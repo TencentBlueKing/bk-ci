@@ -42,3 +42,8 @@ service:
   sshNodePort: 30022
   httpProxyNodePort: 30080
   httpsProxyNodePort: 30090
+
+# https证书相关配置
+https:
+  key: 
+  crt: 

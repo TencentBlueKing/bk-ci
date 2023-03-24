@@ -9,6 +9,7 @@ require (
 	github.com/ci-plugins/crypto-go v0.0.0-20230215041823-7c77b17e97c6
 	github.com/google/go-cmp v0.5.9
 	github.com/gorilla/handlers v1.5.1
+	github.com/klauspost/cpuid/v2 v2.2.4
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
 	github.com/spf13/cobra v1.6.1

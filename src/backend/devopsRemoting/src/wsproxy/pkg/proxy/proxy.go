@@ -1,13 +1,17 @@
 package proxy
 
 import (
+	"bytes"
 	"common/logs"
+	"crypto/tls"
+	stdlog "log"
 	"net/http"
 	"wsproxy/pkg/clients"
 	"wsproxy/pkg/config"
 
 	"github.com/ci-plugins/crypto-go/ssh"
 	"github.com/gorilla/mux"
+	"github.com/klauspost/cpuid/v2"
 )
 
 type WorkspaceProxy struct {
@@ -44,35 +48,31 @@ func (p *WorkspaceProxy) MustServe() {
 		return
 	}
 	srv := &http.Server{
-		Addr:    p.Ingress.HTTPAddress,
+		Addr:    p.Ingress.HTTPSAddress,
 		Handler: handler,
-		// TODO: 未来有证书了再添加https
-		// TLSConfig: &tls.Config{
-		// 	CipherSuites:             optimalDefaultCipherSuites(),
-		// 	CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
-		// 	MinVersion:               tls.VersionTLS12,
-		// 	MaxVersion:               tls.VersionTLS12,
-		// 	PreferServerCipherSuites: true,
-		// 	NextProtos:               []string{"h2", "http/1.1"},
-		// },
+		TLSConfig: &tls.Config{
+			CipherSuites:             optimalDefaultCipherSuites(),
+			CurvePreferences:         []tls.CurveID{tls.CurveP521, tls.CurveP384, tls.CurveP256},
+			MinVersion:               tls.VersionTLS12,
+			MaxVersion:               tls.VersionTLS12,
+			PreferServerCipherSuites: true,
+			NextProtos:               []string{"h2", "http/1.1"},
+		},
+		ErrorLog: stdlog.New(logrusErrorWriter{}, "", 0),
 	}
 
-	// var (
-	// 	crt = p.Config.HTTPS.Certificate
-	// 	key = p.Config.HTTPS.Key
-	// )
-	// if tproot := os.Getenv("TELEPRESENCE_ROOT"); tproot != "" {
-	// 	crt = filepath.Join(tproot, crt)
-	// 	key = filepath.Join(tproot, key)
-	// }
-	// go func() {
-	// 	err := http.ListenAndServe(p.Ingress.HTTPAddress, http.HandlerFunc(redirectToHTTPS))
-	// 	if err != nil {
-	// 		logs.WithError(err).Fatal("cannot start http proxy")
-	// 	}
-	// }()
+	var (
+		crt = p.Config.HTTPS.Certificate
+		key = p.Config.HTTPS.Key
+	)
+	go func() {
+		err := http.ListenAndServe(p.Ingress.HTTPAddress, http.HandlerFunc(redirectToHTTPS))
+		if err != nil {
+			logs.WithError(err).Fatal("cannot start http proxy")
+		}
+	}()
 
-	err = srv.ListenAndServe()
+	err = srv.ListenAndServeTLS(crt, key)
 	if err != nil {
 		logs.WithError(err).Fatal("cannot start proxy")
 		return
@@ -110,4 +110,46 @@ func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
 	}
 	logs.WithField("target", target).Debug("redirect to https")
 	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
+}
+
+// defaultCipherSuitesWithAESNI 假设 AES-NI 的密码套件（AES 的硬件加速）
+var defaultCipherSuitesWithAESNI = []uint16{
+	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+	tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+	tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+}
+
+// defaultCipherSuites 假定缺少 AES-NI（AES 没有硬件加速）
+var defaultCipherSuitesWithoutAESNI = []uint16{
+	tls.TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305,
+	tls.TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384,
+	tls.TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+	tls.TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256,
+	tls.TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+}
+
+// optimalDefaultCipherSuites 返回一个合适的密码
+// 要使用的套件取决于AES的硬件支持。
+func optimalDefaultCipherSuites() []uint16 {
+	if cpuid.CPU.Supports(cpuid.AESNI) {
+		return defaultCipherSuitesWithAESNI
+	}
+	return defaultCipherSuitesWithoutAESNI
+}
+
+var tlsHandshakeErrorPrefix = []byte("http: TLS handshake error")
+
+type logrusErrorWriter struct{}
+
+func (w logrusErrorWriter) Write(p []byte) (int, error) {
+	if bytes.Contains(p, tlsHandshakeErrorPrefix) {
+		return len(p), nil
+	}
+
+	logs.Errorf("%s", string(p))
+	return len(p), nil
 }

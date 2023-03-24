@@ -1,8 +1,8 @@
 package main
 
 import (
-	"common/logs"
 	"common/cli/check"
+	"common/logs"
 	"fmt"
 	"os"
 

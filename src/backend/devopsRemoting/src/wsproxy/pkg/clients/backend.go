@@ -1,10 +1,10 @@
 package clients
 
 import (
+	"common/logs"
 	"context"
 	"crypto/hmac"
 	"crypto/sha1"
-	"common/logs"
 	"fmt"
 	"io/ioutil"
 	"net/http"

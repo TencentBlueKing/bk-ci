@@ -1,13 +1,35 @@
 {
     "folders": [
-        { "path": "." },
-        { "path": "src/common" },
-        { "path": "src/remoting" },
-        { "path": "src/remoting-api" },
-        { "path": "src/ide" },
-        { "path": "src/wsproxy" },
-        { "path": "src/registry-facade" },
-        { "path": "src/registry-facade-api" },
+        {
+            "path": "."
+        },
+        {
+            "path": "src/common"
+        },
+        {
+            "path": "src/remoting"
+        },
+        {
+            "path": "src/remoting-api"
+        },
+        {
+            "path": "src/ide"
+        },
+        {
+            "path": "src/wsproxy"
+        },
+        {
+            "path": "src/registry-facade"
+        },
+        {
+            "path": "src/registry-facade-api"
+        },
+        {
+            "path": "temp"
+        },
+        {
+            "path": "test"
+        }
     ],
     "settings": {
         "[json]": {
