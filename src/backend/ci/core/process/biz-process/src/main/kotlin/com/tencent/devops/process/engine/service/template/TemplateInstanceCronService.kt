@@ -91,7 +91,7 @@ class TemplateInstanceCronService @Autowired constructor(
             activeProfiles.forEach { activeProfile ->
                 sb.append("$activeProfile:")
             }
-            sb.append(LOCK_KEY)
+            sb.append(LOCK_KEY).toString()
         } else {
             LOCK_KEY
         }
