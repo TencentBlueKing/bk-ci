@@ -160,6 +160,9 @@ data class VMBuildContainer(
         if (jobControlOption?.timeoutVar.isNullOrBlank()) {
             jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
         }
+        if (mutexGroup?.timeoutVar.isNullOrBlank()) {
+            mutexGroup?.timeoutVar = mutexGroup?.timeout.toString()
+        }
         super.transformCompatibility()
     }
 }

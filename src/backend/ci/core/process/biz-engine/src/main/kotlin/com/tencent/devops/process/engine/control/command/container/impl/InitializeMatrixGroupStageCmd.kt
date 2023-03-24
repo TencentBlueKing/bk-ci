@@ -105,10 +105,8 @@ class InitializeMatrixGroupStageCmd(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次准备并发执行Stage下Container是执行
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.matrixGroupFlag == true && (
-            commandContext.container.status.isReadyToRun() ||
-                commandContext.container.status == BuildStatus.DEPENDENT_WAITING
-            )
+            commandContext.container.matrixGroupFlag == true &&
+            commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {

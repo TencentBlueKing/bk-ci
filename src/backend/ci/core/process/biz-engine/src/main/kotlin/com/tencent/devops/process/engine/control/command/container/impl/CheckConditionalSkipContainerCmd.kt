@@ -57,10 +57,7 @@ class CheckConditionalSkipContainerCmd constructor(
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            (
-                commandContext.container.status.isReadyToRun() ||
-                    commandContext.container.status == BuildStatus.DEPENDENT_WAITING
-                )
+            commandContext.container.status.isReadyToRun()
     }
 
     override fun execute(commandContext: ContainerContext) {

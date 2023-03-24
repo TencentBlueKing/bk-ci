@@ -85,14 +85,14 @@ class MutexControl @Autowired constructor(
             mutexGroup.mutexGroupName
         }
 
-        mutexGroup.inited = true // 初始化过
         return if (
             mutexGroupName != mutexGroup.mutexGroupName ||
             timeOut != mutexGroup.timeout ||
-            queue != mutexGroup.timeout
+            queue != mutexGroup.queue
         ) {
-            mutexGroup.copy(mutexGroupName = mutexGroupName, timeout = timeOut, queue = queue)
+            mutexGroup.copy(mutexGroupName = mutexGroupName, timeout = timeOut, queue = queue, inited = true)
         } else {
+            mutexGroup.inited = true // 初始化过
             mutexGroup
         }
     }

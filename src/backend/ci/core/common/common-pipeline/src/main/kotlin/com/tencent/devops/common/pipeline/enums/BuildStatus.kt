@@ -87,7 +87,7 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
     fun isReview(): Boolean = this == REVIEW_ABORT || this == REVIEW_PROCESSED
 
-    fun isReadyToRun(): Boolean = this == QUEUE || this == QUEUE_CACHE || this == RETRY
+    fun isReadyToRun(): Boolean = this == QUEUE || this == QUEUE_CACHE || this == RETRY || this == DEPENDENT_WAITING
 
     fun isPassiveStop(): Boolean = this == TERMINATE || this == REVIEW_ABORT || this == QUALITY_CHECK_FAIL
 
