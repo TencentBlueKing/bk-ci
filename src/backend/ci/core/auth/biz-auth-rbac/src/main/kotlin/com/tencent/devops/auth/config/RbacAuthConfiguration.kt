@@ -129,14 +129,16 @@ class RbacAuthConfiguration {
         permissionSubsetManagerService: PermissionSubsetManagerService,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        client: Client
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        client = client
     )
 
     @Bean
@@ -149,8 +151,7 @@ class RbacAuthConfiguration {
         permissionResourceService: PermissionResourceService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         authResourceGroupDao: AuthResourceGroupDao,
-        dslContext: DSLContext,
-        client: Client
+        dslContext: DSLContext
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -159,8 +160,7 @@ class RbacAuthConfiguration {
         permissionResourceService = permissionResourceService,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authResourceGroupDao = authResourceGroupDao,
-        dslContext = dslContext,
-        client = client
+        dslContext = dslContext
     )
 
     @Bean
