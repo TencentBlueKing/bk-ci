@@ -219,7 +219,7 @@
                 return !this.pipelineEditable && this.pipeline.instanceFromTemplate
             },
             curMatchRules () {
-                return this.$route.path.indexOf('template') > 0
+                return this.$route.path.split('/')[3].indexOf('template') > 0
                     ? [
                         ...this.templateRuleList,
                         ...(this.isInstanceEditable ? this.ruleList : [])

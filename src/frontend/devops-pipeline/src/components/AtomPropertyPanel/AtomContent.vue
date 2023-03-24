@@ -241,7 +241,7 @@
                 return this.$route.params.templateId
             },
             isTemplatePanel () {
-                return this.$route.path.indexOf('template') > 0
+                return this.$route.path.split('/')[3].indexOf('template') > 0
             },
             stage () {
                 const { stageIndex, getStage, stages } = this
