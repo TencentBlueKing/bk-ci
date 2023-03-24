@@ -9,11 +9,12 @@ import './css/iconcool.js'
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
+import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
 import { handleProjectManageNoPermission } from './utils/permission';
 import { PermissionDirective } from 'bk-permission';
-import 'bk-permission/dist/style.css';
+import 'bk-permission/dist/main.css';
 
 // i18n
 import { getCookies } from './common/util';

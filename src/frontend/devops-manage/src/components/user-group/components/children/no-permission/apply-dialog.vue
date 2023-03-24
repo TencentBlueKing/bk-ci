@@ -105,6 +105,7 @@
 <script>
 import ajax from '../../../ajax/index';
 import PermissionDialog from '../../widget-components/dialog'
+import { Message } from 'bkui-vue';
 
 export default {
   components: {
@@ -273,13 +274,13 @@ export default {
             applicant: this.userName,
           })
           .then(() => {
-            this.$bkMessage({
+            Message({
               theme: 'success',
               message: this.$t('applySuccess'),
             });
           })
           .catch((err) => {
-            this.$bkMessage({
+            Message({
               theme: 'error',
               message: err.message,
             });
@@ -299,13 +300,13 @@ export default {
           resourceType: this.resourceType,
         })
         .then(() => {
-          this.$bkMessage({
+          Message({
             theme: 'success',
             message: this.$t('applySuccess'),
           });
         })
         .catch((err) => {
-          this.$bkMessage({
+          Message({
             theme: 'error',
             message: err.message,
           });

@@ -53,7 +53,10 @@
                       {{ $t('重命名') }}
                     </bk-button>
                     <bk-button
-                      class="btn"
+                      :class="{
+                        'btn': true,
+                        'is-disable': group.defaultGroup
+                      }"
                       :disabled="group.defaultGroup"
                       text
                       @click="handleShowDeleteGroup(group)">

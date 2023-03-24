@@ -109,6 +109,7 @@ import syncSuccess from '../../../svg/sync-success.svg?inline';
 import syncFailed from '../../../svg/sync-failed.svg?inline';
 import SideSlider from '../../widget-components/side-slider.jsx';
 import PermissionDialog from '../../widget-components/dialog.jsx';
+import { Message } from 'bkui-vue';
 
 const initFormData = () => ({
   isShow: false,
@@ -179,7 +180,7 @@ export default {
           this.memberList = res.data;
         })
         .catch((err) => {
-          this.$bkMessage({
+          Message({
             theme: 'error',
             message: err.message || err,
           });
@@ -200,7 +201,7 @@ export default {
           this.groupPolicies = data;
         })
         .catch((err) => {
-          this.$bkMessage({
+          Message({
             theme: 'error',
             message: err.message || err,
           });
@@ -264,7 +265,7 @@ export default {
           this.getMemberList();
         })
         .catch((err) => {
-          this.$bkMessage({
+          Message({
             theme: 'error',
             message: err.message || err,
           });
