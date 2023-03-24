@@ -35,7 +35,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_ENV_PREPARATION
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_ENV_PREPARATION
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.process.engine.common.VMUtils

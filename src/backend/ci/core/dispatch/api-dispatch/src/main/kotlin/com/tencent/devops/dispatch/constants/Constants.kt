@@ -25,9 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.common
+package com.tencent.devops.dispatch.constants
 
-object ConstantsMessage {
-    const val TROUBLE_SHOOTING = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
-    const val NO_EMPTY_BUILDER = "Kubernetes构建机启动失败，没有空闲的构建机"
-}
+const val QUEUE_BUILD = "queue_build"
+const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
+const val EXCHANGE_BUILD = "exchange_build"
+const val ROUTE_BUILD = "build"
+const val ROUTE_BUILD_NEED_END = "build_need_end"
+
+const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
+const val ROUTE_BUILD_ABORT = "route_build_abort"
+const val QUEUE_BUILD_ABORT = "queue_build_abort"
+
+const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
+const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
+const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
+const val EXCHANGE_TASK = "exchange_vm_task"
+const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
+const val ROUTE_TASK_END = "dispatch_vm_task_end"
+const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"

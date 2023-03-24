@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.BK_FAILED_START_BUILD_MACHINE
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
@@ -255,9 +255,9 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${
-                    MessageUtil.getMessageByLocale("$BK_FAILED_START_BUILD_MACHINE", I18nUtil.getDefaultLocaleLanguage()
-                )}- ${e.message}",
+                message = "${MessageUtil.getMessageByLocale(
+                        "$FAILED_START_BUILD_MACHINE",
+                        I18nUtil.getDefaultLocaleLanguage())}- ${e.message}",
                 executeCount = event.executeCount)
 
             errorCode = e.errorCode
@@ -270,9 +270,9 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${
-                    MessageUtil.getMessageByLocale("$BK_FAILED_START_BUILD_MACHINE", I18nUtil.getDefaultLocaleLanguage()
-                    )} - ${t.message}",
+                message = "${MessageUtil.getMessageByLocale(
+                    "$FAILED_START_BUILD_MACHINE",
+                    I18nUtil.getDefaultLocaleLanguage())} - ${t.message}",
                 executeCount = event.executeCount)
 
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR

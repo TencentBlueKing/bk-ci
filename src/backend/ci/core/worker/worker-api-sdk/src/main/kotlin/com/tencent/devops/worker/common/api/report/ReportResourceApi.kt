@@ -83,7 +83,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         val response = request(
             request,
-            MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
         )
 
         try {
@@ -107,7 +107,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -133,7 +133,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             buildPost(path, requestBody)
         }
         val responseContent = request(request,
-            MessageUtil.getMessageByLocale(BK_CREATE_REPORT_FAIL, I18nUtil.getLanguage()))
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, I18nUtil.getLanguage()))
         return objectMapper.readValue(responseContent)
     }
 

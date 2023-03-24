@@ -35,12 +35,12 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
-import com.tencent.devops.worker.common.BK_CREATE_REPORT_FAIL
-import com.tencent.devops.worker.common.BK_GET_REPORT_ROOT_PATH_FAILURE
-import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_REPORT_FAILURE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.CREATE_REPORT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_ROOT_PATH_FAILURE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -61,7 +61,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -86,7 +86,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_CREATE_REPORT_FAIL, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -124,7 +124,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(request, message)
         try {
             val obj = objectMapper.readTree(responseContent)

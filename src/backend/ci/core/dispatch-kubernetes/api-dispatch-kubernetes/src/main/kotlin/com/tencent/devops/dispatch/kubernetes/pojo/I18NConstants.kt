@@ -27,29 +27,26 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
-const val BK_READY_CREATE_KUBERNETES_BUILD_MACHINE = "BkReadyCreateKubernetesBuildMachine"
-const val BK_START_KUBERNETES_BUILD_CONTAINER_FAIL = "BkStartKubernetesBuildContainerFail"
-const val BK_KUBERNETES_BUILD_ERROR = "BkKubernetesBuildError"
-const val BK_READY_CREATE_BCS_BUILD_MACHINE = "BkReadyCreateBcsBuildMachine"
-const val BK_START_BCS_BUILD_CONTAINER_FAIL = "BkStartBcsBuildContainerFail"
-const val BK_BCS_BUILD_ERROR = "BkBcsBuildError"
-const val BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL = "BkRequestCreateBuildMachineSuccessful"
-const val BK_GET_BUILD_MACHINE_DETAILS_TIMEOUT = "BkGetBuildMachineDetailsTimeout"
-const val BK_MACHINE_INTERFACE_ERROR = "BkMachineInterfaceError" // 操作构建机接口异常
-const val BK_MACHINE_INTERFACE_RETURN_FAIL = "BkMachineInterfaceReturnFail"// 操作构建机接口返回失败
-const val BK_MACHINE_INTERFACE_TIMEOUT = "BkMachineInterfaceTimeout"// 操作构建机接口超时
-const val BK_GET_LOGIN_DEBUG_LINK_TIMEOUT = "BkGetLoginDebugLinkTimeout"// 获取登录调试链接接口超时
-const val BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION = "BkBuildAndPushInterfaceException"// 构建并推送接口异常
-const val BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL = "BkBuildAndPushInterfaceReturnFail"// 构建并推送接口返回失败
-const val BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT = "BkBuildAndPushInterfaceTimeout"// 构建并推送接口超时
-const val BK_GET_BCS_TASK_STATUS_TIMEOUT = "BkGetBcsTaskStatusTimeout"// 获取BCS TASK状态接口超时
-const val BK_GET_BCS_TASK_EXECUTION_TIMEOUT = "BkGetBcsTaskExecutionTimeout"// 获取BCS任务执行超时
-const val BK_GET_BCS_TASK_STATUS_ERROR = "BkGetBcsTaskStatusError"// 获取BCS TASK状态接口异常
-const val BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS = "BkDistributeBuildMachineRequestSuccess"// 下发创建构建机请求成功，等待机器创建
-const val BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP = "BkMachineBuildCompletedWaitingForStartup" // 构建机创建成功，等待机器启动...
-const val BK_BUILD_MACHINE_CREATION_FAILED = "BkBuildMachineCreationFailed"// 构建机创建失败
-const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "BkContainerIsNotInDebugOrInUse"// 容器没有处于debug或正在占用中\
-const val BK_BUILD_MACHINE_STARTUP_FAILED = "BkBuildMachineStartupFailed"// 构建机启动失败，错误信息:{0}
-const val BK_INTERFACE_REQUEST_TIMEOUT = "BkInterfaceRequestTimeout"
-const val BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE = "BkBuildMachineCreationFailedReference"//  "创建构建机失败，错误信息:{0}. \n容器构建异常请参考：{1}"
-const val BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START  = "BkBuildMachineStartSuccessWaitAgentStart"// 构建机启动成功，等待Agent启动...
+const val BK_READY_CREATE_KUBERNETES_BUILD_MACHINE = "bkReadyCreateKubernetesBuildMachine"// 准备创建kubernetes构建机...
+const val BK_READY_CREATE_BCS_BUILD_MACHINE = "bkReadyCreateBcsBuildMachine"// 准备创建BCS(蓝鲸容器平台)构建机...
+
+const val BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL = "bkRequestCreateBuildMachineSuccessful"// 下发创建构建机请求成功，builderName: {0} 等待机器创建...
+
+
+
+
+const val BK_GET_LOGIN_DEBUG_LINK_TIMEOUT = "bkGetLoginDebugLinkTimeout"// 获取登录调试链接接口超时
+const val BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION = "bkBuildAndPushInterfaceException"// 构建并推送接口异常
+const val BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL = "bkBuildAndPushInterfaceReturnFail"// 构建并推送接口返回失败
+const val BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT = "bkBuildAndPushInterfaceTimeout"// 构建并推送接口超时
+const val BK_GET_BCS_TASK_STATUS_TIMEOUT = "bkGetBcsTaskStatusTimeout"// 获取BCS TASK状态接口超时
+const val BK_GET_BCS_TASK_EXECUTION_TIMEOUT = "bkGetBcsTaskExecutionTimeout"// 获取BCS任务执行超时
+const val BK_GET_BCS_TASK_STATUS_ERROR = "bkGetBcsTaskStatusError"// 获取BCS TASK状态接口异常
+const val BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS = "bkDistributeBuildMachineRequestSuccess"// 下发创建构建机请求成功，等待机器创建
+const val BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP = "bkMachineBuildCompletedWaitingForStartup" // 构建机创建成功，等待机器启动...
+const val BK_BUILD_MACHINE_CREATION_FAILED = "bkBuildMachineCreationFailed"// 构建机创建失败
+const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "bkContainerIsNotInDebugOrInUse"// 容器没有处于debug或正在占用中\
+const val BK_BUILD_MACHINE_STARTUP_FAILED = "bkBuildMachineStartupFailed"// 构建机启动失败，错误信息:{0}
+const val BK_INTERFACE_REQUEST_TIMEOUT = "bkInterfaceRequestTimeout"
+const val BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE = "bkBuildMachineCreationFailedReference"//  "创建构建机失败，错误信息:{0}. \n容器构建异常请参考：{1}"
+const val BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START  = "bkBuildMachineStartSuccessWaitAgentStart"// 构建机启动成功，等待Agent启动...

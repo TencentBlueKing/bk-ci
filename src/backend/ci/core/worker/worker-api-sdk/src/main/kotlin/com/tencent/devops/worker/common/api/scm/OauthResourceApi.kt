@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.worker.common.BK_GET_OAUTH_INFO_FAIL
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_OAUTH_INFO_FAIL
 
 class OauthResourceApi : AbstractBuildResourceApi(), OauthSDKApi {
 
@@ -42,7 +42,7 @@ class OauthResourceApi : AbstractBuildResourceApi(), OauthSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_OAUTH_INFO_FAIL, I18nUtil.getLanguage(userId))
+            MessageUtil.getMessageByLocale(GET_OAUTH_INFO_FAIL, I18nUtil.getLanguage(userId))
         )
         return objectMapper.readValue(responseContent)
     }

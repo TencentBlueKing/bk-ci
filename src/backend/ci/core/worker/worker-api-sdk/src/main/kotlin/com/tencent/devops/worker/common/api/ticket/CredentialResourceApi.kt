@@ -34,8 +34,8 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.util.ApiSignUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.worker.common.BK_GET_CREDENTIAL_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CREDENTIAL_FAILED
 
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
 
@@ -53,7 +53,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val request = buildGet(path, signHeaders)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -78,7 +78,7 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
         val request = buildGet(path, signHeaders)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

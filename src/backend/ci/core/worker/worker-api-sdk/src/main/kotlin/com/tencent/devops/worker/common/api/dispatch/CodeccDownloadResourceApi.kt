@@ -34,10 +34,10 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.worker.common.BK_DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL
-import com.tencent.devops.worker.common.BK_DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL
-import com.tencent.devops.worker.common.BK_DOWNLOAD_CODECC_TOOL_FAIL
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_TOOL_FAIL
 import okhttp3.Protocol
 import okhttp3.Response
 
@@ -59,7 +59,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    BK_DOWNLOAD_CODECC_TOOL_FAIL,
+                    DOWNLOAD_CODECC_TOOL_FAIL,
                     I18nUtil.getLanguage(),
                     arrayOf(tool)
                 )
@@ -83,7 +83,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    BK_DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL,
+                    DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL,
                     I18nUtil.getLanguage()
                 )
             )
@@ -107,7 +107,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    BK_DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL,
+                    DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL,
                     I18nUtil.getLanguage()
                 )
             )

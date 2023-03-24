@@ -27,14 +27,17 @@
 
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ATOM_EXECUTION_TIMEOUT
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -68,12 +71,22 @@ class TaskDaemon(
         }
         val f1 = executor.submit(this)
         try {
-            f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
+            f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException(
+                MessageUtil.getMessageByLocale(
+                    ATOM_EXECUTION_TIMEOUT,
+                    System.getProperty(LOCALE_LANGUAGE),
+                    arrayOf("$timeout")
+                )
+            )
         } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                errorMsg = ignore.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+                errorMsg = ignore.message ?: MessageUtil.getMessageByLocale(
+                    ATOM_EXECUTION_TIMEOUT,
+                    System.getProperty(LOCALE_LANGUAGE),
+                    arrayOf("$timeout")
+                )
             )
         } finally {
             executor.shutdownNow()

@@ -29,17 +29,18 @@ package com.tencent.devops.process.constant
 
 /**
  * 流水线微服务模块请求返回状态码
- * 返回码制定规则（除开0代表成功外，为了兼容历史接口成功状态都是返回0）：
+ * 返回码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
  * 1、返回码总长度为7位，
- * 2、前2位数字代表系统名称（如21代表持续集成平台）
+ * 2、前2位数字代表系统名称（如21代表平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
- *    05:environment-持续集成环境 06：experience-版本体验 07：image-镜像 08：log-持续集成日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-持续集成支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店）
+ *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26:stream 27：worker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
- * @since: 2018-11-09
+ * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
@@ -140,7 +141,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101083"// {0} 非 {1} 流水线
     const val ERROR_NO_MATCHING_PIPELINE = "2101084"// 没有找到对应的流水线
     const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101085"// 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
-    const val BK_BUILD_RESOURCE_NOT_EXIST = "2101086"// {0}构建资源不存在，请检查yml配置.
+    const val BUILD_RESOURCE_NOT_EXIST = "2101086"// {0}构建资源不存在，请检查yml配置.
     const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2101087"// {0} 中的step必须包含uses或run或checkout!
     const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2101088"// "{0} job.id 超过长度限制64 {1}}"
     const val ERROR_YAML_FORMAT_EXCEPTION = "2101089"// {0} 中 {1} 格式有误,应为 {2}, error message:${3}
@@ -149,7 +150,7 @@ object ProcessMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2101092"// STREAM Service镜像格式非法
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093"// {0}配置Env数量超过100限制!
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"// {0}Env单变量{1}长度超过{2}字符!({3})
-    const val BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
     const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "2101096"// 变量名称必须是英文字母、数字或下划线(_)
     const val ERROR_JOB_MATRIX_YAML_CONFIG_ERROR = "2101097"// Job[{0]的矩阵YAML配置错误:
 
@@ -171,20 +172,21 @@ object ProcessMessageCode {
     const val ERROR_VIEW_NOT_FOUND_IN_PROJECT = "2101915"// 在项目 {0} 下未找到{1}视图{2}
     const val ERROR_MAX_PIPELINE_COUNT_PER_PROJECT = "2101916"// 该项目最多只能创建{0}条流水线
 
-    const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
-    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
-    const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
-    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
-    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
-    const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
-    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
-    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
-    const val ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED = "2101112"// 生成远程触发token失败
-    const val ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE = "2101113"// 找不到对应子流水线的构建记录
-    const val ERROR_NO_CORRESPONDING_SUB_PIPELINE = "2101114"// "找不到对应子流水线"
-    const val ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO = "2101115"// 用户（{0}) 无权限获取流水线({1})信息({2})
-    const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101116"// 子流水线参数过滤失败
-    const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101117"// 模版下存在无权限的插件
+    const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101501" // 流水线构建[{0}]不存在
+    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101502" // 流水线[{0}]不存在
+    const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101503" // 子流水线循环调用
+    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101504" // 构建中Stage[{0}]不存在
+    const val ERROR_STAGE_IS_NOT_PAUSED = "2101505" // 构建中Stage[{0}]未处于等待把关状态
+    const val ERROR_CONDITION_EXPRESSION_PARSE = "2101506" // 执行条件表达式解析失败
+    const val ERROR_TRIGGER_REVIEW_ABORT = "2101507" // 触发审核未通过
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101508" // 触发不在审核状态中
+    const val ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED = "2101509"// 生成远程触发token失败
+    const val ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE = "2101510"// 找不到对应子流水线的构建记录
+    const val ERROR_NO_CORRESPONDING_SUB_PIPELINE = "2101511"// "找不到对应子流水线"
+    const val ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO = "2101512"// 用户（{0}) 无权限获取流水线({1})信息({2})
+    const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101513"// 子流水线参数过滤失败
+    const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101514"// 模版下存在无权限的插件
+
 
 
     // 导出数据错误

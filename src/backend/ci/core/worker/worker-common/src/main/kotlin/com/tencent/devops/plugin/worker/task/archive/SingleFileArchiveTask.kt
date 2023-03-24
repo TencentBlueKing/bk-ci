@@ -37,8 +37,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.BK_NO_MATCHING_ARCHIVE_FILE
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.NO_MATCHING_ARCHIVE_FILE
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -85,7 +85,7 @@ class SingleFileArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = MessageUtil.getMessageByLocale(BK_NO_MATCHING_ARCHIVE_FILE, I18nUtil.getLanguage())
+                    errorMsg = MessageUtil.getMessageByLocale(NO_MATCHING_ARCHIVE_FILE, I18nUtil.getLanguage())
                 )
             }
         } finally {

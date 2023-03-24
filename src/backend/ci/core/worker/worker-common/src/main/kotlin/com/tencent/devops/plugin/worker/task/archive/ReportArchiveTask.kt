@@ -42,13 +42,13 @@ import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
-import com.tencent.devops.worker.common.BK_ENTRANCE_FILE_CHECK_FINISH
-import com.tencent.devops.worker.common.BK_ENTRANCE_FILE_NOT_IN_FOLDER
-import com.tencent.devops.worker.common.BK_FOLDER_NOT_EXIST
-import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_OUTPUT_SUCCESS
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_CHECK_FINISH
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_NOT_IN_FOLDER
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_OUTPUT_SUCCESS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
@@ -91,7 +91,7 @@ class ReportArchiveTask : ITask() {
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
                     errorMsg = MessageUtil.getMessageByLocale(
-                        BK_FOLDER_NOT_EXIST,
+                        FOLDER_NOT_EXIST,
                         I18nUtil.getLanguage(),
                         arrayOf(fileDirParam)
                     )
@@ -104,14 +104,14 @@ class ReportArchiveTask : ITask() {
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
                     errorMsg = MessageUtil.getMessageByLocale(
-                        BK_ENTRANCE_FILE_NOT_IN_FOLDER,
+                        ENTRANCE_FILE_NOT_IN_FOLDER,
                         I18nUtil.getLanguage(),
                         arrayOf(indexFileParam, fileDirParam)
                     )
                 )
             }
             LoggerService.addNormalLine(
-                MessageUtil.getMessageByLocale(BK_ENTRANCE_FILE_CHECK_FINISH, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(ENTRANCE_FILE_CHECK_FINISH, I18nUtil.getLanguage())
             )
             val reportRootUrl = api.getRootUrl(elementId).data!!
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
@@ -148,7 +148,7 @@ class ReportArchiveTask : ITask() {
             }
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
-                    BK_UPLOAD_CUSTOM_OUTPUT_SUCCESS,
+                    UPLOAD_CUSTOM_OUTPUT_SUCCESS,
                     I18nUtil.getLanguage(),
                     arrayOf("${allFileList.size}")
                 )

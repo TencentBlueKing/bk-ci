@@ -47,15 +47,15 @@ import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_BUILD_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_KUBERNETES_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.KUBERNETES_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_KUBERNETES_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -119,11 +119,11 @@ class KubernetesContainerService @Autowired constructor(
             I18nUtil.getLanguage()
         ),
         startContainerError = MessageUtil.getMessageByLocale(
-            BK_START_KUBERNETES_BUILD_CONTAINER_FAIL,
+            START_KUBERNETES_BUILD_CONTAINER_FAIL,
             I18nUtil.getLanguage()
         ),
         troubleShooting = MessageUtil.getMessageByLocale(
-            BK_KUBERNETES_BUILD_ERROR,
+            KUBERNETES_BUILD_ERROR,
             I18nUtil.getLanguage()
         )
     )

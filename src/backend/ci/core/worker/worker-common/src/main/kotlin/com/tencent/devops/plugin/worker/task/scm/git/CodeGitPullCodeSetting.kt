@@ -39,9 +39,9 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
-import com.tencent.devops.worker.common.BK_GIT_CREDENTIAL_ILLEGAL
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.OauthSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GIT_CREDENTIAL_ILLEGAL
 import org.slf4j.LoggerFactory
 import java.io.File
 
@@ -121,7 +121,7 @@ open class CodeGitPullCodeSetting(
     private fun doHttpPullCode(repo: CodeGitRepository): Map<String, String>? {
         val credentials = getCredential(repo.credentialId)
 
-        val message = MessageUtil.getMessageByLocale(BK_GIT_CREDENTIAL_ILLEGAL, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(GIT_CREDENTIAL_ILLEGAL, I18nUtil.getLanguage())
         if (credentials.size < CredentialSize) {
             logger.warn("The git credential($credentials) is illegal")
             throw ScmException(message, ScmType.CODE_GIT.name)

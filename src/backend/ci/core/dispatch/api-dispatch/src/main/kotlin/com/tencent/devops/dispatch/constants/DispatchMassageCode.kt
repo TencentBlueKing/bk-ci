@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.dispatch.constants
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -44,26 +44,12 @@ package com.tencent.devops.artifactory.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object ArtifactoryMessageCode {
-    const val UPLOAD_FILE_TYPE_IS_NOT_SUPPORT = "2102001" // {0}类型文件不支持上传，您可以上传{1}类型文件
-    const val UPLOAD_FILE_IS_TOO_LARGE = "2102002" // 上传的文件不能超过{0}
-    const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
-    const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
-    const val SHORT_URL_EXPIRED = "2102005" // 短链接已过期
-    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006" // 用户{0}没有项目{1}下载权限
-    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007" // 用户{0}在项目{1}下没有流水线{2}下载构件权限
-    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
-    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
-    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
-    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011"// 获取下载链接请求出错
-    const val UPLOAD_CUSTOM_FILE_FAILED = "2102012"// 上传自定义文件失败
-    const val UPLOAD_PIPELINE_FILE_FAILED = "2102013"// 上传流水线文件失败
-    const val UPLOAD_FILE_FAILED = "2102014"// 上传文件失败
-
-    const val GET_CREDENTIAL_INFO_FAILED = "2102015"// 获取凭证信息失败
-    const val GET_BUILD_BASE_INFO_FAIL = "2102016"// 获取构建机基本信息失败
-    const val GET_PLUGIN_ENV_INFO_FAILED = "2102017"// 获取插件执行环境信息失败
-    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102018"// 更新插件执行环境信息失败
-    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102019" // 获取插件敏感信息失败
-    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102020"// 归档插件文件失败
+object DispatchMassageCode {
+    // 2103101起
+    const val CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "2103101"// 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试.
+    const val THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "2103102"// 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
+    const val BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "2103103"// 构建机升级中，重新调度(Agent is upgrading)
+    const val BUILD_MACHINE_BUSY = "2103104"// 构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}
+    const val BUILD_NODE_IS_EMPTY= "2103105"// 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
+    const val BUILD_ENV_PREPARATION = "2103106"// 构建环境准备中...
 }

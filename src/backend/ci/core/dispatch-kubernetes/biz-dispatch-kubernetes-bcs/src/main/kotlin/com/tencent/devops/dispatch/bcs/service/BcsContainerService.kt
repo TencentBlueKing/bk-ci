@@ -36,8 +36,6 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -63,13 +61,14 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_BCS_BUILD_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAILED
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_BCS_BUILD_MACHINE
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BCS_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_BCS_BUILD_CONTAINER_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.THIRD_SERVICE_BCS_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
@@ -107,11 +106,11 @@ class BcsContainerService @Autowired constructor(
             I18nUtil.getLanguage()
         ),
         startContainerError = MessageUtil.getMessageByLocale(
-            BK_START_BCS_BUILD_CONTAINER_FAIL,
+            START_BCS_BUILD_CONTAINER_FAIL,
             I18nUtil.getLanguage()
         ),
         troubleShooting = MessageUtil.getMessageByLocale(
-            BK_BCS_BUILD_ERROR,
+            THIRD_SERVICE_BCS_BUILD_ERROR,
             I18nUtil.getLanguage()
         )
     )
@@ -258,12 +257,18 @@ class BcsContainerService @Autowired constructor(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
                     ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_BUILD_MACHINE_CREATION_FAILED) +
+                    combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_MACHINE_CREATION_FAILED) +
                     ":${failedMsg ?: taskStatus.message}"
                 )
             }
             return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
         }
+    }
+
+    private fun combinationI18nMessage(message: String, errorMessage: String): String {
+        val language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        return MessageUtil.getMessageByLocale(message, language) +
+                MessageUtil.getMessageByLocale(errorMessage, language)
     }
 
     override fun startBuilder(

@@ -27,12 +27,15 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
@@ -153,11 +156,23 @@ object ShellUtil {
             buildEnvs.forEach { buildEnv ->
                 val home = File(getEnvironmentPathPrefix(), "${buildEnv.name}/${buildEnv.version}/")
                 if (!home.exists()) {
-                    LoggerService.addErrorLine("环境变量路径(${home.absolutePath})不存在")
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(
+                            WorkerMessageCode.ENV_VARIABLE_PATH_NOT_EXIST,
+                            System.getProperty(LOCALE_LANGUAGE),
+                            arrayOf(home.absolutePath)
+                        )
+                    )
                 }
                 val envFile = File(home, buildEnv.binPath)
                 if (!envFile.exists()) {
-                    LoggerService.addErrorLine("环境变量路径(${envFile.absolutePath})不存在")
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(
+                            WorkerMessageCode.ENV_VARIABLE_PATH_NOT_EXIST,
+                            System.getProperty(LOCALE_LANGUAGE),
+                            arrayOf(envFile.absolutePath)
+                        )
+                    )
                     return@forEach
                 }
                 // command.append("export $name=$path")
@@ -182,7 +197,10 @@ object ShellUtil {
         if (!continueNoneZero) {
             command.append("set -e\n")
         } else {
-            LoggerService.addNormalLine("每行命令运行返回值非零时，继续执行脚本")
+            LoggerService.addNormalLine(MessageUtil.getMessageByLocale(
+                WorkerMessageCode.BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO,
+                System.getProperty(LOCALE_LANGUAGE)
+            ))
             command.append("set +e\n")
         }
 

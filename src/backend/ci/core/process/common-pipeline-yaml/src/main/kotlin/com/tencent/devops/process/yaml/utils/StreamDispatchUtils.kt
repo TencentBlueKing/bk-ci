@@ -45,7 +45,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_RESOURCE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -163,7 +164,7 @@ object StreamDispatchUtils {
             throw CustomException(
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
-                    BK_BUILD_RESOURCE_NOT_EXIST,
+                    BUILD_RESOURCE_NOT_EXIST,
                     I18nUtil.getLanguage(),
                     arrayOf("macos")
                 )
@@ -209,7 +210,7 @@ object StreamDispatchUtils {
         } else {
             throw CustomException(
                 Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                    BK_BUILD_RESOURCE_NOT_EXIST,
+                    BUILD_RESOURCE_NOT_EXIST,
                     I18nUtil.getLanguage(),
                     arrayOf("public")
                 )

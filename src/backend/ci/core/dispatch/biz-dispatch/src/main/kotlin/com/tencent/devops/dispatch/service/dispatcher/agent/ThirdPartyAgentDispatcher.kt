@@ -45,12 +45,12 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_MACHINE_BUSY
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_MACHINE_UPGRADE_IN_PROGRESS
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_NODE_IS_EMPTY
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_MACHINE_BUSY
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_MACHINE_UPGRADE_IN_PROGRESS
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_NODE_IS_EMPTY
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
-import com.tencent.devops.dispatch.pojo.DispatchMassageCode.THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock

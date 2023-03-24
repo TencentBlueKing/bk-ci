@@ -35,8 +35,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
@@ -52,10 +50,11 @@ import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BUILD_MACHINE_DETAILS_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_INTERFACE_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_INTERFACE_RETURN_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_INTERFACE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.GET_BUILD_MACHINE_DETAILS_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_RETURN_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -120,7 +119,7 @@ class BcsBuilderClient @Autowired constructor(
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
-                        BK_GET_BUILD_MACHINE_DETAILS_TIMEOUT,
+                        GET_BUILD_MACHINE_DETAILS_TIMEOUT,
                         I18nUtil.getLanguage()
                     ) + ", url: $url"
                 )
@@ -168,7 +167,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_ERROR) +
+                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR) +
                             "（Fail to $action docker, http response code: ${response.code()}"
                     )
                 }
@@ -182,7 +181,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_RETURN_FAIL) + "：$msg"
+                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL) + "：$msg"
                     )
                 }
             }
@@ -192,10 +191,16 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_TIMEOUT) +
+                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_TIMEOUT) +
                         ", url: $url"
             )
         }
+    }
+
+    private fun combinationI18nMessage(message: String, errorMessage: String): String {
+        val language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        return MessageUtil.getMessageByLocale(message, language) +
+                MessageUtil.getMessageByLocale(errorMessage, language)
     }
 
     fun createBuilder(
@@ -221,7 +226,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_ERROR) +
+                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR) +
                                 ": Fail to createBuilder, http response code: ${response.code()}"
                     )
                 }
@@ -235,7 +240,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_RETURN_FAIL) + ": $msg"
+                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL) + ": $msg"
                     )
                 }
             }
@@ -248,7 +253,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_MACHINE_INTERFACE_TIMEOUT) +
+                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_TIMEOUT) +
                         ", url: $url"
             )
         }
@@ -377,7 +382,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL) +
+                        combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL) +
                                 ": $msg"
                     )
                 }
@@ -388,7 +393,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT) +
+                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT) +
                         ", url: $url"
             )
         }

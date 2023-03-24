@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.worker.common.BK_GET_CODE_BASE_FAIL
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CODE_BASE_FAIL
 
 class RepositoryResourceApi : AbstractBuildResourceApi(), RepositorySDKApi {
 
@@ -45,7 +45,7 @@ class RepositoryResourceApi : AbstractBuildResourceApi(), RepositorySDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_CODE_BASE_FAIL, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_CODE_BASE_FAIL, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

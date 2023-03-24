@@ -35,10 +35,10 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.ticket.pojo.CertIOS
-import com.tencent.devops.worker.common.BK_ADD_CODE_BASE_COMMIT_INFO_FAIL
-import com.tencent.devops.worker.common.BK_ADD_SOURCE_MATERIAL_INFO_FAILURE
-import com.tencent.devops.worker.common.BK_GET_LAST_CODE_BASE_COMMIT_INFO_FAIL
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_CODE_BASE_COMMIT_INFO_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_SOURCE_MATERIAL_INFO_FAILURE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_LAST_CODE_BASE_COMMIT_INFO_FAIL
 
 class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
 
@@ -47,7 +47,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildPost(path, getJsonRequest(commits))
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_ADD_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(ADD_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -64,7 +64,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_LAST_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_LAST_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -74,7 +74,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_ADD_SOURCE_MATERIAL_INFO_FAILURE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(ADD_SOURCE_MATERIAL_INFO_FAILURE, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

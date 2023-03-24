@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineTimerRecord
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL
+import com.tencent.devops.process.constant.ProcessMessageCode.ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.process.engine.pojo.PipelineTimer
@@ -95,7 +95,7 @@ open class PipelineTimerService @Autowired constructor(
             Result(
                 ERROR_SAVE_PIPELINE_TIMER.toInt(),
                 MessageUtil.getMessageByLocale(
-                    BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL,
+                    ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL,
                     I18nUtil.getLanguage(userId))
             )
         }

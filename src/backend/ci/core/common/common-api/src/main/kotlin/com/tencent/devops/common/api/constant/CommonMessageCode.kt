@@ -34,12 +34,13 @@ package com.tencent.devops.common.api.constant
  * 2、前2位数字代表系统名称（如21代表平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 21：scm-软件配置管理 17：support-支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26:stream 27：worker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
- * @since: 2018-11-09
+ * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
@@ -82,4 +83,7 @@ object CommonMessageCode {
     const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100030"// 用户 {0}无项目{1}权限
     const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100031"// 无法获取流水线JOB状态，构建停止
     const val JOB_BUILD_STOPS = "2100032"// 流水线JOB已经不再运行，构建停止
+    const val PIPELINE_NAME_OCCUPIED = "2100033"// 流水线名称已被他人使用
+    const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100034"// 内部依赖服务异常
+
 }

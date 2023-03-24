@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -34,20 +34,25 @@ package com.tencent.devops.dispatch.pojo
  * 2、前2位数字代表系统名称（如21代表平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 21：scm-软件配置管理 17：support-支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26:stream 27：worker 28: dispatch-kubernetes）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
- * @since: 2018-11-09
+ * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object DispatchMassageCode {
-    const val CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "2128010"// 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（${dispatchType.displayName}）并发任务数设置并稍后重试.
-    const val THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "2128011"// 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
-    const val BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "2128012"// 构建机升级中，重新调度(Agent is upgrading)
-    const val BUILD_MACHINE_BUSY = "2128013"// 构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}
-    const val BUILD_NODE_IS_EMPTY= "2128014"// 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
-    const val BUILD_ENV_PREPARATION = "2128015"// 构建环境准备中...
+object DispatchK8sMessageCode {
+    const val START_KUBERNETES_BUILD_CONTAINER_FAIL = "2128101"// 启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+    const val KUBERNETES_BUILD_ERROR = "2128102"// Kubernetes构建异常，请联系蓝盾助手排查，异常信息 -
+    const val START_BCS_BUILD_CONTAINER_FAIL = "2128103"// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
+    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2128104"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2128105"// 获取构建机详情接口超时
+    const val MACHINE_INTERFACE_ERROR = "2128007" // 操作构建机接口异常
+    const val TROUBLE_SHOOTING = "2128107"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
+    const val NO_EMPTY_BUILDER = "2128108"// BCS构建机启动失败，没有空闲的构建机
+    const val MACHINE_INTERFACE_RETURN_FAIL = "2128008"// 操作构建机接口返回失败
+    const val MACHINE_INTERFACE_TIMEOUT = "2128109"// 操作构建机接口超时
 }

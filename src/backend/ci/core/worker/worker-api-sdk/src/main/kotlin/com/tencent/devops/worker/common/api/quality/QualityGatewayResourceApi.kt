@@ -30,8 +30,8 @@ package com.tencent.devops.worker.common.api.quality
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.worker.common.BK_SAVE_SCRIPT_METADATA_FAILURE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SAVE_SCRIPT_METADATA_FAILURE
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -56,12 +56,12 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
             val request = buildPost(path, requestBody)
             val responseContent = request(
                 request,
-                MessageUtil.getMessageByLocale(BK_SAVE_SCRIPT_METADATA_FAILURE, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, I18nUtil.getLanguage())
             )
             return Result(responseContent)
         } catch (ignore: Exception) {
             LoggerService.addErrorLine("${
-                MessageUtil.getMessageByLocale(BK_SAVE_SCRIPT_METADATA_FAILURE, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, I18nUtil.getLanguage())
             }: ${ignore.message}")
             logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
