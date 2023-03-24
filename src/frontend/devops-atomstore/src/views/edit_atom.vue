@@ -229,6 +229,7 @@
                             accept="application/zip"
                             @uploadSuccess="uploadPackageSuccess"
                             @uploadFail="uploadPackageErr"
+                            :key="atomForm.releaseType"
                         ></bk-file-upload>
                         <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('store.发布包不能为空') }} </div>
                     </div>
