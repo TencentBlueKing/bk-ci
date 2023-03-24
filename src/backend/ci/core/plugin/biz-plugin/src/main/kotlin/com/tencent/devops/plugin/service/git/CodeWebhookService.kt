@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_NONE_TARGET_BRANCH
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -94,6 +93,11 @@ class CodeWebhookService @Autowired constructor(
     private val scmCheckService: ScmCheckService,
     private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
+        // GIT无目标分支，用于工蜂PUSH事件check回写
+        const val GIT_COMMIT_CHECK_NONE_TARGET_BRANCH = "~NONE"
+    }
 
     fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
         logger.info("Code web hook on start [${event.buildId}]")
@@ -130,7 +134,7 @@ class CodeWebhookService @Autowired constructor(
                                     targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
                                         targetBranch
                                     } else {
-                                        PIPELINE_GIT_NONE_TARGET_BRANCH
+                                        GIT_COMMIT_CHECK_NONE_TARGET_BRANCH
                                     }
                                 )
                             )
@@ -207,7 +211,7 @@ class CodeWebhookService @Autowired constructor(
                                     targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
                                         targetBranch
                                     } else {
-                                        PIPELINE_GIT_NONE_TARGET_BRANCH
+                                        GIT_COMMIT_CHECK_NONE_TARGET_BRANCH
                                     }
                                 )
                             )
@@ -700,9 +704,5 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
     }
 }
