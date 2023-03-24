@@ -39,7 +39,7 @@ const exceptionObj = ref({
   description: '',
   showBtn: false
 })
-
+const projectList = window.parent?.vuexStore.state.projectList || [];
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http
@@ -239,10 +239,16 @@ const handleCancelCreation = () => {
 };
 
 const handleNoPermission = () => {
-  handleProjectManageNoPermission({
+  const project = projectList.find(project => project.projectCode === projectCode)
+  const params = {
     projectId: projectCode,
     resourceCode: projectCode,
-  })
+    action: RESOURCE_ACTION
+  }
+  if (project) {
+    delete params.action
+  }
+  handleProjectManageNoPermission(params)
 };
 
 const statusDisabledTips = {

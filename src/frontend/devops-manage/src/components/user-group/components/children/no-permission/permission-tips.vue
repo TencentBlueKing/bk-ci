@@ -3,9 +3,10 @@
     <div class="content-wrapper">
       <bk-exception
         class="exception-wrap-item exception-part"
-        type="403"
+        :type="exceptionObj.type"
         scene="part"
-        :title="title"
+        :title="exceptionObj.title"
+        :description="exceptionObj.description"
       >
       </bk-exception>
     </div>
@@ -19,12 +20,43 @@ export default {
       type: String,
       default: '',
     },
+    projectCode: {
+      type: String,
+    },
+    errorCode: {
+      type: Number,
+    }
+  },
+  created () {
+    this.exceptionObj.type = this.errorCode
+    if (this.errorCode === 404)  {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '404';
+      this.exceptionObj.title = this.$t('项目不存在');
+      this.exceptionObj.description = '';
+    } else if (this.errorCode === 2119042) {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '403';
+      this.exceptionObj.title = this.$t('项目创建中');
+      this.exceptionObj.description = this.$t('项目正在创建审批中，请耐心等待', [this.projectCode]);
+    }
+  },
+  data() {
+    return {
+      exceptionObj:{
+        type: '',
+        title: '',
+        description: '',
+        showBtn: false
+      }
+    }
   },
 };
 </script>
 
 <style lang="scss" scoped>
     .group-manage {
+        height: 100%;
         flex: 1;
     }
     .content-wrapper {

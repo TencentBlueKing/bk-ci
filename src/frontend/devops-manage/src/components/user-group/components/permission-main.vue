@@ -22,15 +22,25 @@
           :ajax-prefix="ajaxPrefix"
         />
       </template>
-      <no-enable-permission
-        v-else
-        :resource-type="resourceType"
-        :resource-code="resourceCode"
-        :project-code="projectCode"
-        :ajax-prefix="ajaxPrefix"
-        :has-permission="hasPermission"
-        @open-manage="initStatus"
-      />
+      <template v-else>
+        <no-permission
+          v-if="isApprover"
+          :resource-type="resourceType"
+          :resource-code="resourceCode"
+          :project-code="projectCode"
+          :ajax-prefix="ajaxPrefix"
+          :error-code="errorCode"
+        />
+        <no-enable-permission
+          v-else
+          :resource-type="resourceType"
+          :resource-code="resourceCode"
+          :project-code="projectCode"
+          :ajax-prefix="ajaxPrefix"
+          :has-permission="hasPermission"
+          @open-manage="initStatus"
+        />
+      </template>
     </template>
   </article>
 </template>
@@ -76,6 +86,8 @@ export default {
       isEnablePermission: false,
       hasPermission: false,
       isLoading: true,
+      isApprover: false,
+      errorCode: 0
     };
   },
 
@@ -94,6 +106,12 @@ export default {
         .then(([hasManagerData, isEnableData]) => {
           this.isEnablePermission = isEnableData?.data;
           this.hasPermission = hasManagerData?.data;
+        })
+        .catch(err => {
+          if ([404, 2119042].includes(err.code)) {
+              this.isApprover = true;
+              this.errorCode =err.code
+          }
         })
         .finally(() => {
           this.isLoading = false;
