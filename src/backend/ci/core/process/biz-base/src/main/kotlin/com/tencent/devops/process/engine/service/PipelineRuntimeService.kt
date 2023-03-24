@@ -2034,4 +2034,19 @@ class PipelineRuntimeService @Autowired constructor(
     fun updateRecommendVersion(projectId: String, buildId: String, recommendVersion: String) {
         pipelineBuildDao.updateRecommendVersion(dslContext, projectId, buildId, recommendVersion)
     }
+
+    fun updateBuildParameters(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildParameters: Collection<BuildParameters>
+    ): Boolean {
+        return pipelineBuildDao.updateBuildParameters(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildParameters = buildParameters
+        )
+    }
 }

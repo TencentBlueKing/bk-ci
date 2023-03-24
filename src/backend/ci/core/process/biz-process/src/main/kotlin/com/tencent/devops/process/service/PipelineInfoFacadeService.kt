@@ -131,6 +131,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
 
+        // 适配兼容老数据
+        model.stages.forEach {
+            it.transformCompatibility()
+        }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
