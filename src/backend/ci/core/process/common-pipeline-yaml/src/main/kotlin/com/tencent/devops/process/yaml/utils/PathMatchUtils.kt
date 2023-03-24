@@ -30,8 +30,8 @@ package com.tencent.devops.process.yaml.utils
 import java.util.regex.Pattern
 
 object PathMatchUtils {
-    fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?): Boolean {
-        if (pathList.isNullOrEmpty()) {
+    fun isIncludePathMatch(pathList: List<String>?, fileChangeSet: Set<String>?, doCheck: Boolean = true): Boolean {
+        if (pathList.isNullOrEmpty() || !doCheck) {
             return true
         }
 
@@ -66,6 +66,19 @@ object PathMatchUtils {
             }
         }
 
+        return true
+    }
+
+    /**
+     * 使用glob模式进行匹配.
+     * 预留入口，暂未使用
+     */
+    private fun isGlobPathMatch(fullPath: String, prefixPath: String): Boolean {
+        val pattern = Pattern.compile(GlobsUtils.toUnixRegexPattern(prefixPath))
+        val matcher = pattern.matcher(fullPath)
+        if (!matcher.matches()) {
+            return false
+        }
         return true
     }
 }

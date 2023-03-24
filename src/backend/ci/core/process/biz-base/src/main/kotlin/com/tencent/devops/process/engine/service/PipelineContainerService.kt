@@ -297,7 +297,6 @@ class PipelineContainerService @Autowired constructor(
                     taskSeq++ // 当前插件任务的执行序号往后移动一位，留给构建机启动插件任务
                 }
             }
-            val status = atomElement.initStatus()
             context.taskCount++
             addBuildTaskToList(
                 buildTaskList = buildTaskList,
@@ -309,7 +308,7 @@ class PipelineContainerService @Autowired constructor(
                 container = container,
                 taskSeq = taskSeq,
                 atomElement = atomElement,
-                status = status,
+                status = BuildStatus.QUEUE,
                 executeCount = context.executeCount,
                 postParentIdMap = postParentIdMap
             )
@@ -328,7 +327,6 @@ class PipelineContainerService @Autowired constructor(
                         executeCount = context.executeCount,
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
-                        status = atomElement.status,
                         timestamps = mapOf(),
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(

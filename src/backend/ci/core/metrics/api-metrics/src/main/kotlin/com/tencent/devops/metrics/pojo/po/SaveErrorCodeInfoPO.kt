@@ -48,5 +48,7 @@ data class SaveErrorCodeInfoPO(
     @ApiModelProperty("创建时间")
     val createTime: LocalDateTime,
     @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("归属插件")
+    val atomCode: String? = null
 )
