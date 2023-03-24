@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.configuration
 
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
@@ -38,5 +38,5 @@ import org.springframework.context.annotation.Configuration
 class DispatchConfiguration {
 
     @Bean
-    fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQRoutableEventDispatcher(rabbitTemplate)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = ContainerEventDispatcher(streamBridge)
 }

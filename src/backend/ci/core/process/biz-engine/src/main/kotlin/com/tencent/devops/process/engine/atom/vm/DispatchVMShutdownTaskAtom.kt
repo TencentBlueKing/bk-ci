@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -42,6 +41,7 @@ import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -54,7 +54,7 @@ import java.time.LocalDateTime
 class DispatchVMShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: ContainerEventDispatcher,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -85,7 +85,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
-                routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                dispatchType = param.dispatchType,
                 executeCount = task.executeCount
             )
         )
@@ -138,7 +138,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        dispatchType = param.dispatchType,
                         executeCount = task.executeCount
                     )
                 )

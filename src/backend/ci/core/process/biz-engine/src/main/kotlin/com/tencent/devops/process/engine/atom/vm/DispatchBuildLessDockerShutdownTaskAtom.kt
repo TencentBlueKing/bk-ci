@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -42,6 +41,7 @@ import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -55,7 +55,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher
+    private val pipelineEventDispatcher: ContainerEventDispatcher
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
         return JsonUtil.mapTo(task.taskParams, NormalContainer::class.java)

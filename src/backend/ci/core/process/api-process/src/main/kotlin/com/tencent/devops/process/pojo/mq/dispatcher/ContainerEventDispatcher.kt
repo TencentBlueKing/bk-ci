@@ -25,21 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.pojo.pipeline
+package com.tencent.devops.process.pojo.mq.dispatcher
 
-import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.process.pojo.mq.IDispatchEvent
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 
-/**
- * 可指定路由key后续的流水线事件
- */
-@Suppress("LongParameterList")
-abstract class IPipelineRoutableEvent(
-    open var routeKeySuffix: String? = null, // 路由后缀Key
-    open var actionType: ActionType,
-    open val source: String,
-    open val projectId: String,
-    open val pipelineId: String,
-    open val userId: String,
-    open var delayMills: Int,
-    open var retryTime: Int = 1
-)
+class ContainerEventDispatcher constructor(
+    private val streamBridge: StreamBridge
+) : EventDispatcher<IDispatchEvent> {
+
+    override fun dispatch(vararg events: IDispatchEvent) {
+        events.forEach { event ->
+            try {
+                // TODO 转为特定的dispatch队列事件
+                val dispatchEvent = when (event.dispatchType) {
+                    is DockerDispatchType -> {
+                        null
+                    }
+                    else -> {
+                        event
+                    }
+                }
+                dispatchEvent?.sendTo(streamBridge)
+            } catch (ignored: Exception) {
+                logger.error("[MQ] Fail to dispatch the event($events)", ignored)
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ContainerEventDispatcher::class.java)
+    }
+}

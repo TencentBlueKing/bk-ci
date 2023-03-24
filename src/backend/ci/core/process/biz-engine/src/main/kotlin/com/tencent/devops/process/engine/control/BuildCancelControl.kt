@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -61,6 +60,7 @@ import com.tencent.devops.process.engine.service.record.ContainerBuildRecordServ
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
+import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
@@ -74,7 +74,7 @@ class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,
     private val redisOperation: RedisOperation,
     private val pipelineMQEventDispatcher: PipelineEventDispatcher,
-    private val routeEventDispatcher: MQRoutableEventDispatcher,
+    private val routeEventDispatcher: ContainerEventDispatcher,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
@@ -391,7 +391,7 @@ class BuildCancelControl @Autowired constructor(
                 buildId = event.buildId,
                 buildResult = false, // #5046 取消不是成功
                 vmSeqId = id,
-                routeKeySuffix = dispatchType?.routeKeySuffix?.routeKeySuffix,
+                dispatchType = dispatchType,
                 executeCount = executeCount
             )
         )

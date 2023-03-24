@@ -34,7 +34,6 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter

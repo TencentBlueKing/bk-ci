@@ -47,7 +47,6 @@ import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.common.api.check.Preconditions
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -56,6 +55,7 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
@@ -74,7 +74,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: ContainerEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {

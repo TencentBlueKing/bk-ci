@@ -28,13 +28,12 @@
 package com.tencent.devops.process.pojo.mq
 
 import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.event.annotation.RabbitEvent
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-@RabbitEvent(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
+@Event(StreamBinding.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
 data class PipelineBuildLessStartupDispatchEvent(
     override val source: String,
     override val projectId: String,
@@ -47,12 +46,11 @@ data class PipelineBuildLessStartupDispatchEvent(
     val os: String,
     val startTime: Long,
     val channelCode: String,
-    val dispatchType: DispatchType,
+    override val dispatchType: DispatchType? = null,
     val zone: Zone?,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
     val executeCount: Int?,
     val customBuildEnv: Map<String, String>?,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0,
-    override var routeKeySuffix: String? = null
-) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
+    override var delayMills: Int = 0
+) : IDispatchEvent(actionType, source, projectId, pipelineId, userId, dispatchType, delayMills)
