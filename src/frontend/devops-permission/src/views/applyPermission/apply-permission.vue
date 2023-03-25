@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import http from '@/http/api';
+import tools from '@/utils/tools';
 import PermissionHeader from '@/components/permission-header.vue';
 import GroupSearch from './group-search.vue';
 import {
@@ -209,7 +210,7 @@ const handleToProjectManage = (project) => {
 
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
-  formData.value.projectCode = route?.query.project_code || '';
+  formData.value.projectCode = route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
   getUserInfo();
   getAllProjectList();
   if (projectName.value || route?.query.project_code) {

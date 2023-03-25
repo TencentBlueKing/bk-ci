@@ -56,7 +56,7 @@
       </span>
     </div>
     <div class="close-btn">
-      <bk-button @click="handleCloseManage" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
+      <bk-button @click="showCloseManageDialog" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
     </div>
     <bk-dialog
       header-align="center"
@@ -69,6 +69,56 @@
       @confirm="handleDeleteGroup"
     >
       {{ $t('是否删除用户组', [deleteObj.group.name]) }}
+    </bk-dialog>
+    <bk-dialog
+      header-align="center"
+      theme="danger"
+      ext-cls="close-manage-dialog"
+      width="500"
+      :quick-close="false"
+      :show-footer="false"
+      :value="closeObj.isShow"
+      @cancel="handleHiddenCloseManage"
+    >
+      <template #header>
+        <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
+        <p class="close-title">{{ $t('确认关闭【】的权限管理？', [resourceName]) }}</p>
+      </template>
+      <div class="close-tips">
+        <p>{{ $t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? $t('流水线') : $t('流水线组')]) }}</p>
+        <p>
+          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+          {{ $t('将编辑者、执行者、查看者中的用户移除') }}
+        </p>
+        <p>
+          <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
+          {{ $t('删除对应组内用户继承该组的权限') }}
+        </p>
+        <p>
+          <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
+          {{ $t('删除对应组信息和组权限') }}
+        </p>
+      </div>
+      <div class="confirm-close">
+        <i18n path="提交后，再次开启权限管理时对应组内用户将不能恢复，请谨慎操作!" style="color: #737987;font-size: 14px;" tag="div">
+          <span style="color: red;">{{$t('不能恢复')}}</span>
+        </i18n>
+      </div>
+      <div class="option-btns">
+        <bk-button
+          class="close-btn"
+          theme="danger"
+          @click="handleCloseManage"
+        >
+          {{ $t('关闭权限管理') }}
+        </bk-button>
+        <bk-button
+          class="btn"
+          @click="handleHiddenCloseManage"
+        >
+          {{ $t('取消') }}
+        </bk-button>
+      </div>
     </bk-dialog>
   </article>
 </template>
@@ -94,6 +144,10 @@ export default {
       type: String,
       default: '',
     },
+    resourceName: {
+      type: String,
+      default: '',
+    },
     projectCode: {
       type: String,
       default: '',
@@ -116,6 +170,10 @@ export default {
         group: {},
         isShow: false,
         isLoading: false,
+      },
+      closeObj: {
+        isShow: false,
+        isLoading: false
       },
       groupList: [],
       hasLoadEnd: false,
@@ -192,6 +250,12 @@ export default {
         .finally(() => {
           this.isClosing = false;
         });
+    },
+    showCloseManageDialog () {
+      this.closeObj.isShow = true
+    },
+    handleHiddenCloseManage () {
+      this.closeObj.isShow = false
     },
     handleMessage(event) {
       const { data } = event;
@@ -335,6 +399,43 @@ export default {
 }
 .small-size {
   scale: 0.9;
+}
+
+.close-manage-dialog {
+    .title-icon {
+        font-size: 42px;
+        color: #ff9c01;
+        margin-bottom: 15px;
+    }
+    .close-title {
+        margin-top: 10px;
+        white-space: normal !important;
+    }
+    .bk-dialog-header {
+        padding: 15px 0;
+    }
+    .bk-dialog-title {
+        height: 26px !important;
+        overflow: initial !important;
+    }
+    .confirm-close {
+        margin: 15px 0 30px;
+    }
+    .close-tips {
+        padding: 10px;
+        background: #f5f6fa;
+    }
+    .option-btns {
+        text-align: center;
+        margin-top: 20px;
+        .close-btn {
+            margin-right: 10px;
+            margin-bottom: 0 !important;
+        }
+        .btn {
+            width: 88px;
+        }
+    }
 }
 </style>
 <style lang="scss">

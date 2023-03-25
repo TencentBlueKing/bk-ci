@@ -1,9 +1,9 @@
 <template>
     <bk-permission
-        class="pipeline-list-auth"
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"
+        :resource-name="groupName"
         :show-create-group="false"
     />
 </template>
@@ -22,6 +22,9 @@
             },
             resourceCode () {
                 return this.$route.params.id
+            },
+            groupName () {
+                return this.$route.query.groupName
             }
         }
     }

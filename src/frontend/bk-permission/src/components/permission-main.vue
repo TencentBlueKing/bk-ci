@@ -10,6 +10,7 @@
           :show-create-group="showCreateGroup"
           :resource-type="resourceType"
           :resource-code="resourceCode"
+          :resource-name="resourceName"
           :project-code="projectCode"
           :ajax-prefix="ajaxPrefix"
           @close-manage="initStatus"
@@ -58,6 +59,10 @@ export default {
       default: '',
     },
     projectCode: {
+      type: String,
+      default: '',
+    },
+    resourceName: {
       type: String,
       default: '',
     },

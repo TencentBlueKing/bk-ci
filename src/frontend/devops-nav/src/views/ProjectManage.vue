@@ -72,7 +72,7 @@
                         width="500"
                     />
                     <bk-table-column
-                        :label="$t('administrator')"
+                        :label="$t('projectCreator')"
                         prop="creator"
                     />
                     <bk-table-column

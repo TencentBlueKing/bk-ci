@@ -4,6 +4,7 @@
       :show-create-group="showCreateGroup"
       :resource-type="resourceType"
       :resource-code="resourceCode"
+      :resource-name="resourceName"
       :project-code="projectCode"
       :ajax-prefix="ajaxPrefix"
       @choose-group="handleChooseGroup"
@@ -45,6 +46,10 @@ export default {
     showCreateGroup: {
       type: Boolean,
       default: true,
+    },
+    resourceName: {
+      type: String,
+      default: '',
     },
     ajaxPrefix: {
       type: String,

@@ -4,7 +4,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
-        :project-name="projectName"
+        :resource-name="projectName"
     />
 </template>
 
@@ -27,7 +27,7 @@
                 return this.$route.params.pipelineId
             },
             projectName () {
-                return this.curProject.projectName
+                return this.$store?.state?.curProject?.projectName
             }
         }
     }

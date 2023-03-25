@@ -48,15 +48,17 @@ const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = '') 
         data: [data],
       },
     },
-    columns.map(column => h(
-      ui.bkTableColumn,
-      {
-        props: {
-          label: column.label,
-          prop: column.prop,
+    columns
+      .filter(column => data[column.prop])
+      .map(column => h(
+        ui.bkTableColumn,
+        {
+          props: {
+            label: column.label,
+            prop: column.prop,
+          },
         },
-      },
-    )),
+      )),
   );
   const renderFooter = data => h(
     'section',
@@ -265,13 +267,15 @@ const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
         border: 'none',
         data: [data],
       },
-      columns.map(column => h(
-        ui.TableColumn,
-        {
-          label: column.label,
-          prop: column.prop,
-        },
-      )),
+      columns
+        .filter(column => data[column.prop])
+        .map(column => h(
+          ui.TableColumn,
+          {
+            label: column.label,
+            prop: column.prop,
+          },
+        )),
     ),
   );
   const renderFooter = data => h(

@@ -86,10 +86,11 @@
       dialogType="show"
       header-align="center"
       theme="danger"
-      :quick-close="false"
       extCls="delete-group-dialog"
+      :quick-close="false"
       :is-show="deleteObj.isShow"
       :is-loading="deleteObj.isLoading"
+      @closed="handleHiddenDeleteGroup"
     >
       <template #header>
         <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>

@@ -399,9 +399,10 @@ onMounted(async () => {
                   -->
                   <Popover
                     :content="statusDisabledTips[projectData.approvalStatus]"
-                    :disabled="projectData.approvalStatus === 2"
+                    :disabled="[1, 4].includes(projectData.approvalStatus)"
                     v-perm="{
-                      tooltips: t('没有权限'),
+                      disablePermissionApi: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
+                      hasPermission: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
                       permissionData: {
                         projectId: projectData.projectCode,
                         resourceType: RESOURCE_TYPE,
@@ -444,10 +445,11 @@ onMounted(async () => {
                   >
                     {{ t('取消创建') }}
                   </bk-button>
-                  
-                  <span
+                  <bk-button
+                    v-if="projectData.approvalStatus === 2"
                     v-perm="{
-                      tooltips: t('没有权限'),
+                      disablePermissionApi: !projectData.projectCode,
+                      hasPermission: !projectData.projectCode,
                       permissionData: {
                         projectId: projectData.projectCode,
                         resourceType: RESOURCE_TYPE,
@@ -455,16 +457,12 @@ onMounted(async () => {
                         action: RESOURCE_ACTION.ENABLE
                       }
                     }"
+                    class="btn"
+                    theme="default"
+                    @click="handleEnabledProject"
                   >
-                    <bk-button
-                      v-if="projectData.approvalStatus === 2"
-                      class="btn"
-                      theme="default"
-                      @click="handleEnabledProject"
-                    >
-                      {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
-                    </bk-button>
-                  </span>
+                    {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
+                  </bk-button>
                 </bk-form-item>
               </bk-form>
             </section>
