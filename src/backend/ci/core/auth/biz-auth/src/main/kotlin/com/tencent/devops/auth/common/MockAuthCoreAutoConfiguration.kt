@@ -6,6 +6,7 @@ import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.LocalManagerService
 import com.tencent.devops.auth.service.OrganizationService
+import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
@@ -33,6 +34,7 @@ import com.tencent.devops.auth.service.sample.SamplePermissionResourceService
 import com.tencent.devops.auth.service.sample.SamplePermissionResourceValidateService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleService
+import com.tencent.devops.auth.service.sample.SamplePermissionSuperManagerService
 import com.tencent.devops.auth.service.sample.SamplePermissionUrlServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -111,4 +113,8 @@ class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(PermissionResourceValidateService::class)
     fun samplePermissionResourceValidateService() = SamplePermissionResourceValidateService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionSuperManagerService::class)
+    fun samplePermissionSuperManagerService() = SamplePermissionSuperManagerService()
 }
