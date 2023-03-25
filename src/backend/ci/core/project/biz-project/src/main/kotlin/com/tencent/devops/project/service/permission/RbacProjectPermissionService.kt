@@ -40,8 +40,10 @@ import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.service.ProjectApprovalService
+import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
 class RbacProjectPermissionService(
@@ -49,12 +51,17 @@ class RbacProjectPermissionService(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val projectApprovalService: ProjectApprovalService,
     private val dslContext: DSLContext,
-    private val projectDao: ProjectDao
+    private val projectDao: ProjectDao,
+    private val projectExtService: ProjectExtService
 ) : ProjectPermissionService {
 
     // 项目是否需要开启审批
     @Value("\${auth.project.approval:#{false}}")
     private val authProjectApproval: Boolean = false
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RbacProjectPermissionService::class.java)
+    }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return true
@@ -82,6 +89,17 @@ class RbacProjectPermissionService(
             )
         }
 
+        // 创建兼容的权限中心项目
+        val authProjectId = try {
+            projectExtService.createCompatibleAuthProject(
+                resourceRegisterInfo = resourceRegisterInfo,
+                authProjectCreateInfo = authProjectCreateInfo
+            )
+        } catch (ignore: Exception) {
+            logger.error("Failed to create compatible auth project", ignore)
+            ""
+        }
+
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
@@ -90,7 +108,7 @@ class RbacProjectPermissionService(
             resourceCode = resourceRegisterInfo.resourceCode,
             resourceName = resourceRegisterInfo.resourceName
         )
-        return ""
+        return authProjectId
     }
 
     override fun deleteResource(projectCode: String) {

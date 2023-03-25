@@ -29,7 +29,9 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,5 +50,12 @@ class SimpleProjectExtService @Autowired constructor(
         logoAddress: String?
     ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+    }
+
+    override fun createCompatibleAuthProject(
+        resourceRegisterInfo: ResourceRegisterInfo,
+        authProjectCreateInfo: AuthProjectCreateInfo
+    ): String {
+        return ""
     }
 }
