@@ -514,6 +514,14 @@ class TxProjectServiceImpl @Autowired constructor(
         return buildRouterTag(projectInfo.routerTag)
     }
 
+    override fun updateProjectRouterTag(englishName: String) {
+        val tag = bkTag.getLocalTag()
+        // rbac环境创建的项目,需要指定到rbac集群
+        if (tag.contains(rbacTag)) {
+            projectTagService.updateTagByProject(projectCode = englishName, tag = bkTag.getLocalTag())
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
         private const val V0_PERMISSION_CENTER = "v0"
