@@ -48,7 +48,7 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <icon name="apply" size="14" class="mr5" />
+                                <icon name="icon-apply" size="14" class="mr5" />
                                 <span class="text">{{ $t('applyProject') }}</span>
                             </span>
                             <span class="extension-line" />
