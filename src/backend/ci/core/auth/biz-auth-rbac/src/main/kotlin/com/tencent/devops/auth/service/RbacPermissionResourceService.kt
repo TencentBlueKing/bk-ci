@@ -42,8 +42,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -53,7 +57,8 @@ class RbacPermissionResourceService(
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val client: Client
 ) : PermissionResourceService {
 
     companion object {
@@ -228,6 +233,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        checkProjectApprovalStatus(resourceType, resourceCode)
         val checkProjectManage = permissionService.validateUserResourcePermissionByRelation(
             userId = userId,
             action = RbacAuthUtils.buildAction(
@@ -254,6 +260,25 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             relationResourceType = null
         )
+    }
+
+    private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            val projectInfo =
+                client.get(ServiceProjectResource::class).get(resourceCode).data ?: throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    params = arrayOf(resourceCode)
+                )
+            val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+            if (approvalStatus.isCreatePending()) {
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.UNDER_APPROVAL_PROJECT,
+                    params = arrayOf(resourceCode),
+                    defaultMessage = "project $resourceCode is being approved, " +
+                        "please wait patiently, or contact the approver"
+                )
+            }
+        }
     }
 
     override fun isEnablePermission(

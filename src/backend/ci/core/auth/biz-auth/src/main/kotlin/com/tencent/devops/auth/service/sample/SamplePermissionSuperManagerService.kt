@@ -26,34 +26,17 @@
  *
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
-import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.auth.service.PermissionSuperManagerService
 
-/**
- * 外部项目服务类
- */
-interface ProjectExtService {
-
-    @Suppress("LongParameterList")
-    fun createExtProjectInfo(
+class SamplePermissionSuperManagerService : PermissionSuperManagerService {
+    override fun reviewManagerCheck(
         userId: String,
-        authProjectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo,
-        logoAddress: String?
-    )
-
-    /**
-     * 创建兼容的权限中心项目
-     *
-     * 迁移权限中心过程中，项目需要双写到权限中心
-     */
-    fun createOldAuthProject(
-        userId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-    ): String?
+        projectCode: String,
+        resourceType: String,
+        action: String
+    ): Boolean {
+        return false
+    }
 }

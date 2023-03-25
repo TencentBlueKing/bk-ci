@@ -762,7 +762,7 @@ class ProjectDao {
 
     fun updateApprovalStatus(
         dslContext: DSLContext,
-        projectCode: String,
+        englishName: String,
         approver: String,
         approvalStatus: Int
     ): Int {
@@ -771,7 +771,20 @@ class ProjectDao {
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(APPROVER, approver)
                 .set(APPROVAL_TIME, LocalDateTime.now())
-                .where(ENGLISH_NAME.eq(projectCode))
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
+    fun updateAuthProjectId(
+        dslContext: DSLContext,
+        englishName: String,
+        projectId: String
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(PROJECT_ID, projectId)
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }

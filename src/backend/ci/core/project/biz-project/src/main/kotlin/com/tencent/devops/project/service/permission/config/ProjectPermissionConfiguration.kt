@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectApprovalService
+import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.StreamProjectPermissionServiceImpl
 import com.tencent.devops.project.service.permission.BluekingProjectPermissionServiceImpl
@@ -114,16 +115,22 @@ class ProjectPermissionConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacProjectPermissionService(
+        authProjectApi: AuthProjectApi,
         authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         projectApprovalService: ProjectApprovalService,
         dslContext: DSLContext,
-        projectDao: ProjectDao
+        projectDao: ProjectDao,
+        projectExtService: ProjectExtService
     ): ProjectPermissionService = RbacProjectPermissionService(
         authResourceApi = authResourceApi,
+        authProjectApi = authProjectApi,
+        authPermissionApi = authPermissionApi,
         projectAuthServiceCode = projectAuthServiceCode,
         projectApprovalService = projectApprovalService,
         dslContext = dslContext,
-        projectDao = projectDao
+        projectDao = projectDao,
+        projectExtService = projectExtService
     )
 }

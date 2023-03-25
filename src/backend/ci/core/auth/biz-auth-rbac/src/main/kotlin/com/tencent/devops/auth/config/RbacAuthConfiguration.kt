@@ -48,6 +48,7 @@ import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.PermissionSuperManagerService
 import com.tencent.devops.auth.service.RbacPermissionApplyService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
@@ -129,14 +130,16 @@ class RbacAuthConfiguration {
         permissionSubsetManagerService: PermissionSubsetManagerService,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        client: Client
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        client = client
     )
 
     @Bean
@@ -149,8 +152,7 @@ class RbacAuthConfiguration {
         permissionResourceService: PermissionResourceService,
         permissionGroupPoliciesService: PermissionGroupPoliciesService,
         authResourceGroupDao: AuthResourceGroupDao,
-        dslContext: DSLContext,
-        client: Client
+        dslContext: DSLContext
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
@@ -159,8 +161,7 @@ class RbacAuthConfiguration {
         permissionResourceService = permissionResourceService,
         permissionGroupPoliciesService = permissionGroupPoliciesService,
         authResourceGroupDao = authResourceGroupDao,
-        dslContext = dslContext,
-        client = client
+        dslContext = dslContext
     )
 
     @Bean
@@ -188,13 +189,15 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         iamConfiguration: IamConfiguration,
         iamV2PolicyService: PolicyService,
-        authResourceCodeConverter: AuthResourceCodeConverter
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        permissionSuperManagerService: PermissionSuperManagerService
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
         iamConfiguration = iamConfiguration,
         policyService = iamV2PolicyService,
-        authResourceCodeConverter = authResourceCodeConverter
+        authResourceCodeConverter = authResourceCodeConverter,
+        permissionSuperManagerService = permissionSuperManagerService
     )
 
     @Bean
