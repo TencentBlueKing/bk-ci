@@ -269,7 +269,6 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
   emits('approvedChange', true);
 }, {
   deep: true,
-  immediate: false,
 })
 
 onMounted(async () => {
