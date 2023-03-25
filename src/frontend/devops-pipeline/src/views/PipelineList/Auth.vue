@@ -5,7 +5,6 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
-        :project-name="projectName"
     />
 </template>
 
