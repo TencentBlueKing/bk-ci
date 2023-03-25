@@ -6,6 +6,7 @@
     :project-code="projectCode"
     :ajax-prefix="ajaxPrefix"
     :title="title"
+    :error-code="errorCode"
   />
 </template>
 
@@ -35,6 +36,10 @@ export default {
       type: String,
       default: '',
     },
+    errorCode: {
+      type: Number,
+      default: 0
+    }
   },
   computed: {
     renderComponent() {

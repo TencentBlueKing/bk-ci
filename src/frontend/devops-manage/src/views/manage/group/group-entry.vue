@@ -1,5 +1,6 @@
 <template>
   <permission-main
+    class="permission-main"
     :resource-type="resourceType"
     :resource-code="projectCode"
     :project-code="projectCode"
@@ -57,3 +58,9 @@ export default {
   },
 };
 </script>
+
+<style lang="postcss" scoped>
+  .permission-main {
+    padding: 24px;
+  }
+</style>
