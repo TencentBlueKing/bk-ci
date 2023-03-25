@@ -126,8 +126,7 @@ class TxProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
     projectExtService = projectExtService,
-    projectApprovalService = projectApprovalService,
-    projectTagService = projectTagService
+    projectApprovalService = projectApprovalService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")

@@ -70,8 +70,7 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
-    projectApprovalService: ProjectApprovalService,
-    projectTagService: ProjectTagService
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -85,8 +84,7 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
     projectExtService = projectExtService,
-    projectApprovalService = projectApprovalService,
-    projectTagService = projectTagService
+    projectApprovalService = projectApprovalService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {

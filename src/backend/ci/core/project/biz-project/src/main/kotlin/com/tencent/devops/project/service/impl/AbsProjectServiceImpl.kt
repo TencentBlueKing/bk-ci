@@ -65,7 +65,6 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
-import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -82,7 +81,6 @@ import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
@@ -111,8 +109,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val objectMapper: ObjectMapper,
     private val projectExtService: ProjectExtService,
-    private val projectApprovalService: ProjectApprovalService,
-    private val projectTagService: ProjectTagService
+    private val projectApprovalService: ProjectApprovalService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -256,16 +253,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
             }
-            projectTagService.updateTagByProject(
-                ProjectTagUpdateDTO(
-                    routerTag = "kubernetes-dev-rbac",
-                    projectCodeList = listOf(projectCreateInfo.englishName),
-                    bgId = null,
-                    centerId = null,
-                    deptId = null,
-                    channel = null,
-                )
-            )
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
