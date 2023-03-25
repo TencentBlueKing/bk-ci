@@ -30,6 +30,8 @@ package com.tencent.devops.project.service.permission
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -46,8 +48,11 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
+@Suppress("LongParameterList")
 class RbacProjectPermissionService(
+    private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val projectApprovalService: ProjectApprovalService,
     private val dslContext: DSLContext,
@@ -64,7 +69,11 @@ class RbacProjectPermissionService(
     }
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        return true
+        return authProjectApi.checkProjectUser(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            projectCode = projectCode
+        )
     }
 
     override fun verifyUserProjectPermission(
@@ -73,13 +82,21 @@ class RbacProjectPermissionService(
         userId: String,
         permission: AuthPermission
     ): Boolean {
-        return true
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            resourceCode = projectCode,
+            projectCode = projectCode,
+            permission = permission
+        )
     }
 
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
         authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
+        var authProjectId = ""
         with(authProjectCreateInfo) {
             projectApprovalService.create(
                 userId = userId,
@@ -87,17 +104,14 @@ class RbacProjectPermissionService(
                 approvalStatus = approvalStatus,
                 subjectScopes = subjectScopes
             )
-        }
-
-        // 创建兼容的权限中心项目
-        val authProjectId = try {
-            projectExtService.createCompatibleAuthProject(
-                resourceRegisterInfo = resourceRegisterInfo,
-                authProjectCreateInfo = authProjectCreateInfo
-            )
-        } catch (ignore: Exception) {
-            logger.error("Failed to create compatible auth project", ignore)
-            ""
+            if (approvalStatus == ProjectApproveStatus.APPROVED.status) {
+                // 创建兼容的权限中心项目
+                authProjectId = projectExtService.createOldAuthProject(
+                    userId = userId,
+                    accessToken = accessToken,
+                    projectCreateInfo = projectCreateInfo
+                ) ?: ""
+            }
         }
 
         authResourceApi.createResource(
@@ -166,11 +180,19 @@ class RbacProjectPermissionService(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        return emptyList()
+        return authProjectApi.getUserProjects(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = null
+        )
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        return emptyMap()
+        return authProjectApi.getUserProjectsAvailable(
+            userId = userId,
+            serviceCode = projectAuthServiceCode,
+            supplier = null
+        )
     }
 
     override fun cancelCreateAuthProject(userId: String, projectCode: String) {

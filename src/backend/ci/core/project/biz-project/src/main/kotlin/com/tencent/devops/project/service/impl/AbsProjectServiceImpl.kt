@@ -236,7 +236,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (!needApproval) {
                     projectExtService.createExtProjectInfo(
                         userId = userId,
-                        projectId = projectId,
+                        authProjectId = projectId,
                         accessToken = accessToken,
                         projectCreateInfo = projectInfo,
                         createExtInfo = createExtInfo,

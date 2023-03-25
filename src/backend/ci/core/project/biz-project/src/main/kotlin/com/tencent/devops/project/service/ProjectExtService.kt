@@ -28,8 +28,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 
@@ -41,7 +39,7 @@ interface ProjectExtService {
     @Suppress("LongParameterList")
     fun createExtProjectInfo(
         userId: String,
-        projectId: String,
+        authProjectId: String,
         accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
@@ -53,8 +51,9 @@ interface ProjectExtService {
      *
      * 迁移权限中心过程中，项目需要双写到权限中心
      */
-    fun createCompatibleAuthProject(
-        resourceRegisterInfo: ResourceRegisterInfo,
-        authProjectCreateInfo: AuthProjectCreateInfo
-    ): String
+    fun createOldAuthProject(
+        userId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+    ): String?
 }
