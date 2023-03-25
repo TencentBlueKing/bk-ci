@@ -46,7 +46,7 @@ import {
     RESOURCE_ACTION
 } from '@/utils/permission'
 // 权限指令
-import { PermissionDirective } from 'bk-permission'
+import { PermissionDirective, BkPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import VueCompositionAPI from '@vue/composition-api'
 
@@ -60,6 +60,9 @@ Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
 Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(BkPermission, {
+    i18n
+})
 Vue.use(VueCompositionAPI)
 
 Vue.use(VeeValidate, {

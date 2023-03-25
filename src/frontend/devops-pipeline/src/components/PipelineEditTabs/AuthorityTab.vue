@@ -1,5 +1,5 @@
 <template>
-    <permission-component
+    <bk-permission
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"
@@ -9,16 +9,10 @@
 </template>
 
 <script>
-    import {
-        PermissionComponent
-    } from 'bk-permission'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
         name: 'auth-tab',
-        components: {
-            PermissionComponent
-        },
         mixins: [pipelineOperateMixin],
         data () {
             return {

@@ -1,6 +1,6 @@
 import './permission.css';
 import ajax from '../ajax/index';
-import { version } from '../vue';
+import { version } from '../utils/vue';
 ;
 /**
  * 处理无权限的情况，适用于 vue2

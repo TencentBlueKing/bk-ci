@@ -1,7 +1,7 @@
 import {
     defineComponent,
     version
-} from '../../vue';
+} from '../../utils/vue';
 
 export default defineComponent({
     props: {

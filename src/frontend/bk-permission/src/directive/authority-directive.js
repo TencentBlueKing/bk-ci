@@ -1,6 +1,6 @@
 import './authority-directive.scss';
 import ajax from '../ajax/index';
-import { version } from '../vue';
+import { version } from '../utils/vue';
 
 // vue2 和 vue3 使用的弹框不一样，使用变量接收传入的值
 let handleShowDialog;

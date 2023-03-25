@@ -1,5 +1,5 @@
 <template>
-    <permission-component
+    <bk-permission
         class="pipeline-list-auth"
         :resource-type="resourceType"
         :resource-code="resourceCode"
@@ -10,13 +10,8 @@
 </template>
 
 <script>
-    import { PermissionComponent } from 'bk-permission'
-
     export default {
         name: 'auth-tab',
-        components: {
-            PermissionComponent
-        },
         data () {
             return {
                 resourceType: 'pipeline_group'
