@@ -253,6 +253,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
             }
+            updateProjectRouterTag(projectCreateInfo.englishName)
         } catch (e: DuplicateKeyException) {
             logger.warn("Duplicate project $projectCreateInfo", e)
             if (createExtInfo.needAuth) {
@@ -1024,6 +1025,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     )
 
     abstract fun buildRouterTag(routerTag: String?): String?
+
+    abstract fun updateProjectRouterTag(englishName: String)
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
