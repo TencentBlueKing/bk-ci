@@ -55,9 +55,9 @@ enum class ErrorCodeEnum(
     ),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129014, "Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常"),
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129015, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常"),
-    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2129016, "请检查webConsole网关代理配置")
+    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2129016, "请检查webConsole网关代理配置");
 
-    fun getFormatErrorMessageI18n(): String {
+    fun getErrorMessageI18n(): String {
         return MessageUtil.getMessageByLocale(
             messageCode = "${this.errorCode}",
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

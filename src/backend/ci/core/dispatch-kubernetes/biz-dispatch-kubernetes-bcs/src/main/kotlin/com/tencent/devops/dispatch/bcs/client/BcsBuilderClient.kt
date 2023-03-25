@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.bcs.common.getFormatErrorMessageI18n
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -100,7 +101,7 @@ class BcsBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "${TROUBLE_SHOOTING}获取构建机详情接口异常" +
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessageI18n() +
                         "（Fail to get builder detail, http response code: ${response.code()}"
                 )
             }

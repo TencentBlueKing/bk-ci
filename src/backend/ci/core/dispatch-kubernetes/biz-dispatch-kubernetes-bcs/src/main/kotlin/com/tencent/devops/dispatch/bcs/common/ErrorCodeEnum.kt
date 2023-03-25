@@ -28,6 +28,8 @@
 package com.tencent.devops.dispatch.bcs.common
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
@@ -43,5 +45,12 @@ enum class ErrorCodeEnum(
     VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2128009, "第三方服务-BCS 异常，异常信息 - 获取构建机详情接口异常"),
     CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2128010, "第三方服务-BCS 异常，异常信息 - 创建镜像接口异常"),
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2128014, "第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常"),
-    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2128015, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常"),
+    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2128015, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常");
+
+    fun getErrorMessageI18n(): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "${this.errorCode}",
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
+    }
 }

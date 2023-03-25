@@ -101,10 +101,8 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    combinationI18nMessage(
-                        TROUBLE_SHOOTING,
-                        "${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"
-                    ) + "（Fail to get builder detail, http response code: ${response.code()}"
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessageI18n() +
+                            "（Fail to get builder detail, http response code: ${response.code()}"
                 )
             }
         } catch (e: SocketTimeoutException) {
