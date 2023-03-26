@@ -47,14 +47,15 @@ import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
+@Suppress("LongParameterList")
 class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
-    private val deptService: DeptService,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val rbacCacheService: RbacCacheService
 ) : PermissionProjectService {
 
     companion object {
@@ -139,41 +140,49 @@ class RbacPermissionProjectService(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        val action = RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT)
-        val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
-        val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
-        logger.info("get user projects:$projectList")
-        return projectList
+        logger.info("[rbac] get user projects|userId = $userId")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val action = RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT)
+            val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+            val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
+            logger.info("get user projects:$projectList")
+            return projectList
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects"
+            )
+        }
     }
 
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
-        val managerPermission = checkProjectManager(userId, projectCode)
-        val checkCiManager = group != null && (group == BkAuthGroup.MANAGER || group == BkAuthGroup.CI_MANAGER)
-        // 有管理员权限或者若为校验管理员权限,直接返回是否时管理员成员
-        if (managerPermission || checkCiManager) {
-            return managerPermission
+        logger.info("[rbac] check project user|userId = $userId")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val managerPermission = checkProjectManager(userId, projectCode)
+            val checkCiManager = group != null && (group == BkAuthGroup.MANAGER || group == BkAuthGroup.CI_MANAGER)
+            // 有管理员权限或者若为校验管理员权限,直接返回是否时管理员成员
+            if (managerPermission || checkCiManager) {
+                return managerPermission
+            }
+            val instanceDTO = InstanceDTO()
+            instanceDTO.system = iamConfiguration.systemId
+            instanceDTO.id = projectCode
+            instanceDTO.type = AuthResourceType.PROJECT.value
+            return authHelper.isAllowed(
+                userId,
+                RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
+                instanceDTO
+            )
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to check project user"
+            )
         }
-        val instanceDTO = InstanceDTO()
-        instanceDTO.system = iamConfiguration.systemId
-        instanceDTO.id = projectCode
-        instanceDTO.type = AuthResourceType.PROJECT.value
-        return authHelper.isAllowed(
-            userId,
-            RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
-            instanceDTO
-        )
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        val instanceDTO = InstanceDTO()
-        instanceDTO.system = iamConfiguration.systemId
-        instanceDTO.id = projectCode
-        instanceDTO.type = AuthResourceType.PROJECT.value
-        return authHelper.isAllowed(
-            userId,
-            RbacAuthUtils.buildAction(AuthPermission.MANAGE, authResourceType = AuthResourceType.PROJECT),
-            instanceDTO
-        )
+        return rbacCacheService.checkProjectManager(userId, projectCode)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {

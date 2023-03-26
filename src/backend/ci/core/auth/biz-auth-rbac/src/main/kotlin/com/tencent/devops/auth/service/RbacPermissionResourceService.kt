@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -57,6 +58,7 @@ class RbacPermissionResourceService(
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
+    private val permissionProjectService: PermissionProjectService,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val client: Client
 ) : PermissionResourceService {
@@ -234,16 +236,9 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         checkProjectApprovalStatus(resourceType, resourceCode)
-        val checkProjectManage = permissionService.validateUserResourcePermissionByRelation(
+        val checkProjectManage = permissionProjectService.checkProjectManager(
             userId = userId,
-            action = RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
-            ),
-            projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
-            relationResourceType = null
+            projectCode = projectId
         )
         // TODO 流水线组一期先不上,流水线组权限由项目控制
         if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {

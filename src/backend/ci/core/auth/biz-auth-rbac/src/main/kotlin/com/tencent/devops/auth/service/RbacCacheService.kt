@@ -1,22 +1,35 @@
 package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
-import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
+import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
-class RbacPermissionCacheService @Autowired constructor(
-    val dslContext: DSLContext,
-    val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao
-) : PermissionCacheService {
+@Suppress("MagicNumber")
+class RbacCacheService constructor(
+    private val dslContext: DSLContext,
+    private val authResourceTypeDao: AuthResourceTypeDao,
+    private val authActionDao: AuthActionDao,
+    private val authHelper: AuthHelper,
+    private val iamConfiguration: IamConfiguration
+) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(RbacCacheService::class.java)
+    }
+
     /*获取资源类型下的动作*/
     private val resourceType2ActionCache = CacheBuilder.newBuilder()
         .maximumSize(100)
@@ -31,7 +44,13 @@ class RbacPermissionCacheService @Autowired constructor(
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String/*action*/, ActionInfoVo>()
 
-    override fun listResourceTypes(): List<ResourceTypeInfoVo> {
+    // 用户-管理员项目 缓存， 5分钟有效时间
+    private val projectManager = CacheBuilder.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, List<String>>()
+
+    fun listResourceTypes(): List<ResourceTypeInfoVo> {
         if (resourceTypeCache.asMap().values.isEmpty()) {
             authResourceTypeDao.list(dslContext).forEach {
                 val resourceTypeInfo = ResourceTypeInfoVo(
@@ -46,7 +65,7 @@ class RbacPermissionCacheService @Autowired constructor(
         return resourceTypeCache.asMap().values.toList()
     }
 
-    override fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
+    fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
         if (resourceType2ActionCache.getIfPresent(resourceType) == null) {
             val actionList = authActionDao.list(dslContext, resourceType)
             if (actionList.isEmpty()) {
@@ -69,7 +88,7 @@ class RbacPermissionCacheService @Autowired constructor(
         return resourceType2ActionCache.getIfPresent(resourceType)!!
     }
 
-    override fun getActionInfo(action: String): ActionInfoVo {
+    fun getActionInfo(action: String): ActionInfoVo {
         if (actionCache.getIfPresent(action) == null) {
             val actionRecord = authActionDao.get(dslContext, action)
                 ?: throw ErrorCodeException(
@@ -88,7 +107,7 @@ class RbacPermissionCacheService @Autowired constructor(
         return actionCache.getIfPresent(action)!!
     }
 
-    override fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
+    fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
         if (resourceTypeCache.getIfPresent(resourceType) == null) {
             listResourceTypes()
         }
@@ -97,5 +116,48 @@ class RbacPermissionCacheService @Autowired constructor(
             params = arrayOf(resourceType),
             defaultMessage = "the resource type($resourceType) does not exist"
         )
+    }
+
+    fun checkProjectManager(userId: String, projectCode: String): Boolean {
+        val projectCodes = projectManager.getIfPresent(userId)
+        if (projectCodes != null && projectCodes.contains(projectCode)) {
+            return true
+        }
+        val hasProjectManage = validateUserProjectPermission(
+            userId = userId,
+            projectCode = projectCode,
+            permission = AuthPermission.MANAGE
+        )
+        if (hasProjectManage) {
+            val newProjectCodes = projectManager.getIfPresent(userId)?.toMutableList() ?: mutableListOf()
+            newProjectCodes.add(projectCode)
+            projectManager.put(userId, newProjectCodes)
+        }
+        return hasProjectManage
+    }
+
+    private fun validateUserProjectPermission(
+        userId: String,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        logger.info("[rbac] validate user project permission|userId = $userId|permission=$permission")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val action = RbacAuthUtils.buildAction(permission, authResourceType = AuthResourceType.PROJECT)
+            val instanceDTO = InstanceDTO()
+            instanceDTO.system = iamConfiguration.systemId
+            instanceDTO.id = projectCode
+            instanceDTO.type = AuthResourceType.PROJECT.value
+            return authHelper.isAllowed(
+                userId,
+                action,
+                instanceDTO
+            )
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"
+            )
+        }
     }
 }

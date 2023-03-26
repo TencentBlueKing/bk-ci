@@ -47,14 +47,15 @@ import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
-@Suppress("TooManyFunctions", "LongMethod")
+@Suppress("TooManyFunctions", "LongMethod", "LongParameterList")
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamConfiguration: IamConfiguration,
     private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
-    private val permissionSuperManagerService: PermissionSuperManagerService
+    private val permissionSuperManagerService: PermissionSuperManagerService,
+    private val rbacCacheService: RbacCacheService
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -121,7 +122,7 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            if (permissionSuperManagerService.reviewManagerCheck(
+            if (isManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resource.resourceType,
@@ -224,6 +225,9 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
+            if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+                return actions.associateWith { true }
+            }
             val actionList = actions.map { action ->
                 val actionDTO = ActionDTO()
                 actionDTO.id = action
@@ -280,7 +284,7 @@ class RbacPermissionService constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             // 拥有超级管理员权限,返回所有数据
-            if (permissionSuperManagerService.reviewManagerCheck(
+            if (isManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
@@ -355,7 +359,7 @@ class RbacPermissionService constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             // 如果拥有超管权限,则拥有项目下所有数据
-            if (permissionSuperManagerService.reviewManagerCheck(
+            if (isManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
@@ -391,6 +395,12 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
+            if (rbacCacheService.checkProjectManager(userId = userId, projectCode = projectCode)) {
+                return actions.associate {
+                    val authPermission = it.substringAfterLast("_")
+                    AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+                }
+            }
             val instanceList = resources.map { resource ->
                 val paths = mutableListOf<PathInfoDTO>()
                 resourcesPaths(
@@ -471,5 +481,25 @@ class RbacPermissionService constructor(
                 )
             }
         }
+    }
+
+    /**
+     * 判断是否是管理员
+     */
+    private fun isManager(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        action: String
+    ): Boolean {
+        return rbacCacheService.checkProjectManager(
+            userId = userId,
+            projectCode = projectCode
+        ) || permissionSuperManagerService.reviewManagerCheck(
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            action = action
+        )
     }
 }

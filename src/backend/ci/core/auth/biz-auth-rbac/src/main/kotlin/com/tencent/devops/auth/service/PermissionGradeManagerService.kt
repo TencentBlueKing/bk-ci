@@ -190,7 +190,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .syncPerm(true)
                 .groupName(manageGroupConfig.groupName)
                 .applicant(userId)
-                .reason(IamGroupUtils.buildItsmDefaultReason(projectName, projectCode, true))
+                .reason(IamGroupUtils.buildItsmDefaultReason(projectName, userId, true))
                 .callbackId(callbackId)
                 .callbackUrl(itsmCreateCallBackUrl)
                 .content(itsmContentDTO)
