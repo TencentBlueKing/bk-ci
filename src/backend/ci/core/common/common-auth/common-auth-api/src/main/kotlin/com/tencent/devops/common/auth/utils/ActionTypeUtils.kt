@@ -168,7 +168,10 @@ object ActionTypeUtils {
                 return false
             } else {
                 throw PermissionForbiddenException(
-                    MessageUtil.getMessageByLocale(NOT_MEMBER_AND_NOT_OPEN_SOURCE, I18nUtil.getLanguage())
+                    MessageUtil.getMessageByLocale(
+                        NOT_MEMBER_AND_NOT_OPEN_SOURCE,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
             return false

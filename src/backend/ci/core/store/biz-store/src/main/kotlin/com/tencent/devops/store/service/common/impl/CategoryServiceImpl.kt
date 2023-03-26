@@ -29,9 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
@@ -113,10 +114,11 @@ class CategoryServiceImpl @Autowired constructor(
         val codeCount = categoryDao.countByCode(dslContext, categoryCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(categoryCode),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(categoryCode),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val categoryName = categoryRequest.categoryName
@@ -124,10 +126,11 @@ class CategoryServiceImpl @Autowired constructor(
         val nameCount = categoryDao.countByName(dslContext, categoryName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(categoryName),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(categoryName),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val id = UUIDUtil.generate()
@@ -148,10 +151,11 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryCode != category.categoryCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(categoryCode),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(categoryCode),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
@@ -163,10 +167,11 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryName != category.categoryName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(categoryName),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(categoryName),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
@@ -191,9 +196,10 @@ class CategoryServiceImpl @Autowired constructor(
     override fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>) {
         val categoryCode = it[KEY_CATEGORY_CODE] as String
         val categoryName = it[KEY_CATEGORY_NAME] as String
-        val categoryLanName = MessageCodeUtil.getCodeLanMessage(
+        val categoryLanName = MessageUtil.getCodeLanMessage(
             messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
-            defaultMessage = categoryName
+            defaultMessage = categoryName,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
         categoryList.add(
             Category(

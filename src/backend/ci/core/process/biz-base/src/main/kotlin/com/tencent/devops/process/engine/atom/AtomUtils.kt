@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
@@ -42,7 +43,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -106,10 +107,11 @@ object AtomUtils {
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
-                    errorMsg = MessageCodeUtil.getCodeMessage(
-                        ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        arrayOf(element.name)
-                    ) ?: ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                        params = arrayOf(element.name),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,
                     taskId = task.taskId

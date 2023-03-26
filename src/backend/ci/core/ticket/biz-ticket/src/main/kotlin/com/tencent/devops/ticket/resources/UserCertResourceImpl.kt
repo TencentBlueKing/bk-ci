@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.api.UserCertResource
@@ -360,7 +359,12 @@ class UserCertResourceImpl @Autowired constructor(
             )
         }
         if (certId != null && certId!!.length > 128) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(TicketMessageCode.CERT_ID_TOO_LONG))
+            throw OperationException(
+                MessageUtil.getCodeLanMessage(
+                    TicketMessageCode.CERT_ID_TOO_LONG,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 

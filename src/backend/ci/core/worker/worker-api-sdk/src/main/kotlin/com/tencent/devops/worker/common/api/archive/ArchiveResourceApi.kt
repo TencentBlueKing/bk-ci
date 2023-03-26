@@ -35,10 +35,10 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_PIP
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -72,7 +72,9 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val url = "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get" +
                 "?fileType=$fileType&customFilePath=$purePath"
         val request = buildGet(url)
-        val message = MessageUtil.getMessageByLocale(GET_DOWNLOAD_LINK_REQUEST_ERROR, I18nUtil.getLanguage(userId))
+        val message = MessageUtil.getMessageByLocale(
+            GET_DOWNLOAD_LINK_REQUEST_ERROR, System.getProperty(LOCALE_LANGUAGE)
+        )
         val response = request(request, message)
         val result = try {
             objectMapper.readValue<Result<GetFileDownloadUrlsResponse?>>(response)
@@ -106,7 +108,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             requestBody = requestBody,
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_FILE_FAILED, System.getProperty(LOCALE_LANGUAGE))
         val response = request(request, message)
         try {
             val obj = JsonParser.parseString(response).asJsonObject
@@ -135,7 +137,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_PIPELINE_FILE_FAILED,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            System.getProperty(LOCALE_LANGUAGE)
         )
         val response = request(request, message)
         try {

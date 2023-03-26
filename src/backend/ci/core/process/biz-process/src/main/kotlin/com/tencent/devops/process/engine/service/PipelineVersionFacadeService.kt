@@ -67,7 +67,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )

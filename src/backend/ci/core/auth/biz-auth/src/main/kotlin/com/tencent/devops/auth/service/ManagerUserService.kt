@@ -47,7 +47,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -271,9 +270,11 @@ class ManagerUserService @Autowired constructor(
             LOG.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
+                defaultMessage = MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId))
+                    params = arrayOf(userId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         val managerUser = ManagerUserDTO(
@@ -291,9 +292,11 @@ class ManagerUserService @Autowired constructor(
             LOG.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
+                defaultMessage = MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId))
+                    params = arrayOf(userId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         deleteManagerUser("system", managerId, userId)
@@ -314,9 +317,11 @@ class ManagerUserService @Autowired constructor(
                     LOG.warn("createWhiteUser $managerId $it is exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                        defaultMessage = MessageCodeUtil.getCodeMessage(
+                        defaultMessage = MessageUtil.getMessageByLocale(
                             messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                            params = arrayOf(it))
+                            params = arrayOf(it),
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        )
                     )
                 }
 

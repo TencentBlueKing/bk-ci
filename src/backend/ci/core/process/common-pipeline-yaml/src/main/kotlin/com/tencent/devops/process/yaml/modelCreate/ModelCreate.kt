@@ -81,14 +81,17 @@ class ModelCreate @Autowired constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement(
-            MessageUtil.getMessageByLocale(BUILD_MSG_MANUAL, I18nUtil.getLanguage()),
+            MessageUtil.getMessageByLocale(BUILD_MSG_MANUAL, I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
             "T-1-1-1"
         )
         triggerElementList.add(manualTriggerElement)
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = MessageUtil.getMessageByLocale(BUILD_MSG_TRIGGERS, I18nUtil.getLanguage()),
+            name = MessageUtil.getMessageByLocale(
+                BUILD_MSG_TRIGGERS,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             elements = triggerElementList,
             status = null,
             startEpoch = null,

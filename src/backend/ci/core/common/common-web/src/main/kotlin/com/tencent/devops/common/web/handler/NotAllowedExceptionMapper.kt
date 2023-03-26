@@ -29,11 +29,12 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.jmx.exception.JmxExceptions
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import javax.ws.rs.NotAllowedException
 import javax.ws.rs.core.MediaType
@@ -52,7 +53,10 @@ class NotAllowedExceptionMapper : ExceptionMapper<NotAllowedException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            MessageCodeUtil.generateResponseDataObject<Any>(messageCode = ERROR_CLIENT_REST_ERROR).message
+            MessageUtil.generateResponseDataObject<Any>(
+                messageCode = ERROR_CLIENT_REST_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ).message
         }
 
         JmxExceptions.encounter(exception)

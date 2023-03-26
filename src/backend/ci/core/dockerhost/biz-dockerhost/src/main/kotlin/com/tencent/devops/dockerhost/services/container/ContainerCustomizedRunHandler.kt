@@ -112,15 +112,19 @@ class ContainerCustomizedRunHandler(
                 log(
                     buildId = buildId,
                     red = true,
-                    message = MessageUtil.getMessageByLocale(BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage()) +
-                            "，error message:${er.message}",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "，error message:${er.message}",
                     tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {
                     throw ContainerException(
                         errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
-                        message = MessageUtil.getMessageByLocale(BK_BUILD_IMAGE_NOT_EXIST, I18nUtil.getLanguage())
+                        message = MessageUtil.getMessageByLocale(
+                            BK_BUILD_IMAGE_NOT_EXIST,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        )
                     )
                 } else {
                     throw ContainerException(

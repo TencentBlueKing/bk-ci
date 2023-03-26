@@ -66,7 +66,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class DispatchBuildService @Autowired constructor(
@@ -188,17 +187,19 @@ class DispatchBuildService @Autowired constructor(
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorCode,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.formatErrorMessage,
                     dispatchBuild.log.troubleShooting +
-                            MessageUtil.getMessageByLocale(BK_INTERFACE_REQUEST_TIMEOUT, I18nUtil.getLanguage())
+                            MessageUtil.getMessageByLocale(BK_INTERFACE_REQUEST_TIMEOUT,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            )
                 )
             }
             throw BuildFailureException(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE, I18nUtil.getLanguage()),
-                    e.message,
-                    dispatchBuild.helpUrl
+                MessageUtil.getMessageByLocale(
+                    BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("${e.message}", "${dispatchBuild.helpUrl}")
                 )
             )
         }
@@ -484,14 +485,11 @@ class DispatchBuildService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                dispatchBuild.log.troubleShooting +
-                        MessageFormat.format(
-                            MessageUtil.getMessageByLocale(
-                                BK_BUILD_MACHINE_STARTUP_FAILED,
-                                I18nUtil.getLanguage(userId)
-                            ),
-                            failedMsg ?: ""
-                        )
+                dispatchBuild.log.troubleShooting + MessageUtil.getMessageByLocale(
+                            BK_BUILD_MACHINE_STARTUP_FAILED,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf(failedMsg ?: "")
+                )
             )
         }
     }

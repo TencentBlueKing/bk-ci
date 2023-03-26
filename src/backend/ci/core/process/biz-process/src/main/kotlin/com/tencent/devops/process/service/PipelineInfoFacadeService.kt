@@ -31,7 +31,6 @@ import com.fasterxml.jackson.core.JsonParseException
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
-import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -54,7 +53,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
@@ -133,21 +131,25 @@ class PipelineInfoFacadeService @Autowired constructor(
             pipelineId = pipelineId,
             permission = permission,
             message = MessageUtil.getMessageByLocale(
-                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                 language,
                 arrayOf(
                     userId,
                     projectId,
-                    if (language == "zh_CN") permission.alias else permission.value,
+                    permission.getI18n(),
                     pipelineId
                 )
             )
         )
 
         val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
-            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
+            ?: throw OperationException(
+                MessageUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+            )
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
-            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
+            ?: throw OperationException(
+                MessageUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+            )
 
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
@@ -163,7 +165,11 @@ class PipelineInfoFacadeService @Autowired constructor(
         if (!permissionCheck) {
             logger.warn("$userId|$projectId uploadPipeline permission check fail")
             throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeMessage(USER_NEED_PIPELINE_X_PERMISSION, arrayOf(AuthPermission.CREATE.value))
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NEED_PIPELINE_X_PERMISSION,
+                    params = arrayOf(AuthPermission.CREATE.getI18n()),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         val model = pipelineModelAndSetting.model
@@ -255,12 +261,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                     pipelineId = "*",
                     permission = permission,
                     message = MessageUtil.getMessageByLocale(
-                        CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                         language,
                         arrayOf(
                             userId,
                             projectId,
-                            if (language == "zh_CN") permission.alias else permission.value,
+                            permission.getI18n(),
                             "*"
                         )
                     )
@@ -480,9 +486,10 @@ class PipelineInfoFacadeService @Autowired constructor(
             // 判断用户是否为项目管理员
             if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 val defaultMessage = "admin"
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                val permissionMsg = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
-                    defaultMessage = defaultMessage
+                    defaultMessage = defaultMessage,
+                    language = I18nUtil.getLanguage(userId)
                 )
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -543,7 +550,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )
@@ -561,7 +568,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                     permission = AuthPermission.CREATE
                 )
             ) {
-                val permission = AuthPermission.CREATE
                 throw PermissionForbiddenException(
                     MessageUtil.getMessageByLocale(
                         USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
@@ -569,7 +575,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            if (language == "zh_CN") permission.alias else permission.value,
+                            AuthPermission.CREATE.getI18n(),
                             "*"
                         )
                     )
@@ -682,7 +688,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            if (language == "zh_CN") permission.alias else permission.value,
+                            permission.getI18n(),
                             pipelineId
                         )
                     )
@@ -830,7 +836,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )
@@ -935,7 +941,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            if (language == "zh_CN") permission.alias else permission.value,
+                            permission.getI18n(),
                             pipelineId
                         )
                     )

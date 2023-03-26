@@ -40,7 +40,6 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -260,10 +259,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             }
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 if (it.emailType == null || it.bodyFormat == null) {
-                    return MessageCodeUtil.generateResponseDataObject(
+                    return MessageUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf("${it.bodyFormat} or ${it.emailType}"),
-                        data = false
+                        data = false,
+                        language = I18nUtil.getLanguage(userId)
                     )
                 }
                 notifyTypeScopeSet.add(NotifyType.EMAIL.name)
@@ -272,10 +272,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
         // 添加的信息中的模板类型是非法数据
         if (notifyTypeScopeSet.size == 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("notifyType"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -289,10 +290,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             templateName = addNotifyMessageTemplateRequest.templateName
         )
         if (null != commonTplByCode || null != commonTplByName) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("Code/Name"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -372,10 +374,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasEmail = true
                 notifyTypeScopeSet.add(NotifyType.EMAIL.name)
             } else if (it.notifyTypeScope.contains(NotifyType.EMAIL.name) && hasEmail) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
 
@@ -383,10 +386,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasRtx = true
                 notifyTypeScopeSet.add(NotifyType.RTX.name)
             } else if (it.notifyTypeScope.contains(NotifyType.RTX.name) && hasRtx) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
 
@@ -394,10 +398,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasWechat = true
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             } else if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && hasWechat) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
 
@@ -405,19 +410,21 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasWeworkGroup = true
                 notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
             } else if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name) && hasWeworkGroup) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
         }
 
         if (!updateOtherNotifyMessageTemplate(notifyMessageTemplateRequest, notifyTypeScopeSet)) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("notifyType"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -603,10 +610,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(templateCode),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
 
         val sendAllNotify = request.notifyType == null
@@ -754,10 +762,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 1.查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, request.templateCode)
-                ?: return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf(request.templateCode),
-                    null
+                ?: return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(request.templateCode),
+                    data = null,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
 
         val notifyContext = when (request.notifyType.name) {

@@ -255,7 +255,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 status = 1,
                 message = MessageUtil.getMessageByLocale(
                     "${ErrorCodeEnum.IMAGE_CHECK_LEGITIMATE_OR_RETRY.errorCode}"
-                    , I18nUtil.getLanguage()
+                    , I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + if (!msg.isNullOrBlank()) {
                     "errormessage: $msg"
                 } else {
@@ -279,7 +279,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     status = 1,
                     message =  MessageUtil.getMessageByLocale(
                         "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}",
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }

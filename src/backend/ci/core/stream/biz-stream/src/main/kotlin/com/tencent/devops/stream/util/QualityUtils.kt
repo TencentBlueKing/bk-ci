@@ -41,7 +41,7 @@ object QualityUtils {
     private const val BK_ANTICIPATE = "BkAnticipate"// 预期
 
     private fun getI18n(key: String): String{
-        return MessageUtil.getMessageByLocale(key, I18nUtil.getLanguage())
+        return MessageUtil.getMessageByLocale(key, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {

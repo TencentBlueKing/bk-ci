@@ -162,7 +162,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                         + "(System Error) - ${agentResult.message}"
             )
@@ -177,7 +178,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
                 errorMsg = MessageUtil.getMessageByLocale(
                     THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,
-                    I18nUtil.getLanguage()
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
@@ -190,9 +191,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
-                )
-                        + "(System Error) - $dispatchType agent is null"
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "(System Error) - $dispatchType agent is null"
             )
             return
         }
@@ -206,7 +207,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = MessageUtil.getMessageByLocale(
                     CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(dispatchType.displayName)
                 )
             )
@@ -249,7 +250,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         event,
                         MessageUtil.getMessageByLocale(
                             BUILD_MACHINE_UPGRADE_IN_PROGRESS,
-                            I18nUtil.getLanguage()
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ) + " - ${agent.hostname}/${agent.ip}"
                     )
                     return false
@@ -288,8 +289,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             } else {
                 log(
                     event,
-                    MessageUtil.getMessageByLocale(BUILD_MACHINE_BUSY, I18nUtil.getLanguage())
-                            + "(Agent is busy) - ${agent.hostname}/${agent.ip}")
+                    MessageUtil.getMessageByLocale(
+                        BUILD_MACHINE_BUSY,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -411,9 +414,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMessage = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
-                )
-                        + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
@@ -429,9 +432,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
                 errorMessage = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
-                )
-                        + "System Error) - ${dispatchType.envName}: agent is null"
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "System Error) - ${dispatchType.envName}: agent is null"
             )
             return
         }
@@ -448,7 +451,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
                 errorMessage = MessageUtil.getMessageByLocale(
                     BUILD_NODE_IS_EMPTY,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(dispatchType.envName)
                 ) + "build cluster： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )

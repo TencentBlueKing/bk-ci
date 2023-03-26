@@ -48,7 +48,8 @@ import javax.ws.rs.ext.ExceptionMapper
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            defaultMessage = exception.defaultMessage
         )
 
         return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)

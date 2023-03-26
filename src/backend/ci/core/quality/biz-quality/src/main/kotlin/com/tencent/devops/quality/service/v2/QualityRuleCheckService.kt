@@ -704,7 +704,8 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
-            val bkSeeDetails = MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage())
+            val bkSeeDetails =
+                MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>$bkSeeDetails</a>"
             } else {

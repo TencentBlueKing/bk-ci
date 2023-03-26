@@ -30,10 +30,11 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreCommentReplyRecord
 import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
@@ -126,7 +127,11 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
-        ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(commentId))
+        ?: return MessageUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(commentId),
+            language = I18nUtil.getLanguage(userId)
+        )
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
         if (userDeptNameResult.isNotOk()) {
             return Result(userDeptNameResult.status, userDeptNameResult.message ?: "")

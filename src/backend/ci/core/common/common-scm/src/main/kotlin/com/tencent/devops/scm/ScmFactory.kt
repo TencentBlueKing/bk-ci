@@ -32,8 +32,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
 import com.tencent.devops.scm.code.CodeP4ScmImpl
@@ -166,13 +167,19 @@ object ScmFactory {
             ScmType.CODE_P4 -> {
                 if (passPhrase == null) {
                     throw ScmException(
-                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY),
+                        MessageUtil.getCodeLanMessage(
+                            messageCode = RepositoryMessageCode.PWD_EMPTY,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         ScmType.CODE_P4.name
                     )
                 }
                 if (userName == null) {
                     throw ScmException(
-                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY),
+                        MessageUtil.getCodeLanMessage(
+                            RepositoryMessageCode.USER_NAME_EMPTY,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         ScmType.CODE_P4.name
                     )
                 }

@@ -294,7 +294,10 @@ class RepositoryDao {
                 query.and(PROJECT_ID.eq(projectId))
             }
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(GIT_NOT_FOUND, I18nUtil.getLanguage(), arrayOf(""))
+                MessageUtil.getMessageByLocale(
+                    GIT_NOT_FOUND, I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("")
+                )
             )
         }
     }
@@ -306,7 +309,11 @@ class RepositoryDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
                 .fetchOne() ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(GIT_NOT_FOUND, I18nUtil.getLanguage(), arrayOf(repositoryName))
+                MessageUtil.getMessageByLocale(
+                    GIT_NOT_FOUND,
+                    I18nUtil.getLanguage(com.tencent.devops.common.web.utils.I18nUtil.getRequestUserId()),
+                    arrayOf(repositoryName)
+                )
                 )
         }
     }

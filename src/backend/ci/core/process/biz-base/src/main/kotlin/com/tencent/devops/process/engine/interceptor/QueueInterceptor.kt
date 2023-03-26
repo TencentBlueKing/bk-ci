@@ -138,7 +138,10 @@ class QueueInterceptor @Autowired constructor(
             setting.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = MessageUtil.getMessageByLocale(ERROR_PIPELINE_QUEUE_FULL, I18nUtil.getLanguage())
+                    message = MessageUtil.getMessageByLocale(
+                        ERROR_PIPELINE_QUEUE_FULL,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             queueCount >= setting.maxQueueSize -> {
                 if (groupName == null) {

@@ -37,6 +37,7 @@ import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_BUILD_BASE_INFO_FAIL
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_FILE_FAILED
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -49,7 +50,6 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -69,8 +69,7 @@ import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
-import java.util.Base64
-import java.util.Locale
+import java.util.*
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 
@@ -80,7 +79,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val request = buildGet(path)
             val response = request(
                 request,
-                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
             )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
@@ -166,7 +165,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            System.getProperty(LOCALE_LANGUAGE)
         )
         val response = request(request, message)
         try {
@@ -278,7 +277,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            System.getProperty(LOCALE_LANGUAGE)
         )
         val response = request(request, message)
         try {

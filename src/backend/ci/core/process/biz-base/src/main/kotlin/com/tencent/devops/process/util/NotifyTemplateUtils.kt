@@ -44,7 +44,7 @@ object NotifyTemplateUtils {
     fun getCommonShutdownSuccessContent(): String {
         return MessageUtil.getMessageByLocale(
             COMMON_SHUTDOWN_SUCCESS_CONTENT,
-            I18nUtil.getLanguage(),
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             arrayOf(
                 PROJECT_NAME_CHINESE,
                 PIPELINE_NAME,
@@ -58,7 +58,7 @@ object NotifyTemplateUtils {
     fun getCommonShutdownFailureContent(): String {
         return MessageUtil.getMessageByLocale(
             COMMON_SHUTDOWN_FAILURE_CONTENT,
-            I18nUtil.getLanguage(),
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             arrayOf(
                 PROJECT_NAME_CHINESE,
                 PIPELINE_NAME,

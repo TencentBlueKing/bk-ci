@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.dao
 
 import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.ticket.tables.TCert
 import com.tencent.devops.model.ticket.tables.records.TCertRecord
 import org.jooq.DSLContext
@@ -54,7 +55,11 @@ class CertDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.eq(certId))
                     .fetchOne() ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(), arrayOf(certId))
+                MessageUtil.getMessageByLocale(
+                    CERT_NOT_FOUND,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(certId)
+                )
             )
         }
     }

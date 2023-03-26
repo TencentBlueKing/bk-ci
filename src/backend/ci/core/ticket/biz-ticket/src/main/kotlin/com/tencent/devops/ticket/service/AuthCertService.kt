@@ -53,7 +53,10 @@ class AuthCertService @Autowired constructor(
         val certInfos = certService.list(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(BK_NO_CREDENTIAL, I18nUtil.getLanguage())}")
+            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+                BK_NO_CREDENTIAL,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -72,7 +75,9 @@ class AuthCertService @Autowired constructor(
         val certInfos = certService.getCertByIds(ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (certInfos == null || certInfos.isEmpty()) {
-            logger.info("$ids ${MessageUtil.getMessageByLocale(BK_NO_CREDENTIAL, I18nUtil.getLanguage())}")
+            logger.info("$ids ${MessageUtil.getMessageByLocale(
+                BK_NO_CREDENTIAL, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -102,7 +107,10 @@ class AuthCertService @Autowired constructor(
             certId = keyword)
         val result = SearchInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(BK_NO_CERT, I18nUtil.getLanguage())}")
+            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+                BK_NO_CERT, 
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

@@ -32,12 +32,13 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.records.TAtomEnvInfoRecord
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -129,11 +130,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             val params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = params,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                    params = params
-                )
+                params = params
             )
         }
         // 2、根据插件代码和版本号查找插件运行时信息
@@ -220,21 +217,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             val params = arrayOf(projectCode, atomName)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = params,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                    params = params
-                )
+                params = params
             )
         }
         // 查不到当前插件信息则中断流程
         val atomEnv = atomEnvResult.data ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-            params = arrayOf(projectCode, atomName),
-            defaultMessage = MessageCodeUtil.getCodeMessage(
-                messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = arrayOf(projectCode, atomName)
-            )
+            params = arrayOf(projectCode, atomName)
         )
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
@@ -522,10 +511,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             }
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(
+            MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$atomCode+$version"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
     }

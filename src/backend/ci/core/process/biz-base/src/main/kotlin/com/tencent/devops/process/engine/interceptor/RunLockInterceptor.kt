@@ -68,13 +68,14 @@ class RunLockInterceptor @Autowired constructor(
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
             Response(
                 ERROR_PIPELINE_LOCK.toInt(),
-                MessageUtil.getMessageByLocale(ERROR_PIPELINE_LOCK, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(ERROR_PIPELINE_LOCK, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
-                logger.info("[$pipelineId]" +
-                        MessageUtil.getMessageByLocale(BK_PIPELINE_SINGLE_BUILD, I18nUtil.getLanguage()))
+                logger.info("[$pipelineId]" + MessageUtil.getMessageByLocale(
+                    BK_PIPELINE_SINGLE_BUILD, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)
@@ -102,7 +103,7 @@ class RunLockInterceptor @Autowired constructor(
                 logger.info("[$pipelineId] " +
                         MessageUtil.getMessageByLocale(
                             BK_MUTEX_GROUP_SINGLE_BUILD,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf("$concurrencyGroup")
                         )
                 )

@@ -463,7 +463,7 @@ class YamlTemplate<T>(
                     throw YamlFormatException(
                         MessageUtil.getMessageByLocale(
                             ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf(fromPath, key)
                         )
                     )

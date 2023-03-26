@@ -142,7 +142,7 @@ abstract class AbstractDockerHostBuildService constructor(
                 buildId = dockerBuildInfo.buildId,
                 message = MessageUtil.getMessageByLocale(
                     BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START,
-                    I18nUtil.getLanguage()
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 tag = taskId,
                 containerHashId = dockerBuildInfo.containerHashId
@@ -163,7 +163,7 @@ abstract class AbstractDockerHostBuildService constructor(
                 val errorMessage = MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     imageName
                 ) + "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
@@ -177,7 +177,7 @@ abstract class AbstractDockerHostBuildService constructor(
                 val errorMessage = MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     imageName
                 ) +
@@ -194,14 +194,17 @@ abstract class AbstractDockerHostBuildService constructor(
                     buildId = dockerBuildInfo.buildId,
                     message = MessageUtil.getMessageByLocale(
                         BK_PULL_IMAGE_FAILED_ERROR_MESSAGE,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "${t.message}",
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = MessageUtil.getMessageByLocale(BK_TRY_LOCAL_IMAGE_START, I18nUtil.getLanguage()),
+                    message = MessageUtil.getMessageByLocale(
+                        BK_TRY_LOCAL_IMAGE_START,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
@@ -229,7 +232,10 @@ abstract class AbstractDockerHostBuildService constructor(
         val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
         log(
             buildId,
-            MessageUtil.getMessageByLocale(BK_START_PULL_IMAGE, I18nUtil.getLanguage()) + dockerImageName,
+            MessageUtil.getMessageByLocale(
+                BK_START_PULL_IMAGE,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ) + dockerImageName,
             taskId,
             containerHashId
         )
@@ -237,7 +243,10 @@ abstract class AbstractDockerHostBuildService constructor(
             .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
         log(
             buildId,
-            MessageUtil.getMessageByLocale(BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV, I18nUtil.getLanguage()),
+            MessageUtil.getMessageByLocale(
+                BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             taskId,
             containerHashId
         )
@@ -339,7 +348,7 @@ abstract class AbstractDockerHostBuildService constructor(
                         red = false,
                         message = MessageUtil.getMessageByLocale(
                             BK_PULLING_IMAGE,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf("$lays", "$currentProgress")
                         ),
                         tag = startTaskId,

@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -36,7 +37,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -65,7 +66,10 @@ object PipelineUtils {
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
                 logger.warn("Pipeline's start params Name is iregular")
                 throw OperationException(
-                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR)
+                    message = MessageUtil.getCodeLanMessage(
+                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         }

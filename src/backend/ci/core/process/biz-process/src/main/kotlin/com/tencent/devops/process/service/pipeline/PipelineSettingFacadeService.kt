@@ -99,7 +99,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         setting.projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         setting.pipelineId
                     )
                 )
@@ -170,7 +170,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )

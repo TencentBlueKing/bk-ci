@@ -341,7 +341,7 @@ object ScriptYmlUtils {
                 throw YamlFormatException(
                     MessageUtil.getMessageByLocale(
                         ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf("", index)
                     )
                 )
@@ -415,7 +415,7 @@ object ScriptYmlUtils {
             throw YamlFormatException(
                 MessageUtil.getMessageByLocale(
                     ERROR_YAML_FORMAT_EXCEPTION,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf("runs-on", "${e.path[0]?.fieldName}", "${e.targetType?.name}", "${e.message}")
                 )
             )
@@ -438,7 +438,7 @@ object ScriptYmlUtils {
                 throw YamlFormatException(
                     MessageUtil.getMessageByLocale(
                         ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf("oldStep")
                     )
                 )
@@ -449,7 +449,7 @@ object ScriptYmlUtils {
                 throw YamlFormatException(
                     MessageUtil.getMessageByLocale(
                         ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf(preStep.id)
                     )
                 )
@@ -550,7 +550,7 @@ object ScriptYmlUtils {
                 throw YamlFormatException(
                     MessageUtil.getMessageByLocale(
                         ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }
@@ -981,7 +981,7 @@ object ScriptYmlUtils {
             throw YamlFormatException(
                 MessageUtil.getMessageByLocale(
                     ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL,
-                    I18nUtil.getLanguage()
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

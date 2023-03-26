@@ -110,25 +110,28 @@ class BuildAgentBuildResourceImpl constructor(
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
         if (projectId.isBlank()) {
             throw ParamBlankException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(ERROR_INVALID_PARAM_, I18nUtil.getLanguage()),
-                    "projectId"
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("projectId")
                 )
             )
         }
         if (agentId.isBlank()) {
             throw ParamBlankException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(ERROR_INVALID_PARAM_, I18nUtil.getLanguage()),
-                    "agentId"
-                )
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("agentId")
+                ),
             )
         }
         if (secretKey.isBlank()) {
             throw ParamBlankException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(ERROR_NEED_PARAM_, I18nUtil.getLanguage()),
-                    "secretKey"
+                MessageUtil.getMessageByLocale(
+                    ERROR_NEED_PARAM_,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("secretKey")
                 )
             )
         }

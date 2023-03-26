@@ -103,4 +103,8 @@ object I18nUtil {
             getDefaultLocaleLanguage()
         }
     }
+
+    fun getMessageByLocale(chinese: String, english: String?): String {
+        return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english
+    }
 }

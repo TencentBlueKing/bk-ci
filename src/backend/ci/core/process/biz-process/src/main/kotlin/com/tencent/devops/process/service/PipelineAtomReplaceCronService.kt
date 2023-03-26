@@ -45,7 +45,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -226,11 +225,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     val projectInfoRecord = client.get(ServiceProjectResource::class).get(projectId).data
                         ?: throw ErrorCodeException(
                             errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                            params = arrayOf(projectId),
-                            defaultMessage = MessageCodeUtil.getCodeMessage(
-                                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                                params = arrayOf(projectId)
-                            )
+                            params = arrayOf(projectId)
                         )
                     handleProjectPipelineAtom(
                         project = ProjectBaseInfo(projectInfoRecord.id, projectInfoRecord.englishName),
@@ -666,9 +661,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             if (installFlag != true) {
                                 throw ErrorCodeException(
                                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
-                                    defaultMessage = MessageCodeUtil
-                                        .getCodeLanMessage(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID)
+                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
                                 )
                             }
                         }
@@ -737,8 +730,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             if (projectManagers == null || projectManagers.isEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL
                 )
             }
             projectManager = projectManagers[0]

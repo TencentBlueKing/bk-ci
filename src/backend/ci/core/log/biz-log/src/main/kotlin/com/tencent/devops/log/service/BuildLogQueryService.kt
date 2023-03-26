@@ -421,7 +421,7 @@ class BuildLogQueryService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") AuthPermission.EDIT.alias else AuthPermission.EDIT.value,
+                        AuthPermission.EDIT.getI18n(),
                         permission.alias
                     )
                 )

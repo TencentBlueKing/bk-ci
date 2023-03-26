@@ -81,7 +81,10 @@ object FileStoreUtils {
             throw TaskExecuteException(
                 errorCode = MIRROR_FILE_SAVE_FAILED.toInt(),
                 errorType = ErrorType.USER,
-                errorMsg = MessageUtil.getMessageByLocale(MIRROR_FILE_SAVE_FAILED, I18nUtil.getLanguage())
+                errorMsg = MessageUtil.getMessageByLocale(
+                    MIRROR_FILE_SAVE_FAILED,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         } finally {
             closeQuietily(ips)

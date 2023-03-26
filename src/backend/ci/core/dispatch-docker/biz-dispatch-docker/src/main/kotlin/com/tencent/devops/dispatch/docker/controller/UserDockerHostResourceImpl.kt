@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
@@ -56,7 +55,6 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -238,7 +236,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 ),
@@ -263,9 +261,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias
+                defaultMessage = permission.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,

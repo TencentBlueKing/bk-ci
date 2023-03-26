@@ -34,13 +34,13 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_CREDEN
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_CUSTOM_FILE_FAILED
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
@@ -111,7 +111,10 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(
+            UPLOAD_CUSTOM_FILE_FAILED,
+            System.getProperty(LOCALE_LANGUAGE)
+        )
         val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
@@ -174,7 +177,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val message = MessageUtil.getMessageByLocale(
             ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            System.getProperty(LOCALE_LANGUAGE)
         )
         val response = request(request, message)
         try {
@@ -281,7 +284,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, System.getProperty(LOCALE_LANGUAGE))
         )
         return jacksonObjectMapper().readValue(responseContent)
     }

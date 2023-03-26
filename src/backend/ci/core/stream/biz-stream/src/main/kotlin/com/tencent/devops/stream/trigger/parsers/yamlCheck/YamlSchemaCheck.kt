@@ -232,7 +232,7 @@ private fun JsonNode.checkVariablesFormat() {
             throw YamlFormatException(
                 MessageUtil.getMessageByLocale(
                     ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL,
-                    I18nUtil.getLanguage()
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

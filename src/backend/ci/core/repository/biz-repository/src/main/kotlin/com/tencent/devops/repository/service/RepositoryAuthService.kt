@@ -59,7 +59,10 @@ class RepositoryAuthService @Autowired constructor(
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
         if (repositoryInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(BK_PROJECT_NO_CODE_BASE, I18nUtil.getLanguage())}")
+            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+                BK_PROJECT_NO_CODE_BASE, 
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -81,7 +84,9 @@ class RepositoryAuthService @Autowired constructor(
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             repositoryInfos = repositoryService.getInfoByHashIds(ids as List<String>)
             if (repositoryInfos == null) {
-                logger.info("$ids ${MessageUtil.getMessageByLocale(BK_CODE_REPO_NOT_MATCHED, I18nUtil.getLanguage())}")
+                logger.info("$ids ${MessageUtil.getMessageByLocale(
+                    BK_CODE_REPO_NOT_MATCHED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )}")
                 return result.buildFetchInstanceFailResult()
             }
         }

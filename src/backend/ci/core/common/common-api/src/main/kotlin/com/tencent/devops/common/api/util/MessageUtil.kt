@@ -34,6 +34,7 @@ import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
 import java.text.MessageFormat
 import com.tencent.devops.common.api.pojo.Result
+import java.net.URLDecoder
 import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
@@ -342,12 +343,39 @@ object MessageUtil {
     @Suppress("UNCHECKED_CAST")
     fun <T> generateResponseDataObject(
         messageCode: String,
-        params: Array<String>?,
-        data: T?,
-        language: String
+        params: Array<String>? = null,
+        data: T? = null,
+        language: String,
+        defaultMessage: String? = null
     ): Result<T> {
-        val message = getMessageByLocale(messageCode, language, params)
+        val message = getMessageByLocale(
+            messageCode = messageCode,
+            language = language,
+            params = params,
+            defaultMessage = defaultMessage
+        )
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)
+    }
+
+    /**
+     * 获取code对应的中英文信息
+     * @param messageCode code
+     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
+     * @return Result响应结果对象
+     */
+    fun getCodeLanMessage(
+        messageCode: String,
+        defaultMessage: String? = null,
+        params: Array<String>? = null,
+        checkUrlDecoder: Boolean = false,
+        language: String
+    ): String {
+        return getMessageByLocale(
+            messageCode = messageCode,
+            params = params,
+            language = language,
+            defaultMessage = defaultMessage
+        ).let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
     }
 }

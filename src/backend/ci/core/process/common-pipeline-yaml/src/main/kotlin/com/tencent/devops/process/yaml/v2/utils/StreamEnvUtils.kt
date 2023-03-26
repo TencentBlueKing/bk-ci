@@ -40,7 +40,7 @@ object StreamEnvUtils {
                 throw YamlFormatException(
                     MessageUtil.getMessageByLocale(
                         ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf(fileName ?: "")
                     )
                 )
@@ -51,7 +51,7 @@ object StreamEnvUtils {
                     throw YamlFormatException(
                         MessageUtil.getMessageByLocale(
                             ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf(fileName ?: "", "key", "128", t)
                         )
                     )
@@ -60,7 +60,7 @@ object StreamEnvUtils {
                 if (u != null && u.toString().length > 4000) {
                     throw YamlFormatException(MessageUtil.getMessageByLocale(
                         ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf(fileName ?: "", "value", "4k", t)
                     ))
                 }

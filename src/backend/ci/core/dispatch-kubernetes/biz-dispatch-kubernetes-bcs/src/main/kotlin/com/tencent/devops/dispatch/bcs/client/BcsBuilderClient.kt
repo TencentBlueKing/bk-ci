@@ -121,7 +121,7 @@ class BcsBuilderClient @Autowired constructor(
                     formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         GET_BUILD_MACHINE_DETAILS_TIMEOUT,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + ", url: $url"
                 )
             }
@@ -369,8 +369,10 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        MessageUtil.getMessageByLocale(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION, I18nUtil.getLanguage()) +
-                        "（Fail to build image, http response code: ${response.code()}"
+                        MessageUtil.getMessageByLocale(
+                            BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ) + "（Fail to build image, http response code: ${response.code()}"
                     )
                 }
                 val responseData: BcsResult<BcsTaskResp> = objectMapper.readValue(responseContent)

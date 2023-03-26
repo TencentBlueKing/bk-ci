@@ -53,7 +53,8 @@ class AgentLessDockerHostResourceImpl @Autowired constructor(
                     " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             Result(
                 e.errorCodeEnum.errorCode,
-                MessageUtil.getMessageByLocale(BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage()) +
+                MessageUtil.getMessageByLocale(
+                    BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())) +
                         ": ${e.message}", "")
         }
     }

@@ -55,7 +55,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.RegexUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
@@ -133,7 +132,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -378,7 +377,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val userDeptList = storeUserService.getUserDeptList(userId)
         val futureList = mutableListOf<Future<MarketAtomResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
-        labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
+        labelInfoList.add(
+            MarketMainItemLabel(LATEST, MessageUtil.getCodeLanMessage(LATEST, language = I18nUtil.getLanguage(userId)))
+        )
         futureList.add(
             doList(
                 userId = userId,
@@ -398,7 +399,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 urlProtocolTrim = urlProtocolTrim
             )
         )
-        labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
+        labelInfoList.add(
+            MarketMainItemLabel(
+                HOTTEST,
+                MessageUtil.getCodeLanMessage(HOTTEST, language = I18nUtil.getLanguage(userId))
+            )
+        )
         futureList.add(
             doList(
                 userId = userId,
@@ -424,9 +430,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             if (classifyCode != "trigger") {
                 val classifyName = it[KEY_CLASSIFY_NAME] as String
-                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                    defaultMessage = classifyName
+                val classifyLanName = MessageUtil.getCodeLanMessage(
+                    messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                    defaultMessage = classifyName,
+                    language = I18nUtil.getLanguage(userId)
                 )
                 labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
                 futureList.add(
@@ -650,7 +657,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeType = storeErrorCodeInfo.storeType.type.toByte()
         )
         if (!isStoreMember) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val errorCodes = storeErrorCodeInfo.errorCodes
         // 校验code码是否符合插件自定义错误码规范
@@ -730,9 +741,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyCode = record[tClassify.CLASSIFY_CODE]
             val classifyName = record[tClassify.CLASSIFY_NAME]
             val classifyLanName = if (classifyCode != null) {
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                    defaultMessage = classifyName
+                MessageUtil.getCodeLanMessage(
+                    messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                    defaultMessage = classifyName,
+                    language = I18nUtil.getLanguage(userId)
                 )
             } else classifyName
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
@@ -840,7 +852,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val newest = marketAtomDao.getNewestAtomByCode(dslContext, atomCode)
         val latest = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
         return if (null == newest || null == latest) {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
+            MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             val record = if (latest.id != newest.id &&
                 (newest.atomStatus as Byte).toInt() == AtomStatusEnum.TESTING.status
@@ -867,7 +883,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("installAtom params:[$accessToken|$userId|$channelCode|$installAtomReq]")
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, installAtomReq.atomCode)
         if (null == atom || atom.deleteFlag == true) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID, false)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         return storeProjectService.installStoreComponent(
             userId = userId,
@@ -893,10 +913,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         logger.info("setAtomBuildStatus|$userId,atomCode:$atomCode,version:$version,atomStatus:$atomStatus,msg:$msg")
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version)
         if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf("$atomCode+$version"),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$atomCode+$version"),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         } else {
             // 只有处于构建中的插件才允许改构建结束后的构建状态
@@ -985,14 +1006,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val type = StoreTypeEnum.ATOM.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, type)
         if (!isOwner) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val releasedCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
-                arrayOf(atomCode)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 如果已经有流水线在使用该插件，则不能删除
@@ -1000,9 +1026,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             client.get(ServiceMeasurePipelineResource::class).batchGetPipelineCountByAtomCode(atomCode, null).data
         val pipelines = pipelineStat?.get(atomCode) ?: 0
         if (pipelines > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
-                arrayOf(atomCode)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_USED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 删除仓库插件包文件
@@ -1177,8 +1204,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else {
                     false
                 }
-                val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
-                val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
+                val requiredName = MessageUtil.getCodeLanMessage(
+                    messageCode = REQUIRED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+                val defaultName = MessageUtil.getCodeLanMessage(
+                    messageCode = DEFAULT,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
                 if ((type == "selector" && multiple) ||
                     type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
                 ) {
@@ -1229,6 +1262,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Suppress("UNCHECKED_CAST")
     private fun generateV2Yaml(atom: TAtomRecord, defaultShowFlag: Boolean?): String {
+        val userId = I18nUtil.getRequestUserId()
         val sb = StringBuilder()
         if (defaultShowFlag != null && defaultShowFlag) {
             sb.append("h2. ${atom.name}\r\n")
@@ -1256,7 +1290,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else if (!desc?.toString().isNullOrBlank()) {
                     desc.toString()
                 } else {
-                    MessageCodeUtil.getCodeLanMessage(NO_LABEL)
+                    MessageUtil.getCodeLanMessage(
+                        NO_LABEL,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
@@ -1268,11 +1305,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else {
                     false
                 }
-                val requiredName = MessageCodeUtil.getCodeLanMessage(REQUIRED)
-                val defaultName = MessageCodeUtil.getCodeLanMessage(DEFAULT)
-                val optionsName = MessageCodeUtil.getCodeLanMessage(OPTIONS)
-                val multipleName = MessageCodeUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
-                val singleName = MessageCodeUtil.getCodeLanMessage(SINGLE_SELECTOR)
+                val requiredName = MessageUtil.getCodeLanMessage(REQUIRED, language = I18nUtil.getLanguage(userId))
+                val defaultName = MessageUtil.getCodeLanMessage(DEFAULT, language = I18nUtil.getLanguage(userId))
+                val optionsName = MessageUtil.getCodeLanMessage(OPTIONS, language = I18nUtil.getLanguage(userId))
+                val multipleName =
+                    MessageUtil.getCodeLanMessage(MULTIPLE_SELECTOR, language = I18nUtil.getLanguage(userId))
+                val singleName =
+                    MessageUtil.getCodeLanMessage(SINGLE_SELECTOR, language = I18nUtil.getLanguage(userId))
                 try {
                     if ((type == "selector" && multiple) ||
                         type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
@@ -1323,7 +1362,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         0,
                         MessageUtil.getMessageByLocale(
                             TASK_JSON_CONFIGURE_FORMAT_ERROR,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(userId),
                             arrayOf(paramKey, "${ignored.message}")
                         )
                     )
@@ -1419,10 +1458,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
-        val dang = MessageCodeUtil.getCodeLanMessage(DANG)
-        val and = MessageCodeUtil.getCodeLanMessage(AND)
-        val or = MessageCodeUtil.getCodeLanMessage(OR)
-        val timeToSelect = MessageCodeUtil.getCodeLanMessage(TIMETOSELECT)
+        val userId = I18nUtil.getRequestUserId()
+        val dang = MessageUtil.getCodeLanMessage(messageCode = DANG, language = I18nUtil.getLanguage(userId))
+        val and = MessageUtil.getCodeLanMessage(messageCode = AND, language = I18nUtil.getLanguage(userId))
+        val or = MessageUtil.getCodeLanMessage(messageCode = OR, language = I18nUtil.getLanguage(userId))
+        val timeToSelect =
+            MessageUtil.getCodeLanMessage(messageCode = TIMETOSELECT, language = I18nUtil.getLanguage(userId))
         try {
             if (null != rely["expression"]) {
                 val expression = rely["expression"] as List<Map<String, Any>>

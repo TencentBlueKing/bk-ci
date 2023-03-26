@@ -164,11 +164,19 @@ object GitCommonUtils {
             }
         } catch (e: Exception) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
+                MessageUtil.getMessageByLocale(
+                    PARAM_INCORRECT,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(projectId)
+                )
             )
         }
         throw OperationException(
-            MessageUtil.getMessageByLocale(PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
+            MessageUtil.getMessageByLocale(
+                PARAM_INCORRECT,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                arrayOf(projectId)
+            )
         )
     }
 

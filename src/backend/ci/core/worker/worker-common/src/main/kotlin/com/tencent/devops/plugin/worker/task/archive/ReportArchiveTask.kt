@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -35,7 +36,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
@@ -92,7 +92,7 @@ class ReportArchiveTask : ITask() {
                     errorType = ErrorType.USER,
                     errorMsg = MessageUtil.getMessageByLocale(
                         FOLDER_NOT_EXIST,
-                        I18nUtil.getLanguage(),
+                        System.getProperty(LOCALE_LANGUAGE),
                         arrayOf(fileDirParam)
                     )
                 )
@@ -105,13 +105,13 @@ class ReportArchiveTask : ITask() {
                     errorType = ErrorType.USER,
                     errorMsg = MessageUtil.getMessageByLocale(
                         ENTRANCE_FILE_NOT_IN_FOLDER,
-                        I18nUtil.getLanguage(),
+                        System.getProperty(LOCALE_LANGUAGE),
                         arrayOf(indexFileParam, fileDirParam)
                     )
                 )
             }
             LoggerService.addNormalLine(
-                MessageUtil.getMessageByLocale(ENTRANCE_FILE_CHECK_FINISH, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(ENTRANCE_FILE_CHECK_FINISH, System.getProperty(LOCALE_LANGUAGE))
             )
             val reportRootUrl = api.getRootUrl(elementId).data!!
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
@@ -149,7 +149,7 @@ class ReportArchiveTask : ITask() {
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
                     UPLOAD_CUSTOM_OUTPUT_SUCCESS,
-                    I18nUtil.getLanguage(),
+                    System.getProperty(LOCALE_LANGUAGE),
                     arrayOf("${allFileList.size}")
                 )
             )

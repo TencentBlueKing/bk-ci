@@ -120,8 +120,11 @@ object ESConfigUtils {
         val keystoreFile = File(keystoreFilePath)
         if (!keystoreFile.exists()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(FILE_NOT_FOUND_CHECK_PATH, I18nUtil.getLanguage(), arrayOf("keystore")) +
-                        keystoreFilePath
+                MessageUtil.getMessageByLocale(
+                    FILE_NOT_FOUND_CHECK_PATH,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("keystore")
+                ) + keystoreFilePath
             )
         }
         val truststoreFile = File(truststoreFilePath)
@@ -129,7 +132,7 @@ object ESConfigUtils {
             throw IllegalArgumentException(
                 MessageUtil.getMessageByLocale(
                     FILE_NOT_FOUND_CHECK_PATH,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf("truststore")
                 ) + truststoreFilePath
             )

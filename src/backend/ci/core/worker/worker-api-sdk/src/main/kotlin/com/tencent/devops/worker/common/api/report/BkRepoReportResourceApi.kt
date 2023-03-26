@@ -29,10 +29,10 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
@@ -61,7 +61,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, System.getProperty(LOCALE_LANGUAGE))
         )
         return objectMapper.readValue(responseContent)
     }
@@ -86,7 +86,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, System.getProperty(LOCALE_LANGUAGE))
         )
         return objectMapper.readValue(responseContent)
     }
@@ -124,7 +124,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, System.getProperty(LOCALE_LANGUAGE))
         val responseContent = request(request, message)
         try {
             val obj = objectMapper.readTree(responseContent)

@@ -67,7 +67,9 @@ class ImagePushHandler(
                         buildId,
                         false,
                         MessageFormat.format(
-                            MessageUtil.getMessageByLocale(BK_PUSH_IMAGE, I18nUtil.getLanguage()),
+                            MessageUtil.getMessageByLocale(
+                                BK_PUSH_IMAGE, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            ),
                             lays,
                             currentProgress
                         ),

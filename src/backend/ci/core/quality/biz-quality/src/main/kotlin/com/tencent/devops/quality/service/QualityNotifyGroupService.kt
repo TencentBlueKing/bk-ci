@@ -37,7 +37,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.constant.QualityMessageCode.NEED_USER_GROUP_X_PERMISSION
@@ -101,9 +100,10 @@ class QualityNotifyGroupService @Autowired constructor(
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = MessageCodeUtil.getCodeLanMessage(
+                groupName = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName
+                    defaultMessage = it.displayName,
+                    language = I18nUtil.getLanguage(userId)
                 ),
                 groupId = it.roleName,
                 users = it.userIdList.toSet()
@@ -116,8 +116,7 @@ class QualityNotifyGroupService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
-                params = arrayOf(group.name),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(group.name)
             )
         }
 
@@ -202,23 +201,21 @@ class QualityNotifyGroupService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 NEED_USER_GROUP_X_PERMISSION,
                 language,
-                arrayOf(if (language == "zh_CN") authPermission.alias else authPermission.value)
+                arrayOf(authPermission.getI18n())
             )
         )
         if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
-                params = arrayOf(groupHashId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(groupHashId)
             )
         }
         if (qualityNotifyGroupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
-                params = arrayOf(group.name),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(group.name)
             )
         }
 
@@ -252,7 +249,7 @@ class QualityNotifyGroupService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 NEED_USER_GROUP_X_PERMISSION,
                 language,
-                arrayOf(if (language == "zh_CN") authPermission.alias else authPermission.value)
+                arrayOf(authPermission.getI18n())
             )
         )
 

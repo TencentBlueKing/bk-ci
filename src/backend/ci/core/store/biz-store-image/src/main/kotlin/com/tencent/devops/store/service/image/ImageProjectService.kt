@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -38,7 +39,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -316,9 +317,10 @@ class ImageProjectService @Autowired constructor(
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String
         val classifyName = it["classifyName"] as String
-        val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-            defaultMessage = classifyName
+        val classifyLanName = MessageUtil.getCodeLanMessage(
+            messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
+            defaultMessage = classifyName,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
         val logoUrl = it["logoUrl"] as? String
         val icon = it["icon"] as? String
@@ -954,9 +956,10 @@ class ImageProjectService @Autowired constructor(
         val labelList = imageLabelService.getLabelsByImageId(id).data
         val category = it.get(KEY_CATEGORY_CODE) as String?
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
-        val categoryLanName = MessageCodeUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$category",
-            defaultMessage = categoryName
+        val categoryLanName = MessageUtil.getCodeLanMessage(
+            messageCode = "${StoreTypeEnum.IMAGE.name}.category.$category",
+            defaultMessage = categoryName,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
         val publisher = it.get(KEY_PUBLISHER) as String
         val publicFlag = it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean

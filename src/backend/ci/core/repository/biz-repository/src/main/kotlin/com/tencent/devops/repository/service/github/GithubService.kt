@@ -351,7 +351,10 @@ class GithubService @Autowired constructor(
             HTTP_404 -> getMessageByLocale(REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GitHub", operation))
             else -> "GitHub platform $operation fail"
         }
-        throw GithubApiException(code, MessageUtil.getMessageByLocale(msg, I18nUtil.getLanguage(), arrayOf(operation)))
+        throw GithubApiException(
+            code,
+            MessageUtil.getMessageByLocale(msg, I18nUtil.getLanguage(I18nUtil.getRequestUserId()), arrayOf(operation))
+        )
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {

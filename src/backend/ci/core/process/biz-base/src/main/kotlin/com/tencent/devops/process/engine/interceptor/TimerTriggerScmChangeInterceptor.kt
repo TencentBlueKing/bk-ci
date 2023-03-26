@@ -75,14 +75,22 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         // 非定时触发的直接跳过
         if (task.startType != StartType.TIME_TRIGGER) {
-            return Response(OK, MessageUtil.getMessageByLocale(BK_NON_TIMED_TRIGGER_SKIP, I18nUtil.getLanguage()))
+            return Response(
+                OK,
+                MessageUtil.getMessageByLocale(BK_NON_TIMED_TRIGGER_SKIP,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
 
         val pipelineId = task.pipelineInfo.pipelineId
         val projectId = task.pipelineInfo.projectId
         val model = task.model ?: return Response(
             ERROR_PIPELINE_MODEL_NOT_EXISTS.toInt(),
-            MessageUtil.getMessageByLocale(ERROR_PIPELINE_MODEL_NOT_EXISTS, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         )
 
         var noScm = false
@@ -142,7 +150,10 @@ class TimerTriggerScmChangeInterceptor @Autowired constructor(
             !hasScmElement -> Response(OK) // 没有任何拉代码的插件，【源代码未更新时不触发构建】无效，允许执行
             else -> Response(
                 ERROR_PIPELINE_TIMER_SCM_NO_CHANGE.toInt(),
-                MessageUtil.getMessageByLocale(ERROR_PIPELINE_TIMER_SCM_NO_CHANGE, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_TIMER_SCM_NO_CHANGE,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         }
     }

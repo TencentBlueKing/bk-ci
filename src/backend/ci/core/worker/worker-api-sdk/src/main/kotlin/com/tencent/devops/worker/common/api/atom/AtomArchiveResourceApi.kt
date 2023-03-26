@@ -37,11 +37,11 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -96,7 +96,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_ENV_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         return objectMapper.readValue(responseContent)
     }
@@ -118,7 +121,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPut(path, body)
             val responseContent = request(
                 request,
-                MessageUtil.getMessageByLocale(UPDATE_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(
+                    UPDATE_PLUGIN_ENV_INFO_FAILED,
+                    System.getProperty(LOCALE_LANGUAGE)
+                )
             )
         return objectMapper.readValue(responseContent)
     }
@@ -131,7 +137,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_PLUGIN_SENSITIVE_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_SENSITIVE_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         return objectMapper.readValue(responseContent)
     }
@@ -167,7 +176,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         LoggerService.addNormalLine("${
-            MessageUtil.getMessageByLocale(BK_ARCHIVE_PLUGIN_FILE, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+            MessageUtil.getMessageByLocale(
+                BK_ARCHIVE_PLUGIN_FILE,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         }>>> ${file.name}")
 
         val url = StringBuilder("/ms/artifactory/build/atom/result/$path")
@@ -183,7 +195,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(ARCHIVE_PLUGIN_FILE_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                ARCHIVE_PLUGIN_FILE_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
@@ -263,7 +278,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         return objectMapper.readValue(responseContent)
     }
@@ -280,7 +298,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPost(path, body)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(ADD_PLUGIN_PLATFORM_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                ADD_PLUGIN_PLATFORM_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         return objectMapper.readValue(responseContent)
     }

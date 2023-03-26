@@ -29,9 +29,10 @@ package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.pojo.container.BuildResource
 import com.tencent.devops.store.service.container.BuildResourceService
@@ -106,10 +107,11 @@ class BuildResourceServiceImpl @Autowired constructor(
         val count = getCountByCode(buildResourceCode)
         if (count > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(buildResourceCode),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(buildResourceCode),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         buildResourceDao.add(
@@ -138,10 +140,11 @@ class BuildResourceServiceImpl @Autowired constructor(
             val pipelineBuildResource = buildResourceDao.getBuildResource(dslContext, id)
             if (null != pipelineBuildResource && buildResourceCode != pipelineBuildResource.buildResourceCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(buildResourceCode),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(buildResourceCode),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }

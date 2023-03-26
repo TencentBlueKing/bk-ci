@@ -63,7 +63,6 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -178,7 +177,6 @@ class PipelineBuildFacadeService(
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId!!,
@@ -187,9 +185,9 @@ class PipelineBuildFacadeService(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(
-                        userId, projectId, if (language == "zh_CN") permission.alias else permission.value, pipelineId
+                        userId, projectId, permission.getI18n(), pipelineId
                     )
                 )
             )
@@ -250,8 +248,9 @@ class PipelineBuildFacadeService(
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "",
                 options = null,
-                desc = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_DESC
+                desc = MessageUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_MSG_DESC,
+                    language = I18nUtil.getLanguage(userId)
                 ),
                 repoHashId = null,
                 relativePath = null,
@@ -259,13 +258,15 @@ class PipelineBuildFacadeService(
                 containerType = null,
                 glob = null,
                 properties = null,
-                label = MessageCodeUtil.getCodeLanMessage(
+                label = MessageUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_LABEL,
-                    defaultMessage = "构建信息"
+                    defaultMessage = "构建信息",
+                    language = I18nUtil.getLanguage(userId)
                 ),
-                placeholder = MessageCodeUtil.getCodeLanMessage(
+                placeholder = MessageUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_MANUAL,
-                    defaultMessage = "手动触发"
+                    defaultMessage = "手动触发",
+                    language = I18nUtil.getLanguage(userId)
                 ),
                 propertyType = BuildPropertyType.BUILD.name
             )
@@ -348,16 +349,16 @@ class PipelineBuildFacadeService(
         checkManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
-            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "重启" else "retry", pipelineId)
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, projectId, permission.getI18n(), pipelineId)
                 )
             )
         }
@@ -564,7 +565,6 @@ class PipelineBuildFacadeService(
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -573,11 +573,11 @@ class PipelineBuildFacadeService(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )
@@ -665,7 +665,6 @@ class PipelineBuildFacadeService(
     ): String? {
 
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.DELETE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -674,11 +673,11 @@ class PipelineBuildFacadeService(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )
@@ -813,7 +812,6 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true
     ) {
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -822,11 +820,11 @@ class PipelineBuildFacadeService(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )
@@ -1510,9 +1508,10 @@ class PipelineBuildFacadeService(
         }
 
         val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                arrayOf(buildId)
+            ?: return MessageUtil.generateResponseDataObject(
+                messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                params = arrayOf(buildId),
+                language = I18nUtil.getLanguage(userId)
             )
 
         val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
@@ -1842,7 +1841,7 @@ class PipelineBuildFacadeService(
         )
         val result = mutableListOf<IdValue>()
         BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
-            result.add(IdValue(it.name, MessageCodeUtil.getMessageByLocale(it.statusName, it.name)))
+            result.add(IdValue(it.name, MessageUtil.getMessageByLocale(it.statusName, it.name)))
         }
         return result
     }
@@ -2103,9 +2102,10 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-                MessageCodeUtil.getCodeLanMessage(
+                MessageUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId)
+                    params = arrayOf(projectCode, nodeHashId),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             } $msg"
         }
@@ -2117,7 +2117,11 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
+                msg = "$msg| ${MessageUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                }"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")
                 msg?.let { self ->
@@ -2132,7 +2136,10 @@ class PipelineBuildFacadeService(
                 return
             }
         } else {
-            msg = "$msg| ${MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
+            msg = "$msg| ${MessageUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}"
         }
 
         // 添加错误码日志
@@ -2229,7 +2236,6 @@ class PipelineBuildFacadeService(
         buildId: String
     ): String {
         // 校验用户是否有执行流水线权限
-        val language = I18nUtil.getLanguage(userId)
         val permission = AuthPermission.EXECUTE
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
@@ -2238,11 +2244,11 @@ class PipelineBuildFacadeService(
             permission = permission,
             message = MessageUtil.getMessageByLocale(
                 CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                language,
+                I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
                     projectId,
-                    if (language == "zh_CN") permission.alias else permission.value,
+                    permission.getI18n(),
                     pipelineId
                 )
             )
@@ -2258,9 +2264,10 @@ class PipelineBuildFacadeService(
                     throw ErrorCodeException(
                         statusCode = Response.Status.BAD_REQUEST.statusCode,
                         errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                        defaultMessage = MessageCodeUtil.getCodeMessage(
+                        defaultMessage = MessageUtil.getMessageByLocale(
                             messageCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                            params = arrayOf(buildId)
+                            params = arrayOf(buildId),
+                            language = I18nUtil.getLanguage(userId)
                         ),
                         params = arrayOf(buildId)
                     )
@@ -2297,7 +2304,11 @@ class PipelineBuildFacadeService(
         throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-            defaultMessage = MessageCodeUtil.getCodeMessage(ProcessMessageCode.ERROR_RESTART_EXSIT, arrayOf(buildId)),
+            defaultMessage = MessageUtil.getMessageByLocale(
+                messageCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
+                params = arrayOf(buildId),
+                language = I18nUtil.getLanguage(userId)
+            ),
             params = arrayOf(buildId)
         )
     }

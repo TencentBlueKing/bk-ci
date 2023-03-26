@@ -121,7 +121,10 @@ object SendRtx {
             buildId = build.id
         )
         return " <font color=\"${state.second}\"> ${state.first} </font>" +
-                " $content \n [${MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage())}]($detailUrl)"
+                " $content \n [${MessageUtil.getMessageByLocale(
+                    BK_SEE_DETAILS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )}]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
@@ -161,7 +164,10 @@ object SendRtx {
                 "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
                 request +
                 costTime +
-                "[${MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage())}]" +
+                "[${MessageUtil.getMessageByLocale(
+                    BK_SEE_DETAILS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )}]" +
                 "(${
                     StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamUrl,

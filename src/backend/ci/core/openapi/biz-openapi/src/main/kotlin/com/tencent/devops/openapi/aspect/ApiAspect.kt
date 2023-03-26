@@ -37,7 +37,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
-import com.tencent.devops.openapi.constant.BK_PARAM_VERIFY_FAIL_REQUEST_PARAM_CANNOT_EMPTY
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -49,7 +48,6 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 import kotlin.reflect.jvm.kotlinFunction
 
@@ -174,7 +172,7 @@ class ApiAspect(
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
                     PARAM_VERIFY_FAIL,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf("")
                 )+ " ${ignored.message}"
             )
@@ -194,8 +192,8 @@ class ApiAspect(
                     throw CustomException(
                         Response.Status.BAD_REQUEST,
                         MessageUtil.getMessageByLocale(
-                            BK_PARAM_VERIFY_FAIL_REQUEST_PARAM_CANNOT_EMPTY,
-                            I18nUtil.getLanguage(),
+                            PARAM_VERIFY_FAIL,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf("request param ${kParameter.name} cannot be empty")
                         )
                     )

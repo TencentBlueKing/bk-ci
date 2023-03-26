@@ -29,8 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ReasonDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
@@ -101,13 +103,18 @@ class ReasonServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("delete reason, $userId | $id")
         val reason = reasonDao.get(dslContext, id)
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
+            ?: return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                language = I18nUtil.getLanguage(userId)
+            )
         // 若已被使用，不允许删除
         val reasonContent = reason.content
         if (reasonRelDao.isUsed(dslContext, id)) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_UNINSTALL_REASON_USED,
-                params = arrayOf(reasonContent)
+                params = arrayOf(reasonContent),
+                language = I18nUtil.getLanguage(userId),
             )
         }
         reasonDao.delete(dslContext, id)

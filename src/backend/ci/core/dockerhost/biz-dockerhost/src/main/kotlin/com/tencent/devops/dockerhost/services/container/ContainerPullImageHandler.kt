@@ -64,8 +64,9 @@ class ContainerPullImageHandler(
                 )
                 log(
                     buildId,
-                    MessageUtil.getMessageByLocale(BK_START_PULL_IMAGE, I18nUtil.getLanguage()) +
-                            "$formatImageName!!",
+                    MessageUtil.getMessageByLocale(
+                        BK_START_PULL_IMAGE, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "$formatImageName!!",
                     taskId,
                     containerHashId
                 )
@@ -76,7 +77,7 @@ class ContainerPullImageHandler(
                     buildId,
                     MessageUtil.getMessageByLocale(
                         BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     taskId,
                     containerHashId
@@ -85,7 +86,7 @@ class ContainerPullImageHandler(
                 val errorMessage = MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     formatImageName
                 ) + "$buildId|$containerHashId]"
@@ -99,7 +100,7 @@ class ContainerPullImageHandler(
                 val errorMessage = MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     formatImageName
                 ) + "$buildId|$containerHashId]"
@@ -110,14 +111,17 @@ class ContainerPullImageHandler(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         BK_PULL_IMAGE_FAILED_ERROR_MESSAGE,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + t.message,
                     tag = taskId,
                     containerHashId = containerHashId
                 )
                 log(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(BK_TRY_LOCAL_IMAGE_START, I18nUtil.getLanguage()),
+                    message = MessageUtil.getMessageByLocale(
+                        BK_TRY_LOCAL_IMAGE_START,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     tag = taskId,
                     containerHashId = containerHashId
                 )

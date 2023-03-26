@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL
@@ -60,7 +59,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_TOOL_FAIL,
-                    I18nUtil.getLanguage(),
+                    System.getProperty(LOCALE_LANGUAGE),
                     arrayOf(tool)
                 )
             )
@@ -84,7 +83,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL,
-                    I18nUtil.getLanguage()
+                    System.getProperty(LOCALE_LANGUAGE)
                 )
             )
         }
@@ -108,7 +107,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL,
-                    I18nUtil.getLanguage()
+                    System.getProperty(LOCALE_LANGUAGE)
                 )
             )
         }

@@ -32,8 +32,9 @@ import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -88,7 +89,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val records = storeMemberDao.list(
             dslContext = dslContext,
@@ -196,7 +200,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val receivers = mutableSetOf<String>()
         for (item in storeMemberReq.member) {
@@ -266,7 +273,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val record = storeMemberDao.getById(dslContext, id)
         if (record != null) {
@@ -321,11 +331,19 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         if (userId != storeMember) {
             // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
             if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    params = arrayOf(storeCode),
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
         } else {
             if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(storeCode))
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    params = arrayOf(storeCode),
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
         }
         val validateFlag: Boolean?
@@ -338,7 +356,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             ).data
         } catch (ignored: Throwable) {
             logger.warn("verifyUserProjectPermission error, params[$storeMember|$projectCode]", ignored)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         if (null == validateFlag || !validateFlag) {
             // 抛出错误提示
@@ -369,7 +390,10 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun isStoreHasAdmins(storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
         val adminCount = storeMemberDao.countAdmin(dslContext, storeCode, storeType.type.toByte())
         if (adminCount <= 1) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_COMPONENT_ADMIN_COUNT_ERROR)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_COMPONENT_ADMIN_COUNT_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         }
         return Result(true)
     }

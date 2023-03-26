@@ -91,7 +91,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 val pipelineName = bodyParams["pipelineName"]
                 titleParams["content"] = MessageUtil.getMessageByLocale(
                     BK_BUILD_IN_REVIEW_STATUS,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(projectName, "$pipelineName", "$buildNum")
                 )
             }

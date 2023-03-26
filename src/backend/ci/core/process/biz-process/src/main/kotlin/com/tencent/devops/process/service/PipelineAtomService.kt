@@ -48,7 +48,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -354,12 +353,12 @@ class PipelineAtomService @Autowired constructor(
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
-            MessageCodeUtil.getCodeLanMessage(PIPELINE_URL),
-            MessageCodeUtil.getCodeLanMessage(VERSION),
-            MessageCodeUtil.getCodeLanMessage(LATEST_MODIFIER),
-            MessageCodeUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTOR),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
+            MessageUtil.getCodeLanMessage(PIPELINE_URL, language = I18nUtil.getLanguage(userId)),
+            MessageUtil.getCodeLanMessage(VERSION, language = I18nUtil.getLanguage(userId)),
+            MessageUtil.getCodeLanMessage(LATEST_MODIFIER, language = I18nUtil.getLanguage(userId)),
+            MessageUtil.getCodeLanMessage(LATEST_UPDATE_TIME, language = I18nUtil.getLanguage(userId)),
+            MessageUtil.getCodeLanMessage(LATEST_EXECUTOR, language = I18nUtil.getLanguage(userId)),
+            MessageUtil.getCodeLanMessage(LATEST_EXECUTE_TIME, language = I18nUtil.getLanguage(userId))
         )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)
@@ -394,7 +393,6 @@ class PipelineAtomService @Autowired constructor(
         checkPermission: Boolean = true
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -403,11 +401,11 @@ class PipelineAtomService @Autowired constructor(
                 permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
                         projectId,
-                        if (language == "zh_CN") permission.alias else permission.value,
+                        permission.getI18n(),
                         pipelineId
                     )
                 )

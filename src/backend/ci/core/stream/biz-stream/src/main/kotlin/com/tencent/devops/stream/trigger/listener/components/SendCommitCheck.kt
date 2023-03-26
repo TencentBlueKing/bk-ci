@@ -210,7 +210,7 @@ class SendCommitCheck @Autowired constructor(
             homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     STARTUP_CONFIG_MISSING,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(" streamUrl")
                 )
             ),

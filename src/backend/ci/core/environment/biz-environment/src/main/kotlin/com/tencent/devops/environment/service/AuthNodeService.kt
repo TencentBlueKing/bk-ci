@@ -72,7 +72,10 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listByPage(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(BK_PROJECT_NO_NODE, I18nUtil.getLanguage())}")
+            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+                BK_PROJECT_NO_NODE,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -101,7 +104,10 @@ class AuthNodeService @Autowired constructor(
             displayName = keyword)
         val result = SearchInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(BK_PROJECT_NO_NODE, I18nUtil.getLanguage())}")
+            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+                BK_PROJECT_NO_NODE,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )}")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

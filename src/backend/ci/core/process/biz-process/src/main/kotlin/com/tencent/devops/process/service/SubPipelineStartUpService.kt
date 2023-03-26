@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
@@ -155,9 +154,10 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         )
         val callChannelCode = channelCode ?: ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return MessageUtil.generateResponseDataObject(
                     messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildId)
+                    params = arrayOf(buildId),
+                    language = I18nUtil.getLanguage(userId)
                 )
         )
         // 获取子流水线启动参数
@@ -171,7 +171,10 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         try {
             checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
         } catch (e: OperationException) {
-            return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         val subBuildId = subPipelineStartup(
@@ -309,11 +312,12 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
         if (existPipelines.contains(pipelineId)) {
             logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
-            throw OperationException(MessageUtil.getMessageByLocale(
-                ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
-                I18nUtil.getLanguage(),
-                arrayOf(projectId, pipelineId)
-            )
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(projectId, pipelineId)
+                )
             )
         }
         existPipelines.add(pipelineId)

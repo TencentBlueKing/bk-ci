@@ -45,9 +45,10 @@ class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptS
     override fun download(scriptName: String, eTag: String?): Response {
         if (scriptName.isBlank()) {
             throw ParamBlankException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(CommonMessageCode.ERROR_INVALID_PARAM_, I18nUtil.getLanguage()),
-                    "scriptName"
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("scriptName")
                 )
             )
         }

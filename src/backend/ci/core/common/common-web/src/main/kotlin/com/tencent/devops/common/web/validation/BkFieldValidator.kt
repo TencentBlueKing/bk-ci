@@ -33,9 +33,10 @@ import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.MIN_LENGTH
 import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.constant.REQUIRED
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.hibernate.validator.internal.engine.constraintvalidation.ConstraintValidatorContextImpl
 import java.util.regex.Pattern
 import javax.validation.ConstraintValidator
@@ -64,7 +65,11 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         }
         if (required && flag) {
             // 如果参数是必填的且值为空则给用户错误提示
-            message = MessageCodeUtil.getCodeLanMessage(CommonMessageCode.PARAMETER_IS_EMPTY, message)
+            message = MessageUtil.getCodeLanMessage(
+                messageCode = CommonMessageCode.PARAMETER_IS_EMPTY,
+                defaultMessage = message,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             setErrorMessage(constraintValidatorContext, message)
             return false
         }
@@ -73,10 +78,11 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         val minLength = attributes[MIN_LENGTH] as Int // 获取参数最小长度
         if (minLength > 0 && paramValueStr.length < minLength) {
             // 参数最小长度不符合要求则给用户错误提示
-            message = MessageCodeUtil.getCodeLanMessage(
+            message = MessageUtil.getCodeLanMessage(
                 messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_SHORT,
                 defaultMessage = message,
-                params = arrayOf(minLength.toString())
+                params = arrayOf(minLength.toString()),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             setErrorMessage(constraintValidatorContext, message)
             return false
@@ -84,10 +90,11 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         val maxLength = attributes[MAX_LENGTH] as Int // 获取参数最大长度
         if (maxLength > 0 && paramValueStr.length > maxLength) {
             // 参数最大长度不符合要求则给用户错误提示
-            message = MessageCodeUtil.getCodeLanMessage(
+            message = MessageUtil.getCodeLanMessage(
                 messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
                 defaultMessage = message,
-                params = arrayOf(maxLength.toString())
+                params = arrayOf(maxLength.toString()),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             setErrorMessage(constraintValidatorContext, message)
             return false
@@ -95,7 +102,11 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         val patternStyle = attributes[PATTERN_STYLE] as BkStyleEnum
         // 3、判断参数值是否满足配置的正则表达式规范
         if (!flag && !Pattern.matches(patternStyle.style, paramValueStr)) {
-            message = MessageCodeUtil.getCodeLanMessage(patternStyle.name, message)
+            message = MessageUtil.getCodeLanMessage(
+                messageCode = patternStyle.name,
+                defaultMessage = message,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             setErrorMessage(constraintValidatorContext, message)
             return false
         }

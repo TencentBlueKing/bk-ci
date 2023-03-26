@@ -27,13 +27,13 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.SingleArchiveElement
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -85,7 +85,10 @@ class SingleFileArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = MessageUtil.getMessageByLocale(NO_MATCHING_ARCHIVE_FILE, I18nUtil.getLanguage())
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        NO_MATCHING_ARCHIVE_FILE,
+                        System.getProperty(LOCALE_LANGUAGE)
+                    )
                 )
             }
         } finally {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.plugin.worker.task.scm
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -38,7 +39,6 @@ import com.tencent.devops.common.pipeline.enums.SvnDepth
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfig
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.worker.task.scm.git.CodeGitPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.git.GithubPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.git.GitlabPullCodeSetting
@@ -121,7 +121,7 @@ object SCM {
             RepositoryType.ID -> taskParams[CodeSvnElement.REPO_HASH_ID] ?: throw ScmException(
                 MessageUtil.getMessageByLocale(
                     CODE_REPO_PARAM_NOT_IN_PARAMS,
-                    I18nUtil.getLanguage(),
+                    System.getProperty(LOCALE_LANGUAGE),
                     arrayOf("ID")
                 ),
                 scmType.name
@@ -129,7 +129,7 @@ object SCM {
             RepositoryType.NAME -> taskParams[CodeSvnElement.REPO_NAME] ?: throw ScmException(
                 MessageUtil.getMessageByLocale(
                     CODE_REPO_PARAM_NOT_IN_PARAMS,
-                    I18nUtil.getLanguage(),
+                    System.getProperty(LOCALE_LANGUAGE),
                     arrayOf("name")
                 ),
                 scmType.name

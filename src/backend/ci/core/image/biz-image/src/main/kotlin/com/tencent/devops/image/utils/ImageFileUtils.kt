@@ -57,7 +57,10 @@ object ImageFileUtils {
         throw TaskExecuteException(
             errorCode = PARSE_MIRROR_FILE_FAILED.toInt(),
             errorType = ErrorType.USER,
-            errorMsg = MessageUtil.getMessageByLocale(PARSE_MIRROR_FILE_FAILED, I18nUtil.getLanguage())
+            errorMsg = MessageUtil.getMessageByLocale(
+                PARSE_MIRROR_FILE_FAILED,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         )
     }
 

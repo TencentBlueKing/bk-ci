@@ -46,7 +46,6 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -56,7 +55,7 @@ import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
-import java.util.Base64
+import java.util.*
 import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
@@ -165,7 +164,7 @@ object StreamDispatchUtils {
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
                     BUILD_RESOURCE_NOT_EXIST,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf("macos")
                 )
             )
@@ -211,7 +210,7 @@ object StreamDispatchUtils {
             throw CustomException(
                 Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
                     BUILD_RESOURCE_NOT_EXIST,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf("public")
                 )
             )

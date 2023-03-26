@@ -60,7 +60,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
@@ -986,8 +985,12 @@ class TemplateFacadeService @Autowired constructor(
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
                 // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-                templateResult.tips = message ?: ignored.defaultMessage
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = ignored.errorCode,
+                    params = ignored.params,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                templateResult.tips = message
             }
         }
         val latestVersion = TemplateVersion(
@@ -1335,7 +1338,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[instance.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
                     BK_OPERATE_PIPELINE_FAIL,
                     language,
-                    arrayOf(if (language == "zh_CN") "创建" else "create")
+                    arrayOf(AuthPermission.CREATE.getI18n())
                 )
             }
         }
@@ -1414,7 +1417,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[it.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
                     BK_OPERATE_PIPELINE_FAIL,
                     language,
-                    arrayOf(if (language == "zh_CN") "更新" else "update")
+                    arrayOf(AuthPermission.EDIT.getI18n())
                 )
             }
         }

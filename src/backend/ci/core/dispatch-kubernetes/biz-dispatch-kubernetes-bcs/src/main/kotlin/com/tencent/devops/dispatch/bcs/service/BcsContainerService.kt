@@ -103,15 +103,15 @@ class BcsContainerService @Autowired constructor(
     override val log = DispatchBuildLog(
         readyStartLog = MessageUtil.getMessageByLocale(
             BK_READY_CREATE_BCS_BUILD_MACHINE,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ),
         startContainerError = MessageUtil.getMessageByLocale(
             START_BCS_BUILD_CONTAINER_FAIL,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ),
         troubleShooting = MessageUtil.getMessageByLocale(
             THIRD_SERVICE_BCS_BUILD_ERROR,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
     )
 

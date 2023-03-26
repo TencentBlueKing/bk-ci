@@ -29,8 +29,9 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.PipelineStageTagDao
 import com.tencent.devops.process.pojo.PipelineStageTag
 import org.jooq.DSLContext
@@ -89,10 +90,11 @@ class StageTagService @Autowired constructor(
         val count = getCountByNameOrWeight(stageTag, weight)
         if (count > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf("tagName/weight"),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf("tagName/weight"),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val id = UUIDUtil.generate()
@@ -111,10 +113,11 @@ class StageTagService @Autowired constructor(
             val pipelineStageTag = pipelineStageTagDao.getStageTag(dslContext, id)
             if (null != pipelineStageTag && stageTagName != pipelineStageTag.stageTagName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(stageTagName),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(stageTagName),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }

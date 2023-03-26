@@ -47,7 +47,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.process.utils.CredentialUtils
@@ -89,7 +88,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -165,7 +164,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("createGitCodeRepository error is :$e", e)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return MessageUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                I18nUtil.getLanguage(userId)
+            )
         }
         logger.info("gitRepositoryResp>> $gitRepositoryResp")
         return if (null != gitRepositoryResp) {
@@ -197,7 +199,10 @@ class RepositoryService @Autowired constructor(
                 )
             )
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -207,7 +212,10 @@ class RepositoryService @Autowired constructor(
             logger.info("gitToken>> $gitToken")
             if (null == gitToken) {
                 // 抛出无效的token提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                return MessageUtil.generateResponseDataObject(
+                    CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    I18nUtil.getLanguage(userId)
+                )
             }
             gitToken.accessToken
         } else {
@@ -264,7 +272,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("updateGitCodeRepository error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -294,7 +305,10 @@ class RepositoryService @Autowired constructor(
             getGitRepositoryTreeInfoResult
         } catch (e: Exception) {
             logger.error("getGitRepositoryTreeInfo error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -441,7 +455,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("moveProjectToGroupResult error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -505,7 +522,7 @@ class RepositoryService @Autowired constructor(
              * 2022/2/10 tgit类型验证凭证，并且验证失败时返回提示信息
              */
             if (repository !is GithubRepository) {
-                checkRepositoryToken(projectId, repository)
+                checkRepositoryToken(userId, projectId, repository)
             }
         }
 
@@ -638,10 +655,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.VIEW,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_VIEW_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryConfig.getRepositoryId())
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_VIEW_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryConfig.getRepositoryId()),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         return compose(repository)
     }
@@ -773,10 +791,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -786,19 +805,21 @@ class RepositoryService @Autowired constructor(
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
             throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_PATH_WRONG_PARM,
-                    arrayOf(repository.getStartPrefix())
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_PATH_WRONG_PARM,
+                    params = arrayOf(repository.getStartPrefix()),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
 
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String>(
+                MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.REPO_NAME_EXIST,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(repository.aliasName)
-                ).message!!
+                )
             )
         }
 
@@ -807,7 +828,7 @@ class RepositoryService @Autowired constructor(
              * 类型为tGit,去掉凭据验证
              */
             if (repository !is GithubRepository) {
-                checkRepositoryToken(projectId, repository)
+                checkRepositoryToken(userId, projectId, repository)
             }
         }
         // 判断仓库类型是否一致
@@ -816,7 +837,12 @@ class RepositoryService @Autowired constructor(
             when (record.type) {
                 ScmType.CODE_GIT.name -> {
                     if (repository !is CodeGitRepository) {
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_INVALID))
+                        throw OperationException(
+                            MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.GIT_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
+                        )
                     }
                     repositoryDao.edit(
                         dslContext = transactionContext,
@@ -835,7 +861,12 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_TGIT.name -> {
                     if (repository !is CodeTGitRepository) {
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
+                        throw OperationException(
+                            MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.TGIT_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
+                        )
                     }
                     repositoryDao.edit(
                         dslContext = transactionContext,
@@ -854,7 +885,12 @@ class RepositoryService @Autowired constructor(
                 }
                 ScmType.CODE_SVN.name -> {
                     if (repository !is CodeSvnRepository) {
-                        throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_INVALID))
+                        throw OperationException(
+                            MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.SVN_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
+                        )
                     }
                     repositoryDao.edit(
                         dslContext = transactionContext,
@@ -875,7 +911,10 @@ class RepositoryService @Autowired constructor(
                 ScmType.CODE_GITLAB.name -> {
                     if (repository !is CodeGitlabRepository) {
                         throw OperationException(
-                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID)
+                            message = MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.GITLAB_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
                         )
                     }
                     repositoryDao.edit(
@@ -895,7 +934,10 @@ class RepositoryService @Autowired constructor(
                 ScmType.GITHUB.name -> {
                     if (repository !is GithubRepository) {
                         throw OperationException(
-                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID)
+                            message = MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.GITHUB_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
                         )
                     }
                     repositoryDao.edit(
@@ -909,7 +951,10 @@ class RepositoryService @Autowired constructor(
                 ScmType.CODE_P4.name -> {
                     if (repository !is CodeP4Repository) {
                         throw OperationException(
-                            message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID)
+                            message = MessageUtil.getCodeLanMessage(
+                                messageCode = RepositoryMessageCode.P4_INVALID,
+                                language = I18nUtil.getLanguage(userId)
+                            )
                         )
                     }
                     repositoryDao.edit(
@@ -1198,10 +1243,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.DELETE,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_DELETE_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_DELETE_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
 
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
@@ -1242,10 +1288,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -1253,10 +1300,11 @@ class RepositoryService @Autowired constructor(
         }
         if (record.type != ScmType.CODE_SVN.name) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
-                    arrayOf(repositoryHashId)
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
+                    params = arrayOf(repositoryHashId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
 
@@ -1276,10 +1324,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -1287,10 +1336,11 @@ class RepositoryService @Autowired constructor(
         }
         if (record.type != ScmType.CODE_SVN.name) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
-                    arrayOf(repositoryHashId)
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
+                    params = arrayOf(repositoryHashId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         scmService.unlock(
@@ -1393,7 +1443,7 @@ class RepositoryService @Autowired constructor(
         repositoryPermissionService.deleteResource(projectId = projectId, repositoryId = repositoryId)
     }
 
-    private fun checkRepositoryToken(projectId: String, repo: Repository) {
+    private fun checkRepositoryToken(userId: String, projectId: String, repo: Repository) {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)
@@ -1436,13 +1486,19 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val passPhrase = if (list.size > 2) {
@@ -1466,24 +1522,36 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         if (list.size < 3) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.PWD_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.PWD_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         scmService.checkUsernameAndPassword(
@@ -1511,13 +1579,19 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val passPhrase = if (list.size > 2) {
@@ -1543,13 +1617,19 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         if (list.size < 3) {
@@ -1558,7 +1638,12 @@ class RepositoryService @Autowired constructor(
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                            throw OperationException(
+                                MessageUtil.getCodeLanMessage(
+                                    RepositoryMessageCode.PWD_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
+                            )
                         }
                         scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
@@ -1575,13 +1660,19 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val username = list[1]
                         if (username.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         if (list.size < 3) {
@@ -1590,7 +1681,12 @@ class RepositoryService @Autowired constructor(
                         }
                         val password = list[2]
                         if (password.isEmpty()) {
-                            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY))
+                            throw OperationException(
+                                MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.PWD_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
+                            )
                         }
                         scmService.checkUsernameAndPassword(
                             projectName = repo.projectName,
@@ -1617,13 +1713,19 @@ class RepositoryService @Autowired constructor(
                         val token = list[0]
                         if (list.size < 2) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val privateKey = list[1]
                         if (privateKey.isEmpty()) {
                             throw OperationException(
-                                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                                message = MessageUtil.getCodeLanMessage(
+                                    messageCode = RepositoryMessageCode.USER_SECRET_EMPTY,
+                                    language = I18nUtil.getLanguage(userId)
+                                )
                             )
                         }
                         val passPhrase = if (list.size > 2) {
@@ -1663,18 +1765,27 @@ class RepositoryService @Autowired constructor(
                 val username = list[0]
                 if (username.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                        message = MessageUtil.getCodeLanMessage(
+                            messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                            language = I18nUtil.getLanguage(userId)
+                        )
                     )
                 }
                 if (list.size < 2) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                        message = MessageUtil.getCodeLanMessage(
+                            messageCode = RepositoryMessageCode.PWD_EMPTY,
+                            language = I18nUtil.getLanguage(userId)
+                        )
                     )
                 }
                 val password = list[1]
                 if (password.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                        message = MessageUtil.getCodeLanMessage(
+                            messageCode = RepositoryMessageCode.PWD_EMPTY,
+                            language = I18nUtil.getLanguage(userId)
+                        )
                     )
                 }
                 scmService.checkUsernameAndPassword(

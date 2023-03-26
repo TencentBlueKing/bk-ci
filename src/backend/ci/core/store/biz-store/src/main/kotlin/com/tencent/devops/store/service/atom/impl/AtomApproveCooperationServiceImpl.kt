@@ -29,7 +29,8 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreApproveDao
@@ -80,10 +81,11 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         logger.info("approveStoreSpecifyBusInfo params: [$userId|$storeType|$storeCode|$storeApproveRequest]")
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
         if (null == atomApproveRelRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)

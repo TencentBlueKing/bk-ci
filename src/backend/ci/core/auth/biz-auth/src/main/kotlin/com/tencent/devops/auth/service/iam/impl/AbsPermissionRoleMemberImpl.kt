@@ -48,8 +48,9 @@ import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -76,7 +77,10 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
-            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+            throw ParamBlankException(MessageUtil.getCodeLanMessage(
+                CAN_NOT_FIND_RELATION,
+                language = I18nUtil.getLanguage(userId))
+            )
         }
 
         // 页面操作需要校验分级管理员,服务间调用无需校验
@@ -99,18 +103,20 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         } catch (iamEx: IamException) {
             logger.warn("create group user fail. code: ${iamEx.errorCode} | msg: ${iamEx.errorMsg}")
             throw OperationException(
-                MessageCodeUtil.getCodeMessage(
+                MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
-                    params = arrayOf(iamEx.errorMsg)
-                ).toString()
+                    params = arrayOf(iamEx.errorMsg),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         } catch (e: Exception) {
             logger.warn("create group user fail. code: $e")
             throw OperationException(
-                MessageCodeUtil.getCodeMessage(
+                MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
-                    params = arrayOf(e.message ?: "unknown")
-                ).toString()
+                    params = arrayOf(e.message ?: "unknown"),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
 
@@ -134,7 +140,9 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
-            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+            throw ParamBlankException(
+                MessageUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION, language = I18nUtil.getLanguage(userId))
+            )
         }
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
@@ -154,7 +162,12 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
-            throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
+            throw ParamBlankException(
+                MessageUtil.getCodeLanMessage(
+                    messageCode = CAN_NOT_FIND_RELATION,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
         val pageInfoDTO = PageInfoDTO()
         val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz ?: 1000)

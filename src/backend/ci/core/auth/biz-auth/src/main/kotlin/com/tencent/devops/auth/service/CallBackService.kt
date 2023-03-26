@@ -32,7 +32,8 @@ import com.tencent.devops.auth.dao.AuthIamCallBackDao
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -125,8 +126,9 @@ class CallBackService @Autowired constructor(
                     logger.warn("resource[$it] related not exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                     )
                 }
@@ -139,7 +141,10 @@ class CallBackService @Autowired constructor(
         if (!path.contains("api/open")) {
             throw ErrorCodeException(
                 defaultMessage = AuthMessageCode.PATH_CHECK_FAIL,
-                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.PATH_CHECK_FAIL)
+                errorCode = MessageUtil.getCodeLanMessage(
+                    AuthMessageCode.PATH_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         }
     }
@@ -149,7 +154,10 @@ class CallBackService @Autowired constructor(
         if (!gateway.contains("http://") && !gateway.contains("https://")) {
             throw ErrorCodeException(
                 defaultMessage = AuthMessageCode.HOST_CHECKOU_FAIL,
-                errorCode = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.HOST_CHECKOU_FAIL)
+                errorCode = MessageUtil.getCodeLanMessage(
+                    AuthMessageCode.HOST_CHECKOU_FAIL,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         }
     }

@@ -28,12 +28,12 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED
@@ -52,7 +52,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path, requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, I18nUtil.getLanguage()),
+            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, System.getProperty(LOCALE_LANGUAGE)),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L
@@ -77,7 +77,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPut(path.toString(), requestBody)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, System.getProperty(LOCALE_LANGUAGE))
         )
         return objectMapper.readValue(responseContent)
     }
@@ -95,7 +95,10 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path.toString(), requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = MessageUtil.getMessageByLocale(LOG_STORAGE_STATUS_FAILED, I18nUtil.getLanguage()),
+            errorMessage = MessageUtil.getMessageByLocale(
+                LOG_STORAGE_STATUS_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            ),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L

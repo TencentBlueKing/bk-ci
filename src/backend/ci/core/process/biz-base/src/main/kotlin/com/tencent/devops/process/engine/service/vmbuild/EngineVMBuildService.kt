@@ -51,7 +51,6 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
@@ -903,9 +902,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                                MessageCodeUtil.getCodeLanMessage(
+                                MessageUtil.getCodeLanMessage(
                                     messageCode = errorCode.toString(),
-                                    checkUrlDecoder = true
+                                    checkUrlDecoder = true,
+                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                 )
                             }\n"
                         }

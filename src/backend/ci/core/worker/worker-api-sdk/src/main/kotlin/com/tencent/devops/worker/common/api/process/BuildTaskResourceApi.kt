@@ -28,9 +28,9 @@
 package com.tencent.devops.worker.common.api.process
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED
@@ -41,7 +41,10 @@ class BuildTaskResourceApi : AbstractBuildResourceApi(), BuildTaskSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
         )
         return objectMapper.readValue(responseContent)
     }

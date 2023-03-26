@@ -116,15 +116,15 @@ class KubernetesContainerService @Autowired constructor(
     override val log = DispatchBuildLog(
         readyStartLog = MessageUtil.getMessageByLocale(
             BK_READY_CREATE_KUBERNETES_BUILD_MACHINE,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ),
         startContainerError = MessageUtil.getMessageByLocale(
             START_KUBERNETES_BUILD_CONTAINER_FAIL,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ),
         troubleShooting = MessageUtil.getMessageByLocale(
             KUBERNETES_BUILD_ERROR,
-            I18nUtil.getLanguage()
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
     )
 
@@ -262,7 +262,7 @@ class KubernetesContainerService @Autowired constructor(
                 MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
-                        I18nUtil.getLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     builderName
                 )

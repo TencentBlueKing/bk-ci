@@ -69,7 +69,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
             Response.Status.BAD_REQUEST,
            MessageUtil.getMessageByLocale(
                BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER,
-               I18nUtil.getLanguage()
+               I18nUtil.getLanguage(I18nUtil.getRequestUserId())
            )
         )
         return pipelineViewService.viewName2viewId(projectId, viewName, isProject)
@@ -77,7 +77,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
                     ERROR_VIEW_NOT_FOUND_IN_PROJECT,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(projectId, (if (isProject) "project" else "individual"), viewName)
                 )
             )

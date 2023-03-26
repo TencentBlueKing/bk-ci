@@ -30,13 +30,14 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -53,7 +54,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
+import java.util.*
 
 /**
  * store项目通用业务逻辑类
@@ -258,7 +259,11 @@ class StoreProjectServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
         if (!installFlag) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         if (ChannelCode.isNeedAuth(channelCode)) {
             // 获取用户有权限的项目列表
@@ -273,10 +278,11 @@ class StoreProjectServiceImpl @Autowired constructor(
             dataList.removeAll(privilegeProjectCodeList)
             if (dataList.isNotEmpty()) {
                 // 存在用户没有安装权限的项目，抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_PROJECT_IS_NOT_ALLOW_INSTALL,
-                    arrayOf(dataList.toString()),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = StoreMessageCode.USER_PROJECT_IS_NOT_ALLOW_INSTALL,
+                    params = arrayOf(dataList.toString()),
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
         }
