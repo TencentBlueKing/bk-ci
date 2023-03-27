@@ -818,10 +818,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
-            permission = AuthPermission.MANAGE
+            permission = AuthPermission.ENABLE
         )
         if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+            logger.info("$englishName| $userId| ${AuthPermission.ENABLE} validatePermission fail")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         projectDao.updateUsableStatus(
