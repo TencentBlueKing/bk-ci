@@ -403,7 +403,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
                 val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
                 if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
-                    validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+                    val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+                    if (!verify) {
+                        logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+                        throw PermissionForbiddenException(
+                            MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL)
+                        )
+                    }
                 }
                 // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
                 val finalNeedApproval = projectPermissionService.needApproval(needApproval) &&
