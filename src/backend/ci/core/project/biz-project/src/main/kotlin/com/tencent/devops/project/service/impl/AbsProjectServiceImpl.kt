@@ -434,7 +434,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         dslContext = dslContext,
                         userId = userId,
                         englishName = englishName,
-                        approvalStatus = ProjectApproveStatus.UPDATE_PENDING.status
+                        approvalStatus = newApprovalStatus
                     )
                 } else {
                     dslContext.transaction { configuration ->

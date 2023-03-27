@@ -145,7 +145,7 @@ class PermissionGradeManagerService @Autowired constructor(
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
-                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.id)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.username)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
@@ -248,7 +248,7 @@ class PermissionGradeManagerService @Autowired constructor(
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
-                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.name)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.username)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
