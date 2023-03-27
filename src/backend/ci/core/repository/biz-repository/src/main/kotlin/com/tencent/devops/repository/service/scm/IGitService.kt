@@ -38,7 +38,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -51,11 +50,13 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -79,6 +80,7 @@ interface IGitService {
     fun getAuthUrl(authParamJsonStr: String): String
     fun getToken(userId: String, code: String): GitToken
     fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH): GitUserInfo
+    fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH): GitUserInfo
     fun getRedirectUrl(authParamJsonStr: String): String
     fun getGitFileContent(
         repoUrl: String? = null,
@@ -299,7 +301,7 @@ interface IGitService {
     )
 
     fun getGitFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
@@ -323,7 +325,7 @@ interface IGitService {
         projectName: String,
         token: String,
         tokenType: TokenTypeEnum,
-        enable: Boolean ? = true
+        enable: Boolean? = true
     ): Result<Boolean>
 
     fun gitCreateFile(
@@ -359,4 +361,13 @@ interface IGitService {
         type: String,
         iid: Long
     ): Result<List<TapdWorkItem>>
+
+    fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>>
 }

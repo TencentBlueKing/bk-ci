@@ -102,7 +102,9 @@ class StreamTriggerCache @Autowired constructor(
             description = gitProjectInfo.description,
             avatarUrl = gitProjectInfo.avatarUrl,
             pathWithNamespace = gitProjectInfo.pathWithNamespace,
-            nameWithNamespace = gitProjectInfo.nameWithNamespace
+            nameWithNamespace = gitProjectInfo.nameWithNamespace,
+            repoCreatedTime = gitProjectInfo.repoCreatedTime,
+            repoCreatorId = gitProjectInfo.repoCreatorId
         )
 
         saveRequestGitProjectInfo(

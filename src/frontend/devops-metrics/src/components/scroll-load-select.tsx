@@ -28,6 +28,9 @@ export default defineComponent({
     multiple: {
       type: Boolean,
     },
+    atomCode: {
+      type: String,
+    }
   },
 
   emits: ['update:selectValue', 'change'],
@@ -41,6 +44,7 @@ export default defineComponent({
       selectValue,
       placeholder,
       multiple,
+      atomCode,
     } = toRefs(props);
     const list = ref([]);
     // 分页
@@ -63,7 +67,7 @@ export default defineComponent({
         isLoadingMore.value = true;
       }
       apiMethod
-        .value(pageData.value)
+        .value(pageData.value, atomCode)
         .then(({ records = [], count }) => {
           pageData.value.page += 1;
           list.value.push(...records);

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -45,18 +44,18 @@ class ProjectUserService @Autowired constructor(
     fun getUserDept(userId: String): UserDeptDetail? {
         val userRecord = userDao.get(dslContext, userId) ?: return null
         return UserDeptDetail(
-                bgName = userRecord!!.bgName,
-                bgId = userRecord!!.bgId?.toString() ?: "",
-                centerName = userRecord.centerName,
-                centerId = userRecord!!.centerId?.toString() ?: "",
-                deptName = userRecord.deptName,
-                deptId = userRecord.deptId?.toString() ?: "",
-                groupName = userRecord.groupName,
-                groupId = userRecord.groypId?.toString() ?: ""
+            bgName = userRecord!!.bgName,
+            bgId = userRecord!!.bgId?.toString() ?: "",
+            centerName = userRecord.centerName,
+            centerId = userRecord!!.centerId?.toString() ?: "",
+            deptName = userRecord.deptName,
+            deptId = userRecord.deptId?.toString() ?: "",
+            groupName = userRecord.groupName,
+            groupId = userRecord.groypId?.toString() ?: ""
         )
     }
 
-    fun listUser(limit: Int, offset: Int): List<TUserRecord>? {
+    fun listUser(limit: Int, offset: Int): List<UserDeptDetail>? {
         val limitByMax = if (limit > 1000) {
             1000
         } else {
@@ -67,7 +66,20 @@ class ProjectUserService @Autowired constructor(
             dslContext = dslContext,
             limit = limitByMax,
             offset = offset
-        )
+        )?.map {
+            UserDeptDetail(
+                bgName = it!!.bgName,
+                bgId = it.bgId?.toString() ?: "",
+                centerName = it.centerName,
+                centerId = it.centerId?.toString() ?: "",
+                deptName = it.deptName,
+                deptId = it.deptId?.toString() ?: "",
+                groupName = it.groupName,
+                groupId = it.groypId?.toString() ?: "",
+                userId = it.userId,
+                name = it.name
+            )
+        }
     }
 
     companion object {
