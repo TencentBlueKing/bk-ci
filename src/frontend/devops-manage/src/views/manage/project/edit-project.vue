@@ -129,7 +129,7 @@ const showNeedApprovedTips = () => {
     isShow: true,
     infoType: 'warning',
     title: t('本次提交需要审核'),
-    subTitle: t('修改了“项目性质”或“项目最大可授权人员范围”，需要经过审核'),
+    subTitle: t('修改了“项目性质”或“项目最大可授权人员范围”，需要你的上级审核'),
     contentAlign: 'center',
     headerAlign: 'center',
     footerAlign: 'center',
