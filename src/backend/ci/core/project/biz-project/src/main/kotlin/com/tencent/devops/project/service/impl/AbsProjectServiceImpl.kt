@@ -391,7 +391,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
-        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
                 "$needApproval | $subjectScopes"
@@ -402,11 +401,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     englishName = englishName
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
+                val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+                if (approvalStatus.isSuccess() || projectInfo.creator != userId) {
+                    validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+                }
                 // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
                 val finalNeedApproval = projectPermissionService.needApproval(needApproval) &&
                     (projectInfo.subjectScopes != subjectScopesStr ||
                         projectInfo.authSecrecy != projectUpdateInfo.authSecrecy)
-                val approvalStatus = if (finalNeedApproval) {
+                val newApprovalStatus = if (finalNeedApproval) {
                     ProjectApproveStatus.UPDATE_PENDING.status
                 } else {
                     ProjectApproveStatus.APPROVED.status
@@ -418,7 +421,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectUpdateInfo = projectUpdateInfo,
                     needApproval = needApproval!!,
                     subjectScopes = subjectScopes,
-                    approvalStatus = approvalStatus
+                    approvalStatus = newApprovalStatus
                 )
                 modifyProjectAuthResource(resourceUpdateInfo)
                 if (finalNeedApproval) {

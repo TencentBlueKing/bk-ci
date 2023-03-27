@@ -281,6 +281,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        checkProjectApprovalStatus(resourceType, resourceCode)
         return authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
