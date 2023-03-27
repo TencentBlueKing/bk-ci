@@ -30,6 +30,7 @@ package com.tencent.devops.auth.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
@@ -43,7 +44,7 @@ import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
-import com.tencent.devops.auth.service.RbacPermissionCacheService
+import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
@@ -59,11 +60,15 @@ class RbacServiceConfiguration {
     fun rbacPermissionCacheService(
         dslContext: DSLContext,
         authResourceTypeDao: AuthResourceTypeDao,
-        authActionDao: AuthActionDao
-    ) = RbacPermissionCacheService(
+        authActionDao: AuthActionDao,
+        authHelper: AuthHelper,
+        iamConfiguration: IamConfiguration
+    ) = RbacCacheService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
-        authActionDao = authActionDao
+        authActionDao = authActionDao,
+        authHelper = authHelper,
+        iamConfiguration = iamConfiguration
     )
 
     @Bean

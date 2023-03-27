@@ -25,7 +25,6 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
-import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -49,7 +48,7 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceService: AuthResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
-    val rbacCacheService: PermissionCacheService,
+    val rbacCacheService: RbacCacheService,
     val config: CommonConfig,
     val client: Client,
     val authResourceCodeConverter: AuthResourceCodeConverter,

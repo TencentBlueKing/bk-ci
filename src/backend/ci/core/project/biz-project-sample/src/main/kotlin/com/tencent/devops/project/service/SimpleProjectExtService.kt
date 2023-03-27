@@ -41,12 +41,20 @@ class SimpleProjectExtService @Autowired constructor(
 ) : ProjectExtService {
     override fun createExtProjectInfo(
         userId: String,
-        projectId: String,
+        authProjectId: String,
         accessToken: String?,
         projectCreateInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
         logoAddress: String?
     ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
+    }
+
+    override fun createOldAuthProject(
+        userId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo
+    ): String {
+        return ""
     }
 }

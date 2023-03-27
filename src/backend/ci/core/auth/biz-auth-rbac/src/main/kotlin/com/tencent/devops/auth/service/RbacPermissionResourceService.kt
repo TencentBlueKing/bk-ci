@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
+import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -42,8 +43,12 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -53,7 +58,9 @@ class RbacPermissionResourceService(
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val permissionProjectService: PermissionProjectService,
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val client: Client
 ) : PermissionResourceService {
 
     companion object {
@@ -228,16 +235,10 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        val checkProjectManage = permissionService.validateUserResourcePermissionByRelation(
+        checkProjectApprovalStatus(resourceType, resourceCode)
+        val checkProjectManage = permissionProjectService.checkProjectManager(
             userId = userId,
-            action = RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
-            ),
-            projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
-            relationResourceType = null
+            projectCode = projectId
         )
         // TODO 流水线组一期先不上,流水线组权限由项目控制
         if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
@@ -254,6 +255,25 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             relationResourceType = null
         )
+    }
+
+    private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            val projectInfo =
+                client.get(ServiceProjectResource::class).get(resourceCode).data ?: throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    params = arrayOf(resourceCode)
+                )
+            val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+            if (approvalStatus.isCreatePending()) {
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.UNDER_APPROVAL_PROJECT,
+                    params = arrayOf(resourceCode),
+                    defaultMessage = "project $resourceCode is being approved, " +
+                        "please wait patiently, or contact the approver"
+                )
+            }
+        }
     }
 
     override fun isEnablePermission(

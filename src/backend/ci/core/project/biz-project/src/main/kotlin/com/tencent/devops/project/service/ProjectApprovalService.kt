@@ -31,6 +31,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
@@ -138,6 +139,28 @@ class ProjectApprovalService @Autowired constructor(
                 params = arrayOf(projectId),
                 defaultMessage = "project $projectId is not exist"
             )
+        val projectCreateInfo = with(projectInfo) {
+            ProjectCreateInfo(
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType ?: 0,
+                description = description ?: "",
+                bgId = bgId?.toLong() ?: 0L,
+                bgName = bgName ?: "",
+                deptId = deptId?.toLong() ?: 0L,
+                deptName = deptName ?: "",
+                centerId = centerId?.toLong() ?: 0L,
+                centerName = centerName ?: "",
+                kind = kind ?: 0,
+                logoAddress = logoAddr
+            )
+        }
+        // 兼容旧版权限中心，如果旧版权限中心创建成功,则使用旧版权限中心projectId
+        val authProjectId = projectExtService.createOldAuthProject(
+            userId = applicant,
+            accessToken = null,
+            projectCreateInfo = projectCreateInfo
+        ) ?: projectInfo.projectId
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatusByCallback(
@@ -149,40 +172,41 @@ class ProjectApprovalService @Autowired constructor(
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
-                projectCode = projectId,
+                englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            val projectCreateInfo = with(projectInfo) {
-                ProjectCreateInfo(
-                    projectName = projectName,
-                    englishName = englishName,
-                    projectType = projectType ?: 0,
-                    description = description ?: "",
-                    bgId = bgId?.toLong() ?: 0L,
-                    bgName = bgName ?: "",
-                    deptId = deptId?.toLong() ?: 0L,
-                    deptName = deptName ?: "",
-                    centerId = centerId?.toLong() ?: 0L,
-                    centerName = centerName ?: "",
-                    kind = kind ?: 0,
-                    logoAddress = logoAddr
+            if (projectInfo.projectId != authProjectId) {
+                projectDao.updateAuthProjectId(
+                    dslContext = context,
+                    englishName = projectId,
+                    projectId = authProjectId
                 )
             }
-            try {
-                projectExtService.createExtProjectInfo(
-                    userId = applicant,
-                    projectId = projectId,
-                    accessToken = null,
-                    projectCreateInfo = projectCreateInfo,
-                    createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
-                    logoAddress = projectInfo.logoAddr
-                )
-            } catch (ignore: Exception) {
-                logger.warn("fail to create the project[$projectId] ext info $projectInfo", ignore)
-                projectDao.delete(dslContext, projectId)
-                throw ignore
-            }
+            createExtProjectInfo(applicant, authProjectId, projectCreateInfo, projectInfo, projectId)
+        }
+    }
+
+    private fun createExtProjectInfo(
+        applicant: String,
+        authProjectId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        projectInfo: TProjectRecord,
+        projectId: String
+    ) {
+        try {
+            projectExtService.createExtProjectInfo(
+                userId = applicant,
+                authProjectId = authProjectId,
+                accessToken = null,
+                projectCreateInfo = projectCreateInfo,
+                createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+                logoAddress = projectInfo.logoAddr
+            )
+        } catch (ignore: Exception) {
+            logger.warn("fail to create the project[$projectId] ext info $projectInfo", ignore)
+            projectDao.delete(dslContext, projectId)
+            throw ignore
         }
     }
 
@@ -204,7 +228,7 @@ class ProjectApprovalService @Autowired constructor(
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
-                projectCode = projectId,
+                englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
             )
@@ -301,7 +325,7 @@ class ProjectApprovalService @Autowired constructor(
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
-                projectCode = projectId,
+                englishName = projectId,
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
