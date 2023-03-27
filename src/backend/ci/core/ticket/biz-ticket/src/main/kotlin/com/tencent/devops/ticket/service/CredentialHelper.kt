@@ -75,6 +75,9 @@ class CredentialHelper {
             CredentialType.ACCESSTOKEN -> {
                 true
             }
+            CredentialType.OAUTHTOKEN -> {
+                true
+            }
             CredentialType.USERNAME_PASSWORD -> {
                 true
             }

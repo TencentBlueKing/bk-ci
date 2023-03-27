@@ -96,7 +96,9 @@ class ModelElement @Autowired(required = false) constructor(
                 manualRetry = false
             )
 
-            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
+            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(
+                step.ifModify, changeSet, event.checkIfModify
+            )
             // bash
             val element: Element? = when {
                 step.run != null -> {

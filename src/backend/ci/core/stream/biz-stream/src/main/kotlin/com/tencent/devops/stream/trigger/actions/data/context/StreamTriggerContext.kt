@@ -48,6 +48,8 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
  * @param parsedYaml 替换完模板之后的yaml
  * @param normalizedYaml 填充完成的yaml，可以用来生成流水线model
  * @param finishData stream在构建结束后的相关逻辑需要的数据
+ * @param repoCreatedTime 触发仓库创建时间字符串 如:2017-08-13T07:37:14+0000
+ * @param repoCreatorId 触发仓库创建人id， 工蜂侧是数字 id 需要使用时转换为 name
  */
 data class StreamTriggerContext(
     var requestEventId: Long? = null,
@@ -57,6 +59,8 @@ data class StreamTriggerContext(
     var changeSet: Set<String>? = null,
     var mrInfo: StreamMrInfo? = null,
     var defaultBranch: String? = null,
+    var repoCreatedTime: String? = null,
+    var repoCreatorId: String? = null,
     var originYaml: String? = null,
     var parsedYaml: String? = null,
     var normalizedYaml: String? = null,
