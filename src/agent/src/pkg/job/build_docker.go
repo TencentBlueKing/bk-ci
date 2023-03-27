@@ -208,7 +208,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 
 	// 解析docker options
 	var dockerConfig *job_docker.ContainerConfig = nil
-	if dockerBuildInfo.Options != "" {
+	if dockerBuildInfo.Options != nil {
 		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
 		if err != nil {
 			logs.Error("DOCKER_JOB|" + err.Error())

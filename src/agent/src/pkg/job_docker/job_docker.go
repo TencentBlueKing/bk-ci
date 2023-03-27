@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
-	"github.com/mattn/go-shellwords"
 	"github.com/pkg/errors"
 	"github.com/spf13/pflag"
 )
@@ -31,18 +31,33 @@ type ContainerCreateInfo struct {
 	NetWorkingConfig *network.NetworkingConfig
 }
 
-func ParseDockeroptions(dockerClient *client.Client, userOptionStr string) (*ContainerConfig, error) {
-	// 解析用户输入为shell args
-	argv, err := shellwords.Parse(userOptionStr)
-	if err != nil {
-		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
-		return nil, errors.New(errMsg)
+func parseApiDockerOptions(o *api.DockerOptions) []string {
+	args := []string{}
+	switch {
+	case o.Volumes != nil && len(o.Volumes) > 0:
+		for _, v := range o.Volumes {
+			args = append(args, "--volume", strings.TrimSpace(v))
+		}
+		fallthrough
+	case o.Mounts != nil && len(o.Mounts) > 0:
+		for _, m := range o.Mounts {
+			args = append(args, "--mount", strings.TrimSpace(m))
+		}
+		fallthrough
+	case o.Gpus != "":
+		args = append(args, "--gpus", strings.TrimSpace(o.Gpus))
 	}
+	return args
+}
 
-	// 解析shell args为flagSet
+func ParseDockeroptions(dockerClient *client.Client, userOptions *api.DockerOptions) (*ContainerConfig, error) {
+	// 将指定好的options直接换成args
+	argv := parseApiDockerOptions(userOptions)
+
+	// 解析args为flagSet
 	var copts *containerOptions
 	copts = addFlags(pflag.CommandLine)
-	err = pflag.CommandLine.Parse(argv)
+	err := pflag.CommandLine.Parse(argv)
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
 		return nil, errors.New(errMsg)

@@ -88,7 +88,6 @@ require (
 
 require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
-	github.com/mattn/go-shellwords v1.0.12
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 )
 
