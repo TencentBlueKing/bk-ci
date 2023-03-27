@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 class AuthResourceTypeDao {
     fun list(dslContext: DSLContext): Result<TAuthResourceTypeRecord> {
         return with(TAuthResourceType.T_AUTH_RESOURCE_TYPE) {
-            dslContext.selectFrom(this).fetch()
+            dslContext.selectFrom(this).where(DELETE.eq(false)).orderBy(ID.asc()).fetch()
         }
     }
 }
