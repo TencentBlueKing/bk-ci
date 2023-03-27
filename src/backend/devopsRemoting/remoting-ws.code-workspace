@@ -20,6 +20,12 @@
         },
         {
             "path": "src/ide/vscode-desktop"
+        },
+        {
+            "path": "src/registry-facade"
+        },
+        {
+            "path": "src/registry-facade-api"
         }
     ],
     "settings": {
