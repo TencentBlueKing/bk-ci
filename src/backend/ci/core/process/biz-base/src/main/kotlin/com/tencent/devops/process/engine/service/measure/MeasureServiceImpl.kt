@@ -193,7 +193,6 @@ class MeasureServiceImpl : MeasureService {
                 ),
                 extData = extData
             )
-            logger.warn("postTaskData taskName:${task.taskName}|atomCode:$atomCode")
             measureEventDispatcher.dispatch(
                 AtomMonitorReportBroadCastEvent(
                     pipelineId = pipelineId,

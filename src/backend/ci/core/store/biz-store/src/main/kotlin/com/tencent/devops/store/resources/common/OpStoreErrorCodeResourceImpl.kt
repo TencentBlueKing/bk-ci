@@ -25,18 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.vo
+package com.tencent.devops.store.resources.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreErrorCodeResource
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("项目信息查询VO")
-data class QueryProjectInfoVO(
-    @ApiModelProperty("项目列表", required = true)
-    val projectIds: List<String>,
-    @ApiModelProperty("开始时间", required = true)
-    val startDateTime: LocalDateTime,
-    @ApiModelProperty("结束时间", required = true)
-    val endDateTime: LocalDateTime
-)
+@RestResource
+class OpStoreErrorCodeResourceImpl @Autowired constructor(
+    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
+) : OpStoreErrorCodeResource {
+
+    override fun createGeneralErrorCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean> {
+        return marketAtomErrorCodeService.createGeneralErrorCode(userId, storeType, errorCodeInfo)
+    }
+
+}

@@ -30,7 +30,7 @@ package com.tencent.devops.metrics.pojo.`do`
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件基本信息")
+@ApiModel("错误码合规信息")
 data class ComplianceInfoDO(
     @ApiModelProperty("失败执行次数")
     val failExecuteCount: Int,

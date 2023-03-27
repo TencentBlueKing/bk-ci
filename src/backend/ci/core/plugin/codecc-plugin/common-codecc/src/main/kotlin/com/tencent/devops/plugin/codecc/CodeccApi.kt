@@ -183,7 +183,6 @@ open class CodeccApi constructor(
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
         val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
-        logger.info("codecc opensource measurement host:$codeccHost url: $url")
         val httpReq = Request.Builder()
             .url(url)
             .get()

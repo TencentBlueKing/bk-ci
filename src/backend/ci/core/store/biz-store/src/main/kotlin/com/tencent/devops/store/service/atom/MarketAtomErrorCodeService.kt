@@ -28,16 +28,35 @@
 package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface MarketAtomErrorCodeService {
 
-    fun createErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
+    /**
+     * 创建组件自定义错误码
+     */
+    fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
 
-    fun updateErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
+    /**
+     * 更新组件自定义错误码
+     */
+    fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
 
+    /**
+     * 创建通用组件错误码
+     */
+    fun createGeneralErrorCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean>
+
+    /**
+     * 判断错误码是否合规
+     */
     fun isComplianceErrorCode(
         storeCode: String,
         storeType: StoreTypeEnum,

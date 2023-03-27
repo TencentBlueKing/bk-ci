@@ -119,7 +119,7 @@ class StoreDockingPlatformDao {
             if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
                 step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
             }
-            step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+            step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode)).execute()
         }
     }
 

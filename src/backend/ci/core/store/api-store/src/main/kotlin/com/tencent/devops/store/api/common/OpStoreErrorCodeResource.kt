@@ -25,18 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.vo
+package com.tencent.devops.store.api.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("项目信息查询VO")
-data class QueryProjectInfoVO(
-    @ApiModelProperty("项目列表", required = true)
-    val projectIds: List<String>,
-    @ApiModelProperty("开始时间", required = true)
-    val startDateTime: LocalDateTime,
-    @ApiModelProperty("结束时间", required = true)
-    val endDateTime: LocalDateTime
-)
+@Api(tags = ["OP_STORE_ERROR_CODE"], description = "OP-STORE-对接平台")
+@Path("/op/store/error/code")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreErrorCodeResource {
+
+    @ApiOperation("新增插件通用错误码")
+    @POST
+    @Path("type/{storeType}/general/add")
+    fun createGeneralErrorCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("插件通用错误码信息", required = true)
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean>
+}

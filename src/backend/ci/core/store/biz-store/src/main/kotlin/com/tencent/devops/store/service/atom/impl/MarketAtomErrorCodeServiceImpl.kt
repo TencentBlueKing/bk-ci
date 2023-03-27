@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -52,7 +53,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    override fun createErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+    override fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -61,7 +62,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+    override fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -85,15 +86,34 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun createGeneralErrorCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean> {
+        checkErrorCode(ErrorCodeTypeEnum.GENERAL, listOf("${errorCodeInfo.errorCode}"))
+        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+            dslContext,
+            userId,
+            StoreErrorCodeInfo(
+                storeCode = "devops",
+                storeType = storeType,
+                errorCodeType = ErrorCodeTypeEnum.GENERAL,
+                errorCodeInfos = listOf(errorCodeInfo)
+            )
+        )
+        return Result(true)
+    }
+
     @Suppress("ComplexMethod")
-    private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
+    private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum,errorCodeInfos: List<String>) {
         val invalidErrorCodes = mutableListOf<String>()
         errorCodeInfos.forEach { errorCode ->
-            if (errorCode.length != 6) invalidErrorCodes.add(errorCode)
+            if (errorCode.length != defaultAtomErrorCodeLength) invalidErrorCodes.add(errorCode)
             val errorCodePrefix = errorCode.substring(0, 3)
             when (errorCodeType) {
                 ErrorCodeTypeEnum.ATOM -> {
-                    if (!errorCodePrefix.startsWith("8")) {
+                    if (!errorCodePrefix.startsWith(defaultAtomErrorCodePrefix)) {
                         invalidErrorCodes.add(errorCode)
                     }
                 }

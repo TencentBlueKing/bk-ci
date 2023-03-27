@@ -28,9 +28,7 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -38,7 +36,6 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -66,16 +63,5 @@ interface OpenStoreResource {
         @ApiParam("类型", required = true)
         @PathParam("storeType")
         storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    @ApiOperation("新增插件通用错误码")
-    @POST
-    @Path("/Genera/errorCodeInfo/add")
-    fun createGeneralErrorCode(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("插件自定义错误码信息", required = true)
-        storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean>
 }
