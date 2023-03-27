@@ -149,8 +149,8 @@ object TXStreamDispatchUtils {
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
                     jobId = job.id
-                )
-
+                ),
+                options = info.options
             )
 
             return ThirdPartyAgentEnvDispatchType(
