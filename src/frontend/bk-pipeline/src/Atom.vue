@@ -45,7 +45,7 @@
                     {{ atom.atomCode ? atom.name : t("pendingAtom") }}
                 </span>
             </p>
-            <span v-if="isExecuting">{{ execTime }}</span>
+            <span class="atom-execounter" v-if="isExecuting">{{ execTime }}</span>
             <Logo v-if="isBusy" name="circle-2-1" size="14" class="spin-icon" />
             <bk-popover v-else-if="atom.isReviewing" placement="top">
                 <span
@@ -137,29 +137,29 @@
 </template>
 
 <script>
-    import { bkPopover, bkCheckbox } from 'bk-magic-vue'
-    import StatusIcon from './StatusIcon'
-    import Logo from './Logo'
+    import { bkCheckbox, bkPopover } from 'bk-magic-vue'
     import {
-        eventBus,
-        hashID,
-        randomString,
-        isTriggerContainer,
-        convertMStoString
-    } from './util'
-    import { localeMixins } from './locale'
-    import {
+        ATOM_CONTINUE_EVENT_NAME,
+        ATOM_EXEC_EVENT_NAME,
+        ATOM_QUALITY_CHECK_EVENT_NAME,
+        ATOM_REVIEW_EVENT_NAME,
         CLICK_EVENT_NAME,
         COPY_EVENT_NAME,
         DELETE_EVENT_NAME,
         QUALITY_IN_ATOM_CODE,
         QUALITY_OUT_ATOM_CODE,
-        ATOM_CONTINUE_EVENT_NAME,
-        ATOM_EXEC_EVENT_NAME,
-        ATOM_QUALITY_CHECK_EVENT_NAME,
-        ATOM_REVIEW_EVENT_NAME,
         STATUS_MAP
     } from './constants'
+    import { localeMixins } from './locale'
+    import Logo from './Logo'
+    import StatusIcon from './StatusIcon'
+    import {
+        convertMStoString,
+        eventBus,
+        hashID,
+        isTriggerContainer,
+        randomString
+    } from './util'
 
     export default {
         name: 'atom',
@@ -342,7 +342,8 @@
             },
             formatTime () {
                 try {
-                    return convertMStoString(this.atom?.timeCost?.totalCost)
+                    const totalCost = Math.max(0, this.atom?.timeCost?.totalCost ?? 0)
+                    return convertMStoString(totalCost)
                 } catch (error) {
                     return '--'
                 }
@@ -376,11 +377,11 @@
             'atom.locateActive': function (val) {
                 if (val) {
                     const ele = document.getElementById(this.atom.id)
-        ele?.scrollIntoView?.({
-          block: 'center',
-          inline: 'center',
-          behavior: 'smooth'
-        })
+                    ele?.scrollIntoView?.({
+                        block: 'center',
+                        inline: 'center',
+                        behavior: 'smooth'
+                    })
                 }
             }
         },
@@ -654,6 +655,7 @@
     color: $fontWeightColor;
     @include ellipsis();
     max-width: 188px;
+    margin-right: 2px;
     span:hover {
       color: $primaryColor;
     }
@@ -663,8 +665,12 @@
     color: $fontLighterColor;
   }
 
-  .atom-operate-area {
-    margin: 0 8px 0 2px;
+  .atom-execounter {
+    color: $primaryColor;
+    font-size: 12px;
+  }
+  .atom-operate-area{
+    margin: 0 8px 0 0;
     color: $primaryColor;
     font-size: 12px;
   }

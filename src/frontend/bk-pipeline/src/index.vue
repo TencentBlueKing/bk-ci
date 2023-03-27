@@ -142,12 +142,10 @@
         computed: {
             computedStages: {
                 get () {
-                    return (
-          this.pipeline?.stages?.map((stage) => ({
-            ...stage,
-            isTrigger: this.checkIsTriggerStage(stage)
-          })) ?? []
-                    )
+                    return this.pipeline?.stages?.map((stage) => ({
+                        ...stage,
+                        isTrigger: this.checkIsTriggerStage(stage)
+                    })) ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {

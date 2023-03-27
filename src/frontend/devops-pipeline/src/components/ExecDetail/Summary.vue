@@ -113,8 +113,8 @@
                 return convertTime(this.execDetail?.startTime)
             },
             executeTime () {
-                return this.execDetail?.executeTime
-        ? convertMStoString(this.execDetail?.executeTime)
+                return this.execDetail.model?.timeCost?.totalCost
+                ? convertMStoString(this.execDetail.model?.timeCost?.totalCost)
                 : '--'
             },
             visibleMaterial () {
@@ -128,11 +128,11 @@
             },
             webhookInfo () {
                 return this.execDetail?.webhookInfo
-        ? {
-            aliasName: this.execDetail.webhookInfo.webhookAliasName,
-            branchName: this.execDetail.webhookInfo.webhookBranch,
-            newCommitId: this.execDetail.webhookInfo.webhookCommitId
-          }
+                ? {
+                    aliasName: this.execDetail.webhookInfo.webhookAliasName,
+                    branchName: this.execDetail.webhookInfo.webhookBranch,
+                    newCommitId: this.execDetail.webhookInfo.webhookCommitId
+                }
                 : null
             }
         },

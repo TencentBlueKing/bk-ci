@@ -257,9 +257,9 @@
             },
             errorList () {
                 return this.execDetail?.errorInfoList?.map((error) => ({
-        ...error,
-        errorTypeConf: errorTypeMap[error.errorType]
-      }))
+                    ...error,
+                    errorTypeConf: errorTypeMap[error.errorType]
+                }))
             },
             showErrorPopup () {
                 return Array.isArray(this.errorList) && this.errorList.length > 0
@@ -269,33 +269,36 @@
                     field: key,
                     label: this.$t(`details.${key}`),
                     value: this.execDetail?.model?.timeCost?.[key]
-          ? convertMStoString(this.execDetail.model.timeCost[key])
-          : '--'
+                        ? convertMStoString(this.execDetail.model.timeCost[key])
+                        : '--'
                 }))
             },
             queueCost () {
                 return this.execDetail?.model?.timeCost?.queueCost
-        ? convertMStoString(this.execDetail.model.timeCost.queueCost)
+                ? convertMStoString(this.execDetail.model.timeCost.queueCost)
                 : '--'
             },
             totalCost () {
                 return this.execDetail?.model?.timeCost?.totalCost
-        ? convertMStoString(this.execDetail.model.timeCost.totalCost)
+                ? convertMStoString(this.execDetail.model.timeCost.totalCost)
                 : '--'
             },
             errorsTableColumns () {
                 return [
                     {
                         label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorType'
+                        prop: 'errorType',
+                        width: 150
                     },
                     {
                         label: this.$t('details.pipelineErrorCode'),
-                        prop: 'errorCode'
+                        prop: 'errorCode',
+                        width: 150
                     },
                     {
                         label: this.$t('details.pipelineErrorPos'),
-                        prop: 'taskName'
+                        prop: 'taskName',
+                        width: 200
                     },
                     {
                         label: this.$t('details.pipelineErrorInfo'),
@@ -318,7 +321,7 @@
             },
             statusLabel () {
                 return this.execDetail?.status
-        ? this.$t(`details.statusMap.${this.execDetail?.status}`)
+                ? this.$t(`details.statusMap.${this.execDetail?.status}`)
                 : ''
             },
             cancelUserId () {
@@ -372,15 +375,29 @@
             executeCounts () {
                 const len = this.execDetail?.startUserList?.length ?? 0
                 return (
-        this.execDetail?.startUserList?.map((user, index) => ({
-          id: len - index,
-          name: `${len - index} / ${len}`,
-          user
-        })) ?? []
+                    this.execDetail?.startUserList?.map((user, index) => ({
+                    id: len - index,
+                    name: `${len - index} / ${len}`,
+                    user
+                    })) ?? []
                 )
             },
             routerParams () {
                 return this.$route.params
+            }
+        },
+        watch: {
+            errorList: {
+                immediate: true,
+                handler: function (el) {
+                    if (el?.length > 0) {
+                        this.setAtomLocate(el[0])
+                        this.setShowErrorPopup()
+                    } else {
+                        this.activeErrorAtom = null
+                        this.hideErrorPopup()
+                    }
+                }
             }
         },
         mounted () {

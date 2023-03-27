@@ -1,22 +1,29 @@
 <template>
-    <div :class="{
-        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
-    }">
-        <h3 :class="jobTitleCls"
-            @click.stop="showContainerPanel"
-        >
-            <status-icon type="container" :editable="reactiveData.editable" :container-disabled="disabled" :status="containerStatus" :depend-on-value="dependOnValue">
+    <div
+        :class="{
+            'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
+        }"
+    >
+        <h3 :class="jobTitleCls" @click.stop="showContainerPanel">
+            <status-icon
+                type="container"
+                :editable="reactiveData.editable"
+                :container-disabled="disabled"
+                :status="containerStatus"
+                :depend-on-value="dependOnValue"
+            >
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
-                <span
-                    :class="displayNameCls"
-                    :title="displayName"
-                >
+                <span :class="displayNameCls" :title="displayName">
                     {{ displayName }}
                 </span>
             </p>
-            <container-type :class="containerTypeCls" :container="container" v-if="!reactiveData.canSkipElement"></container-type>
+            <container-type
+                :class="containerTypeCls"
+                :container="container"
+                v-if="!reactiveData.canSkipElement"
+            ></container-type>
             <Logo
                 v-if="showCopyJob && !container.isError"
                 :title="t('copyJob')"
@@ -27,10 +34,16 @@
             />
             <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
             <span @click.stop v-if="reactiveData.canSkipElement">
-                <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="disabled"></bk-checkbox>
+                <bk-checkbox
+                    class="atom-canskip-checkbox"
+                    v-model="container.runContainer"
+                    :disabled="disabled"
+                ></bk-checkbox>
             </span>
             <Logo
-                v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag"
+                v-if="
+                    (reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag
+                "
                 name="matrix"
                 size="16"
                 class="matrix-flag-icon"
@@ -44,7 +57,13 @@
                 :class="matrixFoldLogoCls"
             >
             </Logo>
-            <bk-button v-if="showDebugBtn" class="debug-btn" theme="warning" @click.stop="debugDocker">{{ $t('editPage.docker.debugConsole') }}</bk-button>
+            <bk-button
+                v-if="showDebugBtn"
+                class="debug-btn"
+                theme="warning"
+                @click.stop="debugDocker"
+            >{{ $t("editPage.docker.debugConsole") }}</bk-button
+            >
         </h3>
         <atom-list
             v-if="showAtomList || !showMatrixFold"
@@ -71,7 +90,7 @@
         isObject
     } from './util'
     import { localeMixins } from './locale'
-    
+
     import {
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
@@ -117,13 +136,8 @@
             stageLength: Number,
             updateCruveConnectHeight: Function
         },
-        inject: [
-            'reactiveData'
-        ],
-        emits: [
-            DELETE_EVENT_NAME,
-            COPY_EVENT_NAME
-        ],
+        inject: ['reactiveData'],
+        emits: [DELETE_EVENT_NAME, COPY_EVENT_NAME],
         data () {
             return {
                 showContainerName: false,
@@ -162,8 +176,11 @@
             displayName () {
                 try {
                     const { matrixContext, status, name } = this.container
-                    const suffix = isObject(matrixContext) ? Object.values(matrixContext).join(', ') : ''
-                    const isPrepare = (status === STATUS_MAP.PREPARE_ENV && this.containerGroupIndex === undefined)
+                    const suffix = isObject(matrixContext)
+                        ? Object.values(matrixContext).join(', ')
+                        : ''
+                    const isPrepare
+                        = status === STATUS_MAP.PREPARE_ENV && this.containerGroupIndex === undefined
                     return isPrepare ? this.t('prepareEnv') : `${name}${suffix ? `(${suffix})` : ''}`
                 } catch (error) {
                     return 'unknow'
@@ -181,7 +198,7 @@
             projectId () {
                 return this.$route.params.projectId
             },
-            
+
             dependOnValue () {
                 if (isTriggerContainer(this.container)) return ''
                 const val = getDependOnDesc(this.container)
@@ -198,9 +215,22 @@
                 }
             },
             showDebugBtn () {
-                const { reactiveData, container: { baseOS, status } } = this
-                const isshowDebugType = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE, PUBLIC_BCS_BUILD_TYPE].includes(this.buildResourceType)
-                return baseOS === 'LINUX' && isshowDebugType && reactiveData.isExecDetail && reactiveData.isLatestBuild && status === STATUS_MAP.FAILED
+                const {
+                    reactiveData,
+                    container: { baseOS, status }
+                } = this
+                const isshowDebugType = [
+                    DOCKER_BUILD_TYPE,
+                    PUBLIC_DEVCLOUD_BUILD_TYPE,
+                    PUBLIC_BCS_BUILD_TYPE
+                ].includes(this.buildResourceType)
+                return (
+                    baseOS === 'LINUX'
+                    && isshowDebugType
+                    && reactiveData.isExecDetail
+                    && reactiveData.isLatestBuild
+                    && status === STATUS_MAP.FAILED
+                )
             },
             isUnExecThisTime () {
                 return this.container?.executeCount < this.reactiveData.currentExecCount
@@ -210,8 +240,11 @@
             'container.runContainer' (newVal) {
                 const { elements } = this.container
                 if (this.disabled && newVal) return
-                elements.filter(item => (item.additionalOptions === undefined || item.additionalOptions.enable))
-                    .forEach(item => {
+                elements
+                    .filter(
+                        (item) => item.additionalOptions === undefined || item.additionalOptions.enable
+                    )
+                    .forEach((item) => {
                         item.canElementSkip = newVal
                     })
                 this.handleChange(this.container, { elements })
@@ -224,7 +257,7 @@
             },
             deleteJob () {
                 const { containerIndex, stageIndex, isOnlyOneContainer } = this
-                
+
                 this.$emit(DELETE_EVENT_NAME, {
                     stageIndex,
                     containerIndex: isOnlyOneContainer ? undefined : containerIndex
@@ -238,7 +271,7 @@
                     container: this.container
                 })
             },
-            
+
             handleCopyContainer () {
                 try {
                     const copyContainer = JSON.parse(JSON.stringify(this.container))
@@ -247,7 +280,7 @@
                         ...resetContainerProps,
                         containerId: `c-${hashID()}`,
                         jobId: `job_${randomString(3)}`,
-                        elements: copyContainer.elements.map(element => ({
+                        elements: copyContainer.elements.map((element) => ({
                             ...element,
                             id: `e-${hashID()}`
                         })),
@@ -284,94 +317,93 @@
 </script>
 
 <style lang="scss">
-    @use "sass:math";
-    @import "./conf";
-    .devops-stage-container {
-        .container-title {
-            display: flex;
-            height: $itemHeight;
-            background: #33333f;
-            cursor: pointer;
-            color: white;
-            font-size: 14px;
-            align-items: center;
-            position: relative;
-            margin: 0 0 16px 0;
-            z-index: 3;
-            > .container-name {
-                @include ellipsis();
-                flex: 1;
-                padding: 0 6px;
-            }
-
-            .atom-canskip-checkbox {
-                margin-right: 6px;
-                &.is-disabled .bk-checkbox {
-                    background-color: transparent;
-                    border-color: #979BA4;
-                }
-
-            }
-            input[type=checkbox] {
-                border-radius: 3px;
-            }
-            .matrix-flag-icon {
-                position: absolute;
-                top: 0px;
-                font-size: 16px;
-            }
-            .fold-atom-icon {
-                position: absolute;
-                background: white;
-                border-radius: 50%;
-                bottom: -10px;
-                left: 44%;
-                transition: all .3s ease;
-                &.open {
-                    transform: rotate(-180deg);
-                }
-                &.readonly {
-                  color: $fontWeightColor;
-                }
-            }
-            .copyJob {
-                display: none;
-                margin-right: 10px;
-                color: $fontLighterColor;
-                cursor: pointer;
-                &:hover {
-                    color: $primaryColor;
-                }
-            }
-            .close {
-                @include add-plus-icon(#2E2E3A, #2E2E3A, #c4c6cd, 16px, true);
-                @include add-plus-icon-hover($dangerColor, $dangerColor, white);
-                border: none;
-                display: none;
-                margin-right: 10px;
-                transform: rotate(45deg);
-                cursor: pointer;
-                &:before, &:after {
-                    left: 7px;
-                    top: 4px;
-                }
-            }
-            .debug-btn {
-                position: absolute;
-                height: 100%;
-                right: 0;
-            }
-
-            &:hover {
-                .copyJob, .close {
-                    display: block;
-                }
-                .hover-hide {
-                    display: none;
-                }
-            }
-
-        }
-
+@use "sass:math";
+@import "./conf";
+.devops-stage-container {
+  .container-title {
+    display: flex;
+    height: $itemHeight;
+    background: #33333f;
+    cursor: pointer;
+    color: white;
+    font-size: 14px;
+    align-items: center;
+    position: relative;
+    margin: 0 0 16px 0;
+    z-index: 3;
+    > .container-name {
+      @include ellipsis();
+      flex: 1;
+      padding: 0 6px;
     }
+
+    .atom-canskip-checkbox {
+      margin-right: 6px;
+      &.is-disabled .bk-checkbox {
+        background-color: transparent;
+        border-color: #979ba4;
+      }
+    }
+    input[type="checkbox"] {
+      border-radius: 3px;
+    }
+    .matrix-flag-icon {
+      position: absolute;
+      top: 0px;
+      font-size: 16px;
+    }
+    .fold-atom-icon {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      bottom: -10px;
+      left: 44%;
+      transition: all 0.3s ease;
+      &.open {
+        transform: rotate(-180deg);
+      }
+      &.readonly {
+        color: $fontWeightColor;
+      }
+    }
+    .copyJob {
+      display: none;
+      margin-right: 10px;
+      color: $fontLighterColor;
+      cursor: pointer;
+      &:hover {
+        color: $primaryColor;
+      }
+    }
+    .close {
+      @include add-plus-icon(#2e2e3a, #2e2e3a, #c4c6cd, 16px, true);
+      @include add-plus-icon-hover($dangerColor, $dangerColor, white);
+      border: none;
+      display: none;
+      margin-right: 10px;
+      transform: rotate(45deg);
+      cursor: pointer;
+      &:before,
+      &:after {
+        left: 7px;
+        top: 4px;
+      }
+    }
+    .debug-btn {
+      position: absolute;
+      height: 100%;
+      right: 0;
+    }
+
+    &:hover {
+      .copyJob,
+      .close {
+        display: block;
+      }
+      .hover-hide {
+        display: none;
+      }
+    }
+  }
+}
 </style>
