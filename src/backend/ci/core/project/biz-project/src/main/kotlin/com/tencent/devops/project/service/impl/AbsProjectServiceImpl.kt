@@ -49,6 +49,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -412,9 +413,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                 }
                 // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
-                val finalNeedApproval = projectPermissionService.needApproval(needApproval) &&
-                    (projectInfo.subjectScopes != subjectScopesStr ||
-                        projectInfo.authSecrecy != projectUpdateInfo.authSecrecy)
+                val finalNeedApproval = needApprovalWhenUpdate(
+                    needApproval = needApproval,
+                    projectInfo = projectInfo,
+                    subjectScopesStr = subjectScopesStr,
+                    projectUpdateInfo = projectUpdateInfo
+                )
                 val newApprovalStatus = if (finalNeedApproval) {
                     ProjectApproveStatus.UPDATE_PENDING.status
                 } else {
@@ -488,6 +492,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
         }
         return success
+    }
+
+    private fun needApprovalWhenUpdate(
+        needApproval: Boolean?,
+        projectInfo: TProjectRecord,
+        subjectScopesStr: String,
+        projectUpdateInfo: ProjectUpdateInfo
+    ): Boolean {
+        val authNeedApproval = projectPermissionService.needApproval(needApproval)
+        val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+        // 判断是否需要审批
+        return if (approveStatus.isSuccess()) {
+            // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
+            authNeedApproval &&
+                (projectInfo.subjectScopes != subjectScopesStr ||
+                    projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
+                    )
+        } else {
+            // 当创建驳回时，需要再审批
+            authNeedApproval
+        }
     }
 
     /**
@@ -818,10 +843,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
-            permission = AuthPermission.MANAGE
+            permission = AuthPermission.ENABLE
         )
         if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+            logger.info("$englishName| $userId| ${AuthPermission.ENABLE} validatePermission fail")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         projectDao.updateUsableStatus(
