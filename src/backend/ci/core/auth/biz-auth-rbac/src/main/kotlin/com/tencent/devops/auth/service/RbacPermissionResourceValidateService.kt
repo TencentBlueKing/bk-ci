@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
-import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.auth.service.iam.PermissionResourceValidateService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.util.HashUtil
@@ -43,7 +42,7 @@ import org.slf4j.LoggerFactory
 
 class RbacPermissionResourceValidateService(
     private val permissionService: PermissionService,
-    private val rbacCacheService: PermissionCacheService,
+    private val rbacCacheService: RbacCacheService,
     private val client: Client
 ) : PermissionResourceValidateService {
 

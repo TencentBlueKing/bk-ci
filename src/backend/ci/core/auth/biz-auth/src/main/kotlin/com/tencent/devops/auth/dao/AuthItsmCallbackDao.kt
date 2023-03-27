@@ -94,7 +94,6 @@ class AuthItsmCallbackDao {
         with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
             return dslContext.selectFrom(this)
                 .where(ENGLISH_NAME.eq(projectCode))
-                .and(APPROVE_RESULT.isNull)
                 .orderBy(CREATE_TIME.desc())
                 .fetchAny()
         }

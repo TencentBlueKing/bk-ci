@@ -94,6 +94,9 @@ interface PermissionService {
         resourceType: String
     ): Map<AuthPermission, List<String>>
 
+    /**
+     * 过滤有权限的资源实例列表
+     */
     fun filterUserResourcesByActions(
         userId: String,
         actions: List<String>,
@@ -102,10 +105,16 @@ interface PermissionService {
         resources: List<AuthResourceInstance>
     ): Map<AuthPermission, List<String>>
 
+    /**
+     * 获取拥有某个操作的资源实例和资源父实例列表
+     *
+     * 流水线会返回,pipeline,pipeline_group,project列表
+     * 其他的资源返回 资源类型,project
+     */
     fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
         projectCode: String,
         resourceType: String
-    ): Map<String, List<String>>
+    ): Map<String /*resourceType*/, List<String> /*resources*/>
 }
