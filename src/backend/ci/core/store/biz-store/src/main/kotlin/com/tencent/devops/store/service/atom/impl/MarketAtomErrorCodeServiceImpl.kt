@@ -106,7 +106,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     }
 
     @Suppress("ComplexMethod")
-    private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum,errorCodeInfos: List<String>) {
+    private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
         val invalidErrorCodes = mutableListOf<String>()
         errorCodeInfos.forEach { errorCode ->
             if (errorCode.length != defaultAtomErrorCodeLength) invalidErrorCodes.add(errorCode)

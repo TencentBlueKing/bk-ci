@@ -47,5 +47,4 @@ class OpStoreErrorCodeResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return marketAtomErrorCodeService.createGeneralErrorCode(userId, storeType, errorCodeInfo)
     }
-
 }
