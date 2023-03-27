@@ -202,7 +202,7 @@ const handleMessage = (event: any) => {
       case 'load':
         setTimeout(() => {
           // 回显数据
-          vm?.refs.iframeRef.$el.firstElementChild.contentWindow.postMessage(
+          vm?.refs?.iframeRef?.$el?.firstElementChild?.contentWindow?.postMessage?.(
             JSON.parse(JSON.stringify({
               subject_scopes: projectData.value.subjectScopes
             })),

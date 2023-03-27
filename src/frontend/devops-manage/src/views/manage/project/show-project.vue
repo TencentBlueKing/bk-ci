@@ -243,9 +243,9 @@ const handleNoPermission = () => {
   const params = {
     projectId: projectCode,
     resourceCode: projectCode,
-    action: RESOURCE_ACTION
+    action: RESOURCE_ACTION.VIEW
   }
-  if (project) {
+  if (!project) {
     delete params.action
   }
   handleProjectManageNoPermission(params)
@@ -399,7 +399,7 @@ onMounted(async () => {
                   -->
                   <Popover
                     :content="statusDisabledTips[projectData.approvalStatus]"
-                    :disabled="[1, 4].includes(projectData.approvalStatus)"
+                    :disabled="![1, 4].includes(projectData.approvalStatus)"
                     v-perm="{
                       disablePermissionApi: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
                       hasPermission: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
@@ -415,7 +415,7 @@ onMounted(async () => {
                       <bk-button
                         class="btn mr10"
                         theme="primary"
-                        :disabled="projectData.approvalStatus !== 2"
+                        :disabled="[1, 4].includes(projectData.approvalStatus)"
                         @click="handleEdit"
                       >
                         {{ t('编辑') }}
@@ -425,7 +425,7 @@ onMounted(async () => {
 
                   <Popover
                     :content="t('仅更新人可撤销更新')"
-                    :disabled="userName === projectData.updator">
+                    :disabled="userName !== projectData.updator">
                     <bk-button
                       v-if="projectData.approvalStatus === 4"
                       class="btn"
