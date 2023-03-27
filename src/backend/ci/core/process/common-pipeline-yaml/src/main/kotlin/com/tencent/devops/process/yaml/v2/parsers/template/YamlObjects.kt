@@ -233,7 +233,8 @@ object YamlObjects {
                     username = credentialsMap["username"]!!,
                     password = credentialsMap["password"]!!
                 )
-            }
+            },
+            options = getNullValue("options", containerMap)
         )
     }
 

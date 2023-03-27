@@ -32,5 +32,6 @@ data class ThirdPartyContainerInfo(
     val userName: String?,
     val password: String?,
     val credId: String?,
-    val acrossTemplateId: String?
+    val acrossTemplateId: String?,
+    val options: String?
 )
