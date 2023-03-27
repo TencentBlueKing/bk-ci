@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.yaml.pojo
 
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+
 data class ThirdPartyContainerInfo(
     val image: String,
     val userName: String?,
     val password: String?,
     val credId: String?,
     val acrossTemplateId: String?,
-    val options: String?
+    val options: DockerOptions?
 )

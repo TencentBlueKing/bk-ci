@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -234,7 +235,25 @@ object YamlObjects {
                     password = credentialsMap["password"]!!
                 )
             },
-            options = getNullValue("options", containerMap)
+            options = if (containerMap["options"] == null) {
+                null
+            } else {
+                val optionsMap =
+                    transValue<Map<String, Any?>>(fromPath, "options", containerMap["options"])
+                DockerOptions(
+                    gpus = getNullValue("gpus", optionsMap),
+                    volumes = if (optionsMap["volumes"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "volumes", optionsMap["volumes"])
+                    },
+                    mounts = if (optionsMap["mounts"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
+                    },
+                )
+            }
         )
     }
 
