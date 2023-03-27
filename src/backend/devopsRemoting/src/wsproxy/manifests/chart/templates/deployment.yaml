@@ -57,7 +57,7 @@ spec:
               - key: https.pem
                 path: https/https.pem
               - key: https.key
-                paht: https/https.key    
+                path: https/https.key    
       {{- if .Values.wsproxy.affinity }}
       affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
       {{- end }}          
