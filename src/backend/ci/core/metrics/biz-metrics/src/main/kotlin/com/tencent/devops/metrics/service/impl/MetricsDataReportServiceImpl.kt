@@ -359,7 +359,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
         val errorCode = taskMetricsData.errorCode
-        val isComplianceErrorCode = isComplianceErrorCode(atomCode, "$errorCode")
+        val isComplianceErrorCode = isComplianceErrorCode(atomCode, errorCode.toString())
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
@@ -831,7 +831,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
-        var errorCodeType: ErrorCodeTypeEnum = when {
+        val errorCodeType: ErrorCodeTypeEnum = when {
             errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }

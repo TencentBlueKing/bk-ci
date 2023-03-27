@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.codecc
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -187,7 +188,7 @@ open class CodeccApi constructor(
         val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
         val headers = mutableMapOf<String, String>()
         if (!codeccGrayProjectId.isNullOrBlank()) {
-            headers["X-DEVOPS-PROJECT-ID"] = codeccGrayProjectId
+            headers[AUTH_HEADER_PROJECT_ID] = codeccGrayProjectId
         }
         val httpReq = Request.Builder()
             .url(url)
