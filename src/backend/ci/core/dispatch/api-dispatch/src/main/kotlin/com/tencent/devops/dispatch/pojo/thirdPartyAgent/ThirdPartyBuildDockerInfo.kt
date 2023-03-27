@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.tencent.devops.common.pipeline.type.agent.Credential
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 
 // 用来下发给agent的docker信息，用来处理一些调度时和下发时的差异数据
@@ -40,7 +41,7 @@ data class ThirdPartyBuildDockerInfo(
     val secretKey: String,
     val image: String,
     val credential: ThirdPartyBuildDockerInfoCredential?,
-    val options: String?
+    val options: DockerOptions?
 ) {
     constructor(input: ThirdPartyAgentDockerInfoDispatch) : this(
         agentId = input.agentId,
