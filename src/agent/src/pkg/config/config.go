@@ -69,7 +69,6 @@ const (
 	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
 	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild = "devops.docker.enable"
-	KeyDockerOptions     = "devops.docker.options"
 )
 
 // AgentConfig Agent 配置
@@ -390,12 +389,6 @@ func LoadAgentConfig() error {
 
 	GAgentConfig.BatchInstallKey = strings.TrimSpace(conf.Section("").Key(KeyBatchInstall).String())
 
-	// 兼容旧版本没有这个键
-	dockerOptions := []string{"gpus", "volume", "mount"}
-	if conf.Section("").HasKey(KeyDockerOptions) {
-		dockerOptions = strings.Split(strings.TrimSpace(conf.Section("").Key(KeyDockerOptions).String()), ",")
-	}
-
 	GAgentConfig.Gateway = landunGateway
 	systemutil.DevopsGateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
@@ -431,7 +424,6 @@ func LoadAgentConfig() error {
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 	GAgentConfig.EnableDockerBuild = enableDocker
 	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
-	GAgentConfig.DockerOptions = dockerOptions
 	logs.Infof("DockerOptions: %s", strings.Join(GAgentConfig.DockerOptions, ","))
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
@@ -465,7 +457,6 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
-	content.WriteString(KeyDockerOptions + "=" + strings.Join(GAgentConfig.DockerOptions, ",") + "\n")
 
 	err := os.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {
