@@ -21,7 +21,7 @@
         </bk-input>
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
-          @click="handleChooseGroup(group, index)"
+          @click="handleChooseGroup(group)"
           v-show="group.groupId !== renameGroupId"
         >
           <span class="group-name" :title="group.name">{{ group.name }}</span>
@@ -256,9 +256,9 @@ export default {
           this.deleteObj.isLoading = false;
         });
     },
-    handleChooseGroup(group, index) {
+    handleChooseGroup(group) {
       this.activeTab = group.groupId;
-      this.curGroupIndex = index;
+      this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
     handleCreateGroup() {
@@ -284,7 +284,7 @@ export default {
             this
               .refreshList()
               .then(() => {
-                const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0]
+                const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0];
                 this.handleChooseGroup(group);
               })
             break;
@@ -344,6 +344,7 @@ export default {
 
 <style lang="scss" scoped>
 .group-aside {
+  min-width: 240px;
   width: 240px;
   height: 100%;
   background-color: #fff;

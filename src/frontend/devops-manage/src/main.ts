@@ -13,7 +13,7 @@ import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
 import { handleProjectManageNoPermission } from './utils/permission';
-import { PermissionDirective } from 'bk-permission';
+import { AuthorityDirectiveV3 } from 'bk-permission';
 import 'bk-permission/dist/main.css';
 
 // i18n
@@ -39,6 +39,6 @@ app
   .use(createPinia())
   .use(bkui)
   .use(i18n)
-  .use(PermissionDirective(handleProjectManageNoPermission))
+  .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
   .mount('.app');
 app.directive('bk-tooltips', bkTooltips)

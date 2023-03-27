@@ -178,6 +178,7 @@ export default {
       groupList: [],
       hasLoadEnd: false,
       isClosing: false,
+      curGroupIndex: -1,
     };
   },
   watch: {
@@ -234,6 +235,7 @@ export default {
     },
     handleChooseGroup(group) {
       this.activeTab = group.groupId;
+      this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
     },
     handleCreateGroup() {
@@ -273,7 +275,14 @@ export default {
             this.handleChooseGroup(this.groupList[0]);
             break;
           case 'add_user_confirm':
-            this.refreshList()
+            this.groupList[this.curGroupIndex].departmentCount += data.data.departments.length
+            this.groupList[this.curGroupIndex].userCount += data.data.users.length
+            break;
+          case 'remove_user_confirm':
+            const departments = data.data.members.filters(i => i.type === department)
+            const users = data.data.members.filters(i => i.type === user)
+            this.groupList[this.curGroupIndex].departmentCount -= departments.length
+            this.groupList[this.curGroupIndex].userCount -= users.length
             break;
         }
       }
@@ -284,6 +293,7 @@ export default {
 
 <style lang="scss" scoped>
 .group-aside {
+  min-width: 240px;
   width: 240px;
   height: 100%;
   background-color: #fff;

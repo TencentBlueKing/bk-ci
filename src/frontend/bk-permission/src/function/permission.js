@@ -10,7 +10,7 @@ import { version } from '../utils/vue';
  * @param {*} data 弹框需要的数据，不传就通过接口获取
  * @param {*} ajaxPrefix 接口请求前缀
  */
-const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = '') => {
+export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = '') => {
   let infoBoxRef = {};
   let refreshBoxRef = {};
 
@@ -230,7 +230,7 @@ const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix = '') 
  * @param {*} data 弹框需要的数据，不传就通过接口获取
  * @param {*} ajaxPrefix 接口请求前缀
  */
-const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
+export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
   let infoBoxRef = {};
   let refreshBoxRef = {};
 

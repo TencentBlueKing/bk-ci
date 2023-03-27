@@ -70,7 +70,7 @@
     "@types/webpack-env": "^1.15.2",
     "axios": "^0.27.2",
     "bk-magic-vue": "2.4.15-beta.7",
-    "bk-permission": "^0.0.3",
+    "bk-permission": "^0.0.4",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
     "vue": "2.6.12",

@@ -3,14 +3,14 @@ import {
     AngleDown
 } from 'bkui-vue/lib/icon';
 import {
-    handleNoPermission
+    handleNoPermissionV3
 } from 'bk-permission';
 import {
     h
 } from 'vue';
 
 export const handleProjectManageNoPermission = (query) => {
-    return handleNoPermission(
+    return handleNoPermissionV3(
         {
             AngleDown,
             ...BKUI

@@ -168,7 +168,7 @@ async function updatePerms(el, data, vNode, ajaxPrefix) {
 }
 
 // vue2 使用的权限指令
-function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
+export function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
   handleShowDialog = handleNoPermission;
   return class {
     static install(Vue) {
@@ -200,7 +200,7 @@ function AuthorityDirectiveV2(handleNoPermission, ajaxPrefix = '') {
 }
 
 // vue3 使用的权限指令
-function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
+export function AuthorityDirectiveV3(handleNoPermission, ajaxPrefix = '') {
   handleShowDialog = handleNoPermission;
   return class {
     static install(app) {
