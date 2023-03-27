@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -47,7 +48,8 @@ import javax.ws.rs.HttpMethod
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
-    private val codeccHost: String
+    private val codeccHost: String,
+    private val codeccGrayProjectId: String? = null
 ) {
 
     companion object {
@@ -183,8 +185,13 @@ open class CodeccApi constructor(
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
         val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        val headers = mutableMapOf<String, String>()
+        if (!codeccGrayProjectId.isNullOrBlank()) {
+            headers["X-DEVOPS-PROJECT-ID"] = codeccGrayProjectId
+        }
         val httpReq = Request.Builder()
             .url(url)
+            .headers(headers.toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(httpReq).use { response ->
