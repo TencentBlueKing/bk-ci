@@ -177,3 +177,8 @@ func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httput
 		Post(url).Body(message).SetHeaders(headers).Execute().
 		IntoDevopsResult()
 }
+
+func GetDockerOptions() (*httputil.DevopsResult, error) {
+	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/docker/options")
+	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
+}

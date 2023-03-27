@@ -311,18 +311,6 @@
                   }
                 } ]
               },
-              "repos_ignore" : {
-                "type" : "array",
-                "items" : {
-                  "type" : "string"
-                }
-              },
-              "repos_ignore_condition" : {
-                "type" : "array",
-                "items" : {
-                  "type" : "string"
-                }
-              },
               "events" : {
                 "type" : "object",
                 "minProperties" : 1,
@@ -989,6 +977,27 @@
                         }, {
                           "type" : "string"
                         } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          }
+                        }
                       }
                     }
                   },
@@ -1265,6 +1274,27 @@
                         }, {
                           "type" : "string"
                         } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          }
+                        }
                       }
                     }
                   },
