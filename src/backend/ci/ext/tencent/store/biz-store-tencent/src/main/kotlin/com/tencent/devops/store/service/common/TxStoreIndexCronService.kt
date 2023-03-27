@@ -89,8 +89,7 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-//    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0 1 * * ?")
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -137,6 +136,7 @@ class TxStoreIndexCronService(
                         startTime = startTime,
                         endTime = endTime
                     )
+                    // sla计算
                     val atomSlaIndexValue =
                         (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
                     val result = if (atomSlaIndexValue > 99.9) "达标" else "不达标"
@@ -237,6 +237,7 @@ class TxStoreIndexCronService(
                     val projectIds = storeProjectIdMap.filter { (it.value1() as String) == atomCode }.map {
                         it.value2() as String
                     }
+                    // 获取插件合规信息
                     val complianceInfo = client.get(ServiceMetricsResource::class).queryAtomComplianceInfo(
                         userId = SYSTEM_USER,
                         atomCode = atomCode,
