@@ -29,5 +29,4 @@ class RbacLogPermissionService @Autowired constructor(
             relationResourceType = null
         ).data ?: false
     }
-
 }
