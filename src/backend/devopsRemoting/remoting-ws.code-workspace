@@ -13,22 +13,13 @@
             "path": "src/remoting-api"
         },
         {
-            "path": "src/ide"
-        },
-        {
             "path": "src/wsproxy"
         },
         {
-            "path": "src/registry-facade"
+            "path": "src/ide/vscode"
         },
         {
-            "path": "src/registry-facade-api"
-        },
-        {
-            "path": "temp"
-        },
-        {
-            "path": "test"
+            "path": "src/ide/vscode-desktop"
         }
     ],
     "settings": {
@@ -45,11 +36,6 @@
         },
         "go.formatTool": "goimports",
         "go.useLanguageServer": true,
-        "workspace.supportMultiRootWorkspace": true,
-        "launch": {},
-        "files.exclude": {
-            "**/.git": true
-        },
         "go.lintTool": "golangci-lint",
         "gopls": {
             "allowModfileModifications": true

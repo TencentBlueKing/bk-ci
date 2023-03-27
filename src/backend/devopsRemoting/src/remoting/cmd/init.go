@@ -86,7 +86,7 @@ func newCommandInit() *cobra.Command {
 				terminationDone := make(chan struct{})
 				go func() {
 					defer close(terminationDone)
-					slog.TerminateSync(ctx, runCommand.Process.Pid)
+					slog.Terminate(ctx, runCommand.Process.Pid)
 					terminateAllOtherProcesses(ctx, slog)
 				}()
 				// wait for either successful termination or the timeout
@@ -119,7 +119,7 @@ func newShutdownLogger() shutdownLogger {
 
 type shutdownLogger interface {
 	write(s string)
-	TerminateSync(ctx context.Context, pid int)
+	Terminate(ctx context.Context, pid int)
 	io.Closer
 }
 
@@ -141,7 +141,7 @@ func (l *shutdownLoggerImpl) write(s string) {
 func (l *shutdownLoggerImpl) Close() error {
 	return l.file.Close()
 }
-func (l *shutdownLoggerImpl) TerminateSync(ctx context.Context, pid int) {
+func (l *shutdownLoggerImpl) Terminate(ctx context.Context, pid int) {
 	proc, err := procfs.NewProc(pid)
 	if err != nil {
 		l.write(fmt.Sprintf("Couldn't obtain process information for PID %d.", pid))
@@ -155,9 +155,9 @@ func (l *shutdownLoggerImpl) TerminateSync(ctx context.Context, pid int) {
 	} else {
 		l.write(fmt.Sprintf("Terminating process %s with PID %d (state: %s, cmdlind: %s).", stat.Comm, pid, stat.State, fmt.Sprint(proc.CmdLine())))
 	}
-	err = process.TerminateSync(ctx, pid)
+	err = process.Terminate(ctx, pid)
 	if err != nil {
-		if err == process.ErrForceKilled {
+		if err == process.ErrKilled {
 			l.write("Terminating process didn't finish, but had to be force killed")
 		} else {
 			l.write(fmt.Sprintf("Terminating main process errored: %s", err))
@@ -189,7 +189,7 @@ func terminateAllOtherProcesses(ctx context.Context, slog shutdownLogger) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				slog.TerminateSync(ctx, p.PID)
+				slog.Terminate(ctx, p.PID)
 			}()
 		}
 		wg.Wait()

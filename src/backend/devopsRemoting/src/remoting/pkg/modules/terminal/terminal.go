@@ -169,7 +169,7 @@ func (m *Mux) doClose(ctx context.Context, alias string) error {
 
 	logs.WithField("alias", alias).Info("closing terminal")
 	if term.Command.Process != nil {
-		err := process.TerminateSync(ctx, term.Command.Process.Pid)
+		err := process.Terminate(ctx, term.Command.Process.Pid)
 		if err != nil {
 			logs.WithError(err).Errorf("cannot terminate process %s.", fmt.Sprint(term.Command.Args))
 		}
