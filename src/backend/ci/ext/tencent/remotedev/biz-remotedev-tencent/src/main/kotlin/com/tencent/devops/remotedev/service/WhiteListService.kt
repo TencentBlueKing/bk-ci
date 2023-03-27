@@ -14,9 +14,9 @@ class WhiteListService @Autowired constructor(
 ) {
 
     private val redisCache = Caffeine.newBuilder()
-        .maximumSize(20)
+        .maximumSize(1)
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String, String?> { key -> redisOperation.get(key) }
+        .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
