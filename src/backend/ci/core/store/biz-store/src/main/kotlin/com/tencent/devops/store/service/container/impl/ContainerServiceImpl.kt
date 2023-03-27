@@ -146,11 +146,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
-                    // 构建资源国际化转换
-                    val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
-                        defaultMessage = type.value
-                    )
                     var enableFlag: Boolean? = null
                     if (buildTypeConfig != null) {
                         val buildTypeConfigMap = JsonUtil.toMap(buildTypeConfig)
