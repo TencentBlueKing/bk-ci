@@ -41,6 +41,7 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRec
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.store.constant.StoreConstants.DELETE_STORE_INDEX_RESULT_KEY
 import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_DESCRIPTION
@@ -182,8 +183,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             storeIndexManageInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
             storeIndexManageInfoDao.deleteTStoreIndexBaseInfo(context, indexId)
         }
-        // 考虑到数据量的问题，使用定时任务处理存量数据
-        redisOperation.sadd("deleteStoreIndexResultKey", indexId)
+        // 考虑到数据量的问题，使用定时任务处理指标要素数据
+        redisOperation.sadd(DELETE_STORE_INDEX_RESULT_KEY, indexId)
         return Result(true)
     }
 
