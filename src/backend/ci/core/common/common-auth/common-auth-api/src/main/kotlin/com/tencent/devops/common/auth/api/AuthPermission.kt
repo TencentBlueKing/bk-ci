@@ -46,8 +46,15 @@ enum class AuthPermission(val value: String, val alias: String) {
 
     VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
     WEB_CHECK("webcheck", "页面按钮校验"), // 页面按钮校验
-    MANAGE("manage", "管理"), // 项目管理
-    VISIT("visit", "访问"); // 项目访问权限
+    MANAGE("manage", "管理"), // 管理
+    VISIT("visit", "访问"), // 项目访问权限
+
+    ANALYZE("analyze", "分析"), // 分析任务
+    MANAGE_DEFECT("manage-defect", "问题管理"), // 问题管理
+    VIEW_DEFECT("view-defect", "查看问题列表和详情"), // 查看问题列表和详情
+    VIEW_REPORT("view-report", "查看报表"), // 查看报表
+    SETTING("setting", "设置"), // 设置
+    MANAGE_PERMISSIONS("manage-permissions", "权限管理"); // 权限管理
 
     companion object {
         fun get(value: String): AuthPermission {
