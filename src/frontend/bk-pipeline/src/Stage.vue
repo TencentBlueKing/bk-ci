@@ -424,7 +424,7 @@
                 this.cruveHeight = height
             },
             deleteStageHandler () {
-                this.$emit(DELETE_EVENT_NAME, this.stageIndex)
+                this.$emit(DELETE_EVENT_NAME, this.stage.id)
             },
             handleCopyContainer ({ containerIndex, container }) {
                 this.stage.containers.splice(containerIndex + 1, 0, container)

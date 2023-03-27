@@ -142,8 +142,7 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map((stage) => ({
-                        ...stage,
+                    return this.pipeline?.stages?.map((stage) => Object.assign(stage, {
                         isTrigger: this.checkIsTriggerStage(stage)
                     })) ?? []
                 },
@@ -162,7 +161,7 @@
                         return stage
                     })
                     this.updatePipeline(this.pipeline, {
-                        stages: data
+                        stages: data.filter(stage => stage.containers.length)
                     })
                 }
             },
@@ -250,10 +249,8 @@
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
             },
-            handleDeleteStage (stageIndex) {
-                if (Number.isInteger(stageIndex)) {
-                    this.pipeline.stages.splice(stageIndex, 1)
-                }
+            handleDeleteStage (stageId) {
+                this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
             }
         }
     }
