@@ -66,7 +66,14 @@ func (p *WorkspaceProxy) MustServe() {
 		key = p.Config.HTTPS.Key
 	)
 	go func() {
-		err := http.ListenAndServe(p.Ingress.HTTPAddress, http.HandlerFunc(redirectToHTTPS))
+		// 临时启动http服务
+		srvhttp := &http.Server{
+			Addr:    p.Ingress.HTTPAddress,
+			Handler: handler,
+			ErrorLog: stdlog.New(logrusErrorWriter{}, "", 0),
+		}
+		// err := http.ListenAndServe(p.Ingress.HTTPAddress, http.HandlerFunc(redirectToHTTPS))
+		srvhttp.ListenAndServe()
 		if err != nil {
 			logs.WithError(err).Fatal("cannot start http proxy")
 		}
