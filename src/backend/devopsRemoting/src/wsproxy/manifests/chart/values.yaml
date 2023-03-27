@@ -45,5 +45,7 @@ service:
 
 # https证书相关配置
 https:
-  key: 
-  crt: 
+  key: |
+    # https开启时，这里需要https证书key
+  crt: |
+    # https开启时，这里需要https证书crt

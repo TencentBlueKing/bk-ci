@@ -64,7 +64,7 @@ data:
   {{ if .Values.kubeConfig.useKubeConfig -}}
   kubeConfig.yaml: |
     {{- .Values.kubeConfig.content | nindent 4 }}
-  {{- end -}}
+  {{- end }}
 
   https.pem: |-
     {{- .Values.https.crt | nindent 4 }}
