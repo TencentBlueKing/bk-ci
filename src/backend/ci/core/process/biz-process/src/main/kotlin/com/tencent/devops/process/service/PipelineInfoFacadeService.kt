@@ -63,6 +63,7 @@ import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -433,7 +434,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode
-    ) {
+    ): DeployPipelineResult {
         val watcher = Watcher(id = "restorePipeline|$pipelineId|$userId")
         try {
             watcher.start("isProjectManager")
@@ -464,6 +465,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
+            return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
