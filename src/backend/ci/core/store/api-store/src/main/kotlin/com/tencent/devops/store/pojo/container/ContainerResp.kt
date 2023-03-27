@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.container
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import io.swagger.annotations.ApiModel
@@ -51,6 +53,7 @@ data class ContainerResp(
     @ApiModelProperty("默认的构建资源，当操作系统为linux时返回", required = false)
     val defaultPublicBuildResource: String?,
     @ApiModelProperty("支持的构建资源类型", required = false)
+    @BkFieldI18n
     val typeList: List<ContainerBuildType>?,
     @ApiModelProperty("默认的构建资源类型", required = false)
     val defaultBuildType: BuildType?,

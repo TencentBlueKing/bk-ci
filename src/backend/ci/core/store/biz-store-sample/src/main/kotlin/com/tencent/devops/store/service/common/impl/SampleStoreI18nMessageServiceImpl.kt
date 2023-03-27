@@ -66,4 +66,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             filePath = filePath
         ).data
     }
+
+    override fun parseJsonStrI18nInfo(jsonStr: String, keyPrefix: String) {
+        TODO("Not yet implemented")
+    }
 }

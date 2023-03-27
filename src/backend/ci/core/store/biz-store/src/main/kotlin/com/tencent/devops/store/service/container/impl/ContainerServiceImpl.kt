@@ -159,7 +159,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                     }
                     typeList.add(ContainerBuildType(
                         type = type.name,
-                        name = i18nTypeName,
+                        name = type.name,
                         enableApp = type.enableApp,
                         disabled = !clickable(buildType = type, projectCode = projectCode, enableFlag = enableFlag),
                         defaultBuildResource = buildResourceService.getDefaultBuildResource(type)

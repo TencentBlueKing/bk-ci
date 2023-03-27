@@ -891,26 +891,30 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installType == StoreProjectTypeEnum.TEST.type.toByte()
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
+            val classifyLanName = MessageUtil.getMessageByLocale(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
-            result.add(InstalledAtom(
-                atomId = it[KEY_ID] as String,
-                atomCode = atomCode,
-                name = it[NAME] as String,
-                logoUrl = it[KEY_LOGO_URL] as? String,
-                classifyCode = atomClassifyCode,
-                classifyName = classifyLanName,
-                category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
-                summary = it[KEY_SUMMARY] as? String,
-                publisher = it[KEY_PUBLISHER] as? String,
-                installer = installer,
-                installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
-                installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
-                pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
-                hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
-            ))
+            result.add(
+                InstalledAtom(
+                    atomId = it[KEY_ID] as String,
+                    atomCode = atomCode,
+                    version = it[KEY_VERSION] as String,
+                    name = it[NAME] as String,
+                    logoUrl = it[KEY_LOGO_URL] as? String,
+                    classifyCode = atomClassifyCode,
+                    classifyName = classifyLanName,
+                    category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
+                    summary = it[KEY_SUMMARY] as? String,
+                    publisher = it[KEY_PUBLISHER] as? String,
+                    installer = installer,
+                    installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
+                    installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
+                    pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
+                    hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                )
+            )
         }
         return Page(page, pageSize, count.toLong(), result)
     }
@@ -941,6 +945,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             InstalledAtom(
                 atomId = it[KEY_ID] as String,
                 atomCode = atomCode,
+                version = it[KEY_VERSION] as String,
                 name = it[NAME] as String,
                 logoUrl = it[KEY_LOGO_URL] as? String,
                 classifyCode = classifyCode,
@@ -961,6 +966,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             InstalledAtom(
                 atomId = it.id,
                 atomCode = it.atomCode,
+                version = it[KEY_VERSION] as String,
                 name = it.name,
                 logoUrl = it.logoUrl,
                 classifyCode = "",

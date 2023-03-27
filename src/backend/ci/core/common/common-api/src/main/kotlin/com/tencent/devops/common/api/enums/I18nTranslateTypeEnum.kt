@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.annotation
+package com.tencent.devops.common.api.enums
 
-import javax.ws.rs.NameBinding
-
-@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.FIELD)
-@Retention(AnnotationRetention.RUNTIME)
-@NameBinding
-annotation class BkI18n(
-    val fixKeyPrefixName: String = "", // 固定字段前缀名称
-    val keyPrefixNames: Array<String> = [] // 字段前缀名称数组
-)
+enum class I18nTranslateTypeEnum {
+    NAME, // 基于字段名称进行翻译
+    VALUE // 基于字段值进行翻译
+}
