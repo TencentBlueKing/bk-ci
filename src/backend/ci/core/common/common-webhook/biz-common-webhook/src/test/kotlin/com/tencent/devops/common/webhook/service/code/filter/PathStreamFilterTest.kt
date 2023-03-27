@@ -25,28 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-@ApiModel("历史构建阶段状态")
-data class BuildStageStatus(
-    @ApiModelProperty("阶段ID", required = true)
-    val stageId: String,
-    @ApiModelProperty("阶段名称", required = true)
-    val name: String,
-    @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var status: String? = null,
-    @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var tag: List<String>? = null,
-    @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var elapsed: Long? = null,
-    @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null,
-    @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var showMsg: String? = null
-)
+class PathStreamFilterTest {
+    private val response = WebhookFilterResponse()
+
+    @Test
+    fun excludePaths() {
+        val pathStreamFilter = PathStreamFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("Example/Tests/OWNERS", "OWNERS", ".ci/ci_env_print.yml"),
+            includedPaths = emptyList(),
+            excludedPaths = listOf(".ci/*", "OWNERS", "*/*/OWNERS")
+        )
+        Assertions.assertFalse(pathStreamFilter.doFilter(response))
+    }
+}

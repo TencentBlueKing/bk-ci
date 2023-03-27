@@ -25,28 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.common.expression.expression.functions
 
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+import com.tencent.devops.common.expression.FunctionFormatException
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.Function
+import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
-@ApiModel("历史构建阶段状态")
-data class BuildStageStatus(
-    @ApiModelProperty("阶段ID", required = true)
-    val stageId: String,
-    @ApiModelProperty("阶段名称", required = true)
-    val name: String,
-    @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var status: String? = null,
-    @ApiModelProperty("阶段标签", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var tag: List<String>? = null,
-    @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var startEpoch: Long? = null,
-    @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var elapsed: Long? = null,
-    @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = null,
-    @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var showMsg: String? = null
-)
+class StrToTime : Function() {
+    companion object {
+        const val name = "strToTime"
+    }
+
+    override fun createNode(): Function = StrToTime()
+
+    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
+        val dateStr = parameters[0].evaluate(context).convertToString()
+        val timestamp = when (dateStr.length) {
+            10 -> DateTimeUtil.stringToTimestamp(dateStr, YYYY_MM_DD)
+            19 -> DateTimeUtil.stringToTimestamp(dateStr, YYYY_MM_DD_HH_MM_SS)
+            else -> throw FunctionFormatException.invalidFormatString(dateStr)
+        }
+        return Pair(null, timestamp)
+    }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left)", false)
+    }
+}

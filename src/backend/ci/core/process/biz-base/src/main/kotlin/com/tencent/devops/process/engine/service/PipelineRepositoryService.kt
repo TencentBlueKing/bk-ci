@@ -397,6 +397,7 @@ class PipelineRepositoryService constructor(
             // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
             c.id = containerSeqId.get().toString()
             c.containerId = c.id
+            c.timeCost = null
             if (c.containerHashId.isNullOrBlank() || distIds.contains(c.containerHashId)) {
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
@@ -405,6 +406,7 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
+                c.timeCost = null
                 distIds.add(e.id!!)
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
