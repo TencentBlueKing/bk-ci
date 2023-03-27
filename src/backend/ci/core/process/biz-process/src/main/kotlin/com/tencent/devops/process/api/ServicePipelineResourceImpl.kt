@@ -453,11 +453,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
         return null
     }
 
-    override fun batchUpdatePipelineNamePinYin(userId: String): Result<Boolean> {
-        pipelineInfoFacadeService.batchUpdatePipelineNamePinYin(userId)
-        return Result(true)
-    }
-
     override fun getPipelineLabelInfos(
         userId: String,
         projectIds: List<String>

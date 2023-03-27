@@ -234,6 +234,9 @@ class StreamTriggerRequestService @Autowired constructor(
         )
 
         action.data.context.defaultBranch = projectInfo.defaultBranch
+        action.data.context.repoCreatedTime = projectInfo.repoCreatedTime
+        action.data.context.repoCreatorId = projectInfo.repoCreatorId
+        action.parseStreamTriggerContext()
         // 校验mr请求是否产生冲突
         if (!action.checkMrConflict(path2PipelineExists = path2PipelineExists)) {
             return false
@@ -366,6 +369,7 @@ class StreamTriggerRequestService @Autowired constructor(
         return true
     }
 
+    @Suppress("ProtectedMemberInFinalClass")
     private fun trigger(
         action: BaseAction,
         trigger: String?

@@ -27,16 +27,9 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitDiffInfo
 
-data class TGitCred(
-    // 获取stream OAUTH时用户的唯一凭证
-    val userId: String?,
-    // 具体的accessToken有时优先使用
-    val accessToken: String? = null,
-    /**
-     * stream 分为oauth和private key的token，private的请求方式不同
-     * true 为oauth, false 为private
-     */
-    val useAccessToken: Boolean = true
-) : StreamGitCred
+data class TGitCommitDiffInfo(
+    override val oldPath: String,
+    override val newPath: String
+) : StreamGitCommitDiffInfo

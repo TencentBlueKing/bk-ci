@@ -25,18 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.git.pojo.tgit
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-data class TGitCred(
-    // 获取stream OAUTH时用户的唯一凭证
-    val userId: String?,
-    // 具体的accessToken有时优先使用
-    val accessToken: String? = null,
-    /**
-     * stream 分为oauth和private key的token，private的请求方式不同
-     * true 为oauth, false 为private
-     */
-    val useAccessToken: Boolean = true
-) : StreamGitCred
+class PathStreamFilterTest {
+    private val response = WebhookFilterResponse()
+
+    @Test
+    fun excludePaths() {
+        val pathStreamFilter = PathStreamFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("Example/Tests/OWNERS", "OWNERS", ".ci/ci_env_print.yml"),
+            includedPaths = emptyList(),
+            excludedPaths = listOf(".ci/*", "OWNERS", "*/*/OWNERS")
+        )
+        Assertions.assertFalse(pathStreamFilter.doFilter(response))
+    }
+}

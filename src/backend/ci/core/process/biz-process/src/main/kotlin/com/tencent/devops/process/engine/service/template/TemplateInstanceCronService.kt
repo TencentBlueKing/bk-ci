@@ -36,6 +36,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
@@ -82,10 +84,21 @@ class TemplateInstanceCronService @Autowired constructor(
 
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
-        val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        val activeProfiles = profile.getActiveProfiles()
+        val key = if (activeProfiles.size > 1) {
+            val sb = StringBuilder()
+            activeProfiles.forEach { activeProfile ->
+                sb.append("$activeProfile:")
+            }
+            sb.append(LOCK_KEY).toString()
+        } else {
+            LOCK_KEY
+        }
+        val lock = RedisLock(redisOperation, key, 3000)
         try {
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.info("get lock[$key] failed, skip")
                 return
             }
             val statusList = listOf(TemplateInstanceBaseStatus.INIT.name, TemplateInstanceBaseStatus.INSTANCING.name)

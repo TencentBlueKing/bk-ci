@@ -25,18 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.git.pojo.tgit
+package com.tencent.devops.common.expression.expression.functions
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+import com.tencent.devops.common.expression.FunctionFormatException
+import com.tencent.devops.common.expression.expression.sdk.EvaluationContext
+import com.tencent.devops.common.expression.expression.sdk.Function
+import com.tencent.devops.common.expression.expression.sdk.ResultMemory
 
-data class TGitCred(
-    // 获取stream OAUTH时用户的唯一凭证
-    val userId: String?,
-    // 具体的accessToken有时优先使用
-    val accessToken: String? = null,
-    /**
-     * stream 分为oauth和private key的token，private的请求方式不同
-     * true 为oauth, false 为private
-     */
-    val useAccessToken: Boolean = true
-) : StreamGitCred
+class StrToTime : Function() {
+    companion object {
+        const val name = "strToTime"
+    }
+
+    override fun createNode(): Function = StrToTime()
+
+    override fun evaluateCore(context: EvaluationContext): Pair<ResultMemory?, Any?> {
+        val dateStr = parameters[0].evaluate(context).convertToString()
+        val timestamp = when (dateStr.length) {
+            10 -> DateTimeUtil.stringToTimestamp(dateStr, YYYY_MM_DD)
+            19 -> DateTimeUtil.stringToTimestamp(dateStr, YYYY_MM_DD_HH_MM_SS)
+            else -> throw FunctionFormatException.invalidFormatString(dateStr)
+        }
+        return Pair(null, timestamp)
+    }
+
+    override fun subNameValueEvaluateCore(context: EvaluationContext): Pair<Any?, Boolean> {
+        val left = parameters[0].subNameValueEvaluate(context).parseSubNameValueEvaluateResult()
+        return Pair("$name($left)", false)
+    }
+}
