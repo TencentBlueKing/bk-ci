@@ -386,22 +386,12 @@
                 return this.$route.params
             }
         },
-        watch: {
-            errorList: {
-                immediate: true,
-                handler: function (el) {
-                    if (el?.length > 0) {
-                        this.setAtomLocate(el[0])
-                        this.setShowErrorPopup()
-                    } else {
-                        this.activeErrorAtom = null
-                        this.hideErrorPopup()
-                    }
-                }
-            }
-        },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
+            if (this.errorList?.length > 0) {
+                this.setAtomLocate(this.errorList[0])
+                this.setShowErrorPopup()
+            }
         },
         beforeDestroy () {
             this.togglePropertyPanel({
