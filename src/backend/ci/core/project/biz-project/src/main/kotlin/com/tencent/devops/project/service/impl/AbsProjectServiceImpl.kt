@@ -413,17 +413,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     }
                 }
                 // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
-                val finalNeedApproval = needApprovalWhenUpdate(
+                val (finalNeedApproval, newApprovalStatus) = getUpdateApprovalStatus(
                     needApproval = needApproval,
                     projectInfo = projectInfo,
                     subjectScopesStr = subjectScopesStr,
                     projectUpdateInfo = projectUpdateInfo
                 )
-                val newApprovalStatus = if (finalNeedApproval) {
-                    ProjectApproveStatus.UPDATE_PENDING.status
-                } else {
-                    ProjectApproveStatus.APPROVED.status
-                }
                 val projectId = projectInfo.projectId
                 val logoAddress = projectUpdateInfo.logoAddress
                 val resourceUpdateInfo = ResourceUpdateInfo(
@@ -494,24 +489,25 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return success
     }
 
-    private fun needApprovalWhenUpdate(
+    private fun getUpdateApprovalStatus(
         needApproval: Boolean?,
         projectInfo: TProjectRecord,
         subjectScopesStr: String,
         projectUpdateInfo: ProjectUpdateInfo
-    ): Boolean {
+    ): Pair<Boolean, Int> {
         val authNeedApproval = projectPermissionService.needApproval(needApproval)
         val approveStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
         // 判断是否需要审批
         return if (approveStatus.isSuccess()) {
             // 当项目创建成功,则只有最大授权范围和项目性质修改才审批
-            authNeedApproval &&
+            val finalNeedApproval = authNeedApproval &&
                 (projectInfo.subjectScopes != subjectScopesStr ||
                     projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
                     )
+            Pair(finalNeedApproval, ProjectApproveStatus.UPDATE_PENDING.status)
         } else {
-            // 当创建驳回时，需要再审批
-            authNeedApproval
+            // 当创建驳回时，需要再审批,状态又为重新创建
+            Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)
         }
     }
 
