@@ -10,10 +10,10 @@
 
     <appender name="sync-app-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${service.log.dir}/service.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
-            <maxFileSize>1GB</maxFileSize>
+            <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
@@ -30,10 +30,10 @@
 
     <appender name="sync-error-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${service.log.dir}/service-error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
-            <maxFileSize>1GB</maxFileSize>
+            <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
             <pattern>${pattern}</pattern>
