@@ -42,7 +42,7 @@ data class Credential(
     @ApiModelProperty("凭据描述", required = false)
     val credentialRemark: String? = null,
     @ApiModelProperty("最后更新时间", required = true)
-    val updatedTime: Long,
+    val updatedTime: Long? = null,
     @ApiModelProperty("凭据内容", required = true)
     val v1: String,
     @ApiModelProperty("凭据内容", required = true)

@@ -211,6 +211,7 @@ open class BkRepoDownloadService @Autowired constructor(
                     )
                 )
             }
+
             ArtifactoryType.PIPELINE -> {
                 val pipelineId = pipelineService.getPipelineId(path)
                 pipelineService.validatePermission(
@@ -382,7 +383,13 @@ open class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
+            if (region == "OPENAPI") {
+                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
+            } else {
+                resultList.add(
+                    "${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true"
+                )
+            }
         }
         return resultList
     }

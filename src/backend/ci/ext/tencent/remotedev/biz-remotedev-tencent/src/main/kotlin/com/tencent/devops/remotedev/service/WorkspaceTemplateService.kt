@@ -111,6 +111,7 @@ class WorkspaceTemplateService @Autowired constructor(
                     name = it.name,
                     source = it.source,
                     logo = it.logo,
+                    url = it.url,
                     description = it.description
                 )
             )

@@ -137,6 +137,8 @@ class WorkspaceService @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
+        private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
+        private const val BLANK_TEMPLATE_ID = 1
     }
 
     fun getAuthorizedGitRepository(
@@ -164,21 +166,13 @@ class WorkspaceService @Autowired constructor(
     fun getRepositoryBranch(
         userId: String,
         pathWithNamespace: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
         gitType: RemoteDevGitType
     ): List<String> {
-        logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
+        logger.info("$userId get git repository branch list|$pathWithNamespace")
         return checkOauthIllegal(userId) {
             remoteDevGitTransfer.load(gitType).getProjectBranches(
                 userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search
+                pathWithNamespace = pathWithNamespace
             ) ?: emptyList()
         }
     }
@@ -207,8 +201,9 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         } else {
-            // 防止污传
-            workspaceCreate.devFilePath = null
+            // 防止污传,如果是基于BLANK模板创建的则用BLANK作为devFilePath
+            workspaceCreate.devFilePath = if (workspaceCreate.wsTemplateId == BLANK_TEMPLATE_ID) {
+                BLANK_TEMPLATE_YAML_NAME } else null
             redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
         }
 
@@ -250,7 +245,7 @@ class WorkspaceService @Autowired constructor(
 
         val devfile = DevfileUtil.parseDevfile(yaml).apply {
             gitEmail = kotlin.runCatching {
-                gitTransferService.getUserInfo(
+                gitTransferService.getUserEmail(
                     userId = userId
                 )
             }.getOrElse {
@@ -261,7 +256,7 @@ class WorkspaceService @Autowired constructor(
                         .format("get user($userId) info from git failed"),
                     params = arrayOf("get user($userId) info from git failed")
                 )
-            }.email
+            }
 
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
         }
@@ -948,30 +943,41 @@ class WorkspaceService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
                 var status = WorkspaceStatus.values()[it.status]
-                if (status.notOk2doNextAction() && Duration.between(
-                        it.lastStatusUpdateTime,
-                        LocalDateTime.now()
-                    ).seconds > DEFAULT_WAIT_TIME
-                ) {
-                    val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                        .getWorkspaceInfo(userId, it.name).data!!
-                    when (workspaceInfo.status) {
-                        EnvStatusEnum.stopped -> {
-                            doStopWS(true, userId, it.name)
-                            status = WorkspaceStatus.SLEEP
+                run {
+                    if (status.notOk2doNextAction() && Duration.between(
+                            it.lastStatusUpdateTime,
+                            LocalDateTime.now()
+                        ).seconds > DEFAULT_WAIT_TIME
+                    ) {
+                        val workspaceInfo = kotlin.runCatching {
+                            client.get(ServiceRemoteDevResource::class)
+                                .getWorkspaceInfo(userId, it.name).data!!
+                        }.getOrElse { ignore ->
+                            logger.warn(
+                                "get workspace info error ${it.name}|${ignore.message}"
+                            )
+                            status = WorkspaceStatus.EXCEPTION
+                            workspaceDao.updateWorkspaceStatus(dslContext, it.name, WorkspaceStatus.EXCEPTION)
+                            return@run
                         }
-                        EnvStatusEnum.deleted -> {
-                            doDeleteWS(true, userId, it.name)
-                            status = WorkspaceStatus.DELETED
+                        when (workspaceInfo.status) {
+                            EnvStatusEnum.stopped -> {
+                                doStopWS(true, userId, it.name)
+                                status = WorkspaceStatus.SLEEP
+                            }
+                            EnvStatusEnum.deleted -> {
+                                doDeleteWS(true, userId, it.name)
+                                status = WorkspaceStatus.DELETED
+                            }
+                            EnvStatusEnum.running -> {
+                                doStartWS(true, userId, it.name, workspaceInfo.environmentHost)
+                                status = WorkspaceStatus.RUNNING
+                            }
+                            else -> logger.warn(
+                                "wait workspace change over $DEFAULT_WAIT_TIME second |" +
+                                    "${it.name}|${workspaceInfo.status}"
+                            )
                         }
-                        EnvStatusEnum.running -> {
-                            doStartWS(true, userId, it.name, workspaceInfo.environmentHost)
-                            status = WorkspaceStatus.RUNNING
-                        }
-                        else -> logger.warn(
-                            "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                                "${it.name}|${workspaceInfo.status}"
-                        )
                     }
                 }
                 Workspace(
@@ -1031,7 +1037,7 @@ class WorkspaceService @Autowired constructor(
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10560
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10000
         return WorkspaceUserDetail(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
@@ -1041,9 +1047,12 @@ class WorkspaceService @Autowired constructor(
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
-            cpu = workspaces.sumOf { it.cpu },
-            memory = workspaces.sumOf { it.memory },
-            disk = workspaces.sumOf { it.disk }
+            cpu = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.cpu } else { 0 } },
+            memory = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.memory } else { 0 } },
+            disk = workspaces.sumOf {
+                if (it.status in
+                    setOf(WorkspaceStatus.RUNNING.ordinal, WorkspaceStatus.SLEEP.ordinal)) { it.disk } else { 0 }
+            }
         )
     }
 

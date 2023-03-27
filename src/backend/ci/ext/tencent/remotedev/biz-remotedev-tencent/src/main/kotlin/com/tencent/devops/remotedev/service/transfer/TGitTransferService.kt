@@ -24,6 +24,13 @@ import java.net.URLEncoder
 class TGitTransferService @Autowired constructor(
     private val client: Client
 ) : GitTransferService {
+
+    companion object {
+        private const val DEFAULT_GIT_PER_PAGE = 100
+        private const val DEFAULT_PAGE = 1
+        private const val DEFAULT_PAGE_SIZE = 30
+    }
+
     override fun isOAuth(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
@@ -61,19 +68,28 @@ class TGitTransferService @Autowired constructor(
 
     override fun getProjectBranches(
         userId: String,
-        pathWithNamespace: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
+        pathWithNamespace: String
     ): List<String>? {
-        return client.get(ServiceGitResource::class).getBranch(
-            accessToken = getAndCheckOauthToken(userId),
-            userId = userId,
-            repository = URLEncoder.encode(pathWithNamespace, "UTF-8"),
-            page = page,
-            pageSize = pageSize,
-            search = search
-        ).data?.map { it.name }
+        var githubPage = DEFAULT_PAGE
+        val branches = mutableListOf<String>()
+        run outside@{
+            while (true) {
+                val gitBranches = client.get(ServiceGitResource::class).getBranch(
+                    accessToken = getAndCheckOauthToken(userId),
+                    userId = userId,
+                    repository = URLEncoder.encode(pathWithNamespace, "UTF-8"),
+                    page = githubPage,
+                    pageSize = DEFAULT_GIT_PER_PAGE,
+                    search = null
+                ).data!!
+                branches.addAll(gitBranches.map { it.name })
+                if (gitBranches.size < DEFAULT_GIT_PER_PAGE) {
+                    return@outside
+                }
+                githubPage++
+            }
+        }
+        return branches
     }
 
     override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {
@@ -123,5 +139,9 @@ class TGitTransferService @Autowired constructor(
             token = getAndCheckOauthToken(userId),
             tokenType = TokenTypeEnum.OAUTH
         ).data!!
+    }
+
+    override fun getUserEmail(userId: String): String {
+        return getUserInfo(userId).email ?: "$userId@tencent.com"
     }
 }

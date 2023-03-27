@@ -229,6 +229,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
                     )
                 }
+                var errMsg: String? = null
                 var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
@@ -239,13 +240,15 @@ class ThirdPartyAgentService @Autowired constructor(
                         val (userName, password) = try {
                             getTicket(projectId, dockerInfo.credential!!)
                         } catch (e: Exception) {
-                            logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error")
+                            logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error", e)
+                            errMsg = e.message
                             Pair(null, null)
                         }
                         dockerInfo.credential?.user = userName
                         dockerInfo.credential?.password = password
                     }
                     buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                    buildDockerInfo.credential?.errMsg = errMsg
                 }
 
                 return AgentResult(
@@ -276,12 +279,23 @@ class ThirdPartyAgentService @Autowired constructor(
         if (credInfo.credentialId.isNullOrBlank()) {
             return Pair(null, null)
         }
-        val tickets = CommonUtils.getCredential(
-            client = client,
-            projectId = projectId,
-            credentialId = credInfo.credentialId!!,
-            type = CredentialType.USERNAME_PASSWORD
-        )
+
+        val tickets = try {
+            CommonUtils.getCredential(
+                client = client,
+                projectId = projectId,
+                credentialId = credInfo.credentialId!!,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+        } catch (ignore: Exception) {
+            // 没有跨项目的模板引用就直接扔出错误
+            if (credInfo.acrossTemplateId.isNullOrBlank() || credInfo.jobId.isNullOrBlank()) {
+                throw ignore
+            } else {
+                emptyMap()
+            }
+        }
+
         if (!tickets["v1"].isNullOrBlank() && !tickets["v2"].isNullOrBlank()) {
             return Pair(tickets["v1"], tickets["v2"])
         }
@@ -305,7 +319,8 @@ class ThirdPartyAgentService @Autowired constructor(
             client = client,
             projectId = across.targetProjectId,
             credentialId = credInfo.credentialId!!,
-            type = CredentialType.USERNAME_PASSWORD
+            type = CredentialType.USERNAME_PASSWORD,
+            acrossProject = true
         )
         return Pair(acrossTickets["v1"], acrossTickets["v2"])
     }

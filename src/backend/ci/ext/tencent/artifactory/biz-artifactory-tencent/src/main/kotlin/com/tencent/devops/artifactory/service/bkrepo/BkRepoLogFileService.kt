@@ -57,12 +57,17 @@ class BkRepoLogFileService @Autowired constructor(
         elementId: String,
         executeCount: String
     ): Url {
-        val fullPath = "/$pipelineId/$buildId/$elementId/$executeCount.log"
+        var fullPath = "/$pipelineId/$buildId/$elementId/$executeCount.log.zip"
         bkRepoClient.getFileDetail(
             userId = userId,
             projectId = projectId,
             repoName = LOG_REPO,
             path = fullPath
+        ) ?: bkRepoClient.getFileDetail(
+            userId = userId,
+            projectId = projectId,
+            repoName = LOG_REPO,
+            path = fullPath.removeSuffix(".zip").also { fullPath = it }
         ) ?: throw NotFoundException("file[$fullPath] not found")
         val token = bkRepoClient.createTemporaryToken(
             userId = userId,
