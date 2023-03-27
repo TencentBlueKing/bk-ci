@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nMessage
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
@@ -131,6 +132,10 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             keyPrefix = keyPrefix,
             userId = userId
         )
+    }
+
+    override fun parseJsonStrI18nInfo(jsonStr: String, keyPrefix: String) {
+        val jsonMap = JsonUtil.toMutableMap(jsonStr)
     }
 
     private fun asyncHandleI18nMessage(

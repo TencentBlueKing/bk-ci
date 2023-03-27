@@ -98,7 +98,7 @@ object MessageUtil {
     fun traverseMap(
         dataMap: MutableMap<String, Any>,
         keyPrefix: String? = null,
-        properties: Properties? = null
+        properties: Properties
     ): MutableList<FieldLocaleInfo> {
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         dataMap.forEach { (key, value) ->
@@ -132,9 +132,14 @@ object MessageUtil {
                 }
 
                 else -> {
-                    handleProperties(properties, dataKey, dataMap, key)
-                    // 如果value不是集合类型则直接加入字段列表中
-                    fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataMap[key].toString()))
+                    val keyValue = dataMap[key]
+                    val propertyValue = properties[dataKey]?.toString()
+                    // 如果properties参数不为空则进行国际化内容替换(只有值为字符串的字段才需要做国际化)
+                    if (keyValue is String && !propertyValue.isNullOrBlank()) {
+                        dataMap[key] = propertyValue
+                        // 如果value不是集合类型则直接加入字段列表中
+                        fieldLocaleInfos.add(FieldLocaleInfo(dataKey, keyValue.toString()))
+                    }
                 }
             }
         }
@@ -142,27 +147,7 @@ object MessageUtil {
     }
 
     /**
-     * 遍历map集合获取字段列表
-     * @param properties 国际化资源文件特性对象
-     * @param dataKey 带前缀的key
-     * @param dataMap map集合
-     * @param key 原始key
-     */
-    private fun handleProperties(
-        properties: Properties?,
-        dataKey: String,
-        dataMap: MutableMap<String, Any>,
-        key: String
-    ) {
-        properties?.let {
-            val propertyValue = properties[dataKey]?.toString()
-            // 如果properties参数不为空则进行国际化内容替换
-            propertyValue?.let { dataMap[key] = propertyValue }
-        }
-    }
-
-    /**
-     * 遍历list集合获取字段列表
+     * 遍历list集合获取国际化字段列表
      * @param dataList list集合
      * @param keyPrefix 字段key前缀
      * @param properties 国际化资源文件特性对象
@@ -172,7 +157,7 @@ object MessageUtil {
     fun traverseList(
         dataList: MutableList<Any>,
         keyPrefix: String? = null,
-        properties: Properties? = null
+        properties: Properties
     ): MutableList<FieldLocaleInfo> {
         val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         dataList.forEachIndexed { index, value ->
@@ -207,13 +192,14 @@ object MessageUtil {
 
                 else -> {
                     if (!dataKey.isNullOrBlank()) {
-                        properties?.let {
-                            val propertyValue = properties[dataKey]?.toString()
-                            // 如果properties参数不为空则进行国际化内容替换
-                            propertyValue?.let { dataList[index] = propertyValue }
+                        val keyValue = dataList[index]
+                        val propertyValue = properties[dataKey]?.toString()
+                        // 如果properties参数不为空则进行国际化内容替换(只有值为字符串的字段才需要做国际化)
+                        if (keyValue is String && !propertyValue.isNullOrBlank()) {
+                            dataList[index] = propertyValue
+                            // 如果value不是集合类型则直接加入字段列表中
+                            fieldLocaleInfos.add(FieldLocaleInfo(dataKey, keyValue.toString()))
                         }
-                        // 如果value不是集合类型则直接加入字段列表中
-                        fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataList[index].toString()))
                     }
                 }
             }

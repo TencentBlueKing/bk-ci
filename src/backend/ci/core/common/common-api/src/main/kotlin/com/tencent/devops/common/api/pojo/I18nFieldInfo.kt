@@ -38,7 +38,7 @@ data class I18nFieldInfo(
     @ApiModelProperty("字段所属对象")
     val entity: Any,
     @ApiModelProperty("翻译信息来源")
-    val source: I18nSourceEnum = I18nSourceEnum.PROPERTY,
+    val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES,
     @ApiModelProperty("翻译类型")
     val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME,
     @ApiModelProperty("字段前缀名称")

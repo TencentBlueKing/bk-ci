@@ -48,7 +48,6 @@ data class InstalledAtom(
     @ApiModelProperty("插件分类code")
     val classifyCode: String?,
     @ApiModelProperty("插件分类名称")
-    @BkFieldI18n(source = I18nSourceEnum.PROPERTY, )
     val classifyName: String?,
     @ApiModelProperty("插件范畴")
     val category: String?,

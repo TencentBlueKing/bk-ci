@@ -81,7 +81,7 @@ class BkWriterInterceptor : WriterInterceptor {
             }
             val i18nKey = i18nKeySb.append(fieldKey).toString()
             // 根据国际化信息来源把字段信息分别放入不同的集合以便进行后续处理
-            if (i18nFieldInfo.source == I18nSourceEnum.PROPERTY) {
+            if (i18nFieldInfo.source == I18nSourceEnum.PROPERTIES) {
                 propertyI18nKeyMap[fieldPath] = i18nKey
             } else {
                 dbI18nKeyMap[fieldPath] = i18nKey

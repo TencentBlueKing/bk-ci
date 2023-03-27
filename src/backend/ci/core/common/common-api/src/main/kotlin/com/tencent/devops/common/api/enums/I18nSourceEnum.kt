@@ -29,5 +29,5 @@ package com.tencent.devops.common.api.enums
 
 enum class I18nSourceEnum {
     DB, // 来源于数据库
-    PROPERTY // 来源于国际化资源文件
+    PROPERTIES // 来源于国际化资源文件
 }
