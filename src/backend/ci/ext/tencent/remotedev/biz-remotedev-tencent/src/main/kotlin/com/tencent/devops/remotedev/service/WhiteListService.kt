@@ -27,7 +27,7 @@ class WhiteListService @Autowired constructor(
         logger.info("userId($userId) wants to add whiteListUser($whiteListUser)")
         if (redisCache.get(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(whiteListUser) != true) {
             logger.info("whiteListUser($whiteListUser) not in the whiteList")
-            redisOperation.setIfAbsent(RedisKeys.REDIS_WHITE_LIST_KEY, whiteListUser, null, false, false)
+            redisOperation.addSetValue(RedisKeys.REDIS_WHITE_LIST_KEY, whiteListUser, false)
             return true
         }
         return true
