@@ -9,7 +9,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 data class ThirdPartyAgentDockerInfo(
     var image: String,
     var credential: Credential?,
-    var options: String?
+    var options: DockerOptions?
 )
 
 fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
@@ -23,8 +23,16 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
     if (!credential?.credentialId.isNullOrBlank()) {
         credential?.credentialId = EnvUtils.parseEnv(credential?.credentialId, variables)
     }
-    if (!options.isNullOrBlank()) {
-        options = EnvUtils.parseEnv(options, variables)
+    if (options != null) {
+        val newV = options?.volumes?.map { v -> EnvUtils.parseEnv(v, variables) }
+        val newM = options?.mounts?.map { m -> EnvUtils.parseEnv(m, variables) }
+        options?.volumes = options?.volumes?.map { v -> EnvUtils.parseEnv(v, variables) }
+        options?.mounts = options?.mounts?.map { m -> EnvUtils.parseEnv(m, variables) }
+        options?.gpus = if (options?.gpus == null) {
+            null
+        } else {
+            EnvUtils.parseEnv(options?.gpus, variables)
+        }
     }
 }
 
@@ -39,6 +47,14 @@ data class Credential(
     val jobId: String?
 )
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class DockerOptions(
+    var volumes: List<String>?,
+    var mounts: List<String>?,
+    var gpus: String?
+)
+
 // 第三方构建机docker类型，调度使用，会带有调度相关信息
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -48,7 +64,7 @@ data class ThirdPartyAgentDockerInfoDispatch(
     val secretKey: String,
     val image: String,
     val credential: Credential?,
-    val options: String?
+    val options: DockerOptions?
 ) {
     constructor(agentId: String, secretKey: String, info: ThirdPartyAgentDockerInfo) : this(
         agentId, secretKey, info.image, info.credential, info.options
