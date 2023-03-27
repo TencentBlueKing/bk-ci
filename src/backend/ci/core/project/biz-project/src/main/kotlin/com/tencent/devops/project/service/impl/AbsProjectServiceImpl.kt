@@ -430,10 +430,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
                 modifyProjectAuthResource(resourceUpdateInfo)
                 if (finalNeedApproval) {
-                    projectDao.updateProjectStatusByEnglishName(
-                        dslContext = dslContext,
+                    updateApprovalInfo(
                         userId = userId,
-                        englishName = englishName,
+                        projectId = projectId,
+                        projectUpdateInfo = projectUpdateInfo,
+                        subjectScopesStr = subjectScopesStr,
+                        logoAddress = logoAddress,
                         approvalStatus = newApprovalStatus
                     )
                 } else {
@@ -508,6 +510,35 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } else {
             // 当创建驳回时，需要再审批,状态又为重新创建
             Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)
+        }
+    }
+
+    private fun updateApprovalInfo(
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        subjectScopesStr: String,
+        logoAddress: String?,
+        approvalStatus: Int
+    ) {
+        // 如果是审批拒绝后修改再创建，需要修改项目信息
+        if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+            projectDao.update(
+                dslContext = dslContext,
+                userId = userId,
+                projectId = projectId,
+                projectUpdateInfo = projectUpdateInfo,
+                subjectScopesStr = subjectScopesStr,
+                logoAddress = logoAddress,
+                approvalStatus = approvalStatus
+            )
+        } else {
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = dslContext,
+                userId = userId,
+                englishName = projectUpdateInfo.englishName,
+                approvalStatus = approvalStatus
+            )
         }
     }
 
