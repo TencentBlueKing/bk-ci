@@ -39,13 +39,19 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRec
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.plugin.api.ServiceCodeccResource
-import com.tencent.devops.store.constant.StoreConstants.DELETE_STORE_INDEX_RESULT_KEY
-import com.tencent.devops.store.constant.StoreConstants.DELETE_STORE_INDEX_RESULT_LOCK_KEY
-import com.tencent.devops.store.constant.StoreConstants.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
+import com.tencent.devops.store.pojo.common.BK_ATOM_SLA
+import com.tencent.devops.store.pojo.common.BK_CODE_QUALITY
+import com.tencent.devops.store.pojo.common.BK_COMPLIANCE_RATE
+import com.tencent.devops.store.pojo.common.BK_NOT_UP_TO_PAR
+import com.tencent.devops.store.pojo.common.BK_NO_FAIL_DATA
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_FAIL_NUM
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
+import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
+import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -66,27 +72,6 @@ class TxStoreIndexCronService(
 ) {
 
     /**
-     * 执行删除组件指标存量数据
-     */
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
-    fun deleteStoreIndexResult() {
-        logger.info("deleteStoreIndexResult cron starts")
-        val lock = RedisLock(redisOperation, DELETE_STORE_INDEX_RESULT_LOCK_KEY, 60L)
-        try {
-            lock.lock()
-            redisOperation.getSetMembers(DELETE_STORE_INDEX_RESULT_KEY)?.forEach {
-                logger.info("expired indexId is: {}", it)
-                storeIndexManageInfoDao.deleteStoreIndexResulById(dslContext, it)
-                storeIndexManageInfoDao.deleteStoreIndexElementById(dslContext, it)
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to offline index: {}", ignored)
-        } finally {
-            lock.unlock()
-        }
-    }
-
-    /**
      * 计算插件SLA指标数据
      */
     @Scheduled(cron = "0 0 1 * * ?")
@@ -98,10 +83,12 @@ class TxStoreIndexCronService(
             storeType = StoreTypeEnum.ATOM,
             indexCode = indexCode
         )
+        // 数据库中存在指标基本信息才开始进行指标计算
         logger.info("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfoId")
         if (storeIndexBaseInfoId.isNullOrBlank()) {
             return
         }
+        // 对已发布的插件进行指标计算
         val totalTaskNum = atomDao.getPublishedAtomCount(dslContext)
         var finishTaskNum = 0
         val lock = RedisLock(redisOperation, "computeAtomSlaIndexData", 60L)
@@ -112,6 +99,7 @@ class TxStoreIndexCronService(
             logger.info("begin computeAtomSlaIndexData!!")
             var page = 1
             do {
+                // 分页获取已发布的插件
                 val atomCodes = atomDao.getPublishedAtoms(
                     dslContext = dslContext,
                     timeDescFlag = false,
@@ -121,6 +109,7 @@ class TxStoreIndexCronService(
                 val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
                 val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
                 atomCodes.forEach { atomCode ->
+                    // 获取时间段内的每日数据进行指标计算
                     val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
                         dslContext = dslContext,
                         storeCode = atomCode,
@@ -129,17 +118,26 @@ class TxStoreIndexCronService(
                         endTime = endTime
                     )
                     val atomTotalComponentFailCount = atomTotalComponentFailCount(dailyStatisticRecordList)
-                    val atomExecuteCountByCode = storeStatisticDailyDao.getAtomExecuteCountByCode(
+                    val atomExecuteCountByCodeRecord = storeStatisticDailyDao.getAtomExecuteCountByCode(
                         dslContext = dslContext,
                         storeCode = atomCode,
                         storeType = StoreTypeEnum.ATOM.type.toByte(),
                         startTime = startTime,
                         endTime = endTime
                     )
+                    var atomExecuteCountByCode = 0
+                    if (atomExecuteCountByCodeRecord != null) {
+                        atomExecuteCountByCode = (atomExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as Int +
+                                atomExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as Int)
+                    }
                     // sla计算
                     val atomSlaIndexValue =
-                        (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
-                    val result = if (atomSlaIndexValue > 99.9) "达标" else "不达标"
+                        if (atomExecuteCountByCode == 0) {
+                            0.0
+                        } else {
+                            (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
+                        }
+                    val result = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
@@ -154,7 +152,7 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>插件SLA ： $elementValue%（$result）</span>"
+                        "<span style=\"line-height: 18px\"><span>$BK_ATOM_SLA ： $elementValue%（$result）</span>"
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
                     tStoreIndexResultRecord.createTime = LocalDateTime.now()
@@ -208,6 +206,7 @@ class TxStoreIndexCronService(
                 indexCode = indexCode
             )
         logger.info("computeAtomQualityIndexInfo storeIndexBaseInfo is $storeIndexBaseInfoId")
+        // 数据库中存在指标基本信息才开始进行指标计算
         if (storeIndexBaseInfoId.isNullOrBlank()) {
             return
         }
@@ -260,24 +259,25 @@ class TxStoreIndexCronService(
                         }
                     }
                     val codeccOpensourceMeasurement = getCodeccOpensourceMeasurement(atomCode)
-                    val result = if (complianceRate > 99.9 && codeccOpensourceMeasurement == 100.0) "达标" else "不达标"
+                    val result = if (complianceRate > 99.9 && codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR
+                    else BK_NOT_UP_TO_PAR
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfoId,
                         result
                     )
                     val indexInfo = if (elementValue.isNullOrBlank()) {
-                        elementValue = "- （近一月无执行失败数据）"
+                        elementValue = BK_NO_FAIL_DATA
                         elementValue
                     } else {
-                        "$elementValue%(${if (complianceRate > 99.9) "达标" else "不达标"}）"
+                        "$elementValue%(${if (complianceRate > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）"
                     }
                     val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord()
                     tStoreIndexElementDetailRecord1.id = UUIDUtil.generate()
                     tStoreIndexElementDetailRecord1.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord1.storeCode = atomCode
                     tStoreIndexElementDetailRecord1.indexCode = indexCode
-                    tStoreIndexElementDetailRecord1.elementName = "错误码合规率"
+                    tStoreIndexElementDetailRecord1.elementName = BK_COMPLIANCE_RATE
                     tStoreIndexElementDetailRecord1.elementValue = elementValue
                     tStoreIndexElementDetailRecord1.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord1.creator = SYSTEM_USER
@@ -289,7 +289,7 @@ class TxStoreIndexCronService(
                     tStoreIndexElementDetailRecord2.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord2.storeCode = atomCode
                     tStoreIndexElementDetailRecord2.indexCode = indexCode
-                    tStoreIndexElementDetailRecord2.elementName = "codecc代码质量"
+                    tStoreIndexElementDetailRecord2.elementName = BK_CODE_QUALITY
                     tStoreIndexElementDetailRecord2.elementValue = "$codeccOpensourceMeasurement"
                     tStoreIndexElementDetailRecord2.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord2.creator = SYSTEM_USER
@@ -306,9 +306,10 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexResultRecord.iconTips =
                         "<span style=\"line-height: 18px\">" +
-                                "<span>错误码合规率 ： $indexInfo" +
-                                "</span></br><span>codecc代码质量 ： $codeccOpensourceMeasurement" +
-                                "（${if (codeccOpensourceMeasurement == 100.0) "达标" else "不达标"}）</span></span>"
+                                "<span>$BK_COMPLIANCE_RATE ： $indexInfo" +
+                                "</span></br><span>$BK_CODE_QUALITY ： $codeccOpensourceMeasurement" +
+                                "（${if (codeccOpensourceMeasurement == 100.0) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR}）" +
+                                "</span></span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
