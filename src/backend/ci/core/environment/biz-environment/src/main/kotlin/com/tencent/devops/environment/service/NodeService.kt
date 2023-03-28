@@ -117,8 +117,9 @@ class NodeService @Autowired constructor(
     }
 
     fun deleteNodeByIp(userId: String, projectId: String, nodeIp: String) {
-        val node = nodeDao.anyThirdPartyNodeByIp(dslContext, projectId, nodeIp)?.nodeId ?: return
-        deleteNodes(userId, projectId, listOf(node))
+        val node = nodeDao.getThirdPartyNodeByIp(dslContext, projectId, nodeIp).map { it.nodeId }
+        if (node.isEmpty()) return
+        deleteNodes(userId, projectId, node)
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
