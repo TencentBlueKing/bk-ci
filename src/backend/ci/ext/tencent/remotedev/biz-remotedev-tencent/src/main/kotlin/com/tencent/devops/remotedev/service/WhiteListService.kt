@@ -25,10 +25,14 @@ class WhiteListService @Autowired constructor(
     // 添加客户端白名单用户。目前对接redis配置，后续需要对接权限系统。
     fun addWhiteListUser(userId: String, whiteListUser: String): Boolean {
         logger.info("userId($userId) wants to add whiteListUser($whiteListUser)")
-        if (redisCache.get(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(whiteListUser) != true) {
-            logger.info("whiteListUser($whiteListUser) not in the whiteList")
-            redisOperation.addSetValue(RedisKeys.REDIS_WHITE_LIST_KEY, whiteListUser, false)
-            return true
+        // whiteListUser支持多个用;分隔，需要解析。
+        if (whiteListUser.isEmpty()) return false
+        val whiteListUserArray = whiteListUser.split(";")
+        for (user in whiteListUserArray) {
+            if (redisCache.get(RedisKeys.REDIS_WHITE_LIST_KEY)?.contains(user) != true) {
+                logger.info("whiteListUser($user) not in the whiteList")
+                redisOperation.addSetValue(RedisKeys.REDIS_WHITE_LIST_KEY, user, false)
+            }
         }
         return true
     }
