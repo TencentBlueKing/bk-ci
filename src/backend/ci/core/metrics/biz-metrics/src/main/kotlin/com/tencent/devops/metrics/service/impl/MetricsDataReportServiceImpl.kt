@@ -175,7 +175,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
                 }
                 if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
-                    saveAtomIndexStatisticsDailyPOs.forEach {saveAtomIndexStatisticsDailyPO ->
+                    saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
                         try {
                             metricsDataReportDao.saveAtomIndexStatisticsDailyData(
                                 context,
