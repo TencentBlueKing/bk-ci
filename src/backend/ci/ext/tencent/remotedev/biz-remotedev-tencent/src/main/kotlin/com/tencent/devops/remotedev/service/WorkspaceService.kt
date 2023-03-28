@@ -223,26 +223,6 @@ class WorkspaceService @Autowired constructor(
             client.get(ServiceTxUserResource::class).get(userId)
         }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
 
-        val bizId = MDC.get(TraceTag.BIZID)
-        val workspaceName = generateWorkspaceName(userId)
-        val workspace = with(workspaceCreate) {
-            Workspace(
-                workspaceId = null,
-                workspaceName = workspaceName,
-                repositoryUrl = repositoryUrl,
-                branch = branch,
-                devFilePath = devFilePath,
-                yaml = yaml,
-                wsTemplateId = wsTemplateId,
-                status = null,
-                lastStatusUpdateTime = null,
-                sleepingTime = null,
-                createUserId = userId,
-                workPath = Constansts.prefixWorkPath.plus(projectName),
-                hostName = ""
-            )
-        }
-
         val devfile = DevfileUtil.parseDevfile(yaml).apply {
             gitEmail = kotlin.runCatching {
                 gitTransferService.getUserEmail(
@@ -259,6 +239,27 @@ class WorkspaceService @Autowired constructor(
             }
 
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
+        }
+
+        val bizId = MDC.get(TraceTag.BIZID)
+        val workspaceName = generateWorkspaceName(userId)
+        val workspace = with(workspaceCreate) {
+            Workspace(
+                workspaceId = null,
+                workspaceName = workspaceName,
+                repositoryUrl = repositoryUrl,
+                branch = branch,
+                devFilePath = devFilePath,
+                yaml = yaml,
+                wsTemplateId = wsTemplateId,
+                status = null,
+                lastStatusUpdateTime = null,
+                sleepingTime = null,
+                createUserId = userId,
+                workPath = Constansts.prefixWorkPath.plus(projectName),
+                workspaceFolder = devfile.workspaceFolder ?: "",
+                hostName = ""
+            )
         }
 
         workspaceDao.createWorkspace(
@@ -993,6 +994,7 @@ class WorkspaceService @Autowired constructor(
                     sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
                     createUserId = it.creator,
                     workPath = it.workPath,
+                    workspaceFolder = it.workspaceFolder,
                     hostName = it.hostName
                 )
             }
@@ -1597,7 +1599,7 @@ class WorkspaceService @Autowired constructor(
         if (bkTicket.isEmpty() || hostName.isEmpty()) {
             return false
         }
-        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
+        val url = "https://$hostName/_remoting/api/token/updateBkTicket"
         val params = mutableMapOf<String, Any?>()
         params["ticket"] = bkTicket
         params["user"] = userId
