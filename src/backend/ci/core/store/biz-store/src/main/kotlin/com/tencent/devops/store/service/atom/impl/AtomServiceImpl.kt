@@ -86,6 +86,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.KEY_ICON
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -404,7 +405,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installFlag = installFlag,
                 installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode),
                 honorInfos = honorInfos,
-                indexInfos = indexInfos
+                indexInfos = indexInfos,
+                hotFlag = it[KEY_HOT_FLAG] as Boolean
             )
             dataList.add(pipelineAtomRespItem)
         }

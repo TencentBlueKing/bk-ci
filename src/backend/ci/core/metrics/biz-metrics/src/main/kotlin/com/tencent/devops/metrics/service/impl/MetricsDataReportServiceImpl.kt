@@ -359,7 +359,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
         val errorCode = taskMetricsData.errorCode
-        val isComplianceErrorCode = isComplianceErrorCode(atomCode, "$errorCode")
+        val isComplianceErrorCode = isComplianceErrorCode(atomCode, errorCode.toString())
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
@@ -807,7 +807,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         // 从本地缓存获取错误码信息
         val cacheKey = "$atomCode:$errorType:$errorCode"
         val errorCodeInfo = ErrorCodeInfoCacheUtil.getIfPresent(cacheKey)
-        if (errorCodeInfo != null) {
+        if (errorCodeInfo == null) {
             // 缓存中不存在则需要入库
             saveErrorCodeInfoPOs.add(
                 SaveErrorCodeInfoPO(
@@ -831,8 +831,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
-        var errorCodeType: ErrorCodeTypeEnum = when {
-            errorCodePrefix == "8" -> {
+        val errorCodeType: ErrorCodeTypeEnum = when {
+            errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
             errorCodePrefix.startsWith("100") -> {
@@ -845,8 +845,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
         return client.get(ServiceAtomResource::class).isComplianceErrorCode(
             storeCode = atomCode,
-            StoreTypeEnum.ATOM,
-            errorCode.toInt(),
+            storeType = StoreTypeEnum.ATOM,
+            errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).data!!
     }

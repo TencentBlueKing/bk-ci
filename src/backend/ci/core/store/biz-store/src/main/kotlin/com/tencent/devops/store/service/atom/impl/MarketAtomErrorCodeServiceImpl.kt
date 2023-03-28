@@ -31,11 +31,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -52,7 +54,8 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    override fun createErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+    override fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+        // 检查错误码是否规范
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -61,7 +64,8 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+    override fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+        // 检查错误码是否规范
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -85,16 +89,35 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun createGeneralErrorCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean> {
+        // 检查错误码是否规范
+        checkErrorCode(ErrorCodeTypeEnum.GENERAL, listOf("${errorCodeInfo.errorCode}"))
+        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+            dslContext,
+            userId,
+            StoreErrorCodeInfo(
+                storeCode = "devops",
+                storeType = storeType,
+                errorCodeType = ErrorCodeTypeEnum.GENERAL,
+                errorCodeInfos = listOf(errorCodeInfo)
+            )
+        )
+        return Result(true)
+    }
+
     @Suppress("ComplexMethod")
     private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
         val invalidErrorCodes = mutableListOf<String>()
-        errorCodeInfos.forEach {
-            val errorCode = it
-            if (errorCode.length != 6) invalidErrorCodes.add(errorCode)
+        errorCodeInfos.forEach { errorCode ->
+            if (errorCode.length != defaultAtomErrorCodeLength) invalidErrorCodes.add(errorCode)
             val errorCodePrefix = errorCode.substring(0, 3)
             when (errorCodeType) {
                 ErrorCodeTypeEnum.ATOM -> {
-                    if (!errorCodePrefix.startsWith("8")) {
+                    if (!errorCodePrefix.startsWith(defaultAtomErrorCodePrefix)) {
                         invalidErrorCodes.add(errorCode)
                     }
                 }
@@ -127,6 +150,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         try {
             checkErrorCode(errorCodeType, listOf(errorCode))
         } catch (e: ErrorCodeException) {
+            logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
         return storeErrorCodeInfoDao.getAtomErrorCode(
@@ -136,5 +160,9 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).isNotEmpty
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }

@@ -112,7 +112,10 @@ data class MarketImageItem constructor(
     val honorInfos: List<HonorInfo>? = null,
 
     @ApiModelProperty("指标信息列表")
-    val indexInfos: List<StoreIndexInfo>? = null
+    val indexInfos: List<StoreIndexInfo>? = null,
+
+    @ApiModelProperty("hotFlag")
+    val hotFlag: Boolean? = null
 ) {
     constructor(instance: MarketImageItem) : this(
         instance.id,
@@ -139,6 +142,7 @@ data class MarketImageItem constructor(
         instance.updateTime,
         instance.installedFlag,
         instance.honorInfos,
-        instance.indexInfos
+        instance.indexInfos,
+        instance.hotFlag
     )
 }

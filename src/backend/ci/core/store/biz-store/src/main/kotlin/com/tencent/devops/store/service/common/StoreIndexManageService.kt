@@ -37,29 +37,53 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 
 interface StoreIndexManageService {
 
+    /**
+     * 新增研发商店指标
+     */
     fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
 
+    /**
+     * 删除研发商店指标
+     */
     fun delete(userId: String, indexId: String): Result<Boolean>
 
+    /**
+     * 查询研发商店指标
+     */
     fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
 
+    /**
+     * 根据组件列表获取指标列表
+     */
     fun getStoreIndexInfosByStoreCodes(
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<StoreIndexInfo>>
 
+    /**
+     * 获取组件关联指标数据
+     */
     fun getStoreIndexInfosByStoreCode(
         storeType: StoreTypeEnum,
         storeCode: String
     ): List<StoreIndexInfo>
 
+    /**
+     * 新增指标要素
+     */
     fun createIndexComputeDetail(
         userId: String,
         createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
     ): Result<Boolean>
 
+    /**
+     * 根据要素值获取关联的插件列表
+     */
     fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>>
 
+    /**
+     * 根据组件代码删除指标结果
+     */
     fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,

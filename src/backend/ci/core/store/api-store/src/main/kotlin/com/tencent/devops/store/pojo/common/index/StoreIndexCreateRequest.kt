@@ -57,5 +57,7 @@ data class StoreIndexCreateRequest(
     @ApiModelProperty("指标执行时机类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
     @ApiModelProperty("store组件类型", required = true)
-    val storeType: StoreTypeEnum
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("指标展示权重", required = true)
+    val weight: Int
 )

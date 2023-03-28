@@ -31,7 +31,7 @@ import com.tencent.devops.model.store.tables.TStoreHonorInfo
 import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
-import com.tencent.devops.store.constant.StoreConstants
+import com.tencent.devops.store.pojo.common.STORE_HONOR_ID
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -55,10 +55,10 @@ class StoreHonorDao {
             val condition = mutableListOf<Condition>()
             if (!keyWords.isNullOrBlank()) {
                 condition.add(
-                    (HONOR_TITLE.like("%$keyWords%"))
-                        .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
+                    (HONOR_TITLE.eq(keyWords))
+                        .or(HONOR_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_CODE.eq(keyWords))
                 )
             }
             return dslContext.selectCount()
@@ -105,10 +105,10 @@ class StoreHonorDao {
             val condition = mutableListOf<Condition>()
             if (!keyWords.isNullOrBlank()) {
                 condition.add(
-                    (HONOR_TITLE.like("%$keyWords%"))
-                        .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
+                    (HONOR_TITLE.eq(keyWords))
+                        .or(HONOR_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_CODE.eq(keyWords))
                 )
             }
             return dslContext.select(
@@ -170,7 +170,7 @@ class StoreHonorDao {
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
 
             return dslContext.select(
-                ID.`as`(StoreConstants.STORE_HONOR_ID),
+                ID.`as`(STORE_HONOR_ID),
                 tStoreHonorRel.STORE_CODE,
                 HONOR_TITLE,
                 HONOR_NAME,
@@ -193,7 +193,7 @@ class StoreHonorDao {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             return dslContext.select(
-                ID.`as`(StoreConstants.STORE_HONOR_ID),
+                ID.`as`(STORE_HONOR_ID),
                 HONOR_TITLE,
                 HONOR_NAME,
                 tStoreHonorRel.MOUNT_FLAG,

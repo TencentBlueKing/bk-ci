@@ -27,9 +27,11 @@
 
 package com.tencent.devops.metrics.pojo.vo
 
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
+@ApiModel("项目信息查询VO")
 data class QueryProjectInfoVO(
     @ApiModelProperty("项目列表", required = true)
     val projectIds: List<String>,

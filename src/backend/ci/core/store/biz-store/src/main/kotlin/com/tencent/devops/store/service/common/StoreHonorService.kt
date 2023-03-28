@@ -37,6 +37,9 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreHonorService {
 
+    /**
+     * 查询荣誉列表
+     */
     fun list(
         userId: String,
         keyWords: String?,
@@ -44,12 +47,24 @@ interface StoreHonorService {
         pageSize: Int
     ): Page<StoreHonorManageInfo>
 
+    /**
+     * 批量删除组件荣誉
+     */
     fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Boolean
 
+    /**
+     * 添加组件荣誉信息
+     */
     fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean>
 
+    /**
+     * 获取组件荣誉
+     */
     fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo>
 
+    /**
+     * 佩戴荣誉
+     */
     fun installStoreHonor(
         userId: String,
         storeType: StoreTypeEnum,
@@ -57,6 +72,9 @@ interface StoreHonorService {
         honorId: String
     ): Boolean
 
+    /**
+     * 根据组件列表获取关联荣誉信息
+     */
     fun getHonorInfosByStoreCodes(
         storeType: StoreTypeEnum,
         storeCodes: List<String>

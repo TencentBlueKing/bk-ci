@@ -105,7 +105,7 @@ class StoreIndexManageInfoDao {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
             val condition = mutableListOf<Condition>()
             keyWords?.let {
-                condition.add(INDEX_NAME.like("%$it%"))
+                condition.add(INDEX_NAME.eq(it))
             }
             return dslContext.selectCount()
                 .from(this)
@@ -118,7 +118,7 @@ class StoreIndexManageInfoDao {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
             val condition = mutableListOf<Condition>()
             keyWords?.let {
-                condition.add(INDEX_NAME.like("%$it%"))
+                condition.add(INDEX_NAME.eq(it))
             }
             return dslContext.select(
                 ID,
@@ -132,6 +132,7 @@ class StoreIndexManageInfoDao {
                 TOTAL_TASK_NUM,
                 EXECUTE_TIME_TYPE,
                 STORE_TYPE,
+                WEIGHT,
                 CREATOR,
                 MODIFIER,
                 UPDATE_TIME,
@@ -249,6 +250,7 @@ class StoreIndexManageInfoDao {
                 .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID)
                     .and(LEVEL_ID.eq(tStoreIndexLevelInfo.ID)))
                 .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .orderBy(tStoreIndexBaseInfo.WEIGHT.desc())
                 .fetch()
         }
     }

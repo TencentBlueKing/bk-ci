@@ -35,8 +35,10 @@ import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Repository
@@ -181,16 +183,16 @@ class StoreStatisticDailyDao {
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime
-    ): Int {
+    ): Record2<BigDecimal, BigDecimal>? {
         with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
-            return dslContext.select(sum(DAILY_SUCCESS_NUM) + sum(DAILY_FAIL_NUM))
+            return dslContext.select(sum(DAILY_SUCCESS_NUM), sum(DAILY_FAIL_NUM))
                 .from(this)
-                .where(conditions).fetchOne(0, Int::class.java) ?: 0
+                .where(conditions).fetchOne()
         }
     }
 }

@@ -84,5 +84,7 @@ data class MarketItem(
     @ApiModelProperty("指标信息列表")
     val indexInfos: List<StoreIndexInfo>? = null,
     @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null
+    val recentExecuteNum: Int? = null,
+    @ApiModelProperty("热度超过80分位标识")
+    val hotFlag: Boolean? = null
 )

@@ -41,16 +41,17 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRec
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_CODE
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_DESCRIPTION
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_TIPS
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_URL
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_LEVEL_NAME
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_NAME
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.DELETE_STORE_INDEX_RESULT_KEY
+import com.tencent.devops.store.pojo.common.STORE_CODE
+import com.tencent.devops.store.pojo.common.STORE_INDEX_CODE
+import com.tencent.devops.store.pojo.common.STORE_INDEX_DESCRIPTION
+import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_TIPS
+import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_URL
+import com.tencent.devops.store.pojo.common.STORE_INDEX_LEVEL_NAME
+import com.tencent.devops.store.pojo.common.STORE_INDEX_NAME
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -97,6 +98,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         tStoreIndexBaseInfoRecord.description = storeIndexCreateRequest.description
         tStoreIndexBaseInfoRecord.operationType = storeIndexCreateRequest.operationType.name
         tStoreIndexBaseInfoRecord.executeTimeType = storeIndexCreateRequest.executeTimeType.name
+        tStoreIndexBaseInfoRecord.weight = storeIndexCreateRequest.weight
         tStoreIndexBaseInfoRecord.creator = userId
         tStoreIndexBaseInfoRecord.modifier = userId
         tStoreIndexBaseInfoRecord.createTime = LocalDateTime.now()
@@ -181,8 +183,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             storeIndexManageInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
             storeIndexManageInfoDao.deleteTStoreIndexBaseInfo(context, indexId)
         }
-        // 考虑到数据量的问题，使用定时任务处理存量数据
-        redisOperation.sadd("deleteStoreIndexResultKey", indexId)
+        // 考虑到数据量的问题，使用定时任务处理指标要素数据
+        redisOperation.sadd(DELETE_STORE_INDEX_RESULT_KEY, indexId)
         return Result(true)
     }
 
@@ -214,7 +216,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     indexCode = it[STORE_INDEX_CODE] as String,
                     indexName = it[STORE_INDEX_NAME] as String,
                     iconUrl = it[STORE_INDEX_ICON_URL] as String,
-                    description = it[STORE_INDEX_DESCRIPTION] as String,
+                    description = it[STORE_INDEX_DESCRIPTION] as? String ?: "",
                     indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
                     hover = it[STORE_INDEX_ICON_TIPS].toString()
                 )
@@ -288,7 +290,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         indexCode: String,
         storeCodes: List<String>
     ): Result<Boolean> {
-        // 权限校验
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(context, indexCode, storeCodes)

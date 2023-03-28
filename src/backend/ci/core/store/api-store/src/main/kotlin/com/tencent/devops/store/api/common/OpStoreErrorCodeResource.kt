@@ -25,26 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.api.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("统计信息")
-data class StoreStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?,
-    @ApiModelProperty("流水线个数")
-    val pipelineCnt: Int? = null,
-    @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null,
-    @ApiModelProperty("成功率")
-    val successRate: Double? = null,
-    @ApiModelProperty("hotFlag")
-    val hotFlag: Boolean? = null
+@Api(tags = ["OP_STORE_ERROR_CODE"], description = "OP-STORE-对接平台")
+@Path("/op/store/error/code")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpStoreErrorCodeResource {
 
-)
+    @ApiOperation("新增插件通用错误码")
+    @POST
+    @Path("type/{storeType}/general/add")
+    fun createGeneralErrorCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("插件通用错误码信息", required = true)
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean>
+}

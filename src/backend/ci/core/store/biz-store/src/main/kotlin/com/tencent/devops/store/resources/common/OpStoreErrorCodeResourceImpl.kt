@@ -25,26 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.resources.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.OpStoreErrorCodeResource
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("统计信息")
-data class StoreStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?,
-    @ApiModelProperty("流水线个数")
-    val pipelineCnt: Int? = null,
-    @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null,
-    @ApiModelProperty("成功率")
-    val successRate: Double? = null,
-    @ApiModelProperty("hotFlag")
-    val hotFlag: Boolean? = null
+@RestResource
+class OpStoreErrorCodeResourceImpl @Autowired constructor(
+    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
+) : OpStoreErrorCodeResource {
 
-)
+    override fun createGeneralErrorCode(
+        userId: String,
+        storeType: StoreTypeEnum,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean> {
+        return marketAtomErrorCodeService.createGeneralErrorCode(userId, storeType, errorCodeInfo)
+    }
+}

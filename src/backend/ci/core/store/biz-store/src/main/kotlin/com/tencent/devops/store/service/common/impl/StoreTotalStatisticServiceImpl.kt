@@ -39,6 +39,8 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
@@ -49,7 +51,7 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
-import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -60,6 +62,7 @@ import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
@@ -92,6 +95,16 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val taskName = "StoreTotalStatisticTask"
             logger.info("$taskName:stat:start")
             StoreTypeEnum.values().forEach { storeType ->
+                val percentileValue = percentileCalculation(storeType)
+                logger.info("StoreTotalStatisticTask getStorePercentileValue $percentileValue")
+                // 类型组件百分位数计算正常，放入缓存待用
+                if (percentileValue > 0.0) {
+                    redisOperation.set(
+                        "STORE_${storeType.name}_PERCENTILE_VALUE",
+                        "${percentileCalculation(storeType)}",
+                        TimeUnit.DAYS.toSeconds(1L)
+                    )
+                }
                 var offset = 0
                 do {
                     val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
@@ -178,7 +191,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         )
         val storeStatisticMap = hashMapOf<String, StoreStatistic>()
         records?.map {
-            val storeCode = it.value6()
+            val storeCode = it.get(KEY_STORE_CODE) as? String
             if (storeCode != null) {
                 storeStatisticMap[storeCode] = generateStoreStatistic(it)
             }
@@ -279,7 +292,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun generateStoreStatistic(
-        record: Record6<Int, Int, BigDecimal, Int, Int, String>?,
+        record: Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>?,
         successRate: Double? = null
     ): StoreStatistic {
         return StoreStatistic(
@@ -288,7 +301,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             score = String.format("%.1f", record?.value3()?.toDouble()).toDoubleOrNull(),
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
-            successRate = successRate
+            successRate = successRate,
+            hotFlag = record?.get(KEY_HOT_FLAG) as Boolean
         )
     }
 
@@ -337,6 +351,41 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum
             )
+            val percentileValue =
+                redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
+            if (percentileValue != null) {
+                storeStatisticTotalDao.updateStatisticDataHotFlag(
+                    dslContext = dslContext,
+                    storeCode = code,
+                    storeType = storeType,
+                    hotFlag = totalExecuteNum >= percentileValue.toDouble()
+                )
+            }
         }
+    }
+
+    /**
+     * 百分位数计算
+     */
+    private fun percentileCalculation(storeType: StoreTypeEnum): Double {
+        var value = 0.0
+        // 根据组件类型查询该类型组件最近执行次数大于0的数量
+        val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
+        val index = (count + 1) * 0.8
+        // 判断计算出来的index是否为整数，不为整数则取index和index+1 位置数据
+        val pluralFlag = "$index".contains(".0")
+        if (index >= 1) {
+            val result = storeStatisticTotalDao.getStorePercentileValue(
+                dslContext = dslContext,
+                storeType = storeType,
+                index = index.toInt(),
+                pluralFlag = pluralFlag
+            )
+            result.forEach {
+                value += it.value1() as Int
+            }
+        }
+        // index不为整数则取index和index+1 位置数据的平均值
+        return if (!pluralFlag) value / 2 else value
     }
 }

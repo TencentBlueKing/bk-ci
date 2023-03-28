@@ -63,6 +63,8 @@ data class StoreIndexBaseInfo(
     val executeTimeType: IndexExecuteTimeTypeEnum,
     @ApiModelProperty("组件类型", required = true)
     val storeType: StoreTypeEnum,
+    @ApiModelProperty("指标展示权重", required = true)
+    val weight: Int,
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("修改者", required = true)

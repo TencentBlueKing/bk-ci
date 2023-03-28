@@ -45,7 +45,8 @@ class CodeCCAutoConfiguration {
         return CodeccApi(
             codeccApiUrl = codeccConfig.codeccApiGateWay,
             codeccApiProxyUrl = codeccConfig.codeccApiProxyGateWay,
-            codeccHost = codeccConfig.codeccHost
+            codeccHost = codeccConfig.codeccHost,
+            codeccGrayProjectId = codeccConfig.codeccGrayProjectId
         )
     }
 }
