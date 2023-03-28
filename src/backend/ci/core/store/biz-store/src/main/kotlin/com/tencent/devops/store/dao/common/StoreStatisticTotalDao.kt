@@ -248,7 +248,7 @@ class StoreStatisticTotalDao {
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
                 .orderBy(RECENT_EXECUTE_NUM.asc(), CREATE_TIME, STORE_CODE)
-                .limit(index - 1,  1).fetchOne()
+                .limit(index - 1, 1).fetchOne()
         }
     }
 }
