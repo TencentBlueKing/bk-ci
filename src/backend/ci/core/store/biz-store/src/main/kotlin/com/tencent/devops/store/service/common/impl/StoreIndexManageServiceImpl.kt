@@ -28,6 +28,8 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -80,7 +82,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 ) : StoreIndexManageService {
 
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
-        //  管理员权限校验
         val indexCode = storeIndexCreateRequest.indexCode
         // 验证指标代码是否已存在
         val validateResult = validateAddStoreIndexCreateReq(storeIndexCreateRequest)
@@ -137,8 +138,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     }
 
     override fun delete(userId: String, indexId: String): Result<Boolean> {
-        //  管理员权限校验
-
         val indexBaseInfo =
             storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
         val atomCode = indexBaseInfo.atomCode
@@ -188,7 +187,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     }
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo> {
-        //  管理员权限校验
         val count = storeIndexManageInfoDao.count(dslContext, keyWords)
         val records = storeIndexManageInfoDao.list(dslContext, keyWords, page, pageSize)
         return Page(
@@ -241,7 +239,10 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             dslContext = dslContext,
             storeType = StoreTypeEnum.ATOM,
             indexCode = createIndexComputeDetailRequest.indexCode
-        ) ?: return Result(false)
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_INVALID_PARAM_,
+            params = arrayOf("indexCode: ${createIndexComputeDetailRequest.indexCode}")
+        )
         val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
             dslContext,
             indexId,

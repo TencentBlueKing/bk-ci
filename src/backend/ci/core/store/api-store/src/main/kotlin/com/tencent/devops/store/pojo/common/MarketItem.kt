@@ -85,6 +85,6 @@ data class MarketItem(
     val indexInfos: List<StoreIndexInfo>? = null,
     @ApiModelProperty("最近执行次数")
     val recentExecuteNum: Int? = null,
-    @ApiModelProperty("热度超过80分位标识")
+    @ApiModelProperty("是否为受欢迎组件")
     val hotFlag: Boolean? = null
 )
