@@ -1,6 +1,7 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
@@ -99,9 +100,25 @@ abstract class TGitActionGit(
             addCommitCheck = api::addCommitCheck
         )
     }
+
     override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
         branch: String?,
         displayName: String?
     ) = Unit
+
+    override fun parseStreamTriggerContext() {
+        // 格式化repoCreatedTime
+        this.data.context.repoCreatedTime = DateTimeUtil.formatDate(
+            DateTimeUtil.zoneDateToDate(this.data.context.repoCreatedTime)!!
+        )
+
+        // 将repoCreatorId -> user name
+        this.data.context.repoCreatorId = this.data.context.repoCreatorId?.let {
+            api.getUserInfoById(
+                TGitCred(this.data.getUserId()),
+                it
+            ).username
+        }
+    }
 }

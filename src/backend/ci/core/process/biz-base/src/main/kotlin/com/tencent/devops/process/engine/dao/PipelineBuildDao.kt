@@ -213,6 +213,15 @@ class PipelineBuildDao {
         }
     }
 
+    fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.select(START_USER)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     /**
      * 旧接口适配
      */
@@ -334,7 +343,7 @@ class PipelineBuildDao {
             if (pipelineId != null) {
                 select.and(PIPELINE_ID.eq(pipelineId))
             }
-            select.orderBy(QUEUE_TIME.asc()).limit(1)
+            select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
     }

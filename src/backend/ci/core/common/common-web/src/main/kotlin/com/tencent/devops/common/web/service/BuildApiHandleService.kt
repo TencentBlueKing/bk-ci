@@ -25,32 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-USE devops_ci_notify;
-SET NAMES utf8mb4;
+package com.tencent.devops.common.web.service
 
-DROP PROCEDURE IF EXISTS ci_notify_schema_update;
+interface BuildApiHandleService {
 
-DELIMITER <CI_UBF>
-CREATE PROCEDURE ci_notify_schema_update()
-BEGIN
-
-    DECLARE db VARCHAR(100);
-    SET AUTOCOMMIT = 0;
-SELECT DATABASE() INTO db;
-
-IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_EMAILS_NOTIFY_MESSAGE_TEMPLATE'
-                    AND COLUMN_NAME = 'TENCENT_CLOUD_TEMPLATE_ID') THEN
-ALTER TABLE `T_EMAILS_NOTIFY_MESSAGE_TEMPLATE`
-    ADD COLUMN `TENCENT_CLOUD_TEMPLATE_ID` int(11) NULL COMMENT '腾讯云邮件模板id';
-	
-END IF;
-
-COMMIT;
-END <CI_UBF>
-DELIMITER ;
-COMMIT;
-
-CALL ci_notify_schema_update();
+    /**
+     * 处理build接口切面逻辑
+     * @param parameterNames 切点参数名列表
+     * @param parameterValue 切点参数列表
+     * @return 处理后的操作系统名称
+     */
+    fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>)
+}

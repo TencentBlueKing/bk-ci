@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -135,4 +136,9 @@ interface UserContainerResource {
         @PathParam("os")
         os: OS
     ): Result<List<ContainerResp>>
+
+    @ApiOperation("获取全部流水线构建容器信息")
+    @GET
+    @Path("/all")
+    fun getAllContainers(): Result<List<ContainerType>?>
 }

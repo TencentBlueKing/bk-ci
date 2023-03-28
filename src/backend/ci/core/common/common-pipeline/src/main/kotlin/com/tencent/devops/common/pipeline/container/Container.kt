@@ -67,6 +67,7 @@ interface Container {
      */
     fun resetBuildOption(executeCount: Int) {
         this.status = null // 重置状态为空
+        this.timeCost = null
         this.startEpoch = null
         this.elementElapsed = null
         this.systemElapsed = null
