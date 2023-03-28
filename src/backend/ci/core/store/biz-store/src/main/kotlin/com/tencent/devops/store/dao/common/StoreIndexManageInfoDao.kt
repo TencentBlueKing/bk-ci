@@ -105,7 +105,7 @@ class StoreIndexManageInfoDao {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
             val condition = mutableListOf<Condition>()
             keyWords?.let {
-                condition.add(INDEX_NAME.like("%$it%"))
+                condition.add(INDEX_NAME.eq(it))
             }
             return dslContext.selectCount()
                 .from(this)
@@ -118,7 +118,7 @@ class StoreIndexManageInfoDao {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
             val condition = mutableListOf<Condition>()
             keyWords?.let {
-                condition.add(INDEX_NAME.like("%$it%"))
+                condition.add(INDEX_NAME.eq(it))
             }
             return dslContext.select(
                 ID,

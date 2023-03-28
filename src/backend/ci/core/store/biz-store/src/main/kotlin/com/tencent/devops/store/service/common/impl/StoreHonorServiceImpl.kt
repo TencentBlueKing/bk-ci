@@ -36,7 +36,12 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.dao.common.StoreHonorDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.CREATE_TIME
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_CREATE_TIME
 import com.tencent.devops.store.pojo.common.STORE_CREATOR
@@ -48,11 +53,6 @@ import com.tencent.devops.store.pojo.common.STORE_MODIFIER
 import com.tencent.devops.store.pojo.common.STORE_NAME
 import com.tencent.devops.store.pojo.common.STORE_TYPE
 import com.tencent.devops.store.pojo.common.STORE_UPDATE_TIME
-import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
-import com.tencent.devops.store.dao.common.StoreHonorDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -72,8 +72,6 @@ class StoreHonorServiceImpl @Autowired constructor(
 ) : StoreHonorService {
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
-        // 权限校验
-
         val records = storeHonorDao.list(
             dslContext = dslContext,
             keyWords = keyWords,
@@ -102,8 +100,6 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Boolean {
-        // 权限校验
-
         if (storeHonorRelList.isEmpty()) {
             return false
         }
@@ -118,8 +114,6 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
-        // 权限校验
-
         logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
         val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
         if (honorTitleCount > 0) {

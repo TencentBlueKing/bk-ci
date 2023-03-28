@@ -242,7 +242,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         index: Int,
-        pluralFlag: Boolean
+        pluralFlag: Boolean // 计算出来的index是否为整数，不为整数则取index和index+1 位置数据
     ): Result<out Record1<out Any>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val sql = dslContext.select(RECENT_EXECUTE_NUM)

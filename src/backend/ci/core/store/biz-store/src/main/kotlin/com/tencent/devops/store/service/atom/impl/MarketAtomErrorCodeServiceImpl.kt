@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -54,6 +55,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     private lateinit var defaultAtomErrorCodePrefix: String
 
     override fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+        // 检查错误码是否规范
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -63,6 +65,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     }
 
     override fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+        // 检查错误码是否规范
         checkErrorCode(
             storeErrorCodeInfo.errorCodeType,
             storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
@@ -91,6 +94,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean> {
+        // 检查错误码是否规范
         checkErrorCode(ErrorCodeTypeEnum.GENERAL, listOf("${errorCodeInfo.errorCode}"))
         storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
             dslContext,
@@ -146,7 +150,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         try {
             checkErrorCode(errorCodeType, listOf(errorCode))
         } catch (e: ErrorCodeException) {
-            e.printStackTrace()
+            logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
         return storeErrorCodeInfoDao.getAtomErrorCode(
@@ -156,5 +160,9 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).isNotEmpty
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }

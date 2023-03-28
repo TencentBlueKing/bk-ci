@@ -41,6 +41,9 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRec
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
+import com.tencent.devops.store.dao.common.StorePipelineRelDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.DELETE_STORE_INDEX_RESULT_KEY
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_INDEX_CODE
@@ -49,9 +52,6 @@ import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_TIPS
 import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_URL
 import com.tencent.devops.store.pojo.common.STORE_INDEX_LEVEL_NAME
 import com.tencent.devops.store.pojo.common.STORE_INDEX_NAME
-import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
-import com.tencent.devops.store.dao.common.StorePipelineRelDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -216,7 +216,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     indexCode = it[STORE_INDEX_CODE] as String,
                     indexName = it[STORE_INDEX_NAME] as String,
                     iconUrl = it[STORE_INDEX_ICON_URL] as String,
-                    description = it[STORE_INDEX_DESCRIPTION] as String,
+                    description = it[STORE_INDEX_DESCRIPTION] as? String ?: "",
                     indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
                     hover = it[STORE_INDEX_ICON_TIPS].toString()
                 )
@@ -290,7 +290,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         indexCode: String,
         storeCodes: List<String>
     ): Result<Boolean> {
-        // 权限校验
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(context, indexCode, storeCodes)

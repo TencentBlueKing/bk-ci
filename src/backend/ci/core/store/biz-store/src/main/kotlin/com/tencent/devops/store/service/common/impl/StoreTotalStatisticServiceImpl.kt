@@ -364,10 +364,15 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         }
     }
 
+    /**
+     * 百分位数计算
+     */
     private fun percentileCalculation(storeType: StoreTypeEnum): Double {
         var value = 0.0
+        // 根据组件类型查询该类型组件最近执行次数大于0的数量
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
         val index = (count + 1) * 0.8
+        // 判断计算出来的index是否为整数，不为整数则取index和index+1 位置数据
         val pluralFlag = "$index".contains(".0")
         if (index >= 1) {
             val result = storeStatisticTotalDao.getStorePercentileValue(
@@ -379,8 +384,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             result.forEach {
                 value += it.value1() as Int
             }
-            logger.info("getStorePercentileValue result:$result")
         }
+        // index不为整数则取index和index+1 位置数据的平均值
         return if (!pluralFlag) value / 2 else value
     }
 }
