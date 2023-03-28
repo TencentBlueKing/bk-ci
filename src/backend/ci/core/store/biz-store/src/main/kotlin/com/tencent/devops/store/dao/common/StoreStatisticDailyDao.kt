@@ -190,7 +190,7 @@ class StoreStatisticDailyDao {
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
-            return dslContext.select(sum(DAILY_SUCCESS_NUM) , sum(DAILY_FAIL_NUM))
+            return dslContext.select(sum(DAILY_SUCCESS_NUM), sum(DAILY_FAIL_NUM))
                 .from(this)
                 .where(conditions).fetchOne()
         }
