@@ -506,7 +506,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 (projectInfo.subjectScopes != subjectScopesStr ||
                     projectInfo.authSecrecy != projectUpdateInfo.authSecrecy
                     )
-            Pair(finalNeedApproval, ProjectApproveStatus.UPDATE_PENDING.status)
+            val approvalStatus = if (finalNeedApproval) {
+                ProjectApproveStatus.UPDATE_PENDING.status
+            } else {
+                ProjectApproveStatus.APPROVED.status
+            }
+            Pair(finalNeedApproval, approvalStatus)
         } else {
             // 当创建驳回时，需要再审批,状态又为重新创建
             Pair(authNeedApproval, ProjectApproveStatus.CREATE_PENDING.status)

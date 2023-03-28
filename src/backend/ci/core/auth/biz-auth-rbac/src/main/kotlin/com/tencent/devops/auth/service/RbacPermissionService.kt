@@ -307,7 +307,13 @@ class RbacPermissionService constructor(
                     )
                 // 返回具体资源列表
                 else ->
-                    instanceMap[resourceType] ?: emptyList()
+                    instanceMap[resourceType]?.let {
+                        authResourceCodeConverter.batchIamCode2Code(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            iamResourceCodes = it
+                        )
+                    } ?: emptyList()
             }
         } finally {
             logger.info(
