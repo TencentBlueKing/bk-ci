@@ -25,15 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.process.pojo.audit
 
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-修改NAME")
-data class PipelineName(
-    @ApiModelProperty("流水线修改后的名称", required = true)
-    val name: String,
-    @ApiModelProperty("流水线修改前的名称", required = false)
-    val oldName: String = ""
+@ApiModel("审计模型-Audit-查询")
+data class QueryAudit(
+    val projectId: String,
+    val resourceType: String,
+    val resourceId: String?,
+    val resourceName: String?,
+    val userId: String?,
+    val startTime: String?,
+    val endTime: String?
 )

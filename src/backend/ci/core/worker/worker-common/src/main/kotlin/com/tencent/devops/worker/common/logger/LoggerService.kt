@@ -372,7 +372,7 @@ object LoggerService {
                     ) {
                         ArchiveUtils.archiveLogFile(
                             file = zipLog,
-                            destFullPath = property.childZipPath,
+                            destFullPath = property.childZipPath!!,
                             buildVariables = buildVariables!!,
                             token = token
                         )

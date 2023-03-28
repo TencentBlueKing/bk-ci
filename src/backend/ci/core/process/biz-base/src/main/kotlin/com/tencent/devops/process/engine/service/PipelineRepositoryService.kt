@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -598,7 +599,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, 1)
+        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = 1)
     }
 
     private fun update(
@@ -740,7 +741,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, version)
+        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = version)
     }
 
     fun getPipelineInfo(
@@ -1052,7 +1053,12 @@ class PipelineRepositoryService constructor(
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting, version: Int, updateLastModifyUser: Boolean? = true) {
+    fun saveSetting(
+        userId: String,
+        setting: PipelineSetting,
+        version: Int,
+        updateLastModifyUser: Boolean? = true
+    ): PipelineName {
         setting.checkParam()
 
         if (isPipelineExist(
@@ -1068,6 +1074,7 @@ class PipelineRepositoryService constructor(
             )
         }
 
+        var oldName: String = setting.pipelineName
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val old = pipelineSettingDao.getSetting(
@@ -1075,6 +1082,9 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
+            if (old?.name != null) {
+                oldName = old.name
+            }
             pipelineInfoDao.update(
                 dslContext = context,
                 projectId = setting.projectId,
@@ -1106,6 +1116,8 @@ class PipelineRepositoryService constructor(
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
         }
+
+        return PipelineName(name = setting.pipelineName, oldName = oldName)
     }
 
     fun batchUpdatePipelineModel(
@@ -1180,6 +1192,8 @@ class PipelineRepositoryService constructor(
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
                 defaultMessage = "要还原的流水线不存在，可能已经被删除或还原了"
             )
+
+            existModel.name = pipeline.pipelineName
 
             if (pipeline.channel != channelCode.name) {
                 throw ErrorCodeException(

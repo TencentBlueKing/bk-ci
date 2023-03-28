@@ -6,6 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.windows.enums.DevCloudCreateWindowsStatus
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreate
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreateEnv
@@ -18,8 +19,6 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.pojo.QueryTaskStatusResponse
 import com.tencent.devops.dispatch.windows.pojo.WindowsMachineGetResponse
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
-
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -85,7 +84,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("getWindowsMachine|url=$url|body=$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -151,7 +150,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.debug("queryTaskStatus|url=$url")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -225,7 +224,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("DevCloudWindowsService|deleteWindowsMachine|deleteVM|$url|$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
