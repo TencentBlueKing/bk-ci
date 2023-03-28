@@ -130,7 +130,7 @@
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
                 installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE,
-                spawnNodesDescLink: this.BKCI_DOCS.SPAN_NODE_DESC_LINK
+                spawnNodesDescLink: this.BKCI_DOCS.SPAWN_NODES_DOC
             }
         },
         methods: {
