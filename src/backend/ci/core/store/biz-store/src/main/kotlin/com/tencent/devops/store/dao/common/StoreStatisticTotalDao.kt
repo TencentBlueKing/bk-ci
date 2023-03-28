@@ -241,16 +241,14 @@ class StoreStatisticTotalDao {
     fun getStorePercentileValue(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
-        index: Int,
-        pluralFlag: Boolean // 计算出来的index是否为整数，不为整数则取index和index+1 位置数据
-    ): Result<out Record1<out Any>> {
+        index: Int
+    ): Record1<Int>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val sql = dslContext.select(RECENT_EXECUTE_NUM)
+            return dslContext.select(RECENT_EXECUTE_NUM)
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
                 .orderBy(RECENT_EXECUTE_NUM.asc(), CREATE_TIME, STORE_CODE)
-                .limit(index - 1, if (!pluralFlag) 2 else 1)
-            return sql.fetch()
+                .limit(index - 1,  1).fetchOne()
         }
     }
 }

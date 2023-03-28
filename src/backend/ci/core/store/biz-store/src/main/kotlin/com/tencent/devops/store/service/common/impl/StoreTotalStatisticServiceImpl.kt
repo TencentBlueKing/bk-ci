@@ -63,6 +63,7 @@ import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 @Suppress("ALL")
 @Service
@@ -82,6 +83,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StoreTotalStatisticServiceImpl::class.java)
         private const val DEFAULT_PAGE_SIZE = 50
+        private const val DEFAULT_PERCENTILE = 0.8
     }
 
     @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
@@ -95,13 +97,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val taskName = "StoreTotalStatisticTask"
             logger.info("$taskName:stat:start")
             StoreTypeEnum.values().forEach { storeType ->
-                val percentileValue = percentileCalculation(storeType)
+                val percentileValue = percentileCalculation(storeType, DEFAULT_PERCENTILE)
                 logger.info("StoreTotalStatisticTask getStorePercentileValue $percentileValue")
                 // 类型组件百分位数计算正常，放入缓存待用
                 if (percentileValue > 0.0) {
                     redisOperation.set(
                         "STORE_${storeType.name}_PERCENTILE_VALUE",
-                        "${percentileCalculation(storeType)}",
+                        "$percentileValue",
                         TimeUnit.DAYS.toSeconds(1L)
                     )
                 }
@@ -367,25 +369,29 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     /**
      * 百分位数计算
      */
-    private fun percentileCalculation(storeType: StoreTypeEnum): Double {
+    private fun percentileCalculation(storeType: StoreTypeEnum, percentile: Double): Double {
         var value = 0.0
-        // 根据组件类型查询该类型组件最近执行次数大于0的数量
+        // 获取组件类型的总数
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
-        val index = (count + 1) * 0.8
-        // 判断计算出来的index是否为整数，不为整数则取index和index+1 位置数据
-        val pluralFlag = "$index".contains(".0")
+        // 计算出要查找的百分位索引
+        val index = (count + 1) * percentile
         if (index >= 1) {
-            val result = storeStatisticTotalDao.getStorePercentileValue(
+            value += storeStatisticTotalDao.getStorePercentileValue(
                 dslContext = dslContext,
                 storeType = storeType,
-                index = index.toInt(),
-                pluralFlag = pluralFlag
-            )
-            result.forEach {
-                value += it.value1() as Int
+                index = index.roundToInt()
+            )?.value1() ?: 0
+            if ((index % 1) != 0.0) {
+                // 如果索引不是整数，则取平均值
+                value += storeStatisticTotalDao.getStorePercentileValue(
+                    dslContext = dslContext,
+                    storeType = storeType,
+                    index = index.roundToInt() + 1
+                )?.value1() ?: 0
+                value /= 2
             }
         }
-        // index不为整数则取index和index+1 位置数据的平均值
-        return if (!pluralFlag) value / 2 else value
+
+        return value
     }
 }
