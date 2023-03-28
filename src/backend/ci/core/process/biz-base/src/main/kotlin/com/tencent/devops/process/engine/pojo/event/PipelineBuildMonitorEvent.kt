@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 /**
  * 构建任务监视： 状态，进度等，如发现卡死做一定策略停止
@@ -46,7 +45,6 @@ data class PipelineBuildMonitorEvent(
     override val pipelineId: String,
     override val userId: String,
     val buildId: String,
-    val buildStatus: BuildStatus,
     val executeCount: Int = 0, // 0 为了兼容旧的事件没有该字段，默认为0
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0
