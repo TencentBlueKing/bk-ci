@@ -5,6 +5,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("资源类型")
 data class ResourceTypeInfoVo(
+    @ApiModelProperty("ID")
+    val id: Int,
     @ApiModelProperty("资源类型")
     val resourceType: String,
     @ApiModelProperty("资源类型名")

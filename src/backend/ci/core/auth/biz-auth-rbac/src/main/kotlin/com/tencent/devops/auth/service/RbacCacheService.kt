@@ -54,6 +54,7 @@ class RbacCacheService constructor(
         if (resourceTypeCache.asMap().values.isEmpty()) {
             authResourceTypeDao.list(dslContext).forEach {
                 val resourceTypeInfo = ResourceTypeInfoVo(
+                    id = it.id,
                     resourceType = it.resourceType,
                     name = it.name,
                     parent = it.parent,
@@ -62,7 +63,7 @@ class RbacCacheService constructor(
                 resourceTypeCache.put(it.resourceType, resourceTypeInfo)
             }
         }
-        return resourceTypeCache.asMap().values.toList()
+        return resourceTypeCache.asMap().values.toList().sortedBy { it.id }
     }
 
     fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
