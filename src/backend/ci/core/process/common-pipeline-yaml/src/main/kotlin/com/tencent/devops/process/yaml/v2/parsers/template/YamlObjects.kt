@@ -251,7 +251,7 @@ object YamlObjects {
                         null
                     } else {
                         transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
-                    },
+                    }
                 )
             }
         )
