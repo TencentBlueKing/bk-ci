@@ -118,7 +118,10 @@ class AuditDao {
                 query.add(USER_ID.eq(queryAudit.userId))
             }
             if (!queryAudit.resourceName.isNullOrBlank()) {
-                query.add(RESOURCE_NAME.like("%${queryAudit.resourceName}%"))
+                query.add(
+                    RESOURCE_NAME.like("%${queryAudit.resourceName}%")
+                        .or(ACTION_CONTENT.like("%${queryAudit.resourceName}%")) // 针对改名的场景检索
+                )
             }
 
             if (!queryAudit.startTime.isNullOrBlank() && !queryAudit.endTime.isNullOrBlank()) {
