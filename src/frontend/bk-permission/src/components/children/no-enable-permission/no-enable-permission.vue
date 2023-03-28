@@ -8,6 +8,7 @@
         :class="{ 'exception-gray': isGray }"
         :title="title"
       >
+        <p>{{ title }}</p>
         <bk-button
           class="mt10"
           theme="primary"

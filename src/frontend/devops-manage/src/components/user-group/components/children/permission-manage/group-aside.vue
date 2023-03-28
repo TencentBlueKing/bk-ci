@@ -221,7 +221,8 @@ export default {
           this.groupList.push(...data.records);
           // 首页需要加载
           if (this.page === 1) {
-            this.handleChooseGroup(this.groupList[0]);
+            const chooseGroup = this.groupList.find(group => +group.groupId === +this.$route.query?.groupId) || this.groupList[0];
+            this.handleChooseGroup(chooseGroup);
           }
           this.page += 1
         });
@@ -257,6 +258,11 @@ export default {
         });
     },
     handleChooseGroup(group) {
+      this.$router.replace({
+        query: {
+          groupId: group.groupId
+        }
+      })
       this.activeTab = group.groupId;
       this.curGroupIndex = this.groupList.findIndex(item => item.groupId === group.groupId);
       this.$emit('choose-group', group);
