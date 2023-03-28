@@ -28,6 +28,7 @@
 package com.tencent.devops.environment.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.UserNodeResource
@@ -50,7 +51,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
     }
 
     override fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>): Result<Boolean> {
-        nodeService.deleteNodes(userId, projectId, nodeHashIds)
+        nodeService.deleteNodes(userId, projectId, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return Result(true)
     }
 
