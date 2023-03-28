@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -61,27 +60,6 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions *api.DockerOpti
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
 		return nil, errors.New(errMsg)
-	}
-
-	// 获取当前仅支持的flag
-	options := config.GAgentConfig.DockerOptions
-
-	// 校验用户option是否符合预期
-	pflag.CommandLine.Visit(func(f *pflag.Flag) {
-		check := false
-		for _, op := range options {
-			if f.Name == strings.TrimSpace(op) {
-				check = true
-			}
-		}
-		if !check {
-			errMsg := fmt.Sprintf("用户docker option %s 不符合当前未支持列表: %s", f.Name, strings.Join(options, ","))
-			err = errors.New(errMsg)
-			return
-		}
-	})
-	if err != nil {
-		return nil, err
 	}
 
 	// Ping daemon 获取os

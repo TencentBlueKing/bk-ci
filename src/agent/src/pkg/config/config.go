@@ -91,7 +91,6 @@ type AgentConfig struct {
 	JdkDirPath              string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
-	DockerOptions           []string
 }
 
 // AgentEnv Agent 环境配置
@@ -424,7 +423,6 @@ func LoadAgentConfig() error {
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 	GAgentConfig.EnableDockerBuild = enableDocker
 	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
-	logs.Infof("DockerOptions: %s", strings.Join(GAgentConfig.DockerOptions, ","))
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
