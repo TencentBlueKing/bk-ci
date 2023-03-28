@@ -27,7 +27,8 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
 import com.tencent.devops.store.pojo.common.ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE
@@ -72,9 +73,10 @@ class TxAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationSer
             val applyReason = atomCollaboratorCreateReq.applyReason
             val createMoaApproveRequest = CreateMoaApproveRequest(
                 verifier = verifierSb.toString(),
-                title = MessageCodeUtil.getCodeMessage(
+                title = MessageUtil.getMessageByLocale(
                     messageCode = ATOM_COLLABORATOR_APPLY_MOA_TEMPLATE,
-                    params = arrayOf(userId, atomRecord!!.name, applyReason)
+                    params = arrayOf(userId, atomRecord!!.name, applyReason),
+                    language = I18nUtil.getLanguage(userId)
                 ) ?: applyReason,
                 taskId = approveId,
                 backUrl = MessageFormat.format(moaApproveCallBackUrl, token)

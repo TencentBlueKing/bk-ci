@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamCode.BK_STARTUP_CONFIGURATION_MISSING
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -311,7 +311,7 @@ class TXManualTriggerService @Autowired constructor(
             buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
                 homePage = v2GitUrl ?: throw ParamBlankException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                        messageCode = STARTUP_CONFIGURATION_MISSING,
                         language = I18nUtil.getLanguage(userId)
                     )
                 ),

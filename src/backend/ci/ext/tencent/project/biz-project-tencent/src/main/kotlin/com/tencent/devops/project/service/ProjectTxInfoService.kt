@@ -28,7 +28,8 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -76,13 +77,17 @@ class ProjectTxInfoService @Autowired constructor(
         // projectName表字段长度调整到64位限制
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.NAME_TOO_LONG,
+                    language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
             )
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
+                    language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )
         }
@@ -101,7 +106,9 @@ class ProjectTxInfoService @Autowired constructor(
         logger.info("PROJECT|userId|$userId|projectName|$projectName")
         if (projectName.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.NAME_EMPTY,
+                    language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.NAME_EMPTY
             )
         }

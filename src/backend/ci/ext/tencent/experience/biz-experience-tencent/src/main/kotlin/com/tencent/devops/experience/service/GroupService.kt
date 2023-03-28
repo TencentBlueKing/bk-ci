@@ -39,7 +39,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -62,7 +61,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Service
@@ -156,9 +154,10 @@ class GroupService @Autowired constructor(
         val groupAndUsersList = bsAuthProjectApi.getProjectGroupAndUserList(experienceServiceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = MessageCodeUtil.getCodeLanMessage(
+                groupName = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName
+                    defaultMessage = it.displayName,
+                    language = I18nUtil.getLanguage(userId)
                 ),
                 groupId = it.roleName,
                 groupRoleId = it.roleId,
@@ -254,15 +253,13 @@ class GroupService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
-                params = arrayOf(groupHashId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(groupHashId)
             )
         }
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
-                params = arrayOf(group.name),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(group.name)
             )
         }
 

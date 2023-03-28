@@ -59,7 +59,6 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
@@ -151,8 +150,7 @@ class ExperienceService @Autowired constructor(
             if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
                 throw ErrorCodeException(
                     statusCode = 404,
-                    errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND,
-                    language = I18nUtil.getLanguage(userId)
+                    errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
                 )
             }
 
@@ -662,8 +660,7 @@ class ExperienceService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = EXPERIENCE_NOT_EXIST,
-                params = arrayOf(experienceHashId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(experienceHashId)
             )
     }
 
@@ -773,9 +770,10 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ) {
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
-                defaultMessage = AuthPermission.EXECUTE.alias
+                defaultMessage = AuthPermission.EXECUTE.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
@@ -1047,8 +1045,7 @@ class ExperienceService @Autowired constructor(
                 .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
         ) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                language = I18nUtil.getLanguage(userId)
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
             )
         }
 

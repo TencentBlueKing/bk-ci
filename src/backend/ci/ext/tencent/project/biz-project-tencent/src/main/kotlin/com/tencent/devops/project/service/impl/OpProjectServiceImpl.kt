@@ -35,12 +35,10 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
-import com.tencent.devops.project.constant.ProjectCode.BK_DUPLICATE_PROJECT_NAME
-import com.tencent.devops.project.constant.ProjectCode.BK_PROJECT_NOT_EXIST
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dao.ProjectLocalDao
@@ -94,7 +92,7 @@ class OpProjectServiceImpl @Autowired constructor(
             logger.warn("The project $projectId is not exist")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_NOT_EXIST,
+                    messageCode = PROJECT_NOT_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -119,7 +117,7 @@ class OpProjectServiceImpl @Autowired constructor(
                 logger.warn("Duplicate project $projectInfoRequest", e)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_DUPLICATE_PROJECT_NAME,
+                        messageCode = PROJECT_NAME_EXIST,
                         language = I18nUtil.getLanguage(userId)
                     )
                 )
@@ -179,7 +177,8 @@ class OpProjectServiceImpl @Autowired constructor(
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
         if (projectInfo == null) {
             logger.warn("syn project $projectCode is not exist")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            throw OperationException(MessageUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
         }
         var isSyn = false
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)

@@ -29,15 +29,15 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_BSC_CREATE_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_PAASCC_INFORMATION
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_BSC_CREATE_PROJECT
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_GET_PAASCC_INFORMATION
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_SYNCHRONIZE_PROJECT
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_UPDATE_LOGO_INFORMATION
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_UPDATE_PROJECT_INFORMATION
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_SYNCHRONIZE_PROJECT
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_LOGO_INFORMATION
+import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_PROJECT_INFORMATION
 import com.tencent.devops.project.pojo.BcsProjectForCreate
 import com.tencent.devops.project.pojo.BcsProjectForUpdate
 import com.tencent.devops.project.pojo.BcsProjectInfo
@@ -106,7 +106,7 @@ class ProjectPaasCCService @Autowired constructor(
             logger.warn("Fail to create the projects in bcs with response $responseContent")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_SYNCHRONIZE_PROJECT,
+                    messageCode = FAILED_SYNCHRONIZE_PROJECT,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -144,7 +144,7 @@ class ProjectPaasCCService @Autowired constructor(
             .put(requestBody).build()
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_UPDATE_PROJECT_INFORMATION,
+                messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
             ))
         logger.info("Success to update the project with response $responseContent")
@@ -153,7 +153,7 @@ class ProjectPaasCCService @Autowired constructor(
         if (result.code.toInt() != 0) {
             logger.warn("Fail to update the project in bcs with response $responseContent")
             throw OperationException(MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_UPDATE_PROJECT_INFORMATION,
+                messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
             ) + ": $responseContent")
         }
@@ -177,7 +177,7 @@ class ProjectPaasCCService @Autowired constructor(
             .put(requestBody).build()
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_UPDATE_LOGO_INFORMATION,
+                messageCode = FAILED_UPDATE_LOGO_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
             ))
         logger.info("Success to update the projectLogo with response $responseContent")
@@ -187,7 +187,7 @@ class ProjectPaasCCService @Autowired constructor(
             logger.warn("Fail to update the projectLogo in bcs with response $responseContent")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_UPDATE_LOGO_INFORMATION,
+                    messageCode = FAILED_UPDATE_LOGO_INFORMATION,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -204,7 +204,7 @@ class ProjectPaasCCService @Autowired constructor(
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_PAASCC_INFORMATION,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ))
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
         if (result.code != 0) {

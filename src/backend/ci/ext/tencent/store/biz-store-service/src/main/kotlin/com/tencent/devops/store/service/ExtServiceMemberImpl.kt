@@ -29,7 +29,8 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.pojo.common.StoreMemberReq
@@ -59,9 +60,10 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
             "$sendNotify|$checkPermissionFlag|$testProjectCode")
         val serviceCode = storeMemberReq.storeCode
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(serviceCode)
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
                 dslContext = dslContext,
@@ -70,7 +72,10 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val repositoryHashId = serviceRecord.repositoryHashId
         val addRepoMemberResult = addRepoMember(storeMemberReq, userId, repositoryHashId)
@@ -104,12 +109,16 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     ): Result<Boolean> {
         logger.info("deleteExtServiceMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
         val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, storeCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(storeCode)
+                params = arrayOf(storeCode),
+                language = I18nUtil.getLanguage(userId)
             )
         val memberRecord = storeMemberDao.getById(dslContext, id)
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
+            ?: return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                language = I18nUtil.getLanguage(userId))
         // 如果删除的是管理员，只剩一个管理员则不允许删除
         if ((memberRecord.type).toInt() == 0) {
             val validateAdminResult = isStoreHasAdmins(storeCode, storeType)

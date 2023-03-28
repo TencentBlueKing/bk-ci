@@ -43,11 +43,10 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.constant.ProjectCode.BK_ASSOCIATED_SYSTEM_NOT_BOUND
-import com.tencent.devops.project.constant.ProjectCode.BK_NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.ASSOCIATED_SYSTEM_NOT_BOUND
+import com.tencent.devops.project.constant.ProjectMessageCode.NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
@@ -85,18 +84,15 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
+            defaultMessage = MessageUtil.getCodeLanMessage(messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         val projectRelationId = projectInfo.relationId
 
         if (projectRelationId.isNullOrEmpty()) {
             logger.warn("create V3 project user, not binding $projectCode iamV3")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = BK_ASSOCIATED_SYSTEM_NOT_BOUND,
-                    language = I18nUtil.getLanguage()
-                )
+                errorCode = ASSOCIATED_SYSTEM_NOT_BOUND
             )
         }
         logger.info("getProject role $projectCode $projectRelationId")
@@ -141,10 +137,11 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 throw ope
             } catch (e: Exception) {
                 logger.warn("getStaffInfo fail, userId[$it]", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(
+                throw OperationException(MessageUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
                     defaultMessage = e.message,
-                    params = arrayOf(it)
+                    params = arrayOf(it),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ))
             }
             memberList.add(
@@ -159,7 +156,9 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             logger.warn("create group user fail, $projectCode $roleName not find relationGroup")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_EMPTY)
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
         }
 
@@ -190,7 +189,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT,
+                    messageCode = NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT,
                     language = I18nUtil.getLanguage(userId)
                 ) + ":${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
         }

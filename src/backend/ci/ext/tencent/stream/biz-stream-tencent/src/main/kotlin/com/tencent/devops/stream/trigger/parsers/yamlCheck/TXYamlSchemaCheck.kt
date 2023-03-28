@@ -39,8 +39,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.stream.config.TXStreamGitConfig
-import com.tencent.devops.stream.constant.StreamCode.BK_MUST_HAVE_ONE
-import com.tencent.devops.stream.constant.StreamCode.BK_VARIABLE_NAME
+import com.tencent.devops.stream.constant.StreamMessageCode.MUST_HAVE_ONE
+import com.tencent.devops.stream.constant.StreamMessageCode.VARIABLE_NAME
 import com.tencent.devops.stream.service.StreamGitTokenService
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -172,8 +172,8 @@ private fun JsonNode.checkVariablesFormat() {
         if (!keyRegex.matches(it.key)) {
             throw YamlFormatException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_VARIABLE_NAME,
-                    language = I18nUtil.getLanguage()
+                    messageCode = VARIABLE_NAME,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }
@@ -188,8 +188,8 @@ private fun JsonNode.checkCiRequired() {
         }
     }
     throw YamlFormatException(MessageUtil.getMessageByLocale(
-        messageCode = BK_MUST_HAVE_ONE,
-        language = I18nUtil.getLanguage()
+        messageCode = MUST_HAVE_ONE,
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
     ))
 }
 
@@ -197,8 +197,8 @@ private fun JsonNode.checkExtendsRequired() {
     if (get("stages") == null && get("jobs") == null && get("steps") == null) {
         throw YamlFormatException(
             MessageUtil.getMessageByLocale(
-                messageCode = BK_MUST_HAVE_ONE,
-                language = I18nUtil.getLanguage()
+                messageCode = MUST_HAVE_ONE,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
     }

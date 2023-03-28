@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_QUERIED
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_QUERIED
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -73,7 +73,7 @@ class V1GitCIBranchService @Autowired constructor(
         logger.info("get branch build list, gitProjectId: $gitProjectId")
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN, MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             ))
 

@@ -37,8 +37,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.stream.constant.StreamCode
-import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamMessageCode.GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
@@ -225,13 +225,13 @@ class V1YamlTrigger @Autowired constructor(
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_GIT_CI_NO_RECOR,
+                            messageCode = GIT_CI_NO_RECOR,
                             language = I18nUtil.getLanguage()
                         ) + ". ${it.image}"
                     )
                 if (!record.enable) {
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
-                        messageCode = StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE,
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
                         language = I18nUtil.getLanguage()
                     ) + ". ${it.image}")
                 }

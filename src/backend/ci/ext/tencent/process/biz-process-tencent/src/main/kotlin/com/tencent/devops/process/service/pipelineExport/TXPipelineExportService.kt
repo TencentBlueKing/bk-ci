@@ -161,14 +161,12 @@ class TXPipelineExportService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                params = arrayOf(pipelineId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(pipelineId)
             )
 
         val baseModel = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-            language = I18nUtil.getLanguage(userId)
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
         )
 
         val pipelineGroupsMap = mutableMapOf<String, String>()

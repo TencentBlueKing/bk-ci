@@ -27,9 +27,9 @@
 
 package com.tencent.devops.plugin.worker.task.bk
 
-import com.tencent.devops.worker.common.WorkerCode.BK_CANNING_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerCode.BK_NO_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerCode.BK_SENSITIVE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CANNING_SENSITIVE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_SENSITIVE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SENSITIVE_INFORMATION
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -39,6 +39,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.WorkerMessageCode.FOLDER_NOT_EXIST
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
@@ -111,7 +112,7 @@ class SensitiveScanTask : ITask() {
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
             messageCode = BK_CANNING_SENSITIVE_INFORMATION,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getDefaultLocaleLanguage()
         ) + "：$excludePath")
 
         command.execute(buildId, script, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
@@ -120,13 +121,17 @@ class SensitiveScanTask : ITask() {
         val indexFileParam = "detect_ssd.html"
         val reportNameParam = MessageUtil.getMessageByLocale(
             messageCode = BK_SENSITIVE_INFORMATION,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getDefaultLocaleLanguage()
         )
 
         val fileDir = getFile(workspace, fileDirParam)
         if (!fileDir.isDirectory) {
             throw TaskExecuteException(
-                errorMsg = "文件夹($fileDirParam)不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = FOLDER_NOT_EXIST,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf(fileDirParam)
+                ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND
             )
@@ -137,7 +142,7 @@ class SensitiveScanTask : ITask() {
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_NO_SENSITIVE_INFORMATION,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
             return

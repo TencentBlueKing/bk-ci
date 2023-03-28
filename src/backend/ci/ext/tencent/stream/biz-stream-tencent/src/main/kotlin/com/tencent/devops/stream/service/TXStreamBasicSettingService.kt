@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NEED_SUPPLEMEN
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.utils.GitCIUtils
@@ -40,7 +41,6 @@ import com.tencent.devops.project.pojo.ProjectDeptInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamCode.BK_NEED_SUPPLEMEN
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao

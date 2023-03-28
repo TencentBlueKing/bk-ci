@@ -29,6 +29,10 @@ package com.tencent.devops.stream.v1.components
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATE_SERVICE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PULL_CODE
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -95,12 +99,8 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.stream.constant.StreamCode.BK_BUILD_TRIGGER
-import com.tencent.devops.stream.constant.StreamCode.BK_CREATE_SERVICE
-import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
-import com.tencent.devops.stream.constant.StreamCode.BK_MANUAL_TRIGGER
-import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
-import com.tencent.devops.stream.constant.StreamCode.BK_PULL_CODE
+import com.tencent.devops.stream.constant.StreamMessageCode.GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.config.V1BuildConfig
@@ -456,14 +456,14 @@ class V1YamlBuild @Autowired constructor(
             val (imageName, imageTag) = it.parseImage()
             val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                 ?: throw RuntimeException(MessageUtil.getMessageByLocale(
-                    messageCode = BK_GIT_CI_NO_RECOR,
+                    messageCode = GIT_CI_NO_RECOR,
                     language = I18nUtil.getLanguage()
                 ) + ". ${it.image}")
             if (!record.enable) {
                 throw RuntimeException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
-                        language = I18nUtil.getLanguage(userId)
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
+                        language = I18nUtil.getLanguage()
                     )
                 )
             }

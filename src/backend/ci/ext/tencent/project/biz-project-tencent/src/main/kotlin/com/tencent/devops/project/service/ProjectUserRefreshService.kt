@@ -31,8 +31,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INVALID
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TUserRecord
 import com.tencent.devops.project.dao.ProjectFreshDao
 import com.tencent.devops.project.dao.ProjectUserDao
@@ -181,7 +182,9 @@ class ProjectUserRefreshService @Autowired constructor(
                 userId = userId,
                 bkTicket = "",
                 userCache = false
-            ) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage("user $userId level office"))
+            ) ?: throw OperationException(MessageUtil.getCodeLanMessage(
+                messageCode = "user $userId level office",
+                language = I18nUtil.getLanguage(userId)))
             if (userInfo.groupId != deptInfo.groupId || userInfo.deptId != deptInfo.deptId) {
                 logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -49,7 +50,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -405,11 +406,15 @@ class TxProjectServiceImpl @Autowired constructor(
         val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+        val responseContent = request(request, MessageUtil.getCodeLanMessage(
+            messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+            language = I18nUtil.getLanguage(userId)))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+            throw OperationException(MessageUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+                language = I18nUtil.getLanguage(userId)))
         }
         if (result.data == null) {
             return emptyList()

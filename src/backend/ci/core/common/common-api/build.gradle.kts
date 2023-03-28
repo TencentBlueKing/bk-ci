@@ -44,6 +44,7 @@ dependencies {
     api("org.springframework.boot:spring-boot-starter-data-redis")
     api("org.apache.commons:commons-compress")
     api("org.apache.commons:commons-exec")
+    api("org.apache.commons:commons-collections4")
     api("javax.servlet:javax.servlet-api")
     api("javax.validation:validation-api")
     api("com.vdurmont:emoji-java")

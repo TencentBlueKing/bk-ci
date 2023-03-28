@@ -83,7 +83,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
-            // 插件error.json文件数据入库
+            // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(
                 atomCode = atomCode,
                 atomVersion = version,

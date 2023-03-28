@@ -27,8 +27,8 @@
 
 package com.tencent.devops.plugin.worker.task.cert
 
-import com.tencent.devops.worker.common.WorkerCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
-import com.tencent.devops.worker.common.WorkerCode.BK_RELATIVE_PATH_KEYSTORE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.WorkerMessageCode.CERTIFICATE_ID_EMPTY
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -61,7 +62,10 @@ class AndroidCertInstallTask : ITask() {
 
         if (certId.isBlank()) {
             throw TaskExecuteException(
-                errorMsg = "证书ID为空",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = CERTIFICATE_ID_EMPTY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
             )
@@ -71,7 +75,7 @@ class AndroidCertInstallTask : ITask() {
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
             messageCode = BK_RELATIVE_PATH_KEYSTORE,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getDefaultLocaleLanguage()
         ) + "：$filename")
 
         val pairKey = DHUtil.initKey()
@@ -88,7 +92,7 @@ class AndroidCertInstallTask : ITask() {
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_KEYSTORE_INSTALLED_SUCCESSFULLY,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             )
         )
     }

@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -203,10 +202,11 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(templateCode),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
         // 暂时仅支持moa
         val moaTplRecord = tNotifyMessageTemplateDao.getMoaNotifyMessageTemplate(

@@ -28,8 +28,9 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -72,12 +73,16 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
                 storeCode = atomCode,
                 storeType = StoreTypeEnum.ATOM.type.toByte())
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode)
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
             )
         val updateAtomRepositoryUserInfoResult = client.get(ServiceGitRepositoryResource::class)
             .updateRepositoryUserInfo(userId, projectCode, atomRecord.repositoryHashId)

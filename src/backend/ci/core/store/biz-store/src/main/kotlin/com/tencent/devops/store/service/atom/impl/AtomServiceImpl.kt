@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -52,6 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -73,40 +75,7 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
-import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
-import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
-import com.tencent.devops.store.pojo.common.KEY_AVG_SCORE
-import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
-import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
-import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_CREATOR
-import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
-import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
-import com.tencent.devops.store.pojo.common.KEY_ICON
-import com.tencent.devops.store.pojo.common.KEY_ID
-import com.tencent.devops.store.pojo.common.KEY_INSTALLER
-import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
-import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
-import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
-import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
-import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
-import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
-import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
-import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
-import com.tencent.devops.store.pojo.common.KEY_MODIFIER
-import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
-import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
-import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
-import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
-import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
-import com.tencent.devops.store.pojo.common.UnInstallReq
-import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.*
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -331,8 +300,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 JsonUtil.getObjectMapper().readValue(it[KEY_OS] as String, ArrayList::class.java) as ArrayList<String>
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            val classifyLanName = MessageUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             // 社区版插件归档bkrepo后删除local参数
@@ -355,6 +325,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
+                version = version,
                 defaultVersion = defaultVersion,
                 classType = classType,
                 serviceScope = serviceScopeList,
@@ -638,7 +609,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
                 val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = MessageCodeUtil.getCodeLanMessage("$storeAtomStatusPrefix$atomStatusName")
+                val atomStatusMsg = MessageUtil.getCodeLanMessage(
+                    messageCode = "$storeAtomStatusPrefix$atomStatusName",
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
@@ -901,9 +875,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installType == StoreProjectTypeEnum.TEST.type.toByte()
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+            val classifyLanName = MessageUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
-                defaultMessage = classifyName
+                defaultMessage = classifyName,
+                language = I18nUtil.getLanguage(userId)
             )
             result.add(InstalledAtom(
                 atomId = it[KEY_ID] as String,
@@ -943,9 +918,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val installer = it[KEY_INSTALLER] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+            val classifyLanName = MessageUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
+                defaultMessage = classifyName,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             // 判断项目是否是初始化项目或者调试项目
             InstalledAtom(

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.LocaleInfo
 
 interface UserLocaleService {
 

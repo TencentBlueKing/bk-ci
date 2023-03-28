@@ -36,11 +36,12 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.AddCommitCheckStatus
 import com.tencent.devops.scm.constant.ScmMessageCode.ERROR_GIT_BAD_REQUEST
@@ -88,8 +89,11 @@ class ScmMonitorService @Autowired constructor(
                             statusMessage = statusMessage,
                             errorType = errorType,
                             errorCode = errorCode,
-                            errorMsg = MessageCodeUtil.getCodeMessage(messageCode = errorCode, params = null)
-                                ?: statusMessage,
+                            errorMsg = MessageUtil.getMessageByLocale(
+                                messageCode = errorCode,
+                                params = null,
+                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            ),
                             projectName = projectName,
                             commitId = commitId,
                             block = block,

@@ -31,8 +31,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.api.service.ServiceFileResource
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -51,7 +52,10 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }

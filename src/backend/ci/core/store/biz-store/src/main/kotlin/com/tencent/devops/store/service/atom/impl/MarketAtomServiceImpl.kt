@@ -130,7 +130,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -640,7 +640,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
         val atomCode = storeErrorCodeInfo.storeCode
-        val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
@@ -648,28 +647,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeType = storeErrorCodeInfo.storeType.type.toByte()
         )
         if (!isStoreMember) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
         }
-        if (errorCodeInfoList.isNotEmpty()) {
-            val errorCodes = errorCodeInfoList.map { "${it.errorCode}" }
-            val duplicateData = getDuplicateData(errorCodes)
-            // 存在重复code码则报错提示哪些code码重复
-            if (duplicateData.isNotEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
-                    params = arrayOf(duplicateData.joinToString(","))
-                )
-            }
-            // 校验code码是否符合插件自定义错误码规范
-            errorCodes.forEach {
-                if ((it.length != defaultAtomErrorCodeLength) || (!it.startsWith(defaultAtomErrorCodePrefix))) {
-                    throw ErrorCodeException(
-                        errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
-                    )
-                }
+        val errorCodes = storeErrorCodeInfo.errorCodes
+        // 校验code码是否符合插件自定义错误码规范
+        errorCodes.forEach { errorCode ->
+            val errorCodeStr = errorCode.toString()
+            if (errorCodeStr.length != defaultAtomErrorCodeLength ||
+                (!errorCodeStr.startsWith(defaultAtomErrorCodePrefix))
+            ) {
+                throw ErrorCodeException(errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID)
             }
         }
-        val errorJsonStr = JsonUtil.toJson(storeErrorCodeInfo.errorCodeInfos)
+        val errorJsonStr = JsonUtil.toJson(storeErrorCodeInfo.errorCodes)
         // 修改插件error.json文件内容
         val updateAtomFileContentResult = updateAtomFileContent(
             userId = userId,
@@ -687,29 +677,19 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             userId = userId,
             storeErrorCodeInfo = storeErrorCodeInfo
         )
-        val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-            dslContext, storeErrorCodeInfo.storeCode, storeErrorCodeInfo.storeType
-        ).toMutableList()
-        val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
-        errorCodeInfos.removeAll(newErrorCodeInfos)
-        if (errorCodeInfos.isNotEmpty()) {
+        val dbErrorCodes = storeErrorCodeInfoDao.getStoreErrorCodes(
+            dslContext = dslContext, storeCode = storeErrorCodeInfo.storeCode, storeType = storeErrorCodeInfo.storeType
+        ).toMutableSet()
+        dbErrorCodes.removeAll(errorCodes)
+        if (dbErrorCodes.isNotEmpty()) {
             storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
                 dslContext = dslContext,
                 storeCode = storeErrorCodeInfo.storeCode,
                 storeType = storeErrorCodeInfo.storeType,
-                errorCodes = errorCodeInfos.map { it.errorCode }
+                errorCodes = dbErrorCodes
             )
         }
         return Result(true)
-    }
-
-    private fun getDuplicateData(strList: List<String>): List<String> {
-        val set = mutableSetOf<String>()
-        val duplicateData = mutableListOf<String>()
-        strList.forEach {
-            if (set.contains(it)) duplicateData.add(it) else set.add(it)
-        }
-        return duplicateData
     }
 
     @Suppress("UNCHECKED_CAST")

@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_GET_WORKER_BEE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_WORKER_BEE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -58,7 +58,7 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val responseContent = request(request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ))
                 val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
                 context[CI_TOKEN_CONTEXT] = gitToken.data?.accessToken ?: ""
@@ -80,7 +80,7 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val responseContent = request(request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ))
                 val result = objectMapper.readValue<Result<Boolean>>(responseContent)
                 if (result.data == true) {

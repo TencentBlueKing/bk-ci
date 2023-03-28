@@ -37,7 +37,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_OPEN_STREAM
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_QUERIED
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -85,7 +85,7 @@ class V1GitCIRequestService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    messageCode = PROJECT_CANNOT_QUERIED,
                     language = I18nUtil.getLanguage(userId)
                 ))
         val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())

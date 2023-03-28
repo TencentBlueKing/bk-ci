@@ -41,10 +41,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
-import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
-import com.tencent.devops.experience.constant.ExperienceMessageCode.EXP_FILE_NOT_FOUND
-import com.tencent.devops.experience.constant.ExperienceMessageCode.TOKEN_EXPIRED
-import com.tencent.devops.experience.constant.ExperienceMessageCode.TOKEN_NOT_EXISTS
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao

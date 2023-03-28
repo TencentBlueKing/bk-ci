@@ -213,4 +213,99 @@ object I18NConstant {
     const val BK_MODIFICATION_GUIDELINES = "BkModificationGuidelines" // 请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n
     const val BK_CREATE_SERVICE = "BkCreateService" // 创建{0}服务
 
+    const val BK_CONTAINER_SERVICE = "BkContainerService" // 容器服务
+    const val BK_FAILED_BSC_CREATE_PROJECT = "BkFailedBscCreateProject" // 调用BSC接口创建项目失败
+    const val BK_FAILED_GET_PAASCC_INFORMATION = "BkFailedGetPaasccInformation" // 获取PAASCC项目信息失败
+
+    const val BK_FILE_CANNOT_EXCEED = "BkFileCannotExceed" // 请求文件不能超过1M
+    const val BK_LOCAL_WAREHOUSE_CREATION_FAILED = "BkLocalWarehouseCreationFailed" //工程({0})本地仓库创建失败
+    const val BK_TRIGGER_METHOD = "BkTriggerMethod" //触发方式
+    const val BK_QUALITY_RED_LINE = "BkQualityRedLine" //质量红线
+    const val BK_QUALITY_RED_LINE_OUTPUT = "BkQualityRedLineOutput" //质量红线产出插件
+    const val BK_METRIC = "BkMetric" //质量红线产出插件
+    const val BK_RESULT = "BkResult" //结果
+    const val BK_EXPECT = "BkExpect" //预期
+
+    const val BK_SIGNING_TASK_SIGNATURE_INFORMATION = "BkSigningTaskSignatureInformation" //签名任务签名信息(resignId={0})不存在。
+    const val BK_SIGNING_TASK_SIGNATURE_HISTORY  = "BkSigningTaskSignatureHistory" //签名任务签名历史(resignId=${0})不存在。
+    const val BK_FAILED_CREATE_DOWNLOAD_CONNECTION  = "BkFailedCreateDownloadConnection" //创建下载连接失败(resignId={0})
+    const val BK_FAILED_INSERT  = "BkFailedInsert" //插入entitlement文件({0})的keychain-access-groups失败。
+    const val BK_DESCRIPTION_FILE_FOR_CERTIFICATE  = "BkDescriptionFileForCertificate" //未找到证书[{0}]对应的描述文件，返回空值
+
+
+    const val BK_NO_APIGW_API = "BkNoApigwApi"//Openapi非apigw接口，不需要鉴权。
+    const val BK_PRE_ENHANCEMENT = "BkPreEnhancement"//【前置增强】the method
+    const val BK_PARAMETER_NAME = "BkParameterName"//参数名
+    const val BK_PARAMETER_VALUE = "BkParameterValue"//参数值
+    const val BK_REQUEST_TYPE_APIGWTYPE = "BkRequestTypeApigwtype"//请求类型apigwType[{0}],appCode[{1}],项目[{2}]
+    const val BK_PERMISSION_FOR_PROJECT = "BkPermissionForProject"//判断！！！！请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限.
+    const val BK_PERMISSION_FOR_PROJECT_VERIFIED = "BkPermissionForProjectVerified"//请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限【验证通过】
+    const val BK_VERIFICATION_FAILED = "BkVerificationFailed"//请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限【验证失败】
+    const val BK_PROJECT_LIST = "BkProjectList"//项目列表
+
+    const val BK_OTHER = "BkOther"//其他
+    const val BK_PIPELINED_JOB = "BkPipelinedJob"//流水线Job
+    const val BK_IMAGE_STORE_ONLINE = "BkImageStoreOnline"//容器镜像商店上线，历史镜像数据自动生成
+    const val BK_OLD_VERSION_BUILD_IMAGE = "BkOldVersionBuildImage"//旧版的构建镜像，通过拷贝为构建镜像入口生成
+    const val BK_AUTOMATICALLY_CONVERTED = "BkAutomaticallyConverted"//已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
+    const val BK_COPY_FOR_BUILD_IMAGE = "BkCopyForBuildImage"//旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
+    const val BK_AFTER_IMAGE_STORE_ONLINE = "BkAfterImageStoreOnline"//容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
+    const val BK_PROJECT_MANAGER_CAN_OPERATION = "BkProjectManagerCanOperation"//项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
+    const val BK_HISTORYDATA_DATA = "BkHistorydataData"//historyData数据迁移自动通过
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "BkWorkerBeeProjectNotExist"//工蜂项目信息不存在，请检查链接
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "BkWorkerBeeProjectNotStreamEnabled"//工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+
+    const val BK_FAILED_VERIFY_AUTHORITY = "BkFailedVerifyAuthority" //授权人权限校验失败
+    const val BK_STREAM_MESSAGE_NOTIFICATION = "BkStreamMessageNotification" //@Stream消息通知
+    const val BK_SESSION_ID = "BkSessionId" //会话ID
+    const val BK_GROUP_ID = "BkGroupId" //群ID
+    const val BK_THIS_GROUP_ID = "BkThisGroupId" //本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_NEED_SUPPLEMEN = "BkNeedSupplemen" //对接其他Git平台时需要补充
+    const val BK_PULL_CODE = "BkPullCode" //拉代码
+
+
+    const val BK_GROUP_CHATID = "BkGroupChatid" //本群ChatId
+    const val BK_BLUE_SHIELD_DEVOPS_ROBOT = "BkBlueShieldDevopsRobot" //您好，我是蓝盾DevOps机器人，下面是平台相关链接
+    const val BK_PLATFORM_ENTRANCE = "BkPlatformEntrance" //平台入口
+    const val BK_DOCUMENT_ENTRY = "BkDocumentEntry" //文档入口
+    const val BK_CAN_DO_FOLLOWING = "BkCanDoFollowing" //可以进行以下操作
+    const val BK_QUERY_PIPELINE_LIST = "BkQueryPipelineList" //查询流水线列表
+    const val BK_YOU_CAN_CLICK = "BkYouCanClick" //如有需要可以点击
+    const val BK_MANUAL_CUSTOMER_SERVICE = "BkManualCustomerService" //人工客服
+    const val BK_GROUP_BOUND_PROJECT = "BkGroupBoundProject" //本群已绑定【{0}】项目，如需修改请点击：
+    const val BK_MODIFY_ROJECT = "BkModifyRoject" //修改项目
+    const val BK_NOT_EXECUTION_PERMISSION = "BkNotExecutionPermission" //{0}暂时还没有【{1}】流水线的执行权限，请点击申请执行权限：
+    const val BK_APPLICATION_ADDRESS = "BkApplicationAddress" //申请地址
+    const val BK_PIPELINE_STARTED_SUCCESSFULLY = "BkPipelineStartedSuccessfully" //流水线【{0}】启动成功，{1}可以点击查看
+    const val BK_PIPELINE_EXECUTION_DETAILS = "BkPipelineExecutionDetails" //流水线执行详情
+    const val BK_FAILED_START_PIPELINE = "BkFailedStartPipeline" //{0}启动流水线【{1}】失败。
+    const val BK_THERE_NO_ITEMS_VIEW = "BkThereNoItemsView" //在蓝盾平台DevOps中没有可以查看的项目
+    const val BK_ITEMS_CAN_VIEWED = "BkItemsCanViewed" //下面是{0}在蓝盾DevOps平台中可以查看的项目
+    const val BK_AUTOMATICALLY_BIND_RELEVANT_PROJECT = "BkAutomaticallyBindRelevantProject" //PS:选择项目后，本群会自动绑定相关的项目,该消息只允许{0}点击执行
+    const val BK_CONSULTING_GROUP = "BkConsultingGroup" //蓝盾DevOps平台咨询群
+    const val BK_PLEASE_DESCRIBE_YOUR_PROBLEM = "BkPleaseDescribeYourProblem" //请描述您的问题，并带上相关的URL地址
+    const val BK_NEW_CONSULTING_GROUP_PULLED_UP = "BkNewConsultingGroupPulledUp" //已为您拉起新的咨询群，请关注会话列表。
+    const val BK_NO_PIPELINE_VIEW = "BkNoPipelineView" //{0}在【{1}】项目中没有可以查看的流水线
+    const val BK_FOLLOWING_PIPELINE_CAN_VIEW = "BkFollowingPipelineCanView" //下面是{0}在【{1}】项目中可以查看的流水线
+    const val BK_EXECUTION = "BkExecution" //执行
+    const val BK_MESSAGE_ALLOWS_CLICK = "BkMessageAllowsClick" //该消息只允许{0}点击执行。
+
+
+    const val BK_CANNING_SENSITIVE_INFORMATION = "BkCanningSensitiveInformation" //开始敏感信息扫描，待排除目录
+    const val BK_SENSITIVE_INFORMATION = "BkSensitiveInformation" //敏感信息扫描报告
+    const val BK_NO_SENSITIVE_INFORMATION = "BkNoSensitiveInformation" //无敏感信息，无需生成报告
+    const val BK_RELATIVE_PATH_KEYSTORE = "BkRelativePathKeystore" //keystore安装相对路径
+    const val BK_KEYSTORE_INSTALLED_SUCCESSFULLY = "BkKeystoreInstalledSuccessfully" //Keystore安装成功
+    const val BK_FAILED_UPLOAD_BUGLY_FILE = "BkFailedUploadBuglyFile" //上传bugly文件失败
+    const val BK_FAILED_GET_BUILDER_INFORMATION  = "BkFailedGetBuilderInformation" //获取构建机基本信息失败
+    const val BK_FAILED_GET_WORKER_BEE = "BkFailedGetWorkerBee" //获取工蜂CI项目Token失败！
+    const val BK_FAILED_GET_PLUG = "BkFailedGetPlug" //获取插件执行环境信息失败
+    const val BK_FAILED_UPDATE_PLUG = "BkFailedUpdatePlug" //更新插件执行环境信息失败
+    const val BK_FAILED_SENSITIVE_INFORMATION = "BkFailedSensitiveInformation" //获取插件敏感信息失败
+    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = "BkFailedEnvironmentVariableInformation" //获取插件开发语言相关的环境变量信息失败
+    const val BK_FAILED_ADD_INFORMATION = "BkFailedAddInformation" //添加插件对接平台信息失败
+    const val BK_ARCHIVE_PLUG_FILES = "BkArchivePlugFiles" //归档插件文件
+    const val BK_FAILED_IOS_CERTIFICATE = "BkFailedIosCertificate" //获取IOS证书失败
+    const val BK_FAILED_ANDROID_CERTIFICATE = "BkFailedAndroidCertificate" //获取Android证书失败
+    const val BK_ENTERPRISE_SIGNATURE_FAILED = "BkEnterpriseSignatureFailed" //企业签名失败
 }

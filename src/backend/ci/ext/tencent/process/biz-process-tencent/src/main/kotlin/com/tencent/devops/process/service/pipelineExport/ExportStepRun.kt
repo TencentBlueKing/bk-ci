@@ -4,7 +4,6 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportContext
@@ -218,8 +217,7 @@ object ExportStepRun {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
-                    params = arrayOf(key, names.toString()),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(key, names.toString())
                 )
             }
             return

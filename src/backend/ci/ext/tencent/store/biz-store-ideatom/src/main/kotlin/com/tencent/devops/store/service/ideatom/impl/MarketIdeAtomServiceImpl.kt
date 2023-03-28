@@ -30,7 +30,8 @@ package com.tencent.devops.store.service.ideatom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -185,7 +186,8 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         result.add(MarketIdeAtomMainItem(
                 key = LATEST,
-                label = MessageCodeUtil.getCodeLanMessage(LATEST),
+                label = MessageUtil.getCodeLanMessage(messageCode = LATEST,
+                    language = I18nUtil.getLanguage(userId)),
                 records = doList(
                         userId = userId,
                         keyword = null,
@@ -203,7 +205,8 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         result.add(MarketIdeAtomMainItem(
                 key = HOTTEST,
-                label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
+                label = MessageUtil.getCodeLanMessage(messageCode = HOTTEST,
+                    language = I18nUtil.getLanguage(userId)),
                 records = doList(
                         userId = userId,
                         keyword = null,
@@ -223,9 +226,10 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
         classifyList?.forEach {
             val classifyCode = it["classifyCode"] as String
             val classifyName = it["classifyName"] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+            val classifyLanName = MessageUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
+                defaultMessage = classifyName,
+                language = I18nUtil.getLanguage(userId)
             )
             result.add(MarketIdeAtomMainItem(
                     key = classifyCode,
@@ -345,10 +349,11 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     override fun judgeAtomExistByIdAndCode(atomId: String, atomCode: String): Result<Boolean> {
         val count = ideAtomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("atomId:$atomId,atomCode:$atomCode"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return Result(true)

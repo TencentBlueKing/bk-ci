@@ -29,8 +29,9 @@ package com.tencent.devops.store.service.image.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.store.dao.image.ImageDao
@@ -66,10 +67,11 @@ class TxImageRepoService @Autowired constructor(
             val imageCode: String?
             if (null != imageId) {
                 val imageRecord = imageDao.getImage(dslContext, imageId)
-                    ?: return MessageCodeUtil.generateResponseDataObject(
+                    ?: return MessageUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                         params = arrayOf(imageId),
-                        data = null
+                        data = null,
+                        language = I18nUtil.getLanguage(userId)
                     )
                 imageCode = imageRecord.imageCode
                 val dockerRepoTags = dockerRepo.tags

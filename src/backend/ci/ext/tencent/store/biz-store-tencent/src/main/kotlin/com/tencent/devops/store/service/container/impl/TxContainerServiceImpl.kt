@@ -31,8 +31,9 @@ import com.tencent.devops.common.api.constant.EXCEPTION
 import com.tencent.devops.common.api.constant.NORMAL
 import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
@@ -112,9 +113,12 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-                val normalName = MessageCodeUtil.getCodeLanMessage(NORMAL)
-                val exceptionName = MessageCodeUtil.getCodeLanMessage(EXCEPTION)
-                val numUnit = MessageCodeUtil.getCodeLanMessage(NUM_UNIT)
+                val normalName = MessageUtil.getCodeLanMessage(messageCode = NORMAL,
+                    language = I18nUtil.getLanguage(userId))
+                val exceptionName = MessageUtil.getCodeLanMessage(messageCode = EXCEPTION,
+                    language = I18nUtil.getLanguage(userId))
+                val numUnit = MessageUtil.getCodeLanMessage(messageCode = NUM_UNIT,
+                    language = I18nUtil.getLanguage(userId))
                 envNodeList?.map {
                     AgentResponse(
                         id = it.envHashId,
@@ -143,7 +147,8 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }
             }
             BuildType.ESXi -> {
-                val macPublicBuildResourceName = MessageCodeUtil.getCodeLanMessage("macPublicBuildResourceName")
+                val macPublicBuildResourceName = MessageUtil.getCodeLanMessage(messageCode = "macPublicBuildResourceName",
+                    language = I18nUtil.getLanguage(userId))
                 val l = listOf(MacOSNode(macPublicBuildResourceName, macPublicBuildResourceName))
                 containerResourceValue = l.map {
                     it.name

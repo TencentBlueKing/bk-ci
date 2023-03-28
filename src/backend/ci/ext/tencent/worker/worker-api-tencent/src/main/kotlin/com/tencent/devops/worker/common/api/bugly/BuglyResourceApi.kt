@@ -28,7 +28,7 @@
 package com.tencent.devops.worker.common.api.bugly
 
 import com.google.gson.JsonParser
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_UPLOAD_BUGLY_FILE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_UPLOAD_BUGLY_FILE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -71,7 +71,7 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_UPLOAD_BUGLY_FILE,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
 
         val obj = parser.parse(responseContent).asJsonObject

@@ -29,8 +29,9 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceFeatureDao
 import com.tencent.devops.store.pojo.ExtServiceFeatureUpdateInfo
@@ -57,9 +58,10 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(serviceId)
+                params = arrayOf(serviceId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         // 防止重复的mq消息造成的状态异常
         if (serviceRecord.serviceStatus != ExtServiceStatusEnum.BUILDING.status.toByte()) {

@@ -68,7 +68,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -263,9 +262,10 @@ class BkRepoService @Autowired constructor(
             )
         ) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeMessage(
-                    ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    arrayOf(lastModifyUser, projectId)
+                MessageUtil.getMessageByLocale(
+                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    params = arrayOf(lastModifyUser, projectId),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }
@@ -275,9 +275,10 @@ class BkRepoService @Autowired constructor(
                 projectId = targetProjectId,
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
-                message = MessageCodeUtil.getCodeMessage(
-                    ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    arrayOf(lastModifyUser, projectId, targetPipelineId)
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                    params = arrayOf(lastModifyUser, projectId, targetPipelineId),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }
@@ -339,9 +340,10 @@ class BkRepoService @Autowired constructor(
             projectId,
             pipelineId,
             AuthPermission.DOWNLOAD,
-            MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(userId, projectId, pipelineId)
+            MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(userId, projectId, pipelineId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
 

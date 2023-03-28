@@ -33,8 +33,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
-import com.tencent.devops.stream.constant.StreamCode.BK_NOT_AUTHORIZED_BY_OAUTH
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_STREAM_NOT_ENABLED
+import com.tencent.devops.stream.constant.StreamMessageCode.NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_STREAM_NOT_ENABLED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,7 +52,7 @@ class StreamOauthService @Autowired constructor(
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
             message = MessageUtil.getMessageByLocale(
-                messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                messageCode = NOT_AUTHORIZED_BY_OAUTH,
                 language = I18nUtil.getLanguage(userId),
                 params = arrayOf(userId)
             )
@@ -71,7 +71,7 @@ class StreamOauthService @Autowired constructor(
         return client.get(ServiceOauthResource::class).gitGet(userId).data
             ?: throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                    messageCode = NOT_AUTHORIZED_BY_OAUTH,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(userId)
                 )
@@ -84,8 +84,8 @@ class StreamOauthService @Autowired constructor(
         val userId = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableUserId
             ?: throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_STREAM_NOT_ENABLED,
-                    language = I18nUtil.getLanguage(),
+                    messageCode = PROJECT_STREAM_NOT_ENABLED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(gitProjectId.toString())
                 )
             )
@@ -94,7 +94,7 @@ class StreamOauthService @Autowired constructor(
         } catch (e: Exception) {
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                    messageCode = NOT_AUTHORIZED_BY_OAUTH,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(userId)
                 )

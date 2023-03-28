@@ -28,6 +28,10 @@
 package com.tencent.devops.stream.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_STREAM_MESSAGE_NOTIFICATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_THIS_GROUP_ID
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -42,10 +46,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextM
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.stream.config.RtxCustomConfig
-import com.tencent.devops.stream.constant.StreamCode.BK_GROUP_ID
-import com.tencent.devops.stream.constant.StreamCode.BK_SESSION_ID
-import com.tencent.devops.stream.constant.StreamCode.BK_STREAM_MESSAGE_NOTIFICATION
-import com.tencent.devops.stream.constant.StreamCode.BK_THIS_GROUP_ID
 import com.tencent.devops.stream.trigger.listener.notify.RtxCustomApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -140,7 +140,7 @@ class OpenRtxCustomService constructor(
                 if (receiverType == ReceiverType.group && !content.contains(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_STREAM_MESSAGE_NOTIFICATION,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                 )) {
                     return true
@@ -151,11 +151,11 @@ class OpenRtxCustomService constructor(
                     content.contains(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_SESSION_ID,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ), true) || content.contains(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_GROUP_ID,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ),
                             true
                         )
@@ -167,7 +167,7 @@ class OpenRtxCustomService constructor(
                     richtextContentList.add(RichtextText(RichtextTextText(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_THIS_GROUP_ID,
-                            language = I18nUtil.getLanguage(),
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             params = arrayOf(chatId)
                         )
                     )))

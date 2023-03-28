@@ -29,7 +29,8 @@ package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -71,9 +72,10 @@ class IdeAtomServiceImpl @Autowired constructor(
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
+            val classifyLanName = MessageUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName
+                defaultMessage = classifyName,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             IdeAtom(
                 atomId = atomRecord.id,

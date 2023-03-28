@@ -47,9 +47,8 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.common.CommonVariables
-import com.tencent.devops.stream.constant.StreamCode
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_QUERIED
-import com.tencent.devops.stream.constant.StreamCode.BK_USER_NOT_PERMISSION_FOR_WORKER_BEE
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_QUERIED
+import com.tencent.devops.stream.constant.StreamMessageCode.USER_NOT_PERMISSION_FOR_WORKER_BEE
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -92,7 +91,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )
@@ -128,7 +127,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )
@@ -179,7 +178,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )
@@ -229,7 +228,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )
@@ -260,7 +259,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )
@@ -274,7 +273,7 @@ class V1GitCIDetailService @Autowired constructor(
         if (!checkAuth.data!!) {
             throw CustomException(Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_PERMISSION_FOR_WORKER_BEE,
+                    messageCode = USER_NOT_PERMISSION_FOR_WORKER_BEE,
                     language = I18nUtil.getLanguage(userId)
                 ))
         }
@@ -311,7 +310,7 @@ class V1GitCIDetailService @Autowired constructor(
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                messageCode = PROJECT_CANNOT_QUERIED,
                 language = I18nUtil.getLanguage(userId)
             )
         )

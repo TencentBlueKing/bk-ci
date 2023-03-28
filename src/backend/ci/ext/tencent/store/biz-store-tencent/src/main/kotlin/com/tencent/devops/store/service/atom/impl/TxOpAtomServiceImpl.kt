@@ -29,8 +29,9 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.scm.pojo.GitProjectInfo
@@ -66,10 +67,11 @@ class TxOpAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("moveGitProjectToGroup userId is:$userId, groupCode is:$groupCode, atomCode is:$atomCode")
         val atomRecord = atomDao.getRecentAtomByCode(dslContext, atomCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val moveProjectToGroupResult: Result<GitProjectInfo?>
         return try {
@@ -91,7 +93,9 @@ class TxOpAtomServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("atom[$atomCode] moveProjectToGroupResult fail!", ignored)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId))
         }
     }
 }

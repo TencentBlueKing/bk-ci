@@ -55,7 +55,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -226,9 +225,10 @@ open class BkRepoDownloadService @Autowired constructor(
                 pipelineService.validatePermission(
                     userId,
                     projectId,
-                    message = MessageCodeUtil.getCodeMessage(
-                        ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        arrayOf(userId, projectId)
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     )
                 )
             }
@@ -239,9 +239,10 @@ open class BkRepoDownloadService @Autowired constructor(
                     projectId,
                     pipelineId,
                     AuthPermission.SHARE,
-                    MessageCodeUtil.getCodeMessage(
-                        ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
-                        arrayOf(userId, projectId, pipelineId)
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
+                        params = arrayOf(userId, projectId, pipelineId),
+                        language = I18nUtil.getLanguage(userId)
                     )
                 )
             }
@@ -332,24 +333,29 @@ open class BkRepoDownloadService @Autowired constructor(
         val pipelineDownloadErrorMsg: String?
         if (!userId.isNullOrBlank()) {
             accessUserId = userId
-            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId)
+            projectDownloadErrorMsg = MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId),
+                language = I18nUtil.getLanguage(userId)
+
             )
-            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            pipelineDownloadErrorMsg = MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId),
+                language = I18nUtil.getLanguage(userId)
             )
         } else {
             accessUserId = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-            projectDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId)
+            projectDownloadErrorMsg = MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId),
+                language = I18nUtil.getLanguage(userId)
             )
-            pipelineDownloadErrorMsg = MessageCodeUtil.getCodeMessage(
-                ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                arrayOf(accessUserId, targetProjectId, targetPipelineId)
+            pipelineDownloadErrorMsg = MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         logger.info(

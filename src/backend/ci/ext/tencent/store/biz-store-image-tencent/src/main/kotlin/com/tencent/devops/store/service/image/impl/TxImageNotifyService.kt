@@ -27,8 +27,9 @@
 
 package com.tencent.devops.store.service.image.impl
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.store.dao.image.ImageDao
@@ -82,8 +83,9 @@ class TxImageNotifyService @Autowired constructor() : ImageNotifyService {
             "name" to image.imageName,
             "version" to image.version,
             "publisher" to image.publisher,
-            "releaseType" to if (releaseType != null) MessageCodeUtil.getCodeLanMessage(
-                "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
+            "releaseType" to if (releaseType != null) MessageUtil.getCodeLanMessage(
+                messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt()),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) else "",
             "versionDesc" to (imageVersionLog?.content ?: ""),
             "nameInBody" to image.imageName,

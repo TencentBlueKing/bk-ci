@@ -33,7 +33,8 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.exception.GitApiException
@@ -227,7 +228,10 @@ class GitCiService {
         RetryUtils.doRetryHttp(request).use {
             val response = it.body!!.string()
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
-            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            if (!it.isSuccessful) return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
         }
     }

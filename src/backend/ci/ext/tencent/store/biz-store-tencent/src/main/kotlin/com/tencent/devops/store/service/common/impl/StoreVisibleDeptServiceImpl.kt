@@ -29,8 +29,9 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -138,9 +139,10 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val deptIdApprovedList = mutableListOf<DeptInfo>()
@@ -186,9 +188,10 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val deptIdIntList = mutableListOf<Int>()

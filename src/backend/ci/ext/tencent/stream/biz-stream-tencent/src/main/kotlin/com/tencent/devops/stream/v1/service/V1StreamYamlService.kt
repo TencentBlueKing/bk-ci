@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
-import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_QUERIED
+import com.tencent.devops.stream.constant.StreamMessageCode.GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_QUERIED
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
@@ -82,14 +82,14 @@ class V1StreamYamlService @Autowired constructor(
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_GIT_CI_NO_RECOR,
-                            language = I18nUtil.getLanguage()
+                            messageCode = GIT_CI_NO_RECOR,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ) + ". ${it.image}"
                     )
                 if (!record.enable) {
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
-                        messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
-                        language = I18nUtil.getLanguage()
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + ". ${it.image}")
                 }
             }
@@ -149,8 +149,8 @@ class V1StreamYamlService @Autowired constructor(
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_CANNOT_QUERIED,
-                language = I18nUtil.getLanguage()
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)

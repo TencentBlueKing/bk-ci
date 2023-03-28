@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common
 
+@Suppress("LongParameterList")
 interface StoreI18nMessageService {
 
     /**
@@ -39,7 +40,6 @@ interface StoreI18nMessageService {
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
-    @Suppress("LongParameterList")
     fun parseJsonMap(
         userId: String,
         projectCode: String,
@@ -48,4 +48,23 @@ interface StoreI18nMessageService {
         keyPrefix: String? = null,
         repositoryHashId: String? = null
     ): Map<String, Any>
+
+    /**
+     * 解析错误码，把错误码的国际化信息持久化到数据库
+     * @param userId 用户ID
+     * @param projectCode 项目标识
+     * @param errorCodes map集合
+     * @param fileDir 资源文件目录
+     * @param keyPrefix map字段在资源文件中key的前缀
+     * @param repositoryHashId 代码库哈希ID
+     * @return 替换成蓝盾默认语言对应的值的map集合
+     */
+    fun parseErrorCode(
+        userId: String,
+        projectCode: String,
+        errorCodes: Set<Int>,
+        fileDir: String,
+        keyPrefix: String? = null,
+        repositoryHashId: String? = null
+    )
 }

@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.sign.SignCode.BK_IOS_ENTERPRISE_RESIGNATURE
+import com.tencent.devops.sign.api.constant.SignMessageCode.IOS_ENTERPRISE_RESIGNATURE
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.user.UserIpaResource
@@ -72,7 +72,7 @@ class UserIpaResourceImpl @Autowired constructor(
         if (!checkParams(ipaSignInfo, userId)) {
             logger.warn(
                 MessageUtil.getMessageByLocale(
-                messageCode = BK_IOS_ENTERPRISE_RESIGNATURE,
+                messageCode = IOS_ENTERPRISE_RESIGNATURE,
                 language = I18nUtil.getLanguage(userId),
                 params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
             )
@@ -80,7 +80,7 @@ class UserIpaResourceImpl @Autowired constructor(
             )
             throw PermissionForbiddenException(
                 message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_IOS_ENTERPRISE_RESIGNATURE,
+                    messageCode = IOS_ENTERPRISE_RESIGNATURE,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
                 ))

@@ -32,10 +32,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.MessageCodeDetail
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.dao.MessageCodeDetailDao
 import com.tencent.devops.support.model.code.AddMessageCodeRequest
 import com.tencent.devops.support.model.code.MessageCodeResp
@@ -99,7 +100,11 @@ class MessageCodeDetailService @Autowired constructor(
             redisOperation.set(key = BCI_CODE_PREFIX + messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetailResult.data), expired = false)
             Result(data = true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode))
+            MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(messageCode),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
         }
     }
 
@@ -111,7 +116,12 @@ class MessageCodeDetailService @Autowired constructor(
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode
-        if (null != messageCodeDetailResult.data) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(messageCode), false)
+        if (null != messageCodeDetailResult.data) return MessageUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+            params = arrayOf(messageCode),
+            data = false,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         val id = UUIDUtil.generate()
         messageCodeDetailDao.addMessageCodeDetail(dslContext, id, addMessageCodeRequest)
         val messageCodeDetail = MessageCodeDetail(
@@ -133,7 +143,10 @@ class MessageCodeDetailService @Autowired constructor(
         logger.info("messageCode is: $messageCode,updateMessageCodeRequest is: $updateMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(messageCode)
         // 判断code信息是否存在，存在才更新
-        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode), false)
+        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(messageCode),
+            data = false, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         messageCodeDetailDao.updateMessageCodeDetail(dslContext, messageCode, updateMessageCodeRequest.messageDetailZhCn, updateMessageCodeRequest.messageDetailZhTw, updateMessageCodeRequest.messageDetailEn)
         messageCodeDetail.messageDetailZhCn = updateMessageCodeRequest.messageDetailZhCn
         messageCodeDetail.messageDetailZhTw = updateMessageCodeRequest.messageDetailZhTw

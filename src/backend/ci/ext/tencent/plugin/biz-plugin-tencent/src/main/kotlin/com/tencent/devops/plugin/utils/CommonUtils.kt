@@ -38,9 +38,9 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.plugin.constant.PluginCode.BK_GET_SIGNATURE_ERROR
-import com.tencent.devops.plugin.constant.PluginCode.BK_URL_CODING_ERROR
-import com.tencent.devops.plugin.constant.PluginCode.BK_WETEST_FAILED_GET
+import com.tencent.devops.plugin.constant.PluginMessageCode.GET_SIGNATURE_ERROR
+import com.tencent.devops.plugin.constant.PluginMessageCode.URL_CODING_ERROR
+import com.tencent.devops.plugin.constant.PluginMessageCode.WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.Request
@@ -230,7 +230,7 @@ object CommonUtils {
             logger.error("fail to get getApiKey from weTest, retCode: $ret, msg: $msg")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_WETEST_FAILED_GET,
+                    messageCode = WETEST_FAILED_GET,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(ret.toString(), msg)
                 )
@@ -254,7 +254,7 @@ object CommonUtils {
         } catch (e: NoSuchAlgorithmException) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_GET_SIGNATURE_ERROR,
+                    messageCode = GET_SIGNATURE_ERROR,
                     language = I18nUtil.getLanguage()
                 ) + "$e"
             )
@@ -283,7 +283,7 @@ object CommonUtils {
         } catch (e: UnsupportedEncodingException) {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_URL_CODING_ERROR,
+                    messageCode = URL_CODING_ERROR,
                     language = I18nUtil.getLanguage()
                 ) + "$e"
             )

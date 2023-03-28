@@ -28,15 +28,15 @@
 package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.worker.common.WorkerCode.BK_ARCHIVE_PLUG_FILES
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_ADD_INFORMATION
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_GET_PLUG
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ARCHIVE_PLUG_FILES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_ADD_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_PLUG
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_SENSITIVE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -99,7 +99,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_PLUG,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -122,7 +122,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_UPDATE_PLUG,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -136,7 +136,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_SENSITIVE_INFORMATION,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -154,7 +154,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -172,7 +172,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ADD_INFORMATION,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getDefaultLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -204,7 +204,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ARCHIVE_PLUG_FILES,
-                language = I18nUtil.getLanguage(userId)
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + " >>> ${file.name}")
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(

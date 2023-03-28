@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.iam
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -37,7 +38,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.tof.TOFService
@@ -91,7 +92,10 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            ?: throw OperationException(MessageUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            ))
 
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)
@@ -117,7 +121,10 @@ class ProjectIamV0Service @Autowired constructor(
         logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeMessage(ProjectMessageCode.PROJECT_NOT_EXIST, null)
+            defaultMessage = MessageUtil.getMessageByLocale(
+                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                params = null,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
@@ -153,10 +160,11 @@ class ProjectIamV0Service @Autowired constructor(
             } catch (ignore: OperationException) {
                 logger.warn("OperationException $it $projectId ${ignore.message}")
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
+                    MessageUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
                         defaultMessage = ignore.message,
-                        params = arrayOf(it)
+                        params = arrayOf(it),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             } catch (ignore: Exception) {

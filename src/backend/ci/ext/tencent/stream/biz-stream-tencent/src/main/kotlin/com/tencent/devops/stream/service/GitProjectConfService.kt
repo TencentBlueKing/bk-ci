@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_ALREADY_EXISTS
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_NOT_EXIST
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_ALREADY_EXISTS
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitProjectConfDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -62,8 +62,8 @@ class GitProjectConfService @Autowired constructor(
         if (null != record) {
             throw CustomException(Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_ALREADY_EXISTS,
-                    language = I18nUtil.getLanguage()
+                    messageCode = PROJECT_ALREADY_EXISTS,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ))
         }
         gitProjectConfDao.create(dslContext, gitProjectId, name, url, enable)
@@ -74,8 +74,8 @@ class GitProjectConfService @Autowired constructor(
         logger.info("GitProjectConfService|update|id|$gitProjectId|name|$name|url|$url|enable|$enable")
         gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PROJECT_NOT_EXIST,
-                language = I18nUtil.getLanguage()
+                messageCode = PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ))
         gitProjectConfDao.update(dslContext, gitProjectId, name, url, enable)
         return true

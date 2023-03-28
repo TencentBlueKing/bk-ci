@@ -200,8 +200,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         return pipelineInfo.id.toString()
     }

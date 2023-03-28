@@ -101,13 +101,13 @@ class I18nMessageDao {
 
     fun list(
         dslContext: DSLContext,
-        moduleCode: SystemModuleEnum,
+        moduleCodes: Set<String>,
         keys: List<String>,
         language: String
     ): Result<TI18nMessageRecord>? {
         with(TI18nMessage.T_I18N_MESSAGE) {
             return dslContext.selectFrom(this)
-                .where(MODULE_CODE.eq(moduleCode.name))
+                .where(MODULE_CODE.`in`(moduleCodes))
                 .and(KEY.`in`(keys))
                 .and(LANGUAGE.eq(language))
                 .fetch()

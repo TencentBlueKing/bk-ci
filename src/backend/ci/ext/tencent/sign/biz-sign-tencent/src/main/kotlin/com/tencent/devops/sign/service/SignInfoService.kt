@@ -33,9 +33,9 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.sign.SignCode.BK_FAILED_ENCODE_SIGNATURE_INFORMATION
-import com.tencent.devops.sign.SignCode.BK_FAILED_PARSE_SIGNATURE_INFORMATION
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.constant.SignMessageCode.ERROR_ENCODE_SIGN_INFO
+import com.tencent.devops.sign.api.constant.SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
@@ -221,8 +221,8 @@ class SignInfoService(
         } catch (ignore: Throwable) {
             logger.warn(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_PARSE_SIGNATURE_INFORMATION,
-                    language = I18nUtil.getLanguage()
+                    messageCode = ERROR_PARSE_SIGN_INFO_HEADER,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "：$ignore")
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
@@ -239,8 +239,8 @@ class SignInfoService(
         } catch (ignored: Throwable) {
             logger.warn(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_ENCODE_SIGNATURE_INFORMATION,
-                    language = I18nUtil.getLanguage()
+                    messageCode = ERROR_ENCODE_SIGN_INFO,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }

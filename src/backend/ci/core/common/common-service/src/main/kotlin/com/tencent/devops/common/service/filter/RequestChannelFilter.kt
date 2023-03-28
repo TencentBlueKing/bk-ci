@@ -52,8 +52,6 @@ class RequestChannelFilter : Filter {
             RequestChannelTypeEnum.BUILD.name
         } else if (requestUrl.contains("/api/user/")) {
             RequestChannelTypeEnum.USER.name
-        } else if (requestUrl.contains("/api/service/")) {
-            RequestChannelTypeEnum.SERVICE.name
         } else if (requestUrl.contains("/api/op/")) {
             RequestChannelTypeEnum.OP.name
         } else if (requestUrl.contains("/api/open/")) {

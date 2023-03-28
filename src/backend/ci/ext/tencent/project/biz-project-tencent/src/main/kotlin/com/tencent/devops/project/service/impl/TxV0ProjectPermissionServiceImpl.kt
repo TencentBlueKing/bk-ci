@@ -43,8 +43,8 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_CREATE_PROJECT
-import com.tencent.devops.project.constant.ProjectCode.BK_PROJECT_ID_INVALID
+import com.tencent.devops.project.constant.ProjectMessageCode.CALL_PEM_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.PEM_CREATE_ID_INVALID
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -95,7 +95,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         val request = Request.Builder().url(authUrl).post(requestBody).build()
         val responseContent = request(request,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_CREATE_PROJECT,
+                messageCode = CALL_PEM_FAIL,
                 language = I18nUtil.getLanguage(userId)
             ))
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
@@ -103,7 +103,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             logger.warn("Fail to create the project of response $responseContent")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_CREATE_PROJECT,
+                    messageCode = CALL_PEM_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 ) + ": ${result.message}")
         }
@@ -112,7 +112,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             if (authProjectForCreateResult.project_id.isBlank()) {
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_PROJECT_ID_INVALID,
+                        messageCode = PEM_CREATE_ID_INVALID,
                         language = I18nUtil.getLanguage(userId)
                     )
                 )
@@ -122,7 +122,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             logger.warn("Fail to get the project id from response $responseContent")
             throw OperationException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_ID_INVALID,
+                    messageCode = PEM_CREATE_ID_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
             )

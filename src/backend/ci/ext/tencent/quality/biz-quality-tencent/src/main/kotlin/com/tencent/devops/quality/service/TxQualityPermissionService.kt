@@ -31,12 +31,13 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,8 +76,9 @@ class TxQualityPermissionService @Autowired constructor(
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
             )) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                language = I18nUtil.getLanguage(userId),
                 defaultMessage = authPermission.alias
             )
             throw PermissionForbiddenException(
@@ -214,9 +216,10 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                val permissionMsg = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                    defaultMessage = authPermission.alias
+                    defaultMessage = authPermission.alias,
+                    language = I18nUtil.getLanguage(userId)
                 )
                 throw PermissionForbiddenException(
                     message = message,
@@ -247,9 +250,10 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                val permissionMsg = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                    defaultMessage = authPermission.alias
+                    defaultMessage = authPermission.alias,
+                    language = I18nUtil.getLanguage(userId)
                 )
                 throw PermissionForbiddenException(
                     message = message,

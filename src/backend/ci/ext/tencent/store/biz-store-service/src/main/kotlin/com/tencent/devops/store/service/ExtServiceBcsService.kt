@@ -30,8 +30,9 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceBcsResource
 import com.tencent.devops.dispatch.pojo.AppDeployment
 import com.tencent.devops.dispatch.pojo.AppIngress
@@ -187,7 +188,10 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val namespaceName = if (!grayFlag) {
             extServiceBcsNameSpaceConfig.namespaceName
@@ -246,7 +250,9 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
         }
         var grayNamespaceName = ""
         var grayHost = ""
@@ -299,7 +305,10 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val deployment = client.get(ServiceBcsResource::class).getBcsDeploymentInfo(
             namespaceName = if (grayFlag == null || !grayFlag) {

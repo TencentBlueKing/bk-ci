@@ -40,9 +40,10 @@ import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -107,7 +108,9 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
             logger.warn("[IAM] $projectCode iamProject is empty")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_EMPTY)
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
         }
         return iamProjectId.toInt()

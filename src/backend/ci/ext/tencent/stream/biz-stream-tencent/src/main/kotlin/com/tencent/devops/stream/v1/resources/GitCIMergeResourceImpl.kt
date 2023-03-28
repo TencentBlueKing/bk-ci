@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.api.service.v1.GitCIMergeResource
-import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_OPEN_STREAM
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_OPEN_STREAM
 import com.tencent.devops.stream.v1.pojo.V1GitMergeHistory
 import com.tencent.devops.stream.v1.service.V1GitCIMergeService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
@@ -58,7 +58,7 @@ class GitCIMergeResourceImpl @Autowired constructor(
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    messageCode = PROJECT_CANNOT_OPEN_STREAM,
                     language = I18nUtil.getLanguage(userId)
                 ))
         }

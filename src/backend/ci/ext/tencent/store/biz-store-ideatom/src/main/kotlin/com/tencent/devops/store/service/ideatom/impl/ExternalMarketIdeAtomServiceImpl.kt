@@ -29,7 +29,8 @@ package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomEnvInfoDao
@@ -177,10 +178,11 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         logger.info("installIdeAtom installIdeAtomReq is:$installIdeAtomReq")
         val atomCode = installIdeAtomReq.atomCode
         val atomRecord = ideAtomDao.getLatestReleaseAtomByCode(dslContext, atomCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
-                data = null
+                data = null,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomRecord.id)
         // 更新安装量

@@ -35,7 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
-import com.tencent.devops.stream.constant.StreamCode.BK_PIPELINE_NOT_EXIST_OR_DELETED
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_EXIST_OR_DELETED
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
 import com.tencent.devops.stream.v1.utils.V1GitCIPipelineUtils
 import org.jooq.DSLContext
@@ -140,7 +140,7 @@ class V1GitCILogService @Autowired constructor(
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
             ?: throw CustomException(Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_NOT_EXIST_OR_DELETED,
-                    language = I18nUtil.getLanguage()
+                    messageCode = PIPELINE_NOT_EXIST_OR_DELETED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ))
 }

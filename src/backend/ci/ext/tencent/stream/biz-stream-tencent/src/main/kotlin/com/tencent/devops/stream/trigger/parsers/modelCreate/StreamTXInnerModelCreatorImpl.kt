@@ -41,8 +41,10 @@ import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
-import com.tencent.devops.stream.constant.StreamCode.BK_NO_RECORD_MIRROR_VERSION
+import com.tencent.devops.stream.constant.StreamMessageCode.BK_MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamMessageCode.BK_NO_RECORD_MIRROR_VERSION
+import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamMessageCode.NO_RECORD_MIRROR_VERSION
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -69,14 +71,14 @@ class StreamTXInnerModelCreatorImpl @Autowired constructor(
         val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
             ?: throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_RECORD_MIRROR_VERSION,
-                    language = I18nUtil.getLanguage()
+                    messageCode = NO_RECORD_MIRROR_VERSION,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + ". $image")
         if (!record.enable) {
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
-                    language = I18nUtil.getLanguage()
+                    messageCode = MIRROR_VERSION_NOT_AVAILABLE,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

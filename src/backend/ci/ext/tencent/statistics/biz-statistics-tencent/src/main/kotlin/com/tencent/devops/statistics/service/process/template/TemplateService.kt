@@ -46,6 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.PipelineId
@@ -232,8 +233,7 @@ class TemplateService @Autowired constructor(
             if (templateRecord == null) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "模板不存在"
-                )
+                    defaultMessage = "模板不存在")
             } else {
                 val modelStr = templateRecord[tTemplate.TEMPLATE] as String
                 val version = templateRecord[tTemplate.VERSION] as Long

@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineTemplateTransferHistoryDao
@@ -97,8 +96,9 @@ class PipelineTransferService @Autowired constructor(
                 messageCode = BK_ADMINISTRATOR,
                 language = I18nUtil.getLanguage(userId)
             )
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
+                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -304,8 +304,9 @@ class PipelineTransferService @Autowired constructor(
                 messageCode = BK_ADMINISTRATOR,
                 language = I18nUtil.getLanguage(userId)
             )
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
+                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -385,8 +386,9 @@ class PipelineTransferService @Autowired constructor(
                 messageCode = BK_ADMINISTRATOR,
                 language = I18nUtil.getLanguage(userId)
             )
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
+                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -463,8 +465,9 @@ class PipelineTransferService @Autowired constructor(
                 messageCode = BK_ADMINISTRATOR,
                 language = I18nUtil.getLanguage(userId)
             )
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = MessageUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
+                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(

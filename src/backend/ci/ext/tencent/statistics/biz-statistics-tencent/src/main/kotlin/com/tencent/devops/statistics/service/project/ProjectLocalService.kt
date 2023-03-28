@@ -31,10 +31,11 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_B
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.statistics.dao.project.ProjectDao
@@ -208,7 +209,10 @@ class ProjectLocalService @Autowired constructor(
                 "organizationType[$organizationType] :organizationId[$organizationId] " +
                     " not project[$projectId] permission "
             )
-            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+            throw OperationException((MessageUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.ORG_NOT_PROJECT,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )))
         }
         var queryProject: ProjectVO? = null
         projectList.forEach { project ->
@@ -237,7 +241,10 @@ class ProjectLocalService @Autowired constructor(
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
             else -> {
-                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+                throw OperationException((MessageUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.ORG_TYPE_ERROR,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )))
             }
         }
         return getProjectByGroupId(bgId, deptId, centerId)

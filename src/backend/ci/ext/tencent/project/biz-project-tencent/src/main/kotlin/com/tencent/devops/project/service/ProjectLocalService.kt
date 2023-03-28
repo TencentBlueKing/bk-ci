@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -46,7 +47,7 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -489,7 +490,9 @@ class ProjectLocalService @Autowired constructor(
         val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
         if (!validateFlag) {
-            val messageResult = MessageCodeUtil.generateResponseDataObject<String>(CommonMessageCode.PERMISSION_DENIED)
+            val messageResult = MessageUtil.generateResponseDataObject<String>(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
             return Result(messageResult.status, messageResult.message, null)
         }
         val projectUserList = authProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
@@ -586,7 +589,9 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
+            defaultMessage = MessageUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         return authProjectApi.getProjectRoles(
             bsPipelineAuthServiceCode,
@@ -614,9 +619,10 @@ class ProjectLocalService @Autowired constructor(
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (MessageUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.NOT_MANAGER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }
@@ -631,9 +637,10 @@ class ProjectLocalService @Autowired constructor(
                 )) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (MessageUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }

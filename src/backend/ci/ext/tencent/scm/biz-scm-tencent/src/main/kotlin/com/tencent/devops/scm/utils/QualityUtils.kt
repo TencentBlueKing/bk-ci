@@ -27,14 +27,14 @@
 
 package com.tencent.devops.scm.utils
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_METRIC
+import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE_OUTPUT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RESULT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TRIGGER_METHOD
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.scm.constant.ScmCode.BK_EXPECT
-import com.tencent.devops.scm.constant.ScmCode.BK_METRIC
-import com.tencent.devops.scm.constant.ScmCode.BK_QUALITY_RED_LINE
-import com.tencent.devops.scm.constant.ScmCode.BK_QUALITY_RED_LINE_OUTPUT
-import com.tencent.devops.scm.constant.ScmCode.BK_RESULT
-import com.tencent.devops.scm.constant.ScmCode.BK_TRIGGER_METHOD
 
 @Suppress("MaxLineLength")
 object QualityUtils {
@@ -50,13 +50,13 @@ object QualityUtils {
                 "<td style=\"border:none;padding-right: 0\">"+
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_TRIGGER_METHOD,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
         ) + "：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
                 "<td style=\"border:none;padding-right: 0\">" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_QUALITY_RED_LINE,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$ruleName</td>" +
                 "</tr></table>"
@@ -66,22 +66,22 @@ object QualityUtils {
         body.append("<th style=\"text-align:left;\">" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_QUALITY_RED_LINE_OUTPUT,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\">" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_METRIC,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\">" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_RESULT,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\">" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_EXPECT,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\"></th>")
         body.append("</tr>")

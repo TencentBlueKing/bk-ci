@@ -30,8 +30,9 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceExtServiceBuildPipelineInitResource
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineReq
@@ -90,23 +91,26 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         serviceCode: String
     ): Result<Map<String, String>?> {
         logger.info("handleServicePackage params:[$extensionInfo|$serviceCode|$userId]")
-        extensionInfo.authType ?: return MessageCodeUtil.generateResponseDataObject(
+        extensionInfo.authType ?: return MessageUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("authType"),
-            data = null
+            data = null,
+            language = I18nUtil.getLanguage(userId)
         )
-        extensionInfo.visibilityLevel ?: return MessageCodeUtil.generateResponseDataObject(
+        extensionInfo.visibilityLevel ?: return MessageUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("visibilityLevel"),
-            data = null
+            data = null,
+            language = I18nUtil.getLanguage(userId)
         )
         val repositoryInfo: RepositoryInfo?
         if (extensionInfo.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
             if (extensionInfo.privateReason.isNullOrBlank()) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf("privateReason"),
-                    data = null
+                    data = null,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
         }
@@ -144,10 +148,14 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             }
         } catch (ignored: Throwable) {
             logger.error("service[$serviceCode] createGitCodeRepository fail!", ignored)
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL
+            ,language = I18nUtil.getLanguage(userId))
         }
         if (null == repositoryInfo) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
+                language = I18nUtil.getLanguage(userId))
         }
         return Result(mapOf("repositoryHashId" to repositoryInfo.repositoryHashId!!, "codeSrc" to repositoryInfo.url))
     }

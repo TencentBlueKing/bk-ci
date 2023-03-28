@@ -29,8 +29,9 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.ExtServiceDao
@@ -72,12 +73,15 @@ class ServiceRepositoryService {
         logger.info("updateServiceRepositoryUserInfo params:[$userId|$projectCode|$serviceCode]")
         // 判断用户是否是插件管理员，移交代码库只能针对插件管理员
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
         }
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(serviceCode)
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
             )
         val updateServiceRepositoryUserInfoResult = client.get(ServiceGitRepositoryResource::class)
             .updateRepositoryUserInfo(userId, projectCode, serviceRecord.repositoryHashId)
@@ -87,9 +91,10 @@ class ServiceRepositoryService {
 
     fun getReadMeFile(userId: String, serviceCode: String): Result<String?> {
         val featureRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: throw RuntimeException(MessageCodeUtil.getCodeMessage(
+            ?: throw RuntimeException(MessageUtil.getMessageByLocale(
                 messageCode = StoreMessageCode.USER_SERVICE_NOT_EXIST,
-                params = arrayOf(serviceCode))
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId))
             )
         val fileStr = client.get(ServiceGitRepositoryResource::class).getFileContent(
             featureRecord.repositoryHashId,

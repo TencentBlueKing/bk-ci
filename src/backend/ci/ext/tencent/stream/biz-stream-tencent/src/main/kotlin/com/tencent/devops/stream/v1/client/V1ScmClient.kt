@@ -34,7 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.stream.constant.StreamCode.BK_STARTUP_CONFIGURATION_MISSING
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.stream.v1.pojo.V1GitCIBasicSetting
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.pojo.enums.V1GitCICommitCheckState
@@ -82,7 +82,7 @@ class V1ScmClient @Autowired constructor(
             targetUrl = V1GitCIPipelineUtils.genGitCIV2BuildUrl(
                 homePage = v2GitUrl ?: throw ParamBlankException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                        messageCode = STARTUP_CONFIGURATION_MISSING,
                         language = I18nUtil.getLanguage(userId)
                     )
                 ),
@@ -132,7 +132,7 @@ class V1ScmClient @Autowired constructor(
                 V1GitCIPipelineUtils.genGitCIV2NotificationsUrl(
                     streamUrl = v2GitUrl ?: throw ParamBlankException(
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                            messageCode = STARTUP_CONFIGURATION_MISSING,
                             language = I18nUtil.getLanguage(userId)
                         )
                     ),

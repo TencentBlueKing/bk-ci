@@ -29,8 +29,9 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -83,7 +84,10 @@ class TxStoreUserServiceImpl : StoreUserService {
             userDeptInfo = client.get(ServiceTxUserResource::class).get(userId).data
         } catch (ignored: Throwable) {
             logger.warn("getUserDeptDetailFromCache fail!", ignored)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         logger.info("$userId userDeptInfo is:$userDeptInfo")
         return if (null != userDeptInfo) {
@@ -93,7 +97,10 @@ class TxStoreUserServiceImpl : StoreUserService {
             if (userDeptInfo.groupName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.groupName)
             Result(commenterDept.toString())
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 

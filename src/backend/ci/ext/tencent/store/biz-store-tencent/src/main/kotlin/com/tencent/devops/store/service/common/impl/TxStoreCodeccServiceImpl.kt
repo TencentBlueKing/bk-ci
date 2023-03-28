@@ -30,10 +30,11 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -84,7 +85,8 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 return Result(
                     CodeccMeasureInfo(
                         status = 1,
-                        message = MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_START_CODECC_TASK_FAIL)
+                        message = MessageUtil.getCodeLanMessage(messageCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL,
+                            language = I18nUtil.getLanguage(userId))
                     )
                 )
             }

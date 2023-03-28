@@ -35,8 +35,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.stream.constant.StreamCode.BK_BUILD_TASK_NOT_EXIST
-import com.tencent.devops.stream.constant.StreamCode.BK_PIPELINE_NOT_EXIST_OR_DELETED
+import com.tencent.devops.stream.constant.StreamMessageCode.BUILD_TASK_NOT_EXIST
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_EXIST_OR_DELETED
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.components.V1YamlBuild
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -61,7 +61,7 @@ class V1GitCIBuildService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V1GitCIBuildService::class.java)
-        const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
+        const val REPO_GIT_WEBHOOK_MR_IID = "CI_REPO_GIT_WEBHOOK_MR_IID"
     }
 
     private val channelCode = ChannelCode.GIT
@@ -78,14 +78,14 @@ class V1GitCIBuildService @Autowired constructor(
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_NOT_EXIST_OR_DELETED,
+                    messageCode = PIPELINE_NOT_EXIST_OR_DELETED,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
         val gitEventBuild = v1GitRequestEventBuildDao.getByBuildId(dslContext, buildId)
             ?: throw CustomException(Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_BUILD_TASK_NOT_EXIST,
+                    messageCode = BUILD_TASK_NOT_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 ))
         val newBuildId = client.get(ServiceBuildResource::class).retry(
@@ -110,7 +110,7 @@ class V1GitCIBuildService @Autowired constructor(
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_NOT_EXIST_OR_DELETED,
+                    messageCode = PIPELINE_NOT_EXIST_OR_DELETED,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
