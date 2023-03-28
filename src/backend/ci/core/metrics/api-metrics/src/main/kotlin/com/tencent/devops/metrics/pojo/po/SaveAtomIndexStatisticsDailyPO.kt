@@ -25,32 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-USE devops_ci_metrics;
-SET NAMES utf8mb4;
+package com.tencent.devops.metrics.pojo.po
 
-DROP PROCEDURE IF EXISTS ci_metrics_schema_update;
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-DELIMITER <CI_UBF>
-CREATE PROCEDURE ci_metrics_schema_update()
-BEGIN
-
-    DECLARE db VARCHAR(100);
-    SET AUTOCOMMIT = 0;
-SELECT DATABASE() INTO db;
-
-    IF NOT EXISTS(SELECT 1
-                          FROM information_schema.COLUMNS
-                          WHERE TABLE_SCHEMA = db
-                            AND TABLE_NAME = 'T_ATOM_OVERVIEW_DATA'
-                            AND COLUMN_NAME = 'FAIL_COMPLIANCE_COUNT') THEN
-ALTER TABLE `T_ATOM_OVERVIEW_DATA`
-    ADD COLUMN `FAIL_COMPLIANCE_COUNT` bigint(20) DEFAULT '0' COMMENT '失败合规次数';
-
-END IF;
-
-COMMIT;
-END <CI_UBF>
-DELIMITER ;
-COMMIT;
-
-CALL ci_metrics_schema_update();
+@ApiModel("保存插件指标每日统计数据")
+data class SaveAtomIndexStatisticsDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
+    @ApiModelProperty("失败执行次数")
+    val failExecuteCount: Long,
+    @ApiModelProperty("失败合规次数")
+    val failComplianceCount: Long,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime,
+    @ApiModelProperty("创建人")
+    val creator: String,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
+)

@@ -31,10 +31,8 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("项目信息查询VO")
-data class QueryProjectInfoVO(
-    @ApiModelProperty("项目列表", required = true)
-    val projectIds: List<String>,
+@ApiModel("查询区间VO")
+data class QueryIntervalVO(
     @ApiModelProperty("开始时间", required = true)
     val startDateTime: LocalDateTime,
     @ApiModelProperty("结束时间", required = true)

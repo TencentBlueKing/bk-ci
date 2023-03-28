@@ -81,9 +81,6 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     @Value("\${logo.maxUploadLogoSize}")
     private lateinit var maxUploadLogoSize: String
 
-    @Value("\${logo.maxUploadLogoSize}")
-    private lateinit var maxUploadIconSize: String
-
     private val logger = LoggerFactory.getLogger(StoreLogoServiceImpl::class.java)
 
     /**

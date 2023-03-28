@@ -116,7 +116,7 @@ interface UserStoreHonorResource {
 
     @ApiOperation("佩戴组件荣誉")
     @PUT
-    @Path("storeCodes/{storeCode}/install")
+    @Path("/storeCodes/{storeCode}/install")
     fun installStoreHonor(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
