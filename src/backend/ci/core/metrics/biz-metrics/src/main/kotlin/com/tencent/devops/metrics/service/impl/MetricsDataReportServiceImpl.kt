@@ -38,6 +38,7 @@ import com.tencent.devops.metrics.dao.MetricsDataQueryDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
@@ -45,6 +46,7 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
@@ -100,6 +102,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             val updatePipelineStageOverviewDataPOs = mutableListOf<UpdatePipelineStageOverviewDataPO>()
             val saveAtomOverviewDataPOs = mutableListOf<SaveAtomOverviewDataPO>()
             val updateAtomOverviewDataPOs = mutableListOf<UpdateAtomOverviewDataPO>()
+            val saveAtomIndexStatisticsDailyPOs = mutableListOf<SaveAtomIndexStatisticsDailyPO>()
+            val updateAtomIndexStatisticsDailyPOs = mutableListOf<UpdateAtomIndexStatisticsDailyPO>()
             val saveAtomFailSummaryDataPOs = mutableListOf<SaveAtomFailSummaryDataPO>()
             val updateAtomFailSummaryDataPOs = mutableListOf<UpdateAtomFailSummaryDataPO>()
             val saveAtomFailDetailDataPOs = mutableListOf<SaveAtomFailDetailDataPO>()
@@ -128,7 +132,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                             atomOverviewDataRecords = atomOverviewDataRecords,
                             updateAtomOverviewDataPOs = updateAtomOverviewDataPOs,
                             currentTime = currentTime,
-                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs
+                            saveAtomOverviewDataPOs = saveAtomOverviewDataPOs,
+                            saveAtomIndexStatisticsDailyPOs = saveAtomIndexStatisticsDailyPOs
                         )
                         atomFailSummaryDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
@@ -168,6 +173,24 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
+                }
+                if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
+                    saveAtomIndexStatisticsDailyPOs.forEach {saveAtomIndexStatisticsDailyPO ->
+                        try {
+                            metricsDataReportDao.saveAtomIndexStatisticsDailyData(
+                                context,
+                                saveAtomIndexStatisticsDailyPO
+                            )
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.warn(
+                                "fail to update atomIndexStatisticsDaily:$saveAtomIndexStatisticsDailyPO", ignored
+                            )
+                            metricsDataReportDao.updateAtomIndexStatisticsDailyData(
+                                context,
+                                saveAtomIndexStatisticsDailyPO
+                            )
+                        }
+                    }
                 }
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
@@ -350,7 +373,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         atomOverviewDataRecords: Result<TAtomOverviewDataRecord>?,
         updateAtomOverviewDataPOs: MutableList<UpdateAtomOverviewDataPO>,
         currentTime: LocalDateTime,
-        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>
+        saveAtomOverviewDataPOs: MutableList<SaveAtomOverviewDataPO>,
+        saveAtomIndexStatisticsDailyPOs: MutableList<SaveAtomIndexStatisticsDailyPO>
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
         val pipelineId = buildEndPipelineMetricsData.pipelineId
@@ -361,6 +385,14 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val errorCode = taskMetricsData.errorCode
         val isComplianceErrorCode = isComplianceErrorCode(atomCode, errorCode.toString())
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
+        val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
+            dslContext = dslContext,
+            statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                formatStr = YYYY_MM_DD
+            ),
+            atomCode = atomCode
+        )
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
             it.atomCode == atomCode
@@ -381,8 +413,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     successExecuteCount = existSaveAtomOverviewDataPO.successExecuteCount,
                     failExecuteCount = existSaveAtomOverviewDataPO.failExecuteCount,
                     modifier = startUser,
-                    updateTime = currentTime,
-                    failComplianceCount = existSaveAtomOverviewDataPO.failComplianceCount
+                    updateTime = currentTime
                 )
             } else {
                 null
@@ -399,10 +430,11 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 ?: atomOverviewDataRecord?.successExecuteCount ?: 0L
             val originFailExecuteCount = existUpdateAtomOverviewDataPO?.failExecuteCount
                 ?: atomOverviewDataRecord?.failExecuteCount ?: 0L
-            val originFailComplianceCount = existUpdateAtomOverviewDataPO?.failComplianceCount
-                ?: atomOverviewDataRecord?.failComplianceCount ?: 0L
+            val originFailComplianceCount = atomIndexStatisticsDailyRecord?.failComplianceCount ?: 0L
             val currentFailComplianceCount = if (isComplianceErrorCode) originFailComplianceCount + 1
             else originFailComplianceCount
+            val originDailyFailExecuteCount = atomIndexStatisticsDailyRecord?.failExecuteCount ?: 0L
+            val currentDailyFailExecuteCount = originDailyFailExecuteCount + 1
             val currentTotalExecuteCount = originTotalExecuteCount + 1
             val currentTotalCostTime = originAvgCostTime * originTotalExecuteCount + taskMetricsData.costTime
             val currentAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
@@ -428,7 +460,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 existUpdateAtomOverviewDataPO.failExecuteCount = currentFailExecuteCount
                 existUpdateAtomOverviewDataPO.modifier = startUser
                 existUpdateAtomOverviewDataPO.updateTime = currentTime
-                existUpdateAtomOverviewDataPO.failComplianceCount = currentFailComplianceCount
             } else {
                 updateAtomOverviewDataPOs.add(
                     UpdateAtomOverviewDataPO(
@@ -441,11 +472,27 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         successExecuteCount = currentSuccessExecuteCount,
                         failExecuteCount = currentFailExecuteCount,
                         modifier = startUser,
-                        updateTime = currentTime,
-                        failComplianceCount = currentFailComplianceCount
+                        updateTime = currentTime
                     )
                 )
             }
+            saveAtomIndexStatisticsDailyPOs.add(
+                SaveAtomIndexStatisticsDailyPO(
+                    id = atomIndexStatisticsDailyRecord?.id ?: client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
+                    atomCode = taskMetricsData.atomCode,
+                    failExecuteCount = currentDailyFailExecuteCount,
+                    failComplianceCount = currentFailComplianceCount,
+                    statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                        dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                        formatStr = YYYY_MM_DD
+                    ),
+                    creator = startUser,
+                    modifier = startUser,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+            )
         } else {
             val successRate = if (taskSuccessFlag) {
                 BigDecimal(100.00)
@@ -468,6 +515,22 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     avgCostTime = taskMetricsData.costTime,
                     totalExecuteCount = 1,
                     successExecuteCount = if (taskSuccessFlag) 1 else 0,
+                    failExecuteCount = if (taskSuccessFlag) 0 else 1,
+                    statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                        dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                        formatStr = YYYY_MM_DD
+                    ),
+                    creator = startUser,
+                    modifier = startUser,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+            )
+            saveAtomIndexStatisticsDailyPOs.add(
+                SaveAtomIndexStatisticsDailyPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("METRICS_T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
+                    atomCode = taskMetricsData.atomCode,
                     failExecuteCount = if (taskSuccessFlag) 0 else 1,
                     failComplianceCount = if (isComplianceErrorCode) 1 else 0,
                     statisticsTime = DateTimeUtil.stringToLocalDateTime(

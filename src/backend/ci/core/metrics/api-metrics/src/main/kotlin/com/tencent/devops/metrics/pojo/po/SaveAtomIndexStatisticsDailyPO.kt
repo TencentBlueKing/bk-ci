@@ -29,39 +29,18 @@ package com.tencent.devops.metrics.pojo.po
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.math.BigDecimal
 import java.time.LocalDateTime
 
-@ApiModel("保存插件概览数据")
-data class SaveAtomOverviewDataPO(
+@ApiModel("保存插件指标每日统计数据")
+data class SaveAtomIndexStatisticsDailyPO(
     @ApiModelProperty("主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
-    val projectId: String,
-    @ApiModelProperty("流水线ID")
-    val pipelineId: String,
-    @ApiModelProperty("流水线名称")
-    val pipelineName: String,
-    @ApiModelProperty("渠道代码")
-    val channelCode: String,
     @ApiModelProperty("插件代码")
     val atomCode: String,
-    @ApiModelProperty("插件名称")
-    val atomName: String,
-    @ApiModelProperty("插件分类代码")
-    val classifyCode: String,
-    @ApiModelProperty("插件分类名称")
-    val classifyName: String,
-    @ApiModelProperty("成功率")
-    val successRate: BigDecimal,
-    @ApiModelProperty("平均耗时，单位：毫秒")
-    val avgCostTime: Long,
-    @ApiModelProperty("总执行次数")
-    val totalExecuteCount: Long,
-    @ApiModelProperty("成功执行次数")
-    val successExecuteCount: Long,
     @ApiModelProperty("失败执行次数")
     val failExecuteCount: Long,
+    @ApiModelProperty("失败合规次数")
+    val failComplianceCount: Long,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建人")

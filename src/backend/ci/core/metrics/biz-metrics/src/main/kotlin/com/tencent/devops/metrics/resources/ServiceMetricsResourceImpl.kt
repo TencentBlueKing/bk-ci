@@ -35,7 +35,7 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
@@ -99,10 +99,14 @@ class ServiceMetricsResourceImpl constructor(
     override fun queryAtomComplianceInfo(
         userId: String,
         atomCode: String,
-        queryProjectInfoVO: QueryProjectInfoVO
+        queryIntervalVO: QueryIntervalVO
     ): Result<ComplianceInfoDO?> {
         return Result(
-            atomStatisticsManageService.queryAtomComplianceInfo(userId, atomCode, queryProjectInfoVO)
+            atomStatisticsManageService.queryAtomComplianceInfo(
+                userId = userId,
+                atomCode = atomCode,
+                queryIntervalVO = queryIntervalVO
+            )
         )
     }
 }

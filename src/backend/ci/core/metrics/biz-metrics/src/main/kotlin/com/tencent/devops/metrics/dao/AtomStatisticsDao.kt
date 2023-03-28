@@ -43,8 +43,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
@@ -219,18 +219,16 @@ class AtomStatisticsDao {
     fun queryAtomComplianceInfo(
         dslContext: DSLContext,
         atomCode: String,
-        queryProjectInfoVO: QueryProjectInfoVO
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
     ): Record2<BigDecimal, BigDecimal>? {
-        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
             return dslContext.select(
                 sum(FAIL_EXECUTE_COUNT).`as`(Constants.BK_FAIL_EXECUTE_COUNT),
                 sum(FAIL_COMPLIANCE_COUNT).`as`(Constants.BK_FAIL_COMPLIANCE_COUNT)
             ).from(this)
-                .where(PROJECT_ID.`in`(queryProjectInfoVO.projectIds))
-                .and(ATOM_CODE.eq(atomCode))
-                .and(STATISTICS_TIME.between(queryProjectInfoVO.startDateTime, queryProjectInfoVO.endDateTime))
-                .and(FAIL_EXECUTE_COUNT.isNotNull)
-                .and(FAIL_COMPLIANCE_COUNT.isNotNull)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .fetchOne()
         }
     }

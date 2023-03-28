@@ -34,7 +34,7 @@ import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -101,7 +101,7 @@ interface ServiceMetricsResource {
         @ApiParam("插件code", required = true)
         @QueryParam("atomCode")
         atomCode: String,
-        @ApiParam("查询项目列表视图", required = true)
-        queryProjectInfoVO: QueryProjectInfoVO
+        @ApiParam("查询区间视图", required = true)
+        queryIntervalVO: QueryIntervalVO
     ): Result<ComplianceInfoDO?>
 }

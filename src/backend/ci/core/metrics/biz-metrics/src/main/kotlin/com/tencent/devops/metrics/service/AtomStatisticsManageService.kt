@@ -32,7 +32,7 @@ import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 
 interface AtomStatisticsManageService {
 
@@ -61,6 +61,6 @@ interface AtomStatisticsManageService {
     fun queryAtomComplianceInfo(
         userId: String,
         atomCode: String,
-        queryProjectInfoVO: QueryProjectInfoVO
+        queryIntervalVO: QueryIntervalVO
     ): ComplianceInfoDO?
 }

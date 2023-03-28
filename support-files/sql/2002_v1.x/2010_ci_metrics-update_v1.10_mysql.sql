@@ -74,16 +74,6 @@ BEGIN
         ADD INDEX `UNI_TECI_ATOM_CODE` (`ATOM_CODE`);
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                              FROM information_schema.COLUMNS
-                              WHERE TABLE_SCHEMA = db
-                                AND TABLE_NAME = 'T_ATOM_OVERVIEW_DATA'
-                                AND COLUMN_NAME = 'FAIL_COMPLIANCE_COUNT') THEN
-    ALTER TABLE `T_ATOM_OVERVIEW_DATA`
-        ADD COLUMN `FAIL_COMPLIANCE_COUNT` bigint(20) DEFAULT '0' COMMENT '失败合规次数';
-
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

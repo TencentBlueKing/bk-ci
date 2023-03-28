@@ -65,7 +65,7 @@ import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
@@ -178,10 +178,14 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     override fun queryAtomComplianceInfo(
         userId: String,
         atomCode: String,
-        queryProjectInfoVO: QueryProjectInfoVO
+        queryIntervalVO: QueryIntervalVO
     ): ComplianceInfoDO? {
-        val queryAtomComplianceInfo =
-            atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)
+        val queryAtomComplianceInfo = atomStatisticsDao.queryAtomComplianceInfo(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            startDateTime = queryIntervalVO.startDateTime,
+            endDateTime = queryIntervalVO.endDateTime
+        )
         if (queryAtomComplianceInfo != null) {
             val failExecuteCount = queryAtomComplianceInfo.get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?
             val failComplianceCount = queryAtomComplianceInfo.get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?
