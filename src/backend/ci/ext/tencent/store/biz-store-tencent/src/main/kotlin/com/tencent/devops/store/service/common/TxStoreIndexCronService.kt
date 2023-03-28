@@ -34,7 +34,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.metrics.api.ServiceMetricsResource
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
@@ -226,22 +226,12 @@ class TxStoreIndexCronService(
                     page = page,
                     pageSize = pageSize
                 )
-                val storeProjectIdMap = storeProjectRelDao.getInitProjectCodes(
-                    dslContext = dslContext,
-                    storeType = StoreTypeEnum.ATOM,
-                    storeProjectTypeBytes = listOf(0, 1, 2),
-                    storeCodeList = atomCodes
-                )
                 atomCodes.forEach { atomCode ->
-                    val projectIds = storeProjectIdMap.filter { (it.value1() as String) == atomCode }.map {
-                        it.value2() as String
-                    }
                     // 获取插件合规信息
                     val complianceInfo = client.get(ServiceMetricsResource::class).queryAtomComplianceInfo(
                         userId = SYSTEM_USER,
                         atomCode = atomCode,
-                        QueryProjectInfoVO(
-                            projectIds = projectIds,
+                        QueryIntervalVO(
                             startDateTime = startTime,
                             endDateTime = endTime
                         )
