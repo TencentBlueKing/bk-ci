@@ -3,6 +3,7 @@ package job_docker
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
@@ -32,20 +33,22 @@ type ContainerCreateInfo struct {
 
 func parseApiDockerOptions(o *api.DockerOptions) []string {
 	args := []string{}
-	switch {
-	case o.Volumes != nil && len(o.Volumes) > 0:
+	if o.Volumes != nil && len(o.Volumes) > 0 {
 		for _, v := range o.Volumes {
 			args = append(args, "--volume", strings.TrimSpace(v))
 		}
-		fallthrough
-	case o.Mounts != nil && len(o.Mounts) > 0:
+	}
+
+	if o.Mounts != nil && len(o.Mounts) > 0 {
 		for _, m := range o.Mounts {
 			args = append(args, "--mount", strings.TrimSpace(m))
 		}
-		fallthrough
-	case o.Gpus != "":
+	}
+
+	if o.Gpus != "" {
 		args = append(args, "--gpus", strings.TrimSpace(o.Gpus))
 	}
+
 	return args
 }
 
@@ -54,9 +57,9 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions *api.DockerOpti
 	argv := parseApiDockerOptions(userOptions)
 
 	// 解析args为flagSet
-	var copts *containerOptions
-	copts = addFlags(pflag.CommandLine)
-	err := pflag.CommandLine.Parse(argv)
+	flagset := pflag.NewFlagSet(os.Args[0], pflag.ContinueOnError)
+	copts := addFlags(flagset)
+	err := flagset.Parse(argv)
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options失败: %s", err.Error())
 		return nil, errors.New(errMsg)
@@ -70,7 +73,7 @@ func ParseDockeroptions(dockerClient *client.Client, userOptions *api.DockerOpti
 	}
 
 	// 解析配置为可用docker配置, 目前只有linux支持，所以只使用linux相关配置
-	containerConfig, err := parse(pflag.CommandLine, copts, ping.OSType)
+	containerConfig, err := parse(flagset, copts, ping.OSType)
 	if err != nil {
 		errMsg := fmt.Sprintf("解析用户docker options 为docker配置 错误: %s", err.Error())
 		return nil, errors.New(errMsg)
