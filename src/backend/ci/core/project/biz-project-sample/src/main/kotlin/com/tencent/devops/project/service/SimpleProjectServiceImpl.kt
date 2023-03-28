@@ -163,7 +163,7 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun getProjectRouterTag(projectId: String): String? = buildRouterTag(projectId)
+    override fun isRbacPermission(projectId: String): Boolean = true
 
     override fun buildRouterTag(routerTag: String?): String? = null
 
