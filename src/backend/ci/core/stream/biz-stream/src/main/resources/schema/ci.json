@@ -311,6 +311,18 @@
                   }
                 } ]
               },
+              "repos_ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "repos_ignore_condition" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
               "events" : {
                 "type" : "object",
                 "minProperties" : 1,
