@@ -55,10 +55,10 @@ class StoreHonorDao {
             val condition = mutableListOf<Condition>()
             if (!keyWords.isNullOrBlank()) {
                 condition.add(
-                    (HONOR_TITLE.like("%$keyWords%"))
-                        .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
+                    (HONOR_TITLE.eq(keyWords))
+                        .or(HONOR_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_CODE.eq(keyWords))
                 )
             }
             return dslContext.selectCount()
@@ -105,10 +105,10 @@ class StoreHonorDao {
             val condition = mutableListOf<Condition>()
             if (!keyWords.isNullOrBlank()) {
                 condition.add(
-                    (HONOR_TITLE.like("%$keyWords%"))
-                        .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
-                        .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
+                    (HONOR_TITLE.eq(keyWords))
+                        .or(HONOR_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_NAME.eq(keyWords))
+                        .or(tStoreHonorRel.STORE_CODE.eq(keyWords))
                 )
             }
             return dslContext.select(
