@@ -75,7 +75,6 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         filename: '[name].[contenthash].[ext]'
                     }
                 }
-                
             ]
         },
         plugins: [
