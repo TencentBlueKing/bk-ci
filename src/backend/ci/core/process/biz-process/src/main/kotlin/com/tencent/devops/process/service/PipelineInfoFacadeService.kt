@@ -63,7 +63,6 @@ import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineCopy
-import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult

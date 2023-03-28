@@ -1061,8 +1061,12 @@ class PipelineRepositoryService constructor(
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting, version: Int, updateLastModifyUser: Boolean? = true)
-        : PipelineName {
+    fun saveSetting(
+        userId: String,
+        setting: PipelineSetting,
+        version: Int,
+        updateLastModifyUser: Boolean? = true
+    ): PipelineName {
         setting.checkParam()
 
         if (isPipelineExist(
