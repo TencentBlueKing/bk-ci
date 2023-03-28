@@ -173,10 +173,10 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun verifyProjectRouterTag(projectId: String) {
-        val routerTag = client.get(ServiceProjectTagResource::class)
-            .getProjectRouterTag(projectId).data
+        val isRbacPermission = client.get(ServiceProjectTagResource::class)
+            .isRbacPermission(projectId).data
         // 校验项目是否为RBAC,若不是，则抛出异常
-        if (routerTag != null && !routerTag.contains(RBAC_PERMISSION_CENTER)) {
+        if (isRbacPermission != true) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_PROJECT_NOT_UPGRADE,
                 params = arrayOf(projectId),
@@ -250,7 +250,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
         }
-        return groupInfoList.sortedBy { it.resourceType }
+        return groupInfoList.sortedByDescending { it.resourceType }
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
@@ -498,6 +498,5 @@ class RbacPermissionApplyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
-        private const val RBAC_PERMISSION_CENTER = "rbac"
     }
 }

@@ -354,7 +354,8 @@ class ProjectDao {
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         subjectScopesStr: String,
-        logoAddress: String?
+        logoAddress: String?,
+        approvalStatus: Int = ProjectApproveStatus.APPROVED.status
     ): Int {
         with(TProject.T_PROJECT) {
             val update = dslContext.update(this)
@@ -369,7 +370,7 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .set(APPROVAL_STATUS, ProjectApproveStatus.APPROVED.status)
+                .set(APPROVAL_STATUS, approvalStatus)
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }

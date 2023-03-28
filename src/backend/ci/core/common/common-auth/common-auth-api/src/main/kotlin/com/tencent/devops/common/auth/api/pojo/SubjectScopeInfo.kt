@@ -14,5 +14,7 @@ data class SubjectScopeInfo(
     @ApiModelProperty("类型")
     val type: String? = SubjectScopeType.USER.value,
     @JsonProperty("full_name")
-    val fullName: String? = ""
+    val fullName: String? = "",
+    @ApiModelProperty("用户名")
+    val username: String? = ""
 )

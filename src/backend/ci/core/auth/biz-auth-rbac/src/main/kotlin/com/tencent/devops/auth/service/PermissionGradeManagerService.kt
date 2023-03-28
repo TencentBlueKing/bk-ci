@@ -68,11 +68,11 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.Arrays
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
@@ -145,7 +145,7 @@ class PermissionGradeManagerService @Autowired constructor(
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
-                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.id)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.username)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
@@ -248,7 +248,7 @@ class PermissionGradeManagerService @Autowired constructor(
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
                 SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
-                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.name)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.username)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))

@@ -246,7 +246,7 @@ class RbacPermissionResourceService(
         }
         return permissionService.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = RbacAuthUtils.buildAction(
+            action =  RbacAuthUtils.buildAction(
                 authPermission = AuthPermission.MANAGE,
                 authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
             ),

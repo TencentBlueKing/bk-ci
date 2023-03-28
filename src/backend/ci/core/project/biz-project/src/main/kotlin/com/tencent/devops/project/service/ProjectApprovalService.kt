@@ -90,10 +90,10 @@ class ProjectApprovalService @Autowired constructor(
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>
     ): Int {
-        val tipsStatus = if (approvalStatus == ProjectApproveStatus.UPDATE_PENDING.status) {
-            ProjectTipsStatus.SHOW_UPDATE_PENDING.status
-        } else {
-            ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
+        val tipsStatus = when (approvalStatus) {
+            ProjectApproveStatus.CREATE_PENDING.status -> ProjectTipsStatus.SHOW_CREATE_PENDING.status
+            ProjectApproveStatus.UPDATE_PENDING.status -> ProjectTipsStatus.SHOW_UPDATE_PENDING.status
+            else -> ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
         }
         return projectApprovalDao.update(
             dslContext = dslContext,
