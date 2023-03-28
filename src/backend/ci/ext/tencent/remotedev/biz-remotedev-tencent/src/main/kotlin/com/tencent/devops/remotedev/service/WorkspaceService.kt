@@ -49,7 +49,9 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -203,7 +205,8 @@ class WorkspaceService @Autowired constructor(
         } else {
             // 防止污传,如果是基于BLANK模板创建的则用BLANK作为devFilePath
             workspaceCreate.devFilePath = if (workspaceCreate.wsTemplateId == BLANK_TEMPLATE_ID) {
-                BLANK_TEMPLATE_YAML_NAME } else null
+                BLANK_TEMPLATE_YAML_NAME
+            } else null
             redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
         }
 
@@ -437,6 +440,8 @@ class WorkspaceService @Autowired constructor(
                 )
             }
             checkUserCreate(userId, true)
+            /*处理异常的情况*/
+            checkAndFixExceptionWS(status, userId, workspaceName)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -511,6 +516,33 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = "",
                 status = WorkspaceAction.STARTING
             )
+        }
+    }
+
+    private fun checkAndFixExceptionWS(
+        status: WorkspaceStatus,
+        userId: String,
+        workspaceName: String
+    ) {
+        if (status.checkException()) {
+            when (val fix = fixUnexpectedStatus(userId, workspaceName, status)) {
+                WorkspaceStatus.EXCEPTION -> {
+                    logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_ERROR.errorCode,
+                        defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR.formatErrorMessage
+                    )
+                }
+                else -> {
+                    logger.info("$workspaceName is $status to $fix , return info.")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_ERROR_FIX.errorCode,
+                        defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR_FIX.formatErrorMessage
+                            .format(fix.name),
+                        params = arrayOf(fix.name)
+                    )
+                }
+            }
         }
     }
 
@@ -676,6 +708,9 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.name, "status is already $status, can't stop now")
                 )
             }
+
+            /*处理异常的情况*/
+            checkAndFixExceptionWS(status, userId, workspaceName)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -874,7 +909,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         }
-        doDeleteWS(event.status, event.userId, event.workspaceName, event.errorMsg)
+        doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
     }
 
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
@@ -949,35 +984,7 @@ class WorkspaceService @Autowired constructor(
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
                     ) {
-                        val workspaceInfo = kotlin.runCatching {
-                            client.get(ServiceRemoteDevResource::class)
-                                .getWorkspaceInfo(userId, it.name).data!!
-                        }.getOrElse { ignore ->
-                            logger.warn(
-                                "get workspace info error ${it.name}|${ignore.message}"
-                            )
-                            status = WorkspaceStatus.EXCEPTION
-                            workspaceDao.updateWorkspaceStatus(dslContext, it.name, WorkspaceStatus.EXCEPTION)
-                            return@run
-                        }
-                        when (workspaceInfo.status) {
-                            EnvStatusEnum.stopped -> {
-                                doStopWS(true, userId, it.name)
-                                status = WorkspaceStatus.SLEEP
-                            }
-                            EnvStatusEnum.deleted -> {
-                                doDeleteWS(true, userId, it.name)
-                                status = WorkspaceStatus.DELETED
-                            }
-                            EnvStatusEnum.running -> {
-                                doStartWS(true, userId, it.name, workspaceInfo.environmentHost)
-                                status = WorkspaceStatus.RUNNING
-                            }
-                            else -> logger.warn(
-                                "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                                    "${it.name}|${workspaceInfo.status}"
-                            )
-                        }
+                        status = fixUnexpectedStatus(userId, it.name, status)
                     }
                 }
                 Workspace(
@@ -997,6 +1004,43 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         )
+    }
+
+    private fun fixUnexpectedStatus(
+        userId: String,
+        workspaceName: String,
+        status: WorkspaceStatus
+    ): WorkspaceStatus {
+        val workspaceInfo = kotlin.runCatching {
+            client.get(ServiceRemoteDevResource::class)
+                .getWorkspaceInfo(userId, workspaceName).data!!
+        }.getOrElse { ignore ->
+            logger.warn(
+                "get workspace info error $workspaceName|${ignore.message}"
+            )
+            workspaceDao.updateWorkspaceStatus(dslContext, workspaceName, WorkspaceStatus.EXCEPTION)
+            return WorkspaceStatus.EXCEPTION
+        }
+        logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
+        when (workspaceInfo.status) {
+            EnvStatusEnum.stopped -> {
+                doStopWS(true, userId, workspaceName)
+                return WorkspaceStatus.SLEEP
+            }
+            EnvStatusEnum.deleted -> {
+                doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
+                return WorkspaceStatus.DELETED
+            }
+            EnvStatusEnum.running -> {
+                doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
+                return WorkspaceStatus.RUNNING
+            }
+            else -> logger.warn(
+                "wait workspace change over $DEFAULT_WAIT_TIME second |" +
+                    "$workspaceName|${workspaceInfo.status}"
+            )
+        }
+        return status
     }
 
     fun getWorkspaceUserDetail(userId: String): WorkspaceUserDetail {
@@ -1047,11 +1091,28 @@ class WorkspaceService @Autowired constructor(
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
-            cpu = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.cpu } else { 0 } },
-            memory = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.memory } else { 0 } },
+            cpu = workspaces.sumOf {
+                if (it.status == WorkspaceStatus.RUNNING.ordinal) {
+                    it.cpu
+                } else {
+                    0
+                }
+            },
+            memory = workspaces.sumOf {
+                if (it.status == WorkspaceStatus.RUNNING.ordinal) {
+                    it.memory
+                } else {
+                    0
+                }
+            },
             disk = workspaces.sumOf {
                 if (it.status in
-                    setOf(WorkspaceStatus.RUNNING.ordinal, WorkspaceStatus.SLEEP.ordinal)) { it.disk } else { 0 }
+                    setOf(WorkspaceStatus.RUNNING.ordinal, WorkspaceStatus.SLEEP.ordinal)
+                ) {
+                    it.disk
+                } else {
+                    0
+                }
             }
         )
     }
@@ -1166,6 +1227,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun heartBeatStopWS(workspaceName: String): Boolean {
+
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -1183,6 +1245,9 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspace.name, "status is already $status, can't stop again")
             )
         }
+
+        if (!checkProjectRouter(workspace.creator, workspaceName)) return false
+
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.id}",
@@ -1235,6 +1300,39 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    private fun checkProjectRouter(
+        creator: String,
+        workspaceName: String
+    ): Boolean {
+        val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
+            .ifBlank { null } ?: run {
+            logger.info("$workspaceName creator not init setting, ignore it.")
+            return false
+        }
+
+        val projectRouterTagCheck =
+            client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data
+        if (!projectRouterTagCheck!!) {
+            logger.info("project $projectId router tag is not this cluster")
+            return false
+        }
+        return true
+    }
+
+    // 尝试修复异常工作空间状态
+    fun fixUnexpectedWorkspace() {
+        logger.info("fixUnexpectedWorkspace")
+        workspaceDao.fetchWorkspace(
+            dslContext, status = WorkspaceStatus.EXCEPTION
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            logger.info(
+                "workspace ${it.name} is EXCEPTION, try to fix."
+            )
+            fixUnexpectedStatus(ADMIN_NAME, it.name, WorkspaceStatus.values()[it.status])
+        }
+    }
+
     // 获取已休眠(status:3)且过期14天的工作空间
     fun deleteInactivityWorkspace() {
         logger.info("getTimeOutInactivityWorkspace")
@@ -1264,6 +1362,8 @@ class WorkspaceService @Autowired constructor(
                 params = arrayOf(workspace.name, "status is already $status, can't delete again")
             )
         }
+
+        if (!checkProjectRouter(workspace.creator, workspace.name)) return false
         RedisCallLimit(
             redisOperation,
             "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.name}",
@@ -1313,7 +1413,13 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    private fun doDeleteWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {
+    private fun doDeleteWS(
+        status: Boolean,
+        operator: String,
+        workspaceName: String,
+        nodeIp: String?,
+        errorMsg: String? = null
+    ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
             ?: throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
@@ -1323,6 +1429,16 @@ class WorkspaceService @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkDeleted()) return
         if (status) {
+            // 删除环境管理第三方构建机记录
+            val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.creator).projectId
+            if (client.get(ServiceNodeResource::class)
+                    .deleteThirdPartyNode(workspace.creator, projectId, nodeIp ?: "").data == false
+            ) {
+                logger.warn(
+                    "delete workspace $workspaceName, but third party agent delete failed." +
+                        "|${workspace.creator}|$projectId|$nodeIp|"
+                )
+            }
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->

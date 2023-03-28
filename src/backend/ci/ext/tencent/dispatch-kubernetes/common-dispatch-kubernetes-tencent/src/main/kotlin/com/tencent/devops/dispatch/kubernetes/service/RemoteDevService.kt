@@ -106,8 +106,9 @@ class RemoteDevService @Autowired constructor(
             }
 
             return WorkspaceResponse(
-                enviromentUid = enviromentUid,
-                environmentHost = workspaceInfo.environmentHost
+                environmentUid = enviromentUid,
+                environmentHost = workspaceInfo.environmentHost,
+                environmentIp = workspaceInfo.environmentIP
             )
         } else {
             dslContext.transaction { t ->
@@ -165,7 +166,8 @@ class RemoteDevService @Autowired constructor(
 
             return WorkspaceResponse(
                 environmentHost = workspaceInfo.environmentHost,
-                enviromentUid = ""
+                environmentUid = "",
+                environmentIp = workspaceInfo.environmentIP
             )
         } else {
             throw BuildFailureException(
