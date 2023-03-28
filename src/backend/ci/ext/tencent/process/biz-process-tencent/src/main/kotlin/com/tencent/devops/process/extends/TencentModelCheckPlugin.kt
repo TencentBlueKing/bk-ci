@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
@@ -59,10 +60,19 @@ class TencentModelCheckPlugin constructor(
     /**
      * 注：因内部历史原因，存在大量中文命名的变量，所以相对默认检查器，减少针对命名的规范检查
      */
-    override fun checkTriggerContainer(stage: Stage) {
-        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            defaultMessage = "流水线Stage为空",
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-        )) as TriggerContainer
+    override fun checkTriggerContainer(trigger: Stage): Map<String, BuildFormProperty> {
+        if (trigger.containers.size != 1) {
+            throw ErrorCodeException(
+                defaultMessage = "流水线只能有一个触发Stage",
+                errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
+            )
+        }
+
+        return ((trigger.containers.getOrNull(0)
+            ?: throw ErrorCodeException(
+                defaultMessage = "流水线Stage为空",
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+            ))
+            as TriggerContainer).params.associateBy { it.id } // 腾讯特供，不校验变量命名规范（有游戏业务大量使用中文命名变量）
     }
 }

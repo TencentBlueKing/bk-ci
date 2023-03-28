@@ -363,14 +363,6 @@ class PipelineRepositoryService constructor(
                 )
             }
 
-            modelCheckPlugin.checkJob(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                jobContainer = c,
-                userId = userId,
-                finallyStage = stage.finally
-            )
-
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
             try {
