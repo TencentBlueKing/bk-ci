@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.model.store.tables.TStoreStatisticsDaily
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_FAIL_NUM
+import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
 import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -190,7 +192,10 @@ class StoreStatisticDailyDao {
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
-            return dslContext.select(sum(DAILY_SUCCESS_NUM), sum(DAILY_FAIL_NUM))
+            return dslContext.select(
+                sum(DAILY_SUCCESS_NUM).`as`(BK_SUM_DAILY_SUCCESS_NUM),
+                sum(DAILY_FAIL_NUM).`as`(BK_SUM_DAILY_FAIL_NUM)
+            )
                 .from(this)
                 .where(conditions).fetchOne()
         }
