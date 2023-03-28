@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class DeployPipelineResult(
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
     @ApiModelProperty("流水线版本号", required = true)
     val version: Int
 )

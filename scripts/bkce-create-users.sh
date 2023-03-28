@@ -47,6 +47,13 @@ fi
 
 echo "导入 SQL 文件"
 ./bin/sql_migrate.sh -n mysql-ci "$BK_CI_SRC_DIR"/support-files/sql/*.sql
+for sub_dir in "$BK_CI_SRC_DIR"/support-files/sql/*
+do
+   if [[ -d $sub_dir ]]; then
+     echo "import sub_dir $sub_dir/*.sql"
+     ./bin/sql_migrate.sh -n mysql-ci "$sub_dir/*.sql"
+   fi
+done
 
 echo "RabbitMQ"
 install_mq_plugin=
