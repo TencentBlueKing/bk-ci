@@ -44,7 +44,6 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.pojo.common.DELETE_STORE_INDEX_RESULT_KEY
 import com.tencent.devops.store.pojo.common.STORE_CODE
 import com.tencent.devops.store.pojo.common.STORE_INDEX_CODE
 import com.tencent.devops.store.pojo.common.STORE_INDEX_DESCRIPTION
@@ -182,9 +181,9 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             storeIndexManageInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
             storeIndexManageInfoDao.deleteTStoreIndexBaseInfo(context, indexId)
+            storeIndexManageInfoDao.deleteStoreIndexResulById(context, indexId)
+            storeIndexManageInfoDao.deleteStoreIndexElementById(context, indexId)
         }
-        // 考虑到数据量的问题，使用定时任务处理指标要素数据
-        redisOperation.sadd(DELETE_STORE_INDEX_RESULT_KEY, indexId)
         return Result(true)
     }
 
