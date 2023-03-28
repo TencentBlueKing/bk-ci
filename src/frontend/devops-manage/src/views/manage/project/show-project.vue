@@ -391,11 +391,10 @@ onMounted(async () => {
                   <!--
                     approvalStatus
                     0-创建成功/修改成功,最终态
-                    1-创建审批中
-                    2-创建拒绝
-                    3-创建取消
+                    1-新增审批
+                    2-正常
+                    3-新增审批拒绝
                     4-更新审批中
-                    5-更新拒绝
                   -->
                   <Popover
                     :content="statusDisabledTips[projectData.approvalStatus]"
@@ -427,7 +426,7 @@ onMounted(async () => {
                     :content="t('仅更新人可撤销更新')"
                     :disabled="userName !== projectData.updator">
                     <bk-button
-                      v-if="[4, 5].includes(projectData.approvalStatus)"
+                      v-if="[4].includes(projectData.approvalStatus)"
                       class="btn"
                       theme="default"
                       :disabled="userName !== projectData.updator"
@@ -438,7 +437,7 @@ onMounted(async () => {
                   </Popover>
                   
                   <bk-button
-                    v-if="[1, 2].includes(projectData.approvalStatus)"
+                    v-if="[1, 3].includes(projectData.approvalStatus)"
                     class="btn"
                     theme="default"
                     @click="handleCancelCreation"

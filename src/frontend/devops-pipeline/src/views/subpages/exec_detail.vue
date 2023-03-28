@@ -167,7 +167,7 @@
                                 handlePipelineNoPermission({
                                     projectId: this.routerParams.projectId,
                                     resourceCode: this.routerParams.pipelineId,
-                                    action: RESOURCE_ACTION.EXECUTE
+                                    action: RESOURCE_ACTION.VIEW
                                 })
                             },
                             text: this.$t('applyPermission')
