@@ -84,7 +84,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -506,12 +505,12 @@ class TxProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun getProjectRouterTag(projectId: String): String? {
+    override fun isRbacPermission(projectId: String): Boolean {
         val projectInfo = projectDao.getByEnglishName(
             dslContext = dslContext,
             englishName = projectId
-        ) ?: throw NotFoundException("project - $projectId is not exist!")
-        return buildRouterTag(projectInfo.routerTag)
+        ) ?: return false
+        return projectInfo.routerTag?.contains(rbacTag) ?: false
     }
 
     override fun updateProjectRouterTag(englishName: String) {
