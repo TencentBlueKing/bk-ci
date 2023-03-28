@@ -1608,7 +1608,7 @@ class TemplateFacadeService @Autowired constructor(
         template: Model
     ): Model {
         val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
-        if (templateParams == null || templateParams.isEmpty()) {
+        if (templateParams.isNullOrEmpty()) {
             return instance
         }
         val triggerContainer = instance.stages[0].containers[0] as TriggerContainer
@@ -1635,14 +1635,9 @@ class TemplateFacadeService @Autowired constructor(
                 id = id,
                 name = name,
                 elements = elements,
-                status = status,
-                startEpoch = startEpoch,
-                systemElapsed = systemElapsed,
-                elementElapsed = elementElapsed,
                 params = finalParams,
                 templateParams = templateParams,
                 buildNo = buildNo,
-                canRetry = canRetry,
                 containerId = containerId,
                 containerHashId = containerHashId
             )
@@ -1650,7 +1645,7 @@ class TemplateFacadeService @Autowired constructor(
 
         return Model(
             name = instance.name,
-            desc = "",
+            desc = instance.desc,
             stages = PipelineUtils.getFixedStages(instance, finalTriggerContainer, defaultStageTagId = null),
             labels = instance.labels,
             instanceFromTemplate = true
@@ -1695,7 +1690,6 @@ class TemplateFacadeService @Autowired constructor(
             elements = triggerContainer.elements,
             params = params, templateParams = templateParams,
             buildNo = triggerContainer.buildNo,
-            canRetry = triggerContainer.canRetry,
             containerId = triggerContainer.containerId,
             containerHashId = triggerContainer.containerHashId
         )

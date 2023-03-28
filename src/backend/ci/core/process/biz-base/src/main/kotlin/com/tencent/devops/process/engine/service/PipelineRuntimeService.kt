@@ -54,6 +54,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -110,8 +111,6 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.lock.PipelineBuildHistoryLock
-import com.tencent.devops.process.pojo.app.StartBuildContext
-import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -146,6 +145,7 @@ import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.ReviewParam
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
@@ -161,6 +161,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -218,7 +219,7 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuleService: PipelineRuleService,
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineUrlBean: PipelineUrlBean,
@@ -739,7 +740,6 @@ class PipelineRuntimeService @Autowired constructor(
         triggerReviewers: List<String>? = null
     ): String {
         val now = LocalDateTime.now()
-        val startParamMap = pipelineParamMap.values.associate { it.key to it.value.toString() }
         // 2019-12-16 产品 rerun 需求
         val projectId = pipelineInfo.projectId
         val pipelineId = pipelineInfo.pipelineId
@@ -753,7 +753,13 @@ class PipelineRuntimeService @Autowired constructor(
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
             projectId, pipelineId, buildId, null, null, false
         )
-        val context = StartBuildContext.init(projectId, pipelineId, buildId, version, startParamMap)
+        val context = StartBuildContext.init(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            resourceVersion = version,
+            params = pipelineParamMap.values.associate { it.key to it.value.toString() }
+        )
         buildLogPrinter.startLog(buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -807,7 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                 return@nextStage
             }
 
-            DependOnUtils.initDependOn(stage = stage, params = startParamMap)
+            DependOnUtils.initDependOn(stage = stage, params = context.variables)
             // --- 第2层循环：Container遍历处理 ---
             stage.containers.forEach nextContainer@{ container ->
                 if (container is TriggerContainer) { // 寻找触发点
@@ -840,6 +846,10 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextContainer
                     }
                 }
+
+                modelCheckPlugin.checkJobCondition(container, stage.finally, context.variables)
+                modelCheckPlugin.checkMutexGroup(container, context.variables)
+
                 /* #2318
                     原则：当存在多个失败插件时，进行失败插件重试时，一次只能对单个插件进行重试，其他失败插件不会重试，所以：
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
@@ -894,7 +904,6 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     container = container,
-                    startParamMap = startParamMap,
                     context = context,
                     stage = stage,
                     buildContainers = buildContainersWithDetail,
@@ -1079,7 +1088,7 @@ class PipelineRuntimeService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            version = startParamMap[PIPELINE_VERSION].toString().toInt(),
+                            version = context.variables[PIPELINE_VERSION].toString().toInt(),
                             buildNum = buildNum,
                             trigger = context.startType.name,
                             status = startBuildStatus,
@@ -1091,9 +1100,9 @@ class PipelineRuntimeService @Autowired constructor(
                             parentBuildId = context.parentBuildId,
                             parentTaskId = context.parentTaskId,
                             buildParameters = originStartParams,
-                            webhookType = startParamMap[PIPELINE_WEBHOOK_TYPE],
-                            webhookInfo = getWebhookInfo(startParamMap),
-                            buildMsg = getBuildMsg(startParamMap[PIPELINE_BUILD_MSG]),
+                            webhookType = context.variables[PIPELINE_WEBHOOK_TYPE],
+                            webhookInfo = getWebhookInfo(context.variables),
+                            buildMsg = getBuildMsg(context.variables[PIPELINE_BUILD_MSG]),
                             buildNumAlias = buildNumAlias,
                             concurrencyGroup = concurrencyGroup
                         )
@@ -1196,8 +1205,8 @@ class PipelineRuntimeService @Autowired constructor(
             )
         } else if (triggerReviewers?.isNotEmpty() == true) {
             prepareTriggerReview(
-                userId = startParamMap[PIPELINE_START_USER_ID] ?: pipelineInfo.lastModifyUser,
-                triggerUser = startParamMap[PIPELINE_START_USER_NAME] ?: pipelineInfo.lastModifyUser,
+                userId = context.variables[PIPELINE_START_USER_ID] ?: pipelineInfo.lastModifyUser,
+                triggerUser = context.variables[PIPELINE_START_USER_NAME] ?: pipelineInfo.lastModifyUser,
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
@@ -1461,7 +1470,6 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
-                buildStatus = startBuildStatus,
                 executeCount = context.executeCount
             ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
@@ -2020,6 +2028,25 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             stageStatus = allStageStatus
+        )
+    }
+
+    fun updateRecommendVersion(projectId: String, buildId: String, recommendVersion: String) {
+        pipelineBuildDao.updateRecommendVersion(dslContext, projectId, buildId, recommendVersion)
+    }
+
+    fun updateBuildParameters(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildParameters: Collection<BuildParameters>
+    ): Boolean {
+        return pipelineBuildDao.updateBuildParameters(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            buildParameters = buildParameters
         )
     }
 }

@@ -68,12 +68,13 @@ class TaskDaemon(
         }
         val f1 = executor.submit(this)
         try {
-            f1.get(timeout, TimeUnit.MINUTES) ?: throw TimeoutException("插件执行超时, 超时时间:${timeout}分钟")
+            f1.get(timeout, TimeUnit.MINUTES)
+                ?: throw TimeoutException("Task[${buildTask.elementName}] timeout: $timeout minutes")
         } catch (ignore: TimeoutException) {
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                errorMsg = ignore.message ?: "插件执行超时, 超时时间:${timeout}分钟"
+                errorMsg = ignore.message ?: "Task[${buildTask.elementName}] timeout: $timeout minutes"
             )
         } finally {
             executor.shutdownNow()
