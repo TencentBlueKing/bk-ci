@@ -250,7 +250,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
         }
-        return groupInfoList.sortedBy { it.resourceType }
+        return groupInfoList.sortedByDescending { it.resourceType }
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
