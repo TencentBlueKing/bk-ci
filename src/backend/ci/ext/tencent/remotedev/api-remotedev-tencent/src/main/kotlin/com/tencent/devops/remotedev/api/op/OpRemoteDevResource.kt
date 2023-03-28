@@ -136,7 +136,8 @@ interface OpRemoteDevResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "需要添加的白名单用户", required = true)
+        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @QueryParam("whiteListUser")
         whiteListUser: String
     ): Result<Boolean>
 }
