@@ -137,6 +137,10 @@ object ProcessMessageCode {
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
+    const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
+    const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
+    const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -158,13 +162,13 @@ object ProcessMessageCode {
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
     const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
-    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101105" // 触发不在审核状态中
+    const val ERROR_RECORD_PARSE_FAILED = "2101111" // 解析构建记录出错
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
 
     // 构建时错误
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101113" // bcsInstNum is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101114" // instVersionId is not init
@@ -249,9 +253,6 @@ object ProcessMessageCode {
 
     // 构建机Agent详情链接
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
-
-    // 人工审核插件编辑时输入参数错误
-    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 
     // 标签与标签组错误21014开头
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个

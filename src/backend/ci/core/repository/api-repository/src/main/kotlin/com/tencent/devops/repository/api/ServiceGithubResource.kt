@@ -34,10 +34,12 @@ import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
@@ -76,7 +78,11 @@ interface ServiceGithubResource {
     fun getAccessToken(
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
-        userId: String
+        userId: String,
+        @ApiParam("token 类型", required = false)
+        @QueryParam("tokenType")
+        @DefaultValue("GITHUB_APP")
+        tokenType: GithubTokenType? = GithubTokenType.GITHUB_APP
     ): Result<GithubToken?>
 
     @ApiOperation("获取github文件内容")
