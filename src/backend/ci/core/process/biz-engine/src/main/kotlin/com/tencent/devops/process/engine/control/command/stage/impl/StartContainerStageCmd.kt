@@ -137,7 +137,7 @@ class StartContainerStageCmd(
 
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->
-            val jobCount = container.controlOption?.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
+            val jobCount = container.controlOption.matrixControlOption?.totalCount ?: 1 // MatrixGroup存在裂变计算
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)

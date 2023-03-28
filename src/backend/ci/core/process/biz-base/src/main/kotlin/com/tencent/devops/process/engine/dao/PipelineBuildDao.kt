@@ -385,7 +385,10 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(RECOMMEND_VERSION, recommendVersion)
+
+            if (!recommendVersion.isNullOrBlank()) {
+                baseQuery.set(RECOMMEND_VERSION, recommendVersion)
+            }
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)
@@ -932,11 +935,27 @@ class PipelineBuildDao {
 
     fun getBuildParameters(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
-            val record = dslContext.selectFrom(this)
+            return dslContext.select(BUILD_PARAMETERS)
+                .from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
-            return record?.buildParameters
+                .fetchAny(0, String::class.java)
+        }
+    }
+
+    fun updateBuildParameters(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildParameters: Collection<BuildParameters>
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute() == 1
         }
     }
 
