@@ -18,9 +18,13 @@ func portsStatus(c *gin.Context) {
 		observeB = true
 	}
 
-	err := service.ApiService.Ports.PortStatus(c, observeB)
+	ports, err := service.ApiService.Ports.PortStatus(c, observeB)
 	if err != nil {
 		okFail(c, errorcode.UserError, err)
 		return
+	}
+
+	if !observeB {
+		ok(c, ports)
 	}
 }

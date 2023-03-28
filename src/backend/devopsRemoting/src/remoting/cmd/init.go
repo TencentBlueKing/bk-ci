@@ -5,11 +5,9 @@ import (
 	"common/process"
 	"context"
 	"fmt"
-	"io"
 	"os"
 	"os/exec"
 	"os/signal"
-	"remoting/pkg/config"
 	"strings"
 	"sync"
 	"syscall"
@@ -33,42 +31,26 @@ func newCommandInit() *cobra.Command {
 		Long:  initDesc,
 		Run: func(_ *cobra.Command, _ []string) {
 			logs.Init(Service, Version, true, false)
-			cfg, err := config.GetConfig()
-			if err != nil {
-				logs.WithError(err).Error("init command cannnot load config")
-			}
-			var (
-				sigInput = make(chan os.Signal, 1)
-			)
+
+			sigInput := make(chan os.Signal, 1)
 			signal.Notify(sigInput, os.Interrupt, syscall.SIGTERM)
 
-			runPath, err := os.Executable()
-			if err != nil {
-				runPath = "/.devopsRemoting/devopsRemoting"
-			}
-			runCommand := exec.Command(runPath, "run")
-			runCommand.Args[0] = "devopsRemoting"
-			runCommand.Stdin = os.Stdin
-			runCommand.Stdout = os.Stdout
-			runCommand.Stderr = os.Stderr
-			runCommand.Env = os.Environ()
-			err = runCommand.Start()
+			cmd, err := runRemoting()
 			if err != nil {
 				logs.WithError(err).Error("devopsRemoting run start error")
 				return
 			}
-
 			done := make(chan struct{})
 			go func() {
 				defer close(done)
 
-				err := runCommand.Wait()
+				err := cmd.Wait()
 				if err != nil && !(strings.Contains(err.Error(), "signal: interrupt") || strings.Contains(err.Error(), "no child processes")) {
 					logs.WithError(err).Error("devopsRemoting run error")
 					return
 				}
 			}()
-			// start the reaper to clean up zombie processes
+			// 清理僵尸进程
 			reaper.Reap()
 
 			select {
@@ -77,26 +59,26 @@ func newCommandInit() *cobra.Command {
 				return
 			case <-sigInput:
 				// 收到终止信号后传递给devopsRemoting并等待他结束
-				ctx, cancel := context.WithTimeout(context.Background(), cfg.WorkSpace.GetTerminationGracePeriod())
+				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 				defer cancel()
-				slog := newShutdownLogger()
-				defer slog.Close()
-				slog.write("Shutting down all processes")
+				shutDownLog := newShutdownLogger()
+				defer shutDownLog.Close()
+				shutDownLog.write("shut down all processes")
 
 				terminationDone := make(chan struct{})
 				go func() {
 					defer close(terminationDone)
-					slog.Terminate(ctx, runCommand.Process.Pid)
-					terminateAllOtherProcesses(ctx, slog)
+					shutDownLog.terminate(ctx, cmd.Process.Pid)
+					terminateAllOtherProcesses(ctx, shutDownLog)
 				}()
-				// wait for either successful termination or the timeout
+
 				select {
 				case <-ctx.Done():
-					// Time is up, but we give all the goroutines a bit more time to react to this.
+					// 多余提供一些时间给被终止进程
 					time.Sleep(time.Millisecond * 500)
 				case <-terminationDone:
 				}
-				slog.write("Finished shutting down all processes.")
+				shutDownLog.write("shut down all processes done")
 			}
 		},
 	}
@@ -104,82 +86,96 @@ func newCommandInit() *cobra.Command {
 	return cmd
 }
 
-func newShutdownLogger() shutdownLogger {
-	file := "/data/landun/workspace/.devopsRemoting/devopsRemoting-termination.log"
-	f, err := os.Create(file)
+func runRemoting() (*exec.Cmd, error) {
+	remoting, err := os.Executable()
 	if err != nil {
-		logs.WithError(err).WithField("file", file).Error("Couldn't create shutdown log")
+		remoting = "/.devopsRemoting/devopsRemoting"
 	}
-	result := shutdownLoggerImpl{
-		file:      f,
+	cmd := exec.Command(remoting, "run")
+	cmd.Args[0] = "devopsRemoting"
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.Env = os.Environ()
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+
+	return cmd, nil
+}
+
+func newShutdownLogger() *shutdownLogger {
+	file := "/data/landun/workspace/.devopsRemoting/devopsRemoting-termination.log"
+	fs, err := os.Create(file)
+	if err != nil {
+		logs.WithError(err).WithField("file", file).Error("create shutdown log err")
+	}
+	result := shutdownLogger{
+		file:      fs,
 		startTime: time.Now(),
 	}
 	return &result
 }
 
-type shutdownLogger interface {
-	write(s string)
-	Terminate(ctx context.Context, pid int)
-	io.Closer
-}
-
-type shutdownLoggerImpl struct {
+type shutdownLogger struct {
 	file      *os.File
 	startTime time.Time
 }
 
-func (l *shutdownLoggerImpl) write(s string) {
-	if l.file != nil {
-		_, err := l.file.WriteString(fmt.Sprintf("[%s] %s \n", time.Since(l.startTime), s))
+func (s *shutdownLogger) write(content string) {
+	if s.file != nil {
+		_, err := s.file.WriteString(fmt.Sprintf("[%s] %s \n", time.Since(s.startTime), content))
 		if err != nil {
-			logs.WithError(err).Error("couldn't write to log file")
+			logs.WithError(err).Error("shutdownLogger write error")
 		}
 	} else {
-		logs.Debug(s)
+		logs.Debug(content)
 	}
 }
-func (l *shutdownLoggerImpl) Close() error {
-	return l.file.Close()
+func (s *shutdownLogger) Close() error {
+	return s.file.Close()
 }
-func (l *shutdownLoggerImpl) Terminate(ctx context.Context, pid int) {
+func (s *shutdownLogger) terminate(ctx context.Context, pid int) {
 	proc, err := procfs.NewProc(pid)
 	if err != nil {
-		l.write(fmt.Sprintf("Couldn't obtain process information for PID %d.", pid))
+		s.write(fmt.Sprintf("can not get process info from pid %d.", pid))
 		return
 	}
 	stat, err := proc.Stat()
 	if err != nil {
-		l.write(fmt.Sprintf("Couldn't obtain process information for PID %d.", pid))
+		s.write(fmt.Sprintf("can ot get process info from for pid %d.", pid))
 	} else if stat.State == "Z" {
+		// 僵尸进程
 		return
 	} else {
-		l.write(fmt.Sprintf("Terminating process %s with PID %d (state: %s, cmdlind: %s).", stat.Comm, pid, stat.State, fmt.Sprint(proc.CmdLine())))
+		s.write(fmt.Sprintf("terminate process %s with pid %d (state: %s, cmdlind: %s).", stat.Comm, pid, stat.State, fmt.Sprint(proc.CmdLine())))
 	}
 	err = process.Terminate(ctx, pid)
 	if err != nil {
 		if err == process.ErrKilled {
-			l.write("Terminating process didn't finish, but had to be force killed")
+			s.write("terminate process not finish killed")
 		} else {
-			l.write(fmt.Sprintf("Terminating main process errored: %s", err))
+			s.write(fmt.Sprintf("terminate main process error: %s", err.Error()))
 		}
 	}
 }
 
-// terminateAllProcesses 终止除我们的进程之外的所有进程，直到不再有进程或上下文被取消
+// terminateAllProcesses 终止除remoting的进程之外的所有进程，直到不再有进程或上下文被取消
 // 在上下文取消时，任何仍在运行的进程都会收到一个 SIGKILL
-func terminateAllOtherProcesses(ctx context.Context, slog shutdownLogger) {
+func terminateAllOtherProcesses(ctx context.Context, shutDownLog *shutdownLogger) {
 	for {
 		processes, err := procfs.AllProcs()
 		if err != nil {
-			logs.WithError(err).Error("Cannot list processes")
-			slog.write(fmt.Sprintf("Cannot list processes: %s", err))
+			logs.WithError(err).Error("can not list processes")
+			shutDownLog.write(fmt.Sprintf("can not list processes: %s", err))
 			return
 		}
-		// only one process (must be us)
+		// 只有一个肯定是remoting
 		if len(processes) == 1 {
 			return
 		}
-		// terminate all processes but ourself
+
 		var wg sync.WaitGroup
 		for _, proc := range processes {
 			if proc.PID == os.Getpid() {
@@ -189,7 +185,7 @@ func terminateAllOtherProcesses(ctx context.Context, slog shutdownLogger) {
 			wg.Add(1)
 			go func() {
 				defer wg.Done()
-				slog.Terminate(ctx, p.PID)
+				shutDownLog.terminate(ctx, p.PID)
 			}()
 		}
 		wg.Wait()

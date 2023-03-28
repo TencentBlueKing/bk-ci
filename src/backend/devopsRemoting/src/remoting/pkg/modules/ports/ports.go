@@ -219,7 +219,7 @@ func (pm *PortsManager) getStatus() []*types.PortsStatus {
 		res = append(res, pm.getPortStatus(port))
 	}
 	sort.SliceStable(res, func(i, j int) bool {
-		// Max number of port 65536
+		// port最大为 65536
 		score1 := NON_CONFIGED_BASIC_SCORE + res[i].LocalPort
 		score2 := NON_CONFIGED_BASIC_SCORE + res[j].LocalPort
 		if c, ok := pm.portConfigs.Get(res[i].LocalPort); ok {
@@ -231,7 +231,6 @@ func (pm *PortsManager) getStatus() []*types.PortsStatus {
 		if score1 != score2 {
 			return score1 < score2
 		}
-		// Ranged ports
 		return res[i].LocalPort < res[j].LocalPort
 	})
 	return res
@@ -383,7 +382,7 @@ func startLocalhostProxy(port uint32) (io.Closer, error) {
 
 	dsturl, err := url.Parse("http://" + host)
 	if err != nil {
-		return nil, errors.Errorf("cannot produce proxy destination URL: %s", err.Error())
+		return nil, errors.Errorf("can not create proxy url: %s", err.Error())
 	}
 
 	proxy := httputil.NewSingleHostReverseProxy(dsturl)
@@ -394,8 +393,6 @@ func startLocalhostProxy(port uint32) (io.Closer, error) {
 	}
 	proxy.ErrorHandler = func(rw http.ResponseWriter, req *http.Request, err error) {
 		rw.WriteHeader(http.StatusBadGateway)
-
-		// avoid common warnings
 
 		if errors.Is(err, context.Canceled) {
 			return
@@ -613,7 +610,7 @@ func (pm *PortsManager) nextState(ctx context.Context) map[uint32]*managedPort {
 
 func getOnOpenAction(config *types.PortConfig, port uint32) types.PortsStatusOnOpenAction {
 	if config == nil {
-		// anything above 32767 seems odd (e.g. used by language servers)
+		// 任何高于32767的都很奇怪
 		unusualRange := !(0 < port && port < 32767)
 		wellKnown := port <= 10000
 		if unusualRange || !wellKnown {
@@ -633,7 +630,7 @@ func getOnOpenAction(config *types.PortConfig, port uint32) types.PortsStatusOnO
 	return types.PortsStatusNotify
 }
 
-// clients should guard a call with check whether such port is already exposed or auto exposed
+// 客户应该通过检查此类端口是否已经暴露或自动暴露来保护调用
 func (pm *PortsManager) autoExpose(ctx context.Context, localPort uint32, public bool) *autoExposure {
 	exposingErr := pm.ExposeService.Expose(ctx, localPort, public)
 	autoExpose := &autoExposure{

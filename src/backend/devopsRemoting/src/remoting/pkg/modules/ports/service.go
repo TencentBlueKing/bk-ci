@@ -8,22 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func (m *PortsManager) PortStatus(c *gin.Context, observe bool) error {
+func (m *PortsManager) PortStatus(c *gin.Context, observe bool) (*types.PortsStatusResponse, error) {
 	if !observe {
-		c.Stream(func(_ io.Writer) bool {
-			c.SSEvent("message", &types.PortsStatusResponse{
-				Ports: m.Status(),
-			})
-			return false
-		})
+		return &types.PortsStatusResponse{
+			Ports: m.Status(),
+		}, nil
 	}
 
 	sub, err := m.Subscribe()
 	if err == ErrTooManySubscriptions {
-		return errors.New("too many subscriptions")
+		return nil, errors.New("too many subscriptions")
 	}
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer sub.Close()
 
@@ -44,5 +41,5 @@ func (m *PortsManager) PortStatus(c *gin.Context, observe bool) error {
 		}
 	})
 
-	return nil
+	return nil, nil
 }

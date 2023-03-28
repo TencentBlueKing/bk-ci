@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
-	"time"
 
 	"github.com/Netflix/go-env"
 	"github.com/pkg/errors"
@@ -103,10 +102,6 @@ func loadWorkspaceConfigFromEnv() (*WorkspaceConfig, error) {
 	}
 
 	return &res, nil
-}
-
-func (c WorkspaceConfig) GetTerminationGracePeriod() time.Duration {
-	return 15 * time.Second
 }
 
 const WorkspaceLogRateLimitMin = 50

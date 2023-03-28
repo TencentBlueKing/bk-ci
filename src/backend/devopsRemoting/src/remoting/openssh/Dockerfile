@@ -19,10 +19,10 @@
 # OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
-# This Dockerfile was taken from https://github.com/ep76/docker-openssh-static and adapted.
-FROM alpine:3.16 AS builder
+# docker文件来自https://github.com/ep76/docker-openssh-static
+FROM alpine:3.17 AS builder
 
-ARG openssh_url=https://github.com/openssh/openssh-portable/archive/refs/tags/V_9_0_P1.tar.gz
+ARG openssh_url=https://github.com/openssh/openssh-portable/archive/refs/tags/V_9_2_P1.tar.gz
 
 WORKDIR /build
 

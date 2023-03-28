@@ -47,7 +47,6 @@ func StartSSHServer(ctx context.Context, cfg *config.Config, wg *sync.WaitGroup,
 	}()
 }
 
-// ListenAndServe listens on the TCP network address laddr and then handle packets on incoming connections.
 func (s *sshServer) listenAndServe() error {
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%v", s.cfg.Config.SSHPort))
 	if err != nil {
@@ -90,10 +89,10 @@ func (s *sshServer) handleConn(ctx context.Context, conn net.Conn) {
 		"-oPermitUserEnvironment yes",
 		"-oHostKey " + s.sshkey,
 		"-oPidFile none",
-		"-oUseDNS no", // Disable DNS lookups.
+		"-oUseDNS no",
 		"-oSubsystem sftp internal-sftp",
-		"-oStrictModes no", // don't care for home directory and file permissions
-		"-oLogLevel DEBUG", // enabled DEBUG mode by default
+		"-oStrictModes no",
+		"-oLogLevel DEBUG",
 	}
 
 	envs := make([]string, 0)

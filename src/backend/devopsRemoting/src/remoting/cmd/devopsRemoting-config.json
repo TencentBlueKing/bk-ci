@@ -1,6 +1,0 @@
-{
-  "desktopIdeConfigLocation": "/data/ruotiantang/projects/ruotian/remoting/supervior-demo/ide/vscode-desktop/devopsRemoting-ide-desktop-config.json",
-  "apiServerPort": 22999,
-  "sshPort": 23001,
-  "backendHost": "http://dev.devops.woa.com"
-}

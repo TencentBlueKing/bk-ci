@@ -80,7 +80,7 @@ func Run() {
 	// 内部应用端口
 	internalPorts := []uint32{uint32(ide.DesktopIDEPort), uint32(remotingConfig.Config.APIServerPort), uint32(remotingConfig.Config.SSHPort)}
 	if remotingConfig.IDE != nil {
-		internalPorts = append(internalPorts, ide.DesktopIDEPort)
+		internalPorts = append(internalPorts, uint32(remotingConfig.WorkSpace.IDEPort))
 	}
 
 	var (
