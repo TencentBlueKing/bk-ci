@@ -27,7 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.annotation.BkI18n
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.Label
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -35,7 +36,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("流水线-插件信息")
 data class AtomRespItem(
     @ApiModelProperty("插件名称", required = true)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
@@ -60,7 +61,7 @@ data class AtomRespItem(
     @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: String,
     @ApiModelProperty("插件简介", required = false)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("插件说明文档链接", required = false)
     val docsLink: String?,
@@ -71,7 +72,7 @@ data class AtomRespItem(
         "|UNDERCARRIAGED：已下架", required = true)
     val atomStatus: String,
     @ApiModelProperty("插件描述", required = false)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("发布者")
     val publisher: String?,

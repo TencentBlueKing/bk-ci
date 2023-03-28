@@ -75,7 +75,40 @@ import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
-import com.tencent.devops.store.pojo.common.*
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
+import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
+import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
+import com.tencent.devops.store.pojo.common.KEY_AVG_SCORE
+import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
+import com.tencent.devops.store.pojo.common.KEY_CATEGORY
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
+import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
+import com.tencent.devops.store.pojo.common.KEY_ICON
+import com.tencent.devops.store.pojo.common.KEY_ID
+import com.tencent.devops.store.pojo.common.KEY_INSTALLER
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
+import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
+import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
+import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
+import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
+import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
+import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
+import com.tencent.devops.store.pojo.common.KEY_MODIFIER
+import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
+import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
+import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
+import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
+import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReasonTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -300,7 +333,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 JsonUtil.getObjectMapper().readValue(it[KEY_OS] as String, ArrayList::class.java) as ArrayList<String>
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = MessageUtil.getMessageByLocale(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
@@ -500,21 +533,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             } else {
                 val atomClassify = classifyService.getClassify(pipelineAtomRecord.classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
-                val atomLabelList = mutableListOf<Label>()
-                // 查询插件标签信息
-                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, setOf(pipelineAtomRecord.id))
-                atomLabelRecords?.forEach {
-                    atomLabelList.add(
-                        Label(
-                            it[KEY_LABEL_ID] as String,
-                            it[KEY_LABEL_CODE] as String,
-                            it[KEY_LABEL_NAME] as String,
-                            StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
-                            (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
-                            (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
-                        )
-                    )
-                }
+                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
@@ -609,10 +628,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
                 val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = MessageUtil.getCodeLanMessage(
-                    messageCode = "$storeAtomStatusPrefix$atomStatusName",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                val atomStatusMsg = MessageCodeUtil.getCodeLanMessage("$storeAtomStatusPrefix$atomStatusName")
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
@@ -875,27 +891,30 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installType == StoreProjectTypeEnum.TEST.type.toByte()
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
-                defaultMessage = classifyName,
-                language = I18nUtil.getLanguage(userId)
+            val classifyLanName = MessageUtil.getMessageByLocale(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                defaultMessage = classifyName
             )
-            result.add(InstalledAtom(
-                atomId = it[KEY_ID] as String,
-                atomCode = atomCode,
-                name = it[NAME] as String,
-                logoUrl = it[KEY_LOGO_URL] as? String,
-                classifyCode = atomClassifyCode,
-                classifyName = classifyLanName,
-                category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
-                summary = it[KEY_SUMMARY] as? String,
-                publisher = it[KEY_PUBLISHER] as? String,
-                installer = installer,
-                installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
-                installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
-                pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
-                hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
-            ))
+            result.add(
+                InstalledAtom(
+                    atomId = it[KEY_ID] as String,
+                    atomCode = atomCode,
+                    version = it[KEY_VERSION] as String,
+                    name = it[NAME] as String,
+                    logoUrl = it[KEY_LOGO_URL] as? String,
+                    classifyCode = atomClassifyCode,
+                    classifyName = classifyLanName,
+                    category = AtomCategoryEnum.getAtomCategory((it[KEY_CATEGORY] as Byte).toInt()),
+                    summary = it[KEY_SUMMARY] as? String,
+                    publisher = it[KEY_PUBLISHER] as? String,
+                    installer = installer,
+                    installTime = DateTimeUtil.toDateTime(it[KEY_INSTALL_TIME] as LocalDateTime),
+                    installType = StoreProjectTypeEnum.getProjectType((it[KEY_INSTALL_TYPE] as Byte).toInt()),
+                    pipelineCnt = pipelineStat?.get(atomCode) ?: 0,
+                    hasPermission = !isInitTest && (hasManagerPermission || installer == userId)
+                )
+            )
         }
         return Page(page, pageSize, count.toLong(), result)
     }
@@ -918,15 +937,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val installer = it[KEY_INSTALLER] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = classifyName
             )
             // 判断项目是否是初始化项目或者调试项目
             InstalledAtom(
                 atomId = it[KEY_ID] as String,
                 atomCode = atomCode,
+                version = it[KEY_VERSION] as String,
                 name = it[NAME] as String,
                 logoUrl = it[KEY_LOGO_URL] as? String,
                 classifyCode = classifyCode,
@@ -947,6 +966,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             InstalledAtom(
                 atomId = it.id,
                 atomCode = it.atomCode,
+                version = it[KEY_VERSION] as String,
                 name = it.name,
                 logoUrl = it.logoUrl,
                 classifyCode = "",

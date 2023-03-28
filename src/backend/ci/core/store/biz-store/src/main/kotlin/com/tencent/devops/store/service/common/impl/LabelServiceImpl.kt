@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
@@ -178,10 +179,10 @@ class LabelServiceImpl @Autowired constructor(
      */
     override fun addLabelToLabelList(it: Record, labelList: MutableList<Label>) {
         val labelCode = it[KEY_LABEL_CODE] as String
-        val storeType = StoreTypeEnum.getStoreTypeObj((it[KEY_LABEL_TYPE] as Byte).toInt())
+        val labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt())
         val labelName = it[KEY_LABEL_NAME] as String
-        val labelLanName = MessageUtil.getCodeLanMessage(
-            messageCode = "${storeType?.name}.label.$labelCode",
+        val labelLanName = MessageUtil.getMessageByLocale(
+            messageCode = "$labelType.label.$labelCode",
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             defaultMessage = labelName
         )
@@ -190,7 +191,7 @@ class LabelServiceImpl @Autowired constructor(
                 id = it[KEY_LABEL_ID] as String,
                 labelCode = labelCode,
                 labelName = labelLanName,
-                labelType = storeType?.name ?: "",
+                labelType = labelType,
                 createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )

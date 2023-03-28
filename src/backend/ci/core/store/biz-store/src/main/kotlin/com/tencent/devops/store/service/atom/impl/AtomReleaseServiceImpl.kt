@@ -305,7 +305,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
-        val updateRequestDataMap = storeI18nMessageService.parseJsonMap(
+        val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
             jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest),
@@ -346,7 +346,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 getAtomConfResult.errorParams
             )
         }
-        val taskDataMap = storeI18nMessageService.parseJsonMap(
+        val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
@@ -591,7 +591,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         throw ErrorCodeException(errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID)
                     }
                 }
-                storeI18nMessageService.parseErrorCode(
+                storeI18nMessageService.parseErrorCodeI18nInfo(
                     userId = userId,
                     projectCode = projectCode,
                     errorCodes = errorCodes,
@@ -631,7 +631,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 branch = branch
             )
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
-                val qualityDataMap = storeI18nMessageService.parseJsonMap(
+                val qualityDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
                     userId = userId,
                     projectCode = projectCode,
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),

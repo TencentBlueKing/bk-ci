@@ -36,7 +36,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TContainerRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.dao.container.ContainerDao
@@ -146,11 +145,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val typeList = mutableListOf<ContainerBuildType>()
             BuildType.values().filter { type -> type.visable == true }.forEach { type ->
                 if ((containerOS == null || type.osList.contains(containerOS)) && buildTypeEnable(type, projectCode)) {
-                    // 构建资源国际化转换
-                    val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
-                        defaultMessage = type.value
-                    )
                     var enableFlag: Boolean? = null
                     if (buildTypeConfig != null) {
                         val buildTypeConfigMap = JsonUtil.toMap(buildTypeConfig)
@@ -159,7 +153,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                     }
                     typeList.add(ContainerBuildType(
                         type = type.name,
-                        name = i18nTypeName,
+                        name = type.name,
                         enableApp = type.enableApp,
                         disabled = !clickable(buildType = type, projectCode = projectCode, enableFlag = enableFlag),
                         defaultBuildResource = buildResourceService.getDefaultBuildResource(type)

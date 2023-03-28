@@ -28,7 +28,8 @@
 package com.tencent.devops.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.tencent.devops.common.api.annotation.BkI18n
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,7 +44,7 @@ data class Result<out T>(
     @ApiModelProperty("错误信息", required = false)
     val message: String? = null,
     @ApiModelProperty("数据", required = false)
-    @BkI18n
+    @BkFieldI18n
     val data: T? = null
 ) {
     constructor(data: T) : this(0, null, data)

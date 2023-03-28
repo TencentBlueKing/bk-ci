@@ -1095,7 +1095,7 @@ class AtomDao : AtomBaseDao() {
     ): Result<out Record>? {
 
         val (ta, tspr, conditions) = getInstalledConditions(projectCode, classifyCode, name, dslContext)
-        val tc = TClassify.T_CLASSIFY.`as`("tc")
+        val tc = TClassify.T_CLASSIFY
         // 查找每组atomCode最新的记录
         val t = dslContext.select(ta.ATOM_CODE.`as`(KEY_ATOM_CODE), DSL.max(ta.CREATE_TIME).`as`(KEY_CREATE_TIME))
             .from(ta).groupBy(ta.ATOM_CODE)
@@ -1103,6 +1103,7 @@ class AtomDao : AtomBaseDao() {
         val sql = dslContext.select(
             ta.ID.`as`(KEY_ID),
             ta.ATOM_CODE.`as`(KEY_ATOM_CODE),
+            ta.VERSION.`as`(KEY_VERSION),
             ta.NAME.`as`(NAME),
             ta.LOGO_URL.`as`(KEY_LOGO_URL),
             ta.CATEGROY.`as`(KEY_CATEGORY),
