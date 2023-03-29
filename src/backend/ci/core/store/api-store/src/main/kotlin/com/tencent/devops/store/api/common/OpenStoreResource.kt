@@ -67,15 +67,4 @@ interface OpenStoreResource {
         @PathParam("storeType")
         storeType: StoreTypeEnum
     ): Result<Boolean>
-
-    @ApiOperation("新增插件通用错误码")
-    @POST
-    @Path("/Genera/errorCodeInfo/add")
-    fun createGeneralErrorCode(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("插件自定义错误码信息", required = true)
-        storeErrorCodeInfo: StoreErrorCodeInfo
-    ): Result<Boolean>
 }

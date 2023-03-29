@@ -79,8 +79,4 @@ class OpenStoreResourceImpl @Autowired constructor(
                 )
         )
     }
-
-    override fun createGeneralErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
-        return marketAtomErrorCodeService.createErrorCode(userId, storeErrorCodeInfo)
-    }
 }
