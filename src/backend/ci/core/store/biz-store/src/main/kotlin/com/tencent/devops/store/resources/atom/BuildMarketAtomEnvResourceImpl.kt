@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.resources.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.BuildMarketAtomEnvResource
@@ -39,6 +40,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
     BuildMarketAtomEnvResource {
 
+    @BkInterfaceI18n(
+        fixKeyPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"]
+    )
     override fun getAtomEnv(
         projectCode: String,
         atomCode: String,

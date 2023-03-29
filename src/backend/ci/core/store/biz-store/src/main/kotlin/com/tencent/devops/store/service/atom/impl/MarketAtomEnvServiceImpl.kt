@@ -62,6 +62,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
@@ -85,6 +86,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val marketAtomDao: MarketAtomDao,
     private val atomService: AtomService,
     private val marketAtomCommonService: MarketAtomCommonService,
+    private val storeI18nMessageService: StoreI18nMessageService,
     private val redisOperation: RedisOperation
 ) : MarketAtomEnvService {
 
@@ -387,7 +389,16 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     publicFlag = atomBaseInfoRecord[tAtom.DEFAULT_FLAG] as Boolean,
                     summary = atomBaseInfoRecord[tAtom.SUMMARY],
                     docsLink = atomBaseInfoRecord[tAtom.DOCS_LINK],
-                    props = props,
+                    props = props?.let {
+                        storeI18nMessageService.parseJsonStrI18nInfo(
+                            jsonStr = it,
+                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                                storeType = StoreTypeEnum.ATOM,
+                                storeCode = atomCode,
+                                version = atomBaseInfoRecord[tAtom.VERSION]
+                            )
+                        )
+                    },
                     buildLessRunFlag = atomBaseInfoRecord[tAtom.BUILD_LESS_RUN_FLAG],
                     createTime = createTime.timestampmilli(),
                     updateTime = updateTime.timestampmilli(),

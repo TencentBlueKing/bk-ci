@@ -44,5 +44,7 @@ data class I18nFieldInfo(
     @ApiModelProperty("字段前缀名称")
     val keyPrefixName: String = "",
     @ApiModelProperty("是否复用接口定义的公共前缀")
-    val reusePrefixFlag: Boolean = true
+    val reusePrefixFlag: Boolean = true,
+    @ApiModelProperty("字段转换名称")
+    val convertName: String = ""
 )

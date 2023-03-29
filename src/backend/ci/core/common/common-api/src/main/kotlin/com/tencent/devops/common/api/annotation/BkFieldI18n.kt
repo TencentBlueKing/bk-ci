@@ -38,5 +38,6 @@ annotation class BkFieldI18n(
     val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES, // 翻译信息来源（默认来源于资源文件）
     val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME, // 翻译类型（默认基于字段名称进行翻译）
     val keyPrefixName: String = "", // 字段前缀名称
-    val reusePrefixFlag: Boolean = true //是否复用接口定义的公共前缀
+    val reusePrefixFlag: Boolean = true, //是否复用接口定义的公共前缀
+    val convertName: String = "" // 字段转换名称（当translateType为NAME时，返回报文的字段名称需要转换时使用）
 )

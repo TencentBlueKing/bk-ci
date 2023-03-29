@@ -46,7 +46,10 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomService) :
     UserAtomResource {
 
-    @BkInterfaceI18n
+    @BkInterfaceI18n(
+        fixKeyPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"]
+    )
     override fun getPipelineAtom(
         projectCode: String,
         atomCode: String,

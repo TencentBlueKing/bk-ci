@@ -84,4 +84,19 @@ interface I18nMessageService {
         keys: List<String>,
         language: String
     ): List<I18nMessage>?
+
+    /**
+     * 查询国际化信息集合
+     * @param userId 用户ID
+     * @param moduleCode 模块标识
+     * @param keyPrefix 字段key前缀
+     * @param language 国际化语言信息
+     * @return 国际化信息
+     */
+    fun getI18nMessages(
+        userId: String,
+        moduleCode: SystemModuleEnum,
+        keyPrefix: String,
+        language: String
+    ): List<I18nMessage>?
 }

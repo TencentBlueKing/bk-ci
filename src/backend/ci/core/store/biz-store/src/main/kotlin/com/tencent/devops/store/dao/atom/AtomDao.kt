@@ -1137,16 +1137,16 @@ class AtomDao : AtomBaseDao() {
         name: String?,
         dslContext: DSLContext
     ): Triple<TAtom, TStoreProjectRel, MutableList<Condition>> {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
+        val ta = TAtom.T_ATOM
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
         val conditions = mutableListOf<Condition>()
         conditions.add(tspr.PROJECT_CODE.eq(projectCode))
         conditions.add(tspr.STORE_TYPE.eq(0))
         if (!classifyCode.isNullOrEmpty()) {
-            val a = TClassify.T_CLASSIFY.`as`("a")
-            val classifyId = dslContext.select(a.ID)
-                .from(a)
-                .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
+            val tClassify = TClassify.T_CLASSIFY
+            val classifyId = dslContext.select(tClassify.ID)
+                .from(tClassify)
+                .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
                 .fetchOne(0, String::class.java)
             conditions.add(ta.CLASSIFY_ID.eq(classifyId))
         }
@@ -1170,10 +1170,10 @@ class AtomDao : AtomBaseDao() {
             }
             val classifyCode = atomBaseInfoUpdateRequest.classifyCode
             if (null != classifyCode) {
-                val a = TClassify.T_CLASSIFY.`as`("a")
-                val classifyId = dslContext.select(a.ID)
-                    .from(a)
-                    .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(0)))
+                val tClassify = TClassify.T_CLASSIFY
+                val classifyId = dslContext.select(tClassify.ID)
+                    .from(tClassify)
+                    .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(0)))
                     .fetchOne(0, String::class.java)
                 baseStep.set(CLASSIFY_ID, classifyId)
             }
@@ -1215,14 +1215,6 @@ class AtomDao : AtomBaseDao() {
         return with(TAtom.T_ATOM) {
             dslContext.selectFrom(this)
                 .where(ATOM_TYPE.eq(AtomTypeEnum.SELF_DEVELOPED.type.toByte()))
-                .fetch()
-        }
-    }
-
-    fun getDefaultAtoms(dslContext: DSLContext, atomList: List<String>): Result<TAtomRecord>? {
-        return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
                 .fetch()
         }
     }

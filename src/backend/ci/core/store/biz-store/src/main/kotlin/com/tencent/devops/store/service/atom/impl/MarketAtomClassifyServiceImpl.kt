@@ -28,8 +28,10 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
@@ -40,6 +42,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
 import com.tencent.devops.store.service.common.AbstractClassifyService
 import com.tencent.devops.store.service.common.ClassifyService
@@ -82,8 +85,9 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             val id = it[KEY_ID] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            val classifyLanName = MessageUtil.getMessageByLocale(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             val atomNum = it["atomNum"] as? Int
@@ -91,12 +95,12 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             val updateTime = it[KEY_UPDATE_TIME] as LocalDateTime
             marketAtomClassifyList.add(
                 MarketAtomClassify(
-                    id,
-                    classifyCode,
-                    classifyLanName,
-                    atomNum ?: 0,
-                    createTime.timestampmilli(),
-                    updateTime.timestampmilli()
+                    id = id,
+                    classifyCode = classifyCode,
+                    classifyName = classifyLanName,
+                    atomNum = atomNum ?: 0,
+                    createTime = createTime.timestampmilli(),
+                    updateTime = updateTime.timestampmilli()
                 )
             )
         }
@@ -110,6 +114,7 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             Result(classifyRecord?.let {
                 AtomClassifyInfo(
                     atomCode = atomRecord.atomCode,
+                    version = atomRecord.version,
                     atomName = atomRecord.name,
                     classifyCode = it.classifyCode,
                     classifyName = it.classifyName

@@ -310,7 +310,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             projectCode = projectCode,
             jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest),
             fileDir = "$atomCode/$version",
-            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
             repositoryHashId = atomRecord.repositoryHashId
         )
         val convertUpdateRequest = JsonUtil.mapTo(updateRequestDataMap, MarketAtomUpdateRequest::class.java)
@@ -351,7 +351,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
             fileDir = "$atomCode/$version",
-            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
             repositoryHashId = atomRecord.repositoryHashId
         )
         // 校验前端传的版本号是否正确
@@ -636,7 +636,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     projectCode = projectCode,
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),
                     fileDir = "$atomCode/$atomVersion",
-                    keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
+                    keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
                     repositoryHashId = repositoryHashId
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
