@@ -35,29 +35,29 @@ REPLACE INTO  `T_AUTH_GROUP_PERSSION` (`ID`, `AUTH_ACTION`, `GROUP_CODE`, `CREAT
 REPLACE INTO  `T_AUTH_GROUP_PERSSION` (`ID`, `AUTH_ACTION`, `GROUP_CODE`, `CREATE_USER`, `UPDATE_USER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES  ("aed4275ee6f948f9a6049ffa6da35593","node_delete","ciAdmin","system",'',"2020-06-25 17:13:58",NULL);
 REPLACE INTO  `T_AUTH_GROUP_PERSSION` (`ID`, `AUTH_ACTION`, `GROUP_CODE`, `CREATE_USER`, `UPDATE_USER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES  ("1bc8bc33341149f78a049e1a43c99f20","node_use","ciAdmin","system",'',"2020-06-25 17:13:58",NULL);
 
-REPLACE INTO  T_AUTH_RESOURCE_TYPE (RESOURCE_TYPE, NAME, ENGLISH_NAME, `DESC`, ENGLISH_DESC, PARENT, `SYSTEM`, CREATE_USER, UPDATE_USER, `DELETE`) VALUES
-        (1, 'project', '项目', 'Project', '项目', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (2, 'pipeline', '流水线', 'Pipeline', '流水线', 'Pipeline', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (3, 'pipeline_group', '流水线组', 'Pipeline Group', '流水线组', 'Pipeline Group', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (4, 'repertory', '代码库', 'Repository', '代码库', 'Repository', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (5, 'credential', '凭据', 'Credential', '凭据', 'Credential', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (6, 'cert', '证书', 'Cert', '证书', 'Cert', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (7, 'environment', '环境', 'Environment', '环境', 'Environment', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (8, 'env_node', '节点', 'Node', '节点', 'Node', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (9, 'codecc_task', 'CodeCC任务', 'Codecc Task', 'CodeCC任务', 'Codecc Task', 'project', 'bk_ci_rbac', 'system',null, 0),
-        (10, 'codecc_rule_set', 'CodeCC规则集', 'Codecc Rule Set', 'CodeCC规则集', 'Codecc Rule Set', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (11, 'codecc_ignore_type', 'CodeCC忽略类型', 'Codecc Ignore Type', 'CodeCC忽略类型', 'Codecc Ignore Type', 'project', 'bk_ci_rbac', 'system',null, 0),
-        (12, 'experience_task', '版本体验任务', 'Experience Task', '版本体验任务', 'Experience Task', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (13, 'experience_group', '版本体验用户组', 'Experience Group', '版本体验用户组', 'Experience Group', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (14, 'rule', '质量红线规则', 'Andon Rule', '质量红线规则', 'Andon Rule', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (15, 'quality_group', '质量红线通知组', 'Andon Notice Group', '质量红线通知组', 'Andon Notice Group', 'project', 'bk_ci_rbac', 'system', null, 0);
+REPLACE INTO  T_AUTH_RESOURCE_TYPE (`ID`, RESOURCE_TYPE, NAME, ENGLISH_NAME, `DESC`, ENGLISH_DESC, PARENT, `SYSTEM`, CREATE_USER, UPDATE_USER, `DELETE`) VALUES
+        (1, 'project', 'Project', 'Project', 'Project', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (2, 'pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (3, 'pipeline_group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (4, 'repertory', 'Repository', 'Repository', 'Repository', 'Repository', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (5, 'credential', 'Credential', 'Credential', 'Credential', 'Credential', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (6, 'cert', 'Cert', 'Cert', 'Cert', 'Cert', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (7, 'environment', 'Environment', 'Environment', 'Environment', 'Environment', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (8, 'env_node', 'Node', 'Node', 'Node', 'Node', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (9, 'codecc_task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'project', 'bk_ci_rbac', 'system',null, 0),
+        (10, 'codecc_rule_set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (11, 'codecc_ignore_type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'project', 'bk_ci_rbac', 'system',null, 0),
+        (12, 'experience_task', 'Experience Task', 'Experience Task', 'Experience Task', 'Experience Task', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (13, 'experience_group', 'Experience Group', 'Experience Group', 'Experience Group', 'Experience Group', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (14, 'rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (15, 'quality_group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'project', 'bk_ci_rbac', 'system', null, 0);
 REPLACE INTO  T_AUTH_ACTION(`ACTION`, RESOURCE_TYPE, RELATED_RESOURCE_TYPE, ACTION_NAME, ENGLISH_NAME, CREATE_USER, `DELETE`, ACTION_TYPE) VALUES
-        ('project_visit', 'project', 'project', '访问项目', 'Project Visit', 'system', 0, 'view'),
-        ('project_view', 'project', 'project', '查看项目', 'Project View', 'system', 0, 'view'),
-        ('project_edit', 'project', 'project', '编辑项目', 'Project Edit', 'system', 0, 'edit'),
-        ('project_enable', 'project', 'project', '禁用/启用项目', 'Project Enable', 'system', 0, 'edit'),
-        ('project_list', 'project', 'project', '项目列表', 'Project List', 'system', 0, 'view'),
-        ('project_manage', 'project', 'project', '项目权限管理', 'Project Manage', 'system', 0, 'edit'),
+        ('project_visit', 'project', 'project', 'Project Visit', 'Project Visit', 'system', 0, 'view'),
+        ('project_view', 'project', 'project', 'project View', 'Project View', 'system', 0, 'view'),
+        ('project_edit', 'project', 'project', 'Project Edit', 'Project Edit', 'system', 0, 'edit'),
+        ('project_enable', 'project', 'project', 'Project Enable', 'Project Enable', 'system', 0, 'edit'),
+        ('project_list', 'project', 'project', 'Project List', 'Project List', 'system', 0, 'view'),
+        ('project_manage', 'project', 'project', 'Project Manage', 'Project Manage', 'system', 0, 'edit'),
 
         ('pipeline_view', 'pipeline', 'pipeline', 'Pipeline View', 'Pipeline View', 'system', 0, 'view'),
         ('pipeline_edit', 'pipeline', 'pipeline', 'Pipeline Edit', 'Pipeline Edit', 'system', 0, 'edit'),
