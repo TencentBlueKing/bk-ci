@@ -46,8 +46,8 @@ spring:
         name: T_ERROR_CODE_INFO
         broadcastFlag: true
       - index: 12
-          name: T_ATOM_INDEX_STATISTICS_DAILY
-          broadcastFlag: true
+        name: T_ATOM_INDEX_STATISTICS_DAILY
+        broadcastFlag: true
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21990
 server:
