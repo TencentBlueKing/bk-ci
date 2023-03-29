@@ -514,8 +514,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 createTime = it.createTime,
                 updateTime = currentTime
             )
-        } ?: saveAtomIndexStatisticsDailyPOs
-            .firstOrNull { it.atomCode == atomCode } ?: SaveAtomIndexStatisticsDailyPO(
+        } ?: saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode } ?: SaveAtomIndexStatisticsDailyPO(
             id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
             atomCode = taskMetricsData.atomCode,
