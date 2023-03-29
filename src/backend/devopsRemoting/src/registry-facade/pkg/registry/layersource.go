@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"bytes"
 	"common/logs"
 	"compress/gzip"
 	"context"
@@ -8,14 +9,26 @@ import (
 	"io/fs"
 	"os"
 	"registry/api"
+	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/pkg/errors"
+	"golang.org/x/xerrors"
 
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/remotes"
+	lru "github.com/hashicorp/golang-lru"
 	"github.com/opencontainers/go-digest"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
+)
+
+const (
+	// labelSkipNLayer 是图像上的标签，它告诉 registry-facade 丢弃第一个 N 层
+	// 如果这个标签的值
+	// - 不是数字（无法被 strconv.ParseUint 解析），registry-facade 无法使用图像
+	// - 大于图像中的层数，图像被认为是空的（即没有层）
+	labelSkipNLayer = "skip-n.registry-facade.devops.remoting"
 )
 
 type LayerSource interface {
@@ -139,15 +152,6 @@ func NewFileLayerSource(ctx context.Context, file ...string) (FileLayerSource, e
 	}
 
 	return res, nil
-}
-
-// EnvModifier 修改镜像env配置
-type EnvModifier func(*ParsedEnvs)
-
-// ParsedEnvs 解析镜像env配置
-type ParsedEnvs struct {
-	keys   []string
-	values map[string]string
 }
 
 type imagebackedLayer struct {
@@ -287,6 +291,20 @@ func NewStaticSourceFromImage(ctx context.Context, resolver remotes.Resolver, re
 	}, nil
 }
 
+// getSkipNLabelValue 返回 LabelSkipNLayer 标签的解析标签值
+func getSkipNLabelValue(cfg *ociv1.ImageConfig) (skipN int, err error) {
+	v, ok := cfg.Labels[labelSkipNLayer]
+	if !ok {
+		return 0, nil
+	}
+
+	vi, err := strconv.ParseUint(v, 10, 16)
+	if err != nil {
+		return 0, xerrors.Errorf("skipN layer label: %w", err)
+	}
+	return int(vi), nil
+}
+
 // CompositeLayerSource 用来添加不同源的层
 type CompositeLayerSource []LayerSource
 
@@ -336,6 +354,340 @@ func (cs CompositeLayerSource) GetBlob(ctx context.Context, spec *api.ImageSpec,
 
 	err = errdefs.ErrNotFound
 	return
+}
+
+// RefSource extracts an image reference from an image spec
+type RefSource func(*api.ImageSpec) (ref []string, err error)
+
+// NewSpecMappedImageSource creates a new spec mapped image source
+func NewSpecMappedImageSource(resolver ResolverProvider, refSource RefSource) (*SpecMappedImagedSource, error) {
+	cache, err := lru.New(128)
+	if err != nil {
+		return nil, err
+	}
+	return &SpecMappedImagedSource{
+		RefSource: refSource,
+		Resolver:  resolver,
+		cache:     cache,
+	}, nil
+}
+
+// SpecMappedImagedSource provides layers from other images based on the image spec
+type SpecMappedImagedSource struct {
+	RefSource RefSource
+	Resolver  ResolverProvider
+
+	// TODO: add ttl
+	cache *lru.Cache
+}
+
+func (src *SpecMappedImagedSource) Name() string {
+	return "specmapped"
+}
+
+// Envs returns the list of env modifiers
+func (src *SpecMappedImagedSource) Envs(ctx context.Context, spec *api.ImageSpec) ([]EnvModifier, error) {
+	lsrcs, err := src.getDelegate(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+	var res []EnvModifier
+	for _, lsrc := range lsrcs {
+		if lsrc == nil {
+			continue
+		}
+		envs, err := lsrc.Envs(ctx, spec)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, envs...)
+	}
+	return res, nil
+}
+
+// GetLayer returns the list of all layers from this source
+func (src *SpecMappedImagedSource) GetLayer(ctx context.Context, spec *api.ImageSpec) ([]AddonLayer, error) {
+	lsrcs, err := src.getDelegate(ctx, spec)
+	if err != nil {
+		return nil, err
+	}
+	var res []AddonLayer
+	for _, lsrc := range lsrcs {
+		if lsrc == nil {
+			continue
+		}
+		ls, err := lsrc.GetLayer(ctx, spec)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res, ls...)
+	}
+	return res, nil
+}
+
+// HasBlob checks if a digest can be served by this blob source
+func (src *SpecMappedImagedSource) HasBlob(ctx context.Context, spec *api.ImageSpec, dgst digest.Digest) bool {
+	lsrcs, err := src.getDelegate(ctx, spec)
+	if err != nil {
+		return false
+	}
+	for _, lsrc := range lsrcs {
+		if lsrc == nil {
+			continue
+		}
+		if lsrc.HasBlob(ctx, spec, dgst) {
+			return true
+		}
+	}
+	return false
+}
+
+// GetBlob provides access to a blob. If a ReadCloser is returned the receiver is expected to
+// call close on it eventually.
+func (src *SpecMappedImagedSource) GetBlob(ctx context.Context, spec *api.ImageSpec, dgst digest.Digest) (dontCache bool, mediaType string, url string, data io.ReadCloser, err error) {
+	lsrcs, err := src.getDelegate(ctx, spec)
+	if err != nil {
+		return
+	}
+	for _, lsrc := range lsrcs {
+		if lsrc == nil {
+			continue
+		}
+		if lsrc.HasBlob(ctx, spec, dgst) {
+			return lsrc.GetBlob(ctx, spec, dgst)
+		}
+	}
+	err = errdefs.ErrNotFound
+	return
+}
+
+// getDelegate returns the cached layer source delegate computed from the image spec
+func (src *SpecMappedImagedSource) getDelegate(ctx context.Context, spec *api.ImageSpec) ([]LayerSource, error) {
+	refs, err := src.RefSource(spec)
+	if err != nil {
+		return nil, err
+	}
+	layers := make([]LayerSource, len(refs))
+
+	for i, ref := range refs {
+		if ref == "" {
+			continue
+		}
+		if s, ok := src.cache.Get(ref); ok {
+			layers[i] = s.(LayerSource)
+			continue
+		}
+		lsrc, err := NewStaticSourceFromImage(ctx, src.Resolver(), ref)
+		if err != nil {
+			return nil, err
+		}
+		src.cache.Add(ref, lsrc)
+		layers[i] = lsrc
+	}
+	return layers, nil
+}
+
+// NewContentLayerSource creates a new layer source providing the content layer of an image spec
+func NewContentLayerSource() (*ContentLayerSource, error) {
+	blobCache, err := lru.New(128)
+	if err != nil {
+		return nil, err
+	}
+	return &ContentLayerSource{
+		blobCache: blobCache,
+	}, nil
+}
+
+// ContentLayerSource provides layers from other images based on the image spec
+type ContentLayerSource struct {
+	blobCache *lru.Cache
+}
+
+func (src *ContentLayerSource) Name() string {
+	return "contentlayer"
+}
+
+func (src *ContentLayerSource) Envs(ctx context.Context, spec *api.ImageSpec) ([]EnvModifier, error) {
+	return nil, nil
+}
+
+func (src *ContentLayerSource) GetLayer(ctx context.Context, spec *api.ImageSpec) ([]AddonLayer, error) {
+	res := make([]AddonLayer, len(spec.ContentLayer))
+	for i, layer := range spec.ContentLayer {
+		if dl := layer.Direct; dl != nil {
+			dgst := digest.FromBytes(dl.Content)
+			res[i] = AddonLayer{
+				Descriptor: ociv1.Descriptor{
+					MediaType: ociv1.MediaTypeImageLayer,
+					Digest:    dgst,
+					Size:      int64(len(dl.Content)),
+				},
+				DiffID: dgst,
+			}
+			continue
+		}
+
+		if rl := layer.Remote; rl != nil {
+			dgst, err := digest.Parse(rl.Digest)
+			if err != nil {
+				return nil, xerrors.Errorf("cannot parse layer digest %s: %w", rl.Digest, err)
+			}
+			diffID, err := digest.Parse(rl.DiffId)
+			if err != nil {
+				return nil, xerrors.Errorf("cannot parse layer diffID %s: %w", rl.DiffId, err)
+			}
+			var urls []string
+			if rl.Url != "" {
+				urls = []string{rl.Url}
+			}
+
+			res[i] = AddonLayer{
+				Descriptor: ociv1.Descriptor{
+					MediaType: rl.MediaType,
+					Digest:    dgst,
+					URLs:      urls,
+					Size:      rl.Size,
+				},
+				DiffID: diffID,
+			}
+			continue
+		}
+
+		return nil, xerrors.Errorf("unknown layer type")
+	}
+	return res, nil
+}
+
+func (src *ContentLayerSource) HasBlob(ctx context.Context, spec *api.ImageSpec, dgst digest.Digest) bool {
+	if src.blobCache.Contains(dgst) {
+		return true
+	}
+	for _, layer := range spec.ContentLayer {
+		if dl := layer.Direct; dl != nil {
+			if digest.FromBytes(dl.Content) == dgst {
+				return true
+			}
+		}
+
+		if rl := layer.Remote; rl != nil {
+			if rl.Digest == dgst.String() {
+				return true
+			}
+		}
+	}
+	return false
+}
+
+func (src *ContentLayerSource) GetBlob(ctx context.Context, spec *api.ImageSpec, dgst digest.Digest) (dontCache bool, mediaType string, url string, data io.ReadCloser, err error) {
+	if blob, ok := src.blobCache.Get(dgst); ok {
+		return false, ociv1.MediaTypeImageLayer, "", io.NopCloser(bytes.NewReader(blob.([]byte))), nil
+	}
+
+	for _, layer := range spec.ContentLayer {
+		if dl := layer.Direct; dl != nil {
+			if digest.FromBytes(dl.Content) == dgst {
+				return false, ociv1.MediaTypeImageLayer, "", io.NopCloser(bytes.NewReader(dl.Content)), nil
+			}
+		}
+
+		if rl := layer.Remote; rl != nil {
+			if rl.Digest == dgst.String() {
+				mt := ociv1.MediaTypeImageLayerGzip
+				if rl.DiffId == rl.Digest || rl.DiffId == "" {
+					mt = ociv1.MediaTypeImageLayer
+				}
+
+				return false, mt, rl.Url, nil, nil
+			}
+		}
+	}
+
+	err = errdefs.ErrNotFound
+	return
+}
+
+type ParsedEnvs struct {
+	keys   []string
+	values map[string]string
+}
+
+func parseEnvs(envs []string) *ParsedEnvs {
+	result := ParsedEnvs{
+		values: make(map[string]string),
+	}
+	for _, e := range envs {
+		parts := strings.SplitN(e, "=", 2)
+		if len(parts) == 0 {
+			continue
+		}
+		key := parts[0]
+		var value string
+		if len(parts) > 1 {
+			value = parts[1]
+		}
+		result.keys = append(result.keys, key)
+		result.values[key] = value
+	}
+	return &result
+}
+
+// Set the give value as a variable's value of the given name
+func (envs *ParsedEnvs) Set(name, value string) {
+	_, exists := envs.values[name]
+	if !exists {
+		envs.keys = append(envs.keys, name)
+	}
+	envs.values[name] = value
+}
+
+// Append the given value to a variable's value of the given name
+func (envs *ParsedEnvs) Append(name, value string) {
+	current, exists := envs.values[name]
+	if exists {
+		envs.values[name] = value + current
+	} else {
+		envs.keys = append(envs.keys, name)
+		envs.values[name] = value
+	}
+}
+
+// Prepend the given value to a variable's value of the given name
+func (envs *ParsedEnvs) Prepend(name, value string) {
+	current, exists := envs.values[name]
+	if exists {
+		envs.values[name] = current + value
+	} else {
+		envs.keys = append(envs.keys, name)
+		envs.values[name] = value
+	}
+}
+
+func (envs *ParsedEnvs) serialize() (result []string) {
+	for _, key := range envs.keys {
+		result = append(result, key+"="+envs.values[key])
+	}
+	return
+}
+
+// EnvModifier modifies an image envs configuration
+type EnvModifier func(*ParsedEnvs)
+
+func newSetEnvModifier(name, value string) EnvModifier {
+	return func(pe *ParsedEnvs) {
+		pe.Set(name, value)
+	}
+}
+
+func newAppendEnvModifier(name, value string) EnvModifier {
+	return func(pe *ParsedEnvs) {
+		pe.Append(name, value)
+	}
+}
+
+func newPrependEnvModifier(name, value string) EnvModifier {
+	return func(pe *ParsedEnvs) {
+		pe.Prepend(name, value)
+	}
 }
 
 type RevisioningLayerSource struct {

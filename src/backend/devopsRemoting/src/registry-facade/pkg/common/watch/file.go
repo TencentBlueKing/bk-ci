@@ -13,6 +13,8 @@ import (
 	"github.com/fsnotify/fsnotify"
 )
 
+// TODO: 重构后移至common包
+
 type fileWatcher struct {
 	onChange func()
 

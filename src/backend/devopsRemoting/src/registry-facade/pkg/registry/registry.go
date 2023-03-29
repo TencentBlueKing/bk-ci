@@ -3,7 +3,9 @@ package registry
 import (
 	"common/logs"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -12,6 +14,7 @@ import (
 	"registry/api"
 
 	distv2 "github.com/docker/distribution/registry/api/v2"
+	"github.com/gorilla/mux"
 	"github.com/opencontainers/go-digest"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/prometheus/client_golang/prometheus"
@@ -119,71 +122,71 @@ func NewRegistry(cfg config.Config, newResolver ResolverProvider, reg prometheus
 	layerSources = append(layerSources, clsrc)
 
 	specProvider := map[string]ImageSpecProvider{}
-	if cfg.RemoteSpecProvider != nil {
-		var providers []ImageSpecProvider
-		for _, providerCfg := range cfg.RemoteSpecProvider {
-			rsp, err := createRemoteSpecProvider(providerCfg)
-			if err != nil {
-				return nil, err
-			}
+	// if cfg.RemoteSpecProvider != nil {
+	// 	var providers []ImageSpecProvider
+	// 	for _, providerCfg := range cfg.RemoteSpecProvider {
+	// 		rsp, err := createRemoteSpecProvider(providerCfg)
+	// 		if err != nil {
+	// 			return nil, err
+	// 		}
 
-			providers = append(providers, rsp)
-		}
+	// 		providers = append(providers, rsp)
+	// 	}
 
-		specProvider[api.ProviderPrefixRemote] = NewCompositeSpecProvider(providers...)
-	}
+	// 	specProvider[api.ProviderPrefixRemote] = NewCompositeSpecProvider(providers...)
+	// }
 
-	if cfg.FixedSpecProvider != "" {
-		fc, err := ioutil.ReadFile(cfg.FixedSpecProvider)
-		if err != nil {
-			return nil, xerrors.Errorf("cannot read fixed spec: %w", err)
-		}
+	// if cfg.FixedSpecProvider != "" {
+	// 	fc, err := ioutil.ReadFile(cfg.FixedSpecProvider)
+	// 	if err != nil {
+	// 		return nil, xerrors.Errorf("cannot read fixed spec: %w", err)
+	// 	}
 
-		f := make(map[string]json.RawMessage)
-		err = json.Unmarshal(fc, &f)
-		if err != nil {
-			return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
-		}
+	// 	f := make(map[string]json.RawMessage)
+	// 	err = json.Unmarshal(fc, &f)
+	// 	if err != nil {
+	// 		return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
+	// 	}
 
-		prov := make(FixedImageSpecProvider)
-		for k, v := range f {
-			var spec api.ImageSpec
-			err = jsonpb.UnmarshalString(string(v), &spec)
-			if err != nil {
-				return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
-			}
-			prov[k] = &spec
-		}
-		specProvider[api.ProviderPrefixFixed] = prov
-	}
+	// 	prov := make(FixedImageSpecProvider)
+	// 	for k, v := range f {
+	// 		var spec api.ImageSpec
+	// 		err = jsonpb.UnmarshalString(string(v), &spec)
+	// 		if err != nil {
+	// 			return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
+	// 		}
+	// 		prov[k] = &spec
+	// 	}
+	// 	specProvider[api.ProviderPrefixFixed] = prov
+	// }
 
-	var ipfs *IPFSBlobCache
-	if cfg.IPFSCache != nil && cfg.IPFSCache.Enabled {
-		addr := cfg.IPFSCache.IPFSAddr
-		if ipfsHost := os.Getenv("IPFS_HOST"); ipfsHost != "" {
-			addr = strings.ReplaceAll(addr, "$IPFS_HOST", ipfsHost)
-		}
+	var ipfs *IPFSBlobCache = nil
+	// if cfg.IPFSCache != nil && cfg.IPFSCache.Enabled {
+	// 	addr := cfg.IPFSCache.IPFSAddr
+	// 	if ipfsHost := os.Getenv("IPFS_HOST"); ipfsHost != "" {
+	// 		addr = strings.ReplaceAll(addr, "$IPFS_HOST", ipfsHost)
+	// 	}
 
-		maddr, err := ma.NewMultiaddr(strings.TrimSpace(addr))
-		if err != nil {
-			return nil, xerrors.Errorf("cannot connect to IPFS: %w", err)
-		}
+	// 	maddr, err := ma.NewMultiaddr(strings.TrimSpace(addr))
+	// 	if err != nil {
+	// 		return nil, xerrors.Errorf("cannot connect to IPFS: %w", err)
+	// 	}
 
-		core, err := httpapi.NewApiWithClient(maddr, NewRetryableHTTPClient())
-		if err != nil {
-			return nil, xerrors.Errorf("cannot connect to IPFS: %w", err)
-		}
-		rdc, err := getRedisClient(cfg.RedisCache)
-		if err != nil {
-			return nil, xerrors.Errorf("cannot connect to Redis: %w", err)
-		}
+	// 	core, err := httpapi.NewApiWithClient(maddr, NewRetryableHTTPClient())
+	// 	if err != nil {
+	// 		return nil, xerrors.Errorf("cannot connect to IPFS: %w", err)
+	// 	}
+	// 	rdc, err := getRedisClient(cfg.RedisCache)
+	// 	if err != nil {
+	// 		return nil, xerrors.Errorf("cannot connect to Redis: %w", err)
+	// 	}
 
-		ipfs = &IPFSBlobCache{
-			Redis: rdc,
-			IPFS:  core,
-		}
-		log.WithField("config", cfg.IPFSCache).Info("enabling IPFS caching")
-	}
+	// 	ipfs = &IPFSBlobCache{
+	// 		Redis: rdc,
+	// 		IPFS:  core,
+	// 	}
+	// 	log.WithField("config", cfg.IPFSCache).Info("enabling IPFS caching")
+	// }
 
 	layerSource := CompositeLayerSource(layerSources)
 	return &Registry{
@@ -229,21 +232,6 @@ func (reg *Registry) Serve() error {
 	mux := http.NewServeMux()
 	mux.Handle("/", handler)
 
-	if addr := os.Getenv("REGFAC_NO_TLS_DEBUG"); addr != "" {
-		// 端口转发也做 SSL 终止。 如果我们只提供 HTTPS 服务
-		// 当使用 telepresence 时，我们不能直接向 registry facade 发出任何请求，
-		// 例如 使用 curl 或其他 Docker 守护进程。 使用 env var 我们可以启用一个额外的
-		// HTTP 服务。
-		//
-		// 注意：这仅适用于远程呈现设置
-		go func() {
-			err := http.ListenAndServe(addr, mux)
-			if err != nil {
-				logs.WithError(err).Error("start of registry server failed")
-			}
-		}()
-	}
-
 	addr := fmt.Sprintf(":%d", reg.Config.Port)
 	l, err := net.Listen("tcp", addr)
 	if err != nil {
@@ -269,4 +257,16 @@ func (reg *Registry) Serve() error {
 
 	logs.WithField("addr", addr).Info("HTTP registry server listening")
 	return reg.srv.Serve(l)
+}
+
+// registerHandler registers the handle* functions with the corresponding routes
+func (reg *Registry) registerHandler(routes *mux.Router) {
+	routes.Get(distv2.RouteNameBase).HandlerFunc(reg.handleAPIBase)
+	routes.Get(distv2.RouteNameManifest).Handler(dispatcher(reg.handleManifest))
+	// routes.Get(v2.RouteNameCatalog).Handler(dispatcher(reg.handleCatalog))
+	// routes.Get(v2.RouteNameTags).Handler(dispatcher(reg.handleTags))
+	routes.Get(distv2.RouteNameBlob).Handler(dispatcher(reg.handleBlob))
+	// routes.Get(v2.RouteNameBlobUpload).Handler(dispatcher(reg.handleBlobUpload))
+	// routes.Get(v2.RouteNameBlobUploadChunk).Handler(dispatcher(reg.handleBlobUploadChunk))
+	routes.NotFoundHandler = http.HandlerFunc(reg.handleAPIBase)
 }
