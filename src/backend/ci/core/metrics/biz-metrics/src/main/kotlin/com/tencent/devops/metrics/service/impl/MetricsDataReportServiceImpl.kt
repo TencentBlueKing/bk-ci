@@ -530,7 +530,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             createTime = currentTime,
             updateTime = currentTime
         )
-        saveAtomIndexStatisticsDailyPO.failExecuteCount += if (taskSuccessFlag) 1 else 0
+        saveAtomIndexStatisticsDailyPO.failExecuteCount += if (taskSuccessFlag) 0 else 1
         saveAtomIndexStatisticsDailyPO.failComplianceCount +=
             if ((!taskSuccessFlag) && isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
         if (atomIndexStatisticsDailyPO == null && (!taskSuccessFlag)) {
