@@ -203,6 +203,10 @@ func (b *BackendWorkspaceInfoProvider) WorkspaceInfo(workspaceId string) *Worksp
 	}
 	logs.WithField("workspaceId", workspaceId).WithField("details", info).Debug("get backend workspace details")
 
+	if info.PodIp == "" {
+		logs.WithField("workspaceId", workspaceId).Error("wsinfo podIp is null")
+	}
+
 	wsInfo := &WorkspaceInfo{
 		WorkspaceID:   workspaceId,
 		IPAddress:     info.PodIp,
