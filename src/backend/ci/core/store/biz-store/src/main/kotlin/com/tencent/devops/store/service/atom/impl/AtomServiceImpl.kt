@@ -93,10 +93,6 @@ import com.tencent.devops.store.pojo.common.KEY_ID
 import com.tencent.devops.store.pojo.common.KEY_INSTALLER
 import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
 import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
-import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
-import com.tencent.devops.store.pojo.common.KEY_LABEL_ID
-import com.tencent.devops.store.pojo.common.KEY_LABEL_NAME
-import com.tencent.devops.store.pojo.common.KEY_LABEL_TYPE
 import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
 import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
 import com.tencent.devops.store.pojo.common.KEY_MODIFIER
@@ -105,7 +101,6 @@ import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
 import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
-import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.STORE_ATOM_STATUS
 import com.tencent.devops.store.pojo.common.UnInstallReq
 import com.tencent.devops.store.pojo.common.VersionInfo
@@ -118,6 +113,7 @@ import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
@@ -180,6 +176,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var storeUserService: StoreUserService
+
+    @Autowired
+    lateinit var storeI18nMessageService: StoreI18nMessageService
 
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -565,8 +564,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     buildLessRunFlag = pipelineAtomRecord.buildLessRunFlag,
                     weight = pipelineAtomRecord.weight,
                     props = pipelineAtomRecord.props?.let {
+                        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                            jsonStr = it,
+                            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+                        )
                         AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
-                            ?.decorate(pipelineAtomRecord.props) as Map<String, Any>?
+                            ?.decorate(propJsonStr) as Map<String, Any>?
                     },
                     data = pipelineAtomRecord.data?.let {
                         AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)
@@ -937,8 +940,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val installer = it[KEY_INSTALLER] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            val classifyLanName = MessageUtil.getMessageByLocale(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             // 判断项目是否是初始化项目或者调试项目
@@ -1101,26 +1105,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
         }
         return Result(true)
-    }
-
-    override fun findUnDefaultAtom(atomList: List<String>): Result<List<String>> {
-        val defaultInfo = atomDao.getDefaultAtoms(dslContext, atomList)
-        if (defaultInfo == null) {
-            val atomRecords = atomDao.getLatestAtomListByCodes(dslContext, atomList)
-            return Result(atomRecords.map { it!!.name })
-        }
-        val defaultAtom = mutableListOf<String>()
-        defaultInfo.forEach {
-            defaultAtom.add(it.atomCode)
-        }
-        val unDefaultAtomList = mutableListOf<String>()
-        atomList.forEach {
-            if (!defaultAtom.contains(it)) {
-                unDefaultAtomList.add(it)
-            }
-        }
-        val unDefaultRecords = atomDao.getLatestAtomListByCodes(dslContext, unDefaultAtomList)
-        return Result(unDefaultRecords.map { it!!.name })
     }
 
     abstract fun updateRepoInfo(

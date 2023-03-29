@@ -77,5 +77,5 @@ interface StoreI18nMessageService {
     fun parseJsonStrI18nInfo(
         jsonStr: String,
         keyPrefix: String
-    )
+    ): String
 }

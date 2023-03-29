@@ -82,4 +82,19 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
         )
         return Result(i18nMessages)
     }
+
+    override fun getI18nMessagesByKeyPrefix(
+        userId: String,
+        keyPrefix: String,
+        moduleCode: SystemModuleEnum,
+        language: String
+    ): Result<List<I18nMessage>?> {
+        val i18nMessages = i18nMessageService.getI18nMessages(
+            userId = userId,
+            moduleCode = moduleCode,
+            keyPrefix = keyPrefix,
+            language = language
+        )
+        return Result(i18nMessages)
+    }
 }

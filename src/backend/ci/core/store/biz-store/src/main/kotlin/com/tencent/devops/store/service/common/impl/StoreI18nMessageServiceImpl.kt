@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import org.apache.commons.collections4.ListUtils
@@ -134,8 +135,35 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         )
     }
 
-    override fun parseJsonStrI18nInfo(jsonStr: String, keyPrefix: String) {
-        val jsonMap = JsonUtil.toMutableMap(jsonStr)
+    override fun parseJsonStrI18nInfo(jsonStr: String, keyPrefix: String): String {
+        val userId = I18nUtil.getRequestUserId()
+        val language = I18nUtil.getLanguage(userId)
+        val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
+        if (language == devopsDefaultLocaleLanguage) {
+            // 如果请求的语言信息和默认语言一致，则无需对json字符串进行国际化替换
+            return jsonStr
+        }
+        // 根据key前缀查出对应的国际化信息
+        val i18nMessages = client.get(ServiceI18nMessageResource::class).getI18nMessagesByKeyPrefix(
+            userId = userId ?: "",
+            keyPrefix = keyPrefix,
+            moduleCode = SystemModuleEnum.STORE,
+            language = I18nUtil.getLanguage(userId)
+        ).data
+        return if (i18nMessages.isNullOrEmpty()) {
+            // 如果查出来的国际化信息为空则无需进行国际化替换
+            jsonStr
+        } else {
+            val jsonMap = JsonUtil.toMutableMap(jsonStr)
+            // 把国际化信息放入properties对象中
+            val properties = Properties()
+            i18nMessages.forEach { i18nMessage ->
+                properties[i18nMessage.key] = i18nMessage.value
+            }
+            // 对jsonMap中的国际化字段就行国际化信息替换
+            MessageUtil.traverseMap(jsonMap, keyPrefix, properties)
+            JsonUtil.toJson(jsonMap, false)
+        }
     }
 
     private fun asyncHandleI18nMessage(

@@ -107,7 +107,10 @@ class BkWriterInterceptor : WriterInterceptor {
         val fieldKeyPrefixName = i18nFieldInfo.keyPrefixName
         // 依据翻译类型生成字段的后缀名
         val fieldKeySuffixName = if (i18nFieldInfo.translateType == I18nTranslateTypeEnum.NAME) {
-            lastNodeName
+            // 如果注解上配置了字段转换名称，则使用转换名称进行国际化翻译
+            i18nFieldInfo.convertName.ifBlank {
+                lastNodeName
+            }
         } else {
             MessageUtil.getFieldValue(i18nFieldInfo.field, i18nFieldInfo.entity)?.toString() ?: ""
         }

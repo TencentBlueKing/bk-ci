@@ -429,6 +429,7 @@ abstract class ImageService @Autowired constructor() {
                     id = it.id,
                     name = it.name,
                     code = it.code,
+                    version = it.version,
                     // 仅用于插件区分Agent/AgentLess
                     type = "",
                     rdType = it.rdType,

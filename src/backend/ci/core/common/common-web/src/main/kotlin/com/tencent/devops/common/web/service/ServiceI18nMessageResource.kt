@@ -115,4 +115,23 @@ interface ServiceI18nMessageResource {
         @QueryParam("language")
         language: String
     ): Result<List<I18nMessage>?>
+
+
+    @ApiOperation("根据key的前缀批量获取国际化信息")
+    @GET
+    @Path("/listByKeyPrefix")
+    fun getI18nMessagesByKeyPrefix(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String = "",
+        @ApiParam(value = "key前缀", required = true)
+        @QueryParam("keyPrefix")
+        keyPrefix: String,
+        @ApiParam("模块标识", required = true)
+        @QueryParam("moduleCode")
+        moduleCode: SystemModuleEnum,
+        @ApiParam("国际化语言信息", required = true)
+        @QueryParam("language")
+        language: String
+    ): Result<List<I18nMessage>?>
 }

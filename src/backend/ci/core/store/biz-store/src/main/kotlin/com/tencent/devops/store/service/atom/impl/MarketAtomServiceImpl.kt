@@ -119,6 +119,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -212,6 +213,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeDailyStatisticService: StoreDailyStatisticService
+
+    @Autowired
+    lateinit var storeI18nMessageService: StoreI18nMessageService
 
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -328,6 +332,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         id = it[tAtom.ID] as String,
                         name = it[tAtom.NAME] as String,
                         code = atomCode,
+                        version = it[tAtom.VERSION] as String,
                         type = it[tAtom.JOB_TYPE] as String,
                         rdType = AtomTypeEnum.getAtomType((it[tAtom.ATOM_TYPE] as Byte).toInt()),
                         classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
@@ -1085,7 +1090,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     override fun getAtomOutput(atomCode: String): List<AtomOutput> {
         val atom = marketAtomDao.getLatestAtomByCode(dslContext, atomCode) ?: return emptyList()
-        val propMap = JsonUtil.toMap(atom.props)
+        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+            jsonStr = atom.props,
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
+        )
+        val propMap = JsonUtil.toMap(propJsonStr)
         val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
         return outputDataMap?.keys?.map { outputKey ->
             val outputDataObj = outputDataMap[outputKey]
@@ -1145,8 +1154,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             .append("    version: ${atom.version}\r\n")
             .append("    data:\r\n")
             .append("      input:\r\n")
-
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(atom.props)
+        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+            jsonStr = atom.props,
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
+        )
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
         if (null != props["input"]) {
             val input = props["input"] as Map<String, Any>
             input.forEach {
@@ -1234,8 +1246,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val latestVersion = "${atom.version.split('.').first()}.*"
         sb.append("- uses: ${atom.atomCode}@$latestVersion\r\n")
             .append("  name: ${atom.name}\r\n")
-
-        val props: Map<String, Any> = jacksonObjectMapper().readValue(atom.props)
+        val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+            jsonStr = atom.props,
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atom.atomCode, atom.version)
+        )
+        val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
         if (null != props["input"]) {
             sb.append("  with:\r\n")
             val input = props["input"] as Map<String, Any>
