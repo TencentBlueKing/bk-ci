@@ -57,6 +57,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -197,8 +198,11 @@ class BkRepoService @Autowired constructor(
         matadataMap.forEach {
             propertyList.add(Property(it.key, it.value))
         }
-        if (matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            val pipelineName = pipelineService.getPipelineName(projectId, matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
+        if (matadataMap.containsKey(ARCHIVE_PROPS_PROJECT_ID) && matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+            val pipelineName = pipelineService.getPipelineName(
+                matadataMap[ARCHIVE_PROPS_PROJECT_ID]!!,
+                matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!
+            )
             propertyList.add(Property(ARCHIVE_PROPS_PIPELINE_NAME, pipelineName))
         }
         return propertyList
