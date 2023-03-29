@@ -53,11 +53,11 @@ interface ServiceProjectTagResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/{projectId}/getRouterTag")
+    @Path("/{projectId}/isRbacPermission")
     @ApiOperation("获取项目网关路由Tag")
-    fun getProjectRouterTag(
+    fun isRbacPermission(
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
         projectId: String
-    ): Result<String?>
+    ): Result<Boolean>
 }

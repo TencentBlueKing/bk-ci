@@ -43,7 +43,7 @@ class ServiceProjectTagResourceImpl @Autowired constructor(
         return Result(projectTagService.checkProjectTag(projectId))
     }
 
-    override fun getProjectRouterTag(projectId: String): Result<String?> {
-        return Result(projectService.getProjectRouterTag(projectId))
+    override fun isRbacPermission(projectId: String): Result<Boolean> {
+        return Result(projectService.isRbacPermission(projectId))
     }
 }

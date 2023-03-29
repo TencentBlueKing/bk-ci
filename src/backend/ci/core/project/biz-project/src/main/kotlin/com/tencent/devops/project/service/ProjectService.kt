@@ -219,5 +219,5 @@ interface ProjectService {
 
     fun cancelUpdateProject(userId: String, projectId: String): Boolean
 
-    fun getProjectRouterTag(projectId: String): String?
+    fun isRbacPermission(projectId: String): Boolean
 }

@@ -244,18 +244,12 @@ class RbacPermissionResourceService(
         if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
             return checkProjectManage
         }
-        // TODO codecc_task action命名错误,后续需要改正
-        val action = if (resourceType == AuthResourceType.CODECC_TASK.value) {
-            "codecc_task_manage-permissions"
-        } else {
-            RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
-            )
-        }
         return permissionService.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action =  RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+            ),
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode,
