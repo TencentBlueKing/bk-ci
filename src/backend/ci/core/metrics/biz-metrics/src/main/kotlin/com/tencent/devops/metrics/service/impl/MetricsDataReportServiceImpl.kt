@@ -502,6 +502,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 )
             )
         }
+        val atomIndexStatisticsDailyPO = saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode }
         var saveAtomIndexStatisticsDailyPO = atomIndexStatisticsDailyRecord?.let {
             SaveAtomIndexStatisticsDailyPO(
                 id = it.id,
@@ -514,7 +515,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 createTime = it.createTime,
                 updateTime = currentTime
             )
-        } ?: saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode } ?: SaveAtomIndexStatisticsDailyPO(
+        } ?: atomIndexStatisticsDailyPO ?: SaveAtomIndexStatisticsDailyPO(
             id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
             atomCode = taskMetricsData.atomCode,
@@ -532,7 +533,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         saveAtomIndexStatisticsDailyPO.failExecuteCount += if (taskSuccessFlag) 1 else 0
         saveAtomIndexStatisticsDailyPO.failComplianceCount +=
             if ((!taskSuccessFlag) && isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
-        saveAtomIndexStatisticsDailyPOs.add(saveAtomIndexStatisticsDailyPO)
+        atomIndexStatisticsDailyPO?.let {
+            saveAtomIndexStatisticsDailyPOs.add(saveAtomIndexStatisticsDailyPO)
+        }
     }
 
     private fun pipelineStageOverviewDataReport(
