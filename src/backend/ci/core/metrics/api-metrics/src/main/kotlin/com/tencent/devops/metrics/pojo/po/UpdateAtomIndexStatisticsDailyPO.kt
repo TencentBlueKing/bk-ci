@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("保存插件指标每日统计数据")
+@ApiModel("更新插件指标每日统计数据")
 data class UpdateAtomIndexStatisticsDailyPO(
     @ApiModelProperty("主键ID")
     val id: Long,
