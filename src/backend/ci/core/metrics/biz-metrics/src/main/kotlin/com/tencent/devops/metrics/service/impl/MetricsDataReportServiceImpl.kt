@@ -503,7 +503,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
         val atomIndexStatisticsDailyPO = saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode }
-        var saveAtomIndexStatisticsDailyPO = atomIndexStatisticsDailyRecord?.let {
+        val saveAtomIndexStatisticsDailyPO = atomIndexStatisticsDailyPO ?: atomIndexStatisticsDailyRecord?.let {
             SaveAtomIndexStatisticsDailyPO(
                 id = it.id,
                 atomCode = it.atomCode,
@@ -515,7 +515,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 createTime = it.createTime,
                 updateTime = currentTime
             )
-        } ?: atomIndexStatisticsDailyPO ?: SaveAtomIndexStatisticsDailyPO(
+        } ?: SaveAtomIndexStatisticsDailyPO(
             id = client.get(ServiceAllocIdResource::class)
                 .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
             atomCode = taskMetricsData.atomCode,
