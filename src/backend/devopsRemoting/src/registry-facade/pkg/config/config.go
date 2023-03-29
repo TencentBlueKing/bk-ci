@@ -6,10 +6,10 @@ import (
 )
 
 type ServiceConfig struct {
-	Registry           Config `json:"registry"`
-	AuthCfg            string `json:"dockerAuth"`
-	PProfAddr          string `json:"pprofAddr"`
-	PrometheusAddr     string `json:"prometheusAddr"`
+	Registry       Config `json:"registry"`
+	AuthCfg        string `json:"dockerAuth"`
+	PProfAddr      string `json:"pprofAddr"`
+	PrometheusAddr string `json:"prometheusAddr"`
 }
 
 type Config struct {

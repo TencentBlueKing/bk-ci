@@ -8,7 +8,7 @@ import (
 	"io"
 	"io/fs"
 	"os"
-	"registry/api"
+	"registry-facade/api"
 	"strconv"
 	"strings"
 	"sync"

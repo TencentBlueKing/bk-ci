@@ -41,6 +41,7 @@
             "editor.formatOnSave": true
         },
         "go.formatTool": "goimports",
+        "go.useLanguageServer": true,
         "go.lintTool": "golangci-lint",
         "gopls": {
             "allowModfileModifications": true

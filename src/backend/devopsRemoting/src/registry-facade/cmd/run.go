@@ -26,6 +26,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	rootCmd.AddCommand(runCmd)
+}
+
 var runCmd = &cobra.Command{
 	Use:   "run <config.json>",
 	Short: "启动registry",

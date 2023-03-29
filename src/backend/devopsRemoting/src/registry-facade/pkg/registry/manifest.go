@@ -5,18 +5,244 @@ import (
 	"common/logs"
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
+	"mime"
+	"net/http"
 	"strings"
+	"time"
+
+	"registry-facade/api"
 
 	"github.com/containerd/containerd/content"
 	"github.com/containerd/containerd/errdefs"
 	"github.com/containerd/containerd/images"
 	"github.com/containerd/containerd/remotes"
+	distv2 "github.com/docker/distribution/registry/api/v2"
+	"github.com/gorilla/handlers"
 	"github.com/opencontainers/go-digest"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"golang.org/x/xerrors"
 )
+
+func (reg *Registry) handleManifest(ctx context.Context, r *http.Request) http.Handler {
+	t0 := time.Now()
+
+	spname, name := getSpecProviderName(ctx)
+	sp, ok := reg.SpecProvider[spname]
+	if !ok {
+		logs.WithField("specProvName", spname).Error("unknown spec provider")
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			respondWithError(w, distv2.ErrorCodeManifestUnknown)
+		})
+	}
+	spec, err := sp.GetSpec(ctx, name)
+	if err != nil {
+		logs.WithError(err).WithField("specProvName", spname).WithField("name", name).Error("cannot get spec")
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			respondWithError(w, distv2.ErrorCodeManifestUnknown)
+		})
+	}
+
+	manifestHandler := &manifestHandler{
+		Context:        ctx,
+		Name:           name,
+		Spec:           spec,
+		Resolver:       reg.Resolver(),
+		Store:          reg.Store,
+		ConfigModifier: reg.ConfigModifier,
+	}
+	reference := getReference(ctx)
+	dgst, err := digest.Parse(reference)
+	if err != nil {
+		manifestHandler.Tag = reference
+	} else {
+		manifestHandler.Digest = dgst
+	}
+
+	mhandler := handlers.MethodHandler{
+		"GET":    http.HandlerFunc(manifestHandler.getManifest),
+		"HEAD":   http.HandlerFunc(manifestHandler.getManifest),
+		"PUT":    http.HandlerFunc(manifestHandler.putManifest),
+		"DELETE": http.HandlerFunc(manifestHandler.deleteManifest),
+	}
+
+	res := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		mhandler.ServeHTTP(w, r)
+		dt := time.Since(t0)
+		reg.metrics.ManifestHist.Observe(dt.Seconds())
+	})
+
+	return res
+}
+
+type manifestHandler struct {
+	Context context.Context
+
+	Spec           *api.ImageSpec
+	Resolver       remotes.Resolver
+	Store          BlobStore
+	ConfigModifier ConfigModifier
+
+	Name   string
+	Tag    string
+	Digest digest.Digest
+}
+
+func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
+	//nolint:staticcheck,ineffassign
+	// span, ctx := opentracing.StartSpanFromContext(r.Context(), "getManifest")
+	ctx := r.Context()
+	logFields := log.Fields{"workspaceId": mh.Name}
+	logFields["tag"] = mh.Tag
+	logFields["spec"] = mh.Spec
+	err := func() error {
+		logs.WithFields(logFields).Debug("get manifest")
+		// tracing.LogMessageSafe(span, "spec", mh.Spec)
+
+		var (
+			acceptType string
+			err        error
+		)
+		for _, acceptHeader := range r.Header["Accept"] {
+			for _, mediaType := range strings.Split(acceptHeader, ",") {
+				if mediaType, _, err = mime.ParseMediaType(strings.TrimSpace(mediaType)); err != nil {
+					continue
+				}
+
+				if mediaType == ociv1.MediaTypeImageManifest ||
+					mediaType == images.MediaTypeDockerSchema2Manifest ||
+					mediaType == "*" {
+
+					acceptType = ociv1.MediaTypeImageManifest
+					break
+				}
+			}
+			if acceptType != "" {
+				break
+			}
+		}
+		if acceptType == "" {
+			return distv2.ErrorCodeManifestUnknown.WithMessage("Accept header does not include OCIv1 or v2 manifests")
+		}
+
+		// Note: we ignore the mh.Digest for now because we always return a manifest, never a manifest index.
+		ref := mh.Spec.BaseRef
+
+		_, desc, err := mh.Resolver.Resolve(ctx, ref)
+		if err != nil {
+			logs.WithError(err).WithField("ref", ref).WithFields(logFields).Error("cannot resolve")
+			// ErrInvalidAuthorization
+			return err
+		}
+
+		var fcache remotes.Fetcher
+		fetch := func() (remotes.Fetcher, error) {
+			if fcache != nil {
+				return fcache, nil
+			}
+
+			fetcher, err := mh.Resolver.Fetcher(ctx, ref)
+			if err != nil {
+				return nil, err
+			}
+			fcache = fetcher
+			return fcache, nil
+		}
+
+		manifest, ndesc, err := DownloadManifest(ctx, fetch, desc, WithStore(mh.Store))
+		if err != nil {
+			logs.WithError(err).WithField("desc", desc).WithFields(logFields).WithField("ref", ref).Error("cannot download manifest")
+			return distv2.ErrorCodeManifestUnknown.WithDetail(err)
+		}
+		desc = *ndesc
+
+		var p []byte
+		switch desc.MediaType {
+		case images.MediaTypeDockerSchema2Manifest, ociv1.MediaTypeImageManifest:
+			// download config
+			cfg, err := DownloadConfig(ctx, fetch, ref, manifest.Config, WithStore(mh.Store))
+			if err != nil {
+				logs.WithError(err).WithFields(logFields).Error("cannot download config")
+				return err
+			}
+
+			// modify config
+			addonLayer, err := mh.ConfigModifier(ctx, mh.Spec, cfg)
+			if err != nil {
+				logs.WithError(err).WithFields(logFields).Error("cannot modify config")
+				return err
+			}
+			manifest.Layers = append(manifest.Layers, addonLayer...)
+
+			// place config in store
+			rawCfg, err := json.Marshal(cfg)
+			if err != nil {
+				logs.WithError(err).WithFields(logFields).Error("cannot marshal config")
+				return err
+			}
+			cfgDgst := digest.FromBytes(rawCfg)
+
+			// update config digest in manifest
+			manifest.Config.Digest = cfgDgst
+			manifest.Config.URLs = nil
+			manifest.Config.Size = int64(len(rawCfg))
+
+			// 优化：我们将配置存储在商店中，以防客户端尝试下载配置 blob
+			// 来自我们。 如果他们从尚未下载mainfast的registry facade下载它
+			// 我们将即时重新创建配置。
+			if w, err := mh.Store.Writer(ctx, content.WithRef(ref), content.WithDescriptor(manifest.Config)); err == nil {
+				defer w.Close()
+
+				_, err = w.Write(rawCfg)
+				if err != nil {
+					logs.WithError(err).WithFields(logFields).Warn("cannot write config to store - we'll regenerate it on demand")
+				}
+				err = w.Commit(ctx, 0, cfgDgst, content.WithLabels(contentTypeLabel(manifest.Config.MediaType)))
+				if err != nil {
+					logs.WithError(err).WithFields(logFields).Warn("cannot commit config to store - we'll regenerate it on demand")
+				}
+			}
+
+			// 当提供 images.MediaTypeDockerSchema2Manifest 服务时，我们必须在清单本身中设置 mediaType。
+			// 尽管与 OCI 清单规范有些兼容（请参阅 https://github.com/opencontainers/image-spec/blob/master/manifest.md），
+			// 这个字段不是 OCI Go 结构的一部分。 在这种特殊情况下，我们将继续自己添加它。
+			//
+			// 修复 https://github.com/gitpod-io/gitpod/pull/3397
+			if desc.MediaType == images.MediaTypeDockerSchema2Manifest {
+				type ManifestWithMediaType struct {
+					ociv1.Manifest
+					MediaType string `json:"mediaType"`
+				}
+				p, _ = json.Marshal(ManifestWithMediaType{
+					Manifest:  *manifest,
+					MediaType: images.MediaTypeDockerSchema2Manifest,
+				})
+			} else {
+				p, _ = json.Marshal(manifest)
+			}
+		}
+
+		dgst := digest.FromBytes(p).String()
+
+		w.Header().Set("Content-Type", desc.MediaType)
+		w.Header().Set("Content-Length", fmt.Sprint(len(p)))
+		w.Header().Set("Etag", fmt.Sprintf(`"%s"`, dgst))
+		w.Header().Set("Docker-Content-Digest", dgst)
+		_, _ = w.Write(p)
+
+		logs.WithFields(logFields).Debug("get manifest (end)")
+		return nil
+	}()
+
+	if err != nil {
+		logs.WithError(err).WithField("spec", mh.Spec).Error("cannot get manifest")
+		respondWithError(w, err)
+	}
+	// tracing.FinishSpan(span, &err)
+}
 
 // DownloadConfig 下载desc指定的 OCIv2 镜像配置
 func DownloadConfig(ctx context.Context, fetch FetcherFunc, ref string, desc ociv1.Descriptor, options ...ManifestDownloadOption) (cfg *ociv1.Image, err error) {
@@ -254,7 +480,6 @@ type BlobStore interface {
 	Info(ctx context.Context, dgst digest.Digest) (content.Info, error)
 }
 
-
 func contentTypeLabel(mt string) map[string]string {
 	return map[string]string{"Content-Type": mt}
 }
@@ -265,3 +490,18 @@ type manifestDownloadOptions struct {
 
 // ManifestDownloadOption 改变默认的mainfest下载行为
 type ManifestDownloadOption func(*manifestDownloadOptions)
+
+// WithStore caches a downloaded manifest in a store
+func WithStore(store BlobStore) ManifestDownloadOption {
+	return func(o *manifestDownloadOptions) {
+		o.Store = store
+	}
+}
+
+func (mh *manifestHandler) putManifest(w http.ResponseWriter, r *http.Request) {
+	respondWithError(w, distv2.ErrorCodeManifestInvalid)
+}
+
+func (mh *manifestHandler) deleteManifest(w http.ResponseWriter, r *http.Request) {
+	respondWithError(w, distv2.ErrorCodeManifestUnknown)
+}

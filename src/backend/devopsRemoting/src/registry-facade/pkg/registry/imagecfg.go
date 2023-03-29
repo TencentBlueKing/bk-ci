@@ -2,8 +2,9 @@ package registry
 
 import (
 	"context"
+	"registry-facade/api"
+
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
-	"registry/api"
 )
 
 // ImageSpecProvider 基于ref为image pull提供spec
