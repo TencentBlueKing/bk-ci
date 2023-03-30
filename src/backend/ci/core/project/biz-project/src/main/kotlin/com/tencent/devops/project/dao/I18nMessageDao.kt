@@ -102,32 +102,19 @@ class I18nMessageDao {
     fun list(
         dslContext: DSLContext,
         moduleCodes: Set<String>,
-        keys: List<String>,
-        language: String
+        language: String,
+        keys: List<String>? = null,
+        keyPrefix: String? = null
     ): Result<TI18nMessageRecord>? {
         with(TI18nMessage.T_I18N_MESSAGE) {
-            return dslContext.selectFrom(this)
-                .where(MODULE_CODE.`in`(moduleCodes))
-                .and(KEY.`in`(keys))
-                .and(LANGUAGE.eq(language))
-                .fetch()
-        }
-    }
-
-    fun getI18nMessageKeys(
-        dslContext: DSLContext,
-        moduleCode: SystemModuleEnum,
-        key: String,
-        language: String? = null
-    ): List<String> {
-        with(TI18nMessage.T_I18N_MESSAGE) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(MODULE_CODE.eq(moduleCode.name))
-            conditions.add(KEY.like("$key%"))
-            language?.let { conditions.add(LANGUAGE.eq(language)) }
-            return dslContext.select(KEY).from(this)
+            conditions.add(MODULE_CODE.`in`(moduleCodes))
+            conditions.add(LANGUAGE.eq(language))
+            keys?.let { conditions.add(KEY.`in`(keys)) }
+            keyPrefix?.let { conditions.add(KEY.like("$keyPrefix%")) }
+            return dslContext.selectFrom(this)
                 .where(conditions)
-                .fetchInto(String::class.java)
+                .fetch()
         }
     }
 }

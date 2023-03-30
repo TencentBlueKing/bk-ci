@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import io.swagger.annotations.ApiModelProperty
 import java.lang.reflect.Field
 
@@ -34,5 +36,15 @@ data class I18nFieldInfo(
     @ApiModelProperty("字段")
     val field: Field,
     @ApiModelProperty("字段所属对象")
-    val entity: Any
+    val entity: Any,
+    @ApiModelProperty("翻译信息来源")
+    val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES,
+    @ApiModelProperty("翻译类型")
+    val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME,
+    @ApiModelProperty("字段前缀名称")
+    val keyPrefixName: String = "",
+    @ApiModelProperty("是否复用接口定义的公共前缀")
+    val reusePrefixFlag: Boolean = true,
+    @ApiModelProperty("字段转换名称")
+    val convertName: String = ""
 )

@@ -25,21 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.api.enums
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("流水线-插件信息")
-data class MyAtomResp(
-    @ApiModelProperty("总记录数", required = true)
-    val count: Int,
-    @ApiModelProperty("当前页码值", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页记录大小", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("数据集合", required = false)
-    @BkFieldI18n
-    val records: List<MyAtomRespItem?>
-)
+enum class I18nSourceEnum {
+    DB, // 来源于数据库
+    PROPERTIES // 来源于国际化资源文件
+}

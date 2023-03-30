@@ -26,16 +26,19 @@
  */
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nMessage
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import org.apache.commons.collections4.ListUtils
@@ -43,8 +46,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 import java.util.concurrent.Executors
-import java.util.Properties
 
 @Service
 @Suppress("LongParameterList")
@@ -66,7 +69,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
     }
 
-    override fun parseJsonMap(
+    override fun parseJsonMapI18nInfo(
         userId: String,
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
@@ -109,7 +112,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         return jsonMap
     }
 
-    override fun parseErrorCode(
+    override fun parseErrorCodeI18nInfo(
         userId: String,
         projectCode: String,
         errorCodes: Set<Int>,
@@ -131,6 +134,43 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             keyPrefix = keyPrefix,
             userId = userId
         )
+    }
+
+    override fun parseJsonStrI18nInfo(jsonStr: String, keyPrefix: String): String {
+        val userId = I18nUtil.getRequestUserId()
+        val language = I18nUtil.getLanguage(userId)
+        val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
+        if (language == devopsDefaultLocaleLanguage) {
+            // 如果请求的语言信息和默认语言一致，则无需对json字符串进行国际化替换
+            return jsonStr
+        }
+        // 根据key前缀查出对应的国际化信息
+        val i18nMessages = client.get(ServiceI18nMessageResource::class).getI18nMessagesByKeyPrefix(
+            userId = userId ?: "",
+            keyPrefix = keyPrefix,
+            moduleCode = SystemModuleEnum.STORE,
+            language = I18nUtil.getLanguage(userId)
+        ).data
+        return if (i18nMessages.isNullOrEmpty()) {
+            // 如果查出来的国际化信息为空则无需进行国际化替换
+            jsonStr
+        } else {
+            val jsonMap = try {
+                JsonUtil.toMutableMap(jsonStr)
+            } catch (ignored: Throwable) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR
+                )
+            }
+            // 把国际化信息放入properties对象中
+            val properties = Properties()
+            i18nMessages.forEach { i18nMessage ->
+                properties[i18nMessage.key] = i18nMessage.value
+            }
+            // 对jsonMap中的国际化字段就行国际化信息替换
+            MessageUtil.traverseMap(jsonMap, keyPrefix, properties)
+            JsonUtil.toJson(jsonMap, false)
+        }
     }
 
     private fun asyncHandleI18nMessage(

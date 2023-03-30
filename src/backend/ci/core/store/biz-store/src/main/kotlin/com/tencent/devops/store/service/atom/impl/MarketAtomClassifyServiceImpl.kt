@@ -83,22 +83,21 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             val id = it[KEY_ID] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                defaultMessage = classifyName,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = classifyName
             )
             val atomNum = it["atomNum"] as? Int
             val createTime = it[KEY_CREATE_TIME] as LocalDateTime
             val updateTime = it[KEY_UPDATE_TIME] as LocalDateTime
             marketAtomClassifyList.add(
                 MarketAtomClassify(
-                    id,
-                    classifyCode,
-                    classifyLanName,
-                    atomNum ?: 0,
-                    createTime.timestampmilli(),
-                    updateTime.timestampmilli()
+                    id = id,
+                    classifyCode = classifyCode,
+                    classifyName = classifyLanName,
+                    atomNum = atomNum ?: 0,
+                    createTime = createTime.timestampmilli(),
+                    updateTime = updateTime.timestampmilli()
                 )
             )
         }
@@ -112,6 +111,7 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             Result(classifyRecord?.let {
                 AtomClassifyInfo(
                     atomCode = atomRecord.atomCode,
+                    version = atomRecord.version,
                     atomName = atomRecord.name,
                     classifyCode = it.classifyCode,
                     classifyName = it.classifyName

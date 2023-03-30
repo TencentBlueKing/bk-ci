@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.util.LocaleUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
@@ -38,6 +39,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.net.URLDecoder
 
 object I18nUtil {
 
@@ -106,5 +108,41 @@ object I18nUtil {
 
     fun getMessageByLocale(chinese: String, english: String?): String {
         return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english
+    }
+
+    /**
+     * 根据语言环境获取对应的描述信息
+     * @param messageCode 消息标识
+     * @param language 语言信息
+     * @param params 替换描述信息占位符的参数数组
+     * @param defaultMessage 默认信息
+     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
+     * @return 描述信息
+     */
+    fun getCodeLanMessage(
+        messageCode: String,
+        language: String? = null,
+        params: Array<String>? = null,
+        defaultMessage: String? = null,
+        checkUrlDecoder: Boolean = false
+    ): String {
+        // 获取国际化语言信息
+        val i18nLanguage = if (language.isNullOrBlank()) {
+            // 方法没传语言信息，则通过获取请求头中用户信息对应的语言信息
+            getLanguage(getRequestUserId())
+        } else {
+            language
+        }
+        val i18nMessage = MessageUtil.getMessageByLocale(
+            messageCode = messageCode,
+            language = i18nLanguage,
+            params = params,
+            defaultMessage = defaultMessage
+        )
+        return if (i18nMessage.isNotBlank() && checkUrlDecoder) {
+            URLDecoder.decode(i18nMessage, "UTF-8")
+        } else {
+            i18nMessage
+        }
     }
 }

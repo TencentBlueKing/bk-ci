@@ -184,6 +184,39 @@ class I18nMessageServiceImpl @Autowired constructor(
         return i18nMessages
     }
 
+    override fun getI18nMessages(
+        userId: String,
+        moduleCode: SystemModuleEnum,
+        keyPrefix: String,
+        language: String
+    ): List<I18nMessage>? {
+        val busModuleCodeName = moduleCode.name
+        val commonModuleCodeName = SystemModuleEnum.COMMON.name
+        val moduleCodes = setOf(busModuleCodeName, commonModuleCodeName)
+        // 查询业务模块和公共模块key前缀为keyPrefix的记录
+        val i18nMessageRecords = i18nMessageDao.list(
+            dslContext = dslContext,
+            moduleCodes = moduleCodes,
+            keyPrefix = keyPrefix,
+            language = language
+        )
+        var i18nMessages: MutableList<I18nMessage>? = null
+        i18nMessageRecords?.forEach { i18nMessageRecord ->
+            if (i18nMessages == null) {
+                i18nMessages = mutableListOf()
+            }
+            i18nMessages!!.add(
+                I18nMessage(
+                    moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
+                    language = language,
+                    key = i18nMessageRecord.key,
+                    value = i18nMessageRecord.value
+                )
+            )
+        }
+        return i18nMessages
+    }
+
     /**
      * 处理未在缓存中的key的国际化信息
      * @param moduleCode 模块标识

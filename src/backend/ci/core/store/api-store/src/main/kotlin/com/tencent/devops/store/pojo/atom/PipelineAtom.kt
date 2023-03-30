@@ -27,8 +27,9 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.annotation.BkI18n
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.VersionInfo
 import io.swagger.annotations.ApiModel
@@ -39,7 +40,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件ID", required = true)
     val id: String,
     @ApiModelProperty("插件名称", required = true)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
@@ -52,7 +53,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件图标", required = false)
     val icon: String?,
     @ApiModelProperty("插件简介", required = false)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("服务范围", required = false)
     val serviceScope: List<String>?,
@@ -75,7 +76,7 @@ data class PipelineAtom(
     @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
     @ApiModelProperty("插件描述", required = false)
-    @BkI18n
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("版本信息列表", required = true)
     val versionList: List<VersionInfo>,

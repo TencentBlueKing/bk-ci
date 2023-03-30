@@ -161,19 +161,17 @@ class CategoryDao {
 
     fun convert(record: TCategoryRecord): Category {
         with(record) {
-            val type = StoreTypeEnum.getStoreType(type.toInt())
             // 范畴信息名称没有配置国际化信息则取范畴表里面的名称
-            val categoryLanName = MessageUtil.getCodeLanMessage(
-                messageCode = "${type.name}.category.$categoryCode",
-                defaultMessage = categoryName,
-                language = com.tencent.devops.common.web.utils.I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            val categoryLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.getStoreType(type.toInt())}.category.$categoryCode",
+                defaultMessage = categoryName
             )
             return Category(
                 id = id,
                 categoryCode = categoryCode,
                 categoryName = categoryLanName,
                 iconUrl = iconUrl,
-                categoryType = type,
+                categoryType = StoreTypeEnum.getStoreType(type.toInt()),
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )

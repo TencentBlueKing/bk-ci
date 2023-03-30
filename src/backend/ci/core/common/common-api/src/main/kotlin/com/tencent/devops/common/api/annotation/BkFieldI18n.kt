@@ -25,21 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.common.api.annotation
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import javax.ws.rs.NameBinding
 
-@ApiModel("流水线-插件信息")
-data class MyAtomResp(
-    @ApiModelProperty("总记录数", required = true)
-    val count: Int,
-    @ApiModelProperty("当前页码值", required = false)
-    val page: Int?,
-    @ApiModelProperty("每页记录大小", required = false)
-    val pageSize: Int?,
-    @ApiModelProperty("数据集合", required = false)
-    @BkFieldI18n
-    val records: List<MyAtomRespItem?>
+@Target(AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+@NameBinding
+annotation class BkFieldI18n(
+    val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES, // 翻译信息来源（默认来源于资源文件）
+    val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME, // 翻译类型（默认基于字段名称进行翻译）
+    val keyPrefixName: String = "", // 字段前缀名称
+    val reusePrefixFlag: Boolean = true, //是否复用接口定义的公共前缀
+    val convertName: String = "" // 字段转换名称（当translateType为NAME时，返回报文的字段名称需要转换时使用）
 )

@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
@@ -70,6 +71,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
@@ -101,7 +103,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Optional
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -239,9 +241,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 pageSize = pageSize
             )
                 ?: return@Callable MarketTemplateResp(0, page, pageSize, canInstallTemplates)
-
+            val tTemplate = TTemplate.T_TEMPLATE
             val templateCodeList = templates.map {
-                it["TEMPLATE_CODE"] as String
+                it[tTemplate.TEMPLATE_CODE] as String
             }.toList()
             val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
@@ -264,11 +266,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             }
 
             templates.forEach {
-                val code = it["TEMPLATE_CODE"] as String
+                val code = it[tTemplate.TEMPLATE_CODE] as String
                 val visibleList = templateVisibleData?.get(code)
                 val statistic = templateStatisticData[code]
                 val members = memberData?.get(code)
-                val publicFlag = it["PUBLIC_FLAG"] as Boolean
+                val publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean
                 val canInstall = storeCommonService.generateInstallFlag(
                     defaultFlag = publicFlag,
                     members = members,
@@ -277,28 +279,29 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     userDeptList = userDeptList
                 )
                 val installed = installedTemplateCodes?.contains(code)
-                val classifyId = it["CLASSIFY_ID"] as String
+                val classifyId = it[tTemplate.CLASSIFY_ID] as String
                 val marketItem = MarketItem(
-                    id = it["ID"] as String,
-                    name = it["TEMPLATE_NAME"] as String,
+                    id = it[tTemplate.ID] as String,
+                    name = it[tTemplate.TEMPLATE_NAME] as String,
                     code = code,
+                    version = it[tTemplate.VERSION] as String,
                     type = "",
-                    rdType = TemplateRdTypeEnum.getTemplateRdType((it["TEMPLATE_RD_TYPE"] as Byte).toInt()),
+                    rdType = TemplateRdTypeEnum.getTemplateRdType((it[tTemplate.TEMPLATE_RD_TYPE] as Byte).toInt()),
                     classifyCode = if (classifyMap.containsKey(classifyId)) classifyMap[classifyId] else "",
-                    logoUrl = it["LOGO_URL"] as? String,
-                    publisher = it["PUBLISHER"] as String,
+                    logoUrl = it[tTemplate.LOGO_URL],
+                    publisher = it[tTemplate.PUBLISHER] as String,
                     os = listOf(),
                     downloads = statistic?.downloads
                         ?: 0,
                     score = statistic?.score
                         ?: 0.toDouble(),
-                    summary = it["SUMMARY"] as? String,
+                    summary = it[tTemplate.SUMMARY],
                     flag = canInstall,
-                    publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                    publicFlag = it[tTemplate.PUBLIC_FLAG] as Boolean,
                     buildLessRunFlag = false,
                     docsLink = "",
-                    modifier = it["MODIFIER"] as String,
-                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
+                    modifier = it[tTemplate.MODIFIER] as String,
+                    updateTime = DateTimeUtil.toDateTime(it[tTemplate.UPDATE_TIME] as LocalDateTime),
                     installed = installed
                 )
                 when {
@@ -963,42 +966,47 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 获取项目代码对应的名称
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
-            projectCodeList.add(it["projectCode"] as String)
+            projectCodeList.add(it[KEY_PROJECT_CODE] as String)
         }
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
         val templateList = mutableListOf<MyTemplateItem>()
+        val tTemplate = TTemplate.T_TEMPLATE
         records?.forEach {
-            val templateCode = it["templateCode"] as String
+            val templateCode = it[tTemplate.TEMPLATE_CODE] as String
             var releaseFlag = false // 是否有处于上架状态的模板版本
             val count = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
             if (count > 0) {
                 releaseFlag = true
             }
-            templateList.add(MyTemplateItem(
-                templateId = it["templateId"] as String,
-                templateCode = templateCode,
-                templateName = it["templateName"] as String,
-                logoUrl = it["logoUrl"] as? String,
-                version = it["version"] as String,
-                templateStatus = TemplateStatusEnum.getTemplateStatus((it["templateStatus"] as Byte).toInt()),
-                projectCode = it["projectCode"] as String,
-                projectName = projectMap?.get(it["projectCode"] as String) as String,
-                releaseFlag = releaseFlag,
-                creator = it["creator"] as String,
-                modifier = it["modifier"] as String,
-                createTime = (it["createTime"] as LocalDateTime).timestampmilli(),
-                updateTime = (it["updateTime"] as LocalDateTime).timestampmilli()
-            ))
+            templateList.add(
+                MyTemplateItem(
+                    templateId = it[tTemplate.ID] as String,
+                    templateCode = templateCode,
+                    templateName = it[tTemplate.TEMPLATE_NAME] as String,
+                    logoUrl = it[tTemplate.LOGO_URL],
+                    version = it[tTemplate.VERSION] as String,
+                    templateStatus = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt()),
+                    projectCode = it[KEY_PROJECT_CODE] as String,
+                    projectName = projectMap?.get(it[KEY_PROJECT_CODE] as String) as String,
+                    releaseFlag = releaseFlag,
+                    creator = it[tTemplate.CREATOR] as String,
+                    modifier = it[tTemplate.MODIFIER] as String,
+                    createTime = (it[tTemplate.CREATE_TIME] as LocalDateTime).timestampmilli(),
+                    updateTime = (it[tTemplate.UPDATE_TIME] as LocalDateTime).timestampmilli()
+                )
+            )
         }
         val templateCount = marketTemplateDao.getMyTemplatesCount(dslContext, userId, templateName)
         val totalPages = PageUtil.calTotalPage(pageSize, templateCount)
-        return Result(Page(
-            count = templateCount,
-            page = page,
-            pageSize = pageSize,
-            totalPages = totalPages,
-            records = templateList
-        ))
+        return Result(
+            Page(
+                count = templateCount,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                records = templateList
+            )
+        )
     }
 
     /**

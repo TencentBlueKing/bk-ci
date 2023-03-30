@@ -126,18 +126,17 @@ class ClassifyDao {
 
     fun convert(record: TClassifyRecord): Classify {
         with(record) {
-            val type = StoreTypeEnum.getStoreType(type.toInt())
             // 分类信息名称没有配置国际化信息则取分类表里面的名称
-            val classifyLanName = MessageUtil.getCodeLanMessage(
-                messageCode = "${type.name}.classify.$classifyCode",
-                defaultMessage = classifyName,
-                language = com.tencent.devops.common.web.utils.I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            val classifyType = StoreTypeEnum.getStoreType(type.toInt())
+            val classifyLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "$classifyType.classify.$classifyCode",
+                defaultMessage = classifyName
             )
             return Classify(
                 id = id,
                 classifyCode = classifyCode,
                 classifyName = classifyLanName,
-                classifyType = type,
+                classifyType = classifyType,
                 weight = weight,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()

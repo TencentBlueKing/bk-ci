@@ -312,12 +312,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
-        val updateRequestDataMap = storeI18nMessageService.parseJsonMap(
+        val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
             jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest),
             fileDir = "$atomCode/$version",
-            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
             repositoryHashId = atomRecord.repositoryHashId
         )
         val convertUpdateRequest = JsonUtil.mapTo(updateRequestDataMap, MarketAtomUpdateRequest::class.java)
@@ -355,12 +355,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val taskDataMap = storeI18nMessageService.parseJsonMap(
+        val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
             jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
             fileDir = "$atomCode/$version",
-            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
             repositoryHashId = atomRecord.repositoryHashId
         )
         // 校验前端传的版本号是否正确
@@ -603,7 +603,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         throw ErrorCodeException(errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID)
                     }
                 }
-                storeI18nMessageService.parseErrorCode(
+                storeI18nMessageService.parseErrorCodeI18nInfo(
                     userId = userId,
                     projectCode = projectCode,
                     errorCodes = errorCodes,
@@ -643,12 +643,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 branch = branch
             )
             return if (!qualityJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(qualityJsonStr)) {
-                val qualityDataMap = storeI18nMessageService.parseJsonMap(
+                val qualityDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
                     userId = userId,
                     projectCode = projectCode,
                     jsonMap = JsonUtil.toMutableMap(qualityJsonStr),
                     fileDir = "$atomCode/$atomVersion",
-                    keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$atomVersion",
+                    keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
                     repositoryHashId = repositoryHashId
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>

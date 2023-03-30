@@ -1,7 +1,9 @@
 package com.tencent.devops.common.web.interceptor
 
-import com.tencent.devops.common.api.annotation.BkI18n
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import com.tencent.devops.common.api.pojo.I18nMessage
@@ -21,7 +23,7 @@ import javax.ws.rs.ext.WriterInterceptor
 import javax.ws.rs.ext.WriterInterceptorContext
 
 @Provider
-@BkI18n
+@BkInterfaceI18n
 class BkWriterInterceptor : WriterInterceptor {
 
     companion object {
@@ -39,66 +41,119 @@ class BkWriterInterceptor : WriterInterceptor {
         if (context == null) {
             return
         }
-        val bkI18nAnnotation = context.annotations.find {
-            it is BkI18n
-        } as? BkI18n
-        // 只需拦截标上BkI18n注解的接口
-        if (bkI18nAnnotation == null) {
+        // 1、只需拦截标上BkInterfaceI18n注解的接口
+        val bkInterfaceI18nAnnotation = context.annotations.firstOrNull { it is BkInterfaceI18n } as? BkInterfaceI18n
+        if (bkInterfaceI18nAnnotation == null) {
             context.proceed()
             return
         }
-        val fixKeyPrefixName = bkI18nAnnotation.fixKeyPrefixName
-        val keyPrefixNames = bkI18nAnnotation.keyPrefixNames
-        // 获取实体对象里需要进行国际化翻译的字段集合
+        val fixKeyPrefixName = bkInterfaceI18nAnnotation.fixKeyPrefixName
+        val keyPrefixNames = bkInterfaceI18nAnnotation.keyPrefixNames
+        // 2、获取实体对象里需要进行国际化翻译的字段集合
         val entity = context.entity
         val bkI18nFieldMap = MessageUtil.getBkI18nFieldMap(entity)
         val keyPrefixMap = mutableMapOf<String, String>()
-        // 从实体对象map中获取固定前缀名称的值
+        // 3、从实体对象中获取非数组类前缀名称的值
         keyPrefixNames.filter { !it.contains(ARRAY_WILDCARD_TEMPLATE) }.forEach { keyPrefixName ->
             val keyPrefixValue = getKeyPrefixValue(keyPrefixName, entity)
-            keyPrefixValue?.let {
-                keyPrefixMap[keyPrefixName] = it
-            }
+            keyPrefixValue?.let { keyPrefixMap[keyPrefixName] = it }
         }
-        val i18nKeyMap = mutableMapOf<String, String>()
-        // 获取需要进行国际化翻译的字段的国际化key值
+        val propertyI18nKeyMap = mutableMapOf<String, String>()
+        val dbI18nKeyMap = mutableMapOf<String, String>()
+        // 4、获取需要进行国际化翻译的字段的国际化key值
         bkI18nFieldMap.forEach nextBkI18nField@{ fieldPath, i18nFieldInfo ->
             val i18nKeySb = if (fixKeyPrefixName.isBlank()) {
                 StringBuilder()
             } else {
                 StringBuilder("$fixKeyPrefixName.")
             }
-            val fieldPathTemplateLastIndex = fieldPath.lastIndexOf(".")
-            keyPrefixNames.forEach nextKeyPrefixName@{ keyPrefixName ->
-                if (keyPrefixName.contains(ARRAY_WILDCARD_TEMPLATE)) {
-                    val keyPrefixTemplateLastIndex = keyPrefixName.lastIndexOf(".")
-                    // 如果前缀名称不是固定的，需要将前缀名称往上退一级作为模板进行正则匹配替换
-                    val keyPrefixTemplate = getVarTemplate(keyPrefixTemplateLastIndex, keyPrefixName)
-                    // 把前缀名称中数组的通配符换成正则表达式
-                    val regex = keyPrefixTemplate.replace(ARRAY_WILDCARD_TEMPLATE, ARRAY_REGEX_TEMPLATE).toRegex()
-                    // 如果前缀名称不是固定的，需要将字段路径往上退一级作为模板进行正则匹配替换
-                    val fieldPathTemplate = getVarTemplate(fieldPathTemplateLastIndex, fieldPath)
-                    // 通过字段路径模板获取真实的前缀名称
-                    val matchResult = regex.find(fieldPathTemplate)
-                    // 如果通过正则表达式获取不到真实的前缀名称则中断流程
-                    val convertKeyPrefixTemplate = matchResult?.groupValues?.get(0) ?: return@nextKeyPrefixName
-                    // 获取前缀名称的叶子节点
-                    val keyPrefixLastNodeName = keyPrefixName.substring(keyPrefixTemplateLastIndex + 1)
-                    // 生成真实的前缀名称
-                    val convertKeyPrefixName = "$convertKeyPrefixTemplate.$keyPrefixLastNodeName"
-                    // 从实体对象map中获取
-                    val keyPrefixValue = getKeyPrefixValue(convertKeyPrefixName, entity)
-                    appendI18nKeyNodeName(keyPrefixValue, i18nKeySb)
-                } else {
-                    appendI18nKeyNodeName(keyPrefixMap[keyPrefixName], i18nKeySb)
-                }
+            // 获取字段的key值
+            val fieldKey = getFieldKey(fieldPath, i18nFieldInfo)
+            // 判断字段是否需要复用接口定义的公共前缀
+            if (i18nFieldInfo.reusePrefixFlag) {
+                handleInterfaceKeyPrefixNames(
+                    keyPrefixNames = keyPrefixNames,
+                    fieldPath = fieldPath,
+                    entity = entity,
+                    i18nKeySb = i18nKeySb,
+                    keyPrefixMap = keyPrefixMap
+                )
             }
-            val fieldName = fieldPath.substring(fieldPathTemplateLastIndex + 1)
-            i18nKeyMap[fieldPath] = i18nKeySb.append(fieldName).toString()
+            val i18nKey = i18nKeySb.append(fieldKey).toString()
+            // 根据国际化信息来源把字段信息分别放入不同的集合以便进行后续处理
+            if (i18nFieldInfo.source == I18nSourceEnum.PROPERTIES) {
+                propertyI18nKeyMap[fieldPath] = i18nKey
+            } else {
+                dbI18nKeyMap[fieldPath] = i18nKey
+            }
         }
-        // 为字段设置国际化信息
-        setI18nFieldValue(i18nKeyMap, bkI18nFieldMap)
+        // 5、为字段设置国际化信息
+        if (dbI18nKeyMap.isNotEmpty()) {
+            setDbI18nFieldValue(dbI18nKeyMap, bkI18nFieldMap)
+        }
+        if (propertyI18nKeyMap.isNotEmpty()) {
+            setPropertyI18nFieldValue(propertyI18nKeyMap, bkI18nFieldMap)
+        }
         context.proceed()
+    }
+
+    private fun getFieldKey(
+        fieldPath: String,
+        i18nFieldInfo: I18nFieldInfo
+    ): String {
+        val fieldPathTemplateLastIndex = fieldPath.lastIndexOf(".")
+        // 获取字段路径最后一个节点的名称
+        val lastNodeName = fieldPath.substring(fieldPathTemplateLastIndex + 1)
+        val fieldKeyPrefixName = i18nFieldInfo.keyPrefixName
+        // 依据翻译类型生成字段的后缀名
+        val fieldKeySuffixName = if (i18nFieldInfo.translateType == I18nTranslateTypeEnum.NAME) {
+            // 如果注解上配置了字段转换名称，则使用转换名称进行国际化翻译
+            i18nFieldInfo.convertName.ifBlank {
+                lastNodeName
+            }
+        } else {
+            MessageUtil.getFieldValue(i18nFieldInfo.field, i18nFieldInfo.entity)?.toString() ?: ""
+        }
+        val fieldKey = if (fieldKeyPrefixName.isNotBlank()) {
+            // 如果字段有单独配置前缀，应该生成带有前缀的字段名称
+            "$fieldKeyPrefixName.$fieldKeySuffixName"
+        } else {
+            fieldKeySuffixName
+        }
+        return fieldKey
+    }
+
+    private fun handleInterfaceKeyPrefixNames(
+        keyPrefixNames: Array<String>,
+        fieldPath: String,
+        entity: Any,
+        i18nKeySb: StringBuilder,
+        keyPrefixMap: MutableMap<String, String>
+    ) {
+        keyPrefixNames.forEach nextKeyPrefixName@{ keyPrefixName ->
+            if (keyPrefixName.contains(ARRAY_WILDCARD_TEMPLATE)) {
+                val keyPrefixTemplateLastIndex = keyPrefixName.lastIndexOf(".")
+                // 如果前缀名称不是固定的，需要将前缀名称往上退一级作为模板进行正则匹配替换
+                val keyPrefixTemplate = getVarTemplate(keyPrefixTemplateLastIndex, keyPrefixName)
+                // 把前缀名称中数组的通配符换成正则表达式
+                val regex = keyPrefixTemplate.replace(ARRAY_WILDCARD_TEMPLATE, ARRAY_REGEX_TEMPLATE).toRegex()
+                // 如果前缀名称不是固定的，需要将字段路径往上退一级作为模板进行正则匹配替换
+                val fieldPathTemplate = getVarTemplate(fieldPath.lastIndexOf("."), fieldPath)
+                // 通过字段路径模板获取真实的前缀名称
+                val matchResult = regex.find(fieldPathTemplate)
+                // 如果通过正则表达式获取不到真实的前缀名称则中断流程
+                val convertKeyPrefixTemplate = matchResult?.groupValues?.get(0) ?: return@nextKeyPrefixName
+                // 获取前缀名称的叶子节点
+                val keyPrefixLastNodeName = keyPrefixName.substring(keyPrefixTemplateLastIndex + 1)
+                // 生成真实的前缀名称
+                val convertKeyPrefixName = "$convertKeyPrefixTemplate.$keyPrefixLastNodeName"
+                // 从实体对象map中获取
+                val keyPrefixValue = getKeyPrefixValue(convertKeyPrefixName, entity)
+                appendI18nKeyNodeName(keyPrefixValue, i18nKeySb)
+            } else {
+                appendI18nKeyNodeName(keyPrefixMap[keyPrefixName], i18nKeySb)
+            }
+        }
     }
 
     /**
@@ -128,12 +183,12 @@ class BkWriterInterceptor : WriterInterceptor {
     }
 
     /**
-     * 为字段设置国际化信息
-     * @param i18nKeyMap 国际化字段路径与国际化key映射map
+     * 为翻译来源是DB类型的字段设置国际化信息
+     * @param dbI18ndbKeyMap 国际化字段路径与国际化key映射map
      * @param bkI18nFieldMap 国际化字段路径与字段信息映射map
      */
-    private fun setI18nFieldValue(
-        i18nKeyMap: MutableMap<String, String>,
+    private fun setDbI18nFieldValue(
+        dbI18ndbKeyMap: MutableMap<String, String>,
         bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
     ) {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
@@ -145,7 +200,7 @@ class BkWriterInterceptor : WriterInterceptor {
         val language = I18nUtil.getLanguage(userId)
         val i18nMessageMap = mutableMapOf<String, String>()
         val client = SpringContextUtil.getBean(Client::class.java)
-        val i18nKeys = i18nKeyMap.values.toList()
+        val i18nKeys = dbI18ndbKeyMap.values.toList()
         // 切割国际化key列表，分批获取key的国际化信息
         ListUtils.partition(i18nKeys, SIZE).forEach { rids ->
             var i18nMessages:List<I18nMessage>? = null
@@ -162,10 +217,37 @@ class BkWriterInterceptor : WriterInterceptor {
                 i18nMessageMap[i18nMessage.key] = i18nMessage.value
             }
         }
-        i18nKeyMap.forEach { (fieldPath, i18nKey) ->
+        dbI18ndbKeyMap.forEach { (fieldPath, i18nKey) ->
             val i18nFieldInfo = bkI18nFieldMap[fieldPath]
             val i18nFieldValue = i18nMessageMap[i18nKey]
             if (i18nFieldInfo != null && i18nFieldValue != null) {
+                val field = i18nFieldInfo.field
+                if (!field.isAccessible) {
+                    // 设置字段为可访问
+                    field.isAccessible = true
+                }
+                // 为需要进行国际化翻译的字段设置国际化信息
+                field.set(i18nFieldInfo.entity, i18nFieldValue)
+            }
+        }
+    }
+
+    /**
+     * 为翻译来源是PROPERTY类型的字段设置国际化信息
+     * @param propertyI18nKeyMap 国际化字段路径与国际化key映射map
+     * @param bkI18nFieldMap 国际化字段路径与字段信息映射map
+     */
+    private fun setPropertyI18nFieldValue(
+        propertyI18nKeyMap: MutableMap<String, String>,
+        bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
+    ) {
+        propertyI18nKeyMap.forEach { (fieldPath, i18nKey) ->
+            val i18nFieldInfo = bkI18nFieldMap[fieldPath]
+            // 从资源文件中获取国际化信息
+            val i18nFieldValue = I18nUtil.getCodeLanMessage(
+                messageCode = i18nKey
+            )
+            if (i18nFieldInfo != null && i18nFieldValue.isNotBlank()) {
                 val field = i18nFieldInfo.field
                 if (!field.isAccessible) {
                     // 设置字段为可访问

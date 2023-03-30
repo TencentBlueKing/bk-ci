@@ -51,6 +51,8 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -76,6 +78,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+    @Autowired
+    lateinit var storeI18nMessageService: StoreI18nMessageService
     @Autowired
     lateinit var client: Client
 
@@ -143,7 +147,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         atomCode: String,
         version: String
     ): Result<GetAtomConfigResult?> {
-        val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
+        val taskJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+            jsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME),
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+        )
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
             projectCode = projectCode,

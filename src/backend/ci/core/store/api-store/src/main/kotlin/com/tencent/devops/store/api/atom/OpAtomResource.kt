@@ -30,6 +30,8 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
 import com.tencent.devops.store.pojo.atom.AtomCreateRequest
@@ -124,10 +126,11 @@ interface OpAtomResource {
         desc: Boolean?,
         @ApiParam("页码", required = false)
         @QueryParam("page")
-        page: Int?,
+        page: Int = 1,
         @ApiParam("每页数量", required = false)
         @QueryParam("pageSize")
-        pageSize: Int?
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE)
+        pageSize: Int = 10
     ): Result<AtomResp<Atom>?>
 
     @ApiOperation("根据ID获取流水线插件信息")
