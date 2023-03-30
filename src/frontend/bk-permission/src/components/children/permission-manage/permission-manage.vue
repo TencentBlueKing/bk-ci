@@ -10,6 +10,7 @@
       @choose-group="handleChooseGroup"
       @create-group="handleCreateGroup"
       @close-manage="handleCloseManage"
+      @change-group-detail-tab="handleChangeGroupDetailTab"
     />
     <iam-iframe
       v-if="path"
@@ -67,8 +68,11 @@ export default {
   },
 
   methods: {
+    handleChangeGroupDetailTab(payload) {
+      this.tabName = payload;
+    },
     handleChooseGroup(payload) {
-      this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}`;
+      this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}&tab=${this.tabName}`;
     },
     handleCreateGroup() {
       this.activeIndex = '';
@@ -85,5 +89,6 @@ export default {
 .permission-manage {
     display: flex;
     height: 100%;
+    box-shadow: 0 2px 2px 0 #00000026;
 }
 </style>

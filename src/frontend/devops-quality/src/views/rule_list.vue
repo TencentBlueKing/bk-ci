@@ -14,7 +14,6 @@
                     <div class="rule-main-header">
                         <span
                             v-perm="{
-                                tooltips: '没有权限',
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: RULE_RESOURCE_TYPE,
@@ -85,7 +84,6 @@
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
-                                            tooltips: '没有权限',
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: RULE_RESOURCE_TYPE,
@@ -103,7 +101,6 @@
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
-                                            tooltips: '没有权限',
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: RULE_RESOURCE_TYPE,
@@ -121,7 +118,6 @@
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
-                                            tooltips: '没有权限',
                                             permissionData: {
                                                 projectId: projectId,
                                                 resourceType: RULE_RESOURCE_TYPE,

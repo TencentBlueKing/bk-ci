@@ -26,15 +26,14 @@
                     <li
                         v-for="(item, index) in menu"
                         :key="index"
+                        @click="hideUserInfo(item)"
                     >
-                        <router-link
+                        <a
                             v-if="item.to"
                             class="user-menu-item"
-                            :to="item.to"
-                            @click.native="hideUserInfo"
                         >
                             {{ item.label }}
-                        </router-link>
+                        </a>
                         <span
                             v-else-if="item.cb"
                             class="user-menu-item"
@@ -79,8 +78,12 @@
             this.show = !this.show
         }
 
-        hideUserInfo (): void {
+        hideUserInfo (item): void {
             this.show = false
+            if (item) {
+                if (item.to === this.$route.fullPath) return
+                this.$router.push(item.to)
+            }
         }
 
         @Watch('show')
@@ -182,10 +185,17 @@
                 }
             }
             > ul {
-                margin: 20px;
+                margin: 20px 0;
                 > li {
                     margin: 0 0 10px 0;
                     line-height: 24px;
+                    cursor: pointer;
+                    padding: 0 20px;
+                    &:hover {
+                        .user-menu-item {
+                            color: $aHoverColor;
+                        }
+                    }
                     &:last-child {
                         margin-bottom: 0;
                     }

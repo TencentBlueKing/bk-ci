@@ -21,7 +21,7 @@
       <div class="search-input-input">
         <bk-popover
           trigger='manual'
-          theme='light'
+          theme='light group-select-popover'
           :disableOutsideClick="true"
           :arrow="false"
           :isShow="showMenuPopover"
@@ -320,15 +320,61 @@ export default {
   },
   methods: {
     async initApplyQuery() {
-      const { resourceType, action, iamResourceCode, groupId, groupName } = this.$route.query;
-      if (resourceType && iamResourceCode && action) {
-        this.resourceType = resourceType;
-        if (groupId) {
+      const cacheQuery =  JSON.parse(sessionStorage.getItem('group-apply-query'));
+      const { project_code } = this.$route.query;
+      if (cacheQuery.project_code !== project_code) {
+        sessionStorage.setItem('group-apply-query', JSON.stringify(this.$route.query))
+      } else {
+        const { resourceType, action, iamResourceCode, groupId, groupName, project_code } = cacheQuery;
+        if (resourceType && iamResourceCode && action) {
+          this.resourceType = resourceType;
+          if (groupId) {
+            await this.getResourceList();
+            await this.getActionsList();
+            const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
+            const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
+            console.log(this.resourceList, 'resourceList')
+            resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
+            const resourceCodeParams = {
+              id: 'resourceCode',
+              name: this.$t('资源实例'),
+              values: [resourceValue],
+            };
+            this.searchSelectValue.push(resourceCodeParams);
+            const actionValue = this.actionsList.find(i => i.action === action)
+            const actionParams = {
+              id: 'actionId',
+              name: this.$t('操作'),
+              values: [actionValue],
+            }
+            this.searchSelectValue.push(actionParams);
+          } else {
+            await this.getActionsList();
+            const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
+            const actionValue = this.actionsList.find(i => i.action === action)
+            actionValue.name = `${resourceTypeName}/${actionValue.actionName}`
+            const actionParams = {
+              id: 'actionId',
+              name: this.$t('操作'),
+              values: [actionValue],
+            }
+            this.searchSelectValue.push(actionParams);
+          }
+  
+          if (groupName) {
+            const nameParams = {
+              id: 'name',
+              name: this.$t('用户组名'),
+              values: [groupName]
+            }
+            this.searchSelectValue.push(nameParams);
+          }
+        } else if (resourceType && iamResourceCode) {
+          this.resourceType = resourceType;
           await this.getResourceList();
           await this.getActionsList();
           const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
           const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
-          console.log(this.resourceList, 'resourceList')
           resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
           const resourceCodeParams = {
             id: 'resourceCode',
@@ -336,47 +382,7 @@ export default {
             values: [resourceValue],
           };
           this.searchSelectValue.push(resourceCodeParams);
-          const actionValue = this.actionsList.find(i => i.action === action)
-          const actionParams = {
-            id: 'actionId',
-            name: this.$t('操作'),
-            values: [actionValue],
-          }
-          this.searchSelectValue.push(actionParams);
-        } else {
-          await this.getActionsList();
-          const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
-          const actionValue = this.actionsList.find(i => i.action === action)
-          actionValue.name = `${resourceTypeName}/${actionValue.actionName}`
-          const actionParams = {
-            id: 'actionId',
-            name: this.$t('操作'),
-            values: [actionValue],
-          }
-          this.searchSelectValue.push(actionParams);
         }
-
-        if (groupName) {
-          const nameParams = {
-            id: 'name',
-            name: this.$t('用户组名'),
-            values: [groupName]
-          }
-          this.searchSelectValue.push(nameParams);
-        }
-      } else if (resourceType && iamResourceCode) {
-        this.resourceType = resourceType;
-        await this.getResourceList();
-        await this.getActionsList();
-        const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
-        const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
-        resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
-        const resourceCodeParams = {
-          id: 'resourceCode',
-          name: this.$t('资源实例'),
-          values: [resourceValue],
-        };
-        this.searchSelectValue.push(resourceCodeParams);
       }
     },
     changeKeyWords() {
@@ -860,9 +866,10 @@ export default {
       color: #979ba5;
     }
   }
+
 </style>
 <style lang="postcss">
-  .bk-popover {
+  .group-select-popover {
     padding: 0 !important;
     padding-bottom: 0 !important;
     .loading-panel,

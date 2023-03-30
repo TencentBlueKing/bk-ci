@@ -186,10 +186,10 @@ const getAllProjectList = (name = '') => {
 
 const getProjectByName = () => {
   const params = <any>{}
-  if (projectName.value) {
-    params.projectName = projectName.value
-  } else if (route?.query.project_code) {
+  if (route?.query.project_code) {
     params.english_name = route?.query.project_code
+  } else if (projectName.value) {
+    params.projectName = projectName.value
   }
   http.getAllProjectList(params).then(res => {
     curProject.value = res.records[0];
@@ -395,6 +395,8 @@ onMounted(() => {
     }
     .custom-time-select {
         width: 110px;
+        position: relative;
+        left: -1px;
     }
     .reason-textarea {
       width: 440px;
@@ -409,7 +411,6 @@ onMounted(() => {
     .suffix-slot {
       display: flex;
       align-items: center;
-      border-left: 1px solid #c4c6cc;
       justify-content: center;
       width: 35px;
       background: #fff;

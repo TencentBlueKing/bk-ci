@@ -13,12 +13,12 @@
       label-width="100"
     >
       <bk-form-item
-        :label="$t('userGroupName')"
+        :label="$t('用户组名')"
       >
         <span>{{ groupName }}</span>
       </bk-form-item>
       <bk-form-item
-        :label="$t('applicationPeriod')"
+        :label="$t('授权期限')"
         property="expireTime"
         required
         error-display-type="normal"
@@ -39,7 +39,7 @@
             v-show="currentActive !== 'custom'"
             @click="handleChangCustom"
           >
-            {{ $t('custom') }}
+            {{ $t('自定义') }}
           </bk-button>
           <bk-input
             v-model="customTime"
@@ -54,7 +54,7 @@
           >
             <template v-slot:append>
               <div class="group-text">
-                {{ $t('day') }}
+                {{ $t('天') }}
               </div>
             </template>
           </bk-input>
@@ -62,15 +62,15 @@
       </bk-form-item>
       <bk-form-item
         v-if="type === 'renewal'"
-        :label="$t('expirationTime')"
+        :label="$t('到期时间')"
       >
-        <span class="expired">{{ expiredDisplay }}{{ $t('day')}}</span>
+        <span class="expired">{{ expiredDisplay }}{{ $t('天')}}</span>
         <img class="arrows-icon" src="../../../svg/arrows-right.svg?inline">
-        <span class="new-expired">{{ newExpiredDisplay }}{{ $t('day')}}</span>
+        <span class="new-expired">{{ newExpiredDisplay }}{{ $t('天')}}</span>
       </bk-form-item>
       <bk-form-item
         v-else
-        :label="$t('reason')"
+        :label="$t('理由')"
         property="reason"
         required
         error-display-type="normal"
@@ -91,13 +91,13 @@
         :loading="isLoading"
         @click="handleConfirm"
       >
-        {{ $t('confirm') }}
+        {{ $t('确定') }}
       </bk-button>
       <bk-button
         :loading="isLoading"
         @click="handleCancel"
       >
-        {{ $t('cancel') }}
+        {{ $t('取消') }}
       </bk-button>
     </template>
   </permission-dialog>
@@ -154,10 +154,10 @@ export default {
       },
       currentActive: 2592000,
       timeFilters: {
-        2592000: this.$t('oneMonth'),
-        7776000: this.$t('threeMonth'),
-        15552000: this.$t('sixMonth'),
-        31104000: this.$t('twelveMonth'),
+        2592000: this.$t('1个月'),
+        7776000: this.$t('3个月'),
+        15552000: this.$t('6个月'),
+        31104000: this.$t('12个月'),
       },
       rules: {
         expireTime: [
@@ -168,14 +168,14 @@ export default {
               }
               return this.currentActive !== 'custom';
             },
-            message: this.$t('selectPeriod'),
+            message: this.$t('请选择申请期限'),
             trigger: 'blur',
           },
         ],
         reason: [
           {
             required: true,
-            message: this.$t('fillReason'),
+            message: this.$t('请填写申请理由'),
             trigger: 'blur',
           },
         ],
@@ -275,7 +275,7 @@ export default {
           .then(() => {
             this.$bkMessage({
               theme: 'success',
-              message: this.$t('applySuccess'),
+              message: this.$t('申请成功，请等待审批'),
             });
           })
           .catch((err) => {
@@ -301,7 +301,7 @@ export default {
         .then(() => {
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('applySuccess'),
+            message: this.$t('申请成功，请等待审批'),
           });
         })
         .catch((err) => {

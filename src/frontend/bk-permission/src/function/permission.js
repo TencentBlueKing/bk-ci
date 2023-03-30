@@ -54,6 +54,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
         ui.bkTableColumn,
         {
           props: {
+            showOverflowTooltip: true,
             label: column.label,
             prop: column.prop,
           },

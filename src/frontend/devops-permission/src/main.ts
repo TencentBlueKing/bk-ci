@@ -9,6 +9,7 @@ import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
+import ellipsis from '@/directives/ellipsis'
 
 // i18n
 import { getCookies } from './common/util';
@@ -34,4 +35,5 @@ app
   .use(bkui)
   .use(i18n)
   .mount('.app');
-app.directive('bk-tooltips', bkTooltips)
+app.directive('bk-tooltips', bkTooltips);
+app.directive('bk-ellipsis', ellipsis);

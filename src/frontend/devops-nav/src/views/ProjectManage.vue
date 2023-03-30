@@ -204,6 +204,11 @@
                 return list.slice(limit * (current - 1), limit * current)
             }
         },
+        watch: {
+            inputValue (val) {
+                this.pagination.current = 1
+            }
+        },
         created () {
             this.fetchProjects()
         },

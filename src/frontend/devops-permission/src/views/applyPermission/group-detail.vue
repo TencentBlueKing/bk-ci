@@ -141,7 +141,7 @@ const handleShowInstances = (data, name) => {
                 <div class="instance-item">
                   <div v-for="(path, pathIndex) in relatedResourceInfo?.instances?.path" :key="pathIndex">
                     <span v-for="(item, index) in path" :key="item.id">
-                      {{ item.name }} {{ index > 0 ? '/' : '' }}
+                      {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
                     </span>
                   </div>
                 </div>

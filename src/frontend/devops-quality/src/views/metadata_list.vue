@@ -93,7 +93,6 @@
                                                 v-perm="{
                                                     hasPermission: canEdit,
                                                     disablePermissionApi: true,
-                                                    tooltips: '没有权限',
                                                     permissionData: {
                                                         projectId: projectId,
                                                         resourceType: RULE_RESOURCE_TYPE,

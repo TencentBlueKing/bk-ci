@@ -24,7 +24,7 @@
                 return this.$route.params.id
             },
             groupName () {
-                return this.$route.query.groupName
+                return this.$route.params.groupName
             }
         }
     }
