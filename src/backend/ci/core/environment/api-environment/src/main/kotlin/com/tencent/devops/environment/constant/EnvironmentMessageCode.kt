@@ -84,6 +84,10 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
     const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
     const val BK_SZ = "BkSz" // 深圳
+    const val BK_SH = "BkSh" // 上海
+    const val BK_CD = "BkCd" // 成都
+    const val BK_TJ = "BkTj" // 天津
+    const val BK_XJP = "BkXjp" // 新加坡
     const val BK_CMDB = "BkCmdb" // CMDB
     const val BK_DEVCLOUD = "BkDevcloud" // DevCloud虚拟机
     const val BK_THIRDPARTY = "BkThirdparty" // 第三方构建机
