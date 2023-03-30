@@ -12,13 +12,13 @@ enum class GatewayType(val typeName: String) {
 
 
     companion object {
-
+        
         fun i18n(typeName: String): String {
             return when (typeName) {
-                GatewayType.SZ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SZ)
-                GatewayType.SH.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SH)
-                GatewayType.CD.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_CD)
-                GatewayType.TJ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_TJ)
+                SZ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SZ)
+                SH.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SH)
+                CD.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_CD)
+                TJ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_TJ)
                 else -> {
                     MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_XJP)}
             }
