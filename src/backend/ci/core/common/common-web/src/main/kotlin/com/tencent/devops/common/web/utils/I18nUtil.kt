@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import org.springframework.web.context.request.RequestContextHolder
@@ -130,14 +129,14 @@ object I18nUtil {
         } else {
             language
         }
-        val i18nMessage =  MessageUtil.getMessageByLocale(
+        val i18nMessage = MessageUtil.getMessageByLocale(
             messageCode = messageCode,
             language = i18nLanguage,
             params = params,
             defaultMessage = defaultMessage
         )
-        return  if (i18nMessage.isNotBlank()) {
-            if (checkUrlDecoder) URLDecoder.decode(i18nMessage, "UTF-8") else i18nMessage
+        return if (i18nMessage.isNotBlank() && checkUrlDecoder) {
+            URLDecoder.decode(i18nMessage, "UTF-8")
         } else {
             i18nMessage
         }
