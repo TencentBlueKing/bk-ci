@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.service.slave
 
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_SZ
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
@@ -61,7 +63,9 @@ class SlaveGatewayService @Autowired constructor(
                 return it.showName
             }
         }
-        return "深圳"
+        return MessageCodeUtil.getCodeLanMessage(
+            messageCode = BK_SZ
+        )
     }
 
     fun getFileGateway(zoneName: String?): String? {

@@ -27,6 +27,11 @@
 
 package com.tencent.devops.environment.pojo.enums
 
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_ABNORMAL
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_NORMAL
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_UNKNOWN
+
 @Suppress("UNUSED")
 enum class NodeStatus(val statusName: String) {
     NORMAL("正常"),
@@ -123,5 +128,27 @@ enum class NodeStatus(val statusName: String) {
 //                else -> UNKNOWN
 //            }
         }
+
+        fun i18n(status: String): String {
+            return when (status) {
+                NORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_NORMAL)
+                ABNORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_ABNORMAL)
+/*                DELETED.name -> DELETED
+                LOST.name -> LOST
+                CREATING.name -> CREATING
+                RUNNING.name -> RUNNING
+                STARTING.name -> STARTING
+                STOPPING.name -> STOPPING
+                STOPPED.name -> STOPPED
+                RESTARTING.name -> RESTARTING
+                DELETING.name -> DELETING
+                BUILDING_IMAGE.name -> BUILDING_IMAGE
+                BUILD_IMAGE_SUCCESS.name -> BUILD_IMAGE_SUCCESS
+                BUILD_IMAGE_FAILED.name -> BUILD_IMAGE_FAILED*/
+                else -> MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)
+            }
+
+        }
+
     }
 }

@@ -531,6 +531,8 @@ class EnvService @Autowired constructor(
             } else {
                 ""
             }
+            val nodeType = NodeType.i18n(it.nodeType)
+            val nodeStatus = NodeStatus.i18n(it.nodeStatus)
 
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
@@ -538,9 +540,9 @@ class EnvService @Autowired constructor(
                 nodeId = nodeStringId,
                 name = it.nodeName,
                 ip = it.nodeIp,
-                nodeStatus = it.nodeStatus,
+                nodeStatus = nodeStatus,
                 agentStatus = getAgentStatus(it),
-                nodeType = it.nodeType,
+                nodeType = nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
                 operator = it.operator,
