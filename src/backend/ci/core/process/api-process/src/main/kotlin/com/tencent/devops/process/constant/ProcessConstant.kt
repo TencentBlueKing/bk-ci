@@ -1,16 +1,16 @@
 package com.tencent.devops.process.constant
 
-const val BK_PIPELINE_SINGLE_BUILD = "bkPipelineSingleBuild"
-const val BK_MUTEX_GROUP_SINGLE_BUILD = "bkMutexGroupSingleBuild"
-const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip"
-const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty"
-const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed"
-const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted"
-const val BK_QUALITY_TO_BE_REVIEW = "bkQualityToBeReview"
-const val BK_POLLING_WAIT_FOR_QUALITY_RESULT = "bkPollingWaitForQualityResult"
-const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult"
-const val BK_AUDIT_TIMEOUT = "bkAuditTimeout"
-const val BK_AUDIT_RESULT = "bkAuditResult"
+const val BK_PIPELINE_SINGLE_BUILD = "bkPipelineSingleBuild"// 当前流水线已设置为同时只能运行一个构建任务，开始排队！
+const val BK_MUTEX_GROUP_SINGLE_BUILD = "bkMutexGroupSingleBuild"// 当前互斥组[{0}]同时只能运行一个构建任务，开始排队！
+const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip"// 非定时触发，直接跳过
+const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty"// 第一阶段的环境不能为空
+const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed"// 质量红线({0})检测已通过
+const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted"// 质量红线({0})检测被拦截
+const val BK_QUALITY_TO_BE_REVIEW = "bkQualityToBeReview"// 质量红线({0})待审核!审核人：{1}
+const val BK_POLLING_WAIT_FOR_QUALITY_RESULT = "bkPollingWaitForQualityResult"// 第 {0} 次轮询等待红线结果
+const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult"// 检测红线结果
+const val BK_AUDIT_TIMEOUT = "bkAuditTimeout"// 审核超时
+const val BK_AUDIT_RESULT = "bkAuditResult"// 步骤审核结束，审核结果：[{0}]，审核人：{1}
 const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait"// 正在处理当前上报的任务, 请稍等。。。
 const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported"// 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
 const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether"// <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>

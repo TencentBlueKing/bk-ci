@@ -54,6 +54,34 @@ object ProcessMessageCode {
     const val MY_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_MY" // "我的流水线"
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
+    const val BK_PIPELINE_SINGLE_BUILD = "bkPipelineSingleBuild"// 当前流水线已设置为同时只能运行一个构建任务，开始排队！
+    const val BK_MUTEX_GROUP_SINGLE_BUILD = "bkMutexGroupSingleBuild"// 当前互斥组[{0}]同时只能运行一个构建任务，开始排队！
+    const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip"// 非定时触发，直接跳过
+    const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty"// 第一阶段的环境不能为空
+    const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed"// 质量红线({0})检测已通过
+    const val BK_QUALITY_CHECK_INTERCEPTED = "bkQualityCheckIntercepted"// 质量红线({0})检测被拦截
+    const val BK_QUALITY_TO_BE_REVIEW = "bkQualityToBeReview"// 质量红线({0})待审核!审核人：{1}
+    const val BK_POLLING_WAIT_FOR_QUALITY_RESULT = "bkPollingWaitForQualityResult"// 第 {0} 次轮询等待红线结果
+    const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult"// 检测红线结果
+    const val BK_AUDIT_TIMEOUT = "bkAuditTimeout"// 审核超时
+    const val BK_AUDIT_RESULT = "bkAuditResult"// 步骤审核结束，审核结果：[{0}]，审核人：{1}
+    const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait"// 正在处理当前上报的任务, 请稍等。。。
+    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported"// 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
+    const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether"// <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
+    const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin"// 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
+    const val BK_BUILD_IN_REVIEW_STATUS = "bkBuildInReviewStatus"// 项目【{0}】下的流水线【{1}】#{2} 构建处于待审核状态
+    const val BK_CHECK_THE_WEB_DATA = "bkCheckTheWebData"// 查web端数据:
+    const val BK_CHECK_FILE_COUNT_AND_VERSION = "bkCheckFileCountAndVersion"// 查文件个数、版本:
+    const val BK_QUERY_PIPELINE_INFO = "bkQueryPipelineInfo"// 查流水线信息:
+    const val BK_QUERY_FAVORITE_PIPELINE = "bkQueryFavoritePipeline"// 查询收藏的流水线:
+    const val BK_PROJECT_NO_PIPELINE = "bkProjectNoPipeline"// 项目下无流水线
+    const val BK_NO_MATCHING_STARTED_PIPELINE = "bkNoMatchingStartedPipeline"//未匹配到启用流水线
+    const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions"// 用户（{0}) 没有流水线({1})的执行权限
+    const val BK_REMOTE_CALL_SOURCE_IP = "bkRemoteCallSourceIp"// 本次远程调用的来源IP是[$sourceIp]
+    const val BK_OPERATE_PIPELINE_FAIL = "bkOperatePipelineFail"// {0}流水线失败
+    const val BK_PIPELINE_NAME = "bkPipelineName"// 流水线名称
+    const val BK_CREATOR = "bkCreator"// 创建人
+
     const val OK = 0
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" // 子流水线id不存在
@@ -193,40 +221,39 @@ object ProcessMessageCode {
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
 
     // 构建时错误
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101113" // bcsInstNum is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101114" // instVersionId is not init
-    const val ERROR_BUILD_TASK_BCS_OPERATE_FAIL = "2101115" // BCS operate failed
-    const val ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR = "2101116" // instVersionId is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_VERSIONID = "2101117" // versionId is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = "2101118" // showVersionId is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_INSTANCE_ENTITY = "2101119" // instanceEntity is not init
-    const val ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL = "2101120" // create instance fail
-    const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101121" // EnvName is not init
-    const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101122" // EnvId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId 不是 init
+    const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category 不是  init
+    const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101113" // bcsInstNum 不是  init
+    const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101114" // instVersionId 不是  init
+    const val ERROR_BUILD_TASK_BCS_OPERATE_FAIL = "2101115" // BCS 操作失败
+    const val ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR = "2101116" // instVersionId 不是 init
+    const val ERROR_BUILD_TASK_BCS_PARAM_VERSIONID = "2101117" // versionId 不是 init
+    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = "2101118" // showVersionId 不是 init
+    const val ERROR_BUILD_TASK_BCS_PARAM_INSTANCE_ENTITY = "2101119" // instanceEntity 不是 init
+    const val ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL = "2101120" // 创建实例失败
+    const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101121" // EnvName 不是 init
+    const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101122" // EnvId 不是 init
     const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = "2101123" // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = "2101124" // 用户没有操作这些环境的权限！环境：$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = "2101125" //  "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
-    const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = "2101126" // Unsupported targetEnvType: $targetEnvType
+    const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = "2101126" // 支持 目标环境类型: {0}
     const val ERROR_BUILD_TASK_CDN_FAIL = "2101127" // "分发CDN失败
     const val ERROR_BUILD_TASK_JOB_PUSH_FILE_FAIL = "2101128"
-    const val ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS = "2101129" // "Index file not exist")
+    const val ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS = "2101129" // 索引文件不存在
     const val ERROR_BUILD_TASK_ZHIYUN_FAIL = "2101130" // 织云操作失败,织云返回错误信息：$msg
     const val ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL = "2101131" // 织云异步升级失败,织云返回错误信息：$msg
 
-    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_PATH = "2101121" // The path is not init
+    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_PATH = "2101121" // 这路径 不是 init
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_CUSTOMIZED = "2101122"
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
 
-    // 质量红线(准入)配置有误：Fail to find quality gate intercept element
-    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
+
+    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"// 质量红线(准入)配置有误:
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
 
-    // 质量红线(准出)配置有误：Fail to find quality gate intercept element
-    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
+    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"// 质量红线(准出)配置有误：
 
     const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
@@ -274,14 +301,14 @@ object ProcessMessageCode {
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
     const val BUILD_MSG_TRIGGERS = "2101320"// 构建触发
 
-    // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
-    const val BUILD_WORKER_DEAD_ERROR = "2101318"
 
-    // 构建机Agent详情链接
-    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
+    const val BUILD_WORKER_DEAD_ERROR = "2101318"// 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
 
-    // 人工审核插件编辑时输入参数错误
-    const val ERROR_PARAM_MANUALREVIEW = "2101105"
+
+    const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"// 构建机Agent详情链接
+
+
+    const val ERROR_PARAM_MANUALREVIEW = "2101105"// 人工审核插件编辑时输入参数错误
 
     // 标签与标签组错误21014开头
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
