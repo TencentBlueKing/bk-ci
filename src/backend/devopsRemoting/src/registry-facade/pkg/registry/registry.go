@@ -3,7 +3,9 @@ package registry
 import (
 	"common/logs"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"os"
@@ -119,43 +121,43 @@ func NewRegistry(cfg config.Config, newResolver ResolverProvider, reg prometheus
 	layerSources = append(layerSources, clsrc)
 
 	specProvider := map[string]ImageSpecProvider{}
-	// if cfg.RemoteSpecProvider != nil {
-	// 	var providers []ImageSpecProvider
-	// 	for _, providerCfg := range cfg.RemoteSpecProvider {
-	// 		rsp, err := createRemoteSpecProvider(providerCfg)
-	// 		if err != nil {
-	// 			return nil, err
-	// 		}
+	if cfg.RemoteSpecProvider != nil {
+		var providers []ImageSpecProvider
+		for _, providerCfg := range cfg.RemoteSpecProvider {
+			rsp, err := createRemoteSpecProvider(providerCfg)
+			if err != nil {
+				return nil, err
+			}
 
-	// 		providers = append(providers, rsp)
-	// 	}
+			providers = append(providers, rsp)
+		}
 
-	// 	specProvider[api.ProviderPrefixRemote] = NewCompositeSpecProvider(providers...)
-	// }
+		specProvider[api.ProviderPrefixRemote] = NewCompositeSpecProvider(providers...)
+	}
 
-	// if cfg.FixedSpecProvider != "" {
-	// 	fc, err := ioutil.ReadFile(cfg.FixedSpecProvider)
-	// 	if err != nil {
-	// 		return nil, xerrors.Errorf("cannot read fixed spec: %w", err)
-	// 	}
+	if cfg.FixedSpecProvider != "" {
+		fc, err := ioutil.ReadFile(cfg.FixedSpecProvider)
+		if err != nil {
+			return nil, xerrors.Errorf("cannot read fixed spec: %w", err)
+		}
 
-	// 	f := make(map[string]json.RawMessage)
-	// 	err = json.Unmarshal(fc, &f)
-	// 	if err != nil {
-	// 		return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
-	// 	}
+		f := make(map[string]json.RawMessage)
+		err = json.Unmarshal(fc, &f)
+		if err != nil {
+			return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
+		}
 
-	// 	prov := make(FixedImageSpecProvider)
-	// 	for k, v := range f {
-	// 		var spec api.ImageSpec
-	// 		err = jsonpb.UnmarshalString(string(v), &spec)
-	// 		if err != nil {
-	// 			return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
-	// 		}
-	// 		prov[k] = &spec
-	// 	}
-	// 	specProvider[api.ProviderPrefixFixed] = prov
-	// }
+		prov := make(FixedImageSpecProvider)
+		for k, v := range f {
+			var spec api.ImageSpec
+			err = json.Unmarshal(v, &spec)
+			if err != nil {
+				return nil, xerrors.Errorf("cannot unmarshal fixed spec: %w", err)
+			}
+			prov[k] = &spec
+		}
+		specProvider[api.ProviderPrefixFixed] = prov
+	}
 
 	// var ipfs *IPFSBlobCache = nil
 	// if cfg.IPFSCache != nil && cfg.IPFSCache.Enabled {
@@ -197,6 +199,32 @@ func NewRegistry(cfg config.Config, newResolver ResolverProvider, reg prometheus
 		ConfigModifier:    NewConfigModifierFromLayerSource(layerSource),
 		metrics:           metrics,
 	}, nil
+}
+
+func createRemoteSpecProvider(cfg *config.RSProvider) (ImageSpecProvider, error) {
+	// grpcOpts := common_grpc.DefaultClientOptions()
+	// if cfg.TLS != nil {
+	// 	tlsConfig, err := common_grpc.ClientAuthTLSConfig(
+	// 		cfg.TLS.Authority, cfg.TLS.Certificate, cfg.TLS.PrivateKey,
+	// 		common_grpc.WithSetRootCAs(true),
+	// 		common_grpc.WithServerName("ws-manager"),
+	// 	)
+	// 	if err != nil {
+	// 		logs.WithField("config", cfg.TLS).Error("Cannot load ws-manager certs - this is a configuration issue.")
+	// 		return nil, xerrors.Errorf("cannot load ws-manager certs: %w", err)
+	// 	}
+
+	// 	grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
+	// } else {
+	// 	grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
+	// }
+
+	specprov, err := NewCachingSpecProvider(128, NewRemoteSpecProvider(cfg.Addr))
+	if err != nil {
+		return nil, xerrors.Errorf("cannot create caching spec provider: %w", err)
+	}
+
+	return specprov, nil
 }
 
 // UpdateStaticLayer updates the static layer a registry-facade adds

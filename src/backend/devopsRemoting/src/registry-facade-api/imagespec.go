@@ -45,3 +45,8 @@ type DirectContentLayer struct {
 	// 用作层的未压缩tar文件的字节数
 	Content []byte `json:"content,omitempty"`
 }
+
+// GetImageSpecRequest 请求image spec 结构体
+type GetImageSpecRequest struct {
+	Id string `json:"id"`
+}
