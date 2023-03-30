@@ -149,6 +149,14 @@
                             { id: 'v2', label: this.$t('setting.ticket.username'), type: 'text', required: true, rules: [this.requireRule('username')], placeholder: this.$t('setting.ticket.usernamePlaceholder') },
                             { id: 'v3', label: this.$t('setting.ticket.password'), type: 'password', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
+                    },
+                    {
+                        id: 'OAUTHTOKEN',
+                        name: 'OauthToken',
+                        desc: this.$t('setting.ticket.oauthTokenDesc'),
+                        content: [
+                            { id: 'v1', label: 'OauthToken', type: 'password', required: true, rules: [this.requireRule('oauth_token')], placeholder: this.$t('setting.ticket.oauthTokenPlaceholder') }
+                        ]
                     }
                 ],
                 formData: {
