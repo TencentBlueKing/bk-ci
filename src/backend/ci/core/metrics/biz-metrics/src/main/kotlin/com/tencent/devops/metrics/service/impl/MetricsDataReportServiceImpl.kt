@@ -384,10 +384,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
             dslContext = dslContext,
-            statisticsTime = DateTimeUtil.stringToLocalDateTime(
-                dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
-                formatStr = YYYY_MM_DD
-            ),
+            statisticsTime = currentTime,
             atomCode = atomCode
         )
         // 获取该插件在更新集合中的记录
