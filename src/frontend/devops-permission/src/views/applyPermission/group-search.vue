@@ -22,6 +22,7 @@ const props = defineProps({
   groupList: Array,
   projectCode: String,
   isDisabled: Boolean,
+  curProject: Object,
 });
 
 const { t } = useI18n();
@@ -43,6 +44,7 @@ const pagination = ref({
 const isRowChecked = ref(false);
 const indeterminate = ref(false);
 const isSelectedAll = ref(false);
+const applyTips = ref('');
 
 const searchList = computed(() => {
   const datas = [
@@ -51,6 +53,7 @@ const searchList = computed(() => {
       id: 'resourceCode',
       multiple: false,
       children: [],
+      disabled: props.isDisabled,
     },
     {
       name: t('用户组名'),
@@ -325,7 +328,9 @@ const columns = [
       :project-code="projectCode"
       @change="handleChangeSearch">
     </search-select>
-    <!-- <div v-if="isDisabled" style="color: #c4c6cd; font-size: 12px;">{{ $t('无该项目的权限，请先选择下方用户组申请加入项目') }}</div> -->
+    <div class="apply-tips">
+      
+    </div>
     <bk-loading
       class="group-table"
       :loading="isLoading">

@@ -46,9 +46,8 @@ const pageInfo = ref({
   loadEnd: false,
 })
 
-const projectName = ref(route?.query.projectName);
 const curProject = ref(null);
-const isDisabled = ref(false);
+const isDisabled = ref(true);
 
 const rules = {
   projectCode: [
@@ -186,13 +185,14 @@ const getAllProjectList = (name = '') => {
 
 const getProjectByName = () => {
   const params = <any>{}
-  if (route?.query.project_code) {
-    params.english_name = route?.query.project_code
-  } else if (projectName.value) {
-    params.projectName = projectName.value
-  }
+  if (formData.value.projectCode) {
+    params.english_name = formData.value.projectCode;
+  } 
   http.getAllProjectList(params).then(res => {
-    curProject.value = res.records[0];
+    if (res.records.length) {
+      curProject.value = res.records[0];
+      isDisabled.value = curProject.value.permission;
+    }
   })
 }
 
@@ -208,14 +208,12 @@ const handleToProjectManage = (project) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   formData.value.expiredAt = formatTimes(2592000);
   formData.value.projectCode = route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
-  getUserInfo();
-  getAllProjectList();
-  if (projectName.value || route?.query.project_code) {
-    getProjectByName();
-  }
+  await getUserInfo();
+  await getAllProjectList();
+  await getProjectByName();
 });
 
 </script>
@@ -264,6 +262,7 @@ onMounted(() => {
           <bk-form-item :label="t('选择用户组')" required>
             <group-search
               :groupList="groupList"
+              :cur-project="curProject"
               :is-disabled="isDisabled"
               :project-code="formData.projectCode"
               @handle-change-select-group="handleChangeGroup"

@@ -2,7 +2,7 @@
   <section
     ref="wrap"
     class="search-select"
-    :class="{ 'is-focus': input.focus, 'disabled': isDisabled }"
+    :class="{ 'is-focus': input.focus }"
     @click="handleWrapClick">
     <div
       class="search-input"
@@ -27,13 +27,6 @@
           :isShow="showMenuPopover"
           placement='bottom-start'>
           <div
-            class="div-input-disabled"
-            v-if="isDisabled"
-            :data-placeholder="disabledPlaceholder"
-          >
-          </div>
-          <div
-            v-else
             ref="input"
             class="div-input"
             :class="{ 'input-before': isShowPlaceholder }"
@@ -67,13 +60,15 @@
               <template v-else-if="optionList.length">
                 <ul class="search-list-menu">
                   <div v-for="option in optionList" :key="option.id">
-                    <li
-                      :key="option.id"
-                      class="menu-item"
-                      :class="{ 'is-hover': hoverId === option.id }"
-                      @click="handleTitleSelect(option)">
-                      {{ option.name }}
-                    </li>
+                    <div v-bk-tooltips="{ content: $t('尚未加入项目。项目成员才可以根据资源实例查询'), placement: 'right', disabled: !option.disabled }">
+                      <li
+                        :key="option.id"
+                        class="menu-item"
+                        :class="{ 'is-hover': hoverId === option.id, 'is-disabled': option.disabled }"
+                        @click="handleTitleSelect(option)">
+                        {{ option.name }}
+                      </li>
+                    </div>
                   </div>
                 </ul>
               </template>
@@ -283,6 +278,7 @@ export default {
     },
     projectCode: {
       handler (val) {
+        this.curProjectCode = val
         this.searchSelectValue = []
       },
       deep: true
@@ -311,7 +307,7 @@ export default {
       hasActionId: false,
       hasLoadEnd: false,
       titleType: '',
-      disabledPlaceholder: this.$t('尚未加入项目，请先加入后再开启搜索')
+      curProjectCode: ''
     }
   },
   async created() {
@@ -333,7 +329,6 @@ export default {
             await this.getActionsList();
             const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
             const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
-            console.log(this.resourceList, 'resourceList')
             resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
             const resourceCodeParams = {
               id: 'resourceCode',
@@ -360,7 +355,7 @@ export default {
             }
             this.searchSelectValue.push(actionParams);
           }
-  
+
           if (groupName) {
             const nameParams = {
               id: 'name',
@@ -384,6 +379,7 @@ export default {
           this.searchSelectValue.push(resourceCodeParams);
         }
       }
+
     },
     changeKeyWords() {
       this.resourceList = [];
@@ -403,7 +399,7 @@ export default {
     },
     
     async getResourceList(page, pageSize, keyWords) {
-      if (!this.projectCode) {
+      if (!this.curProjectCode) {
         Message({
           theme: 'error',
           message: this.$t('请选择项目'),
@@ -452,7 +448,6 @@ export default {
     },
     // searchSelect点击事件
     handleWrapClick() {
-      if (this.isDisabled) return
       if (this.shrink) {
         this.setInputFocus();
       }
@@ -477,7 +472,6 @@ export default {
     },
     // 文本框获取焦点
     handleInputFocus() {
-      if (this.isDisabled) return
       this.input.focus = true
       const input = this.$refs.input;
       // 设置文本框焦点显示位置
@@ -495,18 +489,12 @@ export default {
     },
     // 选中标题类型
     handleTitleSelect(val) {
+      if (val.disabled) return;
       this.actionsList = [];
       this.resourceList = [];
       this.hasResourceCode = this.searchSelectValue.some(item => item.id === 'resourceCode');
       this.hasActionId = this.searchSelectValue.some(item => item.id === 'actionId');
       this.titleType = val.id;
-      // if (this.hasResourceCode && val.id === 'actionId') {
-      //   this.getActionsList();
-      // }
-
-      // if (this.hasActionId && val.id === 'resourceCode') {
-      //   this.getResourceList();
-      // }
 
       this.selectInfo = tools.deepClone(val);
       const inputDom = this.$refs.input;
@@ -533,11 +521,6 @@ export default {
       this.resourceTypeName = name;
       this.hoverId = resourceType;
       this.isLoading = true;
-      // if (this.selectInfo.id === 'actionId') {
-      //   await this.getActionsList();
-      // } else {
-      //   await this.getResourceList();
-      // }
       this.isLoading = false;
     },
 
@@ -585,9 +568,6 @@ export default {
 
     // 快速清空
     handleClear() {
-      if (!this.isDisabled) {
-        this.$refs.input.innerText = '';
-      }
       this.setInputFocus();
       this.input.value = '';
       this.selectInfo = {};
@@ -613,9 +593,6 @@ export default {
 
     // 文本框按键事件
     handleInputKeyup (e) {
-      if (this.isDisabled) {
-        return
-      }
       switch (e.code) {
         case 'Enter':
         case 'NumpadEnter':
@@ -791,9 +768,6 @@ export default {
     &.is-focus {
       border-color: #3a84ff;
     }
-    &.disabled {
-      cursor: not-allowed;
-    }
     transition: all .5s;
   }
   .search-input {
@@ -876,9 +850,9 @@ export default {
     .search-list-menu,
     .select-list-menu {
       padding: 6px 0;
-      max-height: 180px;
+      max-height: 300px;
       overflow: auto;
-      width: 160px !important;
+      width: 200px !important;
       &::-webkit-scrollbar {
         width: 4px;
         height: 4px;
@@ -914,6 +888,10 @@ export default {
         font-size: 22px;
         color: #3a84ff;
       }
+      &.is-disabled {
+        cursor: not-allowed;
+        color: #c4c6cc;
+      }
       &:hover,
       &.is-hover {
         background: #f5f7fa;
@@ -942,7 +920,7 @@ export default {
     .cascader-menu {
       display: flex;
       .cascader-panel {
-        width: 160px;
+        width: 200px;
         height: 100%;
       }
     }
