@@ -126,7 +126,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     )
                     val atomIndexStatisticsDailyRecords = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
                         dslContext = dslContext,
-                        statisticsTime = currentTime,
+                        statisticsTime = statisticsTime,
                         atomCodes = container.atomCodes
                     )
                     container.tasks.forEach { task ->
