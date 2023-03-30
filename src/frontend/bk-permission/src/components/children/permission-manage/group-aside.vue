@@ -1,6 +1,6 @@
 <template>
   <article class="group-aside" v-bkloading="{ isLoading: !groupList.length }">
-    <span class="group-title">{{ $t('权限角色') }}</span>
+    <span class="group-title">{{ t('权限角色') }}</span>
     <scroll-load-list
       class="group-list"
       ref="loadList"
@@ -114,11 +114,13 @@
 <script>
 import ScrollLoadList from '../../widget-components/scroll-load-list';
 import ajax from '../../../ajax/index';
+import { localeMixins } from '../../../utils/locale'
 
 export default {
   components: {
     ScrollLoadList,
   },
+  mixins: [localeMixins],
   props: {
     activeIndex: {
       type: Boolean,
