@@ -273,7 +273,6 @@ class MetricsDataReportDao {
                     .execute()
             }
         }
-
     }
 
     fun batchUpdateAtomOverviewData(
