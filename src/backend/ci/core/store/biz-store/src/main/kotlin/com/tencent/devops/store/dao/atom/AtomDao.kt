@@ -353,8 +353,8 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?,
         sortType: String?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
             val conditions = queryOpPipelineAtomsConditions(
@@ -378,11 +378,7 @@ class AtomDao : AtomBaseDao() {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
-            return if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
-            }
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
     }
 

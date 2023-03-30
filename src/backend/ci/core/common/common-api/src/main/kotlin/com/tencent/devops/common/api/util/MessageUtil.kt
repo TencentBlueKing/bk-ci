@@ -53,7 +53,7 @@ object MessageUtil {
      */
     fun getMessageByLocale(
         messageCode: String,
-        language: String,
+        language: String? = null,
         params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME,
         defaultMessage: String? = null

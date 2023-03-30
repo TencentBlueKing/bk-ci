@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -45,8 +46,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.*
 import java.util.concurrent.Executors
-import java.util.Properties
 
 @Service
 @Suppress("LongParameterList")
@@ -154,7 +155,13 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             // 如果查出来的国际化信息为空则无需进行国际化替换
             jsonStr
         } else {
-            val jsonMap = JsonUtil.toMutableMap(jsonStr)
+            val jsonMap = try {
+                JsonUtil.toMutableMap(jsonStr)
+            } catch (ignored: Throwable) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_CLIENT_REST_ERROR
+                )
+            }
             // 把国际化信息放入properties对象中
             val properties = Properties()
             i18nMessages.forEach { i18nMessage ->

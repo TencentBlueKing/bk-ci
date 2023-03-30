@@ -244,9 +244,8 @@ class BkWriterInterceptor : WriterInterceptor {
         propertyI18nKeyMap.forEach { (fieldPath, i18nKey) ->
             val i18nFieldInfo = bkI18nFieldMap[fieldPath]
             // 从资源文件中获取国际化信息
-            val i18nFieldValue = MessageUtil.getMessageByLocale(
-                messageCode = i18nKey,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            val i18nFieldValue = I18nUtil.getCodeLanMessage(
+                messageCode = i18nKey
             )
             if (i18nFieldInfo != null && i18nFieldValue.isNotBlank()) {
                 val field = i18nFieldInfo.field
