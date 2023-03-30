@@ -32,6 +32,7 @@ import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import java.time.LocalDateTime
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -155,6 +156,19 @@ class AuthResourceGroupDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RELATION_ID.eq(iamGroupId))
                 .fetchOne()
+        }
+    }
+
+    fun listByRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.`in`(iamGroupIds))
+                .fetch()
         }
     }
 

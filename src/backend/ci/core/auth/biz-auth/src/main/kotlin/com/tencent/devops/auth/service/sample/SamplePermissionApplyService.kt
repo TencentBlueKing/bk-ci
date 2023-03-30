@@ -56,14 +56,6 @@ class SamplePermissionApplyService : PermissionApplyService {
         return true
     }
 
-    override fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Boolean {
-        return true
-    }
-
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
         return emptyList()
     }

@@ -76,20 +76,6 @@ interface UserAuthApplyResource {
         applyJoinGroupInfo: ApplyJoinGroupInfo
     ): Result<Boolean>
 
-    @ApiOperation("申请加入项目")
-    @Path("/{projectId}/applyToJoinProject/")
-    @POST
-    fun applyToJoinProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Result<Boolean>
-
     @GET
     @Path("{groupId}/getGroupPermissionDetail")
     @ApiOperation("查询用户组权限详情")
