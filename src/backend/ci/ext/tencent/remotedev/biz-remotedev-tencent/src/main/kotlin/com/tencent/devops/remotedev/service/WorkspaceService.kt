@@ -1210,6 +1210,11 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    fun preCiAgent(agentId: String, workspaceName: String): Boolean {
+        logger.info("update preCiAgent id|$workspaceName|$agentId")
+        return workspaceDao.updatePreCiAgentId(dslContext, agentId, workspaceName)
+    }
+
     fun checkDevfile(
         userId: String,
         pathWithNamespace: String,
@@ -1434,11 +1439,11 @@ class WorkspaceService @Autowired constructor(
             // 删除环境管理第三方构建机记录
             val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.creator).projectId
             if (client.get(ServiceNodeResource::class)
-                    .deleteThirdPartyNode(workspace.creator, projectId, nodeIp ?: "").data == false
+                    .deleteThirdPartyNode(workspace.creator, projectId, workspace.preciAgentId ?: "").data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.creator}|$projectId|$nodeIp|"
+                        "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
             // 清心跳

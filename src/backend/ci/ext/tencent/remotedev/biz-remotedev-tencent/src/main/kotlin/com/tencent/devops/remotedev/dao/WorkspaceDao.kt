@@ -369,6 +369,19 @@ class WorkspaceDao {
         }
     }
 
+    fun updatePreCiAgentId(
+        dslContext: DSLContext,
+        agentId: String,
+        workspaceName: String
+    ): Boolean {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.update(this)
+                .set(PRECI_AGENT_ID, agentId)
+                .where(NAME.eq(workspaceName))
+                .execute() == 1
+        }
+    }
+
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
         return DSL.field(
             "timestampdiff({0}, {1}, NOW())",

@@ -98,4 +98,22 @@ interface RemoteDevResource {
         @QueryParam("timestamp")
         timestamp: String
     ): Result<WorkspaceProxyDetail>
+
+    @ApiOperation("上报preci agent id")
+    @POST
+    @Path("/workspace-proxy/preci_agent")
+    fun preCiAgent(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String,
+        @ApiParam(value = "agentId", required = true)
+        @QueryParam("agentId")
+        agentId: String
+    ): Result<Boolean>
 }
