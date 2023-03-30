@@ -49,6 +49,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
@@ -260,10 +261,8 @@ class RbacPermissionResourceService(
     private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {
         if (resourceType == AuthResourceType.PROJECT.value) {
             val projectInfo =
-                client.get(ServiceProjectResource::class).get(resourceCode).data ?: throw ErrorCodeException(
-                    errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                    params = arrayOf(resourceCode)
-                )
+                client.get(ServiceProjectResource::class).get(resourceCode).data
+                    ?: throw NotFoundException("project - $resourceCode is not exist!")
             val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
             if (approvalStatus.isCreatePending()) {
                 throw ErrorCodeException(
