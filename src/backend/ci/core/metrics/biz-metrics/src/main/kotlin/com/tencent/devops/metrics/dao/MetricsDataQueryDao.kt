@@ -151,7 +151,7 @@ class MetricsDataQueryDao {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
             return dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .and(STATISTICS_TIME.eq(statisticsTime))
+//                .and(STATISTICS_TIME.eq(statisticsTime))
                 .fetchOne()
         }
     }
