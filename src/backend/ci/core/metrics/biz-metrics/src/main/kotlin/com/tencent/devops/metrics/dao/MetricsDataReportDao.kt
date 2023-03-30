@@ -250,38 +250,30 @@ class MetricsDataReportDao {
         }
     }
 
-    fun saveAtomIndexStatisticsDailyData(
+    fun batchSaveAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
-        saveAtomIndexStatisticsDailyPO: SaveAtomIndexStatisticsDailyPO
+        saveAtomIndexStatisticsDailyPOs: List<SaveAtomIndexStatisticsDailyPO>
     ) {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            dslContext.insertInto(this)
-                .set(ID, saveAtomIndexStatisticsDailyPO.id)
-                .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
-                .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
-                .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
-                .execute()
+            saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomIndexStatisticsDailyPO.id)
+                    .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                    .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
+                    .onDuplicateKeyUpdate()
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                    .execute()
+            }
         }
-    }
 
-    fun updateAtomIndexStatisticsDailyData(
-        dslContext: DSLContext,
-        saveAtomIndexStatisticsDailyPO: SaveAtomIndexStatisticsDailyPO
-    ) {
-        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            dslContext.update(this)
-                .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                .where(ATOM_CODE.eq(saveAtomIndexStatisticsDailyPO.atomCode))
-                .and(STATISTICS_TIME.eq(saveAtomIndexStatisticsDailyPO.statisticsTime))
-                .execute()
-        }
     }
 
     fun batchUpdateAtomOverviewData(

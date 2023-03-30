@@ -180,22 +180,10 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
                 }
                 if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
-                    saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
-                        try {
-                            metricsDataReportDao.saveAtomIndexStatisticsDailyData(
-                                context,
-                                saveAtomIndexStatisticsDailyPO
-                            )
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.warn(
-                                "fail to update atomIndexStatisticsDaily:$saveAtomIndexStatisticsDailyPO", ignored
-                            )
-                            metricsDataReportDao.updateAtomIndexStatisticsDailyData(
-                                context,
-                                saveAtomIndexStatisticsDailyPO
-                            )
-                        }
-                    }
+                    metricsDataReportDao.batchSaveAtomIndexStatisticsDailyData(
+                        context,
+                        saveAtomIndexStatisticsDailyPOs
+                    )
                 }
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
