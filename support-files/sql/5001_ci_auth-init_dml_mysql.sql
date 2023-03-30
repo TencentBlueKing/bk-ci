@@ -36,21 +36,21 @@ REPLACE INTO  `T_AUTH_GROUP_PERSSION` (`ID`, `AUTH_ACTION`, `GROUP_CODE`, `CREAT
 REPLACE INTO  `T_AUTH_GROUP_PERSSION` (`ID`, `AUTH_ACTION`, `GROUP_CODE`, `CREATE_USER`, `UPDATE_USER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES  ("1bc8bc33341149f78a049e1a43c99f20","node_use","ciAdmin","system",'',"2020-06-25 17:13:58",NULL);
 
 REPLACE INTO  T_AUTH_RESOURCE_TYPE (`ID`, RESOURCE_TYPE, NAME, ENGLISH_NAME, `DESC`, ENGLISH_DESC, PARENT, `SYSTEM`, CREATE_USER, UPDATE_USER, `DELETE`) VALUES
-        (1, 'project', 'Project', 'Project', 'Project', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (2, 'pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (3, 'pipeline_group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (4, 'repertory', 'Repository', 'Repository', 'Repository', 'Repository', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (5, 'credential', 'Credential', 'Credential', 'Credential', 'Credential', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (6, 'cert', 'Cert', 'Cert', 'Cert', 'Cert', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (7, 'environment', 'Environment', 'Environment', 'Environment', 'Environment', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (8, 'env_node', 'Node', 'Node', 'Node', 'Node', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (9, 'codecc_task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'project', 'bk_ci_rbac', 'system',null, 0),
-        (10, 'codecc_rule_set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (11, 'codecc_ignore_type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'project', 'bk_ci_rbac', 'system',null, 0),
-        (12, 'experience_task', 'Experience Task', 'Experience Task', 'Experience Task', 'Experience Task', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (13, 'experience_group', 'Experience Group', 'Experience Group', 'Experience Group', 'Experience Group', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (14, 'rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'project', 'bk_ci_rbac', 'system', null, 0),
-        (15, 'quality_group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'project', 'bk_ci_rbac', 'system', null, 0);
+        (1, 'pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'Pipeline', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (2, 'pipeline_group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'Pipeline Group', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (3, 'repertory', 'Repository', 'Repository', 'Repository', 'Repository', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (4, 'credential', 'Credential', 'Credential', 'Credential', 'Credential', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (5, 'cert', 'Cert', 'Cert', 'Cert', 'Cert', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (6, 'environment', 'Environment', 'Environment', 'Environment', 'Environment', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (7, 'env_node', 'Node', 'Node', 'Node', 'Node', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (8, 'codecc_task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'CodeCC Task', 'project', 'bk_ci_rbac', 'system',null, 0),
+        (9, 'codecc_rule_set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'CodeCC Rule Set', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (10, 'codecc_ignore_type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'CodeCC Ignore Type', 'project', 'bk_ci_rbac', 'system',null, 0),
+        (11, 'experience_task', 'Experience Task', 'Experience Task', 'Experience Task', 'Experience Task', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (12, 'experience_group', 'Experience Group', 'Experience Group', 'Experience Group', 'Experience Group', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (13, 'rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'Andon Rule', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (14, 'quality_group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'Andon Notice Group', 'project', 'bk_ci_rbac', 'system', null, 0),
+        (15, 'project', 'Project', 'Project', 'Project', 'Project', 'project', 'bk_ci_rbac', 'system', null, 0);
 REPLACE INTO  T_AUTH_ACTION(`ACTION`, RESOURCE_TYPE, RELATED_RESOURCE_TYPE, ACTION_NAME, ENGLISH_NAME, CREATE_USER, `DELETE`, ACTION_TYPE) VALUES
         ('project_visit', 'project', 'project', 'Project Visit', 'Project Visit', 'system', 0, 'view'),
         ('project_view', 'project', 'project', 'project View', 'Project View', 'system', 0, 'view'),

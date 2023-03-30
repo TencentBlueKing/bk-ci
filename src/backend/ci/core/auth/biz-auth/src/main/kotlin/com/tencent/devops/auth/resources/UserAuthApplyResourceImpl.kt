@@ -46,20 +46,6 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         return Result(permissionApplyService.applyToJoinGroup(userId, applyJoinGroupInfo))
     }
 
-    override fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Result<Boolean> {
-        return Result(
-            permissionApplyService.applyToJoinProject(
-                userId = userId,
-                projectId = projectId,
-                applyJoinProjectInfo = applyJoinProjectInfo
-            )
-        )
-    }
-
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
         return Result(permissionApplyService.getGroupPermissionDetail(userId, groupId))
     }

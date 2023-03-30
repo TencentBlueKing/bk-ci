@@ -4,16 +4,15 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
+import com.tencent.bk.sdk.iam.dto.manager.GroupMemberVerifyInfo
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
-import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
-import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.ManagerRoleGroupInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -30,7 +29,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
@@ -40,6 +38,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -215,42 +215,48 @@ class RbacPermissionApplyService @Autowired constructor(
         projectName: String,
         managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
-        val groupInfoList: MutableList<ManagerRoleGroupInfo> = mutableListOf()
-        if (managerRoleGroupInfoList.isNotEmpty()) {
-            // 校验用户是否属于用户组
-            val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
-            val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
-            managerRoleGroupInfoList.forEach {
-                val dbGroupRecord = authResourceGroupDao.getByRelationId(
-                    dslContext = dslContext,
-                    projectCode = projectId,
-                    iamGroupId = it.id.toString()
-                ) /*?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                    params = arrayOf(it.id.toString()),
-                    defaultMessage = "group ${it.name} not exist"
-                )*/
-                // todo 待完善后，要进行异常处理,暂时这么处理，如果在用户组表找不到，那么用户组默认挂在项目下
-                groupInfoList.add(
-                    ManagerRoleGroupInfo(
-                        id = it.id,
-                        name = it.name,
-                        description = it.description,
-                        readonly = it.readonly,
-                        userCount = it.userCount,
-                        departmentCount = it.departmentCount,
-                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                        resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value,
-                        resourceTypeName = rbacCacheService.getResourceTypeInfo(
-                            dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
-                        ).name,
-                        resourceName = dbGroupRecord?.resourceName ?: projectName,
-                        resourceCode = dbGroupRecord?.resourceCode ?: projectId
-                    )
-                )
-            }
+        if (managerRoleGroupInfoList.isEmpty()) return emptyList()
+
+        val groupIds = managerRoleGroupInfoList.map { it.id.toString() }
+        val verifyMemberJoinedResult = verifyMemberJoined(userId, groupIds)
+        val dbGroupRecords = authResourceGroupDao.listByRelationId(dslContext, projectId, groupIds)
+
+        return managerRoleGroupInfoList.map { gInfo ->
+            val dbGroupRecord = dbGroupRecords.find { record -> record.relationId == gInfo.id.toString() }
+            val resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
+            val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
+            val resourceName = dbGroupRecord?.resourceName ?: projectName
+            val resourceCode = dbGroupRecord?.resourceCode ?: projectId
+            ManagerRoleGroupInfo(
+                id = gInfo.id,
+                name = gInfo.name,
+                description = gInfo.description,
+                readonly = gInfo.readonly,
+                userCount = gInfo.userCount,
+                departmentCount = gInfo.departmentCount,
+                joined = verifyMemberJoinedResult[gInfo.id.toInt()]?.belong ?: false,
+                resourceType = resourceType,
+                resourceTypeName = resourceTypeName,
+                resourceName = resourceName,
+                resourceCode = resourceCode
+            )
+        }.sortedBy { it.resourceType }
+    }
+
+    private fun verifyMemberJoined(
+        userId: String,
+        groupIds: List<String>
+    ): Map<Int, GroupMemberVerifyInfo> {
+        val verifyGroupValidMemberResult = mutableMapOf<Int, GroupMemberVerifyInfo>()
+        val futures = mutableListOf<Future<*>>()
+        groupIds.chunked(20).forEach { batchGroupIds ->
+            futures.add(executor.submit {
+                val batchVerifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","))
+                verifyGroupValidMemberResult.putAll(batchVerifyGroupValidMember)
+            })
         }
-        return groupInfoList.sortedBy { it.resourceType }
+        futures.forEach { it.get() } // 等待所有异步任务完成
+        return verifyGroupValidMemberResult
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
@@ -273,38 +279,9 @@ class RbacPermissionApplyService @Autowired constructor(
         return true
     }
 
-    override fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Boolean {
-        logger.info("user $userId apply join project $projectId)|${applyJoinProjectInfo.expireTime}")
-        val resourceGroup = authResourceGroupDao.get(
-            dslContext = dslContext,
-            projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
-            groupCode = DefaultGroupType.VIEWER.value
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(DefaultGroupType.VIEWER.displayName),
-            defaultMessage = "group ${DefaultGroupType.VIEWER.displayName} not exist"
-        )
-        return applyToJoinGroup(
-            userId = userId,
-            applyJoinGroupInfo = ApplyJoinGroupInfo(
-                groupIds = listOf(resourceGroup.relationId.toInt()),
-                expiredAt = applyJoinProjectInfo.expireTime,
-                applicant = userId,
-                reason = applyJoinProjectInfo.reason
-            )
-        )
-    }
-
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
-        val iamGroupPermissionDetailList: List<GroupPermissionDetailResponseDTO>
-        try {
-            iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
+        val iamGroupPermissionDetailList = try {
+            v2ManagerService.getGroupPermissionDetail(groupId)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
@@ -312,24 +289,20 @@ class RbacPermissionApplyService @Autowired constructor(
                 defaultMessage = "Failed to get group($groupId) permission info"
             )
         }
-        val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
-        iamGroupPermissionDetailList.forEach {
-            val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
+        return iamGroupPermissionDetailList.map { detail ->
+            val relatedResourceTypesDTO = detail.resourceGroups[0].relatedResourceTypesDTO[0]
             buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
                 name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
-            groupPermissionDetailVoList.add(
-                GroupPermissionDetailVo(
-                    actionId = it.id,
-                    name = rbacCacheService.getActionInfo(action = it.id).actionName,
-                    relatedResourceInfo = relatedResourceInfo
-                )
+            GroupPermissionDetailVo(
+                actionId = detail.id,
+                name = rbacCacheService.getActionInfo(action = detail.id).actionName,
+                relatedResourceInfo = relatedResourceInfo
             )
-        }
-        return groupPermissionDetailVoList.sortedBy { it.relatedResourceInfo.type }
+        }.sortedBy { it.relatedResourceInfo.type }
     }
 
     private fun buildRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
@@ -478,11 +451,7 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             groupCode = groupCode
-        ) /*?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(groupCode),
-            defaultMessage = "group [$groupCode] not exist"
-        )*/
+        )
         if (resourceGroup != null) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
@@ -498,5 +467,6 @@ class RbacPermissionApplyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
+        private val executor = Executors.newFixedThreadPool(10)
     }
 }

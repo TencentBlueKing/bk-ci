@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.service
 
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
@@ -31,21 +31,21 @@ class RbacCacheService constructor(
     }
 
     /*获取资源类型下的动作*/
-    private val resourceType2ActionCache = CacheBuilder.newBuilder()
+    private val resourceType2ActionCache = Caffeine.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String/*resourceType*/, List<ActionInfoVo>>()
-    private val resourceTypeCache = CacheBuilder.newBuilder()
+    private val resourceTypeCache = Caffeine.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String/*resourceType*/, ResourceTypeInfoVo>()
-    private val actionCache = CacheBuilder.newBuilder()
+    private val actionCache = Caffeine.newBuilder()
         .maximumSize(500)
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String/*action*/, ActionInfoVo>()
 
     // 用户-管理员项目 缓存， 5分钟有效时间
-    private val projectManager = CacheBuilder.newBuilder()
+    private val projectManager = Caffeine.newBuilder()
         .maximumSize(5000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, List<String>>()

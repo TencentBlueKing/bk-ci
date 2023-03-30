@@ -28,12 +28,6 @@ interface PermissionApplyService {
         applyJoinGroupInfo: ApplyJoinGroupInfo
     ): Boolean
 
-    fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Boolean
-
     fun getGroupPermissionDetail(
         userId: String,
         groupId: Int
