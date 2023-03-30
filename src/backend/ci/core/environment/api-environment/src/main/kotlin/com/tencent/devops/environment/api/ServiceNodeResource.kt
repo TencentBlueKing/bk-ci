@@ -169,8 +169,8 @@ interface ServiceNodeResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "节点ip", required = true)
-        @QueryParam("nodeIp")
-        nodeIp: String
+        @ApiParam(value = "agent id", required = true)
+        @QueryParam("agentId")
+        agentId: String
     ): Result<Boolean>
 }
