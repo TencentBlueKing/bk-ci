@@ -257,16 +257,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         groupId: Int
     ): Boolean {
         logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
-        if (!permissionResourceService.hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-            )) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val authResourceGroup = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = projectId,
@@ -302,17 +298,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 defaultMessage = "group name cannot be less than 5 characters"
             )
         }
-        if (!permissionResourceService.hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-            )
-        ) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val authResourceGroup = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = projectId,
