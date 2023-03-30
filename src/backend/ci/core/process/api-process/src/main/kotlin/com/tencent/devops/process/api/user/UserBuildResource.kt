@@ -37,12 +37,14 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -51,6 +53,7 @@ import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -235,6 +238,27 @@ interface UserBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<ModelDetail>
+
+    @ApiOperation("根据执行次数获取构建详情")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/record")
+    fun getBuildRecordByExecuteCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<ModelRecord>
 
     @ApiOperation("获取构建详情")
     @GET
@@ -540,5 +564,26 @@ interface UserBuildResource {
         @ApiParam("containerId", required = true)
         @QueryParam("containerId")
         containerId: String
+    ): Result<Boolean>
+
+    @ApiOperation("尝试将异常导致流水线中断的继续运转下去（结果可能是：失败结束 or 继续运行）")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/try_fix_stuck_builds")
+    fun tryFinishStuckBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128, required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64, required = true)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(minLength = 32, maxLength = 34, required = true)
+        pipelineId: String,
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
+        @BkField(required = true)
+        buildIds: Set<String>
     ): Result<Boolean>
 }

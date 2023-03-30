@@ -164,7 +164,8 @@ class NodeService @Autowired constructor(
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
                 if (it.nodeType == NodeType.THIRDPARTY.name ||
-                    it.nodeType == NodeType.DEVCLOUD.name) {
+                    it.nodeType == NodeType.DEVCLOUD.name
+                ) {
                     it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
@@ -404,8 +405,13 @@ class NodeService @Autowired constructor(
         }
     }
 
-    fun getByDisplayName(userId: String, projectId: String, displayName: String): List<NodeBaseInfo> {
-        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, null)
+    fun getByDisplayName(
+        userId: String,
+        projectId: String,
+        displayName: String,
+        nodeType: List<String>? = null
+    ): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, nodeType)
         if (nodes.isEmpty()) {
             return emptyList()
         }
@@ -428,22 +434,22 @@ class NodeService @Autowired constructor(
 
     fun searchByDisplayName(projectId: String, offset: Int?, limit: Int?, displayName: String): Page<NodeBaseInfo> {
         val nodeInfos = nodeDao.searchByDisplayName(
-                dslContext = dslContext,
-                offset = offset!!,
-                limit = limit!!,
-                projectId = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            offset = offset!!,
+            limit = limit!!,
+            projectId = projectId,
+            displayName = displayName
         )
         val count = nodeDao.countByDisplayName(
-                dslContext = dslContext,
-                project = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            project = projectId,
+            displayName = displayName
         )
         return Page(
-                count = count.toLong(),
-                page = offset!!,
-                pageSize = limit!!,
-                records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+            count = count.toLong(),
+            page = offset!!,
+            pageSize = limit!!,
+            records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
 

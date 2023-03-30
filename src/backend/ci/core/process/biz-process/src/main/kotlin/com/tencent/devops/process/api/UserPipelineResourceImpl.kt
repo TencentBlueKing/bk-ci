@@ -175,7 +175,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = pipeline.name,
                 userId = userId,
                 action = "create",
-                actionContent = "创建流水线/Create Pipeline",
+                actionContent = "Create",
                 projectId = projectId
             )
         )
@@ -233,7 +233,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = pipeline.name,
                 userId = userId,
                 action = "copy",
-                actionContent = "复制流水线/Copy Pipeline from($pipelineId)",
+                actionContent = "Copy from($pipelineId)",
                 projectId = projectId
             )
         )
@@ -256,7 +256,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = pipeline.name,
                 userId = userId,
                 action = "edit",
-                actionContent = "编辑流水线/Edit Ver.${pipelineResult.version}",
+                actionContent = "Edit Ver.${pipelineResult.version}",
                 projectId = projectId
             )
         )
@@ -290,7 +290,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
                 action = "edit",
-                actionContent = "保存流水线/Save Ver.${pipelineResult.version}",
+                actionContent = "Save Ver.${pipelineResult.version}",
                 projectId = projectId
             )
         )
@@ -312,7 +312,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = setting.pipelineName,
                 userId = userId,
                 action = "edit",
-                actionContent = "更新设置/Update Setting",
+                actionContent = "Update Setting",
                 projectId = projectId
             )
         )
@@ -327,17 +327,6 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             name = name.name,
             channelCode = ChannelCode.BS
-        )
-        auditService.createAudit(
-            Audit(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceId = pipelineId,
-                resourceName = name.name,
-                userId = userId,
-                action = "edit",
-                actionContent = "改名/Rename",
-                projectId = projectId
-            )
         )
         return Result(true)
     }
@@ -414,7 +403,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = deletePipeline.pipelineName,
                 userId = userId,
                 action = "delete",
-                actionContent = "删除流水线/Delete Pipeline",
+                actionContent = "Delete Pipeline",
                 projectId = projectId
             )
         )
@@ -459,7 +448,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 resourceName = pipelineName,
                 userId = userId,
                 action = "delete",
-                actionContent = "删除版本/Delete Ver.$version",
+                actionContent = "Delete Ver.$version",
                 projectId = projectId
             )
         )
@@ -473,11 +462,22 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParam(userId, projectId)
-        pipelineInfoFacadeService.restorePipeline(
+        val restorePipeline = pipelineInfoFacadeService.restorePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = restorePipeline.pipelineName,
+                userId = userId,
+                action = "Restore",
+                actionContent = "Restore Ver.${restorePipeline.version}",
+                projectId = projectId
+            )
         )
         return Result(true)
     }
@@ -611,13 +611,25 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineInfo: PipelineModelAndSetting,
         projectId: String
     ): Result<String?> {
-        return Result(
-            pipelineInfoFacadeService.uploadPipeline(
+
+        val pipelineId = pipelineInfoFacadeService.uploadPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineModelAndSetting = pipelineInfo
+        )
+
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = pipelineInfo.setting.pipelineName,
                 userId = userId,
-                projectId = projectId,
-                pipelineModelAndSetting = pipelineInfo
+                action = "create",
+                actionContent = "Import Create",
+                projectId = projectId
             )
         )
+        return Result(pipelineId)
     }
 
     private fun checkParam(userId: String, projectId: String) {

@@ -44,7 +44,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_R
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -127,7 +127,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             buildPost(path)
         } else {
             val requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
                 objectMapper.writeValueAsString(reportEmail)
             )
             buildPost(path, requestBody)

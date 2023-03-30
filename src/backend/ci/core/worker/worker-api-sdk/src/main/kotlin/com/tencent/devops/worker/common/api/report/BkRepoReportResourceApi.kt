@@ -44,7 +44,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTO
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import java.io.File
 
@@ -80,8 +80,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(MediaType.parse(
-                "application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
+            val requestBody = RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                objectMapper.writeValueAsString(reportEmail)
+            )
             buildPost(path, requestBody)
         }
         val responseContent = request(
@@ -120,7 +122,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         val request = buildPut(
             path = url,
-            requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
             headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )

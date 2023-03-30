@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
@@ -49,9 +50,14 @@ class BuildAgentBuildResourceImpl constructor(
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : BuildAgentBuildResource {
 
-    override fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
+    override fun startBuild(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildType: String?
+    ): AgentResult<ThirdPartyBuildInfo?> {
         checkParam(projectId, agentId, secretKey)
-        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey, BuildJobType.toEnum(buildType))
     }
 
     override fun upgrade(

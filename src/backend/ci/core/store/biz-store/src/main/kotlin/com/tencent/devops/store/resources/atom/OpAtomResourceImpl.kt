@@ -145,4 +145,8 @@ class OpAtomResourceImpl @Autowired constructor(
             disposition = disposition
         )
     }
+
+    override fun setDefault(userId: String, atomCode: String): Result<Boolean> {
+        return Result(opAtomService.setDefault(userId = userId, atomCode = atomCode))
+    }
 }

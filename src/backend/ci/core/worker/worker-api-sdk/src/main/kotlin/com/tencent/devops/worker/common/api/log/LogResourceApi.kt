@@ -35,6 +35,7 @@ import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOG_STORAGE_STATUS_FAILED
@@ -46,7 +47,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         val path = "/log/api/build/logs/multi?buildId=$buildId"
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(logMessages)
         )
         val request = buildPost(path, requestBody)
@@ -73,7 +74,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
         if (executeCount != null) path.append("&executeCount=$executeCount")
         if (logMode != null) path.append("&logMode=${logMode.name}")
-        val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         val request = buildPut(path.toString(), requestBody)
         val responseContent = request(
             request,
@@ -89,7 +90,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val path = StringBuilder("/log/api/build/logs/mode")
         path.append("?executeCount=$executeCount")
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(propertyList)
         )
         val request = buildPost(path.toString(), requestBody)

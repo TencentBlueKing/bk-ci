@@ -164,7 +164,13 @@ object WorkspaceUtils {
         val logFile = File(pipelineLogDir, childPath)
         logFile.parentFile.mkdirs()
         logFile.createNewFile()
-        return TaskBuildLogProperty(elementId, childPath, logFile, logStorageMode)
+        return TaskBuildLogProperty(
+            elementId = elementId,
+            childPath = childPath,
+            childZipPath = "$childPath.zip",
+            logFile = logFile,
+            logStorageMode = logStorageMode
+        )
     }
 
     private fun getBuildLogChildPath(

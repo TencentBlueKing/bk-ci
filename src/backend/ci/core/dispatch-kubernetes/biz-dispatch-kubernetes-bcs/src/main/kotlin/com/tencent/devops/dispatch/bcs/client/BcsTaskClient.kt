@@ -68,12 +68,12 @@ class BcsTaskClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (response.isSuccessful) {
                     return objectMapper.readValue(responseContent)
                 }
 
-                logger.error("Get task status failed, responseCode: ${response.code()}")
+                logger.error("Get task status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,

@@ -618,8 +618,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
             }
-        } catch (ignored: Throwable) {
-            logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
+        } catch (ignored: Exception) {
+            logger.warn("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
     }
 

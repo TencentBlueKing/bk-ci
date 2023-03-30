@@ -106,12 +106,8 @@ class ModelContainer @Autowired(required = false) constructor(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
             dispatchType = StreamDispatchUtils.getDispatchType(
-                client = client,
-                objectMapper = objectMapper,
                 job = job,
-                projectCode = projectCode,
                 defaultImage = defaultImage,
-                resources = resources,
                 containsMatrix = dispatchInfo != null,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
@@ -132,7 +128,7 @@ class ModelContainer @Autowired(required = false) constructor(
             client.get(ServiceContainerAppResource::class).getBuildEnv(
                 name = env.key,
                 version = env.value,
-                os = os.name.toLowerCase()
+                os = os.name.lowercase()
             ).data ?: throw CustomException(
                 // 说明用户填写的name或version不对，直接抛错
                 Response.Status.BAD_REQUEST,
@@ -145,10 +141,8 @@ class ModelContainer @Autowired(required = false) constructor(
         }
     }
 
-    protected fun getMatrixControlOption(
-        job: Job,
-        dispatchInfo: DispatchInfo?
-    ): MatrixControlOption? {
+    @Suppress("UNCHECKED_CAST")
+    fun getMatrixControlOption(job: Job, dispatchInfo: DispatchInfo?): MatrixControlOption? {
 
         val strategy = job.strategy ?: return null
 
@@ -221,15 +215,17 @@ class ModelContainer @Autowired(required = false) constructor(
         )
     }
 
-    protected fun getJobControlOption(
+    fun getJobControlOption(
         job: Job,
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
+        val timeout = setUpTimeout(job)
         return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
@@ -244,7 +240,8 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 JobControlOption(
                     enable = jobEnable,
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = ModelCreateUtil.removeIfBrackets(job.ifField),
                     dependOnType = DependOnType.ID,
@@ -256,7 +253,8 @@ class ModelContainer @Autowired(required = false) constructor(
         } else {
             JobControlOption(
                 enable = jobEnable,
-                timeout = job.timeoutMinutes ?: 480,
+                timeout = timeout,
+                timeoutVar = timeout.toString(),
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,
@@ -265,7 +263,9 @@ class ModelContainer @Autowired(required = false) constructor(
         }
     }
 
-    protected fun getMutexGroup(resource: Mutex?): MutexGroup? {
+    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: 480)
+
+    fun getMutexGroup(resource: Mutex?): MutexGroup? {
         if (resource == null) {
             return null
         }

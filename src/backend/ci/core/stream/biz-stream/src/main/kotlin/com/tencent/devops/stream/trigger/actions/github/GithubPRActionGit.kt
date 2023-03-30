@@ -547,7 +547,7 @@ class GithubPRActionGit(
             sourceBranch = GitActionCommon.getTriggerBranch(event.pullRequest.head.ref),
             targetBranch = GitActionCommon.getTriggerBranch(event.pullRequest.base.ref),
             changeSet = getChangeSet(),
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             mrAction = mrAction
         )
         return TriggerResult(

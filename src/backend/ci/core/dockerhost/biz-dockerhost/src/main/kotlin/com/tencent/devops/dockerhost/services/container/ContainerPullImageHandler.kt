@@ -29,9 +29,6 @@ package com.tencent.devops.dockerhost.services.container
 
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.UnauthorizedException
-import com.tencent.devops.common.api.constant.BK_START_PULL_IMAGE
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
@@ -41,7 +38,6 @@ import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class ContainerPullImageHandler(
@@ -62,34 +58,16 @@ class ContainerPullImageHandler(
                     registryUser = registryUser,
                     registryPwd = registryPwd
                 )
-                log(
-                    buildId,
-                    MessageUtil.getMessageByLocale(
-                        BK_START_PULL_IMAGE, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ) + "$formatImageName!!",
-                    taskId,
-                    containerHashId
-                )
+                log(buildId, "Start pulling image $formatImageName!!", taskId, containerHashId)
                 httpLongDockerCli.pullImageCmd(formatImageName!!).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId))
                     .awaitCompletion()
-                log(
-                    buildId,
-                    MessageUtil.getMessageByLocale(
-                        BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
-                    taskId,
-                    containerHashId
-                )
+                log(buildId, "Pull the image successfully, " +
+                    "ready to start the build environment...", taskId, containerHashId)
             } catch (t: UnauthorizedException) {
-                val errorMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
-                    formatImageName
-                ) + "$buildId|$containerHashId]"
+                val errorMessage = "No permission to pull image $formatImageName，" +
+                    "Please check if the image path or credentials are correct." +
+                        "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -97,31 +75,21 @@ class ContainerPullImageHandler(
                     message = errorMessage
                 )
             } catch (t: NotFoundException) {
-                val errorMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
-                    formatImageName
-                ) + "$buildId|$containerHashId]"
+                val errorMessage = "Image does not exist $formatImageName!!，" +
+                    "Please check if the image path or credentials are correct." +
+                        "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $formatImageName!! of build $buildId", t)
                 log(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_PULL_IMAGE_FAILED_ERROR_MESSAGE,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ) + t.message,
+                    message = "Failed to pull image: ${t.message}",
                     tag = taskId,
                     containerHashId = containerHashId
                 )
                 log(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_TRY_LOCAL_IMAGE_START,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
+                    message = "Trying to boot from a local image...",
                     tag = taskId,
                     containerHashId = containerHashId
                 )

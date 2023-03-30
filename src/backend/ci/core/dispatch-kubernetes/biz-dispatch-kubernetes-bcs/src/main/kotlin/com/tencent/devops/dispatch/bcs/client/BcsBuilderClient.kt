@@ -31,12 +31,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.bcs.common.getFormatErrorMessageI18n
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -48,16 +46,8 @@ import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.GET_BUILD_MACHINE_DETAILS_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_RETURN_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -86,7 +76,7 @@ class BcsBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] builderName: $name response: $responseContent")
                 if (response.isSuccessful) {
                     return objectMapper.readValue(responseContent)
@@ -101,8 +91,8 @@ class BcsBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessageI18n() +
-                        "（Fail to get builder detail, http response code: ${response.code()}"
+                    "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
+                            "（Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -119,10 +109,7 @@ class BcsBuilderClient @Autowired constructor(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = MessageUtil.getMessageByLocale(
-                        GET_BUILD_MACHINE_DETAILS_TIMEOUT,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ) + ", url: $url"
+                    errorMessage = "获取构建机详情接口超时, url: $url"
                 )
             }
         }
@@ -140,7 +127,7 @@ class BcsBuilderClient @Autowired constructor(
         val (request, action) = when (param) {
             is BcsDeleteBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, url)
-                    .delete(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .delete(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "delete"
             )
@@ -152,7 +139,7 @@ class BcsBuilderClient @Autowired constructor(
             )
             is BcsStartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
-                    .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "start"
             )
@@ -162,14 +149,14 @@ class BcsBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR) +
-                            "（Fail to $action docker, http response code: ${response.code()}"
+                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
+                                "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -182,7 +169,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL) + "：$msg"
+                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口返回失败：$msg"
                     )
                 }
             }
@@ -192,16 +179,9 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_TIMEOUT) +
-                        ", url: $url"
+                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口超时, url: $url"
             )
         }
-    }
-
-    private fun combinationI18nMessage(message: String, errorMessage: String): String {
-        val language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        return MessageUtil.getMessageByLocale(message, language) +
-                MessageUtil.getMessageByLocale(errorMessage, language)
     }
 
     fun createBuilder(
@@ -215,20 +195,20 @@ class BcsBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = clientCommon.baseRequest(userId, url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code()}, $responseContent")
+                val responseContent = response.body!!.string()
+                logger.info("[$buildId]|[$vmSeqId] http code is ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR) +
-                                ": Fail to createBuilder, http response code: ${response.code()}"
+                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
+                                "${response.code}"
                     )
                 }
 
@@ -241,7 +221,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL) + ": $msg"
+                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口返回失败: $msg"
                     )
                 }
             }
@@ -254,8 +234,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_TIMEOUT) +
-                        ", url: $url"
+                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
             )
         }
     }
@@ -315,7 +294,7 @@ class BcsBuilderClient @Autowired constructor(
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
@@ -323,7 +302,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                        "get websocket interface fail（Fail to getWebsocket, http response code: ${response.code()}"
+                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                     )
                 }
                 val bcsResult: BcsResult<String> = objectMapper.readValue(responseContent)
@@ -339,7 +318,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = ", url: $url, ${e.message}"
+                errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }
     }
@@ -355,24 +334,21 @@ class BcsBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url)
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageReq)
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(buildImageReq)
                 )
             )
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("$userId build and push image response: $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        MessageUtil.getMessageByLocale(
-                            BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ) + "（Fail to build image, http response code: ${response.code()}"
+                        "构建并推送接口异常（Fail to build image, http response code: ${response.code}"
                     )
                 }
                 val responseData: BcsResult<BcsTaskResp> = objectMapper.readValue(responseContent)
@@ -385,8 +361,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL) +
-                                ": $msg"
+                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: $msg"
                     )
                 }
             }
@@ -396,8 +371,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_AND_PUSH_INTERFACE_TIMEOUT) +
-                        ", url: $url"
+                errorMessage = "构建并推送接口超时, url: $url"
             )
         }
     }

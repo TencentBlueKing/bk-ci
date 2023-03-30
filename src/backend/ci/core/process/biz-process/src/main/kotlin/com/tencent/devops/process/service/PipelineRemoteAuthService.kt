@@ -35,7 +35,6 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -45,6 +44,7 @@ import com.tencent.devops.process.constant.BK_REMOTE_CALL_SOURCE_IP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_MATCHING_PIPELINE
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
+import com.tencent.devops.process.engine.control.lock.PipelineRemoteAuthLock
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineRemoteToken
@@ -71,7 +71,7 @@ class PipelineRemoteAuthService @Autowired constructor(
 ) {
 
     fun generateAuth(pipelineId: String, projectId: String, userId: String): PipelineRemoteToken {
-        val redisLock = RedisLock(redisOperation, "process_pipeline_remote_token_lock_key_$pipelineId", 10)
+        val redisLock = PipelineRemoteAuthLock(redisOperation, pipelineId)
         try {
             redisLock.lock()
             val record = pipelineRemoteAuthDao.getByPipelineId(dslContext, projectId, pipelineId)

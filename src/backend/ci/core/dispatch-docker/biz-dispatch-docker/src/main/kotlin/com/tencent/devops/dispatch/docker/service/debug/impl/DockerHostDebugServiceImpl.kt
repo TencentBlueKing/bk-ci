@@ -55,7 +55,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -167,12 +167,15 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val request = dockerHostProxyService.getDockerHostProxyRequest(
                 dockerHostUri = "/api/docker/debug/end",
                 dockerHostIp = dockerIp
-            ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            ).post(RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            ))
                 .build()
 
-            LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url()}")
+            LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url}")
             OkhttpUtils.doLongHttp(request).use { resp ->
-                val responseBody = resp.body()!!.string()
+                val responseBody = resp.body!!.string()
                 LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
@@ -205,7 +208,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         ).get().build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 return response["data"] as Boolean
@@ -232,7 +235,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         ).get().build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 return response["data"] as String
@@ -445,12 +448,12 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/debug/start",
             dockerHostIp = dockerIp
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+        ).post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(requestBody)))
             .build()
 
-        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}")
+        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url}")
         OkhttpUtils.doLongHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {

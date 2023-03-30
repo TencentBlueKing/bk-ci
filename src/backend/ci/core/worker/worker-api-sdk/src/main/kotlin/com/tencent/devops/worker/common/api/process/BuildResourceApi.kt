@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_FINISH_REQUEST_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_TIMEOUT_END_REQUEST_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_BUILD_TASK_DETAILS_FAILURE
@@ -89,7 +90,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun completeTask(result: BuildTaskResult): Result<Boolean> {
         val path = "/ms/process/api/build/builds/complete"
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)

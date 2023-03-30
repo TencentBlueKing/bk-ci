@@ -50,7 +50,7 @@ object PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9\\.]*"
+    private const val ENGLISH_NAME_PATTERN = "[A-Za-z_][A-Za-z_0-9.]*"
 
     fun checkPipelineName(name: String, maxPipelineNameSize: Int) {
         if (name.toCharArray().size > maxPipelineNameSize) {
@@ -61,10 +61,11 @@ object PipelineUtils {
         }
     }
 
-    fun checkPipelineParams(params: List<BuildFormProperty>) {
-        params.forEach {
-            if (!Pattern.matches(ENGLISH_NAME_PATTERN, it.id)) {
-                logger.warn("Pipeline's start params Name is iregular")
+    fun checkPipelineParams(params: List<BuildFormProperty>): MutableMap<String, BuildFormProperty> {
+        val map = mutableMapOf<String, BuildFormProperty>()
+        params.forEach { param ->
+            if (!Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
+                logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
                     message = MessageUtil.getCodeLanMessage(
                         ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR,
@@ -72,7 +73,9 @@ object PipelineUtils {
                     )
                 )
             }
+            map[param.id] = param
         }
+        return map
     }
 
     fun checkPipelineDescLength(desc: String?, maxPipelineNameSize: Int) {
@@ -97,6 +100,7 @@ object PipelineUtils {
                         value.forEach { checkVariablesLength(param.key, it.toString()) }
                     }
                 }
+
                 else -> {
                     checkVariablesLength(param.key, param.value.toString())
                 }
@@ -123,13 +127,12 @@ object PipelineUtils {
         val defaultTagIds = if (defaultStageTagId.isNullOrBlank()) emptyList() else listOf(defaultStageTagId)
         model.stages.forEachIndexed { index, stage ->
             stage.id = stage.id ?: VMUtils.genStageId(index + 1)
+            stage.transformCompatibility()
             if (index == 0) {
                 stages.add(stage.copy(containers = listOf(fixedTriggerContainer)))
             } else {
-                model.stages.forEach {
-                    if (it.name.isNullOrBlank()) it.name = it.id
-                    if (it.tag == null) it.tag = defaultTagIds
-                }
+                if (stage.name.isNullOrBlank()) stage.name = stage.id
+                if (stage.tag == null) stage.tag = defaultTagIds
                 stages.add(stage)
             }
         }
@@ -166,7 +169,6 @@ object PipelineUtils {
             elements = templateTrigger.elements,
             params = instanceParam,
             buildNo = buildNo,
-            canRetry = templateTrigger.canRetry,
             containerId = templateTrigger.containerId,
             containerHashId = templateTrigger.containerHashId
         )

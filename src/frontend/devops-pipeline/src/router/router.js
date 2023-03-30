@@ -48,6 +48,8 @@ const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../vi
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
 // 插件前端task.json在线调试
+// docker console
+const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
 const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
 
@@ -139,6 +141,12 @@ const routes = [
                         component: templateInstanceCreate
                     }
                 ]
+            },
+            {
+                // docker console
+                path: 'dockerConsole',
+                name: 'pipelinesDocker',
+                component: pipelinesDocker
             },
             {
                 path: 'atomDebug',

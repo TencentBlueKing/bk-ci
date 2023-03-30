@@ -308,13 +308,7 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchOne() ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(
-                    GIT_NOT_FOUND,
-                    I18nUtil.getLanguage(com.tencent.devops.common.web.utils.I18nUtil.getRequestUserId()),
-                    arrayOf(repositoryName)
-                )
-                )
+                .fetchAny() ?: throw NotFoundException("代码库${repositoryName}不存在")
         }
     }
 

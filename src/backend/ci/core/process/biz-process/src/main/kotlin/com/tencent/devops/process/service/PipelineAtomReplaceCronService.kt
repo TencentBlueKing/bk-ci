@@ -858,7 +858,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 toFieldDefaultValue = paramReplaceInfo.toParamValue
             )
             val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             val errorMessage = "$fromParamName convert $toParamName fail"
             if (!response.isSuccessful) {
                 throw ErrorCodeException(

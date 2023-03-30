@@ -37,6 +37,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -57,7 +58,8 @@ class ApiAspect(
     private val appCodeService: AppCodeService,
     private val apiGatewayUtil: ApiGatewayUtil,
     private val redisOperation: RedisOperation,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val permissionService: OpenapiPermissionService
 ) {
 
     companion object {
@@ -85,6 +87,7 @@ class ApiAspect(
         var projectId: String? = null
         var appCode: String? = null
         var apigwType: String? = null
+        var userId: String? = null
 
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
@@ -93,6 +96,7 @@ class ApiAspect(
                 "projectCode" -> projectId = parameterValue[index]?.toString()
                 "appCode" -> appCode = parameterValue[index]?.toString()
                 "apigwType" -> apigwType = parameterValue[index]?.toString()
+                "userId" -> userId = parameterValue[index]?.toString()
                 else -> Unit
             }
         }
@@ -127,6 +131,9 @@ class ApiAspect(
         }
 
         if (projectId != null) {
+
+            permissionService.validProjectPermission(appCode, apigwType, userId, projectId)
+
             if (appCodeService.validProjectInfo(projectId) == null) {
                 appCodeService.invalidProjectInfo(projectId)
                 throw CustomException(Response.Status.NOT_FOUND, "ProjectId [$projectId] not find, please check it.")
@@ -146,7 +153,7 @@ class ApiAspect(
     }
 
     @Suppress("ComplexCondition")
-    @Around("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
+    @Around("within(com.tencent.devops.openapi.resources.apigw..*)")
     fun aroundMethod(pdj: ProceedingJoinPoint): Any? {
         val begin = System.currentTimeMillis()
         val methodName = pdj.signature.name

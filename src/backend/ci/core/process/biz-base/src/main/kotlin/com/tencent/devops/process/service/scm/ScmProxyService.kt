@@ -39,9 +39,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
@@ -99,17 +96,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
-                val message = MessageUtil.getMessageByLocale(
-                    ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("$retry")
-                )
-                AlertUtils.doAlert(
-                    module = "SCM",
-                    level = AlertLevel.MEDIUM,
-                    title = message,
-                    message = "$message, projectId: $projectId, pipelineId: $pipelineId $e"
-                )
                 return Result(ERROR_RETRY_3_FAILED.toInt())
             }
         }, retry, 2000)

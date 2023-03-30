@@ -28,15 +28,12 @@
 package com.tencent.devops.process.yaml.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -47,15 +44,12 @@ import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
-import com.tencent.devops.process.yaml.v2.models.Resources
+import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfo
 import com.tencent.devops.process.yaml.v2.models.job.Container
 import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
-import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
-import java.util.*
 import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
@@ -101,12 +95,8 @@ object StreamDispatchUtils {
         CustomException::class
     )
     fun getDispatchType(
-        client: Client,
-        objectMapper: ObjectMapper,
         job: Job,
-        projectCode: String,
         defaultImage: String,
-        resources: Resources? = null,
         context: Map<String, String>? = null,
         containsMatrix: Boolean? = false,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
@@ -127,25 +117,21 @@ object StreamDispatchUtils {
                 )
             }
 
-            val (image, userName, password) = parseRunsOnContainer(
-                client = client,
+            val info = parseRunsOnContainer(
                 job = job,
-                projectCode = projectCode,
-                context = context,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             )
 
             val dockerInfo = ThirdPartyAgentDockerInfo(
-                image = image,
-                credential = if (userName.isBlank() || password.isBlank()) {
-                    null
-                } else {
-                    thirdPartDockerCredential(
-                        user = userName,
-                        password = password
-                    )
-                },
-                envs = job.env
+                image = info.image,
+                credential = thirdPartDockerCredential(
+                    user = info.userName,
+                    password = info.password,
+                    credentialId = info.credId,
+                    acrossTemplateId = info.acrossTemplateId,
+                    jobId = job.id
+                )
+
             )
 
             return ThirdPartyAgentEnvDispatchType(
@@ -219,25 +205,25 @@ object StreamDispatchUtils {
 
     /**
      * 解析 jobs.runsOn.container
+     * 注：因为要蓝盾也要支持所以环境变量替换会在蓝盾层面去做
      * @return image,username,password
      */
     fun parseRunsOnContainer(
-        client: Client,
         job: Job,
-        projectCode: String,
-        context: Map<String, String>?,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): Triple<String, String, String> {
+    ): ThirdPartyContainerInfo {
         return try {
             val container = YamlUtil.getObjectMapper().readValue(
                 JsonUtil.toJson(job.runsOn.container!!),
                 Container::class.java
             )
 
-            Triple(
-                EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                EnvUtils.parseEnv(container.credentials?.username, context ?: mapOf()),
-                EnvUtils.parseEnv(container.credentials?.password, context ?: mapOf())
+            ThirdPartyContainerInfo(
+                image = container.image,
+                userName = container.credentials?.username,
+                password = container.credentials?.password,
+                credId = null,
+                acrossTemplateId = null
             )
         } catch (e: Exception) {
             val container = YamlUtil.getObjectMapper().readValue(
@@ -245,131 +231,13 @@ object StreamDispatchUtils {
                 Container2::class.java
             )
 
-            var user = ""
-            var password = ""
-            if (!container.credentials.isNullOrEmpty()) {
-                val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
-                user = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-
-            Triple(
-                EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                user,
-                password
+            ThirdPartyContainerInfo(
+                image = container.image,
+                userName = null,
+                password = null,
+                credId = container.credentials,
+                acrossTemplateId = buildTemplateAcrossInfo?.templateId
             )
         }
-    }
-
-    private fun getTicket(
-        client: Client,
-        projectCode: String,
-        container: Container2,
-        context: Map<String, String>?,
-        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): MutableMap<String, String> {
-        val ticketsMap = try {
-            getCredential(
-                client = client,
-                projectId = projectCode,
-                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                type = CredentialType.USERNAME_PASSWORD
-            )
-        } catch (ignore: Exception) {
-            // 没有跨项目的模板引用就直接扔出错误
-            if (buildTemplateAcrossInfo == null) {
-                throw ignore
-            }
-            getCredential(
-                client = client,
-                projectId = buildTemplateAcrossInfo.targetProjectId,
-                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                type = CredentialType.USERNAME_PASSWORD,
-                acrossProject = true
-            )
-        }
-        return ticketsMap
-    }
-
-    private fun getCredential(
-        client: Client,
-        projectId: String,
-        credentialId: String,
-        type: CredentialType,
-        acrossProject: Boolean = false
-    ): MutableMap<String, String> {
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val decoder = Base64.getDecoder()
-        val credentialResult = client.get(ServiceCredentialResource::class).get(
-            projectId, credentialId,
-            encoder.encodeToString(pair.publicKey)
-        )
-        if (credentialResult.isNotOk() || credentialResult.data == null) {
-            throw RuntimeException(
-                "Fail to get the credential($credentialId) of project($projectId), " +
-                        "because of ${credentialResult.message}"
-            )
-        }
-
-        val credential = credentialResult.data!!
-        if (type != credential.credentialType) {
-            throw ParamBlankException(
-                "Fail to get the credential($credentialId) of project($projectId), " +
-                        "expect:${type.name}, but real:${credential.credentialType.name}"
-            )
-        }
-
-        if (acrossProject && !credential.allowAcrossProject) {
-            throw RuntimeException(
-                "Fail to get the credential($credentialId) of project($projectId), " +
-                        "not allow across project use"
-            )
-        }
-
-        val ticketMap = mutableMapOf<String, String>()
-        val v1 = String(
-            DHUtil.decrypt(
-                decoder.decode(credential.v1),
-                decoder.decode(credential.publicKey),
-                pair.privateKey
-            )
-        )
-        ticketMap["v1"] = v1
-
-        if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
-            val v2 = String(
-                DHUtil.decrypt(
-                    decoder.decode(credential.v2),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey
-                )
-            )
-            ticketMap["v2"] = v2
-        }
-
-        if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
-            val v3 = String(
-                DHUtil.decrypt(
-                    decoder.decode(credential.v3),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey
-                )
-            )
-            ticketMap["v3"] = v3
-        }
-
-        if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
-            val v4 = String(
-                DHUtil.decrypt(
-                    decoder.decode(credential.v4),
-                    decoder.decode(credential.publicKey),
-                    pair.privateKey
-                )
-            )
-            ticketMap["v4"] = v4
-        }
-
-        return ticketMap
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -37,6 +38,7 @@ import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -184,6 +186,14 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
+        val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(userId, templateCode)
+        val imageCode = releaseResult.data
+        if (!imageCode.isNullOrBlank()) {
+            throw ErrorCodeException(
+                errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
+                params = arrayOf(imageCode)
+            )
+        }
         if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在

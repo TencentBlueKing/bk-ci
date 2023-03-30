@@ -37,6 +37,8 @@ data class SubNotifyMessageTemplate(
     val title: String? = "",
     @ApiModelProperty("消息内容", required = true)
     val body: String,
+    @ApiModelProperty("消息内容(md 格式)", required = false)
+    val bodyMD: String? = null,
     @ApiModelProperty("邮件格式（邮件方式必填）", required = false)
     val bodyFormat: Int? = null,
     @ApiModelProperty("邮件类型（邮件方式必填）", required = false)

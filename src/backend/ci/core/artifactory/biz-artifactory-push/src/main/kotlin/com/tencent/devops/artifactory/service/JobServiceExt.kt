@@ -69,7 +69,7 @@ class JobServiceExt @Autowired constructor(
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             logger.info("response body: $responseStr")
 
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
@@ -91,7 +91,7 @@ class JobServiceExt @Autowired constructor(
             val url = "$jobUrl/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
 //            val responseStr = HttpUtils.get(url)
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)

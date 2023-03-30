@@ -44,7 +44,7 @@ import com.tencent.devops.image.pojo.ImageItem
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.joda.time.DateTime
@@ -60,7 +60,7 @@ class ImageArtifactoryService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     private val credential: String
@@ -337,11 +337,11 @@ class ImageArtifactoryService @Autowired constructor(
             try {
 //            val response = call.execute()
                 if (!response.isSuccessful) {
-                    logger.error("get tag info failed, statusCode: ${response.code()}")
+                    logger.error("get tag info failed, statusCode: ${response.code}")
                     throw RuntimeException("get tag info failed")
                 }
 
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
@@ -393,11 +393,11 @@ class ImageArtifactoryService @Autowired constructor(
             try {
 //            val response = call.execute()
                 if (!response.isSuccessful) {
-                    logger.error("sql search failed, statusCode: ${response.code()}")
+                    logger.error("sql search failed, statusCode: ${response.code}")
                     throw RuntimeException("aql search failed")
                 }
 
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
                 return parseImages(responseBody!!)
             } catch (e: Exception) {
@@ -513,8 +513,8 @@ class ImageArtifactoryService @Autowired constructor(
         OkhttpUtils.doHttp(request).use { response ->
             try {
 //            val response = call.execute()
-                if (!response.isSuccessful && response.code() != 404) {
-                    val responseBody = response.body()?.string()
+                if (!response.isSuccessful && response.code != 404) {
+                    val responseBody = response.body?.string()
                     logger.error("delete item failed, responseBody: ", responseBody)
                     throw OperationException("delete Item failed")
                 }
@@ -541,10 +541,10 @@ class ImageArtifactoryService @Autowired constructor(
             try {
 //                val response = call.execute()
                 if (!response.isSuccessful) {
-                    if (response.code() == 404) {
+                    if (response.code == 404) {
                         return false
                     } else {
-                        val responseBody = response.body()?.string()
+                        val responseBody = response.body?.string()
                         logger.error("check item failed, responseBody: ", responseBody)
                         throw OperationException("check item failed")
                     }
@@ -567,7 +567,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), ""))
             .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
@@ -575,7 +575,7 @@ class ImageArtifactoryService @Autowired constructor(
             try {
 //            val response = call.execute()
                 if (!response.isSuccessful) {
-                    val responseBody = response.body()?.string()
+                    val responseBody = response.body?.string()
                     logger.error("copy item failed, responseBody: $responseBody}")
                     throw RuntimeException("aql search failed")
                 }
@@ -596,7 +596,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url)
-            .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
+            .put(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), ""))
             .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
@@ -604,7 +604,7 @@ class ImageArtifactoryService @Autowired constructor(
             try {
 //                val response = call.execute()
                 if (!response.isSuccessful) {
-                    val responseBody = response.body()?.string()
+                    val responseBody = response.body?.string()
                     logger.error("set item properties failed, responseBody: $responseBody}")
                     throw RuntimeException("set item properties failed")
                 }

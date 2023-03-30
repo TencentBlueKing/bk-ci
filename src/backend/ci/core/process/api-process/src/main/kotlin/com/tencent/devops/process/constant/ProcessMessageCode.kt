@@ -166,6 +166,10 @@ object ProcessMessageCode {
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
+    const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
+    const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
+    const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101083"// {0} 非 {1} 流水线
     const val ERROR_NO_MATCHING_PIPELINE = "2101084"// 没有找到对应的流水线
     const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101085"// 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
@@ -215,7 +219,15 @@ object ProcessMessageCode {
     const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101513"// 子流水线参数过滤失败
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101514"// 模版下存在无权限的插件
 
-
+    const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
+    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
+    const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
+    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
+    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
+    const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
+    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101105" // 触发不在审核状态中
+    const val ERROR_RECORD_PARSE_FAILED = "2101111" // 解析构建记录出错
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}

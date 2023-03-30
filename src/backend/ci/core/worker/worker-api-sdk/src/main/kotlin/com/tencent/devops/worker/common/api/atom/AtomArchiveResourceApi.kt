@@ -62,7 +62,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUGIN_FILE
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
@@ -115,7 +115,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     ): Result<Boolean> {
         val path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
@@ -192,14 +192,8 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             url.append(";$ARCHIVE_PROPS_SOURCE=pipeline")
         }
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val responseContent = request(
-            request,
-            MessageUtil.getMessageByLocale(
-                ARCHIVE_PLUGIN_FILE_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
-            )
-        )
+        val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
+        val responseContent = request(request, "归档插件文件失败")
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
@@ -292,7 +286,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     ): Result<Boolean> {
         val path = "/ms/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)

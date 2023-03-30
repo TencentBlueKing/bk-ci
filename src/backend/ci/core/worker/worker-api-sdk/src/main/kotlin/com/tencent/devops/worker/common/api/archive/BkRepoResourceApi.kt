@@ -63,7 +63,7 @@ import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
@@ -125,16 +125,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPost(
             path = url,
             requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
                 objectMapper.writeValueAsString(requestData)
             ),
             headers = mapOf(BKREPO_UID to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.error("http request failed, code: ${response.code()}, responseContent: $responseContent")
-                throw RemoteServiceException("http request failed: $responseContent", response.code())
+                logger.error("http request failed, code: ${response.code}, responseContent: $responseContent")
+                throw RemoteServiceException("http request failed: $responseContent", response.code)
             }
 
             val responseData = objectMapper.readValue<BkRepoResponse<List<BkRepoAccessToken>>>(responseContent)
@@ -159,7 +159,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/generic/temporary/upload/$projectId/$repoName/${urlEncode(destFullPath)}?token=$token"
         val request = buildPut(
             url,
-            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
             getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
@@ -271,7 +271,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(destFullPath)}"
         val request = buildPut(
             path = url,
-            requestBody = RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
             headers = getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileDevnetGateway = true
         )
@@ -380,7 +380,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 val pipelineNameRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
                     RequestBody.create(
-                        MediaType.parse("application/json; charset=utf-8"),
+                        "application/json; charset=utf-8".toMediaTypeOrNull(),
                         JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
                     ),
                     headers
@@ -391,7 +391,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 val buildNumRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId/$buildId",
                     RequestBody.create(
-                        MediaType.parse("application/json; charset=utf-8"),
+                        "application/json; charset=utf-8".toMediaTypeOrNull(),
                         JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
                     ),
                     headers
@@ -459,16 +459,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPost(
             url,
             RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
                 requestBody
             ),
             mutableMapOf("X-BKREPO-UID" to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("query failed, responseContent: $responseContent")
-                throw RemoteServiceException("query failed: $responseContent", response.code())
+                throw RemoteServiceException("query failed: $responseContent", response.code)
             }
 
             val responseData = objectMapper.readValue<Response<QueryData>>(responseContent)

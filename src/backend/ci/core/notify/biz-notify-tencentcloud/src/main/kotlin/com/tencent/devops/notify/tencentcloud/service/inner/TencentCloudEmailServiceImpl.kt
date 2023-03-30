@@ -180,10 +180,10 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
         headers: Map<String, String>
     ): EmailResponse {
         val response = OkhttpUtils.doPost(url = url, jsonParam = body, headers = headers)
-        val responseContent = response.body()!!.string()
+        val responseContent = response.body!!.string()
         if (!response.isSuccessful) {
             throw RemoteServiceException(
-                httpStatus = response.code(),
+                httpStatus = response.code,
                 responseContent = responseContent,
                 errorMessage = "send tencent cloud email message failed"
             )

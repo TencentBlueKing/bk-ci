@@ -30,9 +30,6 @@ package com.tencent.devops.dockerhost.services.container
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.Capability
 import com.github.dockerjava.api.model.HostConfig
-import com.tencent.devops.common.api.constant.BK_BUILD_ENV_START_FAILED
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
@@ -92,19 +89,14 @@ class ContainerRunHandler(
                 log(
                     buildId = buildId,
                     red = true,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ) + "，error message:${er.message}",
+                    message = "Failed to start build environment: ${er.message}",
                     tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {
                     throw ContainerException(
                         errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
-                        message = MessageUtil.getMessageByLocale(
-                            BK_BUILD_IMAGE_NOT_EXIST,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        )
+                        message = "Image does not exist."
                     )
                 } else {
                     throw ContainerException(

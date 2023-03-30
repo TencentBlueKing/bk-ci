@@ -50,7 +50,6 @@ import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.BK_FIRST_STAGE_ENV_NOT_EMPTY
@@ -63,6 +62,7 @@ import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.cfg.VersionConfigure
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -77,6 +77,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
@@ -369,14 +370,6 @@ class PipelineRepositoryService constructor(
                 )
             }
 
-            modelCheckPlugin.checkJob(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                jobContainer = c,
-                userId = userId,
-                finallyStage = stage.finally
-            )
-
             var taskSeq = 0
             c.id = containerSeqId.incrementAndGet().toString()
             try {
@@ -404,6 +397,7 @@ class PipelineRepositoryService constructor(
             // #4518 Model中的containerId 和T_PIPELINE_BUILD_CONTAINER表的containerId保持一致，同为seq id
             c.id = containerSeqId.get().toString()
             c.containerId = c.id
+            c.timeCost = null
             if (c.containerHashId.isNullOrBlank() || distIds.contains(c.containerHashId)) {
                 c.containerHashId = modelContainerIdGenerator.getNextId()
             }
@@ -412,6 +406,7 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
+                c.timeCost = null
                 distIds.add(e.id!!)
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
@@ -490,7 +485,7 @@ class PipelineRepositoryService constructor(
 
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -611,7 +606,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, 1)
+        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = 1)
     }
 
     private fun update(
@@ -629,7 +624,7 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -753,7 +748,7 @@ class PipelineRepositoryService constructor(
                 channelCode = channelCode.name
             )
         )
-        return DeployPipelineResult(pipelineId, version)
+        return DeployPipelineResult(pipelineId, pipelineName = model.name, version = version)
     }
 
     fun getPipelineInfo(
@@ -836,7 +831,7 @@ class PipelineRepositoryService constructor(
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1062,7 +1057,12 @@ class PipelineRepositoryService constructor(
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting, version: Int, updateLastModifyUser: Boolean? = true) {
+    fun saveSetting(
+        userId: String,
+        setting: PipelineSetting,
+        version: Int,
+        updateLastModifyUser: Boolean? = true
+    ): PipelineName {
         setting.checkParam()
 
         if (isPipelineExist(
@@ -1077,6 +1077,7 @@ class PipelineRepositoryService constructor(
             )
         }
 
+        var oldName: String = setting.pipelineName
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val old = pipelineSettingDao.getSetting(
@@ -1084,6 +1085,9 @@ class PipelineRepositoryService constructor(
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId
             )
+            if (old?.name != null) {
+                oldName = old.name
+            }
             pipelineInfoDao.update(
                 dslContext = context,
                 projectId = setting.projectId,
@@ -1115,6 +1119,8 @@ class PipelineRepositoryService constructor(
             }
             pipelineSettingDao.saveSetting(context, setting).toString()
         }
+
+        return PipelineName(name = setting.pipelineName, oldName = oldName)
     }
 
     fun batchUpdatePipelineModel(
@@ -1122,7 +1128,7 @@ class PipelineRepositoryService constructor(
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         pipelineModelVersionList.forEach { pipelineModelVersion ->
-            val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineModelVersion.pipelineId), 20)
+            val lock = PipelineModelLock(redisOperation, pipelineModelVersion.pipelineId)
             try {
                 lock.lock()
                 pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
@@ -1187,6 +1193,8 @@ class PipelineRepositoryService constructor(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
+
+            existModel.name = pipeline.pipelineName
 
             if (pipeline.channel != channelCode.name) {
                 throw ErrorCodeException(
@@ -1289,6 +1297,5 @@ class PipelineRepositoryService constructor(
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
-        private fun pipelineModelLockKey(pipelineId: String) = "pipelineModelLock:$pipelineId"
     }
 }
