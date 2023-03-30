@@ -6,6 +6,8 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Credential
+import com.tencent.devops.common.environment.agent.pojo.devcloud.Pool
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -21,7 +23,6 @@ import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
-import com.tencent.devops.dispatch.devcloud.pojo.Credential
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
@@ -29,7 +30,6 @@ import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.Params
-import com.tencent.devops.dispatch.devcloud.pojo.Pool
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus

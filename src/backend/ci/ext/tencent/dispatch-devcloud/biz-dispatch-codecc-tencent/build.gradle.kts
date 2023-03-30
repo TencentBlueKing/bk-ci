@@ -25,21 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.config
+dependencies {
+    api(project(":ext:tencent:dispatch-devcloud:api-dispatch-codecc-tencent"))
+    api(project(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent"))
 
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
-import com.tencent.devops.common.redis.RedisAutoConfiguration
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+    api(project(":core:common:common-dispatch-sdk"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-db-base"))
+    api(project(":core:log:api-log"))
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureAfter(RedisAutoConfiguration::class)
-class DevCloudConfiguration {
+    api(project(":ext:tencent:common:common-devcloud"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
 
-    @Bean
-    fun esbAgentClient() = EsbAgentClient()
+    api("org.apache.commons:commons-collections4")
+    api("ch.qos.logback:logback-classic")
+    api("org.json:json")
+    api("io.github.openfeign.form:feign-form")
 }

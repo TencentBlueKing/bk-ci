@@ -25,21 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.environment.agent.config
+package com.tencent.devops.dispatch.codecc.pojo.codecc
 
-import com.tencent.devops.common.environment.agent.client.EsbAgentClient
-import com.tencent.devops.common.redis.RedisAutoConfiguration
-import org.springframework.boot.autoconfigure.AutoConfigureAfter
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
-@AutoConfigureAfter(RedisAutoConfiguration::class)
-class DevCloudConfiguration {
+@ApiModel("性能基础选项配置")
+data class DockerResourceOptionsVO(
+    @ApiModelProperty("内存")
+    val memoryLimitBytes: Long,
 
-    @Bean
-    fun esbAgentClient() = EsbAgentClient()
-}
+    @ApiModelProperty("CPU")
+    val cpuPeriod: Int,
+
+    @ApiModelProperty("CPU")
+    val cpuQuota: Int,
+
+    @ApiModelProperty("磁盘写速率")
+    val blkioDeviceWriteBps: Long,
+
+    @ApiModelProperty("磁盘读速率")
+    val blkioDeviceReadBps: Long,
+
+    @ApiModelProperty("磁盘大小: 单位GB")
+    val disk: Int,
+
+    @ApiModelProperty("描述")
+    val description: String
+)

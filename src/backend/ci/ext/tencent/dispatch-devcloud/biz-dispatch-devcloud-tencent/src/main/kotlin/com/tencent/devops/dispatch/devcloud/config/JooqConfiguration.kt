@@ -94,6 +94,14 @@ class JooqConfiguration {
                 LOG.info("dslContext_init|dispatchWindowsJooqConfiguration|${declaringClass.name}")
                 return DSL.using(configuration)
             }
+
+            if ((packageName == "com.tencent.devops.dispatch.codecc.service") ||
+                (packageName == "com.tencent.devops.dispatch.codecc.listener")) {
+                val configuration = configurationMap["dispatchCodeccJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no dispatchCodeccJooqConfiguration")
+                LOG.info("dslContext_init|dispatchCodeccJooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
         }
         return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
     }
@@ -126,6 +134,16 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(dispatchMacosDataSource, bkJooqExecuteListenerProvider)
+    }
+
+    @Bean
+    fun dispatchCodeccJooqConfiguration(
+        @Qualifier("dispatchCodeccDataSource")
+        dispatchCodeccDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(dispatchCodeccDataSource, bkJooqExecuteListenerProvider)
     }
 
     private fun generateDefaultConfiguration(
