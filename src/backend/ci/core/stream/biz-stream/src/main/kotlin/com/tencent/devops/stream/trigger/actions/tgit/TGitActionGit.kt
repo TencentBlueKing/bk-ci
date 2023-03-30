@@ -7,6 +7,7 @@ import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -107,7 +108,7 @@ abstract class TGitActionGit(
         displayName: String?
     ) = Unit
 
-    override fun parseStreamTriggerContext() {
+    override fun parseStreamTriggerContext(cred: StreamGitCred?) {
         // 格式化repoCreatedTime
         this.data.context.repoCreatedTime = DateTimeUtil.formatDate(
             DateTimeUtil.zoneDateToDate(this.data.context.repoCreatedTime)!!
@@ -116,7 +117,7 @@ abstract class TGitActionGit(
         // 将repoCreatorId -> user name
         this.data.context.repoCreatorId = this.data.context.repoCreatorId?.let {
             api.getUserInfoById(
-                TGitCred(this.data.getUserId()),
+                (cred as TGitCred?) ?: getGitCred(),
                 it
             ).username
         }
