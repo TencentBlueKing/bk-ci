@@ -52,7 +52,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.FAILED_GET_USER_INFORMATION
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
@@ -146,8 +145,7 @@ class IamV3Service @Autowired constructor(
         val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
             ?: throw ErrorCodeException(
                 errorCode = FAILED_GET_USER_INFORMATION,
-                params = arrayOf(userId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(userId)
             )
         val bgId = deptInfo.results[0].id
         logger.info("user $userId bg: $bgId bgName: $bgName")
