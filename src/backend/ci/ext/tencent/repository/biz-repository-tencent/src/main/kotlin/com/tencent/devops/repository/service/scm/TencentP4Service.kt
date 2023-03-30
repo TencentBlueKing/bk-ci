@@ -95,13 +95,13 @@ class TencentP4Service(
         val username = credentials[0]
         if (username.isEmpty()) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
+                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
@@ -109,7 +109,7 @@ class TencentP4Service(
         val password = credentials[1]
         if (password.isEmpty()) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
+                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
         }

@@ -27,13 +27,10 @@
 
 package com.tencent.devops.store.dao.common
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TClassify
 import com.tencent.devops.model.store.tables.records.TClassifyRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.ClassifyRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -130,9 +127,8 @@ class ClassifyDao {
         with(record) {
             // 分类信息名称没有配置国际化信息则取分类表里面的名称
             val classifyType = StoreTypeEnum.getStoreType(type.toInt())
-            val classifyLanName = MessageUtil.getMessageByLocale(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "$classifyType.classify.$classifyCode",
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             return Classify(

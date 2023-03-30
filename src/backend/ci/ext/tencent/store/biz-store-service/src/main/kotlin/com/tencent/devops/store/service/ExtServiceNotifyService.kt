@@ -88,7 +88,7 @@ class ExtServiceNotifyService {
             "name" to serviceName,
             "version" to serviceRecord.version,
             "publisher" to serviceRecord.publisher,
-            "releaseType" to if (releaseType != null) MessageUtil.getCodeLanMessage(
+            "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
                 messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt()),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) else "",

@@ -83,7 +83,7 @@ class TxImageNotifyService @Autowired constructor() : ImageNotifyService {
             "name" to image.imageName,
             "version" to image.version,
             "publisher" to image.publisher,
-            "releaseType" to if (releaseType != null) MessageUtil.getCodeLanMessage(
+            "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
                 messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt()),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) else "",

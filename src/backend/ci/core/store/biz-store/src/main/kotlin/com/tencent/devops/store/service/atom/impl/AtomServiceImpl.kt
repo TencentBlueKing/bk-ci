@@ -43,7 +43,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -332,9 +331,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 JsonUtil.getObjectMapper().readValue(it[KEY_OS] as String, ArrayList::class.java) as ArrayList<String>
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getMessageByLocale(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             // 社区版插件归档bkrepo后删除local参数
@@ -894,9 +892,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 installType == StoreProjectTypeEnum.TEST.type.toByte()
             val atomClassifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getMessageByLocale(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             result.add(
@@ -940,9 +937,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val installer = it[KEY_INSTALLER] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getMessageByLocale(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             // 判断项目是否是初始化项目或者调试项目

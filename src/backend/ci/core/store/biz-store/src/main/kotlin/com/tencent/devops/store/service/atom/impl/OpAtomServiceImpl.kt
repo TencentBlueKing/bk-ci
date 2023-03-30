@@ -43,7 +43,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -52,7 +51,6 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
-import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
@@ -65,6 +63,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
+import com.tencent.devops.store.pojo.common.Classify
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -76,6 +75,8 @@ import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.OpAtomService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
+import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.common.StoreLogoService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
@@ -96,7 +97,6 @@ import java.time.LocalDateTime
 @Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
 class OpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val classifyDao: ClassifyDao,
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomFeatureDao: MarketAtomFeatureDao,
@@ -107,6 +107,8 @@ class OpAtomServiceImpl @Autowired constructor(
     private val atomReleaseService: AtomReleaseService,
     private val storeLogoService: StoreLogoService,
     private val storeWebsocketService: StoreWebsocketService,
+    private val classifyService: ClassifyService,
+    private val storeI18nMessageService: StoreI18nMessageService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) : OpAtomService {
@@ -128,8 +130,8 @@ class OpAtomServiceImpl @Autowired constructor(
         atomStatus: AtomStatusEnum?,
         sortType: OpSortTypeEnum?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<Atom>?> {
         logger.info("getOpPipelineAtoms|atomName=$atomName,serviceScope=$serviceScope,os=$os,atomType=$atomType")
         logger.info("getOpPipelineAtoms|category=$category,classifyId=$classifyId,page=$page,pageSize=$pageSize")
@@ -207,12 +209,12 @@ class OpAtomServiceImpl @Autowired constructor(
      * 生成插件对象
      */
     private fun generatePipelineAtom(it: TAtomRecord): Atom {
-        val atomClassifyRecord = classifyDao.getClassify(dslContext, it.classifyId)
-        return convert(it, atomClassifyRecord)
+        val classify = classifyService.getClassify(it.classifyId).data
+        return convert(it, classify)
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun convert(atomRecord: TAtomRecord, atomClassifyRecord: TClassifyRecord?): Atom {
+    private fun convert(atomRecord: TAtomRecord, classify: Classify?): Atom {
         val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomRecord.atomCode)
         return Atom(
             id = atomRecord.id,
@@ -225,9 +227,9 @@ class OpAtomServiceImpl @Autowired constructor(
             serviceScope = JsonUtil.toOrNull(atomRecord.serviceScope, List::class.java) as List<String>?,
             jobType = atomRecord.jobType,
             os = JsonUtil.toOrNull(atomRecord.os, List::class.java) as List<String>?,
-            classifyId = atomClassifyRecord?.id,
-            classifyCode = atomClassifyRecord?.classifyCode,
-            classifyName = atomClassifyRecord?.classifyName,
+            classifyId = classify?.id,
+            classifyCode = classify?.classifyCode,
+            classifyName = classify?.classifyName,
             docsLink = atomRecord.docsLink,
             category = AtomCategoryEnum.getAtomCategory(atomRecord.categroy.toInt()),
             atomType = AtomTypeEnum.getAtomType(atomRecord.atomType.toInt()),
@@ -244,8 +246,16 @@ class OpAtomServiceImpl @Autowired constructor(
             buildLessRunFlag = atomRecord.buildLessRunFlag,
             weight = atomRecord.weight,
             props = atomRecord.props?.let {
+                val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                    jsonStr = it,
+                    keyPrefix = StoreUtils.getStoreFieldKeyPrefix(
+                        storeType = StoreTypeEnum.ATOM,
+                        storeCode = atomRecord.atomCode,
+                        version = atomRecord.version
+                    )
+                )
                 AtomDecorateFactory.get(AtomDecorateFactory.Kind.PROPS)
-                    ?.decorate(atomRecord.props) as Map<String, Any>?
+                    ?.decorate(propJsonStr) as Map<String, Any>?
             },
             data = atomRecord.data?.let {
                 AtomDecorateFactory.get(AtomDecorateFactory.Kind.DATA)

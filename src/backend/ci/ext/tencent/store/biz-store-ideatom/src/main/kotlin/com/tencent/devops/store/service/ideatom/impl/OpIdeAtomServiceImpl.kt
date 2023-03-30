@@ -230,7 +230,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val classifyRecord = classifyDao.getClassify(dslContext, it.classifyId)
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -306,7 +306,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
             val atomClassifyCode = it["classifyCode"] as? String
             val classifyName = it["classifyName"] as? String
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
                 defaultMessage = classifyName,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

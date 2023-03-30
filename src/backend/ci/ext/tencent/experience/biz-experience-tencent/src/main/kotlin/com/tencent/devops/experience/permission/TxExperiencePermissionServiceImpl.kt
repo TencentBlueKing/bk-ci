@@ -40,7 +40,7 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -106,7 +106,7 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias,
                 language = I18nUtil.getLanguage(userId)

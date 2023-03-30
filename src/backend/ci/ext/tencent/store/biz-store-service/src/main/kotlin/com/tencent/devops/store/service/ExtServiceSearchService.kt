@@ -80,7 +80,7 @@ class ExtServiceSearchService @Autowired constructor(
         result.add(
             ExtServiceMainItemVo(
                 key = LATEST,
-                label = MessageUtil.getCodeLanMessage(messageCode = LATEST,
+                label = I18nUtil.getCodeLanMessage(messageCode = LATEST,
                     language = I18nUtil.getLanguage(userId)),
                 records = doList(
                     userId = userId,
@@ -100,7 +100,7 @@ class ExtServiceSearchService @Autowired constructor(
         result.add(
             ExtServiceMainItemVo(
                 key = HOTTEST,
-                label = MessageUtil.getCodeLanMessage(
+                label = I18nUtil.getCodeLanMessage(
                     messageCode = HOTTEST,
                     language = I18nUtil.getLanguage(userId)),
                 records = doList(

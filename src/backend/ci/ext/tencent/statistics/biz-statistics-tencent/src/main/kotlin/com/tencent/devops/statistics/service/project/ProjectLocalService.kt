@@ -209,7 +209,7 @@ class ProjectLocalService @Autowired constructor(
                 "organizationType[$organizationType] :organizationId[$organizationId] " +
                     " not project[$projectId] permission "
             )
-            throw OperationException((MessageUtil.getCodeLanMessage(
+            throw OperationException((I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.ORG_NOT_PROJECT,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )))
@@ -241,7 +241,7 @@ class ProjectLocalService @Autowired constructor(
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
             else -> {
-                throw OperationException((MessageUtil.getCodeLanMessage(
+                throw OperationException((I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.ORG_TYPE_ERROR,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )))

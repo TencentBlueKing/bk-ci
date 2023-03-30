@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.constant.NUM_THREE
 import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
@@ -103,21 +102,21 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = BEGIN,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = COMMIT,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), COMMIT, NUM_TWO, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = END,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_THREE, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = APPROVE,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), APPROVE, NUM_THREE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = END,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_FOUR, UNDO))
         }

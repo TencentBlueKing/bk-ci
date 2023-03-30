@@ -134,7 +134,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
                     resourceType = resourceType,
                     authPermission = permission
                 )) {
-                val permissionMsg = MessageUtil.getCodeLanMessage(
+                val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
                     language = I18nUtil.getLanguage(userId),
                     defaultMessage = permission.alias

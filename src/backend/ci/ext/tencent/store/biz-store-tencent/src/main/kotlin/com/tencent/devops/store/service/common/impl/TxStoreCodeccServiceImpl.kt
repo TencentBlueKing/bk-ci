@@ -85,7 +85,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 return Result(
                     CodeccMeasureInfo(
                         status = 1,
-                        message = MessageUtil.getCodeLanMessage(messageCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL,
+                        message = I18nUtil.getCodeLanMessage(messageCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL,
                             language = I18nUtil.getLanguage(userId))
                     )
                 )

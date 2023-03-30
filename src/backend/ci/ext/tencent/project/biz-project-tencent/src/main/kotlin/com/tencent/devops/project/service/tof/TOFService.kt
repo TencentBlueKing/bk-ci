@@ -109,7 +109,7 @@ class TOFService @Autowired constructor(
             detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bkTicket)
             if (detail == null) {
                 logger.info("user $userId is level office")
-                throw OperationException(MessageUtil.getCodeLanMessage(
+                throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
                     defaultMessage = MessageUtil.getMessageByLocale(
                         messageCode = USER_RESIGNED,
@@ -154,7 +154,7 @@ class TOFService @Autowired constructor(
                     tofAppCode!!,
                     tofAppSecret!!,
                     id.toString()
-                ), MessageUtil.getCodeLanMessage(
+                ), I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
                     language = I18nUtil.getLanguage(userId))
             )
@@ -167,11 +167,11 @@ class TOFService @Autowired constructor(
                     statusCode = response.code,
                     statusMessage = response.message,
                     errorCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
-                    errorMessage = MessageUtil.getCodeLanMessage(
+                    errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
                         language = I18nUtil.getLanguage(userId))
                 )
-                throw OperationException(MessageUtil.getCodeLanMessage(
+                throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
                     language = I18nUtil.getLanguage(userId)))
             }
@@ -194,7 +194,7 @@ class TOFService @Autowired constructor(
             )
         } catch (e: Exception) {
             logger.warn("Fail to get the organization info of id $id", e)
-            throw OperationException(MessageUtil.getCodeLanMessage(
+            throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
                 language = I18nUtil.getLanguage(userId)))
         }
@@ -210,7 +210,7 @@ class TOFService @Autowired constructor(
                     tofAppSecret!!,
                     getParentDeptIdByOrganizationType(type, id),
                     1
-                ), MessageUtil.getCodeLanMessage(
+                ), I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                     language = I18nUtil.getLanguage(userId))
             )
@@ -223,11 +223,11 @@ class TOFService @Autowired constructor(
                     statusCode = response.code,
                     statusMessage = response.message,
                     errorCode = QUERY_SUB_DEPARTMENT_FAIL,
-                    errorMessage = MessageUtil.getCodeLanMessage(
+                    errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                         language = I18nUtil.getLanguage(userId))
                 )
-                throw OperationException(MessageUtil.getCodeLanMessage(
+                throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                     language = I18nUtil.getLanguage(userId)))
             }
@@ -241,7 +241,7 @@ class TOFService @Autowired constructor(
             return response.data
         } catch (t: Throwable) {
             logger.warn("Fail to get the organization info of type $type and id $id", t)
-            throw OperationException(MessageUtil.getCodeLanMessage(
+            throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = QUERY_SUB_DEPARTMENT_FAIL,
                 language = I18nUtil.getLanguage(userId)))
         }
@@ -273,7 +273,7 @@ class TOFService @Autowired constructor(
                     path, StaffInfoRequest(
                     tofAppCode!!,
                     tofAppSecret!!, operator, userId, bkTicket
-                    ), MessageUtil.getCodeLanMessage(
+                    ), I18nUtil.getCodeLanMessage(
                             messageCode = FAILED_USER_INFORMATION,
                             language = I18nUtil.getLanguage(userId),
                             params = arrayOf(userId)
@@ -286,7 +286,7 @@ class TOFService @Autowired constructor(
                         statusCode = response.code,
                         statusMessage = response.message,
                         errorCode = QUERY_USER_INFO_FAIL,
-                        errorMessage =  MessageUtil.getCodeLanMessage(
+                        errorMessage =  I18nUtil.getCodeLanMessage(
                                 messageCode = FAILED_USER_INFORMATION,
                                 language = I18nUtil.getLanguage(userId),
                                 params = arrayOf(userId)
@@ -294,7 +294,7 @@ class TOFService @Autowired constructor(
                     )
                     logger.warn("Fail to get the staff info|$userId|$bkTicket|$responseContent")
                     throw OperationException(
-                        MessageUtil.getCodeLanMessage(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = FAILED_USER_INFORMATION,
                             language = I18nUtil.getLanguage(userId),
                             params = arrayOf(userId)
@@ -313,7 +313,7 @@ class TOFService @Autowired constructor(
             return info
         } catch (t: Throwable) {
             logger.warn("Fail to get the staff info of userId $userId with ticket $bkTicket", t)
-            throw OperationException(MessageUtil.getCodeLanMessage(
+            throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = FAILED_USER_INFORMATION,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(userId)
@@ -336,7 +336,7 @@ class TOFService @Autowired constructor(
             val responseContent = request(
                 path,
                 ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level),
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_ORG_FAIL,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )
@@ -348,11 +348,11 @@ class TOFService @Autowired constructor(
                     statusCode = response.code,
                     statusMessage = response.message,
                     errorCode = QUERY_ORG_FAIL,
-                    errorMessage = MessageUtil.getCodeLanMessage(
+                    errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = QUERY_ORG_FAIL,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
                 )
-                throw OperationException(MessageUtil.getCodeLanMessage(
+                throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_ORG_FAIL,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
             }
@@ -367,7 +367,7 @@ class TOFService @Autowired constructor(
             return response.data
         } catch (t: Throwable) {
             logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
-            throw OperationException(MessageUtil.getCodeLanMessage(
+            throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
         }

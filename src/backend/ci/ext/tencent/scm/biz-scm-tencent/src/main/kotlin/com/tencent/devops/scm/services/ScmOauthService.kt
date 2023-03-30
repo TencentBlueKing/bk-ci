@@ -280,7 +280,7 @@ class ScmOauthService @Autowired constructor(
             statusCode = e.code
             statusMessage = e.message
             throw ScmException(
-                e.message ?: MessageUtil.getCodeLanMessage(
+                e.message ?: I18nUtil.getCodeLanMessage(
                     messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
                 ScmType.CODE_GIT.name

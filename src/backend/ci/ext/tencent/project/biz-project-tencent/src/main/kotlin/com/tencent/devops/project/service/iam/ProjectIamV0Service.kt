@@ -92,7 +92,7 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw OperationException(MessageUtil.getCodeLanMessage(
+            ?: throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                 language = I18nUtil.getLanguage(userId)
             ))
@@ -160,7 +160,7 @@ class ProjectIamV0Service @Autowired constructor(
             } catch (ignore: OperationException) {
                 logger.warn("OperationException $it $projectId ${ignore.message}")
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
                         defaultMessage = ignore.message,
                         params = arrayOf(it),

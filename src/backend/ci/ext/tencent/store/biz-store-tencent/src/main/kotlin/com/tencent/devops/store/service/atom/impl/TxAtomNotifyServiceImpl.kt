@@ -91,7 +91,7 @@ class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
             "name" to atomName,
             "version" to atom.version,
             "publisher" to atom.publisher,
-            "releaseType" to if (releaseType != null) MessageUtil.getCodeLanMessage(
+            "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
                 messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt()),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) else "",

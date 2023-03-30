@@ -72,7 +72,7 @@ class IdeAtomServiceImpl @Autowired constructor(
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = classifyName,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

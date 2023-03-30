@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.EXCEPTION
 import com.tencent.devops.common.api.constant.NORMAL
 import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
@@ -113,11 +112,11 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-                val normalName = MessageUtil.getCodeLanMessage(messageCode = NORMAL,
+                val normalName = I18nUtil.getCodeLanMessage(messageCode = NORMAL,
                     language = I18nUtil.getLanguage(userId))
-                val exceptionName = MessageUtil.getCodeLanMessage(messageCode = EXCEPTION,
+                val exceptionName = I18nUtil.getCodeLanMessage(messageCode = EXCEPTION,
                     language = I18nUtil.getLanguage(userId))
-                val numUnit = MessageUtil.getCodeLanMessage(messageCode = NUM_UNIT,
+                val numUnit = I18nUtil.getCodeLanMessage(messageCode = NUM_UNIT,
                     language = I18nUtil.getLanguage(userId))
                 envNodeList?.map {
                     AgentResponse(
@@ -147,7 +146,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }
             }
             BuildType.ESXi -> {
-                val macPublicBuildResourceName = MessageUtil.getCodeLanMessage(messageCode = "macPublicBuildResourceName",
+                val macPublicBuildResourceName = I18nUtil.getCodeLanMessage(messageCode = "macPublicBuildResourceName",
                     language = I18nUtil.getLanguage(userId))
                 val l = listOf(MacOSNode(macPublicBuildResourceName, macPublicBuildResourceName))
                 containerResourceValue = l.map {

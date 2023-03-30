@@ -29,12 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
@@ -181,9 +179,8 @@ class LabelServiceImpl @Autowired constructor(
         val labelCode = it[KEY_LABEL_CODE] as String
         val labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt())
         val labelName = it[KEY_LABEL_NAME] as String
-        val labelLanName = MessageUtil.getMessageByLocale(
+        val labelLanName = I18nUtil.getCodeLanMessage(
             messageCode = "$labelType.label.$labelCode",
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             defaultMessage = labelName
         )
         labelList.add(

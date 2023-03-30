@@ -112,7 +112,6 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.utils.VersionUtils
 import okhttp3.Request
-import org.checkerframework.checker.units.qual.s
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -909,7 +908,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 serviceId = serviceId,
                 serviceStatus = status,
                 userId = userId,
-                msg = MessageUtil.getCodeLanMessage(
+                msg = I18nUtil.getCodeLanMessage(
                     messageCode = UN_RELEASE,
                     language = I18nUtil.getLanguage(userId))
             )
@@ -1350,31 +1349,34 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = BEGIN,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = TEST_ENV_PREPARE,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), TEST_ENV_PREPARE, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(messageCode = TEST,
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
+            messageCode = TEST,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), TEST, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = EDIT,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = ONLINE,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), ONLINE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = END,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_SIX, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = APPROVE,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(messageCode = ONLINE,
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
+                messageCode = ONLINE,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), ONLINE, NUM_SIX, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(messageCode = END,
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
+                messageCode = END,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_SEVEN, UNDO))
         }
         return processInfo

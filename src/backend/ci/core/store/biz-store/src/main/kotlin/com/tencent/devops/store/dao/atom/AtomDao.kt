@@ -54,33 +54,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
-import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
-import com.tencent.devops.store.pojo.common.KEY_ATOM_STATUS
-import com.tencent.devops.store.pojo.common.KEY_ATOM_TYPE
-import com.tencent.devops.store.pojo.common.KEY_AVG_SCORE
-import com.tencent.devops.store.pojo.common.KEY_BUILD_LESS_RUN_FLAG
-import com.tencent.devops.store.pojo.common.KEY_CATEGORY
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_ID
-import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
-import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
-import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
-import com.tencent.devops.store.pojo.common.KEY_CREATOR
-import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
-import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
-import com.tencent.devops.store.pojo.common.KEY_ICON
-import com.tencent.devops.store.pojo.common.KEY_ID
-import com.tencent.devops.store.pojo.common.KEY_INSTALLER
-import com.tencent.devops.store.pojo.common.KEY_INSTALL_TIME
-import com.tencent.devops.store.pojo.common.KEY_INSTALL_TYPE
-import com.tencent.devops.store.pojo.common.KEY_LATEST_FLAG
-import com.tencent.devops.store.pojo.common.KEY_LOGO_URL
-import com.tencent.devops.store.pojo.common.KEY_MODIFIER
-import com.tencent.devops.store.pojo.common.KEY_PUBLISHER
-import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
-import com.tencent.devops.store.pojo.common.KEY_RECOMMEND_FLAG
-import com.tencent.devops.store.pojo.common.KEY_SERVICE_SCOPE
-import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.*
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.utils.VersionUtils
@@ -353,8 +327,8 @@ class AtomDao : AtomBaseDao() {
         atomStatus: AtomStatusEnum?,
         sortType: String?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
             val conditions = queryOpPipelineAtomsConditions(
@@ -378,11 +352,7 @@ class AtomDao : AtomBaseDao() {
                 baseStep.where(conditions).orderBy(CREATE_TIME.desc())
             }
 
-            return if (null != page && null != pageSize) {
-                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-            } else {
-                baseStep.fetch()
-            }
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
     }
 

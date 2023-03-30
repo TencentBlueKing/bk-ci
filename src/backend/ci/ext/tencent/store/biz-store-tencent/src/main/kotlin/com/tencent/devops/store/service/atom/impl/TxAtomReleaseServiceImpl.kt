@@ -533,35 +533,35 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean, codeccFlag: Boolean?): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(messageCode = BEGIN,
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN,
             language = I18nUtil.getDefaultLocaleLanguage()), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = COMMIT,
             language = I18nUtil.getDefaultLocaleLanguage()), COMMIT, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = BUILD,
             language = I18nUtil.getDefaultLocaleLanguage()), BUILD, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = TEST,
             language = I18nUtil.getDefaultLocaleLanguage()), TEST, NUM_FOUR, UNDO))
         val flag = codeccFlag == null || !codeccFlag
         if (!flag) {
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = CODECC,
                 language = I18nUtil.getDefaultLocaleLanguage()), CODECC, NUM_FIVE, UNDO))
         }
         if (isNormalUpgrade) {
             val endStep = if (flag) NUM_FIVE else NUM_SIX
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = END,
                 language = I18nUtil.getDefaultLocaleLanguage()), END, endStep, UNDO))
         } else {
             val approveStep = if (flag) NUM_FIVE else NUM_SIX
             val endStep = if (flag) NUM_SIX else NUM_SEVEN
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
                 messageCode = APPROVE,
                 language = I18nUtil.getDefaultLocaleLanguage()), APPROVE, approveStep, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageUtil.getCodeLanMessage(messageCode = END,
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END,
                 language = I18nUtil.getDefaultLocaleLanguage()), END, endStep, UNDO))
         }
         return processInfo

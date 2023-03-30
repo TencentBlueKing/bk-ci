@@ -28,11 +28,8 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomClassifyDao
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
@@ -85,9 +82,8 @@ class MarketAtomClassifyServiceImpl @Autowired constructor() : MarketAtomClassif
             val id = it[KEY_ID] as String
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageUtil.getMessageByLocale(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             val atomNum = it["atomNum"] as? Int

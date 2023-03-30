@@ -182,7 +182,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 userId = userId,
                 bkTicket = "",
                 userCache = false
-            ) ?: throw OperationException(MessageUtil.getCodeLanMessage(
+            ) ?: throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = "user $userId level office",
                 language = I18nUtil.getLanguage(userId)))
             if (userInfo.groupId != deptInfo.groupId || userInfo.deptId != deptInfo.deptId) {

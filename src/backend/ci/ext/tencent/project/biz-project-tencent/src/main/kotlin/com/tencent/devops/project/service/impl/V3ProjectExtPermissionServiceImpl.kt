@@ -84,7 +84,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageUtil.getCodeLanMessage(messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         val projectRelationId = projectInfo.relationId
@@ -137,7 +137,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 throw ope
             } catch (e: Exception) {
                 logger.warn("getStaffInfo fail, userId[$it]", e)
-                throw OperationException(MessageUtil.getCodeLanMessage(
+                throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
                     defaultMessage = e.message,
                     params = arrayOf(it),
@@ -156,7 +156,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             logger.warn("create group user fail, $projectCode $roleName not find relationGroup")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             )

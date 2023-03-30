@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import com.tencent.devops.common.api.pojo.Result
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
-import java.net.URLDecoder
 import java.text.MessageFormat
 import java.util.*
 
@@ -53,7 +52,7 @@ object MessageUtil {
      */
     fun getMessageByLocale(
         messageCode: String,
-        language: String,
+        language: String? = null,
         params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME,
         defaultMessage: String? = null
@@ -353,26 +352,5 @@ object MessageUtil {
         )
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)
-    }
-
-    /**
-     * 获取code对应的中英文信息
-     * @param messageCode code
-     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
-     * @return Result响应结果对象
-     */
-    fun getCodeLanMessage(
-        messageCode: String,
-        defaultMessage: String? = null,
-        params: Array<String>? = null,
-        checkUrlDecoder: Boolean = false,
-        language: String
-    ): String {
-        return getMessageByLocale(
-            messageCode = messageCode,
-            params = params,
-            language = language,
-            defaultMessage = defaultMessage
-        ).let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
     }
 }

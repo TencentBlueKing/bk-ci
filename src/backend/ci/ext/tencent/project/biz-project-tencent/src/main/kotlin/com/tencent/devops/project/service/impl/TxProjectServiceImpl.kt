@@ -406,13 +406,13 @@ class TxProjectServiceImpl @Autowired constructor(
         val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, MessageUtil.getCodeLanMessage(
+        val responseContent = request(request, I18nUtil.getCodeLanMessage(
             messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
             language = I18nUtil.getLanguage(userId)))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(MessageUtil.getCodeLanMessage(
+            throw OperationException(I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
                 language = I18nUtil.getLanguage(userId)))
         }

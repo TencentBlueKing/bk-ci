@@ -76,7 +76,7 @@ class TxQualityPermissionService @Autowired constructor(
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
             )) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 language = I18nUtil.getLanguage(userId),
                 defaultMessage = authPermission.alias
@@ -216,7 +216,7 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageUtil.getCodeLanMessage(
+                val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                     defaultMessage = authPermission.alias,
                     language = I18nUtil.getLanguage(userId)
@@ -250,7 +250,7 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageUtil.getCodeLanMessage(
+                val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                     defaultMessage = authPermission.alias,
                     language = I18nUtil.getLanguage(userId)

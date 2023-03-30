@@ -177,7 +177,7 @@ class OpProjectServiceImpl @Autowired constructor(
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
         if (projectInfo == null) {
             logger.warn("syn project $projectCode is not exist")
-            throw OperationException(MessageUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST,
+            throw OperationException(I18nUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
         }
         var isSyn = false

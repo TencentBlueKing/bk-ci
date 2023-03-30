@@ -589,7 +589,7 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageUtil.getCodeLanMessage(
+            defaultMessage = I18nUtil.getCodeLanMessage(
                 messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
@@ -619,7 +619,7 @@ class ProjectLocalService @Autowired constructor(
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
-                    (MessageUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.NOT_MANAGER,
                         params = arrayOf(userId, projectId),
                         language = I18nUtil.getLanguage(userId)
@@ -637,7 +637,7 @@ class ProjectLocalService @Autowired constructor(
                 )) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
-                    (MessageUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
                         params = arrayOf(userId, projectId),
                         language = I18nUtil.getLanguage(userId)

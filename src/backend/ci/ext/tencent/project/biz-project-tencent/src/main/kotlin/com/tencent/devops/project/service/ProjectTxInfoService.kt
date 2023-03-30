@@ -77,7 +77,7 @@ class ProjectTxInfoService @Autowired constructor(
         // projectName表字段长度调整到64位限制
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.NAME_TOO_LONG,
                     language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
@@ -85,7 +85,7 @@ class ProjectTxInfoService @Autowired constructor(
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
             throw ErrorCodeException(
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.PROJECT_NAME_EXIST,
                     language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
@@ -106,7 +106,7 @@ class ProjectTxInfoService @Autowired constructor(
         logger.info("PROJECT|userId|$userId|projectName|$projectName")
         if (projectName.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.NAME_EMPTY,
                     language = I18nUtil.getLanguage(userId)),
                 errorCode = ProjectMessageCode.NAME_EMPTY

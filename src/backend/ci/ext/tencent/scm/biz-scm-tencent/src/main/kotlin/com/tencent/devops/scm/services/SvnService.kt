@@ -212,7 +212,7 @@ class SvnService {
                     params = arrayOf(url)
                 ), e)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = RepositoryMessageCode.CALL_REPO_ERROR,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
                 scmType = ScmType.CODE_SVN.name
@@ -230,7 +230,7 @@ class SvnService {
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
                 scmType = ScmType.CODE_SVN.name
@@ -281,7 +281,7 @@ class SvnService {
             return result
         } catch (e: SVNException) {
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = RepositoryMessageCode.CALL_REPO_ERROR,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
                 scmType = ScmType.CODE_SVN.name

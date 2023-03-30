@@ -770,7 +770,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ) {
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
                 defaultMessage = AuthPermission.EXECUTE.alias,
                 language = I18nUtil.getLanguage(userId)
