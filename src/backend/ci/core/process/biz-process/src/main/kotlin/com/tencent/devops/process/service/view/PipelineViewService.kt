@@ -39,10 +39,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
-import com.tencent.devops.process.constant.BK_CREATOR
-import com.tencent.devops.process.constant.BK_PIPELINE_NAME
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CREATOR
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_NAME
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao

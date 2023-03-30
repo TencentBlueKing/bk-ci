@@ -46,10 +46,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.process.utils.CredentialUtils
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -78,7 +76,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Base64
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -150,8 +148,8 @@ class RepositoryService @Autowired constructor(
         } catch (e: Exception) {
             logger.error("createGitCodeRepository error is :$e", e)
             return MessageUtil.generateResponseDataObject(
-                CommonMessageCode.SYSTEM_ERROR,
-                I18nUtil.getLanguage(userId)
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         logger.info("gitRepositoryResp>> $gitRepositoryResp")
@@ -187,7 +185,7 @@ class RepositoryService @Autowired constructor(
         } else {
             MessageUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
-                I18nUtil.getLanguage(userId)
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }
@@ -200,7 +198,7 @@ class RepositoryService @Autowired constructor(
                 // 抛出无效的token提示
                 return MessageUtil.generateResponseDataObject(
                     CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
-                    I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
             gitToken.accessToken
@@ -260,7 +258,7 @@ class RepositoryService @Autowired constructor(
             logger.error("updateGitCodeRepository error is :$e", e)
             MessageUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
-                I18nUtil.getLanguage(userId)
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }
@@ -293,7 +291,7 @@ class RepositoryService @Autowired constructor(
             logger.error("getGitRepositoryTreeInfo error is :$e", e)
             MessageUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
-                I18nUtil.getLanguage(userId)
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }
@@ -444,7 +442,7 @@ class RepositoryService @Autowired constructor(
             logger.error("moveProjectToGroupResult error is :$e", e)
             MessageUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
-                I18nUtil.getLanguage(userId)
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }

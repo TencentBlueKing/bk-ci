@@ -102,7 +102,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessageI18n() +
-                            "（Fail to get builder detail, http response code: ${response.code()}"
+                            "（Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -172,7 +172,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR, userId) +
-                            "（Fail to $action docker, http response code: ${response.code()}"
+                            "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] operator builder: $name response: $responseContent")
@@ -228,7 +228,7 @@ class KubernetesBuilderClient @Autowired constructor(
                             TROUBLE_SHOOTING,
                             "${ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode}",
                             userId
-                        ) + ": Fail to createBuilder, http response code: ${response.code()}"
+                        ) + ": Fail to createBuilder, http response code: ${response.code}"
                     )
                 }
 
@@ -259,7 +259,7 @@ class KubernetesBuilderClient @Autowired constructor(
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL, userId) +
-                "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
+                "${TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
             )
         }
     }

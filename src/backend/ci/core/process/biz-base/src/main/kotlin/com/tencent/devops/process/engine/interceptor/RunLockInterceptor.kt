@@ -30,8 +30,8 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_MUTEX_GROUP_SINGLE_BUILD
-import com.tencent.devops.process.constant.BK_PIPELINE_SINGLE_BUILD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTEX_GROUP_SINGLE_BUILD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_SINGLE_BUILD
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_LOCK
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.service.PipelineRuntimeService

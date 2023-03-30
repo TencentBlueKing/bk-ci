@@ -33,7 +33,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
@@ -46,6 +45,7 @@ import com.tencent.devops.dispatch.bcs.pojo.BcsStopBuilderParams
 import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -91,7 +91,7 @@ class BcsBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
+                    "${TROUBLE_SHOOTING}获取构建机详情接口异常" +
                             "（Fail to get builder detail, http response code: ${response.code}"
                 )
             }
@@ -155,7 +155,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
+                        "${TROUBLE_SHOOTING}操作构建机接口异常" +
                                 "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
@@ -169,7 +169,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口返回失败：$msg"
+                        "${TROUBLE_SHOOTING}操作构建机接口返回失败：$msg"
                     )
                 }
             }
@@ -179,7 +179,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口超时, url: $url"
+                errorMessage = "${TROUBLE_SHOOTING}操作构建机接口超时, url: $url"
             )
         }
     }
@@ -207,7 +207,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
+                        "${TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
                                 "${response.code}"
                     )
                 }
@@ -221,7 +221,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口返回失败: $msg"
+                        "${TROUBLE_SHOOTING}创建构建机接口返回失败: $msg"
                     )
                 }
             }
@@ -234,7 +234,7 @@ class BcsBuilderClient @Autowired constructor(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
+                errorMessage = "${TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
             )
         }
     }
@@ -361,7 +361,7 @@ class BcsBuilderClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: $msg"
+                        "$TROUBLE_SHOOTING 构建并镜像接口返回失败: $msg"
                     )
                 }
             }

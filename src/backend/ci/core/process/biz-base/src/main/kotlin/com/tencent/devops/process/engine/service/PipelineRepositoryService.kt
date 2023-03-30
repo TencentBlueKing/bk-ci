@@ -52,8 +52,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -271,8 +271,7 @@ class PipelineRepositoryService constructor(
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
-                language = I18nUtil.getLanguage(userId)
+                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
             )
         }
         val c = (
@@ -280,8 +279,8 @@ class PipelineRepositoryService constructor(
                     ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
                         params = arrayOf(
-                            MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))),
-                        language = I18nUtil.getLanguage(userId)
+                            MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
+                        )
                     )
                 ) as TriggerContainer
 
@@ -346,8 +345,8 @@ class PipelineRepositoryService constructor(
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
                 params = arrayOf(
-                    MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))),
-                language = I18nUtil.getLanguage(userId)
+                    MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
+                )
             )
         }
         stage.containers.forEach { c ->
@@ -389,8 +388,7 @@ class PipelineRepositoryService constructor(
             } catch (ignore: Exception) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_JOB_MATRIX_YAML_CONFIG_ERROR,
-                    params = arrayOf(c.name, ignore.message ?: ""),
-                    language = I18nUtil.getLanguage(userId)
+                    params = arrayOf(c.name, ignore.message ?: "")
                 )
             }
 
@@ -826,8 +824,7 @@ class PipelineRepositoryService constructor(
 
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                language = I18nUtil.getLanguage(userId)
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)

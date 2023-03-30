@@ -34,8 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
-import com.tencent.devops.process.constant.BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER
-import com.tencent.devops.process.constant.BK_VIEW_NOT_FOUND_IN_PROJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_VIEW_NOT_FOUND_IN_PROJECT
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation

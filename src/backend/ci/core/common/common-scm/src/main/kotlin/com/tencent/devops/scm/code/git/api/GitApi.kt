@@ -103,6 +103,7 @@ open class GitApi {
         private const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList"
         private const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo"
         private const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems"
+        private const val GET_PROJECT_INFO = "bkGetProjectInfo"// 获取项目详情
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
@@ -647,6 +648,11 @@ open class GitApi {
 
     fun getProjectInfo(host: String, token: String, url: String): GitProjectInfo {
         val request = get(host, token, url, StringUtils.EMPTY)
-        return JsonUtil.getObjectMapper().readValue(getBody(GET_PROJECT_INFO, request))
+        return JsonUtil.getObjectMapper().readValue(
+            getBody(
+                getMessageByLocale(GET_PROJECT_INFO),
+                request
+            )
+        )
     }
 }

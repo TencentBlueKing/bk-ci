@@ -65,8 +65,8 @@ import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
-import com.tencent.devops.process.constant.BK_OPERATE_PIPELINE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OPERATE_PIPELINE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator

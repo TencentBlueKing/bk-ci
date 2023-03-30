@@ -34,10 +34,10 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_CHECK_FILE_COUNT_AND_VERSION
-import com.tencent.devops.process.constant.BK_CHECK_THE_WEB_DATA
-import com.tencent.devops.process.constant.BK_QUERY_FAVORITE_PIPELINE
-import com.tencent.devops.process.constant.BK_QUERY_PIPELINE_INFO
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_FILE_COUNT_AND_VERSION
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_THE_WEB_DATA
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUERY_FAVORITE_PIPELINE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUERY_PIPELINE_INFO
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService

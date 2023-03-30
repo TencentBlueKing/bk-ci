@@ -46,7 +46,7 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_ENV_NOT_YET_SUPPORTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo

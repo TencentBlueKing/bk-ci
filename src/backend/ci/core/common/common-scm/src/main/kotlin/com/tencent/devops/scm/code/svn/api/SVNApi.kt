@@ -149,9 +149,27 @@ object SVNApi {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 when {
-                    response.code == 401 -> throw ScmException("工程仓库访问未授权", ScmType.CODE_SVN.name)
-                    response.code == 404 -> throw ScmException("工程仓库不存在", ScmType.CODE_SVN.name)
-                    else -> throw ScmException("工程仓库访问异常", ScmType.CODE_SVN.name)
+                    response.code == 401 -> throw ScmException(
+                        MessageUtil.getMessageByLocale(
+                            ENGINEERING_REPO_UNAUTHORIZED,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
+                        ScmType.CODE_SVN.name
+                    )
+                    response.code == 404 -> throw ScmException(
+                        MessageUtil.getMessageByLocale(
+                            ENGINEERING_REPO_NOT_EXIST,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
+                        ScmType.CODE_SVN.name
+                    )
+                    else -> throw ScmException(
+                        MessageUtil.getMessageByLocale(
+                            ENGINEERING_REPO_CALL_ERROR,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
+                        ScmType.CODE_SVN.name
+                    )
                 }
             }
             return response.body!!.string()

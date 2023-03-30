@@ -218,16 +218,7 @@ object ProcessMessageCode {
     const val ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO = "2101512"// 用户（{0}) 无权限获取流水线({1})信息({2})
     const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101513"// 子流水线参数过滤失败
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101514"// 模版下存在无权限的插件
-
-    const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
-    const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
-    const val ERROR_SUBPIPELINE_CYCLE_CALL = "2101102" // 子流水线循环调用
-    const val ERROR_NO_STAGE_EXISTS_BY_ID = "2101106" // 构建中Stage[{0}]不存在
-    const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
-    const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
-    const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
-    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101105" // 触发不在审核状态中
-    const val ERROR_RECORD_PARSE_FAILED = "2101111" // 解析构建记录出错
+    const val ERROR_RECORD_PARSE_FAILED = "2101515" // 解析构建记录出错
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}

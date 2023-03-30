@@ -46,7 +46,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
 import com.tencent.devops.process.engine.control.lock.PipelineWebHookQueueLock
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.BK_TRIGGERED_BY_GIT_EVENT_PLUGIN
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGERED_BY_GIT_EVENT_PLUGIN
 import com.tencent.devops.process.engine.dao.PipelineWebHookQueueDao
 import com.tencent.devops.process.engine.pojo.PipelineWebHookQueue
 import com.tencent.devops.project.api.service.ServiceAllocIdResource

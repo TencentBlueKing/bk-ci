@@ -40,7 +40,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.BK_REMOTE_CALL_SOURCE_IP
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_REMOTE_CALL_SOURCE_IP
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_MATCHING_PIPELINE
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao

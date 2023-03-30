@@ -149,8 +149,8 @@ object CommonUtils {
             if (!response.isSuccessful) {
                 val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
                 return MessageUtil.generateResponseDataObject(
-                    CommonMessageCode.SYSTEM_ERROR,
-                    commonConfig.devopsDefaultLocaleLanguage
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
