@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
+import com.tencent.bk.sdk.iam.dto.manager.GroupMemberVerifyInfo
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
@@ -40,6 +41,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -216,41 +219,55 @@ class RbacPermissionApplyService @Autowired constructor(
         managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
         val groupInfoList: MutableList<ManagerRoleGroupInfo> = mutableListOf()
-        if (managerRoleGroupInfoList.isNotEmpty()) {
-            // 校验用户是否属于用户组
-            val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
-            val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
-            managerRoleGroupInfoList.forEach {
-                val dbGroupRecord = authResourceGroupDao.getByRelationId(
-                    dslContext = dslContext,
-                    projectCode = projectId,
-                    iamGroupId = it.id.toString()
-                ) /*?: throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                    params = arrayOf(it.id.toString()),
-                    defaultMessage = "group ${it.name} not exist"
-                )*/
-                // todo 待完善后，要进行异常处理,暂时这么处理，如果在用户组表找不到，那么用户组默认挂在项目下
-                groupInfoList.add(
-                    ManagerRoleGroupInfo(
-                        id = it.id,
-                        name = it.name,
-                        description = it.description,
-                        readonly = it.readonly,
-                        userCount = it.userCount,
-                        departmentCount = it.departmentCount,
-                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                        resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value,
-                        resourceTypeName = rbacCacheService.getResourceTypeInfo(
-                            dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
-                        ).name,
-                        resourceName = dbGroupRecord?.resourceName ?: projectName,
-                        resourceCode = dbGroupRecord?.resourceCode ?: projectId
-                    )
+        if (managerRoleGroupInfoList.isEmpty())
+            return groupInfoList
+        val groupIds = managerRoleGroupInfoList.map { it.id }
+        val verifyMemberJoinedResult = verifyMemberJoined(
+            userId = userId,
+            groupIds = groupIds
+        )
+        managerRoleGroupInfoList.forEach {
+            val dbGroupRecord = authResourceGroupDao.getByRelationId(
+                dslContext = dslContext,
+                projectCode = projectId,
+                iamGroupId = it.id.toString()
+            )
+            groupInfoList.add(
+                ManagerRoleGroupInfo(
+                    id = it.id,
+                    name = it.name,
+                    description = it.description,
+                    readonly = it.readonly,
+                    userCount = it.userCount,
+                    departmentCount = it.departmentCount,
+                    joined = verifyMemberJoinedResult[it.id.toInt()]?.belong ?: false,
+                    resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value,
+                    resourceTypeName = rbacCacheService.getResourceTypeInfo(
+                        dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
+                    ).name,
+                    resourceName = dbGroupRecord?.resourceName ?: projectName,
+                    resourceCode = dbGroupRecord?.resourceCode ?: projectId
                 )
-            }
+            )
         }
+
         return groupInfoList.sortedBy { it.resourceType }
+    }
+
+    private fun verifyMemberJoined(
+        userId: String,
+        groupIds: List<Int>
+    ): Map<Int, GroupMemberVerifyInfo> {
+        val verifyGroupValidMemberResult = mutableMapOf<Int, GroupMemberVerifyInfo>()
+        val futures = mutableListOf<Future<*>>()
+        groupIds.chunked(20).forEach { batchGroupIds ->
+            futures.add(executor.submit {
+                val batchVerifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, batchGroupIds.joinToString(","))
+                verifyGroupValidMemberResult.putAll(batchVerifyGroupValidMember)
+            })
+        }
+        futures.forEach { it.get() } // 等待所有异步任务完成
+        return verifyGroupValidMemberResult
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
@@ -478,11 +495,7 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             groupCode = groupCode
-        ) /*?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(groupCode),
-            defaultMessage = "group [$groupCode] not exist"
-        )*/
+        )
         if (resourceGroup != null) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
@@ -498,5 +511,6 @@ class RbacPermissionApplyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
+        private val executor = Executors.newFixedThreadPool(10)
     }
 }
