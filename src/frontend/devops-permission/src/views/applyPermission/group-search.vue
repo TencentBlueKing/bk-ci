@@ -94,13 +94,13 @@ const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined
 watch(() => props.projectCode, (newVal, oldVal) => {
   if (oldVal) {
     filter.value = [];
+    applyTips.value = '';
   }
-  // if ((props.projectCode && !route.query.resourceType)
-  //   || (props.projectCode && !route.query.action)
-  //   || (props.projectCode && route.query.action && route.query.resourceType)) {
-  //   fetchGroupList();
-  // };
-})
+},
+  {
+    immediate: true,
+  }
+)
 
 watch(() => selections.value, () => {
   checkSelectedAll();
@@ -155,7 +155,11 @@ const initTable = () => {
 
 const handleChangeSearch = (data) => {
   filter.value = data;
-  const resourceType = JSON.parse(sessionStorage.getItem('group-apply-query')).resourceType
+  const query = JSON.parse(sessionStorage.getItem('group-apply-query'))
+  const resourceType = query?.resourceType
+  if (Object.keys(query).length > 1 && query.project_code === props.projectCode) {
+    applyTips.value = t('根据筛选条件，匹配到如下用户组:');
+  }
   if (resourceType && !userGroupList.value.length && !data.length) return
   fetchGroupList(data);
 };
@@ -334,6 +338,9 @@ const columns = [
     <bk-loading
       class="group-table"
       :loading="isLoading">
+      <div v-if="applyTips">
+        {{ applyTips }}
+      </div>
       <bk-table
         ref="tableRef"
         class="group-table"
