@@ -116,10 +116,12 @@ abstract class TGitActionGit(
 
         // 将repoCreatorId -> user name
         this.data.context.repoCreatorId = this.data.context.repoCreatorId?.let {
-            api.getUserInfoById(
-                (cred as TGitCred?) ?: getGitCred(),
-                it
-            ).username
+            kotlin.runCatching {
+                api.getUserInfoById(
+                    (cred as TGitCred?) ?: getGitCred(),
+                    it
+                ).username
+            }.getOrNull() ?: ""
         }
     }
 }
