@@ -4,18 +4,18 @@
       v-bkloading="{ isLoading }"
       :data="memberList"
     >
-      <bk-table-column :label="$t('userGroup')" prop="groupName"></bk-table-column>
-      <bk-table-column :label="$t('createdTime')" prop="createdTime">
+      <bk-table-column :label="$t('用户组')" prop="groupName"></bk-table-column>
+      <bk-table-column :label="$t('添加时间')" prop="createdTime">
         <template #default="{ row }">
           <span>{{ row.createdTime ? row.createdTime : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('expiredTime')" prop="expiredDisplay">
+      <bk-table-column :label="$t('有效期')" prop="expiredDisplay">
         <template #default="{ row }">
-          <span>{{ row.expiredDisplay ? row.expiredDisplay + $t('day') : '--' }} </span>
+          <span>{{ row.expiredDisplay ? row.expiredDisplay + $t('天') : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('status')" prop="status">
+      <bk-table-column :label="$t('状态')" prop="status">
         <template #default="{ row }">
           <div class="status-content">
             <img :src="statusIcon(row.status)" class="status-icon">
@@ -23,35 +23,35 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('operation')">
+      <bk-table-column :label="$t('操作')">
         <template #default="{ row }">
           <bk-button
             class="btn"
             theme="primary"
             text
             @click="handleViewDetail(row)"
-          >{{ $t('permissionDetail') }}</bk-button>
+          >{{ $t('权限详情') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="row.status === 'NOT_JOINED'"
             @click="handleApply(row)"
-          >{{ $t('applyJoin') }}</bk-button>
+          >{{ $t('申请加入') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleRenewal(row)"
-          >{{ $t('renewal') }}</bk-button>
+          >{{ $t('续期') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleShowLogout(row)"
-          >{{ $t('exit') }}</bk-button>
+          >{{ $t('退出') }}</bk-button>
         </template>
       </bk-table-column>
     </bk-table>
@@ -62,13 +62,13 @@
     >
       <template v-slot:header>
         <div class="detail-title">
-          {{ $t('permissionDetail') }}
+          {{ $t('权限详情') }}
           <span class="group-name">{{ groupName }}</span>
         </div>
       </template>
       <template v-slot:content>
         <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-          <div class="title">{{ $t('pipelineManage') }}</div>
+          <div class="title">{{ $t('流水线管理') }}</div>
           <div class="content">
             <bk-checkbox
               v-for="(item, index) in groupPolicies"
@@ -90,7 +90,7 @@
       @confirm="handleLogout"
       @cancel="handleCancelLogout"
     >
-      {{ $t('exitGroupTips', [logout.name]) }}
+      {{ $t('退出后，将无法再使用所赋予的权限。', [logout.name]) }}
     </permission-dialog>
     <apply-dialog
       :is-show="apply.isShow"
@@ -212,9 +212,9 @@ export default {
 
     statusFormatter(status) {
       const map = {
-        NOT_JOINED: this.$t('notJoined'),
-        NORMAL: this.$t('normal'),
-        EXPIRED: this.$t('expired'),
+        NOT_JOINED: this.$t('未加入'),
+        NORMAL: this.$t('正常'),
+        EXPIRED: this.$t('已过期'),
       };
       return map[status];
     },
@@ -233,7 +233,7 @@ export default {
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
       this.apply.expiredDisplay = row.expiredDisplay;
-      this.apply.title = this.$t('renewal');
+      this.apply.title = this.$t('续期');
       this.apply.type = 'renewal';
     },
 
@@ -241,7 +241,7 @@ export default {
       this.apply.isShow = true;
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
-      this.apply.title = this.$t('applyJoin');
+      this.apply.title = this.$t('申请加入');
       this.apply.type = 'apply';
     },
 
@@ -300,11 +300,11 @@ export default {
         .title {
             font-size: 14px;
             color: #313238;
-            margin-left: 20px;
+            margin-left: 14px;
             &::before {
                 content: '';
                 position: absolute;
-                left: 30px;
+                left: 20px;
                 top: 22px;
                 width: 4px;
                 height: 16px;
@@ -319,6 +319,20 @@ export default {
             min-width: 150px;
             margin-bottom: 10px;
             cursor: default !important;
+        }
+         .is-disabled {
+            .bk-checkbox-text {
+                color:#d6d7d7 !important;
+            }
+        }
+        .is-checked {
+            .bk-checkbox {
+                background-color: #c2daff !important;
+                border-color: #c2daff !important;
+            }
+            .bk-checkbox-text {
+                color: #63656e !important;
+            }
         }
     }
 </style>

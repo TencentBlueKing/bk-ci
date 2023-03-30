@@ -10,6 +10,8 @@ import {
   watch,
   onMounted,
   computed,
+  resolveDirective,
+  withDirectives,
 } from 'vue';
 import { useRoute } from 'vue-router';
 import BkCheckbox from 'bkui-vue/lib/checkbox';
@@ -23,6 +25,7 @@ const props = defineProps({
 });
 
 const { t } = useI18n();
+const bkEllipsis = resolveDirective('bk-ellipsis');
 const showDetail = ref(false);
 const tableRef = ref();
 const resourcesTypeList = ref([]);
@@ -85,13 +88,15 @@ const handleChangeSelectGroup = (values) => {
 // 可选择的用户组 joined -> flase
 const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
 
-watch(() => props.projectCode, () => {
-  if ((props.projectCode && !route.query.resourceType)
-    || (props.projectCode && !route.query.action)
-    || (props.projectCode && route.query.action && route.query.resourceType)) {
+watch(() => props.projectCode, (newVal, oldVal) => {
+  if (oldVal) {
     filter.value = [];
-    fetchGroupList();
-  };
+  }
+  // if ((props.projectCode && !route.query.resourceType)
+  //   || (props.projectCode && !route.query.action)
+  //   || (props.projectCode && route.query.action && route.query.resourceType)) {
+  //   fetchGroupList();
+  // };
 })
 
 watch(() => selections.value, () => {
@@ -147,9 +152,9 @@ const initTable = () => {
 
 const handleChangeSearch = (data) => {
   filter.value = data;
-  if (data.length) {
-    fetchGroupList(data);
-  }
+  const resourceType = JSON.parse(sessionStorage.getItem('group-apply-query')).resourceType
+  if (resourceType && !userGroupList.value.length && !data.length) return
+  fetchGroupList(data);
 };
 
 const fetchGroupList = async (payload = []) => {
@@ -247,6 +252,7 @@ const renderSelectionHeader = (col: any) => {
     {
       indeterminate: indeterminate.value,
       modelValue: isSelectedAll.value,
+      class: 'group-table-header-checkbox',
       onChange(val) {
         handleSelectAllGroup(val);
       }
@@ -263,18 +269,13 @@ const columns = [
   {
     label: t('资源实例'),
     render ({ cell, row }) {
-      return h(
-        'span',
+      return withDirectives(h(
+        'div',
         {
-          title: row.resourceName, 
+          class: 'bk-ellipsis',
         },
-        [
-          cell,
-          row.resourceTypeName,
-          ': ',
-          row.resourceName
-        ]
-      );
+        `${row.resourceTypeName}:${row.resourceName}`,
+      ), [[bkEllipsis]]);
     },
   },
   {
@@ -302,16 +303,13 @@ const columns = [
   {
     label: t('描述'),
     render ({ cell, row }) {
-      return h(
-        'span',
+      return withDirectives(h(
+        'div',
         {
-          title: row.description,
+          class: 'bk-ellipsis',
         },
-        [
-          cell,
-          row.description
-        ]
-      );
+        row.description,
+      ), [[bkEllipsis]]);
     },
   }
 ];
@@ -333,6 +331,7 @@ const columns = [
       :loading="isLoading">
       <bk-table
         ref="tableRef"
+        class="group-table"
         :data="userGroupList"
         :columns="columns"
         :border="['row', 'outer']"
@@ -384,5 +383,28 @@ const columns = [
     border: 1px solid #dcdee5;
     border-top: none;
     height: 40px;
+  }
+</style>
+
+<style lang="postcss">
+  .bk-ellipsis {
+    width: 100%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .group-table {
+    .hover-highlight td:nth-child(1) {
+      .cell {
+        display: flex !important;
+        justify-content: space-evenly;
+      }
+    }
+    thead tr th:nth-child(1) {
+      .cell {
+        display: flex !important;
+        justify-content: space-evenly;
+      }
+    }
   }
 </style>

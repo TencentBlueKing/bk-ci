@@ -65,3 +65,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .manage-icon-warning-circle-fill:before {
 	content: "\e118";
 }
+.manage-icon-unknown-2:before {
+	content: "\e119";
+}

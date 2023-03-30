@@ -5,23 +5,12 @@
         class="exception-wrap-item exception-part"
         type="403"
         scene="part"
-        :title="title"
+        :title="$t('无该项目用户组管理权限')"
       >
       </bk-exception>
     </div>
   </article>
 </template>
-
-<script>
-export default {
-  props: {
-    title: {
-      type: String,
-      default: '无该项目用户组管理权限',
-    },
-  },
-};
-</script>
 
 <style lang="scss" scoped>
     .group-manage {

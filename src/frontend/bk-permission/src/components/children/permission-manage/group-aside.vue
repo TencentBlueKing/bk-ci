@@ -61,18 +61,6 @@
     <bk-dialog
       header-align="center"
       theme="danger"
-      quick-close
-      :value="deleteObj.isShow"
-      :title="$t('删除')"
-      :is-loading="deleteObj.isLoading"
-      @cancel="handleHiddenDeleteGroup"
-      @confirm="handleDeleteGroup"
-    >
-      {{ $t('是否删除用户组', [deleteObj.group.name]) }}
-    </bk-dialog>
-    <bk-dialog
-      header-align="center"
-      theme="danger"
       ext-cls="close-manage-dialog"
       width="500"
       :quick-close="false"
@@ -290,6 +278,8 @@ export default {
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
             break;
+          case 'change_group_detail_tab':
+            this.$emit('change-group-detail-tab', data.data.tab)
         }
       }
     },
@@ -330,11 +320,11 @@ export default {
   color: #63656E;
   cursor: pointer;
   &:hover {
-    color: #3A84FF;
-    background-color: #E1ECFF;
-    .group-icon {
-      filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
-    }
+    color: #3a3c42;
+    background-color: #eaebf0;
+    // .group-icon {
+    //   filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
+    // }
   }
 }
 .group-item:hover .user-num,
@@ -382,13 +372,18 @@ export default {
   text-align: center;
   color: #C4C6CC;
 }
+.more-icon {
+  border-radius: 50%;
+  color: #63656e;
+  padding: 1px;
+}
+.more-icon:hover {
+  background-color: #d5ddef;
+  color: #3A84FF !important;
+}
 .group-icon {
   height: 12px;
   width: 12px;
-  filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
-}
-.more-icon {
-  height: 18px;
   filter: invert(89%) sepia(8%) saturate(136%) hue-rotate(187deg) brightness(91%) contrast(86%);
 }
 .line-split {
@@ -439,7 +434,7 @@ export default {
         margin: 15px 0 30px;
     }
     .close-tips {
-        padding: 10px;
+        padding: 20px;
         background: #f5f6fa;
     }
     .option-btns {

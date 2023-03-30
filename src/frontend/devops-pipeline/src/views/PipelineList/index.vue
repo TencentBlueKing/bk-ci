@@ -107,7 +107,7 @@
                 return this.$route.name
             },
             groupName () {
-                return this.$route.query.groupName
+                return this.$route.params.groupName
             },
             dropTitle () {
                 return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'

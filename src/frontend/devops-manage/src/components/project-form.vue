@@ -219,7 +219,7 @@ const fetchUserDetail = async () => {
   await http.getUserDetail().then(res => {
     const { bgId, centerId, deptId } = res;
     projectData.value.bgId = bgId;
-    projectData.value.centerId = centerId;
+    projectData.value.centerId = centerId === '0' ? '' : centerId;
     projectData.value.deptId = deptId;
   })
 };

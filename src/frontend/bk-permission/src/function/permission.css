@@ -22,6 +22,10 @@
     width: auto;
 }
 
+.permission-table .cell {
+    width: 90%;
+}
+
 .permission-footer {
     height: 48px;
     display: flex;
