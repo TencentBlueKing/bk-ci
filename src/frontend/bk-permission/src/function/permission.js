@@ -1,7 +1,7 @@
 import './permission.css';
 import ajax from '../ajax/index';
 import { version } from '../utils/vue';
-;
+import { t } from '../utils/locale';
 /**
  * 处理无权限的情况，适用于 vue2
  * @param {*} ui 组件库
@@ -16,15 +16,15 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
 
   const columns = [
     {
-      label: '需要申请的权限',
+      label: t('需要申请的权限'),
       prop: 'actionName',
     },
     {
-      label: '关联的资源类型',
+      label: t('关联的资源类型'),
       prop: 'resourceTypeName',
     },
     {
-      label: '关联的资源实例',
+      label: t('关联的资源实例'),
       prop: 'resourceName',
     },
   ];
@@ -37,7 +37,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
         scene: 'part',
       },
     },
-    '没有操作权限',
+    t('没有操作权限'),
   );
   const renderTable = data => h(
     ui.bkTable,
@@ -100,7 +100,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
                     {
                       class: 'bk-dropdown-list permission-confirm',
                     },
-                    ['去申请'],
+                    [t('去申请')],
                   ),
                   h(
                     'i',
@@ -127,7 +127,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
               },
             },
           },
-          ['去申请'],
+          [t('去申请')],
         ),
       h(
         ui.bkButton,
@@ -140,7 +140,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
           },
         },
         [
-          '取消',
+          t('取消'),
         ],
       ),
     ],
@@ -150,11 +150,11 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
     infoBoxRef?.close?.();
 
     refreshBoxRef = ui.bkInfoBox({
-      title: '权限申请单已提交',
+      title: t('权限申请单已提交'),
       subHeader: h(
         'section',
         [
-          '请在权限管理页填写权限申请单，提交完成后再刷新该页面',
+          t('请在权限管理页填写权限申请单，提交完成后再刷新该页面'),
           h(
             'section',
             {
@@ -174,7 +174,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
                     },
                   },
                 },
-                ['刷新页面'],
+                [t('刷新页面')],
               ),
               h(
                 ui.bkButton,
@@ -185,7 +185,7 @@ export const handleNoPermissionV2 = (ui, params, h, data = undefined, ajaxPrefix
                     },
                   },
                 },
-                ['关闭'],
+                [t('关闭')],
               ),
             ],
           ),
@@ -237,15 +237,15 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
 
   const columns = [
     {
-      label: '需要申请的权限',
+      label: t('需要申请的权限'),
       prop: 'actionName',
     },
     {
-      label: '关联的资源类型',
+      label: t('关联的资源类型'),
       prop: 'resourceTypeName',
     },
     {
-      label: '关联的资源实例',
+      label: t('关联的资源实例'),
       prop: 'resourceName',
     },
   ];
@@ -255,7 +255,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
       type: '403',
       scene: 'part',
     },
-    '没有操作权限',
+    t('没有操作权限'),
   );
   const renderTable = data => h(
     'section',
@@ -315,7 +315,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
                     class: 'mr10',
                   },
                   [
-                    '去申请',
+                    t('去申请'),
                     h(
                       ui.AngleDown,
                       {
@@ -338,7 +338,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
               handleClickLink();
             },
           },
-          ['去申请'],
+          [t('去申请')],
         ),
       h(
         ui.Button,
@@ -349,7 +349,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
           },
         },
         [
-          '取消',
+          t('取消'),
         ],
       ),
     ],
@@ -359,11 +359,11 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
     infoBoxRef?.hide?.();
 
     refreshBoxRef = ui.InfoBox({
-      title: '权限申请单已提交',
+      title: t('权限申请单已提交'),
       subTitle: h(
         'section',
         [
-          '请在权限管理页填写权限申请单，提交完成后再刷新该页面',
+          t('请在权限管理页填写权限申请单，提交完成后再刷新该页面'),
           h(
             'section',
             {
@@ -379,7 +379,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
                     location.reload();
                   },
                 },
-                ['刷新页面'],
+                [t('刷新页面')],
               ),
               h(
                 ui.Button,
@@ -388,7 +388,7 @@ export const handleNoPermissionV3 = (ui, params, h, data, ajaxPrefix = '') => {
                     refreshBoxRef.hide?.();
                   },
                 },
-                ['关闭'],
+                [t('关闭')],
               ),
             ],
           ),

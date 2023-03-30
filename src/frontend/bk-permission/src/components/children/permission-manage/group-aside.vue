@@ -38,7 +38,7 @@
                 :disabled="[1, 2].includes(group.id)"
                 text
                 @click="handleShowDeleteGroup(group)">
-                {{ $t('删除') }}
+                {{ t('删除') }}
               </bk-button>
             </template>
           </bk-popover>
@@ -52,11 +52,11 @@
       @click="handleCreateGroup">
       <span class="add-group-btn">
         <i class="bk-icon bk-icon-add-fill add-icon"></i>
-        {{ $t('新建用户组') }}
+        {{ t('新建用户组') }}
       </span>
     </div>
     <div class="close-btn">
-      <bk-button @click="showCloseManageDialog" :loading="isClosing">{{ $t('关闭权限管理') }}</bk-button>
+      <bk-button @click="showCloseManageDialog" :loading="isClosing">{{ t('关闭权限管理') }}</bk-button>
     </div>
     <bk-dialog
       header-align="center"
@@ -70,26 +70,26 @@
     >
       <template #header>
         <img src="../../../svg/warning-circle-fill.svg" style="width: 42px;">
-        <p class="close-title">{{ $t('确认关闭【】的权限管理？', [resourceName]) }}</p>
+        <p class="close-title">{{ t('确认关闭【】的权限管理？', [resourceName]) }}</p>
       </template>
       <div class="close-tips">
-        <p>{{ $t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? $t('流水线') : $t('流水线组')]) }}</p>
+        <p>{{ t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? t('流水线') : t('流水线组')]) }}</p>
         <p>
           <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ $t('将编辑者、执行者、查看者中的用户移除') }}
+          {{ t('将编辑者、执行者、查看者中的用户移除') }}
         </p>
         <p>
           <img src="../../../svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ $t('删除对应组内用户继承该组的权限') }}
+          {{ t('删除对应组内用户继承该组的权限') }}
         </p>
         <p>
           <img src="../../..//svg/warning-circle-fill.svg" style="width: 14px;">
-          {{ $t('删除对应组信息和组权限') }}
+          {{ t('删除对应组信息和组权限') }}
         </p>
       </div>
       <div class="confirm-close">
         <i18n path="提交后，再次开启权限管理时对应组内用户将不能恢复，请谨慎操作!" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{$t('不能恢复')}}</span>
+          <span style="color: red;">{{t('不能恢复')}}</span>
         </i18n>
       </div>
       <div class="option-btns">
@@ -98,13 +98,13 @@
           theme="danger"
           @click="handleCloseManage"
         >
-          {{ $t('关闭权限管理') }}
+          {{ t('关闭权限管理') }}
         </bk-button>
         <bk-button
           class="btn"
           @click="handleHiddenCloseManage"
         >
-          {{ $t('取消') }}
+          {{ t('取消') }}
         </bk-button>
       </div>
     </bk-dialog>
