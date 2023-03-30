@@ -114,9 +114,9 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun deleteThirdPartyNode(userId: String, projectId: String, nodeIp: String): Result<Boolean> {
-        if (nodeIp.isEmpty()) return Result(false)
-        nodeService.deleteNodeByIp(userId, projectId, nodeIp)
+    override fun deleteThirdPartyNode(userId: String, projectId: String, agentId: String): Result<Boolean> {
+        if (agentId.isEmpty()) return Result(false)
+        nodeService.deleteNodeByAgentId(userId, projectId, agentId)
         return Result(true)
     }
 }
