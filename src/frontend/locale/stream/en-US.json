@@ -251,7 +251,7 @@
         "ticket": {
             "oauthTokenDesc": "Oauth Token is generally used in scenarios where the upper platform invokes Stream. The user has authorized the upper platform with Oauth, and the upper platform uses the user authorization to operate when using the Stream service",
             "oauthTokenPlaceholder": "OauthToken is used to pass user authorization information when the upper platform invokes the Stream service",
-            "credentialDesc": "The credentials are referenced in YAML by means of the context settings.&lt;key&gt;.xxx, which has a different field name depending on the credential type",
+            "credentialDesc": "The credentials are referenced in YAML by means of the context settings.<key>.xxx, which has a different field name depending on the credential type",
             "credentialType": "Credential type",
             "credentialKey": "Credential identification (key)",
             "addCredential": "Add Credential",
