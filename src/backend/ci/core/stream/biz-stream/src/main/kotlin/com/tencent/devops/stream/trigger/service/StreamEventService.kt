@@ -28,8 +28,12 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
@@ -110,7 +114,13 @@ class StreamEventService @Autowired constructor(
                     state = StreamCommitCheckState.FAILURE.toGitState(streamGitConfig.getScmType()),
                     block = setting.enableMrBlock && commitCheckBlock,
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
-                        streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamGitConfig"),
+                        streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                            MessageUtil.getMessageByLocale(
+                                STARTUP_CONFIG_MISSING,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                                arrayOf(" streamGitConfig")
+                            )
+                        ),
                         gitProjectId = getGitProjectId(),
                         messageId = action.data.context.requestEventId.toString()
                     ),

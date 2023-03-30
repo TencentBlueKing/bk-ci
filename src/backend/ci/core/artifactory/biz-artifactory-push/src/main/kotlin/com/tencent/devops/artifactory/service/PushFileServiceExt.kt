@@ -31,16 +31,17 @@ import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
 import com.tencent.devops.artifactory.pojo.FileResourceInfo
-import com.tencent.devops.artifactory.pojo.vo.PushResultVO
 import com.tencent.devops.artifactory.pojo.PushStatus
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
+import com.tencent.devops.artifactory.pojo.vo.PushResultVO
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,9 +80,13 @@ class PushFileServiceExt @Autowired constructor(
         )
 
         if (!validatePermission) {
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeMessage(
-                messageCode = PushMessageCode.FUSH_FILE_VALIDATE_FAIL,
-                params = null))
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = PushMessageCode.FUSH_FILE_VALIDATE_FAIL,
+                    params = null,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // 解析目标机器，需校验用户是否有权限操作目标机
         val envSet = envService.parsingAndValidateEnv(pushResourceInfo, userId, projectId)

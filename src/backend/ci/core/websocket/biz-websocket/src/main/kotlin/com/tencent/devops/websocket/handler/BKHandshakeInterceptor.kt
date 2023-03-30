@@ -61,10 +61,12 @@ class BKHandshakeInterceptor @Autowired constructor(
             if (userId != null && sessionId != null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
                 logger.info(
-                    "[WebSocket]-[$userId]-[$sessionId]-连接成功,redisData:${RedisUtlis.getSessionIdByUserId(
-                        redisOperation,
-                        userId
-                    )}"
+                    "[WebSocket]-[$userId]-[$sessionId]-connected successfully,redisData:${
+                        RedisUtlis.getSessionIdByUserId(
+                            redisOperation, 
+                            userId
+                        )
+                    }"
                 )
                 websocketService.createTimeoutSession(sessionId, userId)
             }

@@ -29,8 +29,10 @@ package com.tencent.devops.dispatch.bcs.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.BcsTaskStatusEnum
@@ -39,6 +41,9 @@ import com.tencent.devops.dispatch.bcs.pojo.isFailed
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.isSuccess
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskStatusResp
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_EXECUTION_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_TIMEOUT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -73,7 +78,8 @@ class BcsTaskClient @Autowired constructor(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "获取BCS TASK状态接口异常：http response code: ${response.code()}"
+                    MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_STATUS_ERROR, I18nUtil.getLanguage(userId)) +
+                    "：http response code: ${response.code()}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -87,7 +93,10 @@ class BcsTaskClient @Autowired constructor(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取BCS TASK状态接口超时, url: $url"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        BK_GET_BCS_TASK_STATUS_TIMEOUT,
+                        I18nUtil.getLanguage(userId)
+                    ) + ", url: $url"
                 )
             }
         }
@@ -98,7 +107,11 @@ class BcsTaskClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("$taskId bcs task timeout")
-                return Pair(BcsTaskStatusEnum.TIME_OUT, "获取BCS任务执行超时（10min）")
+                return Pair(
+                    BcsTaskStatusEnum.TIME_OUT,
+                    MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_EXECUTION_TIMEOUT, I18nUtil.getLanguage(userId)) +
+                            "（10min）"
+                )
             }
             Thread.sleep(1 * 1000)
             val (status, errorMsg) = getTaskResult(userId, taskId).apply {

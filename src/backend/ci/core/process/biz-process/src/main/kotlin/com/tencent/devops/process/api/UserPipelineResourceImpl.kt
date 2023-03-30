@@ -27,11 +27,13 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.pipeline.Model
@@ -39,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.utils.MatrixYamlCheckUtils
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -370,12 +373,22 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineId: String
     ): Result<PipelineRemoteToken> {
         checkParam(userId, projectId)
+        val language = I18nUtil.getLanguage(userId)
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+            message = MessageUtil.getMessageByLocale(
+                USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(
+                    userId,
+                    projectId,
+                    AuthPermission.EDIT.getI18n(),
+                    pipelineId
+                )
+            )
         )
         return Result(
             pipelineRemoteAuthService.generateAuth(

@@ -30,16 +30,23 @@ package com.tencent.devops.quality.service.v2
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.QualityRuleIntercept
 import com.tencent.devops.common.quality.pojo.QualityRuleInterceptRecord
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
+import com.tencent.devops.quality.constant.BK_BLOCKED
+import com.tencent.devops.quality.constant.BK_CURRENT_VALUE
+import com.tencent.devops.quality.constant.BK_PASSED
+import com.tencent.devops.quality.constant.BK_VALIDATION_INTERCEPTED
+import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
@@ -153,15 +160,24 @@ class QualityHistoryService @Autowired constructor(
 
             val sb = StringBuilder()
             if (result == RuleInterceptResult.PASS) {
-                sb.append("已通过：")
+                sb.append(MessageUtil.getMessageByLocale(BK_PASSED, I18nUtil.getLanguage(userId)))
             } else {
-                sb.append("已拦截：")
+                sb.append(MessageUtil.getMessageByLocale(BK_BLOCKED, I18nUtil.getLanguage(userId)))
             }
 
             interceptList.forEach { intercept ->
                 val thresholdOperationName = ThresholdOperationUtil.getOperationName(intercept.operation)
-                sb.append("${intercept.indicatorName}当前值(${intercept.actualValue})，" +
-                    "期望$thresholdOperationName${intercept.value}\n")
+                sb.append(
+                        MessageUtil.getMessageByLocale(
+                            BK_CURRENT_VALUE,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf(
+                                "${intercept.indicatorName}",
+                                "${intercept.actualValue}",
+                                "$thresholdOperationName${intercept.value}"
+                            )
+                        )
+                )
             }
             val remark = sb.toString()
 
@@ -413,8 +429,17 @@ class QualityHistoryService @Autowired constructor(
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { intercept ->
                 val thresholdOperationName = ThresholdOperationUtil.getOperationName(intercept.operation)
-                sb.append("${intercept.indicatorName}当前值(${intercept.actualValue})，")
-                    .append("期望$thresholdOperationName${intercept.value}\n")
+                sb.append(
+                        MessageUtil.getMessageByLocale(
+                            BK_CURRENT_VALUE,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf(
+                                "${intercept.indicatorName}",
+                                "${intercept.actualValue}",
+                                "$thresholdOperationName${intercept.value}"
+                            )
+                        )
+                    )
             }
             val remark = sb.toString()
             val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)
@@ -568,9 +593,17 @@ class QualityHistoryService @Autowired constructor(
                 val buildName = getBuildName(projectId, interceptHistory.buildId)
                 val time = interceptHistory.createTime.format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss"))
                 if (result == RuleInterceptResult.PASS) {
-                    "$pipelineName(#$buildName)在${time}验证通过"
+                    MessageUtil.getMessageByLocale(
+                        BK_VALIDATION_PASSED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("$pipelineName", buildName, "$time")
+                    )
                 } else {
-                    "$pipelineName(#$buildName)在${time}验证被拦截"
+                    MessageUtil.getMessageByLocale(
+                        BK_VALIDATION_INTERCEPTED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("$pipelineName", buildName, "$time")
+                    )
                 }
             } else {
                 null
@@ -669,8 +702,17 @@ class QualityHistoryService @Autowired constructor(
             val interceptList = objectMapper.readValue<List<QualityRuleInterceptRecord>>(it.interceptList)
             interceptList.forEach { intercept ->
                 val thresholdOperationName = ThresholdOperationUtil.getOperationName(intercept.operation)
-                sb.append("${intercept.indicatorName}当前值(${intercept.actualValue})，")
-                    .append("期望$thresholdOperationName${intercept.value}\n")
+                sb.append(
+                    MessageUtil.getMessageByLocale(
+                        BK_CURRENT_VALUE,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(
+                            "${intercept.indicatorName}",
+                            "${intercept.actualValue}",
+                            "$thresholdOperationName${intercept.value}"
+                        )
+                    )
+                )
             }
             val remark = sb.toString()
             val hisRuleHashId = HashUtil.encodeLongId(it.ruleId)

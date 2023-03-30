@@ -33,10 +33,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
@@ -251,8 +253,11 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
-                message = "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) {
-                    "错误信息: $msg"
+                message = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.IMAGE_CHECK_LEGITIMATE_OR_RETRY.errorCode}"
+                    , I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + if (!msg.isNullOrBlank()) {
+                    "errormessage: $msg"
                 } else {
                     ""
                 }
@@ -272,7 +277,10 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message = "登录调试失败，调试容器异常关闭，请重试。"
+                    message =  MessageUtil.getMessageByLocale(
+                        "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}",
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         } catch (e: Exception) {

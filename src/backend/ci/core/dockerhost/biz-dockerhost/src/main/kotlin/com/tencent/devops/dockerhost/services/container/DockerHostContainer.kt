@@ -24,14 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
-import com.tencent.devops.common.web.annotation.BkField
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("语言环境信息")
-data class LocaleInfo(
-    @ApiModelProperty("语言环境信息")
-    @field:BkField(minLength = 1, maxLength = 64)
-    val language: String
-)
+package com.tencent.devops.dockerhost.services.container
+
+const val BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START = "bkSelfDevelopedPublicImageLocalStart"// 自研公共镜像，不从仓库拉取，直接从本地启动...
+const val BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL = "bkNoPermissionPullImageCheckPathOrCredential"// 无权限拉取镜像:{0}，请检查镜像路径或凭证是否正确
+const val BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL = "bkImageNotExistCheckPathOrCredential"// 镜像不存在：{0}，请检查镜像路径或凭证是否正确；
+const val BK_PULL_IMAGE_FAILED_ERROR_MESSAGE = "bkPullImageFailedErrorMessage"// 拉取镜像失败，错误信息：
+const val BK_TRY_LOCAL_IMAGE_START = "bkTryLocalImageStart"// 尝试使用本地镜像启动...
+const val BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV = "bkPullImageSuccessReadyStartBuildEnv"// 拉取镜像成功，准备启动构建环境...
+const val BK_PUSH_IMAGE = "BkPushImage"// 正在推送镜像,第{0}层，进度：{1}
+const val BK_BUILD_IMAGE_NOT_EXIST = "bkBuildImageNotExist"// 构建镜像不存在

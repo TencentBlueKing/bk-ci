@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -71,7 +72,7 @@ import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
@@ -1774,7 +1775,10 @@ class PipelineRuntimeService @Autowired constructor(
                 BuildStageStatus(
                     stageId = STATUS_STAGE,
                     name = STATUS_STAGE,
-                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE)
+                    status = MessageUtil.getCodeLanMessage(
+                        BUILD_QUEUE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             ),
             oldBuildStatus = oldStatus,

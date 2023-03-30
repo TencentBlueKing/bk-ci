@@ -30,10 +30,11 @@ package com.tencent.devops.common.client.ms
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.KubernetesUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.apache.commons.lang3.RandomUtils
@@ -61,7 +62,11 @@ class MicroServiceTarget<T> constructor(
             })
 
     private val errorInfo =
-        MessageCodeUtil.generateResponseDataObject<String>(ERROR_SERVICE_NO_FOUND, arrayOf(serviceName))
+        MessageUtil.generateResponseDataObject<String>(
+            messageCode = ERROR_SERVICE_NO_FOUND,
+            params = arrayOf(serviceName),
+            language = DEFAULT_LOCALE_LANGUAGE
+        )
 
     private fun choose(serviceName: String): ServiceInstance {
         val discoveryTag = bkTag.getFinalTag()

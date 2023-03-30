@@ -29,9 +29,12 @@ package com.tencent.devops.worker.common.api.docker
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_IMAGE_MARKET_INFO_FAILED
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -54,7 +57,10 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
         )
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)
         val request = buildPut(path, body, headMap)
-        val responseContent = request(request, "更新镜像市场信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(UPDATE_IMAGE_MARKET_INFO_FAILED, System.getProperty(LOCALE_LANGUAGE))
+        )
         return objectMapper.readValue(responseContent)
     }
 }

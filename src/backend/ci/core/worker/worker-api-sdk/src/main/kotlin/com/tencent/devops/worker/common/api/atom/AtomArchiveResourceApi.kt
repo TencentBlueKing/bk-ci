@@ -29,16 +29,24 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.ARCHIVE_PLUGIN_FILE_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_ENV_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_SENSITIVE_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.store.constant.StoreMessageCode.ADD_PLUGIN_PLATFORM_INFO_FAILED
+import com.tencent.devops.store.constant.StoreMessageCode.GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
@@ -52,6 +60,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUGIN_FILE
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -85,7 +94,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件执行环境信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_ENV_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -104,7 +119,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
-        val responseContent = request(request, "更新插件执行环境信息失败")
+            val responseContent = request(
+                request,
+                MessageUtil.getMessageByLocale(
+                    UPDATE_PLUGIN_ENV_INFO_FAILED,
+                    System.getProperty(LOCALE_LANGUAGE)
+                )
+            )
         return objectMapper.readValue(responseContent)
     }
 
@@ -114,7 +135,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     override fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?> {
         val path = "/ms/store/api/build/store/sensitiveConf/types/ATOM/codes/$atomCode"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件敏感信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_SENSITIVE_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -148,7 +175,12 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             destPath.trim().removePrefix("/") + "/" + file.name
         }
 
-        LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
+        LoggerService.addNormalLine("${
+            MessageUtil.getMessageByLocale(
+                BK_ARCHIVE_PLUGIN_FILE,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        }>>> ${file.name}")
 
         val url = StringBuilder("/ms/artifactory/build/atom/result/$path")
         with(buildVariables) {
@@ -161,7 +193,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
-        val responseContent = request(request, "归档插件文件失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                ARCHIVE_PLUGIN_FILE_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        )
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
@@ -238,7 +276,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/" +
             "types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -252,7 +296,13 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)
-        val responseContent = request(request, "添加插件对接平台信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                ADD_PLUGIN_PLATFORM_INFO_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 

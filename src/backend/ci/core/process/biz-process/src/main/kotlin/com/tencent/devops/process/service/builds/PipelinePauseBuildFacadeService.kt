@@ -27,8 +27,10 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -36,6 +38,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -81,12 +84,17 @@ class PipelinePauseBuildFacadeService(
     ): Boolean {
         logger.info("executePauseAtom| $userId| $pipelineId|$buildId| $stageId| $containerId| $taskId| $isContinue")
         if (checkPermission!!) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限执行暂停流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(), pipelineId)
+                )
             )
         }
 

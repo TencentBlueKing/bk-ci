@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.permission.service.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -39,7 +38,6 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -125,10 +123,7 @@ class V3PipelinePermissionService constructor(
                 relationResourceType = authResourceType
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias
-            )
+            val permissionMsg = permission.getI18n()
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,

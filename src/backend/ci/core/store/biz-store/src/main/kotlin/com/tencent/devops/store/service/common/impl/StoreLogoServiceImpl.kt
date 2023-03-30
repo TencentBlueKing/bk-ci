@@ -29,9 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreLogoDao
 import com.tencent.devops.store.pojo.common.Logo
@@ -100,17 +101,19 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
-                arrayOf(fileType, allowUploadLogoTypes)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
+                params = arrayOf(fileType, allowUploadLogoTypes),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 校验上传文件大小是否超出限制
         val maxFileSize = maxUploadLogoSize.toLong()
         if (contentLength > maxFileSize) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
-                arrayOf((maxFileSize / 1048576).toString() + "M")
+            return MessageUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
+                params = arrayOf((maxFileSize / 1048576).toString() + "M"),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
@@ -123,9 +126,10 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             val height = img.height
             if (sizeLimitFlag != false) {
                 if (width != height || width < allowUploadLogoWidth.toInt()) {
-                    return MessageCodeUtil.generateResponseDataObject(
+                    return MessageUtil.generateResponseDataObject(
                         StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
-                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight),
+                        language = I18nUtil.getLanguage(userId)
                     )
                 }
             }
@@ -145,7 +149,10 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 output.flush()
             } catch (ignored: Throwable) {
                 logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             } finally {
                 output.close()
             }

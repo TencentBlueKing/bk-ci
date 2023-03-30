@@ -25,22 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch
+package com.tencent.devops.environment.constant
 
-const val QUEUE_BUILD = "queue_build"
-const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
-const val EXCHANGE_BUILD = "exchange_build"
-const val ROUTE_BUILD = "build"
-const val ROUTE_BUILD_NEED_END = "build_need_end"
-
-const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
-const val ROUTE_BUILD_ABORT = "route_build_abort"
-const val QUEUE_BUILD_ABORT = "queue_build_abort"
-
-const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
-const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
-const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
-const val EXCHANGE_TASK = "exchange_vm_task"
-const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
-const val ROUTE_TASK_END = "dispatch_vm_task_end"
-const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"
+const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
+const val DEFAULT_SYTEM_USER = "devops"
+const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment"// 项目下无环境
+const val BK_PROJECT_NO_NODE = "BkProjectNoNode"// 项目下无节点

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.util.LocaleUtil
@@ -74,10 +75,24 @@ object I18nUtil {
         }
     }
 
+    /**
+     * 获取接口请求用户信息
+     * @return 用户ID
+     */
+    fun getRequestUserId(): String? {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return if (null != attributes) {
+            val request = attributes.request
+            request.getHeader(AUTH_HEADER_USER_ID)?.toString()
+        } else {
+            null
+        }
+    }
+
     fun getLanguage (userId: String? = null): String{
         userId ?: return  getDefaultLocaleLanguage()
         val requestChannel = getRequestChannel()
-        return if (requestChannel == RequestChannelTypeEnum.USER.name || requestChannel == RequestChannelTypeEnum.OPEN.name) {
+        return if (requestChannel != RequestChannelTypeEnum.BUILD.name) {
             var language = getUserLocaleLanguageFromCache(userId)
             if (language.isNullOrBlank()){
                 val client = SpringContextUtil.getBean(Client::class.java)
@@ -87,5 +102,9 @@ object I18nUtil {
         }else{
             getDefaultLocaleLanguage()
         }
+    }
+
+    fun getMessageByLocale(chinese: String, english: String?): String {
+        return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import org.glassfish.jersey.media.multipart.MultiPartFeature
 import org.glassfish.jersey.server.ResourceConfig
 import org.reflections.Reflections
@@ -51,6 +52,7 @@ open class JerseyConfig : ResourceConfig(), ApplicationContextAware, Initializin
         logger.info("JerseyConfig-register-start")
         register(ValidationConfigurationContextResolver::class.java)
         register(MultiPartFeature::class.java)
+        register(BkWriterInterceptor::class.java)
         logger.info("JerseyConfig-ExceptionMapper-Spring-find-start")
         val mappers = applicationContext.getBeansWithAnnotation(BkExceptionMapper::class.java)
         logger.info("JerseyConfig-ExceptionMapper-register-start")

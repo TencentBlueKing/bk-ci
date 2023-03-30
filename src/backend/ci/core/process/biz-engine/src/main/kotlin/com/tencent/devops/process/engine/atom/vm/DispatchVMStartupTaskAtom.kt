@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -47,8 +48,10 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
+import com.tencent.devops.process.constant.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -182,7 +185,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             exception = BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = "流水线不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_NOT_EXISTS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -195,7 +201,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             exception = BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-                errorMsg = "流水线的模型中指定构建容器${vmNames}不存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_NOT_EXISTS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(vmNames)
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -295,7 +305,11 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 if (res == null) {
                     buildLogPrinter.addRedLine(
                         buildId = task.buildId,
-                        message = "尚未支持 ${env.key} $version，请联系 DevOps-helper 添加对应版本",
+                        message = MessageUtil.getMessageByLocale(
+                            BK_ENV_NOT_YET_SUPPORTED,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            arrayOf(env.key, version)
+                        ),
                         tag = task.taskId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1

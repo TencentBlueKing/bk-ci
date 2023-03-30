@@ -33,6 +33,7 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
@@ -40,6 +41,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
@@ -493,7 +495,7 @@ class PipelineViewGroupService @Autowired constructor(
         projectViewList.add(
             PipelineViewDict.ViewInfo(
                 viewId = PIPELINE_VIEW_UNCLASSIFIED,
-                viewName = "未分组",
+                viewName = MessageUtil.getMessageByLocale(PIPELINE_VIEW_UNCLASSIFIED, I18nUtil.getLanguage(userId)),
                 pipelineList = pipelineInfoMap.values
                     .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
                     .map {
@@ -657,7 +659,7 @@ class PipelineViewGroupService @Autowired constructor(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
                     projectId = projectId,
-                    name = "未分组",
+                    name = MessageUtil.getMessageByLocale(PIPELINE_VIEW_UNCLASSIFIED, I18nUtil.getLanguage(userId)),
                     projected = true,
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),

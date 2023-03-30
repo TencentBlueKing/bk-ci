@@ -28,12 +28,13 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -81,9 +82,10 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         val heartbeatInfo = agentDetail.heartbeatInfo
 
         logMessage.append(
-            MessageCodeUtil.getCodeLanMessage(
+            MessageUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, agentDetail.nodeId)
+                params = arrayOf(event.projectId, agentDetail.nodeId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
 

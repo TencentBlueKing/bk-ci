@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -37,7 +38,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
@@ -46,17 +47,17 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import org.slf4j.LoggerFactory
@@ -197,9 +198,10 @@ class BuildMonitorControl @Autowired constructor(
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = MessageUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
-                params = arrayOf("Job", "$minute")
+                params = arrayOf("Job", "$minute"),
+                language = I18nUtil.getLanguage(userId)
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -335,9 +337,10 @@ class BuildMonitorControl @Autowired constructor(
                 buildStatus = buildInfo.status
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = MessageUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
-                params = arrayOf(event.buildId)
+                params = arrayOf(event.buildId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             val jobId = "0"
             buildLogPrinter.addRedLine(

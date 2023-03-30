@@ -28,10 +28,10 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TLabel
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.model.store.tables.records.TLabelRecord
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.LabelRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -121,16 +121,18 @@ class LabelDao {
 
     fun convert(record: TLabelRecord): Label {
         with(record) {
+            val type = StoreTypeEnum.getStoreType(type.toInt())
             // 标签信息名称没有配置国际化信息则取标签表里面的名称
-            val labelLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
-                defaultMessage = labelName
+            val labelLanName = MessageUtil.getCodeLanMessage(
+                messageCode = "${type.name}.label.$labelCode",
+                defaultMessage = labelName,
+                language = com.tencent.devops.common.web.utils.I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             return Label(
                 id = id,
                 labelCode = labelCode,
                 labelName = labelLanName,
-                labelType = StoreTypeEnum.getStoreType(type.toInt()),
+                labelType = type,
                 createTime = createTime.timestampmilli(),
                 updateTime = updateTime.timestampmilli()
             )

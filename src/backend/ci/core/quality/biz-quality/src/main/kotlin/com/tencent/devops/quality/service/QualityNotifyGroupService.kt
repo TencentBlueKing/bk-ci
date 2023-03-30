@@ -32,12 +32,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.constant.QualityMessageCode
+import com.tencent.devops.quality.constant.QualityMessageCode.NEED_USER_GROUP_X_PERMISSION
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
@@ -98,9 +100,10 @@ class QualityNotifyGroupService @Autowired constructor(
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = MessageCodeUtil.getCodeLanMessage(
+                groupName = MessageUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName
+                    defaultMessage = it.displayName,
+                    language = I18nUtil.getLanguage(userId)
                 ),
                 groupId = it.roleName,
                 users = it.userIdList.toSet()
@@ -113,7 +116,6 @@ class QualityNotifyGroupService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
-                defaultMessage = "用户组(${group.name})已存在",
                 params = arrayOf(group.name)
             )
         }
@@ -189,18 +191,23 @@ class QualityNotifyGroupService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, groupHashId: String, group: GroupUpdate) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
+        val language = I18nUtil.getLanguage(userId)
+        val authPermission = AuthPermission.EDIT
         qualityPermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户没有用户组的编辑权限"
+            authPermission = authPermission,
+            message = MessageUtil.getMessageByLocale(
+                NEED_USER_GROUP_X_PERMISSION,
+                language,
+                arrayOf(authPermission.getI18n())
+            )
         )
         if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_NOT_EXISTS,
-                defaultMessage = "用户组($groupHashId)不存在",
                 params = arrayOf(groupHashId)
             )
         }
@@ -208,7 +215,6 @@ class QualityNotifyGroupService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = QualityMessageCode.USER_GROUP_IS_EXISTS,
-                defaultMessage = "用户组(${group.name})已存在",
                 params = arrayOf(group.name)
             )
         }
@@ -233,12 +239,18 @@ class QualityNotifyGroupService @Autowired constructor(
 
     fun delete(userId: String, projectId: String, groupHashId: String) {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
+        val language = I18nUtil.getLanguage(userId)
+        val authPermission = AuthPermission.DELETE
         qualityPermissionService.validateGroupPermission(
             userId = userId,
             projectId = projectId,
             groupId = groupId,
-            authPermission = AuthPermission.DELETE,
-            message = "用户没有用户组的删除权限"
+            authPermission = authPermission,
+            message = MessageUtil.getMessageByLocale(
+                NEED_USER_GROUP_X_PERMISSION,
+                language,
+                arrayOf(authPermission.getI18n())
+            )
         )
 
         qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)

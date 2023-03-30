@@ -29,7 +29,8 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.exception.ScmException
@@ -74,7 +75,10 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to login p4", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL),
+                ignored.message ?: MessageUtil.getCodeLanMessage(
+                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 ScmType.CODE_P4.name
             )
         }
@@ -94,7 +98,10 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add p4 triggers", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL),
+                ignored.message ?: MessageUtil.getCodeLanMessage(
+                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 ScmType.CODE_P4.name
             )
         }

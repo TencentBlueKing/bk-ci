@@ -34,7 +34,10 @@ import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -226,7 +229,12 @@ private fun JsonNode.checkVariablesFormat() {
     val keyRegex = Regex("^[0-9a-zA-Z_]+$")
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
-            throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
+            throw YamlFormatException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
     }
 }

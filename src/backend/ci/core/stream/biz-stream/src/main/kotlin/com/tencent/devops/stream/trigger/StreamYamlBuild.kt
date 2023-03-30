@@ -31,11 +31,13 @@ import com.fasterxml.jackson.core.JsonProcessingException
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
@@ -52,6 +54,7 @@ import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -524,7 +527,12 @@ class StreamYamlBuild @Autowired constructor(
                     ?: throw StreamTriggerException(
                         action,
                         TriggerReason.PIPELINE_PREPARE_ERROR,
-                        listOf("跨项目引用第三方构建资源池错误: 获取远程仓库(${repoNameAndPool[0]})信息失败, 请检查填写是否正确")
+                        listOf(
+                            MessageUtil.getMessageByLocale(
+                                CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            )
+                        )
                     )
 
                 val result = GitCommonUtils.getCiProjectId(

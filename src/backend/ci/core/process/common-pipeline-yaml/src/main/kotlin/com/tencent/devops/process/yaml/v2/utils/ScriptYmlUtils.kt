@@ -41,8 +41,14 @@ import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL
 import com.tencent.devops.process.yaml.v2.enums.StreamMrEventAction
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
@@ -332,7 +338,13 @@ object ScriptYmlUtils {
 
             // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
             if (index.length > 64) {
-                throw YamlFormatException("job.id 超过长度限制64 $index")
+                throw YamlFormatException(
+                    MessageUtil.getMessageByLocale(
+                        ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("", index)
+                    )
+                )
             }
 
             // 检测job env合法性
@@ -401,8 +413,11 @@ object ScriptYmlUtils {
                 )
             }
             throw YamlFormatException(
-                "runs-on 中 ${e?.path[0]?.fieldName} 格式有误," +
-                    "应为 ${e?.targetType?.name}, error message:${e.message}"
+                MessageUtil.getMessageByLocale(
+                    ERROR_YAML_FORMAT_EXCEPTION,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("runs-on", "${e.path[0]?.fieldName}", "${e.targetType?.name}", "${e.message}")
+                )
             )
         }
     }
@@ -420,12 +435,24 @@ object ScriptYmlUtils {
         val stepIdSet = mutableSetOf<String>()
         oldSteps.forEach { preStep ->
             if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
-                throw YamlFormatException("step必须包含uses或run或checkout!")
+                throw YamlFormatException(
+                    MessageUtil.getMessageByLocale(
+                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("oldStep")
+                    )
+                )
             }
 
             // 校验stepId唯一性
             if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
-                throw YamlFormatException("请确保step.id唯一性!(${preStep.id})")
+                throw YamlFormatException(
+                    MessageUtil.getMessageByLocale(
+                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf(preStep.id)
+                    )
+                )
             } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
                 stepIdSet.add(preStep.id)
             }
@@ -520,7 +547,12 @@ object ScriptYmlUtils {
             if (stageLabel != null) {
                 newLabels.add(stageLabel.id)
             } else {
-                throw YamlFormatException("请核对Stage标签是否正确")
+                throw YamlFormatException(
+                    MessageUtil.getMessageByLocale(
+                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
             }
         }
 
@@ -946,7 +978,12 @@ object ScriptYmlUtils {
     fun parseServiceImage(image: String): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw YamlFormatException("STREAM Service镜像格式非法")
+            throw YamlFormatException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
         return Pair(list[0], list[1])
     }

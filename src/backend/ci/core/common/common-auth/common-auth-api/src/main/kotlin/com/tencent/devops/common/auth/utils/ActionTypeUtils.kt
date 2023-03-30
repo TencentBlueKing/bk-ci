@@ -27,8 +27,11 @@
 
 package com.tencent.devops.common.auth.utils
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.NOT_MEMBER_AND_NOT_OPEN_SOURCE
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.utils.I18nUtil
 
 object ActionTypeUtils {
     private val executeAction = ExecuteAction()
@@ -164,7 +167,12 @@ object ActionTypeUtils {
             } else if (isPublicProject) {
                 return false
             } else {
-                throw PermissionForbiddenException("非项目成员且项目为非开源项目")
+                throw PermissionForbiddenException(
+                    MessageUtil.getMessageByLocale(
+                        NOT_MEMBER_AND_NOT_OPEN_SOURCE,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
             }
             return false
         }

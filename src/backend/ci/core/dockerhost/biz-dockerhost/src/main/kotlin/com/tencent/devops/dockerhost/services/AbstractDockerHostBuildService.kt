@@ -37,18 +37,29 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
+import com.tencent.devops.common.api.constant.BK_PULLING_IMAGE
+import com.tencent.devops.common.api.constant.BK_START_PULL_IMAGE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.services.container.BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL
+import com.tencent.devops.dockerhost.services.container.BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL
+import com.tencent.devops.dockerhost.services.container.BK_PULL_IMAGE_FAILED_ERROR_MESSAGE
+import com.tencent.devops.dockerhost.services.container.BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV
+import com.tencent.devops.dockerhost.services.container.BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START
+import com.tencent.devops.dockerhost.services.container.BK_TRY_LOCAL_IMAGE_START
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.text.MessageFormat
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,
@@ -129,7 +140,10 @@ abstract class AbstractDockerHostBuildService constructor(
             dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)) {
             log(
                 buildId = dockerBuildInfo.buildId,
-                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                message = MessageUtil.getMessageByLocale(
+                    BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 tag = taskId,
                 containerHashId = dockerBuildInfo.containerHashId
             )
@@ -146,8 +160,13 @@ abstract class AbstractDockerHostBuildService constructor(
                     containerHashId = dockerBuildInfo.containerHashId
                 )
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；" +
-                        "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                val errorMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
+                    imageName
+                ) + "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -155,7 +174,13 @@ abstract class AbstractDockerHostBuildService constructor(
                     message = errorMessage
                 )
             } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
+                    imageName
+                ) +
                         "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
@@ -167,13 +192,19 @@ abstract class AbstractDockerHostBuildService constructor(
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = "拉取镜像失败，错误信息：${t.message}",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_PULL_IMAGE_FAILED_ERROR_MESSAGE,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "${t.message}",
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
                 log(
                     buildId = dockerBuildInfo.buildId,
-                    message = "尝试使用本地镜像启动...",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_TRY_LOCAL_IMAGE_START,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     tag = taskId,
                     containerHashId = dockerBuildInfo.containerHashId
                 )
@@ -199,10 +230,26 @@ abstract class AbstractDockerHostBuildService constructor(
         )
         val dockerImageName = CommonUtils.normalizeImageName(imageName)
         val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
-        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", taskId, containerHashId)
+        log(
+            buildId,
+            MessageUtil.getMessageByLocale(
+                BK_START_PULL_IMAGE,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ) + dockerImageName,
+            taskId,
+            containerHashId
+        )
         httpLongDockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
             .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
-        log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
+        log(
+            buildId,
+            MessageUtil.getMessageByLocale(
+                BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
+            taskId,
+            containerHashId
+        )
         return Result(true)
     }
 
@@ -299,7 +346,11 @@ abstract class AbstractDockerHostBuildService constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        message = MessageUtil.getMessageByLocale(
+                            BK_PULLING_IMAGE,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            arrayOf("$lays", "$currentProgress")
+                        ),
                         tag = startTaskId,
                         jobId = containerHashId
                     )

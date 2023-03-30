@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.pipeline.enums
 
+import com.tencent.devops.common.api.util.MessageUtil
+
 /**
  * [statusName] 状态中文名
  * [visible] 是否对用户可见
@@ -94,6 +96,13 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
     fun isPause(): Boolean = this == PAUSE
 
     fun isTimeout(): Boolean = this == QUEUE_TIMEOUT || this == EXEC_TIMEOUT || this == HEARTBEAT_TIMEOUT
+
+    fun getNameByLocale(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "BUILDSTATUS_${this.name}",
+            language = language
+        )
+    }
 
     companion object {
 

@@ -29,6 +29,9 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.stream.constant.StreamMessageCode.PARAM_INCORRECT
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork
 import org.slf4j.LoggerFactory
@@ -160,9 +163,21 @@ object GitCommonUtils {
                 return projectId.removePrefix(githubProjectPrefix).toLong()
             }
         } catch (e: Exception) {
-            throw OperationException("蓝盾项目ID $projectId 不正确")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    PARAM_INCORRECT,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(projectId)
+                )
+            )
         }
-        throw OperationException("蓝盾项目ID $projectId 不正确")
+        throw OperationException(
+            MessageUtil.getMessageByLocale(
+                PARAM_INCORRECT,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                arrayOf(projectId)
+            )
+        )
     }
 
     // 获取蓝盾项目名称

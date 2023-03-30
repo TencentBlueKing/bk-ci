@@ -29,10 +29,10 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_LABEL_CODE
@@ -100,10 +100,11 @@ class LabelServiceImpl @Autowired constructor(
         val codeCount = labelDao.countByCode(dslContext, labelCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(labelCode),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(labelCode),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val labelName = labelRequest.labelName
@@ -111,10 +112,11 @@ class LabelServiceImpl @Autowired constructor(
         val nameCount = labelDao.countByName(dslContext, labelName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(labelName),
-                false
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(labelName),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val id = UUIDUtil.generate()
@@ -135,10 +137,11 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelCode != label.labelCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(labelCode),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(labelCode),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
@@ -150,10 +153,11 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelName != label.labelName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(labelName),
-                    false
+                return MessageUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(labelName),
+                    data = false,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }
@@ -177,9 +181,11 @@ class LabelServiceImpl @Autowired constructor(
      */
     override fun addLabelToLabelList(it: Record, labelList: MutableList<Label>) {
         val labelCode = it[KEY_LABEL_CODE] as String
+        val storeType = StoreTypeEnum.getStoreTypeObj((it[KEY_LABEL_TYPE] as Byte).toInt())
         val labelName = it[KEY_LABEL_NAME] as String
-        val labelLanName = MessageCodeUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_LABEL_PREFIX}$labelCode",
+        val labelLanName = MessageUtil.getMessageByLocale(
+            messageCode = "${storeType?.name}.label.$labelCode",
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             defaultMessage = labelName
         )
         labelList.add(
@@ -187,7 +193,7 @@ class LabelServiceImpl @Autowired constructor(
                 id = it[KEY_LABEL_ID] as String,
                 labelCode = labelCode,
                 labelName = labelLanName,
-                labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
+                labelType = storeType?.name ?: "",
                 createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )

@@ -28,8 +28,8 @@
 package com.tencent.devops.common.web.service
 
 import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.LocaleInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

@@ -33,27 +33,28 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
-import com.tencent.devops.auth.common.Constants.LEVEL
-import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.HTTP_RESULT
+import com.tencent.devops.auth.common.Constants.LEVEL
 import com.tencent.devops.auth.common.Constants.NAME
+import com.tencent.devops.auth.common.Constants.PARENT
 import com.tencent.devops.auth.common.Constants.USERNAME
 import com.tencent.devops.auth.common.Constants.USER_LABLE
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.entity.SearchProfileDeptEntity
 import com.tencent.devops.auth.entity.SearchRetrieveDeptEntity
+import com.tencent.devops.auth.entity.SearchUserAndDeptEntity
 import com.tencent.devops.auth.entity.UserDeptTreeInfo
 import com.tencent.devops.auth.pojo.vo.BkUserInfoVo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -293,9 +294,11 @@ class AuthDeptServiceImpl @Autowired constructor(
                         " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.USER_NOT_EXIST
-                ))
+                    MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.USER_NOT_EXIST,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
             }
             val responseStr = it.body()!!.string()
             logger.info("callUserCenter : response = $responseStr")
@@ -307,8 +310,9 @@ class AuthDeptServiceImpl @Autowired constructor(
                         " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.USER_NOT_EXIST
+                    MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.USER_NOT_EXIST,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ))
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")

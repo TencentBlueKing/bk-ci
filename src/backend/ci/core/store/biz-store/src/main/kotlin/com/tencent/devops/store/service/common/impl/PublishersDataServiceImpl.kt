@@ -33,9 +33,10 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
@@ -247,7 +248,10 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return MessageUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val organizationPublisherIds =
             publisherMemberDao.getPublisherMemberRelByMemberId(dslContext, userId)

@@ -39,7 +39,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.DefaultGroup
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.pojo.vo.GroupInfoVo
@@ -47,12 +46,14 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -179,7 +180,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 // 不在默认分组内则直接报错
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR)
+                    defaultMessage = MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         } else {
@@ -187,7 +191,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
             if (DefaultGroupType.contains(code)) {
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR)
+                    defaultMessage = MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         }
@@ -201,7 +208,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 // 不在默认分组内则直接报错
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.DEFAULT_GROUP_ERROR)
+                    defaultMessage = MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         } else {
@@ -209,7 +219,10 @@ open class IamPermissionRoleExtService @Autowired constructor(
             if (DefaultGroupType.containsDisplayName(name)) {
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.UN_DEFAULT_GROUP_ERROR)
+                    defaultMessage = MessageUtil.getCodeLanMessage(
+                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         }
@@ -256,12 +269,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
 
     private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
         val strategyInfo = strategyService.getStrategyByName(defaultGroup.displayName)
-            ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeMessage(
-                    messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
-                    params = arrayOf(defaultGroup.value)
-                ))
+            ?: throw ErrorCodeException(errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST)
         logger.info("getGroupStrategy ${strategyInfo.strategy}")
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()

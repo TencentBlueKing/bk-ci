@@ -27,32 +27,55 @@
 
 package com.tencent.devops.common.api.util
 
+import com.tencent.devops.common.api.annotation.BkI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
+import com.tencent.devops.common.api.pojo.I18nFieldInfo
+import org.slf4j.LoggerFactory
+import java.lang.reflect.Field
+import java.text.MessageFormat
+import com.tencent.devops.common.api.pojo.Result
+import java.net.URLDecoder
 import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
 
 object MessageUtil {
 
+    private val logger = LoggerFactory.getLogger(MessageUtil::class.java)
     private const val DEFAULT_BASE_NAME = "i18n/message"
 
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
      * @param language 语言信息
+     * @param params 替换描述信息占位符的参数数组
      * @param baseName 基础资源名称
+     * @param defaultMessage 默认信息
      * @return 描述信息
      */
     fun getMessageByLocale(
         messageCode: String,
         language: String,
-        baseName: String = DEFAULT_BASE_NAME
+        params: Array<String>? = null,
+        baseName: String = DEFAULT_BASE_NAME,
+        defaultMessage: String? = null
     ): String {
         val localeObj = Locale(language)
         // 根据locale和baseName生成resourceBundle对象
         val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
         // 通过resourceBundle获取对应语言的描述信息
-        return String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        var message: String? = null
+        try {
+            message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)
+        }
+        if (null != params && null != message) {
+            val mf = MessageFormat(message)
+            // 根据参数动态替换状态码描述里的占位符
+            message = mf.format(params)
+        }
+        return message ?: defaultMessage ?: messageCode
     }
 
     /**
@@ -111,17 +134,33 @@ object MessageUtil {
                 }
 
                 else -> {
-                    properties?.let {
-                        val propertyValue = properties[dataKey]?.toString()
-                        // 如果properties参数不为空则进行国际化内容替换
-                        propertyValue?.let { dataMap[key] = propertyValue }
-                    }
+                    handleProperties(properties, dataKey, dataMap, key)
                     // 如果value不是集合类型则直接加入字段列表中
                     fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataMap[key].toString()))
                 }
             }
         }
         return fieldLocaleInfos
+    }
+
+    /**
+     * 遍历map集合获取字段列表
+     * @param properties 国际化资源文件特性对象
+     * @param dataKey 带前缀的key
+     * @param dataMap map集合
+     * @param key 原始key
+     */
+    private fun handleProperties(
+        properties: Properties?,
+        dataKey: String,
+        dataMap: MutableMap<String, Any>,
+        key: String
+    ) {
+        properties?.let {
+            val propertyValue = properties[dataKey]?.toString()
+            // 如果properties参数不为空则进行国际化内容替换
+            propertyValue?.let { dataMap[key] = propertyValue }
+        }
     }
 
     /**
@@ -182,5 +221,161 @@ object MessageUtil {
             }
         }
         return fieldLocaleInfos
+    }
+
+    /**
+     * 从实体对象中获取需要进行国际化翻译的字段集合
+     * @param entity 实体对象
+     * @param fieldPath 字段路径
+     * @return 需要进行国际化翻译的字段集合
+     */
+    fun getBkI18nFieldMap(
+        entity: Any,
+        fieldPath: String = ""
+    ): MutableMap<String, I18nFieldInfo> {
+        val bkI18nFieldMap = mutableMapOf<String, I18nFieldInfo>()
+        when (entity) {
+            is List<*> -> {
+                // entity如果是list集合，需遍历集合中的对象收集国际化字段信息
+                entity.forEachIndexed { index, itemEntity ->
+                    handleItemEntityI18nInfo(
+                        fieldPath = fieldPath,
+                        index = index,
+                        itemEntity = itemEntity,
+                        bkI18nFieldMap = bkI18nFieldMap
+                    )
+                }
+            }
+
+            is Set<*> -> {
+                // entity如果是set集合，为了保证字段有序，需先将其转换为有序的list集合然后遍历集合中的对象收集国际化字段信息
+                entity.toList().sortedBy {
+                    it?.let {
+                        ShaUtils.sha1InputStream(JsonUtil.toJson(it, false).byteInputStream())
+                    }
+                }.forEachIndexed { index, itemEntity ->
+                    handleItemEntityI18nInfo(
+                        fieldPath = fieldPath,
+                        index = index,
+                        itemEntity = itemEntity,
+                        bkI18nFieldMap = bkI18nFieldMap
+                    )
+                }
+            }
+
+            else -> {
+                val entityClass = entity::class
+                // 统计出返回对象需要进行国际化翻译的字段
+                entityClass.java.declaredFields.forEach { dataField ->
+                    val dataFieldName = dataField.name
+                    // 生成字段路径
+                    val newFieldPath = if (fieldPath.isNotBlank()) {
+                        "$fieldPath.$dataFieldName"
+                    } else {
+                        dataFieldName
+                    }
+                    // 判断字段上是否有BkI18n注解，有该注解的字段才需要做国际化替换
+                    if (dataField.annotations.find { it is BkI18n } !is BkI18n) return@forEach
+                    // 获取字段的值，如果字段的值为空则无需进行国际化替换
+                    val dataFieldValue = getFieldValue(dataField, entity) ?: return@forEach
+                    if (ReflectUtil.isNativeType(dataFieldValue) || dataFieldValue is String ||
+                        dataFieldValue is Enum<*>
+                    ) {
+                        // 如果字段的值是基本类型则把该字段放入需要国际化翻译的集合中
+                        bkI18nFieldMap[newFieldPath] = I18nFieldInfo(dataField, entity)
+                    } else {
+                        // 如果字段的值不是基本类型则进行递归收集国际化字段处理
+                        bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = dataFieldValue, fieldPath = newFieldPath))
+                    }
+                }
+            }
+        }
+        return bkI18nFieldMap
+    }
+
+    /**
+     * 获取字段的值
+     * @param field 字段
+     * @param entity 实体对象
+     * @return 字段值
+     */
+    fun getFieldValue(field: Field, entity: Any): Any? {
+        // 判断字段是否可以访问
+        if (!field.isAccessible) {
+            // 设置字段为可访问
+            field.isAccessible = true
+        }
+        return field.get(entity)
+    }
+
+    /**
+     * 处理实体对象的国际化信息
+     * @param fieldPath 字段路径
+     * @param index 字段数组下标
+     * @param itemEntity 实体对象
+     * @param bkI18nFieldMap 需要国际化翻译的字段的map集合
+     */
+    private fun handleItemEntityI18nInfo(
+        fieldPath: String,
+        index: Int,
+        itemEntity: Any?,
+        bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
+    ) {
+        // 把实体对象的国际化字段信息放入集合中
+        itemEntity?.let {
+            // 生成字段路径
+            val newFieldPath = if (fieldPath.isNotBlank()) {
+                "$fieldPath[$index]"
+            } else {
+                "[$index]"
+            }
+            bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = itemEntity, fieldPath = newFieldPath))
+        }
+    }
+
+    /**
+     * 生成请求响应对象
+     * @param messageCode 状态码
+     * @param params 替换状态码描述信息占位符的参数数组
+     * @param data 数据对象
+     * @return Result响应结果对象
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T> generateResponseDataObject(
+        messageCode: String,
+        params: Array<String>? = null,
+        data: T? = null,
+        language: String,
+        defaultMessage: String? = null
+    ): Result<T> {
+        val message = getMessageByLocale(
+            messageCode = messageCode,
+            language = language,
+            params = params,
+            defaultMessage = defaultMessage
+        )
+        // 生成Result对象
+        return Result(messageCode.toInt(), message, data)
+    }
+
+    /**
+     * 获取code对应的中英文信息
+     * @param messageCode code
+     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
+     * @return Result响应结果对象
+     */
+    fun getCodeLanMessage(
+        messageCode: String,
+        defaultMessage: String? = null,
+        params: Array<String>? = null,
+        checkUrlDecoder: Boolean = false,
+        language: String
+    ): String {
+        return getMessageByLocale(
+            messageCode = messageCode,
+            params = params,
+            language = language,
+            defaultMessage = defaultMessage
+        ).let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
     }
 }

@@ -27,6 +27,9 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.image.constants.ImageMessageCode.FILE_NOT_FOUND_CHECK_PATH
 import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
@@ -116,11 +119,23 @@ object ESConfigUtils {
     ): SSLContext {
         val keystoreFile = File(keystoreFilePath)
         if (!keystoreFile.exists()) {
-            throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    FILE_NOT_FOUND_CHECK_PATH,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("keystore")
+                ) + keystoreFilePath
+            )
         }
         val truststoreFile = File(truststoreFilePath)
         if (!truststoreFile.exists()) {
-            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    FILE_NOT_FOUND_CHECK_PATH,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("truststore")
+                ) + truststoreFilePath
+            )
         }
         val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
         val keystorePasswordCharArray = keystorePassword.toCharArray()

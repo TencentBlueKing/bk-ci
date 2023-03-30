@@ -31,10 +31,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -232,9 +233,10 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = params,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    defaultMessage = MessageUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
+                        params = params,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }
@@ -250,9 +252,10 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = params,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                    defaultMessage = MessageUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
+                        params = params,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }

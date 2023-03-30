@@ -30,6 +30,7 @@ package com.tencent.devops.process.yaml.modelCreate
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -44,6 +45,8 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
@@ -132,7 +135,12 @@ class ModelContainer @Autowired(required = false) constructor(
                 os = os.name.toLowerCase()
             ).data ?: throw CustomException(
                 // 说明用户填写的name或version不对，直接抛错
-                Response.Status.BAD_REQUEST, "尚未支持 ${env.key} ${env.value}，请联系 DevOps-helper 添加对应版本"
+                Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    BK_ENV_NOT_YET_SUPPORTED,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf(env.key, env.value)
+                )
             )
         }
     }

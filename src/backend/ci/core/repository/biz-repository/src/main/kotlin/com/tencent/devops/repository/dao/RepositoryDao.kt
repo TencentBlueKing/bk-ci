@@ -27,8 +27,11 @@
 
 package com.tencent.devops.repository.dao
 
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.TRepository
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.pojo.enums.RepositorySortEnum
@@ -290,7 +293,12 @@ class RepositoryDao {
             if (!projectId.isNullOrBlank()) {
                 query.and(PROJECT_ID.eq(projectId))
             }
-            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException("代码库不存在")
+            return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
+                MessageUtil.getMessageByLocale(
+                    GIT_NOT_FOUND, I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("")
+                )
+            )
         }
     }
 
@@ -300,7 +308,13 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchOne() ?: throw NotFoundException("代码库${repositoryName}不存在")
+                .fetchOne() ?: throw NotFoundException(
+                MessageUtil.getMessageByLocale(
+                    GIT_NOT_FOUND,
+                    I18nUtil.getLanguage(com.tencent.devops.common.web.utils.I18nUtil.getRequestUserId()),
+                    arrayOf(repositoryName)
+                )
+                )
         }
     }
 

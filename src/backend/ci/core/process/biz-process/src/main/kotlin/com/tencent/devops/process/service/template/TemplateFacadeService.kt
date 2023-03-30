@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -59,12 +60,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
+import com.tencent.devops.process.constant.BK_OPERATE_PIPELINE_FAIL
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -982,8 +985,12 @@ class TemplateFacadeService @Autowired constructor(
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
                 // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-                templateResult.tips = message ?: ignored.defaultMessage
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = ignored.errorCode,
+                    params = ignored.params,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                templateResult.tips = message
             }
         }
         val latestVersion = TemplateVersion(
@@ -1320,11 +1327,19 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignored: DuplicateKeyException) {
                 logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = "流水线已经存在"
+                messages[instance.pipelineName] = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_IS_EXISTS,
+                    I18nUtil.getLanguage(userId)
+                )
             } catch (ignored: Throwable) {
                 logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = ignored.message ?: "创建流水线失败"
+                val language = I18nUtil.getLanguage(userId)
+                messages[instance.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
+                    BK_OPERATE_PIPELINE_FAIL,
+                    language,
+                    arrayOf(AuthPermission.CREATE.getI18n())
+                )
             }
         }
 
@@ -1390,11 +1405,20 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignored: DuplicateKeyException) {
                 logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
+                messages[it.pipelineName] = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_IS_EXISTS,
+                    I18nUtil.getLanguage(userId)
+                )
             } catch (ignored: Throwable) {
+
                 logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = ignored.message ?: "更新流水线失败"
+                val language = I18nUtil.getLanguage(userId)
+                messages[it.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
+                    BK_OPERATE_PIPELINE_FAIL,
+                    language,
+                    arrayOf(AuthPermission.EDIT.getI18n())
+                )
             }
         }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")

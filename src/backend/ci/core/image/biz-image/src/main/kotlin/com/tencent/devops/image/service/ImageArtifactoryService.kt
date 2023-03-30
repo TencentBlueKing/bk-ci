@@ -31,10 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
+import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_COPYING_IN_PROGRESS
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageItem
@@ -621,7 +624,7 @@ class ImageArtifactoryService @Autowired constructor(
             imageRepo.startsWith("devcloud/$projectId/") -> {
                 "paas/bkdevops/$projectId${imageRepo.removePrefix("devcloud/$projectId")}"
             }
-            else -> throw OperationException("imageRepo参数错误")
+            else -> throw OperationException("imageRepo param error")
         }
 
         val copyTo = "$toImageRepo/$imageTag"
@@ -629,7 +632,12 @@ class ImageArtifactoryService @Autowired constructor(
         logger.info("copyTo, $copyTo")
         val redisKey = "image.copyToBuildImage_$copyFrom"
         if (!redisOperation.get(redisKey).isNullOrBlank()) {
-            throw OperationException("镜像正在拷贝中")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    IMAGE_COPYING_IN_PROGRESS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
 
         redisOperation.set(redisKey, "true")

@@ -31,14 +31,16 @@ package com.tencent.devops.common.api.constant
  * 流水线微服务模块请求返回状态码
  * 返回码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
  * 1、返回码总长度为7位，
- * 2、前2位数字代表系统名称（如21代表蓝盾平台）
+ * 2、前2位数字代表系统名称（如21代表平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
- *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限）
+ *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26:stream 27：worker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
- * @since: 2019-03-05
+ *
+ * @since: 2023-3-20
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
@@ -88,4 +90,24 @@ object RepositoryMessageCode {
     const val P4_INVALID = "2115043" // 无效的p4仓库
     const val P4_EVENT_PATH_EMPTY = "2115044" // p4事件触发路径为空
     const val P4_USERNAME_PASSWORD_FAIL = "2115045" // p4用户名密码错误
+    const val GIT_NOT_FOUND = "2115046"// 代码库{0}不存在
+    const val PARAM_ERROR= "2115047"// 参数错误
+    const val AUTH_FAIL = "2115048"// {0}认证失败
+    const val ACCOUNT_NO_OPERATION_PERMISSIONS = "2115049"// 账户没有{0}的权限
+    const val REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION = "2115050"// {0}仓库不存在或者是账户没有该项目{1}的权限
+    const val USER_CREATE_PEM_ERROR = "2115052" // 用户{0}在工程{1}下没有代码库创建权限
+    const val GIT_INTERFACE_NOT_EXIST = "2115053"// {0}平台没有{1}的接口
+    const val GIT_CANNOT_OPERATION = "2115054"// {0}平台{1}操作不能进行
+    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2115055"//unlock webhooklock失败,请确认token是否已经配置
+    const val COMMIT_CHECK_ADD_FAIL = "2115056"// Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ADD_MR_COMMENTS_FAIL = "2115057"// 添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val WEBHOOK_ADD_FAIL = "2115058"// Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限
+    const val WEBHOOK_UPDATE_FAIL = "2115059"// Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ENGINEERING_REPO_UNAUTHORIZED = "2115060"// 工程仓库访问未授权
+    const val ENGINEERING_REPO_NOT_EXIST = "2115061"// 工程仓库不存在
+    const val ENGINEERING_REPO_CALL_ERROR = "2115062"// 工程仓库访问异常
+    const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2115063"// 非项目成员且项目为非开源项目
+    const val NOT_SVN_CODE_BASE = "2115064"// 代码库({0})不是svn代码库
+    const val FAIL_TO_GET_SVN_DIRECTORY = "2115065"// 获取Svn目录失败, msg:{0}
+    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115066"// 仓库ID和仓库名都为空
 }

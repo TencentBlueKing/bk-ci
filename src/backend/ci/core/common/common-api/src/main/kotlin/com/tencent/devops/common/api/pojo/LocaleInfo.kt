@@ -24,10 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.api.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-package com.tencent.devops.dispatch.kubernetes.common
-
-object ConstantsMessage {
-    const val TROUBLE_SHOOTING = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
-    const val NO_EMPTY_BUILDER = "Kubernetes构建机启动失败，没有空闲的构建机"
-}
+@ApiModel("语言环境信息")
+data class LocaleInfo(
+    @ApiModelProperty("语言环境信息")
+    val language: String
+)

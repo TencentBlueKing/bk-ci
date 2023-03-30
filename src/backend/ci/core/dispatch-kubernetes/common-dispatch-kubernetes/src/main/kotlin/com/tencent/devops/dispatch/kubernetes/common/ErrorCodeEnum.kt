@@ -28,16 +28,25 @@
 package com.tencent.devops.dispatch.kubernetes.common
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "Dispatcher-base系统错误"),
-    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2123002, "构建机启动失败，没有空闲的构建机"),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2123050, "已超过dispatch base创建Job容器上限."),
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2128001, "Dispatcher-base系统错误"),
+    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2128002, "构建机启动失败，没有空闲的构建机"),
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2128050, "已超过dispatch base创建Job容器上限."),
 
-    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2123018, "第三方服务异常，异常信息 - 接口请求超时"),
-    START_VM_ERROR(ErrorType.THIRD_PARTY, 2123004, "第三方服务异常，异常信息 - 构建机启动失败")
+    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2128018, "第三方服务异常，异常信息 - 接口请求超时"),
+    START_VM_ERROR(ErrorType.THIRD_PARTY, 2128004, "第三方服务异常，异常信息 - 构建机启动失败");
+
+    fun getErrorMessageI18n(): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "${this.errorCode}",
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
+    }
 }

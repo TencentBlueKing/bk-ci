@@ -28,11 +28,14 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_ENV_PREPARATION
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.process.engine.common.VMUtils
@@ -84,7 +87,9 @@ class PipelineDispatchService @Autowired constructor(
         if (startupEvent.retryTime == 0) {
             buildLogPrinter.addLine(
                 buildId = startupEvent.buildId,
-                message = "构建环境准备中...",
+                message = MessageUtil.getMessageByLocale(
+                    BUILD_ENV_PREPARATION, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
                 jobId = startupEvent.containerHashId,
                 executeCount = startupEvent.executeCount ?: 1

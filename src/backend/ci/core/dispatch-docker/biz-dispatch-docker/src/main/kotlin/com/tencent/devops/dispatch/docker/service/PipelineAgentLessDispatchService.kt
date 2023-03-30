@@ -28,11 +28,15 @@
 package com.tencent.devops.dispatch.docker.service
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_NOT_RUNNING
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_STATUS_ERROR
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.client.BuildLessClient
 import com.tencent.devops.dispatch.docker.client.DockerHostClient
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
@@ -138,21 +142,29 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         if (statusResult.isNotOk() || statusResult.data == null) {
             LOG.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
+            val message = MessageUtil.getMessageByLocale(
+                "$PIPELINE_STATUS_ERROR",
+                I18nUtil.getLanguage(event.userId)
+            )
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
-                errorMessage = "无法获取流水线JOB状态，构建停止"
+                errorCode = PIPELINE_STATUS_ERROR,
+                formatErrorMessage = message,
+                errorMessage = message
             )
         }
 
         if (!statusResult.data!!.isRunning()) {
             LOG.warn("The build event($event) is not running")
+            val message = MessageUtil.getMessageByLocale(
+                "$PIPELINE_NOT_RUNNING",
+                I18nUtil.getLanguage(event.userId)
+            )
             throw BuildFailureException(
                 errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
-                errorMessage = "流水线JOB已经不再运行，构建停止"
+                errorCode = PIPELINE_NOT_RUNNING,
+                formatErrorMessage = message,
+                errorMessage = message
             )
         }
     }

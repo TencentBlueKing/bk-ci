@@ -29,9 +29,10 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceReportResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -57,7 +58,10 @@ class ServiceReportResourceImpl @Autowired constructor(
                 throw PermissionForbiddenException(
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                     params = arrayOf(AuthPermission.VIEW.value),
-                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION)
+                    message = MessageUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         }

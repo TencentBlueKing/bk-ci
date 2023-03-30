@@ -33,10 +33,12 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.ticket.tables.records.TCredentialRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
@@ -44,6 +46,8 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.ticket.constant.TicketMessageCode
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -76,7 +80,11 @@ class CredentialServiceImpl @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
                 params = arrayOf(credentialId),
-                defaultMessage = "凭证$credentialId 不存在"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    CERT_NOT_FOUND,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(credentialId)
+                )
             )
         }
         if (!credentialHelper.isValid(credential)) {
@@ -125,11 +133,20 @@ class CredentialServiceImpl @Autowired constructor(
         credential: CredentialCreate,
         authGroupList: List<BkAuthGroup>?
     ) {
+        val create = AuthPermission.CREATE
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
-            authPermission = AuthPermission.CREATE,
-            message = "用户($userId)在工程($projectId)下没有凭据创建权限"
+            authPermission = create,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+            )
         )
 
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
@@ -194,12 +211,21 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun userEdit(userId: String, projectId: String, credentialId: String, credential: CredentialUpdate) {
+        val edit = AuthPermission.EDIT
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
 
         serviceEdit(
@@ -216,12 +242,21 @@ class CredentialServiceImpl @Autowired constructor(
         credentialId: String,
         credentialSetting: CredentialSettingUpdate
     ): Boolean {
+        val edit = AuthPermission.EDIT
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
 
         return credentialDao.updateSetting(
@@ -233,12 +268,21 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun userDelete(userId: String, projectId: String, credentialId: String) {
+        val delete = AuthPermission.DELETE
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.DELETE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的删除权限"
+            authPermission = delete,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") delete.alias else delete.value)
+            )
         )
 
         logger.info("$userId delete credential $credentialId")
@@ -380,12 +424,21 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun userShow(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
+        val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
+            authPermission = view,
+            message = MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") view.alias else view.value)
+            )
         )
 
         val hasViewPermission = true
@@ -416,12 +469,21 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     override fun userGet(userId: String, projectId: String, credentialId: String): CredentialWithPermission {
+        val view = AuthPermission.VIEW
         credentialPermissionService.validatePermission(
             userId,
             projectId,
             credentialId,
-            AuthPermission.VIEW,
-            "用户($userId)在工程($projectId)下没有凭据($credentialId)的查看权限"
+            view,
+            MessageUtil.getMessageByLocale(
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") view.alias else view.value)
+            )
         )
 
         val hasViewPermission = true

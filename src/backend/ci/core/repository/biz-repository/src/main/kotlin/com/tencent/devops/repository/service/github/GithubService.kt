@@ -34,11 +34,17 @@ import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -106,8 +112,8 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPost(token, "repos/$projectName/check-runs", body)
-
-        return callMethod(OPERATION_ADD_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        val operation = getMessageByLocale(OPERATION_ADD_CHECK_RUNS)
+        return callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
     override fun updateCheckRuns(
@@ -126,8 +132,8 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
-
-        callMethod(OPERATION_UPDATE_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
+        callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
     override fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult {
@@ -162,11 +168,12 @@ class GithubService @Autowired constructor(
     fun getRepositories(token: String): List<GithubRepo> {
         val githubRepos = mutableListOf<GithubRepo>()
         var page = 0
+        val operation = getMessageByLocale(OPERATION_GET_REPOS)
         run outside@{
             while (page < PAGE_SIZE) {
                 page++
                 val request = buildGet(token, "user/repos?page=$page&per_page=$PAGE_SIZE")
-                val body = getBody(OPERATION_GET_REPOS, request)
+                val body = getBody(operation, request)
                 val repos = objectMapper.readValue<List<GithubRepo>>(body)
                 githubRepos.addAll(repos)
 
@@ -194,7 +201,8 @@ class GithubService @Autowired constructor(
                     val sBranch = branch ?: "master"
                     val path = "repos/$projectName/branches/$sBranch"
                     val request = buildGet(token, path)
-                    val body = getBody(OPERATION_GET_BRANCH, request)
+                    val operation = getMessageByLocale(OPERATION_GET_BRANCH)
+                    val body = getBody(operation, request)
                     return objectMapper.readValue(body)
                 }
             },
@@ -214,7 +222,8 @@ class GithubService @Autowired constructor(
                 override fun execute(): GithubTag? {
                     val path = "repos/$projectName/git/refs/tags/$tag"
                     val request = buildGet(token, path)
-                    val body = getBody(OPERATION_GET_TAG, request)
+                    val operation = getMessageByLocale(OPERATION_GET_TAG)
+                    val body = getBody(operation, request)
                     return objectMapper.readValue(body)
                 }
             },
@@ -249,7 +258,8 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/branches?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val body = getBody(OPERATION_LIST_BRANCHS, request)
+                    val operation = getMessageByLocale(OPERATION_LIST_BRANCHS)
+                    val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
                 }
             },
@@ -269,7 +279,8 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/tags?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val body = getBody(OPERATION_LIST_TAGS, request)
+                    val operation = getMessageByLocale(OPERATION_LIST_TAGS)
+                    val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
                 }
             },
@@ -334,13 +345,24 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         val msg = when (code) {
-            HTTP_400 -> "参数错误"
-            HTTP_401 -> "GitHub认证失败"
-            HTTP_403 -> "账户没有${operation}的权限"
-            HTTP_404 -> "GitHub仓库不存在或者是账户没有该项目${operation}的权限"
-            else -> "GitHub平台${operation}失败"
+            HTTP_400 -> getMessageByLocale(PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(AUTH_FAIL, arrayOf("GitHub token"))
+            HTTP_403 -> getMessageByLocale(ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GitHub", operation))
+            else -> "GitHub platform $operation fail"
         }
-        throw GithubApiException(code, msg)
+        throw GithubApiException(
+            code,
+            MessageUtil.getMessageByLocale(msg, I18nUtil.getLanguage(I18nUtil.getRequestUserId()), arrayOf(operation))
+        )
+    }
+
+    private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = messageCode,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            params = params
+        )
     }
 
     // TODO:脱敏
@@ -349,12 +371,12 @@ class GithubService @Autowired constructor(
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
         private const val GITHUB_API_URL = "https://api.github.com"
-        private const val OPERATION_ADD_CHECK_RUNS = "添加检测任务"
-        private const val OPERATION_UPDATE_CHECK_RUNS = "更新检测任务"
-        private const val OPERATION_GET_REPOS = "获取仓库列表"
-        private const val OPERATION_GET_BRANCH = "获取指定分支"
-        private const val OPERATION_GET_TAG = "获取指定Tag"
-        private const val OPERATION_LIST_BRANCHS = "获取分支列表"
-        private const val OPERATION_LIST_TAGS = "获取Tag列表"
+        private const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns"// 添加检测任务
+        private const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns"// 更新检测任务
+        private const val OPERATION_GET_REPOS = "OperationGetRepos"// 获取仓库列表
+        private const val OPERATION_GET_BRANCH = "OperationGetBranch"// 获取指定分支
+        private const val OPERATION_GET_TAG = "OperationGetTag"// 获取指定Tag
+        private const val OPERATION_LIST_BRANCHS = "OperationListBranchs"// 获取分支列表
+        private const val OPERATION_LIST_TAGS = "OperationListTags"// 获取Tag列表
     }
 }

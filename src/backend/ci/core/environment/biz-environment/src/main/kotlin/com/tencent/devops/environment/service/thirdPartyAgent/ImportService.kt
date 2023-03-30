@@ -35,11 +35,12 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.TpaLock
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -95,7 +96,10 @@ class ImportService @Autowired constructor(
 
             if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
                 throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+                    message = MessageUtil.getCodeLanMessage(
+                        EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 )
             }
 
@@ -152,7 +156,10 @@ class ImportService @Autowired constructor(
         Preconditions.checkTrue(
             condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
             exception = PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+                message = MessageUtil.getCodeLanMessage(
+                    EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         )
 

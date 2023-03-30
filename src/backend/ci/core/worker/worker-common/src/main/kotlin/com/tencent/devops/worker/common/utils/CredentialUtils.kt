@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -34,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
@@ -43,6 +45,7 @@ import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
@@ -86,7 +89,7 @@ object CredentialUtils {
         } catch (ignored: Exception) {
             logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
-                LoggerService.addErrorLine("获取凭证（$credentialId）失败， 原因：${ignored.message}")
+                LoggerService.addErrorLine("Fail to get the credential($credentialId)， cause：${ignored.message}")
             }
             throw ignored
         }
@@ -195,7 +198,14 @@ object CredentialUtils {
             logger.info("get credential context value, key: $key acrossProjectId: $acrossProjectId")
             value
         } catch (ignore: Exception) {
-            logger.warn("凭证ID变量($ticketId)不存在", ignore.message)
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    WorkerMessageCode.CREDENTIAL_ID_NOT_EXIST,
+                    System.getProperty(LOCALE_LANGUAGE),
+                    arrayOf(ticketId)
+                ),
+                ignore.message
+            )
             null
         }
     }

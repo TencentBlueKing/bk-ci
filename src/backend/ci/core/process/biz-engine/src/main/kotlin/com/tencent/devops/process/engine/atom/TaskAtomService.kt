@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -44,6 +45,9 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -111,7 +115,10 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
-            atomResponse.errorMsg = "后台服务任务执行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -122,7 +129,10 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
-            atomResponse.errorMsg = "后台服务运行出错"
+            atomResponse.errorMsg = MessageUtil.getMessageByLocale(
+                ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {
             taskAfter(atomResponse, task, startTime)

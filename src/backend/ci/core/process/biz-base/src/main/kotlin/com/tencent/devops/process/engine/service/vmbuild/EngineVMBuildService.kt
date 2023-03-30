@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,10 +51,11 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -497,7 +499,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("ENGINE|$buildId|BC_RUNNING|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.status}")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "正在处理当前上报的任务, 请稍等。。。(Waiting please)",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT,
+                        I18nUtil.getLanguage(userId)
+                    ),
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -897,9 +902,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                                MessageCodeUtil.getCodeLanMessage(
+                                MessageUtil.getCodeLanMessage(
                                     messageCode = errorCode.toString(),
-                                    checkUrlDecoder = true
+                                    checkUrlDecoder = true,
+                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                 )
                             }\n"
                         }

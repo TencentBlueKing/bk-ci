@@ -29,7 +29,9 @@ package com.tencent.devops.stream.service.transfer
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AppInstallationResult
@@ -41,6 +43,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.USER_NOT_AUTHORIZED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -76,7 +80,7 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = MessageUtil.getMessageByLocale(USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
         )
     }
 

@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -44,11 +45,14 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_AUTH_CENTER_CREATE_PROJECT_INFO
+import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -99,7 +103,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
             throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_EMPTY),
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.NAME_EMPTY, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 errorCode = ProjectMessageCode.NAME_EMPTY
             )
         }
@@ -107,13 +113,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ProjectValidateType.project_name -> {
                 if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            ProjectMessageCode.NAME_TOO_LONG,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
                     )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            ProjectMessageCode., language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
                     )
                 }
@@ -122,21 +133,29 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 // 2 ~ 64 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_INTERVAL_ERROR),
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
                     )
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST),
+                        defaultMessage = MessageUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_EXIST,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ),
                         errorCode = ProjectMessageCode.EN_NAME_EXIST
                     )
                 }
@@ -179,8 +198,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
+            logger.warn(
+                MessageUtil.getMessageByLocale(BK_AUTH_CENTER_CREATE_PROJECT_INFO, I18nUtil.getLanguage(userId)) +
+                "$projectCreateInfo",
+                e
+            )
+            throw OperationException(
+                MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.PEM_CREATE_FAIL, language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         if (projectId.isNullOrEmpty()) {
             projectId = UUIDUtil.generate()
@@ -228,7 +255,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (createExtInfo.needAuth) {
                 deleteAuth(projectId, accessToken)
             }
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+            throw OperationException(
+                MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NAME_EXIST,
+                    language = I18nUtil.getLanguage(userId))
+            )
         } catch (ignored: Throwable) {
             logger.warn(
                 "Fail to create the project ($projectCreateInfo)",
@@ -254,8 +285,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                    ProjectMessageCode.PROJECT_NAME_EXIST
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NAME_EXIST, language = I18nUtil.getLanguage(userId)
                 )
             )
         }
@@ -308,7 +339,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(
                         dslContext = dslContext,
                         englishName = englishName
-                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
+                    )?.projectId ?: throw NotFoundException(
+                        "-$englishName" +
+                                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+                    )
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -333,7 +367,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                throw OperationException(
+                    MessageUtil.getCodeLanMessage(
+                        ProjectMessageCode.PROJECT_NAME_EXIST,
+                        language = I18nUtil.getLanguage(userId))
+                )
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
@@ -415,7 +453,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, null)
-            logger.info("项目列表：$projects")
+            logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it))
@@ -568,12 +606,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 return Result(ProjectLogo(logoAddress))
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
+                throw OperationException(
+                    MessageUtil.getCodeLanMessage(
+                        ProjectMessageCode.UPDATE_LOGO_FAIL,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             } finally {
                 logoFile?.delete()
             }
         } else {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL))
+            throw OperationException(
+                MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.QUERY_PROJECT_FAIL, language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 
@@ -581,13 +628,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG)
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.NAME_TOO_LONG, language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST)
+                defaultMessage = MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NAME_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
@@ -605,7 +657,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(
+                MessageUtil.getCodeLanMessage(
+                    ProjectMessageCode.PEM_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId))
+            )
         }
         projectDao.updateUsableStatus(
             dslContext = dslContext,
@@ -691,10 +747,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException(
+            MessageUtil.getMessageByLocale(
+                PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
+        )
         val currentRelationId = projectInfo.relationId
         if (!currentRelationId.isNullOrEmpty()) {
-            throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
+            throw InvalidParamException(
+                projectCode + MessageUtil.getMessageByLocale(
+                    BOUND_IAM_GRADIENT_ADMIN,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
         return updateCount > 0

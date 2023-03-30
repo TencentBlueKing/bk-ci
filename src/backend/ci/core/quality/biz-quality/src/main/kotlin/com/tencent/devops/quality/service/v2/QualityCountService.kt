@@ -92,7 +92,7 @@ class QualityCountService @Autowired constructor(
             if (pipelineInterceptList.size == INTERCEPT_PIPELINE_LIST_SIZE) return pipelineInterceptList
         }
         for (count in 1..(INTERCEPT_PIPELINE_LIST_SIZE - pipelineInterceptList.size)) {
-            pipelineInterceptList.add(CountPipelineIntercept("", "暂无流水线", 0))
+            pipelineInterceptList.add(CountPipelineIntercept("", "no pipeline", 0))
         }
 
         return pipelineInterceptList

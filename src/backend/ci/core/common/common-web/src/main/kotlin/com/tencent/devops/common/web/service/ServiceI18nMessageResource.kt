@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.common.web.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -58,7 +58,7 @@ interface ServiceI18nMessageResource {
     fun batchAddI18nMessage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String = "",
         @ApiParam(value = "国际化信息集合", required = true)
         i18nMessages: List<I18nMessage>
     ): Result<Boolean>
@@ -69,7 +69,7 @@ interface ServiceI18nMessageResource {
     fun deleteI18nMessage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String = "",
         @ApiParam("国际化变量名", required = true)
         @PathParam("key")
         key: String,
@@ -77,8 +77,8 @@ interface ServiceI18nMessageResource {
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = false)
-        @QueryParam("locale")
-        locale: String?
+        @QueryParam("language")
+        language: String?
     ): Result<Boolean>
 
     @ApiOperation("获取国际化信息")
@@ -87,7 +87,7 @@ interface ServiceI18nMessageResource {
     fun getI18nMessage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String = "",
         @ApiParam("国际化变量名", required = true)
         @PathParam("key")
         key: String,
@@ -95,24 +95,24 @@ interface ServiceI18nMessageResource {
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = true)
-        @QueryParam("locale")
-        locale: String
+        @QueryParam("language")
+        language: String
     ): Result<I18nMessage?>
 
     @ApiOperation("批量获取国际化信息")
-    @GET
+    @POST
     @Path("/list")
     fun getI18nMessages(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+        userId: String = "",
         @ApiParam(value = "国际化变量名列表", required = true)
         keys: List<String>,
         @ApiParam("模块标识", required = true)
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = true)
-        @QueryParam("locale")
-        locale: String
+        @QueryParam("language")
+        language: String
     ): Result<List<I18nMessage>?>
 }

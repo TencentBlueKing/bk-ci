@@ -77,8 +77,8 @@ class PipelineSettingVersionDao {
                     "",
                     successNotifyTypes,
                     failNotifyTypes,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
-                    NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
+                    NotifyTemplateUtils.getCommonShutdownSuccessContent(),
+                    NotifyTemplateUtils.getCommonShutdownFailureContent(),
                     isTemplate,
                     version,
                     id

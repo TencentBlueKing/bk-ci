@@ -146,3 +146,8 @@ const val KEY_VERSION = "version"
 const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
 const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
+
+const val BK_BUILD_ENV_START_FAILED = "BkBuildEnvStartFailed" // 构建环境启动失败
+const val BK_START_PULL_IMAGE = "BkStartPullImage"// 开始拉取镜像，镜像名称：
+const val BK_PULLING_IMAGE = "BkPullingImage"// 正在拉取镜像,第{0}层，进度：{1}
+const val BK_SEE_DETAILS = "BkSeeDetails"// 查看详情
