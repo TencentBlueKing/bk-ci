@@ -46,8 +46,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
 import java.util.concurrent.Executors
+import java.util.Properties
 
 @Service
 @Suppress("LongParameterList")
