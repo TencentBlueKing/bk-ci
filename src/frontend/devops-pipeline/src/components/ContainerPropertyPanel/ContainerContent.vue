@@ -318,7 +318,9 @@
                 'getContainerModalId',
                 'isThirdPartyContainer',
                 'isPublicResource',
-                'isDockerBuildResource'
+                'isDockerBuildResource',
+                'isPublicDevCloudContainer',
+                'getRealSeqId'
             ]),
             imageTypeList () {
                 return [
@@ -331,6 +333,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            isDetailPage () {
+                return this.$route.name === 'pipelinesDetail'
             },
             projectId () {
                 return this.$route.params.projectId
@@ -375,6 +380,9 @@
                 } catch (e) {
                     return ''
                 }
+            },
+            isPublicDevCloud () {
+                return this.isPublicDevCloudContainer(this.container)
             },
             xcodeVersion () {
                 return this.container.dispatchType.xcodeVersion
@@ -698,6 +706,14 @@
                     ...buildEnv
                 })
             },
+            async startDebug () {
+                const realSeqId = this.getRealSeqId(this.stages, this.stageIndex, this.containerIndex)
+                const vmSeqId = this.isDetailPage ? (this.container.containerId || realSeqId) : realSeqId
+                const tab = window.open('about:blank')
+                const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
+            },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
                     this.handleContainerChange('buildEnv', {})
@@ -786,6 +802,11 @@
             }
         }
         .control-bar {
+            position: absolute;
+            right: 34px;
+            top: 12px;
+        }
+        .debug-btn {
             position: absolute;
             right: 34px;
             top: 12px;

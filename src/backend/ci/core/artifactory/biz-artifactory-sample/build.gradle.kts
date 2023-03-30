@@ -28,5 +28,4 @@
 dependencies {
     api(project(":core:artifactory:api-artifactory-sample"))
     api(project(":core:artifactory:biz-artifactory"))
-
 }

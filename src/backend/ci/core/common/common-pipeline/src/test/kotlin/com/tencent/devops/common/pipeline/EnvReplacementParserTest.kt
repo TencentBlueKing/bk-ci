@@ -422,9 +422,13 @@ internal class EnvReplacementParserTest {
         val command9 = "echo \${{ ci.workspace }} || \${{variables.hello}}"
         val command10 = "echo \${{ ci.xyz == 'zzzz' }}"
         val command11 = "echo \${{ variables.xyz == 'zzzz' }}"
+        val command12 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-16 12:06:21') }}"
+        val command13 = "echo \${{ strToTime(variables.date) > strToTime('2023-03-14 12:06:21') }}"
+        val command14 = "\${{ strToTime(\${{variables.date}}) > strToTime('2023-03-14 12:06:21') }}"
         val data = mapOf(
             "variables.abc" to "variables.value",
             "variables.xyz" to "zzzz",
+            "variables.date" to "2023-03-15 12:06:22",
             "variables.hello" to "hahahahaha",
             "{variables.abc" to "jacky"
         )
@@ -447,6 +451,9 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data, true))
         Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
+        Assertions.assertEquals("echo false", EnvReplacementParser.parse(command12, data, true))
+        Assertions.assertEquals("echo true", EnvReplacementParser.parse(command13, data, true))
+        Assertions.assertEquals("true", EnvReplacementParser.parse(command14, data, true))
     }
 
     @Test

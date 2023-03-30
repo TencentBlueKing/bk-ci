@@ -29,11 +29,12 @@ package api
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"runtime"
 	"strconv"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func buildUrl(url string) string {
@@ -125,8 +126,8 @@ func GetAgentStatus() (*httputil.DevopsResult, error) {
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func GetBuild() (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup")
+func GetBuild(buildType BuildJobType) (*httputil.AgentResult, error) {
+	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup?buildType=%s", buildType))
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 

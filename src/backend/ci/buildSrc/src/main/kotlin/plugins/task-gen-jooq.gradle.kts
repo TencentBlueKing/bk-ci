@@ -48,7 +48,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     }
 
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
     }
 
     else -> listOf(moduleName)
@@ -56,6 +56,8 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
 
 if (name == "model-dispatch-kubernetes") {
     moduleNames = listOf("dispatch_kubernetes")
+} else if (name == "model-dispatch-devcloud-tencent") {
+    moduleNames = listOf("dispatch_devcloud", "dispatch_macos", "dispatch_windows")
 }
 
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
@@ -129,7 +131,7 @@ jooq {
                         }
 
                         target.apply {
-                            packageName = "com.tencent.devops.model.$moduleName"
+                            packageName = "com.tencent.devops.model.${moduleName.replace("_", ".")}"
                         }
                     }
                 }
