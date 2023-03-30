@@ -87,4 +87,25 @@ object CommonMessageCode {
     const val ILLEGAL_JOB_TYPE = "2100035"//非法的job类型!
     const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036"//GITCI Service镜像格式非法
 
+    const val THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION = "2100037"//第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -
+    const val CREATE_CONTAINER_INTERFACE_EXCEPTION = "2100038"//创建容器接口异常
+    const val CREATE_CONTAINER_RETURNS_FAILED = "2100039"//创建容器接口返回失败
+    const val CREATE_CONTAINER_TIMED_OUT = "2100040"//创建容器接口超时
+    const val OPERATION_CONTAINER_INTERFACE_EXCEPTION = "2100041"//操作容器接口异常
+    const val OPERATION_CONTAINER_RETURNED_FAILURE = "2100042"//操作容器接口返回失败
+    const val OPERATION_CONTAINER_TIMED_OUT = "2100043"//操作容器接口超时
+    const val GET_STATUS_INTERFACE_EXCEPTION = "2100044"//获取容器状态接口异常
+    const val GET_STATUS_TIMED_OUT = "2100045"//获取容器状态接口超时
+    const val CREATE_MIRROR_INTERFACE_EXCEPTION = "2100046"//创建镜像接口异常
+    const val CREATE_MIRROR_INTERFACE_RETURNED_FAILURE = "2100047"//创建镜像接口返回失败
+    const val CREATE_MIRROR_INTERFACE_EXCEPTION_NEW = "2100048"//创建镜像新版本接口异常
+    const val NEW_MIRROR_INTERFACE_RETURNED_FAILURE = "2100049"//创建镜像新版本接口返回失败
+    const val TASK_STATUS_INTERFACE_EXCEPTION = "2100050"//获取TASK状态接口异常
+    const val TASK_STATUS_TIMED_OUT = "2100051"//获取TASK状态接口超时
+    const val GET_WEBSOCKET_INTERFACE_EXCEPTION = "2100052"//获取websocket接口异常
+    const val PARAMETER_CANNOT_EMPTY = "2100053"//参数不能为空
+    const val PARAMETER_CANNOT_EMPTY_ALL = "2100054"//参数不能全部为空
+
+
+
 }

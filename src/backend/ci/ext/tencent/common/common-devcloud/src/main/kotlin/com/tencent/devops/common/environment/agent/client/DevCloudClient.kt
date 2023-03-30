@@ -30,8 +30,27 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_CONTAINER_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_CONTAINER_RETURNS_FAILED
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_MIRROR_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_MIRROR_INTERFACE_EXCEPTION_NEW
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_MIRROR_INTERFACE_RETURNED_FAILURE
+import com.tencent.devops.common.api.constant.CommonMessageCode.GET_STATUS_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.GET_STATUS_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.GET_WEBSOCKET_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.NEW_MIRROR_INTERFACE_RETURNED_FAILURE
+import com.tencent.devops.common.api.constant.CommonMessageCode.OPERATION_CONTAINER_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.OPERATION_CONTAINER_RETURNED_FAILURE
+import com.tencent.devops.common.api.constant.CommonMessageCode.OPERATION_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.TASK_STATUS_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.TASK_STATUS_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATION_FAILED_EXCEPTION_INFORMATION
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.BuildFailureException
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Action
@@ -47,6 +66,7 @@ import com.tencent.devops.common.environment.agent.pojo.devcloud.Params
 import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.common.environment.agent.pojo.devcloud.VolumeDetail
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -114,8 +134,13 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                                "创建容器接口异常: Fail to createContainer, http response code: ${response.code}"
+                        errorMessage = MessageUtil.getMessageByLocale(
+                            messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + MessageUtil.getMessageByLocale(
+                            messageCode = CREATE_CONTAINER_INTERFACE_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + ": Fail to createContainer, http response code: ${response.code}"
                     )
                 }
 
@@ -130,7 +155,13 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口返回失败: $msg"
+                        errorMessage = MessageUtil.getMessageByLocale(
+                            messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + MessageUtil.getMessageByLocale(
+                            messageCode = CREATE_CONTAINER_RETURNS_FAILED,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + ": $msg"
                     )
                 }
             }
@@ -142,7 +173,13 @@ class DevCloudClient {
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口超时, url: $url")
+                errorMessage = MessageUtil.getMessageByLocale(
+                    messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + MessageUtil.getMessageByLocale(
+                    messageCode = CREATE_CONTAINER_TIMED_OUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + ", url: $url")
         }
     }
 
@@ -180,8 +217,13 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                                "操作容器接口异常（Fail to $action docker, http response code: ${response.code}"
+                        errorMessage = MessageUtil.getMessageByLocale(
+                            messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + MessageUtil.getMessageByLocale(
+                            messageCode = OPERATION_CONTAINER_INTERFACE_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -196,7 +238,13 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口返回失败：$msg"
+                        errorMessage = MessageUtil.getMessageByLocale(
+                            messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + MessageUtil.getMessageByLocale(
+                            messageCode = OPERATION_CONTAINER_RETURNED_FAILURE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + "：$msg"
                     )
                 }
             }
@@ -206,7 +254,13 @@ class DevCloudClient {
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口超时, url: $url")
+                errorMessage = MessageUtil.getMessageByLocale(
+                    messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + MessageUtil.getMessageByLocale(
+                    messageCode = OPERATION_CONTAINER_TIMED_OUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + ", url: $url")
         }
     }
 
@@ -261,8 +315,13 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -" +
-                                " 获取容器状态接口异常（Fail to get container status, http response code: ${response.code}"
+                        errorMessage = MessageUtil.getMessageByLocale(
+                            messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + MessageUtil.getMessageByLocale(
+                            messageCode = GET_STATUS_INTERFACE_EXCEPTION,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ) + "（Fail to get container status, http response code: ${response.code}"
                     )
                 }
                 return JSONObject(responseContent)
@@ -278,7 +337,10 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取容器状态接口超时, url: $url")
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = GET_STATUS_TIMED_OUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + ", url: $url")
             }
         }
     }
@@ -319,8 +381,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "创建镜像接口异常（Fail to createImage, http response code: ${response.code}"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = CREATE_MIRROR_INTERFACE_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "（Fail to createImage, http response code: ${response.code}"
                 )
             }
             logger.info("response: $responseContent")
@@ -336,7 +403,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口返回失败：$msg"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = CREATE_MIRROR_INTERFACE_RETURNED_FAILURE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "：$msg"
                 )
             }
         }
@@ -361,8 +434,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "创建镜像新版本接口异常（Fail to createImageVersions, http response code: ${response.code}"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = CREATE_MIRROR_INTERFACE_EXCEPTION_NEW,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "（Fail to createImageVersions, http response code: ${response.code}"
                 )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -377,7 +455,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口返回失败：$msg"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = NEW_MIRROR_INTERFACE_RETURNED_FAILURE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "：$msg"
                 )
             }
         }
@@ -408,7 +492,10 @@ class DevCloudClient {
                                 errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                                 errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                                 formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                errorMessage = "获取TASK状态接口异常：http response code: ${response.code}"
+                                errorMessage = MessageUtil.getMessageByLocale(
+                                    messageCode = TASK_STATUS_INTERFACE_EXCEPTION,
+                                    language = I18nUtil.getDefaultLocaleLanguage()
+                                ) + "：http response code: ${response.code}"
                             )
                         }
 
@@ -430,7 +517,10 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取TASK状态接口超时, url: $url")
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = TASK_STATUS_TIMED_OUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + ", url: $url")
             }
         }
     }
@@ -452,8 +542,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -" +
-                            " 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = GET_WEBSOCKET_INTERFACE_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return JSONObject(responseContent)
@@ -503,8 +598,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = GET_WEBSOCKET_INTERFACE_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return responseContent
@@ -528,8 +628,13 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
+                    errorMessage = MessageUtil.getMessageByLocale(
+                        messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + MessageUtil.getMessageByLocale(
+                        messageCode = GET_WEBSOCKET_INTERFACE_EXCEPTION,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return responseContent
@@ -585,7 +690,10 @@ class DevCloudClient {
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("$taskId dev cloud task timeout")
-                return Triple(TaskStatus.TIMEOUT, "创建容器超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
+                return Triple(TaskStatus.TIMEOUT, MessageUtil.getMessageByLocale(
+                    messageCode = BK_CONTAINER_TIMED_OUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(userId, taskId)
@@ -646,7 +754,13 @@ class DevCloudClient {
             }
         } catch (e: Exception) {
             logger.error("Get dev cloud task error, taskId: $taskId", e)
-            return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
+            return TaskResult(
+                isFinish = true,
+                success = false,
+                msg = MessageUtil.getMessageByLocale(
+                messageCode = BK_CREATION_FAILED_EXCEPTION_INFORMATION,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + ":${e.message}")
         }
     }
 

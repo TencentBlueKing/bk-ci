@@ -27,11 +27,14 @@
 
 package com.tencent.devops.common.environment.agent.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 class BuildFailureException(
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "errorCodeEnum", reusePrefixFlag = false)
     val formatErrorMessage: String,
     errorMessage: String
 ) : Exception(errorMessage)

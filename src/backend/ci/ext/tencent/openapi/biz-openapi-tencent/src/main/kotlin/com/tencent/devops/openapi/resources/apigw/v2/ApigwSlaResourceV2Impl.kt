@@ -27,6 +27,7 @@
 
 package com.tencent.devops.openapi.resources.apigw.v2
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ApigwSlaResourceV2Impl @Autowired constructor(
     private val client: Client
 ) : ApigwSlaResourceV2 {
+    @BkInterfaceI18n
     override fun codeccQueryByBG(
         appCode: String?,
         apigwType: String?,

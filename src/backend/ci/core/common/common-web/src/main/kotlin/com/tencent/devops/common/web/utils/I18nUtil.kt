@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
 import org.springframework.web.context.request.RequestContextHolder
@@ -101,6 +102,20 @@ object I18nUtil {
             language
         }else{
             getDefaultLocaleLanguage()
+        }
+    }
+
+    /**
+     * 根据locale信息获取对应的语言描述信息
+     * @param chinese 中文描述信息
+     * @param english 英文描述信息
+     * @return 语言描述信息
+     */
+    fun getMessageByLocale(chinese: String, english: String?): String {
+        return when (CommonUtils.getBkLocale()) {
+            CommonUtils.ZH_CN -> chinese // 简体中文描述
+            CommonUtils.ZH_TW -> chinese // 繁体中文描述
+            else -> english ?: "" // 英文描述
         }
     }
 }

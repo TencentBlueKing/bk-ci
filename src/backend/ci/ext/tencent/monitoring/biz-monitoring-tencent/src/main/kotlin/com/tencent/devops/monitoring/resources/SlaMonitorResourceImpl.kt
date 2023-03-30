@@ -27,6 +27,7 @@
 
 package com.tencent.devops.monitoring.resources
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_ENTERPRISE_GROUP_ID
 import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_TIMESTAMP_RANGE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_INCORRECT_PASSWORD
@@ -48,6 +49,7 @@ class SlaMonitorResourceImpl @Autowired constructor(
     private val slaMonitorService: SlaMonitorService,
     private val monitorNotifyJob: MonitorNotifyJob
 ) : SlaMonitorResource {
+    @BkInterfaceI18n
     override fun codeccQuery(bgId: String, startTime: Long, endTime: Long): Result<SlaCodeccResponseData> {
         if (startTime > System.currentTimeMillis() || startTime > endTime) {
             logger.error("wrong timestamp , startTime:$startTime , endTime:$endTime")

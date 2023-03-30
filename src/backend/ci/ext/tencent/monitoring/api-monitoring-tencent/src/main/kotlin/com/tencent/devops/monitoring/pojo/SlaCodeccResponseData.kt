@@ -27,6 +27,8 @@
 
 package com.tencent.devops.monitoring.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,6 +41,7 @@ data class SlaCodeccResponseData(
     @ApiModelProperty("成功率")
     val successRate: Double,
     @ApiModelProperty("错误码分布")
+    @BkFieldI18n
     val errorPie: List<ErrorPie>
 ) {
     companion object {
@@ -56,6 +59,7 @@ data class ErrorPie(
     @ApiModelProperty("错误码")
     val code: String?,
     @ApiModelProperty("错误信息")
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "slaPluginError", reusePrefixFlag = false)
     val message: String?,
     @ApiModelProperty("次数")
     val count: Int

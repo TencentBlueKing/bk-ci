@@ -308,4 +308,9 @@ object I18NConstant {
     const val BK_FAILED_IOS_CERTIFICATE = "BkFailedIosCertificate" //获取IOS证书失败
     const val BK_FAILED_ANDROID_CERTIFICATE = "BkFailedAndroidCertificate" //获取Android证书失败
     const val BK_ENTERPRISE_SIGNATURE_FAILED = "BkEnterpriseSignatureFailed" //企业签名失败
+
+    const val BK_CONTAINER_TIMED_OUT = "BkContainerTimedOut"//创建容器超时
+    const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "BkCreationFailedExceptionInformation"//创建失败，异常信息
+    const val BK_WHEN = "BkWhen"//当
+
 }

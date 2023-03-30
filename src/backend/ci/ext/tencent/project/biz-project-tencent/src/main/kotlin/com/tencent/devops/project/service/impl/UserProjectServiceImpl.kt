@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTAINER_SERVICE
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.dao.FavoriteDao
@@ -95,7 +94,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val replaceMap = getReplaceMapByRequest()
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = MessageCodeUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
+                val typeName = I18nUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
@@ -112,7 +111,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = MessageCodeUtil.getMessageByLocale(it.name, it.englishName),
+                            name = I18nUtil.getMessageByLocale(it.name, it.englishName),
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,

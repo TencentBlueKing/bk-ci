@@ -27,7 +27,11 @@
 
 package com.tencent.devops.common.ci.image
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_CANNOT_EMPTY
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_CANNOT_EMPTY_ALL
+import com.tencent.devops.common.api.constant.I18NConstant.BK_WHEN
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
@@ -39,6 +43,7 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
@@ -56,7 +61,14 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ))
             }
         }
     },
@@ -74,7 +86,15 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
             }
         }
     },
@@ -92,7 +112,13 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_WHEN,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
+                    messageCode = PARAMETER_CANNOT_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ))
             }
         }
     },
@@ -107,7 +133,13 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
-                throw OperationException("当pool.type=$this, container参数不能为空")
+                throw OperationException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_WHEN,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
+                    messageCode = PARAMETER_CANNOT_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ))
             }
         }
     },
@@ -124,15 +156,36 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.macOS) {
                 logger.error("validatePool, pool.type:{}, macOS is null", this)
-                throw OperationException("当pool.type=$this, macOS参数不能为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "pool.type=$this, macOS" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ))
             }
             if (null == pool.macOS.systemVersion) {
                 logger.error("validatePool, pool.type:{}, macOS.systemVersion is null", this)
-                throw OperationException("当pool.type=$this, macOS.systemVersion参数不能为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "pool.type=$this, macOS.systemVersion" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ))
             }
             if (null == pool.macOS.xcodeVersion) {
                 logger.error("validatePool, pool.type:{} , macOS.xcodeVersion is null", this)
-                throw OperationException("当pool.type=$this, macOS.xcodeVersion参数不能为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "pool.type=$this, macOS.xcodeVersion" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ))
             }
         }
     },
@@ -187,7 +240,14 @@ enum class PoolType {
         override fun validatePool(pool: Pool) {
             if (null == pool.agentName && null == pool.agentId && null == pool.envId && null == pool.envName) {
                 logger.error("validatePool, pool.type:{}, agentName/agentId/envId/envName is null", this)
-                throw OperationException("当pool.type=$this, agentName/agentId/envId/envName参数不能全部为空")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_WHEN,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "pool.type=$this, agentName/agentId/envId/envName" + MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_CANNOT_EMPTY_ALL,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ))
             }
         }
     }
