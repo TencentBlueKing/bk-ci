@@ -167,9 +167,6 @@ interface UserMarketAtomResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("bk ticket", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
-        bk_ticket: String,
         @ApiParam("atomCode", required = true)
         @PathParam("atomCode")
         atomCode: String

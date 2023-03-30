@@ -28,8 +28,11 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
@@ -94,7 +97,22 @@ class FeignConfiguration @Autowired constructor(
             if (!languageHeaderValue.isNullOrBlank()) {
                 requestTemplate.header(languageHeaderName, languageHeaderValue) // 设置Accept-Language请求头
             }
-
+            // 设置用户ID
+            val userId = request.getHeader(AUTH_HEADER_USER_ID)
+            if (!userId.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_USER_ID, userId)
+            }
+            // 设置请求渠道信息
+            val requestChannel =
+                (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
+            if (!requestChannel.isNullOrBlank()) {
+                requestTemplate.header(REQUEST_CHANNEL, requestChannel)
+            }
+            // 设置服务名称
+            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME)
+            if (!serviceName.isNullOrBlank()) {
+                requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
+            }
             val cookies = request.cookies
             if (cookies != null && cookies.isNotEmpty()) {
                 val cookieBuilder = StringBuilder()

@@ -191,10 +191,6 @@ interface AtomService {
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean>
 
-    fun findUnDefaultAtom(
-        atomList: List<String>
-    ): Result<List<String>>
-
     /**
      * 获取插件真实版本号
      * @param projectCode 项目代码

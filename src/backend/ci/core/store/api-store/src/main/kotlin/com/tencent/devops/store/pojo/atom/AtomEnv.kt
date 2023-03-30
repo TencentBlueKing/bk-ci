@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -38,6 +40,7 @@ data class AtomEnv(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB, convertName = "name")
     val atomName: String,
     @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
@@ -48,6 +51,7 @@ data class AtomEnv(
     @ApiModelProperty("是否是公共插件", required = true)
     val publicFlag: Boolean,
     @ApiModelProperty("插件简介", required = false)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("插件说明文档链接", required = false)
     val docsLink: String?,

@@ -259,7 +259,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         return StoreErrorCodeInfo(
             storeCode = storeCode,
             storeType = storeType,
-            errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(dslContext, storeCode, storeType)
+            errorCodes = storeErrorCodeInfoDao.getStoreErrorCodes(dslContext, storeCode, storeType)
         )
     }
 

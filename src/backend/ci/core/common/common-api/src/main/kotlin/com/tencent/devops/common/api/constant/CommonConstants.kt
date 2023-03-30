@@ -115,6 +115,9 @@ const val BUILD_FAILED = "buildFailed" // 构建失败
 const val ID = "id" // id
 const val STATUS = "status" // 状态
 const val EXECUTE_COUNT = "executeCount"
+const val LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE" // locale国际化语言信息
+const val DEFAULT_LOCALE_LANGUAGE = "zh_CN" // 默认语言信息
+const val REQUEST_CHANNEL = "BK_CI_REQUEST_CHANNEL" // 请求渠道
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -145,3 +148,4 @@ const val KEY_REPOSITORY_PATH = "repositoryPath"
 const val KEY_VERSION = "version"
 const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
+const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
