@@ -533,7 +533,6 @@ class EnvService @Autowired constructor(
             }
             val nodeType = NodeType.i18n(it.nodeType)
             val nodeStatus = NodeStatus.i18n(it.nodeStatus)
-
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
