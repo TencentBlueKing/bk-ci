@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class P4ShelveEvent(

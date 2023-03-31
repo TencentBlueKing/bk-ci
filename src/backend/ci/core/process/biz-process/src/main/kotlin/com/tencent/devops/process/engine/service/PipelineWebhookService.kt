@@ -207,7 +207,7 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
                     scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
-                ScmType.GITHUB,ScmType.CODE_P4 -> {
+                ScmType.GITHUB, ScmType.CODE_P4 -> {
                     val repo = client.get(ServiceRepositoryResource::class).get(
                         pipelineWebhook.projectId,
                         repositoryConfig.getURLEncodeRepositoryId(),
