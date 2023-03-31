@@ -341,14 +341,8 @@ class RbacPermissionService constructor(
                     projectCode = projectCode,
                     resourceType = resourceType
                 )
-                val resourceListByUser = authResourceService.list(
-                    projectCode = projectCode,
-                    userId = userId,
-                    resourceType = resourceType
-                )
-                val resourceListResult = actionResourceList.plus(resourceListByUser)
                 val authPermission = it.substringAfterLast("_")
-                AuthPermission.get(authPermission) to resourceListResult
+                AuthPermission.get(authPermission) to actionResourceList
             }
         } finally {
             logger.info(

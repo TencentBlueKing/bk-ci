@@ -203,23 +203,6 @@ class AuthResourceDao {
         }
     }
 
-    fun list(
-        dslContext: DSLContext,
-        userId: String,
-        projectCode: String,
-        resourceType: String
-    ): Result<TAuthResourceRecord> {
-        val now = LocalDateTime.now()
-        with(TAuthResource.T_AUTH_RESOURCE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_CODE.eq(projectCode))
-                .and(RESOURCE_TYPE.eq(resourceType))
-                .and(CREATE_TIME.gt(now.plusSeconds(-5)))
-                .and(CREATE_USER.eq(userId))
-                .fetch()
-        }
-    }
-
     fun getResourceCodeByIamCodes(
         dslContext: DSLContext,
         projectCode: String,
