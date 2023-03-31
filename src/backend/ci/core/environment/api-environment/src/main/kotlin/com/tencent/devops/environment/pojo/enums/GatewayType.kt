@@ -18,8 +18,8 @@ enum class GatewayType(val typeName: String) {
                 CD.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_CD)
                 TJ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_TJ)
                 else -> {
-                    MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_XJP)}
+                    MessageCodeUtil.getCodeLanMessage( EnvironmentMessageCode.BK_XJP) }
             }
-         }
+        }
     }
 }
