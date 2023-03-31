@@ -35,9 +35,9 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("研发商店错误码信息")
 data class StoreErrorCodeInfo(
     @ApiModelProperty("store代码")
-    val storeCode: String,
+    val storeCode: String?,
     @ApiModelProperty("store组件类型")
-    val storeType: StoreTypeEnum,
+    val storeType: StoreTypeEnum?,
     @ApiModelProperty("错误码所属类型")
     val errorCodeType: ErrorCodeTypeEnum,
     @ApiModelProperty("错误码信息")

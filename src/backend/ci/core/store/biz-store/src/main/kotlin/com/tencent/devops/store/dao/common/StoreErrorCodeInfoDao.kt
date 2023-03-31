@@ -28,6 +28,7 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreDockingPlatformErrorCode
 import com.tencent.devops.model.store.tables.TStoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
@@ -53,7 +54,6 @@ class StoreErrorCodeInfoDao {
                     .set(ERROR_MSG_ZH_CN, it.errorMsgZhCn)
                     .set(ERROR_MSG_ZH_TW, it.errorMsgZhTw)
                     .set(ERROR_MSG_EN, it.errorMsgEn)
-                    .set(ERROR_CODE_TYPE, storeErrorCodeInfo.errorCodeType.type.toByte())
                     .set(CREATOR, userId)
                     .set(MODIFIER, userId)
                     .set(CREATE_TIME, LocalDateTime.now())
@@ -72,8 +72,7 @@ class StoreErrorCodeInfoDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCode: Int,
-        errorCodeType: ErrorCodeTypeEnum
+        errorCode: Int
     ): Result<Record> {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             return dslContext.select()
@@ -81,7 +80,22 @@ class StoreErrorCodeInfoDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(ERROR_CODE.eq(errorCode))
-                .and(ERROR_CODE_TYPE.eq(errorCodeType.type.toByte()))
+                .fetch()
+        }
+    }
+
+    fun getAtomErrorCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int
+    ): Result<Record> {
+        with(TStoreDockingPlatformErrorCode.T_STORE_DOCKING_PLATFORM_ERROR_CODE) {
+            return dslContext.select()
+                .from(this)
+                .where(PLATFORM_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(ERROR_CODE.eq(errorCode))
                 .fetch()
         }
     }

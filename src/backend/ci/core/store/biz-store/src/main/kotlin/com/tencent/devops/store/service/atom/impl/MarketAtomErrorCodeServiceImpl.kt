@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.jooq.DSLContext
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -54,41 +55,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
 
-    override fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
-        // 检查错误码是否规范
-        checkErrorCode(
-            storeErrorCodeInfo.errorCodeType,
-            storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
-        )
-        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
-        return Result(true)
-    }
-
-    override fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
-        // 检查错误码是否规范
-        checkErrorCode(
-            storeErrorCodeInfo.errorCodeType,
-            storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
-        )
-        val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-            dslContext = dslContext,
-            storeCode = storeErrorCodeInfo.storeCode,
-            storeType = storeErrorCodeInfo.storeType,
-            errorCodeType = storeErrorCodeInfo.errorCodeType
-        ).subtract(storeErrorCodeInfo.errorCodeInfos.toSet()).toList()
-        if (errorCodeInfos.isNotEmpty()) {
-            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
-                dslContext = dslContext,
-                storeType = storeErrorCodeInfo.storeType,
-                storeCode = storeErrorCodeInfo.storeCode,
-                errorCodeType = storeErrorCodeInfo.errorCodeType,
-                errorCodes = errorCodeInfos.map { it.errorCode }
-            )
-        }
-        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
-        return Result(true)
-    }
-
     override fun createGeneralErrorCode(
         userId: String,
         storeType: StoreTypeEnum,
@@ -100,8 +66,8 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             dslContext,
             userId,
             StoreErrorCodeInfo(
-                storeCode = "devops",
-                storeType = storeType,
+                storeCode = null,
+                storeType = null,
                 errorCodeType = ErrorCodeTypeEnum.GENERAL,
                 errorCodeInfos = listOf(errorCodeInfo)
             )
@@ -153,6 +119,9 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
+        if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {
+
+        }
         return storeErrorCodeInfoDao.getAtomErrorCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -163,6 +132,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
+        val logger: Logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }
