@@ -139,7 +139,8 @@ class PipelineRecordModelService @Autowired constructor(
         stageVarMap: MutableMap<String, Any>,
         pipelineBaseModelMap: Map<String, Any>
     ) {
-        val stageRecordContainers = buildRecordContainers.filter { it.stageId == stageId }.sortedBy { it.containerId }
+        val stageRecordContainers =
+            buildRecordContainers.filter { it.stageId == stageId }.sortedBy { it.containerId.toInt() }
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
         stageRecordContainers.filter { it.matrixGroupId.isNullOrBlank() }.forEach { stageRecordContainer ->
@@ -160,7 +161,7 @@ class PipelineRecordModelService @Autowired constructor(
                 }
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers =
-                    stageRecordContainers.filter { it.matrixGroupId == containerId }.sortedBy { it.containerId }
+                    stageRecordContainers.filter { it.matrixGroupId == containerId }.sortedBy { it.containerId.toInt() }
                 val groupContainers = mutableListOf<Map<String, Any>>()
                 matrixRecordContainers.forEach { matrixRecordContainer ->
                     // 生成矩阵job的变量模型
