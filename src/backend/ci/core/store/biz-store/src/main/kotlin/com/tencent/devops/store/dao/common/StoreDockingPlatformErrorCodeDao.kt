@@ -75,7 +75,6 @@ class StoreDockingPlatformErrorCodeDao {
         }
     }
 
-
     fun deletePlatformErrorCodeInfo(
         dslContext: DSLContext,
         platformCode: String,

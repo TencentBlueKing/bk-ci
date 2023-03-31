@@ -70,7 +70,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             StoreErrorCodeInfo(
                 storeCode = null,
                 storeType = null,
-                errorCodeType = ErrorCodeTypeEnum.GENERAL,
                 errorCodeInfos = listOf(errorCodeInfo)
             )
         )
