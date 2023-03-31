@@ -5,12 +5,20 @@
         class="exception-wrap-item exception-part"
         type="403"
         scene="part"
-        :title="$t('无该项目用户组管理权限')"
+        :title="t('无该项目用户组管理权限')"
       >
       </bk-exception>
     </div>
   </article>
 </template>
+
+<script>
+import { localeMixins } from '../../../utils/locale'
+
+export default {
+  mixins: [localeMixins],
+}
+</script>
 
 <style lang="scss" scoped>
     .group-manage {

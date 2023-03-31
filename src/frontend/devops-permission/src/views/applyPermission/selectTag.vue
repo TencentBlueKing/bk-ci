@@ -5,7 +5,7 @@
       <span class="tag-value">
         {{ localValue }}
       </span>
-      <span @click="handleTagClear" class="permission-icon permission-icon-close-samll close-icon" :class="{ 'disabled': isDisabled }"></span>
+      <span @click="handleTagClear" class="permission-icon permission-icon-close-samll close-icon"></span>
     </div>
   </div>
 </template>
@@ -43,7 +43,6 @@
       },
       methods: {
         handleTagClear () {
-          if (this.isDisabled) return
           this.$emit('handleTagClear', this.tagInfo.id)
         }
       }
@@ -78,9 +77,6 @@
       font-size: 14px;
       font-weight: 700;
       cursor: pointer;
-      &.disabled {
-        cursor: not-allowed;
-      }
     }
   }
 </style>

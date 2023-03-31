@@ -13,12 +13,12 @@
       label-width="100"
     >
       <bk-form-item
-        :label="$t('用户组名')"
+        :label="t('用户组名')"
       >
         <span>{{ groupName }}</span>
       </bk-form-item>
       <bk-form-item
-        :label="$t('授权期限')"
+        :label="t('授权期限')"
         property="expireTime"
         required
         error-display-type="normal"
@@ -39,7 +39,7 @@
             v-show="currentActive !== 'custom'"
             @click="handleChangCustom"
           >
-            {{ $t('自定义') }}
+            {{ t('自定义') }}
           </bk-button>
           <bk-input
             v-model="customTime"
@@ -54,7 +54,7 @@
           >
             <template v-slot:append>
               <div class="group-text">
-                {{ $t('天') }}
+                {{ t('天') }}
               </div>
             </template>
           </bk-input>
@@ -62,15 +62,15 @@
       </bk-form-item>
       <bk-form-item
         v-if="type === 'renewal'"
-        :label="$t('到期时间')"
+        :label="t('到期时间')"
       >
-        <span class="expired">{{ expiredDisplay }}{{ $t('天')}}</span>
+        <span class="expired">{{ expiredDisplay }}{{ t('天')}}</span>
         <img class="arrows-icon" src="../../../svg/arrows-right.svg?inline">
-        <span class="new-expired">{{ newExpiredDisplay }}{{ $t('天')}}</span>
+        <span class="new-expired">{{ newExpiredDisplay }}{{ t('天')}}</span>
       </bk-form-item>
       <bk-form-item
         v-else
-        :label="$t('理由')"
+        :label="t('理由')"
         property="reason"
         required
         error-display-type="normal"
@@ -91,13 +91,13 @@
         :loading="isLoading"
         @click="handleConfirm"
       >
-        {{ $t('确定') }}
+        {{ t('确定') }}
       </bk-button>
       <bk-button
         :loading="isLoading"
         @click="handleCancel"
       >
-        {{ $t('取消') }}
+        {{ t('取消') }}
       </bk-button>
     </template>
   </permission-dialog>
@@ -105,11 +105,13 @@
 <script>
 import ajax from '../../../ajax/index';
 import PermissionDialog from '../../widget-components/dialog'
+import { localeMixins } from '../../../utils/locale'
 
 export default {
   components: {
     PermissionDialog
   },
+  mixins: [localeMixins],
   props: {
     isShow: {
       type: Boolean,
@@ -154,10 +156,10 @@ export default {
       },
       currentActive: 2592000,
       timeFilters: {
-        2592000: this.$t('1个月'),
-        7776000: this.$t('3个月'),
-        15552000: this.$t('6个月'),
-        31104000: this.$t('12个月'),
+        2592000: t('1个月'),
+        7776000: t('3个月'),
+        15552000: t('6个月'),
+        31104000: t('12个月'),
       },
       rules: {
         expireTime: [
@@ -168,14 +170,14 @@ export default {
               }
               return this.currentActive !== 'custom';
             },
-            message: this.$t('请选择申请期限'),
+            message: t('请选择申请期限'),
             trigger: 'blur',
           },
         ],
         reason: [
           {
             required: true,
-            message: this.$t('请填写申请理由'),
+            message: t('请填写申请理由'),
             trigger: 'blur',
           },
         ],
@@ -275,7 +277,7 @@ export default {
           .then(() => {
             this.$bkMessage({
               theme: 'success',
-              message: this.$t('申请成功，请等待审批'),
+              message: t('申请成功，请等待审批'),
             });
           })
           .catch((err) => {
@@ -301,7 +303,7 @@ export default {
         .then(() => {
           this.$bkMessage({
             theme: 'success',
-            message: this.$t('申请成功，请等待审批'),
+            message: t('申请成功，请等待审批'),
           });
         })
         .catch((err) => {

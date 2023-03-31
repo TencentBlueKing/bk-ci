@@ -41,14 +41,13 @@ const isLoading = ref(false);
 const scrollLoading = ref(false);
 const pageInfo = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 30,
   projectName: '',
   loadEnd: false,
 })
 
-const projectName = ref(route?.query.projectName);
 const curProject = ref(null);
-const isDisabled = ref(false);
+const isDisabled = ref(true);
 
 const rules = {
   projectCode: [
@@ -69,9 +68,9 @@ const rules = {
 
 watch(() => formData.value.projectCode, (val) => {
   groupList.value = [];
-  const project = projectList.value.find(i => i.englishName === val)
-  if (project) {
-    isDisabled.value = !project.permission
+  curProject.value = projectList.value.find(i => i.englishName === val)
+  if (curProject.value) {
+    isDisabled.value = !curProject.value.permission
   }
 }, {
   deep: true,
@@ -186,13 +185,23 @@ const getAllProjectList = (name = '') => {
 
 const getProjectByName = () => {
   const params = <any>{}
-  if (route?.query.project_code) {
-    params.english_name = route?.query.project_code
-  } else if (projectName.value) {
-    params.projectName = projectName.value
-  }
+  if (formData.value.projectCode) {
+    params.english_name = formData.value.projectCode;
+  } 
   http.getAllProjectList(params).then(res => {
-    curProject.value = res.records[0];
+    if (res.records.length) {
+      res.records.forEach(i => {
+        i.hide = true;
+      });
+      projectList.value = [...res.records, ...projectList.value];
+      curProject.value = res.records[0];
+      isDisabled.value = curProject.value.permission;
+    } else {
+      formData.value.projectCode = ''
+      setTimeout(() => {
+        formRef.value.clearValidate()
+      });
+    }
   })
 }
 
@@ -208,14 +217,12 @@ const handleToProjectManage = (project) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   formData.value.expiredAt = formatTimes(2592000);
   formData.value.projectCode = route?.query.project_code || tools.getCookie('X-DEVOPS-PROJECT-ID') || '';
-  getUserInfo();
-  getAllProjectList();
-  if (projectName.value || route?.query.project_code) {
-    getProjectByName();
-  }
+  await getUserInfo();
+  await getAllProjectList();
+  await getProjectByName();
 });
 
 </script>
@@ -240,30 +247,33 @@ onMounted(() => {
               @scroll-end="getAllProjectList"
               :remote-method="handleSearchProject"
             >
-              <bk-option
-                  v-for="(project, index) in projectList"
-                  :key="index"
-                  :value="project.englishName"
-                  :disabled="['v0', 'v3'].includes(project.routerTag)"
-                  :label="project.projectName"
-              >
-                <div
-                  class="option-item">
-                  {{ project.projectName }}
-                  <i
-                    v-if="['v0', 'v3'].includes(project.routerTag)"
-                    v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
-                    class="permission-icon permission-icon-edit edit-icon"
-                    @click="handleToProjectManage(project)"
-                  >
-                  </i>
-                </div>
-              </bk-option>
+              <div v-for="(project, index) in projectList"
+                :key="index">
+                <bk-option
+                    v-show="!project.hide"
+                    :value="project.englishName"
+                    :disabled="['v0', 'v3'].includes(project.routerTag)"
+                    :label="project.projectName"
+                >
+                  <div
+                    class="option-item">
+                    {{ project.projectName }}
+                    <i
+                      v-if="['v0', 'v3'].includes(project.routerTag)"
+                      v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
+                      class="permission-icon permission-icon-edit edit-icon"
+                      @click="handleToProjectManage(project)"
+                    >
+                    </i>
+                  </div>
+                </bk-option>
+              </div>
             </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('选择用户组')" required>
             <group-search
               :groupList="groupList"
+              :cur-project="curProject"
               :is-disabled="isDisabled"
               :project-code="formData.projectCode"
               @handle-change-select-group="handleChangeGroup"

@@ -46,7 +46,7 @@
         data () {
             return {
                 page: 1,
-                pageSize: 6,
+                pageSize: 20,
                 isLoadingMore: false,
                 isLoading: false,
                 keyWords: ''
@@ -108,10 +108,10 @@
 <style scoped lang="postcss">
     .bk-scroll-load-list {
         padding: 6px 0;
-        max-height: 180px;
+        max-height: 300px;
         height: 100%;
         overflow: auto;
-        width: 160px !important;
+        width: 200px !important;
         &::-webkit-scrollbar {
         width: 4px;
         height: 4px;
@@ -123,11 +123,11 @@
       }
     }
     .search-input-list {
-        max-height: 148px;
+        max-height: 288px;
         height: calc(100% - 32px);
     }
     .search-input {
-        width: 160px;
+        width: 200px;
     }
     .list-item {
         height: 32px;
