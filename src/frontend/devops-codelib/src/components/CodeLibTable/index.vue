@@ -29,7 +29,6 @@
                     v-perm="{
                         hasPermission: props.row.canEdit,
                         disablePermissionApi: true,
-                        tooltips: $t('codelib.noPermission'),
                         permissionData: {
                             projectId: projectId,
                             resourceType: RESOURCE_TYPE,
@@ -45,7 +44,6 @@
                     v-perm="{
                         hasPermission: props.row.canDelete,
                         disablePermissionApi: true,
-                        tooltips: $t('codelib.noPermission'),
                         permissionData: {
                             projectId: projectId,
                             resourceType: RESOURCE_TYPE,
@@ -178,89 +176,71 @@
             },
 
             async editCodeLib (codelib) {
-                const { repositoryHashId, type, authType, svnType, canEdit } = codelib
-                if ('canEdit' in codelib && !canEdit) {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: RESOURCE_TYPE,
-                        resourceCode: repositoryHashId,
-                        action: RESOURCE_ACTION.EDIT
-                    })
-                } else {
-                    const { credentialTypes, typeName } = getCodelibConfig(
-                        type,
-                        svnType,
-                        authType
-                    )
-                    this.updateCodelib({
-                        '@type': typeName
-                    })
-                    const CodelibDialog = {
-                        repositoryHashId,
-                        showCodelibDialog: true,
-                        projectId: this.projectId,
-                        credentialTypes,
-                        authType,
-                        codelib,
-                        instance: this
-                    }
-                    this.toggleCodelibDialog(CodelibDialog)
+                const { repositoryHashId, type, authType, svnType } = codelib
+                const { credentialTypes, typeName } = getCodelibConfig(
+                    type,
+                    svnType,
+                    authType
+                )
+                this.updateCodelib({
+                    '@type': typeName
+                })
+                const CodelibDialog = {
+                    repositoryHashId,
+                    showCodelibDialog: true,
+                    projectId: this.projectId,
+                    credentialTypes,
+                    authType,
+                    codelib,
+                    instance: this
                 }
+                this.toggleCodelibDialog(CodelibDialog)
             },
 
-            deleteCodeLib ({ repositoryHashId, aliasName, canDelete }) {
-                if (!canDelete) {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: RESOURCE_TYPE,
-                        resourceCode: repositoryHashId,
-                        action: RESOURCE_ACTION.DELETE
-                    })
-                } else {
-                    this.$bkInfo({
-                        theme: 'warning',
-                        type: 'warning',
-                        subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
-                        confirmFn: () => {
-                            const { projectId, currentPage, pageSize, count, totalPages } = this
-                            this.isLoading = true
-    
-                            this.deleteRepo({ projectId, repositoryHashId }).then(() => {
-                                this.$bkMessage({
-                                    message: `${this.$t('codelib.codelib')}${aliasName}${this.$t('codelib.successfullyDeleted')}`,
-                                    theme: 'success'
-                                })
-    
-                                this.$router.push({
-                                    name: 'codelibHome',
-                                    params: {
-                                        projectId: this.projectId,
-                                        repoType: '',
-                                        repoId: ''
-                                    }
-                                })
-                                if (count - 1 <= pageSize * (totalPages - 1)) {
-                                    // 删除列表项之后，如果不足页数的话直接切换到上一页
-                                    this.switchPage(currentPage - 1, pageSize)
-                                } else {
-                                    this.switchPage(currentPage, pageSize)
-                                }
-                            }).catch((e) => {
-                                this.handleError(
-                                    e,
-                                    {
-                                        projectId: this.projectId,
-                                        resourceType: RESOURCE_TYPE,
-                                        resourceCode: repositoryHashId,
-                                        action: RESOURCE_ACTION.DELETE
-                                    }
-                                )
-                            }).finally(() => {
-                                this.isLoading = false
+            deleteCodeLib ({ repositoryHashId, aliasName }) {
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
+                    confirmFn: () => {
+                        const { projectId, currentPage, pageSize, count, totalPages } = this
+                        this.isLoading = true
+
+                        this.deleteRepo({ projectId, repositoryHashId }).then(() => {
+                            this.$bkMessage({
+                                message: `${this.$t('codelib.codelib')}${aliasName}${this.$t('codelib.successfullyDeleted')}`,
+                                theme: 'success'
                             })
-                        }
-                    })
-                }
+
+                            this.$router.push({
+                                name: 'codelibHome',
+                                params: {
+                                    projectId: this.projectId,
+                                    repoType: '',
+                                    repoId: ''
+                                }
+                            })
+                            if (count - 1 <= pageSize * (totalPages - 1)) {
+                                // 删除列表项之后，如果不足页数的话直接切换到上一页
+                                this.switchPage(currentPage - 1, pageSize)
+                            } else {
+                                this.switchPage(currentPage, pageSize)
+                            }
+                        }).catch((e) => {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: RESOURCE_TYPE,
+                                    resourceCode: repositoryHashId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        }).finally(() => {
+                            this.isLoading = false
+                        })
+                    }
+                })
             },
             
             handleSortChange ({ prop, order }) {

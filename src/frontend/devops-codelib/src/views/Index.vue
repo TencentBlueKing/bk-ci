@@ -5,7 +5,6 @@
                 v-perm="{
                     hasPermission: codelibs.hasCreatePermission,
                     disablePermissionApi: true,
-                    tooltips: $t('codelib.noPermission'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: RESOURCE_TYPE,
