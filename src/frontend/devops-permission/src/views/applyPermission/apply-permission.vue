@@ -68,9 +68,9 @@ const rules = {
 
 watch(() => formData.value.projectCode, (val) => {
   groupList.value = [];
-  const project = projectList.value.find(i => i.englishName === val)
-  if (project) {
-    isDisabled.value = !project.permission
+  curProject.value = projectList.value.find(i => i.englishName === val)
+  if (curProject.value) {
+    isDisabled.value = !curProject.value.permission
   }
 }, {
   deep: true,
@@ -195,8 +195,12 @@ const getProjectByName = () => {
       });
       projectList.value = [...res.records, ...projectList.value];
       curProject.value = res.records[0];
-      console.log(projectList.value, 123)
       isDisabled.value = curProject.value.permission;
+    } else {
+      formData.value.projectCode = ''
+      setTimeout(() => {
+        formRef.value.clearValidate()
+      });
     }
   })
 }

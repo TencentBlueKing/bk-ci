@@ -209,6 +209,9 @@ export default {
     },
     isDisabled: {
       type: Boolean,
+    },
+    curProject: {
+      type: Object,
     }
   },
   computed: {
@@ -316,6 +319,7 @@ export default {
   },
   methods: {
     async initApplyQuery() {
+      if (!this.curProject) return
       const cacheQuery =  JSON.parse(sessionStorage.getItem('group-apply-query'));
       
       if (!cacheQuery || (cacheQuery && this.$route.query.project_code !== cacheQuery?.project_code)) {

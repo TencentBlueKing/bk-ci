@@ -157,7 +157,7 @@ const handleChangeSearch = (data) => {
   filter.value = data;
   const query = JSON.parse(sessionStorage.getItem('group-apply-query'))
   const resourceType = query?.resourceType
-  if (Object.keys(query).length > 1 && query.project_code === props.projectCode) {
+  if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
     applyTips.value = t('根据筛选条件，匹配到如下用户组:');
   }
   if (resourceType && !userGroupList.value.length && !data.length) return
@@ -165,7 +165,7 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode) return;
+  if (!props.projectCode || !props.curProject) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
@@ -330,6 +330,7 @@ const columns = [
       :search-list="searchList"
       :is-disabled="isDisabled"
       :project-code="projectCode"
+      :cur-project="curProject"
       @change="handleChangeSearch">
     </search-select>
     <div class="apply-tips">
