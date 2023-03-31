@@ -36,14 +36,14 @@ func (reg *Registry) handleBlob(ctx context.Context, r *http.Request) http.Handl
 	sp, ok := reg.SpecProvider[spname]
 	if !ok {
 		logs.WithField("specProvName", spname).Error("unknown spec provider")
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
 	}
 	spec, err := sp.GetSpec(ctx, name)
 	if err != nil {
 		logs.WithError(err).WithField("specProvName", spname).WithField("name", name).Error("cannot get spec")
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
 	}

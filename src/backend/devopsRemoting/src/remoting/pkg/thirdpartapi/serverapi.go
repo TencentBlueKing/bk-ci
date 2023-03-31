@@ -1,6 +1,7 @@
 package thirdpartapi
 
 import (
+	"common/devops"
 	"common/logs"
 	"common/util/fileutil"
 	"common/util/rsa"
@@ -14,7 +15,6 @@ import (
 	"net/http"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/pkg/errors"
@@ -47,26 +47,15 @@ func (s *ServerApi) SetRemotedevHeader(request *http.Request, workspaceId, sign 
 	request.Header.Set("X-Signature", hmacsha1Encrypt(s.sha1key, sign))
 	// 项目，区分灰度
 	// TODO: 目前先写死，未来通过workspaceId区分
-	request.Header.Set("X-DEVOPS-PROJECT-ID", "grayproject")
+	request.Header.Set("X-DEVOPS-PROJECT-ID", devops.ParseWsId2UserProjectId(workspaceId))
 }
 
-// parseProjectId 从工作空间ID解析项目ID
-// 项目ID为 _userid  工作空间ID为 userid-xxx
-func parseProjectId(workspaceId string) string {
-	workspaceSub := strings.Split(workspaceId, "-")
-	if len(workspaceSub) < 2 {
-		logs.Warnf("worksapceid %s format error", workspaceId)
-		return ""
-	}
-	return "_" + workspaceSub[0]
-}
-
-func (s *ServerApi) DownloadDefaultDevfile(ctx context.Context, savePath string) error {
+func (s *ServerApi) DownloadDefaultDevfile(ctx context.Context, savePath string, wsId string) error {
 	req, err := http.NewRequestWithContext(ctx, "GET", fmt.Sprintf("%s/remotedev/api/external/remotedev/devfile", s.host), nil)
 	if err != nil {
 		return err
 	}
-	req.Header.Set("X-DEVOPS-PROJECT-ID", "grayproject")
+	req.Header.Set("X-DEVOPS-PROJECT-ID", devops.ParseWsId2UserProjectId(wsId))
 
 	resp, err := s.client.Do(req)
 	defer func() {

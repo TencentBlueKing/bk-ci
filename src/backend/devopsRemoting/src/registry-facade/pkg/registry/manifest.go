@@ -190,7 +190,7 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 			manifest.Config.URLs = nil
 			manifest.Config.Size = int64(len(rawCfg))
 
-			// 优化：我们将配置存储在商店中，以防客户端尝试下载配置 blob
+			// 优化：我们将配置存储在缓存中，以防客户端尝试下载配置 blob
 			// 来自我们。 如果他们从尚未下载mainfast的registry facade下载它
 			// 我们将即时重新创建配置。
 			if w, err := mh.Store.Writer(ctx, content.WithRef(ref), content.WithDescriptor(manifest.Config)); err == nil {
