@@ -140,18 +140,7 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
 
     override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
         with(atomReleaseRequest) {
-            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
-                dslContext,
-                userId,
-                atomCode,
-                StoreTypeEnum.ATOM
-            )!!
-            val atomEnvInfo = marketAtomEnvService.getMarketAtomEnvInfo(
-                projectCode = projectCode,
-                atomCode = atomCode,
-                version = version,
-                atomStatus = atomStatus
-            ).data!!
+            val atomEnvInfo = marketAtomEnvInfoDao.getAtomEnvInfo(dslContext, atomId)!!
             client.get(ServiceReplicaResource::class).createReplicaTask(
                 userId = userId,
                 projectId = "bk-store",
