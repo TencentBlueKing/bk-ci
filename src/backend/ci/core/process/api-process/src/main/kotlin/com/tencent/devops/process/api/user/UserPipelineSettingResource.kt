@@ -53,6 +53,7 @@ interface UserPipelineSettingResource {
     @ApiOperation("保存流水线设置")
     @POST
     // @Path("/")
+    @Deprecated("已废弃,使用 @see UserPipelineResource.saveSetting")
     @Path("/save")
     fun saveSetting(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)

@@ -190,4 +190,14 @@ interface BaseAction {
      * 判断是否是远程仓库触发
      */
     fun checkRepoHookTrigger() = this is StreamRepoTriggerAction || this.data.context.repoTrigger != null
+
+    /*
+    * 判断是否if-modify
+    */
+    fun checkIfModify() = false
+
+    /*
+    * 格式化 StreamTriggerContext
+    */
+    fun parseStreamTriggerContext(cred: StreamGitCred? = null) = Unit
 }

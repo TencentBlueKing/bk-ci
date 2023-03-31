@@ -88,7 +88,8 @@ class PipelineRecordModelService @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount
         )
-        val buildRecordContainers = buildNormalRecordContainers.plus(buildMatrixRecordContainers)
+        val buildRecordContainers =
+            buildNormalRecordContainers.plus(buildMatrixRecordContainers)
         // 获取task级别变量数据
         val matrixContainerIds = buildMatrixRecordContainers.map { it.containerId }
         val buildNormalRecordTasks = buildRecordTaskDao.getLatestNormalRecords(
@@ -138,7 +139,8 @@ class PipelineRecordModelService @Autowired constructor(
         stageVarMap: MutableMap<String, Any>,
         pipelineBaseModelMap: Map<String, Any>
     ) {
-        val stageRecordContainers = buildRecordContainers.filter { it.stageId == stageId }
+        val stageRecordContainers =
+            buildRecordContainers.filter { it.stageId == stageId }.sortedBy { it.containerId.toInt() }
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
         stageRecordContainers.filter { it.matrixGroupId.isNullOrBlank() }.forEach { stageRecordContainer ->
@@ -158,7 +160,8 @@ class PipelineRecordModelService @Autowired constructor(
                     it[Container::id.name] == containerId
                 }
                 // 过滤出矩阵分裂出的job数据
-                val matrixRecordContainers = stageRecordContainers.filter { it.matrixGroupId == containerId }
+                val matrixRecordContainers =
+                    stageRecordContainers.filter { it.matrixGroupId == containerId }.sortedBy { it.containerId.toInt() }
                 val groupContainers = mutableListOf<Map<String, Any>>()
                 matrixRecordContainers.forEach { matrixRecordContainer ->
                     // 生成矩阵job的变量模型
@@ -199,7 +202,7 @@ class PipelineRecordModelService @Autowired constructor(
         containerBaseMap: Map<String, Any>? = null
     ) {
         // 过滤出job下的task变量数据
-        val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }
+        val containerRecordTasks = stageRecordTasks.filter { it.containerId == containerId }.sortedBy { it.taskSeq }
         val tasks = mutableListOf<Map<String, Any>>()
         containerRecordTasks.forEachIndexed { index, containerRecordTask ->
             var taskVarMap = containerRecordTask.taskVar

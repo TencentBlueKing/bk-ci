@@ -452,7 +452,8 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.getChangeSet(),
-            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
+            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action),
+            checkIfModify = action.checkIfModify()
         )
 
         return Pair(modelCreateEvent, modelParams)
