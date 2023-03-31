@@ -29,7 +29,19 @@ package com.tencent.devops.environment.pojo.enums
 
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_ABNORMAL
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILDING_IMAGE
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILD_IMAGE_FAILED
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILD_IMAGE_SUCCESS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_CREATING
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_DELETED
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_DELETING
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_LOST
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_NORMAL
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_RESTARTING
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_RUNNING
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STARTING
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STOPPED
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STOPPING
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_UNKNOWN
 
 @Suppress("UNUSED")
@@ -133,18 +145,18 @@ enum class NodeStatus(val statusName: String) {
             return when (status) {
                 NORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_NORMAL)
                 ABNORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_ABNORMAL)
-/*                DELETED.name -> DELETED
-                LOST.name -> LOST
-                CREATING.name -> CREATING
-                RUNNING.name -> RUNNING
-                STARTING.name -> STARTING
-                STOPPING.name -> STOPPING
-                STOPPED.name -> STOPPED
-                RESTARTING.name -> RESTARTING
-                DELETING.name -> DELETING
-                BUILDING_IMAGE.name -> BUILDING_IMAGE
-                BUILD_IMAGE_SUCCESS.name -> BUILD_IMAGE_SUCCESS
-                BUILD_IMAGE_FAILED.name -> BUILD_IMAGE_FAILED*/
+                DELETED.name -> MessageCodeUtil.getCodeLanMessage(BK_DELETED)
+                LOST.name -> MessageCodeUtil.getCodeLanMessage(BK_LOST)
+                CREATING.name -> MessageCodeUtil.getCodeLanMessage(BK_CREATING)
+                RUNNING.name -> MessageCodeUtil.getCodeLanMessage(BK_RUNNING)
+                STARTING.name -> MessageCodeUtil.getCodeLanMessage(BK_STARTING)
+                STOPPING.name -> MessageCodeUtil.getCodeLanMessage(BK_STOPPING)
+                STOPPED.name -> MessageCodeUtil.getCodeLanMessage(BK_STOPPED)
+                RESTARTING.name -> MessageCodeUtil.getCodeLanMessage(BK_RESTARTING)
+                DELETING.name -> MessageCodeUtil.getCodeLanMessage(BK_DELETING)
+                BUILDING_IMAGE.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILDING_IMAGE)
+                BUILD_IMAGE_SUCCESS.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_SUCCESS)
+                BUILD_IMAGE_FAILED.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_FAILED)
                 else -> MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)
             }
 

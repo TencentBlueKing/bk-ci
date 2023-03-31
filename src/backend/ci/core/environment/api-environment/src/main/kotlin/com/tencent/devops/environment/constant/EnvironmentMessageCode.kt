@@ -95,5 +95,17 @@ object EnvironmentMessageCode {
     const val BK_UNKNOWN = "BkUnknown" // 未知
     const val BK_NORMAL = "BkNormal" // 正常
     const val BK_ABNORMAL = "BkAbnormal" // 异常
+    const val BK_DELETED = "BkDeleted" // 已删除
+    const val BK_LOST = "BkLost" // 失联
+    const val BK_CREATING = "BkCreating" // 正在创建中
+    const val BK_RUNNING = "BkRunning" // 安装Agent
+    const val BK_STARTING = "BkStarting" // 正在开机中
+    const val BK_STOPPING = "BkStopping" // 正在关机中
+    const val BK_STOPPED = "BkStopped" // 已关机
+    const val BK_RESTARTING = "BkAbnormal" // 正在重启中
+    const val BK_DELETING = "BkDeleting" // 正在销毁中
+    const val BK_BUILDING_IMAGE = "BkBuildingImage" // 正在制作镜像中
+    const val BK_BUILD_IMAGE_SUCCESS = "BkBuildImageSuccess" // 制作镜像成功
+    const val BK_BUILD_IMAGE_FAILED = "BkBuildImageFailed" // 制作镜像失败
 
 }
