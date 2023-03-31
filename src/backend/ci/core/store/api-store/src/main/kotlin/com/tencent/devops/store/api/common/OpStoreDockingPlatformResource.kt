@@ -68,6 +68,21 @@ interface OpStoreDockingPlatformResource {
         storeDockingPlatformRequest: StoreDockingPlatformRequest
     ): Result<Boolean>
 
+    @ApiOperation("添加对接平台错误码前缀")
+    @POST
+    @Path("/platformCodes/{platformCode}/prefix/{prefix}/add")
+    fun addErrorPrefix(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "对接平台请求报文体", required = true)
+        @PathParam("platformCode")
+        platformCode: String,
+        @ApiParam(value = "对接平台请求报文体", required = true)
+        @PathParam("prefix")
+        prefix: Int
+    ): Result<Boolean>
+
     @ApiOperation("更新对接平台")
     @PUT
     @Path("/ids/{id}/update")

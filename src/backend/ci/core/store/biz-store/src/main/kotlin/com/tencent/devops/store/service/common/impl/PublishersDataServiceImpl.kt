@@ -42,13 +42,11 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.store.dao.common.PublisherMemberDao
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
-import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
+import com.tencent.devops.store.dao.common.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
-import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
@@ -69,7 +67,7 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
     private val storeUserService: StoreUserService,
-    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao
 ) : PublishersDataService {
     override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
@@ -222,23 +220,21 @@ class PublishersDataServiceImpl @Autowired constructor(
         }
     }
 
-    override fun createPlatformsData(
+    override fun savePlatformsData(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
         storeDockingPlatformRequests.forEach {
-            storeDockingPlatformDao.add(dslContext, userId, it)
-            if (!it.errorCodeInfo.isNullOrEmpty()) {
-                storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
-                    dslContext = dslContext,
-                    userId = userId,
-                    storeErrorCodeInfo = StoreErrorCodeInfo(
-                        storeCode = it.platformCode,
-                        storeType = StoreTypeEnum.ATOM,
-                        errorCodeType = ErrorCodeTypeEnum.PLATFORM,
-                        errorCodeInfos = it.errorCodeInfo!!
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                storeDockingPlatformDao.add(context, userId, it)
+                if (!it.errorCodeInfo.isNullOrEmpty()) {
+                    storeDockingPlatformErrorCodeDao.batchSaveErrorCodeInfo(
+                        dslContext = context,
+                        platformCode = it.platformCode,
+                        errorCodeInfos = it.errorCodeInfo
                     )
-                )
+                }
             }
         }
         return storeDockingPlatformRequests.size
@@ -249,32 +245,16 @@ class PublishersDataServiceImpl @Autowired constructor(
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
         storeDockingPlatformRequests.forEach {
-            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
-                dslContext = dslContext,
-                storeCode = it.platformCode,
-                errorCodeType = ErrorCodeTypeEnum.PLATFORM
-            )
-        }
-        return storeDockingPlatformDao.batchDelete(dslContext, userId, storeDockingPlatformRequests)
-    }
-
-    override fun updatePlatformsData(
-        userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
-        storeDockingPlatformRequests.forEach {
-            storeDockingPlatformDao.update(dslContext, userId, it)
-            if (!it.errorCodeInfo.isNullOrEmpty()) {
-                storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
-                    dslContext = dslContext,
-                    userId = userId,
-                    storeErrorCodeInfo = StoreErrorCodeInfo(
-                        storeCode = it.platformCode,
-                        storeType = StoreTypeEnum.ATOM,
-                        errorCodeType = ErrorCodeTypeEnum.PLATFORM,
-                        errorCodeInfos = it.errorCodeInfo!!
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                if (it.errorCodeInfo != null) {
+                    storeDockingPlatformErrorCodeDao.deletePlatformErrorCodeInfo(
+                        dslContext = context,
+                        platformCode = it.platformCode,
+                        errorCodes = it.errorCodeInfo!!.map { errorCodeInfo -> errorCodeInfo.errorCode }
                     )
-                )
+                }
+                storeDockingPlatformDao.delete(context, it)
             }
         }
         return storeDockingPlatformRequests.size

@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
 import com.tencent.devops.store.service.common.StoreDockingPlatformService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
 @Service
@@ -66,6 +67,23 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             )
         }
         storeDockingPlatformDao.add(dslContext, userId, storeDockingPlatformRequest)
+        return true
+    }
+
+    override fun addErrorPrefix(userId: String, platformCode: String, prefix: Int): Boolean {
+        try {
+            storeDockingPlatformDao.addErrorPrefix(
+                dslContext = dslContext,
+                userId = userId,
+                platformCode = platformCode,
+                prefix = prefix
+            )
+        } catch (ignored: DuplicateKeyException) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf("$prefix")
+            )
+        }
         return true
     }
 

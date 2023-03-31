@@ -85,7 +85,7 @@ class ServiceAtomResourceImpl @Autowired constructor(
             marketAtomErrorCodeService.isComplianceErrorCode(
                 storeCode,
                 storeType,
-                "$errorCode",
+                errorCode,
                 errorCodeType
             )
         )

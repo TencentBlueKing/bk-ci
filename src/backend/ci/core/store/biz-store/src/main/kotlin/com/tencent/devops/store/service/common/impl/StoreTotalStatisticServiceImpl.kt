@@ -61,7 +61,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
@@ -278,8 +278,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
                 dslContext = dslContext,
                 storeCode = storeCode,
-                storeType = storeType,
-                errorCodeType = ErrorCodeTypeEnum.ATOM
+                storeType = storeType
             ),
             errorCodeType = ErrorCodeTypeEnum.ATOM
         )

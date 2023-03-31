@@ -49,7 +49,7 @@ interface MarketAtomErrorCodeService {
     fun isComplianceErrorCode(
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCode: String,
+        errorCode: Int,
         errorCodeType: ErrorCodeTypeEnum
     ): Boolean
 }

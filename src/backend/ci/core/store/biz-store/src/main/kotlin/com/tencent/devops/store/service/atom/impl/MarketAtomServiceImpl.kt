@@ -655,13 +655,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         projectCode: String,
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
-        val atomCode = storeErrorCodeInfo.storeCode
+        val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf("atomCode")
+        )
         val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
             storeCode = atomCode,
-            storeType = storeErrorCodeInfo.storeType.type.toByte()
+            storeType = storeErrorCodeInfo.storeType!!.type.toByte()
         )
         if (!isStoreMember) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -706,17 +709,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
             dslContext = dslContext,
             storeCode = storeErrorCodeInfo.storeCode,
-            storeType = storeErrorCodeInfo.storeType,
-            errorCodeType = ErrorCodeTypeEnum.ATOM
+            storeType = storeErrorCodeInfo.storeType
         ).toMutableList()
         val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
         errorCodeInfos.removeAll(newErrorCodeInfos)
         if (errorCodeInfos.isNotEmpty()) {
             storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
                 dslContext = dslContext,
-                storeCode = storeErrorCodeInfo.storeCode,
-                storeType = storeErrorCodeInfo.storeType,
-                errorCodeType = ErrorCodeTypeEnum.ATOM,
+                storeCode = storeErrorCodeInfo.storeCode!!,
+                storeType = storeErrorCodeInfo.storeType!!,
                 errorCodes = errorCodeInfos.map { it.errorCode }
             )
         }
