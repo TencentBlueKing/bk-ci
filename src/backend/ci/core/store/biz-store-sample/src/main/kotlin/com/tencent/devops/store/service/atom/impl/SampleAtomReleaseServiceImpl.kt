@@ -140,10 +140,11 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
 
     override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
         with(atomReleaseRequest) {
-            val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            val projectCode = storeProjectRelDao.getUserStoreTestProjectCode(
                 dslContext,
+                userId,
                 atomCode,
-                StoreTypeEnum.ATOM.type.toByte()
+                StoreTypeEnum.ATOM
             )!!
             val atomEnvInfo = marketAtomEnvService.getMarketAtomEnvInfo(
                 projectCode = projectCode,
