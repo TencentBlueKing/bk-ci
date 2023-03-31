@@ -281,7 +281,6 @@ export default {
     },
     projectCode: {
       handler (val) {
-        this.curProjectCode = val
         this.searchSelectValue = []
       },
       deep: true
@@ -310,7 +309,6 @@ export default {
       hasActionId: false,
       hasLoadEnd: false,
       titleType: '',
-      curProjectCode: ''
     }
   },
   async created() {
@@ -319,11 +317,10 @@ export default {
   },
   methods: {
     async initApplyQuery() {
-      if (!this.curProject) return
-      const cacheQuery =  JSON.parse(sessionStorage.getItem('group-apply-query'));
+      const cacheQuery =  JSON.parse(sessionStorage.getItem('apply-query'));
       
       if (!cacheQuery || (cacheQuery && this.$route.query.project_code !== cacheQuery?.project_code)) {
-        sessionStorage.setItem('group-apply-query', JSON.stringify(this.$route.query))
+        sessionStorage.setItem('apply-query', JSON.stringify(this.$route.query))
       }
       const query = cacheQuery || this.$route.query
       const { resourceType, action, iamResourceCode, groupId, groupName } = query;
@@ -334,7 +331,9 @@ export default {
           await this.getActionsList();
           const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
           const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
-          resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
+          if (resourceTypeName && resourceValue) {
+            resourceValue.name = `${resourceTypeName}/${resourceValue?.resourceName}`;
+          }
           const resourceCodeParams = {
             id: 'resourceCode',
             name: this.$t('资源实例'),
@@ -384,7 +383,7 @@ export default {
     },
     
     async getResourceList(page, pageSize, keyWords) {
-      if (!this.curProjectCode) {
+      if (!this.projectCode) {
         Message({
           theme: 'error',
           message: this.$t('请选择项目'),
