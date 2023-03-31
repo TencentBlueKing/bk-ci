@@ -213,9 +213,9 @@ export default {
 
     statusFormatter(status) {
       const map = {
-        NOT_JOINED: this.$t('未加入'),
-        NORMAL: this.$t('正常'),
-        EXPIRED: this.$t('已过期'),
+        NOT_JOINED: t('未加入'),
+        NORMAL: t('正常'),
+        EXPIRED: t('已过期'),
       };
       return map[status];
     },
@@ -234,7 +234,7 @@ export default {
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
       this.apply.expiredDisplay = row.expiredDisplay;
-      this.apply.title = this.$t('续期');
+      this.apply.title = t('续期');
       this.apply.type = 'renewal';
     },
 
@@ -242,7 +242,7 @@ export default {
       this.apply.isShow = true;
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
-      this.apply.title = this.$t('申请加入');
+      this.apply.title = t('申请加入');
       this.apply.type = 'apply';
     },
 
