@@ -42,8 +42,8 @@ const jobOptionConfigMixin = {
                     text: this.$t('storeMap.queueEnable'),
                     default: false
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080, min_value: 1 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
                     placeholder: this.$t('storeMap.mutualTimeoutPlaceholder'),
@@ -191,8 +191,8 @@ const jobOptionConfigMixin = {
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),
