@@ -33,7 +33,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
-import com.tencent.devops.quality.service.v2.QualityHisMetadataService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
