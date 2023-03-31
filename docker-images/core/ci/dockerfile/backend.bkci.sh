@@ -1,4 +1,24 @@
 #!/bin/bash
+i18n_path="/data/workspace/support-files/i18n"
+if [ -d "$i18n_path" ] ; then
+   echo "copy i18n into $MS_NAME classpath..."
+   property_array=("en_US" "zh_CN")
+   for property in "${property_array[@]}"
+   do
+        # set variables for input files
+        file1="$i18n_path/message_$property.properties"
+        file2="$i18n_path/$MS_NAME/message_$property.properties"
+        target_file="/data/workspace/$MS_NAME/message_$property.properties"
+        # create output file with first input
+        cp "$file1" "$target_file" || true
+        # append second input to output file if it exists
+        if [ -f "$file2" ]; then
+            cat "$file2" >> "$target_file"
+        fi
+        echo "Target file generated: $target_file"
+   done
+fi
+
 echo "source env files..."
 source service.env
 MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:-UseAdaptiveSizePolicy"
