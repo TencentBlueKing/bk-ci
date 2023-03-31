@@ -155,7 +155,7 @@ const initTable = () => {
 
 const handleChangeSearch = (data) => {
   filter.value = data;
-  const query = JSON.parse(sessionStorage.getItem('apply-query'))
+  const query = JSON.parse(sessionStorage.getItem('group-apply-query'))
   const resourceType = query?.resourceType
   if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
     applyTips.value = t('根据筛选条件，匹配到如下用户组:');
