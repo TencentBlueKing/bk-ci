@@ -45,9 +45,10 @@ class ServicePreBuildAgentResourceImpl @Autowired constructor(
         projectId: String,
         os: OS,
         zoneName: String?,
-        initIp: String?
+        initIp: String?,
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo> {
-        return Result(preBuildAgentMgrService.createPrebuildAgent(userId, projectId, os, zoneName, initIp))
+        return Result(preBuildAgentMgrService.createPrebuildAgent(userId, projectId, os, zoneName, initIp, nodeStingId))
     }
 
     override fun listPreBuildAgent(

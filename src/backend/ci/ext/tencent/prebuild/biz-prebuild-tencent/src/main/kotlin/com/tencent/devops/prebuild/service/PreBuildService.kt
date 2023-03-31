@@ -528,7 +528,8 @@ class PreBuildService @Autowired constructor(
         userId: String,
         os: OS,
         ip: String,
-        hostName: String
+        hostName: String,
+        nodeStingId: String?
     ): ThirdPartyAgentStaticInfo {
         val machine = prebuildPersonalMachineDao.get(dslContext, userId, hostName)
         if (null == machine) {
@@ -545,7 +546,7 @@ class PreBuildService @Autowired constructor(
         }
 
         val createResult = client.get(ServicePreBuildAgentResource::class)
-            .createPrebuildAgent(userId, getUserProjectId(userId), os, null, ip)
+            .createPrebuildAgent(userId, getUserProjectId(userId), os, null, ip, nodeStingId)
         if (createResult.isNotOk()) {
             logger.error("create prebuild agent failed")
             throw OperationException("create prebuild agent failed")
