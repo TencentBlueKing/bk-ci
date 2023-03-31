@@ -10,9 +10,7 @@ enum class GatewayType(val typeName: String) {
     TJ("天津"),
     XJP("新加坡");
 
-
     companion object {
-        
         fun i18n(typeName: String): String {
             return when (typeName) {
                 SZ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SZ)
@@ -22,7 +20,6 @@ enum class GatewayType(val typeName: String) {
                 else -> {
                     MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_XJP)}
             }
-        }
-
+         }
     }
 }

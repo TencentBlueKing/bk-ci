@@ -68,9 +68,8 @@ enum class NodeType(val typeName: String) {
                 DEVCLOUD.name -> MessageCodeUtil.getCodeLanMessage(BK_DEVCLOUD)
                 THIRDPARTY.name -> MessageCodeUtil.getCodeLanMessage(BK_THIRDPARTY)
                 OTHER.name -> MessageCodeUtil.getCodeLanMessage(BK_OTHER)
-                else -> {MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)}
+                else -> { MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN) }
             }
         }
-
     }
 }

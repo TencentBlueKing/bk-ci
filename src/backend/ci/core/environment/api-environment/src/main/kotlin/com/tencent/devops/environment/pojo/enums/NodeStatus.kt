@@ -159,8 +159,6 @@ enum class NodeStatus(val statusName: String) {
                 BUILD_IMAGE_FAILED.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_FAILED)
                 else -> MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)
             }
-
         }
-
     }
 }

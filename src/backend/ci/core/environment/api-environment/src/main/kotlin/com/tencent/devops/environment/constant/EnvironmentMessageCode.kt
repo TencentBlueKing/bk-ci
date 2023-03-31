@@ -107,5 +107,4 @@ object EnvironmentMessageCode {
     const val BK_BUILDING_IMAGE = "BkBuildingImage" // 正在制作镜像中
     const val BK_BUILD_IMAGE_SUCCESS = "BkBuildImageSuccess" // 制作镜像成功
     const val BK_BUILD_IMAGE_FAILED = "BkBuildImageFailed" // 制作镜像失败
-
 }
