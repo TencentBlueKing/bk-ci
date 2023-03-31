@@ -61,6 +61,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -207,8 +208,11 @@ class BkRepoService @Autowired constructor(
         matadataMap.forEach {
             propertyList.add(Property(it.key, it.value))
         }
-        if (matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            val pipelineName = pipelineService.getPipelineName(projectId, matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
+        if (matadataMap.containsKey(ARCHIVE_PROPS_PROJECT_ID) && matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+            val pipelineName = pipelineService.getPipelineName(
+                matadataMap[ARCHIVE_PROPS_PROJECT_ID]!!,
+                matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!
+            )
             propertyList.add(Property(ARCHIVE_PROPS_PIPELINE_NAME, pipelineName))
         }
         return propertyList
@@ -788,8 +792,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-                "/bkrepo/api/external/repository$shareUri&download=true"
+
+        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

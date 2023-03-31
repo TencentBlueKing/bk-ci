@@ -142,6 +142,7 @@ class ContainerControl @Autowired constructor(
             LOG.info("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|status=$status|concurrent")
             mutexControl.releaseContainerMutex(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,

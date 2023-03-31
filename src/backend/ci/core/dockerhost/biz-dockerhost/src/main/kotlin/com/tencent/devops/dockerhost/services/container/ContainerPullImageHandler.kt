@@ -58,13 +58,15 @@ class ContainerPullImageHandler(
                     registryUser = registryUser,
                     registryPwd = registryPwd
                 )
-                log(buildId, "开始拉取镜像，镜像名称：$formatImageName!!", taskId, containerHashId)
+                log(buildId, "Start pulling image $formatImageName!!", taskId, containerHashId)
                 httpLongDockerCli.pullImageCmd(formatImageName!!).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId))
                     .awaitCompletion()
-                log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
+                log(buildId, "Pull the image successfully, " +
+                    "ready to start the build environment...", taskId, containerHashId)
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$formatImageName，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "No permission to pull image $formatImageName，" +
+                    "Please check if the image path or credentials are correct." +
                         "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
@@ -73,20 +75,21 @@ class ContainerPullImageHandler(
                     message = errorMessage
                 )
             } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$formatImageName!!，请检查镜像路径或凭证是否正确；" +
+                val errorMessage = "Image does not exist $formatImageName!!，" +
+                    "Please check if the image path or credentials are correct." +
                         "$buildId|$containerHashId]"
                 logger.error(errorMessage, t)
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $formatImageName!! of build $buildId", t)
                 log(
                     buildId = buildId,
-                    message = "拉取镜像失败，错误信息：${t.message}",
+                    message = "Failed to pull image: ${t.message}",
                     tag = taskId,
                     containerHashId = containerHashId
                 )
                 log(
                     buildId = buildId,
-                    message = "尝试使用本地镜像启动...",
+                    message = "Trying to boot from a local image...",
                     tag = taskId,
                     containerHashId = containerHashId
                 )

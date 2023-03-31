@@ -297,7 +297,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             FileInfo(
                 name = it.name,
                 fullName = it.name,
-                path = it.path,
+                path = "${it.projectId}/${it.repoName}${it.fullPath}",
                 fullPath = it.fullPath,
                 size = it.size,
                 folder = it.folder,

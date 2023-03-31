@@ -123,7 +123,7 @@ object TXSendRtx {
                 "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
-                "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
+                "Commit [[${requestId.subSequence(0, 8)}]]($gitUrl/$projectName/commit/$requestId)" +
                     "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"

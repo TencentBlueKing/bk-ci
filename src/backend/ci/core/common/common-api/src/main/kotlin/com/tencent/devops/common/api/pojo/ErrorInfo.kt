@@ -35,7 +35,9 @@ data class ErrorInfo(
     @ApiModelProperty("阶段ID", required = false)
     val stageId: String? = "",
     @ApiModelProperty("作业ID", required = false)
-    val jobId: String? = "",
+    val containerId: String? = "",
+    @ApiModelProperty("构建矩阵标识", required = false)
+    val matrixFlag: Boolean? = false,
     @ApiModelProperty("插件ID", required = false)
     val taskId: String,
     @ApiModelProperty("插件名称", required = false)

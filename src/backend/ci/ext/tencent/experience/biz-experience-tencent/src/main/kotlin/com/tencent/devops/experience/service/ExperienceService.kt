@@ -52,6 +52,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -168,7 +169,7 @@ class ExperienceService @Autowired constructor(
             val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
             client.get(ServicePipelineArtifactoryResource::class).hasPermission(
                 userId = userId,
-                projectId = projectId,
+                projectId = propertyMap[ARCHIVE_PROPS_PROJECT_ID] ?: projectId,
                 pipelineId = pipelineId,
                 permission = permission
             ).data!!

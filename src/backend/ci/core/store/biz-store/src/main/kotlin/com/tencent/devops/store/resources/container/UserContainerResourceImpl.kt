@@ -35,6 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.container.UserContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.service.container.ContainerService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -81,5 +82,9 @@ class UserContainerResourceImpl @Autowired constructor(private val containerServ
         os: OS
     ): Result<List<ContainerResp>> {
         return containerService.getAllContainerInfos(userId, projectCode, type, os)
+    }
+
+    override fun getAllContainers(): Result<List<ContainerType>?> {
+        return containerService.getAllContainers()
     }
 }
