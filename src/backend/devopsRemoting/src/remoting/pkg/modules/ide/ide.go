@@ -12,6 +12,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"remoting/pkg/config"
+	"remoting/pkg/constant"
 	"remoting/pkg/dropwriter"
 	"remoting/pkg/service"
 	"runtime"
@@ -84,6 +85,16 @@ func StartAndWatchIDE(
 	if devfile == nil && ide == WebIDE {
 		// devfile 不存在目前不能影响ide正常打开
 		logs.Warn("webide devfile is null")
+	}
+
+	// 对于ssh插件因为工作空间可能清空的问题，需要主动copy下插件
+	if ide == DesktopIDE {
+		if err := copyDir(
+			filepath.Join(constant.RemotingUserHome, ".vscode-server", "extensions"),
+			filepath.Join(cfg.WorkSpace.WorkspaceRootPath, ".vscode-server", "extensions"),
+		); err != nil {
+			logs.WithError(err).Error("copy vscode ssh extensions fail")
+		}
 	}
 
 	ideStatus := statusNeverRan
@@ -341,4 +352,34 @@ func WaitForIde(parent context.Context, ideReady *service.IdeReadyState, desktop
 		return
 	case <-desktopIdeReady.Wait():
 	}
+}
+
+// copyDir 拷贝某个文件夹下所有文件到另一个文件夹
+func copyDir(src, dst string) error {
+	files, err := ioutil.ReadDir(src)
+	if err != nil {
+		return err
+	}
+
+	if err := os.MkdirAll(dst, os.ModePerm); err != nil && !os.IsExist(err) {
+		return err
+	}
+
+	for _, file := range files {
+		// 不拷贝子文件夹
+		if file.IsDir() {
+			continue
+		}
+
+		input, err := ioutil.ReadFile(filepath.Join(src, file.Name()))
+		if err != nil {
+			return err
+		}
+
+		err = ioutil.WriteFile(filepath.Join(dst, file.Name()), input, os.ModePerm)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
