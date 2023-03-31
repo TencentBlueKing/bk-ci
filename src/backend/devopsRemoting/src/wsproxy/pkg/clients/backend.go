@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"common/devops"
 	"common/logs"
 	"context"
 	"crypto/hmac"
@@ -36,7 +37,7 @@ func (b *BackendClient) SetRemotedevHeader(request *http.Request, workspaceId, t
 	request.Header.Set("X-Signature", hmacsha1Encrypt(b.sha1key, workspaceId+timestamp))
 	// 项目，区分灰度
 	// TODO: 目前先写死，未来通过workspaceId区分
-	request.Header.Set("X-DEVOPS-PROJECT-ID", "grayproject")
+	request.Header.Set("X-DEVOPS-PROJECT-ID", devops.ParseWsId2UserProjectId(workspaceId))
 }
 
 // parseProjectId 从工作空间ID解析项目ID
@@ -107,7 +108,7 @@ func CheckAuthBackend(ctx context.Context, host, wsid, ticket string) (bool, err
 	if err != nil {
 		return false, err
 	}
-	req.Header.Set("X-DEVOPS-PROJECT-ID", "grayproject")
+	req.Header.Set("X-DEVOPS-PROJECT-ID", devops.ParseWsId2UserProjectId(wsid))
 	req.AddCookie(&http.Cookie{
 		Name:  "bk_ticket",
 		Value: ticket,

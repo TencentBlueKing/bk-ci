@@ -153,8 +153,11 @@ func StartContentInit(
 		// 拉完代码后再添加可能的default文件
 		if cfg.WorkSpace.DevopsRemotingYaml == "" {
 			os.MkdirAll(filepath.Join(cfg.WorkSpace.GitRepoRootPath, constant.DevfileDir), os.ModePerm)
-			if err = thirdApi.Server.DownloadDefaultDevfile(context.Background(),
-				filepath.Join(cfg.WorkSpace.GitRepoRootPath, constant.DevfileDir, constant.DefaultDevFileName)); err != nil {
+			if err = thirdApi.Server.DownloadDefaultDevfile(
+				context.Background(),
+				filepath.Join(cfg.WorkSpace.GitRepoRootPath, constant.DevfileDir, constant.DefaultDevFileName),
+				cfg.WorkSpace.WorkspaceId,
+			); err != nil {
 				logs.WithError(err).Error("download default devfile error")
 				// 没有devfile不影响主流程
 				err = nil
