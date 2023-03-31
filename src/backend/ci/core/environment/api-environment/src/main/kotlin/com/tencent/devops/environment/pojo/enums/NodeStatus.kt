@@ -141,6 +141,7 @@ enum class NodeStatus(val statusName: String) {
 //            }
         }
 
+        @Suppress("ComplexMethod")
         fun i18n(status: String): String {
             return when (status) {
                 NORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_NORMAL)
