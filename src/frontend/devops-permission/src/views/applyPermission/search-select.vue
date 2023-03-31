@@ -371,7 +371,7 @@ export default {
         await this.getActionsList();
         const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
         const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
-        resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
+        resourceValue.name = `${resourceTypeName}/${resourceValue?.resourceName}`
         const resourceCodeParams = {
           id: 'resourceCode',
           name: this.$t('资源实例'),

@@ -41,7 +41,7 @@ const isLoading = ref(false);
 const scrollLoading = ref(false);
 const pageInfo = ref({
   page: 1,
-  pageSize: 10,
+  pageSize: 30,
   projectName: '',
   loadEnd: false,
 })
@@ -190,7 +190,12 @@ const getProjectByName = () => {
   } 
   http.getAllProjectList(params).then(res => {
     if (res.records.length) {
+      res.records.forEach(i => {
+        i.hide = true;
+      });
+      projectList.value = [...res.records, ...projectList.value];
       curProject.value = res.records[0];
+      console.log(projectList.value, 123)
       isDisabled.value = curProject.value.permission;
     }
   })
@@ -238,25 +243,27 @@ onMounted(async () => {
               @scroll-end="getAllProjectList"
               :remote-method="handleSearchProject"
             >
-              <bk-option
-                  v-for="(project, index) in projectList"
-                  :key="index"
-                  :value="project.englishName"
-                  :disabled="['v0', 'v3'].includes(project.routerTag)"
-                  :label="project.projectName"
-              >
-                <div
-                  class="option-item">
-                  {{ project.projectName }}
-                  <i
-                    v-if="['v0', 'v3'].includes(project.routerTag)"
-                    v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
-                    class="permission-icon permission-icon-edit edit-icon"
-                    @click="handleToProjectManage(project)"
-                  >
-                  </i>
-                </div>
-              </bk-option>
+              <div v-for="(project, index) in projectList"
+                :key="index">
+                <bk-option
+                    v-show="!project.hide"
+                    :value="project.englishName"
+                    :disabled="['v0', 'v3'].includes(project.routerTag)"
+                    :label="project.projectName"
+                >
+                  <div
+                    class="option-item">
+                    {{ project.projectName }}
+                    <i
+                      v-if="['v0', 'v3'].includes(project.routerTag)"
+                      v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
+                      class="permission-icon permission-icon-edit edit-icon"
+                      @click="handleToProjectManage(project)"
+                    >
+                    </i>
+                  </div>
+                </bk-option>
+              </div>
             </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('选择用户组')" required>
