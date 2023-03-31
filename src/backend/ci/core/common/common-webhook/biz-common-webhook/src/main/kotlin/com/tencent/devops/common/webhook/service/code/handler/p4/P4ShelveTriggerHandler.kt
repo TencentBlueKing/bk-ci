@@ -70,7 +70,13 @@ class P4ShelveTriggerHandler(
     )
     override fun getEventType(): CodeEventType = CodeEventType.SHELVE_COMMIT
 
-    override fun getEventType(event: P4ShelveEvent): CodeEventType = event.eventType
+    override fun getEventType(event: P4ShelveEvent): CodeEventType = when (event.eventType) {
+        P4ShelveEvent.SHELVE_COMMIT -> CodeEventType.SHELVE_COMMIT
+        P4ShelveEvent.SHELVE_DELETE -> CodeEventType.SHELVE_DELETE
+        P4ShelveEvent.SHELVE_SUBMIT -> CodeEventType.SHELVE_SUBMIT
+        else ->
+            CodeEventType.valueOf(event.eventType)
+    }
 
     override fun getMessage(event: P4ShelveEvent) = ""
 

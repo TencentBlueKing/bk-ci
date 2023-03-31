@@ -31,9 +31,15 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "trigger_type")
+@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "event_type")
 @JsonSubTypes(
-    JsonSubTypes.Type(value = P4ChangeEvent::class, name = P4ChangeEvent.classType),
-    JsonSubTypes.Type(value = P4ShelveEvent::class, name = P4ShelveEvent.classType)
+    JsonSubTypes.Type(
+        value = P4ChangeEvent::class,
+        names = ["CHANGE_COMMIT", "CHANGE_CONTENT", "CHANGE_SUBMIT", "change-commit"]
+    ),
+    JsonSubTypes.Type(
+        value = P4ShelveEvent::class,
+        names = ["SHELVE_COMMIT", "SHELVE_DELETE", "SHELVE_SUBMIT", "shelve-commit"]
+    )
 )
 open class P4Event : CodeWebhookEvent

@@ -36,10 +36,13 @@ data class P4ShelveEvent(
     val change: Int,
     val p4Port: String,
     @JsonProperty("event_type")
-    val eventType: CodeEventType,
+    val eventType: String,
     val user: String? = null
 ) : P4Event() {
     companion object {
         const val classType = "SHELVE"
+        const val SHELVE_COMMIT = "shelve-commit"
+        const val SHELVE_DELETE = "shelve-delete"
+        const val SHELVE_SUBMIT = "shelve-submit"
     }
 }
