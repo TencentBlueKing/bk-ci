@@ -107,13 +107,8 @@ spec:
           - mountPath: /data/workspace/lambda/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
-          - mountPath: /data1/certificate/
-            name: secret-volume
       volumes:
       - hostPath:
           path: /data
         name: log-volume
-      - name: secret-volume
-        secret:
-          secretName: {{ include "bkci.names.fullname" . }}-lambda
 {{- end -}}
