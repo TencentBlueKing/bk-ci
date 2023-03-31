@@ -209,7 +209,7 @@ class AuthResourceService @Autowired constructor(
     fun list(
         projectCode: String,
         userId: String,
-        resourceType: String,
+        resourceType: String
     ): List<String> {
         return authResourceDao.list(
             dslContext = dslContext,
