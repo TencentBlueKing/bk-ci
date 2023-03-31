@@ -12,7 +12,7 @@
       </bk-table-column>
       <bk-table-column :label="$t('有效期')" prop="expiredDisplay">
         <template #default="{ row }">
-          <span>{{ row.expiredDisplay ? row.expiredDisplay + $t('天') : '--' }} </span>
+          <span>{{ row.expiredDisplay ? row.expiredDisplay + t('天') : '--' }} </span>
         </template>
       </bk-table-column>
       <bk-table-column :label="$t('状态')" prop="status">
@@ -30,28 +30,28 @@
             theme="primary"
             text
             @click="handleViewDetail(row)"
-          >{{ $t('权限详情') }}</bk-button>
+          >{{ t('权限详情') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="row.status === 'NOT_JOINED'"
             @click="handleApply(row)"
-          >{{ $t('申请加入') }}</bk-button>
+          >{{ t('申请加入') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleRenewal(row)"
-          >{{ $t('续期') }}</bk-button>
+          >{{ t('续期') }}</bk-button>
           <bk-button
             class="btn"
             theme="primary"
             text
             v-if="['EXPIRED', 'NORMAL'].includes(row.status)"
             @click="handleShowLogout(row)"
-          >{{ $t('退出') }}</bk-button>
+          >{{ t('退出') }}</bk-button>
         </template>
       </bk-table-column>
     </bk-table>
@@ -62,13 +62,13 @@
     >
       <template v-slot:header>
         <div class="detail-title">
-          {{ $t('权限详情') }}
+          {{ t('权限详情') }}
           <span class="group-name">{{ groupName }}</span>
         </div>
       </template>
       <template v-slot:content>
         <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-          <div class="title">{{ $t('流水线管理') }}</div>
+          <div class="title">{{ t('流水线管理') }}</div>
           <div class="content">
             <bk-checkbox
               v-for="(item, index) in groupPolicies"
@@ -90,7 +90,7 @@
       @confirm="handleLogout"
       @cancel="handleCancelLogout"
     >
-      {{ $t('退出后，将无法再使用所赋予的权限。', [logout.name]) }}
+      {{ t('退出后，将无法再使用所赋予的权限。', [logout.name]) }}
     </permission-dialog>
     <apply-dialog
       :is-show="apply.isShow"
@@ -109,6 +109,7 @@ import syncSuccess from '../../../svg/sync-success.svg?inline';
 import syncFailed from '../../../svg/sync-failed.svg?inline';
 import SideSlider from '../../widget-components/side-slider.jsx';
 import PermissionDialog from '../../widget-components/dialog.jsx';
+import { localeMixins } from '../../../utils/locale'
 
 const initFormData = () => ({
   isShow: false,
@@ -124,7 +125,7 @@ export default {
     SideSlider,
     PermissionDialog,
   },
-
+  mixins: [localeMixins],
   props: {
     resourceType: {
       type: String,
@@ -212,9 +213,9 @@ export default {
 
     statusFormatter(status) {
       const map = {
-        NOT_JOINED: this.$t('未加入'),
-        NORMAL: this.$t('正常'),
-        EXPIRED: this.$t('已过期'),
+        NOT_JOINED: t('未加入'),
+        NORMAL: t('正常'),
+        EXPIRED: t('已过期'),
       };
       return map[status];
     },
@@ -233,7 +234,7 @@ export default {
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
       this.apply.expiredDisplay = row.expiredDisplay;
-      this.apply.title = this.$t('续期');
+      this.apply.title = t('续期');
       this.apply.type = 'renewal';
     },
 
@@ -241,7 +242,7 @@ export default {
       this.apply.isShow = true;
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
-      this.apply.title = this.$t('申请加入');
+      this.apply.title = t('申请加入');
       this.apply.type = 'apply';
     },
 

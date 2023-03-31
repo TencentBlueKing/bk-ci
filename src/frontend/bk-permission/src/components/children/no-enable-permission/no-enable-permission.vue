@@ -15,7 +15,7 @@
           :disabled="!hasPermission"
           :loading="isOpenManageLoading"
           @click="openManage"
-        >{{ $t('开启权限管理') }}</bk-button>
+        >{{ t('开启权限管理') }}</bk-button>
       </bk-exception>
     </div>
   </article>
@@ -23,8 +23,10 @@
 
 <script>
 import ajax from '../../../ajax/index';
+import { localeMixins } from '../../../utils/locale'
 
 export default {
+  mixins: [localeMixins],
   props: {
     hasPermission: {
       type: Boolean,
