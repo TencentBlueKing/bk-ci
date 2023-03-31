@@ -95,6 +95,7 @@ watch(() => props.projectCode, (newVal, oldVal) => {
   if (oldVal) {
     filter.value = [];
     applyTips.value = '';
+    pagination.value.current = 1;
   }
 },
   {
@@ -165,7 +166,7 @@ const handleChangeSearch = (data) => {
 };
 
 const fetchGroupList = async (payload = []) => {
-  if (!props.projectCode || !props.curProject) return;
+  if (!props.projectCode) return;
   const params = {
     page: pagination.value.current,
     pageSize: pagination.value.limit,
