@@ -106,7 +106,7 @@ object QueryParamCheckUtil {
     }
 
     fun getErrorTypeName(errorType: Int): String {
-        return MessageUtil.getCodeLanMessage(
+        return I18nUtil.getCodeLanMessage(
             ERROR_TYPE_NAME_PREFIX + "$errorType",
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )

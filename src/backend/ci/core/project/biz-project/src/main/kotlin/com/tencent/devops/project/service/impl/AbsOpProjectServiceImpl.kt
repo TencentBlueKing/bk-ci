@@ -67,7 +67,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         if (dbProjectRecord == null) {
             logger.warn("The project is not exist : projectId = $projectId")
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PROJECT_NOT_EXIST, language = I18nUtil.getLanguage(userId))
             )
         }
@@ -90,7 +90,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             } catch (ignored: DuplicateKeyException) {
                 logger.warn("Duplicate ${projectInfoRequest.projectId} or ${projectInfoRequest.projectName}", ignored)
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         ProjectMessageCode.PROJECT_NAME_EXIST,
                         language = I18nUtil.getLanguage(userId)
                     )

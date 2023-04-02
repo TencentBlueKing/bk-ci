@@ -123,19 +123,19 @@ class PipelineViewService @Autowired constructor(
         val systemViewList = listOf(
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                name = MessageUtil.getCodeLanMessage(
+                name = I18nUtil.getCodeLanMessage(
                     ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                 )
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_MY_PIPELINES,
-                name = MessageUtil.getCodeLanMessage(
+                name = I18nUtil.getCodeLanMessage(
                     ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                 )
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_ALL_PIPELINES,
-                name = MessageUtil.getCodeLanMessage(
+                name = I18nUtil.getCodeLanMessage(
                     ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -161,19 +161,19 @@ class PipelineViewService @Autowired constructor(
         }
 
         val systemPipelineViewClassify = PipelineViewClassify(
-            label = MessageUtil.getCodeLanMessage(
+            label = I18nUtil.getCodeLanMessage(
                 ProcessMessageCode.SYSTEM_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
             ),
             viewList = systemViewList
         )
         val projectPipelineViewClassify = PipelineViewClassify(
-            label = MessageUtil.getCodeLanMessage(
+            label = I18nUtil.getCodeLanMessage(
                 ProcessMessageCode.PROJECT_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
             ),
             viewList = projectViewList
         )
         val personPipelineViewClassify = PipelineViewClassify(
-            label = MessageUtil.getCodeLanMessage(
+            label = I18nUtil.getCodeLanMessage(
                 ProcessMessageCode.PERSON_VIEW_LABEL, language = I18nUtil.getLanguage(userId)
             ),
             viewList = personViewList
@@ -193,19 +193,19 @@ class PipelineViewService @Autowired constructor(
             listOf(
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                    name = MessageUtil.getCodeLanMessage(
+                    name = I18nUtil.getCodeLanMessage(
                         ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                     )
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_MY_PIPELINES,
-                    name = MessageUtil.getCodeLanMessage(
+                    name = I18nUtil.getCodeLanMessage(
                         ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                     )
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_ALL_PIPELINES,
-                    name = MessageUtil.getCodeLanMessage(
+                    name = I18nUtil.getCodeLanMessage(
                         ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                     )
                 )
@@ -240,19 +240,19 @@ class PipelineViewService @Autowired constructor(
                     listOf(
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                            name = MessageUtil.getCodeLanMessage(
+                            name = I18nUtil.getCodeLanMessage(
                                 ProcessMessageCode.FAVORITE_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                             )
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_MY_PIPELINES,
-                            name = MessageUtil.getCodeLanMessage(
+                            name = I18nUtil.getCodeLanMessage(
                                 ProcessMessageCode.MY_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                             )
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_ALL_PIPELINES,
-                            name = MessageUtil.getCodeLanMessage(
+                            name = I18nUtil.getCodeLanMessage(
                                 ProcessMessageCode.ALL_PIPELINES_LABEL, language = I18nUtil.getLanguage(userId)
                             )
                         )
@@ -565,17 +565,16 @@ class PipelineViewService @Autowired constructor(
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> {
-                MessageUtil.getCodeLanMessage(
-                    ProcessMessageCode.FAVORITE_PIPELINES_LABEL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    ProcessMessageCode.FAVORITE_PIPELINES_LABEL
                 )
             }
 
-            PIPELINE_VIEW_MY_PIPELINES -> MessageUtil.getCodeLanMessage(
+            PIPELINE_VIEW_MY_PIPELINES -> I18nUtil.getCodeLanMessage(
                 ProcessMessageCode.MY_PIPELINES_LABEL,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
-            PIPELINE_VIEW_ALL_PIPELINES -> MessageUtil.getCodeLanMessage(
+            PIPELINE_VIEW_ALL_PIPELINES -> I18nUtil.getCodeLanMessage(
                 ProcessMessageCode.ALL_PIPELINES_LABEL,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )

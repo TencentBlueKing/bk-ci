@@ -84,7 +84,7 @@ class ActivityService @Autowired constructor(
         }
         return Result(
             405,
-            MessageUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
+            I18nUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
         )
     }
 

@@ -192,8 +192,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             if (it.response.error != null) {
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL,
-                    params = arrayOf(it.response.error.code),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(it.response.error.code)
                 )
             }
         }

@@ -341,8 +341,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(name),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }

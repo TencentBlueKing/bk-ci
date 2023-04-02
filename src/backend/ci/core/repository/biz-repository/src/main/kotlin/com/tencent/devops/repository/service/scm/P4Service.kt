@@ -114,14 +114,14 @@ class P4Service(
         val username = credentials[0]
         if (username.isEmpty()) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     RepositoryMessageCode.USER_NAME_EMPTY, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     RepositoryMessageCode.PWD_EMPTY, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
@@ -129,9 +129,8 @@ class P4Service(
         val password = credentials[1]
         if (password.isEmpty()) {
             throw OperationException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.PWD_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.PWD_EMPTY
                 )
             )
         }

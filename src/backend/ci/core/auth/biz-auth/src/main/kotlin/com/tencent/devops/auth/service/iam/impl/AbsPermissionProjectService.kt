@@ -202,9 +202,8 @@ abstract class AbsPermissionProjectService @Autowired constructor(
             logger.warn("[IAM] $projectCode iamProject is empty")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
                 )
             )
         }

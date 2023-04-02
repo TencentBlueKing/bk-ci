@@ -353,12 +353,12 @@ class PipelineAtomService @Autowired constructor(
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
-            MessageUtil.getCodeLanMessage(PIPELINE_URL, language = I18nUtil.getLanguage(userId)),
-            MessageUtil.getCodeLanMessage(VERSION, language = I18nUtil.getLanguage(userId)),
-            MessageUtil.getCodeLanMessage(LATEST_MODIFIER, language = I18nUtil.getLanguage(userId)),
-            MessageUtil.getCodeLanMessage(LATEST_UPDATE_TIME, language = I18nUtil.getLanguage(userId)),
-            MessageUtil.getCodeLanMessage(LATEST_EXECUTOR, language = I18nUtil.getLanguage(userId)),
-            MessageUtil.getCodeLanMessage(LATEST_EXECUTE_TIME, language = I18nUtil.getLanguage(userId))
+            I18nUtil.getCodeLanMessage(PIPELINE_URL, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(VERSION, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_MODIFIER, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTOR, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME, language = I18nUtil.getLanguage(userId))
         )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)

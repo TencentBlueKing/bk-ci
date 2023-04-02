@@ -82,7 +82,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         val heartbeatInfo = agentDetail.heartbeatInfo
 
         logMessage.append(
-            MessageUtil.getCodeLanMessage(
+            I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
                 params = arrayOf(event.projectId, agentDetail.nodeId),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

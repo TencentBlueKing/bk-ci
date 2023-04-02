@@ -27,15 +27,19 @@
 
 package com.tencent.devops.buildless.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2127001, "Buildless 系统错误"),
-    CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127002, "创建容器异常"),
-    NO_IDLE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127003, "当前母机无可用空闲容器"),
-    GET_LOCK_FAILED(ErrorType.SYSTEM, 2127004, "获取锁失败")
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2130001, "2130001"),// Buildless 系统错误
+    CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2130002, "2130002"),// 创建容器异常
+    NO_IDLE_CONTAINER_ERROR(ErrorType.SYSTEM, 2130003, "2130003"),// 当前母机无可用空闲容器
+    GET_LOCK_FAILED(ErrorType.SYSTEM, 2130004, "2130004")// 获取锁失败
 }

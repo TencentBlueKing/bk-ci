@@ -54,7 +54,7 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
                     "| projectId = $projectId | managerProject = $managerProject"
             )
             throw PermissionForbiddenException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     AuthMessageCode.GRADE_CHECK_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 )

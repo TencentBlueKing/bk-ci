@@ -479,8 +479,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 )
                 if (count == 0) return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("$projectCode+$atomCode"),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf("$projectCode+$atomCode")
                 )
             }
         }
@@ -634,9 +633,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
                 val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = MessageUtil.getCodeLanMessage(
-                    messageCode = "$storeAtomStatusPrefix$atomStatusName",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                val atomStatusMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "$storeAtomStatusPrefix$atomStatusName"
                 )
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"

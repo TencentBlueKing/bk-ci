@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -107,7 +107,12 @@ class CodeGitRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GIT.name) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_INVALID))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GIT_INVALID,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
@@ -172,12 +177,12 @@ class CodeGitRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(
@@ -194,12 +199,12 @@ class CodeGitRepositoryService @Autowired constructor(
             RepoAuthType.HTTP -> {
                 if (repoCredentialInfo.username.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.password.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
                     )
                 }
                 scmService.checkUsernameAndPassword(

@@ -317,19 +317,18 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     private fun getHeaderFieldName(type: String) = "errorCount-$type"
 
     private fun getHeaderInfo(): MutableMap<String, String> {
-        val language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         val headerInfo = mutableMapOf<String, String>()
-        headerInfo[BK_ATOM_CODE] = MessageUtil.getCodeLanMessage(BK_ATOM_CODE_FIELD_NAME_ENGLISH, language = language)
+        headerInfo[BK_ATOM_CODE] = I18nUtil.getCodeLanMessage(BK_ATOM_CODE_FIELD_NAME_ENGLISH)
         headerInfo[BK_CLASSIFY_CODE] =
-            MessageUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH, language = language)
+            I18nUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
         headerInfo[BK_SUCCESS_RATE] =
-            MessageUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH, language = language)
+            I18nUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
         headerInfo[BK_AVG_COST_TIME] =
-            MessageUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH, language = language)
-        headerInfo[BK_TOTAL_EXECUTE_COUNT] = MessageUtil
-            .getCodeLanMessage(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH, language = language)
-        headerInfo[BK_SUCCESS_EXECUTE_COUNT] = MessageUtil
-            .getCodeLanMessage(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH, language = language)
+            I18nUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
+        headerInfo[BK_TOTAL_EXECUTE_COUNT] = I18nUtil
+            .getCodeLanMessage(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
+        headerInfo[BK_SUCCESS_EXECUTE_COUNT] = I18nUtil
+            .getCodeLanMessage(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
         return headerInfo
     }
 

@@ -75,9 +75,8 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to login p4", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL
                 ),
                 ScmType.CODE_P4.name
             )
@@ -98,9 +97,8 @@ class CodeP4ScmImpl(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add p4 triggers", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.P4_USERNAME_PASSWORD_FAIL
                 ),
                 ScmType.CODE_P4.name
             )

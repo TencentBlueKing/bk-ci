@@ -54,7 +54,7 @@ class GroupUserService @Autowired constructor(
         if (groupUserRecord != null) {
             logger.warn("addUser2Group user $userId already in this group $groupId")
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     AuthMessageCode.GROUP_USER_ALREADY_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -65,7 +65,7 @@ class GroupUserService @Autowired constructor(
         if (groupRecord == null) {
             logger.warn("addUser2Group group $groupId is not exist")
             throw OperationException(
-                MessageUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST, language = I18nUtil.getLanguage(userId))
             )
         }
         // 添加用户至用户组

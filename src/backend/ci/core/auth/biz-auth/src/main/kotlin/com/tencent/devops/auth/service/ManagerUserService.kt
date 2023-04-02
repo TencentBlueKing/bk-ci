@@ -319,8 +319,7 @@ class ManagerUserService @Autowired constructor(
                         errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
                         defaultMessage = MessageUtil.getMessageByLocale(
                             messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                            params = arrayOf(it),
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            params = arrayOf(it)
                         )
                     )
                 }

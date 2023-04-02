@@ -101,7 +101,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessageI18n() +
+                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage +
                             "（Fail to get builder detail, http response code: ${response.code}"
                 )
             }

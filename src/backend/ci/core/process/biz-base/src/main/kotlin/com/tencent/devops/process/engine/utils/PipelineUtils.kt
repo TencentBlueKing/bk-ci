@@ -67,7 +67,7 @@ object PipelineUtils {
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )

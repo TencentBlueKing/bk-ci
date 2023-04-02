@@ -132,8 +132,7 @@ class ClassifyServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyCode),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }
@@ -148,8 +147,7 @@ class ClassifyServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyName),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }

@@ -360,7 +360,7 @@ class UserCertResourceImpl @Autowired constructor(
         }
         if (certId != null && certId!!.length > 128) {
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     TicketMessageCode.CERT_ID_TOO_LONG,
                     language = I18nUtil.getLanguage(userId)
                 )

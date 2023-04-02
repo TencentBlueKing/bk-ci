@@ -61,7 +61,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
             )) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias,
                 language = I18nUtil.getLanguage(userId)
@@ -151,7 +151,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 projectCode = projectId,
                 permission = authPermission
             )) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias,
                 language = I18nUtil.getLanguage(userId)
@@ -177,7 +177,7 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(ruleId),
                 permission = authPermission)) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias,
                 language = I18nUtil.getLanguage(userId)

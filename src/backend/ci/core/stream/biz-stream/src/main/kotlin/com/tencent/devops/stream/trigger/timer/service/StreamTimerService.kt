@@ -122,15 +122,13 @@ class StreamTimerService @Autowired constructor(
             if (!CronExpression.isValidExpression(newConvertExpression)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                    params = arrayOf(crontabExpression),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(crontabExpression)
                 )
             }
             if (!CronExpressionUtils.isValidTimeInterval(newConvertExpression)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
-                    params = arrayOf(crontabExpression),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(crontabExpression)
                 )
             }
             newCrontabExpressions.add(newConvertExpression)

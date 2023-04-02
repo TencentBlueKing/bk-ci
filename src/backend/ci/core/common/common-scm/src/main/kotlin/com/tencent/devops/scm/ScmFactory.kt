@@ -167,18 +167,16 @@ object ScmFactory {
             ScmType.CODE_P4 -> {
                 if (passPhrase == null) {
                     throw ScmException(
-                        MessageUtil.getCodeLanMessage(
-                            messageCode = RepositoryMessageCode.PWD_EMPTY,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = RepositoryMessageCode.PWD_EMPTY
                         ),
                         ScmType.CODE_P4.name
                     )
                 }
                 if (userName == null) {
                     throw ScmException(
-                        MessageUtil.getCodeLanMessage(
-                            RepositoryMessageCode.USER_NAME_EMPTY,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        I18nUtil.getCodeLanMessage(
+                            RepositoryMessageCode.USER_NAME_EMPTY
                         ),
                         ScmType.CODE_P4.name
                     )

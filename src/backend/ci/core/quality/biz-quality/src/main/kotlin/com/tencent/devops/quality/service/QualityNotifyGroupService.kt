@@ -100,7 +100,7 @@ class QualityNotifyGroupService @Autowired constructor(
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = MessageUtil.getCodeLanMessage(
+                groupName = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
                     defaultMessage = it.displayName,
                     language = I18nUtil.getLanguage(userId)

@@ -144,7 +144,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
             throw PermissionForbiddenException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PEM_CHECK_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 )

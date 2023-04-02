@@ -233,7 +233,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = params,
-                    defaultMessage = MessageUtil.getCodeLanMessage(
+                    defaultMessage = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = params,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -252,7 +252,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = params,
-                    defaultMessage = MessageUtil.getCodeLanMessage(
+                    defaultMessage = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = params,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

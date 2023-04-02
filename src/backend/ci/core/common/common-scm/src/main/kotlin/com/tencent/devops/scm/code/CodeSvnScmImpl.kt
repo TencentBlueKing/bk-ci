@@ -96,9 +96,8 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -123,9 +122,8 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -138,9 +136,8 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -175,9 +172,8 @@ class CodeSvnScmImpl constructor(
         } catch (ignored: Exception) {
             logger.warn("Fail to add the webhook", ignored)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_CREATE_HOOK_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SVN_CREATE_HOOK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -202,9 +198,8 @@ class CodeSvnScmImpl constructor(
         } catch (e: Exception) {
             logger.warn("Fail to lock the repo:$repoName", e)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.LOCK_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.LOCK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -218,9 +213,8 @@ class CodeSvnScmImpl constructor(
         } catch (e: Exception) {
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.UNLOCK_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.UNLOCK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -244,7 +238,7 @@ class CodeSvnScmImpl constructor(
         } catch (e: SVNException) {
             if (e.errorMessage.errorCode.isAuthentication) {
                 throw ScmException(
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         RepositoryMessageCode.GIT_REPO_PEM_FAIL,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
@@ -253,7 +247,7 @@ class CodeSvnScmImpl constructor(
             } else {
                 logger.error("engineering($projectName)failed to get branch", e)
                 throw ScmException(
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         RepositoryMessageCode.CALL_REPO_ERROR,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
@@ -270,9 +264,8 @@ class CodeSvnScmImpl constructor(
         } catch (e: SVNException) {
             logger.error("engineering($projectName)local repository creation failed", e)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.CALL_REPO_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -297,9 +290,8 @@ class CodeSvnScmImpl constructor(
         } catch (e: SVNException) {
             logger.warn("Get the project($projectName})version changelog failed", e)
             throw ScmException(
-                message = MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.CALL_REPO_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )

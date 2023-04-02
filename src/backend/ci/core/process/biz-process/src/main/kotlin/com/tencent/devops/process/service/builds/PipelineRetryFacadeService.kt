@@ -127,9 +127,8 @@ class PipelineRetryFacadeService @Autowired constructor(
             logger.warn("retry runningJob: $projectId|$buildId｜${containerInfo.containerId} is running")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_JOB_RUNNING,
-                defaultMessage = MessageUtil.getCodeLanMessage(
-                    ProcessMessageCode.ERROR_JOB_RUNNING,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    ProcessMessageCode.ERROR_JOB_RUNNING
                 )
             )
         }

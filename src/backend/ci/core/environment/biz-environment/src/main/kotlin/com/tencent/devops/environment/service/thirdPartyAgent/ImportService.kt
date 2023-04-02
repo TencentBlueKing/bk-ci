@@ -96,7 +96,7 @@ class ImportService @Autowired constructor(
 
             if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
                 throw PermissionForbiddenException(
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -156,7 +156,7 @@ class ImportService @Autowired constructor(
         Preconditions.checkTrue(
             condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
             exception = PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )

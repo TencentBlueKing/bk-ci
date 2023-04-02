@@ -270,7 +270,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         failNum: Int
     ) {
         totalFailDetail[key] = mapOf(
-            NAME to MessageUtil.getCodeLanMessage(
+            NAME to I18nUtil.getCodeLanMessage(
                 messageCode = key,
                 defaultMessage = key,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),

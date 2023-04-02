@@ -43,28 +43,24 @@ object BuildMsgUtils {
     private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
             StartType.MANUAL ->
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_MANUAL,
-                    defaultMessage = "手动触发",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = "手动触发"
                 )
             StartType.TIME_TRIGGER ->
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_TIME,
-                    defaultMessage = "定时触发",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = "定时触发"
                 )
             StartType.WEB_HOOK ->
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_WEBHOOK,
-                    defaultMessage = "webhook触发",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = "webhook触发"
                 )
             StartType.REMOTE ->
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_REMOTE,
-                    defaultMessage = "远程触发",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = "远程触发"
                 )
             StartType.SERVICE ->
                 if (channelCode != null) {
@@ -74,17 +70,16 @@ object BuildMsgUtils {
                         channelCode.name + "触发"
                     }
                 } else {
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BUILD_MSG_SERVICE,
                         defaultMessage = "服务触发",
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 }
             StartType.PIPELINE ->
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BUILD_MSG_PIPELINE,
-                    defaultMessage = "流水线调用触发",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = "流水线调用触发"
                 )
         }
     }

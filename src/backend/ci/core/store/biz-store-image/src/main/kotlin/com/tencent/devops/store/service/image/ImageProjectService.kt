@@ -317,7 +317,7 @@ class ImageProjectService @Autowired constructor(
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String
         val classifyName = it["classifyName"] as String
-        val classifyLanName = MessageUtil.getCodeLanMessage(
+        val classifyLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
             defaultMessage = classifyName,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -956,7 +956,7 @@ class ImageProjectService @Autowired constructor(
         val labelList = imageLabelService.getLabelsByImageId(id).data
         val category = it.get(KEY_CATEGORY_CODE) as String?
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
-        val categoryLanName = MessageUtil.getCodeLanMessage(
+        val categoryLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.IMAGE.name}.category.$category",
             defaultMessage = categoryName,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

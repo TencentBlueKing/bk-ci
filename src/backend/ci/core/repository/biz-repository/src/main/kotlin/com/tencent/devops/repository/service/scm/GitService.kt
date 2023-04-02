@@ -748,8 +748,7 @@ class GitService @Autowired constructor(
                     if (!StringUtils.isEmpty(message)) {
                         val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
                             messageCode = RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL,
-                            params = arrayOf(it),
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            params = arrayOf(it)
                         )
 
                         return Result(validateResult.status, "${validateResult.message}（git error:$message）")

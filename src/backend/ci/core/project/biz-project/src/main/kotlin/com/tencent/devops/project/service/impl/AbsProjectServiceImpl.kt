@@ -103,7 +103,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
             throw ErrorCodeException(
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.NAME_EMPTY, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 errorCode = ProjectMessageCode.NAME_EMPTY
@@ -113,16 +113,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ProjectValidateType.project_name -> {
                 if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageUtil.getCodeLanMessage(
-                            ProjectMessageCode.NAME_TOO_LONG,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            ProjectMessageCode.NAME_TOO_LONG
                         ),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
                     )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageUtil.getCodeLanMessage(
+                        defaultMessage = I18nUtil.getCodeLanMessage(
                             ProjectMessageCode., language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ),
                         errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
@@ -133,9 +132,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 // 2 ~ 64 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_INTERVAL_ERROR,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_INTERVAL_ERROR
                         ),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
                     )
@@ -143,18 +141,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        defaultMessage = MessageUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                         ),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = MessageUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_EXIST,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_EXIST
                         ),
                         errorCode = ProjectMessageCode.EN_NAME_EXIST
                     )
@@ -204,7 +200,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 e
             )
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PEM_CREATE_FAIL, language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -256,7 +252,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 deleteAuth(projectId, accessToken)
             }
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PROJECT_NAME_EXIST,
                     language = I18nUtil.getLanguage(userId))
             )
@@ -285,7 +281,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PROJECT_NAME_EXIST, language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -368,7 +364,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         ProjectMessageCode.PROJECT_NAME_EXIST,
                         language = I18nUtil.getLanguage(userId))
                 )
@@ -607,7 +603,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         ProjectMessageCode.UPDATE_LOGO_FAIL,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -617,7 +613,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
         } else {
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.QUERY_PROJECT_FAIL, language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -628,7 +624,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG,
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.NAME_TOO_LONG, language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -636,7 +632,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = MessageUtil.getCodeLanMessage(
+                defaultMessage = I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PROJECT_NAME_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -658,7 +654,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
             throw PermissionForbiddenException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.PEM_CHECK_FAIL,
                     language = I18nUtil.getLanguage(userId))
             )

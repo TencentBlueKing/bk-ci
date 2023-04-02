@@ -915,7 +915,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                                MessageUtil.getCodeLanMessage(
+                                I18nUtil.getCodeLanMessage(
                                     messageCode = errorCode.toString(),
                                     checkUrlDecoder = true,
                                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

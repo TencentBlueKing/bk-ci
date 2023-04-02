@@ -254,7 +254,7 @@ class PipelineBuildFacadeService(
                 type = BuildFormPropertyType.STRING,
                 defaultValue = "",
                 options = null,
-                desc = MessageUtil.getCodeLanMessage(
+                desc = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_DESC,
                     language = I18nUtil.getLanguage(userId)
                 ),
@@ -264,12 +264,12 @@ class PipelineBuildFacadeService(
                 containerType = null,
                 glob = null,
                 properties = null,
-                label = MessageUtil.getCodeLanMessage(
+                label = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_LABEL,
                     defaultMessage = "构建信息",
                     language = I18nUtil.getLanguage(userId)
                 ),
-                placeholder = MessageUtil.getCodeLanMessage(
+                placeholder = I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_MSG_MANUAL,
                     defaultMessage = "手动触发",
                     language = I18nUtil.getLanguage(userId)
@@ -2179,10 +2179,9 @@ class PipelineBuildFacadeService(
 
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                    params = arrayOf(projectCode, nodeHashId),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(projectCode, nodeHashId)
                 )
             } $msg"
         }
@@ -2194,9 +2193,8 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${MessageUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                msg = "$msg| ${I18nUtil.getCodeLanMessage(
+                    messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
                     )
                 }"
             } else {
@@ -2213,7 +2211,7 @@ class PipelineBuildFacadeService(
                 return
             }
         } else {
-            msg = "$msg| ${MessageUtil.getCodeLanMessage(
+            msg = "$msg| ${I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )}"

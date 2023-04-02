@@ -472,7 +472,7 @@ abstract class ImageService @Autowired constructor() {
         result.add(
             MarketImageMain(
                 key = LATEST,
-                label = MessageUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId)),
+                label = I18nUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId)),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -494,7 +494,7 @@ abstract class ImageService @Autowired constructor() {
         result.add(
             MarketImageMain(
                 key = HOTTEST,
-                label = MessageUtil.getCodeLanMessage(messageCode = HOTTEST, language = I18nUtil.getLanguage(userId)),
+                label = I18nUtil.getCodeLanMessage(messageCode = HOTTEST, language = I18nUtil.getLanguage(userId)),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -517,7 +517,7 @@ abstract class ImageService @Autowired constructor() {
         classifyList.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
-                val classifyLanName = MessageUtil.getCodeLanMessage(
+                val classifyLanName = I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                     defaultMessage = it.classifyName,
                     language = I18nUtil.getLanguage(userId)
@@ -1114,9 +1114,8 @@ abstract class ImageService @Autowired constructor() {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val imageStatusName = ImageStatusEnum.getImageStatus(imageStatus.toInt())
                 val storeImageStatusPrefix = STORE_IMAGE_STATUS + "_"
-                val imageStatusMsg = MessageUtil.getCodeLanMessage(
-                    messageCode = "$storeImageStatusPrefix$imageStatusName",
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                val imageStatusMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "$storeImageStatusPrefix$imageStatusName"
                 )
                 versionName = "$versionName / $imageStatusMsg"
                 latestVersionName = "$latestVersionName / $imageStatusMsg"

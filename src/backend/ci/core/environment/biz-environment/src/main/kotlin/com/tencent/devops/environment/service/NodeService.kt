@@ -386,7 +386,7 @@ class NodeService @Autowired constructor(
         )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_NODE_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )

@@ -141,16 +141,16 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
     private fun initProcessInfo(): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(
-            MessageUtil.getCodeLanMessage(BEGIN, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+            I18nUtil.getCodeLanMessage(BEGIN, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
             BEGIN, NUM_ONE, SUCCESS))
         processInfo.add(ReleaseProcessItem(
-            MessageUtil.getCodeLanMessage(COMMIT, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+            I18nUtil.getCodeLanMessage(COMMIT, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
             COMMIT, NUM_TWO, UNDO))
         processInfo.add(ReleaseProcessItem(
-            MessageUtil.getCodeLanMessage(TEST, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+            I18nUtil.getCodeLanMessage(TEST, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
             TEST, NUM_THREE, UNDO))
         processInfo.add(ReleaseProcessItem(
-            MessageUtil.getCodeLanMessage(END, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+            I18nUtil.getCodeLanMessage(END, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
             END, NUM_FOUR, UNDO))
         return processInfo
     }

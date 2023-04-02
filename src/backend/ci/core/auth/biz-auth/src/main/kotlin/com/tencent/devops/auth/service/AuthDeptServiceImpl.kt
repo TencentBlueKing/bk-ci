@@ -54,10 +54,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.common.web.utils.I18nUtil
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -296,7 +294,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                             " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
@@ -312,7 +310,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                             " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ))

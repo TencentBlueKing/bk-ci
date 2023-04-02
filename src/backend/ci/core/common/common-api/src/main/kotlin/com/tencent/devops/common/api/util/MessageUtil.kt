@@ -356,25 +356,4 @@ object MessageUtil {
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)
     }
-
-    /**
-     * 获取code对应的中英文信息
-     * @param messageCode code
-     * @param checkUrlDecoder 考虑利用URL编码以支持多行信息，以及带特殊字符的信息
-     * @return Result响应结果对象
-     */
-    fun getCodeLanMessage(
-        messageCode: String,
-        defaultMessage: String? = null,
-        params: Array<String>? = null,
-        checkUrlDecoder: Boolean = false,
-        language: String
-    ): String {
-        return getMessageByLocale(
-            messageCode = messageCode,
-            params = params,
-            language = language,
-            defaultMessage = defaultMessage
-        ).let { if (checkUrlDecoder) URLDecoder.decode(it, "UTF-8") else it }
-    }
 }

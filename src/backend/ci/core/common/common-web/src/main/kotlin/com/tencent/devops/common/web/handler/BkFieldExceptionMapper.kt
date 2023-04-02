@@ -55,7 +55,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
         val constraintViolations = exception.constraintViolations
         var errorResult: Result<Any> = MessageUtil.generateResponseDataObject(
             CommonMessageCode.SYSTEM_ERROR,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation ->
@@ -71,10 +71,9 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                     else -> propertyPath
                 }
                 // 获取path路径对应的描述信息，如果没有配置则给前端展示去掉方法名的path
-                val parameterName = MessageUtil.getCodeLanMessage(
+                val parameterName = I18nUtil.getCodeLanMessage(
                     messageCode = propertyPath,
-                    defaultMessage = propertyShowPath,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    defaultMessage = propertyShowPath
                 )
                 // 生成错误提示信息
                 errorResult = MessageUtil.generateResponseDataObject(

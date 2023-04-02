@@ -655,10 +655,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val stageCode = qualityDataMap["stage"] as String
                 val language = I18nUtil.getLanguage(userId)
                 val stage = when (stageCode) {
-                    "DEVELOP" -> MessageUtil.getCodeLanMessage(messageCode = DEVELOP, language = language)
-                    "TEST" -> MessageUtil.getCodeLanMessage(messageCode = TEST, language = language)
-                    "DEPLOY" -> MessageUtil.getCodeLanMessage(messageCode = DEPLOY, language = language)
-                    "SECURITY" -> MessageUtil.getCodeLanMessage(messageCode = SECURITY, language = language)
+                    "DEVELOP" -> I18nUtil.getCodeLanMessage(messageCode = DEVELOP, language = language)
+                    "TEST" -> I18nUtil.getCodeLanMessage(messageCode = TEST, language = language)
+                    "DEPLOY" -> I18nUtil.getCodeLanMessage(messageCode = DEPLOY, language = language)
+                    "SECURITY" -> I18nUtil.getCodeLanMessage(messageCode = SECURITY, language = language)
                     else -> throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
@@ -984,7 +984,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomId = atomId,
             atomStatus = status,
             userId = userId,
-            msg = MessageUtil.getCodeLanMessage(messageCode = UN_RELEASE, language = I18nUtil.getLanguage(userId))
+            msg = I18nUtil.getCodeLanMessage(messageCode = UN_RELEASE, language = I18nUtil.getLanguage(userId))
         )
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(

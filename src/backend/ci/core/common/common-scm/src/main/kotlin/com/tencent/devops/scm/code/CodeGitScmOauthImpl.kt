@@ -102,9 +102,8 @@ class CodeGitScmOauthImpl constructor(
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SERCRT_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SERCRT_EMPTY
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -115,9 +114,8 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_WRONG,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_WRONG
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -133,9 +131,8 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_SERCRT_WRONG,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_SERCRT_WRONG
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -145,9 +142,8 @@ class CodeGitScmOauthImpl constructor(
     override fun checkTokenAndUsername() {
         if (privateKey == null) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.PWD_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.PWD_EMPTY
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -159,9 +155,8 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_WRONG,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_WRONG
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -175,9 +170,8 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_LOGIN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -187,18 +181,16 @@ class CodeGitScmOauthImpl constructor(
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_GIT.name
             )
         }
         if (hookUrl.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_HOOK_URL_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_HOOK_URL_EMPTY
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -207,9 +199,8 @@ class CodeGitScmOauthImpl constructor(
             gitOauthApi.addWebhook(gitConfig.gitApiUrl, token, projectName, hookUrl, event)
         } catch (ignored: Throwable) {
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_LOGIN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -226,9 +217,8 @@ class CodeGitScmOauthImpl constructor(
     ) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_GIT.name
             )
@@ -247,9 +237,8 @@ class CodeGitScmOauthImpl constructor(
             )
         } catch (ignored: Throwable) {
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_LOGIN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_GIT.name
             )

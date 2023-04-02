@@ -78,7 +78,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
         if (!validateCreatePermission) {
             throw PermissionForbiddenException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     ProjectMessageCode.USER_NOT_CREATE_PERM, language = I18nUtil.getLanguage(userId)
                 )
             )

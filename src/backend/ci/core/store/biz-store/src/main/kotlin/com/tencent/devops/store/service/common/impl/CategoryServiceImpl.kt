@@ -154,8 +154,7 @@ class CategoryServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(categoryCode),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }
@@ -170,8 +169,7 @@ class CategoryServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(categoryName),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }
@@ -196,7 +194,7 @@ class CategoryServiceImpl @Autowired constructor(
     override fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>) {
         val categoryCode = it[KEY_CATEGORY_CODE] as String
         val categoryName = it[KEY_CATEGORY_NAME] as String
-        val categoryLanName = MessageUtil.getCodeLanMessage(
+        val categoryLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
             defaultMessage = categoryName,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

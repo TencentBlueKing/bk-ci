@@ -112,7 +112,7 @@ class EnvService @Autowired constructor(
     override fun createEnvironment(userId: String, projectId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, AuthPermission.CREATE)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_CREATE_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -131,7 +131,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -398,7 +398,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.VIEW)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_VIEW_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -478,7 +478,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_DEL_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -568,7 +568,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -630,7 +630,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -739,7 +739,7 @@ class EnvService @Autowired constructor(
         val envId = HashUtil.decodeIdToLong(envHashId)
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_EDIT_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                     )
@@ -770,7 +770,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_DEL_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                     )
@@ -884,7 +884,7 @@ class EnvService @Autowired constructor(
         envDao.getOrNull(dslContext, projectId, envId) ?: return
         if (!environmentPermissionService.checkEnvPermission(userId, projectId, envId, AuthPermission.DELETE)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getCodeLanMessage(
+                message = I18nUtil.getCodeLanMessage(
                     ERROR_ENV_NO_DEL_PERMISSSION,
                     language = I18nUtil.getLanguage(userId)
                     )

@@ -58,7 +58,7 @@ class ServiceReportResourceImpl @Autowired constructor(
                 throw PermissionForbiddenException(
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                     params = arrayOf(AuthPermission.VIEW.value),
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )

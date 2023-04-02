@@ -139,8 +139,7 @@ class LabelServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelCode),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }
@@ -155,8 +154,7 @@ class LabelServiceImpl @Autowired constructor(
                 return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelName),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
             }
         }

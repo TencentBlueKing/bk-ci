@@ -143,11 +143,11 @@ class PipelineInfoFacadeService @Autowired constructor(
 
         val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
             ?: throw OperationException(
-                MessageUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw OperationException(
-                MessageUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON, language = I18nUtil.getLanguage(userId))
             )
 
         // 适配兼容老数据
@@ -489,7 +489,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             // 判断用户是否为项目管理员
             if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
                 val defaultMessage = "admin"
-                val permissionMsg = MessageUtil.getCodeLanMessage(
+                val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
                     defaultMessage = defaultMessage,
                     language = I18nUtil.getLanguage(userId)

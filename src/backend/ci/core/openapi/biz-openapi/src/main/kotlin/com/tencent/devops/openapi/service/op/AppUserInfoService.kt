@@ -36,7 +36,7 @@ class AppUserInfoService @Autowired constructor(
         if (!opAppUserService.checkUser(appManagerInfo.managerUser)) {
             logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser check fail")
             throw ParamBlankException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     OpenAPIMessageCode.USER_CHECK_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -48,7 +48,7 @@ class AppUserInfoService @Autowired constructor(
             if (appManagerInfo.managerUser == appManagerRecord.managerId) {
                 logger.warn("BIND_APP_MANAGER_USER|$userId|appManagerUser ${appManagerInfo.managerUser} is exist")
                 throw ParamBlankException(
-                    MessageUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         OpenAPIMessageCode.ERROR_USER_EXIST,
                         language = I18nUtil.getLanguage(userId)
                     )

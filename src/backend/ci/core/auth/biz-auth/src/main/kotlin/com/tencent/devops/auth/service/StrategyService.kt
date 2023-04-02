@@ -80,7 +80,7 @@ class StrategyService @Autowired constructor(
         if (strategyNameCheck != null) {
             logger.warn("createStrategy: $name is exist")
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.STRATEGT_NAME_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 )

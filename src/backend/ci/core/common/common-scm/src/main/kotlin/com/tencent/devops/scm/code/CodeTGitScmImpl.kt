@@ -98,9 +98,8 @@ class CodeTGitScmImpl constructor(
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SERCRT_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SERCRT_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -111,9 +110,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.TGIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -128,9 +126,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_SECRET_WRONG,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.TGIT_SECRET_WRONG
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -140,9 +137,8 @@ class CodeTGitScmImpl constructor(
     override fun checkTokenAndUsername() {
         if (privateKey == null) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.PWD_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.PWD_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -154,9 +150,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.TGIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -170,9 +165,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_LOGIN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.TGIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -182,18 +176,16 @@ class CodeTGitScmImpl constructor(
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
         }
         if (hookUrl.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_HOOK_URL_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_HOOK_URL_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -203,7 +195,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -219,9 +211,8 @@ class CodeTGitScmImpl constructor(
     ) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -241,9 +232,8 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add commit check of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )

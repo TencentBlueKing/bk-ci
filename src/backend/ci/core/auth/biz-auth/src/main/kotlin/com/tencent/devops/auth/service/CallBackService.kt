@@ -126,9 +126,8 @@ class CallBackService @Autowired constructor(
                     logger.warn("resource[$it] related not exist")
                     throw ErrorCodeException(
                         errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = MessageUtil.getCodeLanMessage(
-                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = I18nUtil.getCodeLanMessage(
+                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
                         )
                     )
                 }
@@ -140,10 +139,9 @@ class CallBackService @Autowired constructor(
         // auth回调接口通道校验
         if (!path.contains("api/open")) {
             throw ErrorCodeException(
-                defaultMessage = AuthMessageCode.PATH_CHECK_FAIL,
-                errorCode = MessageUtil.getCodeLanMessage(
-                    AuthMessageCode.PATH_CHECK_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorCode = AuthMessageCode.PATH_CHECK_FAIL,
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    AuthMessageCode.PATH_CHECK_FAIL
                 )
             )
         }
@@ -153,10 +151,9 @@ class CallBackService @Autowired constructor(
         // gateway校验https,http
         if (!gateway.contains("http://") && !gateway.contains("https://")) {
             throw ErrorCodeException(
-                defaultMessage = AuthMessageCode.HOST_CHECKOU_FAIL,
-                errorCode = MessageUtil.getCodeLanMessage(
-                    AuthMessageCode.HOST_CHECKOU_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorCode = AuthMessageCode.HOST_CHECKOU_FAIL,
+                defaultMessage = I18nUtil.getCodeLanMessage(
+                    AuthMessageCode.HOST_CHECKOU_FAIL
                 )
             )
         }

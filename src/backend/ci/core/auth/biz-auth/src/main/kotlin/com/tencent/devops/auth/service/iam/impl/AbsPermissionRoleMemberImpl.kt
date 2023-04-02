@@ -77,7 +77,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
-            throw ParamBlankException(MessageUtil.getCodeLanMessage(
+            throw ParamBlankException(I18nUtil.getCodeLanMessage(
                 CAN_NOT_FIND_RELATION,
                 language = I18nUtil.getLanguage(userId))
             )
@@ -141,7 +141,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(
-                MessageUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION, language = I18nUtil.getLanguage(userId))
             )
         }
         permissionGradeService.checkGradeManagerUser(userId, projectId)
@@ -163,9 +163,8 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(
-                MessageUtil.getCodeLanMessage(
-                    messageCode = CAN_NOT_FIND_RELATION,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CAN_NOT_FIND_RELATION
                 )
             )
         }

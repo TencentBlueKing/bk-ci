@@ -88,7 +88,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         } else {
             return Result(
                 405,
-                MessageUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(ProjectMessageCode.ID_INVALID, language = I18nUtil.getLanguage(userId))
             )
         }
     }
@@ -176,7 +176,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             if (favoriteDao.create(dslContext, userId, serviceId) > 0) {
                 return Result(
                     status = 0,
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         ProjectMessageCode.COLLECTION_SUCC, language = I18nUtil.getLanguage(userId)
                     ),
                     requestId = "",
@@ -187,7 +187,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             if (favoriteDao.delete(dslContext, userId, serviceId) > 0) {
                 return Result(
                     status = 0,
-                    message = MessageUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         ProjectMessageCode.COLLECTION_CANCEL_SUCC, language = I18nUtil.getLanguage(userId)
                     ),
                     requestId = "",

@@ -67,7 +67,7 @@ class AuthGroupService @Autowired constructor(
                     "projectCode = $projectCode | groupInfo = $groupInfo "
             )
             throw OperationException(
-                MessageUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.GROUP_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -103,7 +103,7 @@ class AuthGroupService @Autowired constructor(
                     "projectCode = $projectCode | groupInfo = $groupCodes "
             )
             throw OperationException(
-                MessageUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST, language = I18nUtil.getLanguage(userId))
             )
         }
         val groupCreateInfos = mutableListOf<GroupCreateInfo>()

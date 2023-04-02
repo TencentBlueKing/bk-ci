@@ -1239,7 +1239,7 @@ abstract class ImageReleaseService {
         val imageAgentTypes = mutableListOf<ImageAgentTypeInfo>()
         types.forEach { type ->
             val buildType = BuildType.valueOf(type)
-            val i18nTypeName = MessageUtil.getCodeLanMessage(
+            val i18nTypeName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${buildType.name}",
                 defaultMessage = buildType.value,
                 language = I18nUtil.getLanguage(userId)

@@ -549,8 +549,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 ?: return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(templateCode),
-                    data = false,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = false
                 )
 
         val sendAllNotify = request.notifyType == null
@@ -708,8 +707,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 ?: return MessageUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(request.templateCode),
-                    data = null,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    data = null
                 )
 
         val notifyContext = when (request.notifyType.name) {

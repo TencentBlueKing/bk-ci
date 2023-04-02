@@ -28,16 +28,23 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 /**
  * 项目角色组
  */
-enum class DefaultGroupType(val value: String, val displayName: String) {
-    MANAGER("manager", "CI管理员"), // 管理员
-    DEVELOPER("developer", "开发人员"), // 开发人员
-    MAINTAINER("maintainer", "运维人员"), // 运维人员
-    TESTER("tester", "测试人员"), // 测试人员
-    PM("pm", "产品人员"), // 产品人员
-    QC("qc", "质量管理员"); // 质量管理员
+enum class DefaultGroupType(
+    val value: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "defaultGroupType", reusePrefixFlag = false)
+    val displayName: String
+) {
+    MANAGER("manager", "manager"), // CI管理员
+    DEVELOPER("developer", "developer"), // 开发人员
+    MAINTAINER("maintainer", "maintainer"), // 运维人员
+    TESTER("tester", "tester"), // 测试人员
+    PM("pm", "pm"), // 产品人员
+    QC("qc", "qc"); // 质量管理员
 
     companion object {
         fun get(value: String): DefaultGroupType {

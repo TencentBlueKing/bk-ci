@@ -46,15 +46,15 @@ package com.tencent.devops.stream.constant
  */
 
 object StreamMessageCode {
-
-    const val BRANCH_INFO_ACCESS_DENIED = "2126001" // 无权限获取分支信息
-    const val PIPELINE_NOT_FOUND_OR_DELETED = "2126002"// 该流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2126003"// 构建任务不存在，无法重试
-    const val USER_NOT_AUTHORIZED = "2126004"// 用户[{0}]尚未进行OAUTH授权，请先授权。
-    const val STARTUP_CONFIG_MISSING = "2126005"// 启动配置缺少 {0}
-    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2126006"// ci开启人{0} 无当前项目执行权限, 请重新授权
-    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2126007"// 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
-    const val TIMER_PARAM_TOO_LONG = "2126008"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
-    const val PARAM_INCORRECT = "2126009"// 蓝盾项目ID {0} 不正确
-    const val PROJECT_NOT_OPEN_STREAM = "2126010"// 项目未开启Stream，无法查询
+    // 从2126101起
+    const val BRANCH_INFO_ACCESS_DENIED = "2126101" // 无权限获取分支信息
+    const val PIPELINE_NOT_FOUND_OR_DELETED = "2126102"// 该流水线不存在或已删除，如有疑问请联系蓝盾助手
+    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2126103"// 构建任务不存在，无法重试
+    const val USER_NOT_AUTHORIZED = "2126104"// 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val STARTUP_CONFIG_MISSING = "2126105"// 启动配置缺少 {0}
+    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2126106"// ci开启人{0} 无当前项目执行权限, 请重新授权
+    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2126107"// 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
+    const val TIMER_PARAM_TOO_LONG = "2126108"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val PARAM_INCORRECT = "2126109"// 蓝盾项目ID {0} 不正确
+    const val PROJECT_NOT_OPEN_STREAM = "2126110"// 项目未开启Stream，无法查询
 }

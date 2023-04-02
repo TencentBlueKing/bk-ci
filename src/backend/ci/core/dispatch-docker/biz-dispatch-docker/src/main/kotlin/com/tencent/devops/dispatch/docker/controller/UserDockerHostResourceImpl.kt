@@ -261,7 +261,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            val permissionMsg = MessageUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
                 defaultMessage = permission.alias,
                 language = I18nUtil.getLanguage(userId)

@@ -78,9 +78,9 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-                val normalName = MessageUtil.getCodeLanMessage(NORMAL, language = I18nUtil.getLanguage(userId))
-                val exceptionName = MessageUtil.getCodeLanMessage(EXCEPTION, language = I18nUtil.getLanguage(userId))
-                val numUnit = MessageUtil.getCodeLanMessage(NUM_UNIT, language = I18nUtil.getLanguage(userId))
+                val normalName = I18nUtil.getCodeLanMessage(NORMAL, language = I18nUtil.getLanguage(userId))
+                val exceptionName = I18nUtil.getCodeLanMessage(EXCEPTION, language = I18nUtil.getLanguage(userId))
+                val numUnit = I18nUtil.getCodeLanMessage(NUM_UNIT, language = I18nUtil.getLanguage(userId))
                 envNodeList?.map {
                     AgentResponse(
                         id = it.envHashId,

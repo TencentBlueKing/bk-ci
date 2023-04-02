@@ -336,7 +336,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(
             MarketMainItemLabel(
-                LATEST, MessageUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId))
+                LATEST, I18nUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId))
             )
         )
         futureList.add(
@@ -359,7 +359,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         labelInfoList.add(
             MarketMainItemLabel(
                 HOTTEST,
-                MessageUtil.getCodeLanMessage(HOTTEST, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(HOTTEST, language = I18nUtil.getLanguage(userId))
             )
         )
         futureList.add(
@@ -382,7 +382,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
         classifyList.forEach {
             val classifyCode = it.classifyCode
-            val classifyLanName = MessageUtil.getCodeLanMessage(
+            val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
                 defaultMessage = it.classifyName,
                 language = I18nUtil.getLanguage(userId)
