@@ -37,7 +37,6 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.common.AuthI18nConstants
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -64,10 +63,7 @@ class ResourceService @Autowired constructor(
         )
         val response = authHttpClientService.request(
             request,
-            MessageUtil.getMessageByLocale(
-                AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API,
-                I18nUtil.getDefaultLocaleLanguage()
-            )
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API)
         )
         return buildResult(callBackInfo.method, response)
     }
@@ -101,10 +97,7 @@ class ResourceService @Autowired constructor(
         )
         val response = authHttpClientService.request(
             request,
-            MessageUtil.getMessageByLocale(
-                AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API,
-                I18nUtil.getDefaultLocaleLanguage()
-            )
+            I18nUtil.getCodeLanMessage(AuthI18nConstants.BK_FAILED_CALL_CALLBACK_API)
         )
 
         logger.info("getInstanceByResource response: $response")

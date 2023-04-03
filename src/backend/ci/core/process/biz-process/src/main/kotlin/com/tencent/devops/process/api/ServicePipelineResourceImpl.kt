@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -512,10 +512,9 @@ class ServicePipelineResourceImpl @Autowired constructor(
             )
         ) {
             throw PermissionForbiddenException(
-                MessageUtil.getMessageByLocale(
-                    BK_USER_NOT_HAVE_PROJECT_PERMISSIONS,
-                    I18nUtil.getDefaultLocaleLanguage(),
-                    arrayOf(userId, projectId)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
                 )
             )
         }

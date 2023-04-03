@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.listener
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
 import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -83,20 +82,14 @@ class ThirdPartyAgentListener @Autowired constructor(
             logger.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
             throw VMTaskFailException(
-                MessageUtil.getMessageByLocale(
-                    UNABLE_GET_PIPELINE_JOB_STATUS,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )
+                I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             )
         }
 
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
             throw VMTaskFailException(
-                MessageUtil.getMessageByLocale(
-                    JOB_BUILD_STOPS,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )
+                I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             )
         }
 

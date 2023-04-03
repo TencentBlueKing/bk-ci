@@ -147,10 +147,7 @@ class DispatchService constructor(
         if (statusResult.isNotOk() || statusResult.data == null) {
             logger.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
-            val errorMessage = MessageUtil.getMessageByLocale(
-                UNABLE_GET_PIPELINE_JOB_STATUS,
-                I18nUtil.getDefaultLocaleLanguage()
-            )
+            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
@@ -161,10 +158,7 @@ class DispatchService constructor(
 
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
-            val errorMessage = MessageUtil.getMessageByLocale(
-                JOB_BUILD_STOPS,
-                I18nUtil.getDefaultLocaleLanguage()
-            )
+            val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
                 errorCode = JOB_BUILD_STOPS.toInt(),

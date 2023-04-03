@@ -255,9 +255,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${MessageUtil.getMessageByLocale(
-                        "$FAILED_START_BUILD_MACHINE",
-                        I18nUtil.getDefaultLocaleLanguage())}- ${e.message}",
+                message = "${I18nUtil.getCodeLanMessage("$FAILED_START_BUILD_MACHINE")}- ${e.message}",
                 executeCount = event.executeCount)
 
             errorCode = e.errorCode
@@ -270,9 +268,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${MessageUtil.getMessageByLocale(
-                    "$FAILED_START_BUILD_MACHINE",
-                    I18nUtil.getDefaultLocaleLanguage())} - ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage("$FAILED_START_BUILD_MACHINE")} - ${t.message}",
                 executeCount = event.executeCount)
 
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR

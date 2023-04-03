@@ -92,10 +92,7 @@ class JobQuotaService constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(
-                            BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY,
-                            I18nUtil.getDefaultLocaleLanguage()
-                        ),
+                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY),
                         vmType.displayName,
                         "${RETRY_DELTA / 1000}",
                         "${startupEvent.retryTime}"
@@ -119,10 +116,7 @@ class JobQuotaService constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(
-                            BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED,
-                            I18nUtil.getDefaultLocaleLanguage()
-                        ),
+                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED),
                         vmType.displayName,
                         "$retryTime"
                     ),
@@ -144,10 +138,7 @@ class JobQuotaService constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(
-                            BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED,
-                            I18nUtil.getDefaultLocaleLanguage()
-                        ),
+                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED),
                         vmType.displayName,
                         "${RETRY_DELTA / 1000}",
                         "${startupEvent.retryTime}"

@@ -106,7 +106,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
                     params = arrayOf(iamEx.errorMsg),
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         } catch (e: Exception) {
@@ -115,7 +115,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
                     params = arrayOf(e.message ?: "unknown"),
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

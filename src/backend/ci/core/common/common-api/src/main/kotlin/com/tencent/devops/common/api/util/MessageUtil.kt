@@ -30,11 +30,10 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
+import com.tencent.devops.common.api.pojo.Result
 import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
 import java.text.MessageFormat
-import com.tencent.devops.common.api.pojo.Result
-import java.net.URLDecoder
 import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
@@ -344,7 +343,7 @@ object MessageUtil {
         messageCode: String,
         params: Array<String>? = null,
         data: T? = null,
-        language: String,
+        language: String? = null,
         defaultMessage: String? = null
     ): Result<T> {
         val message = getMessageByLocale(

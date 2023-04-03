@@ -133,7 +133,7 @@ object BuildStatusSwitcher {
     class TaskBuildStatusMaker : BuildStatusMaker {
 
         companion object {
-            private val timeoutCodeSet = setOf(2128006)
+            private val timeoutCodeSet = setOf(2103006)
         }
 
         /**
