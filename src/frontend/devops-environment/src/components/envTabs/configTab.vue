@@ -76,7 +76,6 @@
                                 v-perm="{
                                     hasPermission: curEnvDetail.canEdit,
                                     disablePermissionApi: true,
-                                    tooltips: $t('environment.noPermission'),
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: ENV_RESOURCE_TYPE,
@@ -91,7 +90,6 @@
                                 v-perm="{
                                     hasPermission: curEnvDetail.canEdit,
                                     disablePermissionApi: true,
-                                    tooltips: $t('environment.noPermission'),
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: ENV_RESOURCE_TYPE,
