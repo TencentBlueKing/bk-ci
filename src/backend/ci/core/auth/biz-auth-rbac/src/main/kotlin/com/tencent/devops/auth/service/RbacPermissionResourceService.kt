@@ -289,11 +289,17 @@ class RbacPermissionResourceService(
     }
 
     override fun isEnablePermission(
+        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        checkProjectApprovalStatus(resourceType, resourceCode)
+        hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         return authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,

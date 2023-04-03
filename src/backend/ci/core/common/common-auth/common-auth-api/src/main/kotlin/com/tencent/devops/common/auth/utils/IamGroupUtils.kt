@@ -81,8 +81,8 @@ object IamGroupUtils {
     /**
      * 构建二级管理员用户组名称
      */
-    fun buildSubsetManagerGroupName(resourceType: String, resourceName: String, groupName: String) =
-        "$SYSTEM_DEFAULT_NAME-$resourceType-$resourceName-$groupName"
+    fun buildSubsetManagerGroupName(resourceType: String, resourceName: String) =
+        "$SYSTEM_DEFAULT_NAME-$resourceType-$resourceName"
 
     /**
      * 获取二级管理员用户组展示名称

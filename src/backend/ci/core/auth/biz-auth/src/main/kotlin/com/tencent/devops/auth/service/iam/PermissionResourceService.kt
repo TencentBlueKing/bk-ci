@@ -91,6 +91,7 @@ interface PermissionResourceService {
      * 资源是否开启权限管理
      */
     fun isEnablePermission(
+        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String

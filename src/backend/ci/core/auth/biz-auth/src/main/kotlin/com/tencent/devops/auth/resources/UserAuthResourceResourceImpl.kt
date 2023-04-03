@@ -61,12 +61,14 @@ class UserAuthResourceResourceImpl @Autowired constructor(
     }
 
     override fun isEnablePermission(
+        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
     ): Result<Boolean> {
         return Result(
             permissionResourceService.isEnablePermission(
+                userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
                 resourceCode = resourceCode

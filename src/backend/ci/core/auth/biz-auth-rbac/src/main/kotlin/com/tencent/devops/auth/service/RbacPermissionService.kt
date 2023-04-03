@@ -43,6 +43,7 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
@@ -122,11 +123,17 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
+            // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+            val useAction = if (!action.contains("_")) {
+                RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resource.resourceType))
+            } else {
+                action
+            }
             if (isManager(
                     userId = userId,
                     projectCode = projectCode,
                     resourceType = resource.resourceType,
-                    action = action
+                    action = useAction
                 )
             ) {
                 return true
@@ -142,7 +149,7 @@ class RbacPermissionService constructor(
                 .build()
 
             val actionDTO = ActionDTO()
-            actionDTO.id = action
+            actionDTO.id = useAction
             val paths = mutableListOf<PathInfoDTO>()
             resourcesPaths(
                 projectCode = projectCode,

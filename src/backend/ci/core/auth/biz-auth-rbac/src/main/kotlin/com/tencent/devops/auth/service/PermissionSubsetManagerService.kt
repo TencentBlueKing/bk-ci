@@ -83,8 +83,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceType = resourceType,
-            resourceName = resourceName,
-            groupName = managerGroupConfig.groupName
+            resourceName = resourceName
         )
         val description = managerGroupConfig.description
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
@@ -131,8 +130,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceType = resourceType,
-            resourceName = resourceName,
-            groupName = managerGroupConfig.groupName
+            resourceName = resourceName
         )
 
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
