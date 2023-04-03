@@ -79,7 +79,20 @@
                         <span>{{ $t(envTypeDesc) }}</span>
                     </p>
                     <div class="handler-btn" v-if="curEnvDetail.envType !== 'BUILD'">
-                        <i class="devops-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i class="devops-icon icon-edit" v-if="!isEditingType" @click="toEditBaseForm('type')"></i>
+                        </span>
                         <span class="edit-base" v-if="isEditingType" @click="saveEnvDetail('type')">{{ $t('environment.save') }}</span>
                         <span class="edit-base" v-if="isEditingType" @click="cancelEnvDetail('type')">{{ $t('environment.cancel') }}</span>
                     </div>

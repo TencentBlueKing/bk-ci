@@ -52,7 +52,7 @@ const isDisabled = ref(true);
 const rules = {
   projectCode: [
     {
-      validator: (val) => val,
+      validator: (val: string) => val,
       message: t('请选择项目'),
       trigger: 'change',
     },

@@ -72,9 +72,9 @@
                                     action: ENV_RESOURCE_ACTION.EDIT
                                 }
                             }"
-                        >
-                            <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
-                        </span>
+                            class="node-delete delete-node-text"
+                            @click.stop="confirmDelete(props.row)"
+                        >{{ $t('environment.remove') }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
