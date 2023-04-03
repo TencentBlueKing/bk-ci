@@ -25,26 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.audit
 
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModel
 
-data class PipelineBuildContainer(
+@ApiModel("审计模型-Audit-查询")
+data class QueryAudit(
     val projectId: String,
-    val pipelineId: String,
-    val buildId: String,
-    val stageId: String,
-    val containerId: String, // 与seq id同值
-    val containerHashId: String?, // 与model中的container.containerHashId同值
-    val matrixGroupFlag: Boolean?,
-    val matrixGroupId: String?,
-    val containerType: String,
-    val seq: Int,
-    var status: BuildStatus,
-    var startTime: LocalDateTime? = null,
-    var endTime: LocalDateTime? = null,
-    val cost: Int = 0,
-    var executeCount: Int = 1,
-    val controlOption: PipelineBuildContainerControlOption
+    val resourceType: String,
+    val resourceId: String?,
+    val resourceName: String?,
+    val userId: String?,
+    val startTime: String?,
+    val endTime: String?
 )

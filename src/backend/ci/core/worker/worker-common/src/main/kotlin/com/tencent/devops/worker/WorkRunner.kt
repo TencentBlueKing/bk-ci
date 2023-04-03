@@ -83,6 +83,7 @@ object WorkRunner {
             exitProcess(-1)
         } catch (re: RemoteServiceException) {
             ErrorMsgLogUtil.appendErrorMsg(re.responseContent ?: re.message!!)
+            exitProcess(-1) // fix #8360
         } catch (ignore: Throwable) {
             logger.error("Encounter unknown exception", ignore)
             LoggerService.addErrorLine("Other unknown error has occurred: " + ignore.message)

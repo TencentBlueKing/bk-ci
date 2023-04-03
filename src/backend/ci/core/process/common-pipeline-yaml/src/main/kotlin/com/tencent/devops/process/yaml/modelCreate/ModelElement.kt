@@ -68,9 +68,11 @@ class ModelElement @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
+            val timeout = setupTimeout(step)
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
-                timeout = step.timeoutMinutes?.toLong() ?: 480,
+                timeout = timeout,
+                timeoutVar = timeout.toString(),
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
@@ -127,6 +129,8 @@ class ModelElement @Autowired(required = false) constructor(
 
         return elementList
     }
+
+    private fun setupTimeout(step: Step) = step.timeoutMinutes?.toLong() ?: 480
 
     private fun makeRunElement(
         step: Step,
