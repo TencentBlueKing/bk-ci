@@ -235,8 +235,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     params = params,
                     defaultMessage = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = params
                     )
                 )
             }
@@ -254,8 +253,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     params = params,
                     defaultMessage = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = params
                     )
                 )
             }

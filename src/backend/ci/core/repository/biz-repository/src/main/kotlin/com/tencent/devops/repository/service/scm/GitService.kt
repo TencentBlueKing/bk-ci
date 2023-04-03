@@ -866,8 +866,7 @@ class GitService @Autowired constructor(
                 val message = dataMap["message"]
                 if (!StringUtils.isEmpty(message)) {
                     val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
                     )
                     return Result(
                         status = validateResult.status,
@@ -1001,8 +1000,7 @@ class GitService @Autowired constructor(
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
                     MessageUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
                     )
                 logger.info("updateGitProjectInfo validateResult>> $validateResult")
 
@@ -1056,16 +1054,14 @@ class GitService @Autowired constructor(
                 return if (!StringUtils.isEmpty(message)) {
                     val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
-                        params = arrayOf(groupCode),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = arrayOf(groupCode)
                     )
                     logger.info("moveProjectToGroup validateResult>> $validateResult")
                     Result(validateResult.status, "${validateResult.message}（git error:$message）")
                 } else {
                     MessageUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
-                        params = arrayOf(groupCode),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = arrayOf(groupCode)
                     )
                 }
             }
@@ -1384,8 +1380,7 @@ class GitService @Autowired constructor(
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
                     MessageUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
                     )
                 logger.info("createGitTag validateResult>> $validateResult")
 

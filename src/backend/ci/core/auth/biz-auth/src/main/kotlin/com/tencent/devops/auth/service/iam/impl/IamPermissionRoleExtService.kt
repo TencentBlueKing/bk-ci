@@ -181,8 +181,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR
                     )
                 )
             }
@@ -192,8 +191,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
                     )
                 )
             }
@@ -209,8 +207,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR
                     )
                 )
             }
@@ -220,8 +217,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
                     defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
                     )
                 )
             }

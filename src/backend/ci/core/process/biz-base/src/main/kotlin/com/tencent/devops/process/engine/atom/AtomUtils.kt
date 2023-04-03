@@ -109,8 +109,7 @@ object AtomUtils {
                     errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
                     errorMsg = MessageUtil.getMessageByLocale(
                         messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        params = arrayOf(element.name),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = arrayOf(element.name)
                     ),
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,

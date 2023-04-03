@@ -72,8 +72,7 @@ object BuildMsgUtils {
                 } else {
                     I18nUtil.getCodeLanMessage(
                         messageCode = BUILD_MSG_SERVICE,
-                        defaultMessage = "服务触发",
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        defaultMessage = "服务触发"
                     )
                 }
             StartType.PIPELINE ->

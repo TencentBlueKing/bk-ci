@@ -295,8 +295,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.USER_NOT_EXIST,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.USER_NOT_EXIST
                     )
                 )
             }
@@ -311,8 +310,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 )
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.USER_NOT_EXIST,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        messageCode = AuthMessageCode.USER_NOT_EXIST
                     ))
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")

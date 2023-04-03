@@ -239,8 +239,7 @@ class CodeSvnScmImpl constructor(
             if (e.errorMessage.errorCode.isAuthentication) {
                 throw ScmException(
                     message = I18nUtil.getCodeLanMessage(
-                        RepositoryMessageCode.GIT_REPO_PEM_FAIL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        RepositoryMessageCode.GIT_REPO_PEM_FAIL
                     ),
                     scmType = ScmType.CODE_SVN.name
                 )
@@ -248,8 +247,7 @@ class CodeSvnScmImpl constructor(
                 logger.error("engineering($projectName)failed to get branch", e)
                 throw ScmException(
                     message = I18nUtil.getCodeLanMessage(
-                        RepositoryMessageCode.CALL_REPO_ERROR,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        RepositoryMessageCode.CALL_REPO_ERROR
                     ),
                     scmType = ScmType.CODE_SVN.name
                 )

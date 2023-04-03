@@ -181,8 +181,7 @@ open class BaseBuildDetailService constructor(
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (stage.id == TRIGGER_STAGE) {
                     I18nUtil.getCodeLanMessage(
-                        statusMessage,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        statusMessage
                     ) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )

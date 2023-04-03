@@ -79,8 +79,7 @@ class TimerTriggerElementBizPlugin constructor(
                 if (!CronExpression.isValidExpression(cron)) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                        params = arrayOf(cron),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = arrayOf(cron)
                     )
                 }
                 if (!CronExpressionUtils.isValidTimeInterval(cron)) {
