@@ -1132,7 +1132,9 @@ class BkRepoClient constructor(
             setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
             remoteClusterIds = emptySet()
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
