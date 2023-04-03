@@ -3,6 +3,7 @@ package ide
 import (
 	"common/logs"
 	commonTypes "common/types"
+	"common/util/fileutil"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -90,7 +91,7 @@ func StartAndWatchIDE(
 	// 对于ssh插件因为工作空间可能清空的问题，需要主动copy下插件
 	if ide == DesktopIDE {
 		logs.Debug("copy vscode ssh extensions")
-		if err := copyDir(
+		if err := fileutil.CopyDir(
 			filepath.Join(constant.RemotingUserHome, ".vscode-server", "extensions"),
 			filepath.Join(cfg.WorkSpace.WorkspaceRootPath, ".vscode-server", "extensions"),
 		); err != nil {
@@ -353,34 +354,4 @@ func WaitForIde(parent context.Context, ideReady *service.IdeReadyState, desktop
 		return
 	case <-desktopIdeReady.Wait():
 	}
-}
-
-// copyDir 拷贝某个文件夹下所有文件到另一个文件夹
-func copyDir(src, dst string) error {
-	files, err := ioutil.ReadDir(src)
-	if err != nil {
-		return err
-	}
-
-	if err := os.MkdirAll(dst, os.ModePerm); err != nil && !os.IsExist(err) {
-		return err
-	}
-
-	for _, file := range files {
-		// 不拷贝子文件夹
-		if file.IsDir() {
-			continue
-		}
-
-		input, err := ioutil.ReadFile(filepath.Join(src, file.Name()))
-		if err != nil {
-			return err
-		}
-
-		err = ioutil.WriteFile(filepath.Join(dst, file.Name()), input, os.ModePerm)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
 }

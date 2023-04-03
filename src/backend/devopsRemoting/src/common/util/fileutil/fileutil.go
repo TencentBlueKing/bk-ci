@@ -2,6 +2,7 @@ package fileutil
 
 import (
 	"common/internal/third_party/dep/fs"
+	"common/util/fileutil/copyfile"
 	"io"
 	"io/ioutil"
 	"os"
@@ -40,4 +41,11 @@ func Chmod(file string, perm os.FileMode) error {
 		err = os.Chmod(file, perm) // 修改权限
 	}
 	return err
+}
+
+func CopyDir(src, dst string) error {
+	if err := os.MkdirAll(dst, os.ModePerm); err != nil && !os.IsExist(err) {
+		return err
+	}
+	return copyfile.CopyDir(src, dst)
 }
