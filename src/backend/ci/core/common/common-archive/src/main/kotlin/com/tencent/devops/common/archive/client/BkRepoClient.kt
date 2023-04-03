@@ -34,8 +34,8 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
-import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -91,6 +91,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
@@ -1049,7 +1050,7 @@ class BkRepoClient constructor(
             setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
             remoteClusterIds = emptySet()
         )
-        val request = Request.Builder().url(url).header(getCommonHeaders(userId, projectId).toHeaders())
+        val request = Request.Builder().url(url).headers(getCommonHeaders(userId, projectId).toHeaders())
             .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
