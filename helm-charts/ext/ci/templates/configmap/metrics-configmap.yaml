@@ -1,5 +1,5 @@
 #metrics configmap
-  {{ if .Values.configmap.enabled -}}
+{{ if .Values.configmap.enabled -}}
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -15,4 +15,4 @@ metadata:
 data:
   application.yml: |-
     {{- include "bkci.metrics.yaml" . | nindent 4 -}}
-  {{- end -}}
+{{- end -}}
