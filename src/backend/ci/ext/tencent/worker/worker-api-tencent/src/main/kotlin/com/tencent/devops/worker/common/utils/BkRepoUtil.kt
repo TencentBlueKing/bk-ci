@@ -27,9 +27,9 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 
 object BkRepoUtil {
 
