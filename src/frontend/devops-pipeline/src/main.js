@@ -23,25 +23,25 @@
 
 import Vue from 'vue'
 import App from './App'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
-import focus from './directives/focus/index.js'
 
+import '@icon-cool/bk-icon-devops'
+import '@icon-cool/bk-icon-devops/src/index'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+import PortalVue from 'portal-vue'; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
+import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
-import mavonEditor from 'mavon-editor'
-import 'mavon-editor/dist/css/index.css'
-import PortalVue from 'portal-vue' // eslint-disable-line
-import createLocale from '../../locale'
-import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
 
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
+import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 
 // 全量引入 bk-magic-vue 样式
 require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -80,7 +80,7 @@ Vue.prototype.$bkMessage = function (config) {
 /* eslint-disable */
 // 扩展字符串，判断是否为蓝盾变量格式
 String.prototype.isBkVar = function () {
-    return /\$\{{2}([\w\_\.-]+)\}{2}/g.test(this) || /\$\{([\w\_\.-]+)\}/g.test(this)
+    return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
 }
 /* eslint-disable */
 

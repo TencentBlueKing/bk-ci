@@ -75,6 +75,11 @@ if devops_tag == nil then
     devops_tag = ns_config.tag
 end
 
+-- 设置 rid
+if ngx.var.http_x_devops_rid == nil then
+    ngx.header["X-DEVOPS-RID"]=ngx.var.uuid
+end
+
 -- 负载均衡
 local target = loadBalanceUtil:getTarget(devops_tag, service_name, cache_tail, ns_config)
 if target == nil then

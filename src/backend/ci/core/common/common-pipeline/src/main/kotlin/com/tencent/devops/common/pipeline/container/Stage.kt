@@ -93,4 +93,13 @@ data class Stage(
         }
         return null
     }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        containers.forEach { container ->
+            container.transformCompatibility()
+        }
+    }
 }

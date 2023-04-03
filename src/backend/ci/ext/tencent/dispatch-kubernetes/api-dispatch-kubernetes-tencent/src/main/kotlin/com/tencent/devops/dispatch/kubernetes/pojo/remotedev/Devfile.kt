@@ -22,7 +22,9 @@ data class Devfile(
     @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
     var gitEmail: String?,
     @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
-    var dotfileRepo: String?
+    var dotfileRepo: String?,
+    @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
+    var workspaceFolder: String?
 )
 //
 // data class DevfileImage(

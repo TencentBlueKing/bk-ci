@@ -120,8 +120,8 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
                     }
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.atomTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),
