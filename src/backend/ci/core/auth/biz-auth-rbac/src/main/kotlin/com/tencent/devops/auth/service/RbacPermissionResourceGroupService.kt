@@ -117,12 +117,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = iamGroupInfoList.filterNot {
-            // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
-            val resourceGroup = resourceGroupMap[it.id]
-            resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
-                resourceGroup.groupCode == DefaultGroupType.MANAGER.value
-        }.map {
+        val iamGroupInfoVoList = iamGroupInfoList.map {
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
                 defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
