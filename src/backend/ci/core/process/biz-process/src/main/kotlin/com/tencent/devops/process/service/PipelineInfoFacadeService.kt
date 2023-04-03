@@ -131,6 +131,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
 
+        // 适配兼容老数据
+        model.stages.forEach {
+            it.transformCompatibility()
+        }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
@@ -433,7 +437,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode
-    ) {
+    ): DeployPipelineResult {
         val watcher = Watcher(id = "restorePipeline|$pipelineId|$userId")
         try {
             watcher.start("isProjectManager")
@@ -464,6 +468,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
+            return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
@@ -795,6 +800,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
+                it.transformCompatibility()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
