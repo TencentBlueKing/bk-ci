@@ -295,9 +295,11 @@ object WebhookUtils {
         object : WebhookFilter {
             override fun doFilter(response: WebhookFilterResponse): Boolean {
                 return if (getMajorVersion(webHookParams.version) >= P4_CUSTOM_TRIGGER_VERSION) {
+                    // 2.0以后,由用户配置的触发器触发
                     event.isCustomTrigger()
                 } else {
-                    true
+                    // 1.0 由插件注册的触发器触发
+                    !event.isCustomTrigger()
                 }
             }
         }
