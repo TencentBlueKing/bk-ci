@@ -4,11 +4,13 @@ import (
 	"common/cli/check"
 	"common/logs"
 	"context"
+	"fmt"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"registry-facade/pkg/common/kubernetes"
 	"registry-facade/pkg/common/pprof"
 	"registry-facade/pkg/common/watch"
 	"registry-facade/pkg/config"
@@ -20,6 +22,8 @@ import (
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
 	"github.com/docker/cli/cli/config/configfile"
+	"github.com/docker/distribution/reference"
+	"github.com/heptiolabs/healthcheck"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/collectors"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -95,6 +99,37 @@ var runCmd = &cobra.Command{
 			}
 
 			return docker.NewResolver(resolverOpts)
+		}
+
+		if cfg.ReadinessProbeAddr != "" {
+			// use the first layer as source for the tests
+			if len(cfg.Registry.StaticLayer) < 1 {
+				logs.Fatal("To use the readiness probe you need to specify at least one blobserve repo")
+			}
+
+			staticLayerRef := cfg.Registry.StaticLayer[0].Ref
+
+			named, err := reference.ParseNamed(staticLayerRef)
+			if err != nil {
+				logs.WithError(err).WithField("repo", staticLayerRef).Fatal("cannot parse repository reference")
+			}
+
+			staticLayerHost := reference.Domain(named)
+
+			// Ensure we can resolve DNS queries, and can access the registry host
+			health := healthcheck.NewHandler()
+			health.AddReadinessCheck("dns", kubernetes.DNSCanResolveProbe(staticLayerHost, 1*time.Second))
+			health.AddReadinessCheck("registry", kubernetes.NetworkIsReachableProbe(fmt.Sprintf("https://%v", staticLayerRef)))
+			health.AddReadinessCheck("registry-facade", kubernetes.NetworkIsReachableProbe(fmt.Sprintf("https://127.0.0.1:%v/%v/base/", cfg.Registry.Port, cfg.Registry.Prefix)))
+
+			health.AddLivenessCheck("dns", kubernetes.DNSCanResolveProbe(staticLayerHost, 1*time.Second))
+			health.AddLivenessCheck("registry", kubernetes.NetworkIsReachableProbe(fmt.Sprintf("https://%v", staticLayerRef)))
+
+			go func() {
+				if err := http.ListenAndServe(cfg.ReadinessProbeAddr, health); err != nil && err != http.ErrServerClosed {
+					logs.WithError(err).Panic("error starting HTTP server")
+				}
+			}()
 		}
 
 		registryDoneChan := make(chan struct{})

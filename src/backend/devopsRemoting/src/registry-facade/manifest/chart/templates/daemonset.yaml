@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ .Release.Name }}
+    spec:
+      {{- if .Values.registry.affinity }}
+      affinity: {{- toYaml .Values.registry.affinity | nindent 8 }}
+      {{- end }}          
+      {{- if .Values.registry.tolerations }}
+      tolerations: {{- toYaml .Values.registry.tolerations | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ .Release.Name }}
+        image: {{ .Values.registry.image }}
+        imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+        {{- if .Values.registry.resources }}
+        resources: {{- toYaml .Values.registry.resources | nindent 12 }}
+        {{- end }}
+        ports:
+          - name: registry
+            containerPort: 9000 
+        workingDir: /data/workspace/registry-facade
+        volumeMounts:
+          - name: {{ .Release.Name }}-config
+            mountPath: /data/workspace/registry-facade/config
+            readOnly: true
+          - name: {{ .Release.Name }}-cache
+            mountPath: /data/workspace/registry-facade/cache
+          - name: {{ .Release.Name }}-pull-secret
+            mountPath: /data/workspace/registry-facade/pull-secret
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 2
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3        
+      volumes:
+      - name: {{ .Release.Name }}-cache
+        emptyDir:
+      - name: {{ .Release.Name }}-config
+        configMap:
+          name: {{ .Release.Name }}-config
+          items:
+            - key: run.json
+              path: run.json
+      - name: {{ .Release.Name }}-pull-secret
+        secret:
+          secretName: {{ .Release.Name }}-pull-secret
+          items:
+            - key: .dockerconfigjson
+              path: pull-secret.json

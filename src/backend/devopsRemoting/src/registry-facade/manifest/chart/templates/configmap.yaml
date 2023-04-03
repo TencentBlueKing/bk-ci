@@ -1,0 +1,29 @@
+#wsproxy configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+data:
+  run.json: |-
+    {
+      "dockerAuth": "/data/workspace/registry-facade/pull-secret/pull-secret.json",
+      "registry": {
+        "port": 9000,
+        {{- if .Values.registry.staticLayers }}
+        "staticLayer": {{ toJson .Values.registry.staticLayers }},
+        {{- end }}
+        "store": "/data/landun/workspace/cache",
+        "requireAuth": false,
+        "remoteSpecProvider": [
+          {
+            "addr": "{{.Values.registry.remoteSpecProvider.addr}}"
+          }
+        ]
+      },
+      "readinessProbeAddr": ":8000"
+    }

@@ -1,0 +1,23 @@
+registry:
+  image: 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  staticLayers: 
+    - type: "image"
+      ref: "mirrors.tencent.com/ci/remote-dev-base:0.0.3"
+    - type: "image"
+      ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"
+     
+  remoteSpecProvider:
+    addr: 
+  # cat ~/.docker/config.json | base64 -w0   
+  dockerAuth: 
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent  

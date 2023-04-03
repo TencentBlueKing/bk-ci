@@ -1,5 +1,5 @@
 LOCAL_REGISTRY=mirrors.tencent.com
-LOCAL_IMAGE=ruotiantang/wsproxy-demo:0.0.31
+LOCAL_IMAGE=ruotiantang/registry-facade-demo:0.0.1
 
 VERSION=$(shell cd . && git log -1 --pretty=format:"%H")
 
@@ -19,7 +19,17 @@ clean:
 	rm -rf ./bin
 
 .PHONY: build
-build: test clean
+build.registry.amd64: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
  	go build -trimpath -ldflags "-X cmd.Version=$(VERSION)" \
  	-o ./bin/registry-amd64 main.go
+
+.PHONY: debug.registry.amd64
+debug.registry.amd64: build.registry.amd64
+	docker build -f Dockerfile --build-arg ARCH="amd64" --build-arg DEBUG="true" \
+	-t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE)-debug .
+
+.PHONY: release.registry.amd64
+release.registry.amd64: build.registry.amd64
+	docker build -f Dockerfile --build-arg ARCH="amd64" --build-arg DEBUG="false" \
+	-t $(LOCAL_REGISTRY)/$(LOCAL_IMAGE) .

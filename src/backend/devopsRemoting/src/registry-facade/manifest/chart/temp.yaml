@@ -1,0 +1,118 @@
+---
+# Source: registry-facade/templates/pull-secret.yaml
+apiVersion: v1
+kind: Secret
+type: kubernetes.io/dockerconfigjson
+metadata:
+  name: release-name-pull-secret
+data:  
+  .dockerconfigjson:
+---
+# Source: registry-facade/templates/configmap.yaml
+#wsproxy configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: release-name-config
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: release-name
+    app.kubernetes.io/name: release-name
+data:
+  run.json: |-
+    {
+      "dockerAuth": "/data/workspace/registry-facade/pull-secret/pull-secret.json",
+      "registry": {
+        "port": 9000,
+        "staticLayer": [{"ref":"mirrors.tencent.com/ci/remote-dev-base:0.0.3","type":"image"},{"ref":"mirrors.tencent.com/ci/remote-dev-full:0.0.8","type":"image"}],
+        "store": "/data/landun/workspace/cache",
+        "requireAuth": false,
+        "remoteSpecProvider": [
+          {
+            "addr": ""
+          }
+        ]
+      },
+      "readinessProbeAddr": ":8000"
+    }
+---
+# Source: registry-facade/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: release-name
+  namespace: default
+  labels:
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/component: release-name
+    app.kubernetes.io/name: release-name
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/component: release-name
+      app.kubernetes.io/name: release-name
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/component: release-name
+        app.kubernetes.io/name: release-name
+    spec:
+      containers:
+      - name: release-name
+        image: 
+        imagePullPolicy: IfNotPresent
+        resources:
+            limits:
+              cpu: 500m
+              memory: 1500Mi
+            requests:
+              cpu: 100m
+              memory: 1000Mi
+        ports:
+          - name: registry
+            containerPort: 9000 
+        workingDir: /data/workspace/registry-facade
+        volumeMounts:
+          - name: release-name-config
+            mountPath: /data/workspace/registry-facade/config
+            readOnly: true
+          - name: release-name-cache
+            mountPath: /data/workspace/registry-facade/cache
+          - name: release-name-pull-secret
+            mountPath: /data/workspace/registry-facade/pull-secret
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 5
+          timeoutSeconds: 3
+          successThreshold: 2
+          failureThreshold: 5
+        livenessProbe:
+          httpGet:
+            path: /live
+            port: 8000
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          timeoutSeconds: 2
+          successThreshold: 1
+          failureThreshold: 3        
+      volumes:
+      - name: release-name-cache
+        emptyDir:
+      - name: release-name-config
+        configMap:
+          name: release-name-config
+          items:
+            - key: run.json
+              path: run.json
+      - name: release-name-pull-secret
+        secret:
+          secretName: release-name-pull-secret
+          items:
+            - key: .dockerconfigjson
+              path: pull-secret.json

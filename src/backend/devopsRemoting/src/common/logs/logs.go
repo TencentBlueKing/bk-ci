@@ -102,6 +102,10 @@ func Printf(format string, args ...interface{}) {
 	Logs.Printf(format, args...)
 }
 
+func Fatal(args ...interface{}) {
+	Logs.Fatal(args...)
+}
+
 func WithError(err error) *logrus.Entry {
 	return Logs.WithError(err)
 }
