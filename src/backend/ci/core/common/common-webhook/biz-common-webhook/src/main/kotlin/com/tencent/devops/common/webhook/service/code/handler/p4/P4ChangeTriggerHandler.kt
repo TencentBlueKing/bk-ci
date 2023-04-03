@@ -87,6 +87,10 @@ class P4ChangeTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val versionFilter = WebhookUtils.getP4VersionFilter(
+                event = event,
+                webHookParams = webHookParams
+            )
             val urlFilter = P4PortFilter(
                 pipelineId = pipelineId,
                 triggerOnP4port = event.p4Port,
@@ -117,7 +121,7 @@ class P4ChangeTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(urlFilter, eventTypeFilter, pathFilter)
+            return listOf(versionFilter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 

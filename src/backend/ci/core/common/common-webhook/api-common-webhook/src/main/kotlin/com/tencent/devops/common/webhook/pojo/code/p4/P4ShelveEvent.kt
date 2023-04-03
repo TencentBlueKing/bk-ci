@@ -44,4 +44,14 @@ data class P4ShelveEvent(
         const val SHELVE_DELETE = "shelve-delete"
         const val SHELVE_SUBMIT = "shelve-submit"
     }
+
+    /**
+     * 是否由用户自己配置触发器,2.0以后的插件,都由用户配置p4 trigger,插件不再主动注册
+     */
+    override fun isCustomTrigger(): Boolean {
+        return when (eventType) {
+            SHELVE_COMMIT, SHELVE_DELETE, SHELVE_SUBMIT -> true
+            else -> false
+        }
+    }
 }

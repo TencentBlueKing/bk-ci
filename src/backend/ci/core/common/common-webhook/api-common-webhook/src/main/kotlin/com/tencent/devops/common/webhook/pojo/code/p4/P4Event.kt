@@ -47,4 +47,6 @@ import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
         names = ["SHELVE_COMMIT", "SHELVE_DELETE", "SHELVE_SUBMIT", "shelve-commit"]
     )
 )
-open class P4Event : CodeWebhookEvent
+abstract class P4Event : CodeWebhookEvent {
+    abstract fun isCustomTrigger(): Boolean
+}

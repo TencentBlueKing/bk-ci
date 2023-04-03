@@ -43,4 +43,14 @@ data class P4ChangeEvent(
         const val CHANGE_CONTENT = "change-content"
         const val CHANGE_SUBMIT = "change-submit"
     }
+
+    /**
+     * 是否由用户自己配置触发器,2.0以后的插件,都由用户配置p4 trigger,插件不再主动注册
+     */
+    override fun isCustomTrigger(): Boolean {
+        return when (eventType) {
+            CHANGE_COMMIT, CHANGE_CONTENT, CHANGE_SUBMIT -> true
+            else -> false
+        }
+    }
 }
