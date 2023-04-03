@@ -733,8 +733,10 @@ class DispatchDevCloudClient {
             // 轮询容器状态
             var success = true
             var isFinish = false
-            val statusResponse = getContainerStatus(projectId, pipelineId,
-                                                    buildId, vmSeqId, userId, containerName)
+            val statusResponse = getContainerStatus(
+                projectId, pipelineId,
+                buildId, vmSeqId, userId, containerName
+            )
             val actionCode = statusResponse.optInt("actionCode")
             if (actionCode == 200) {
                 val status = statusResponse.optString("data")
