@@ -28,13 +28,14 @@
             <p class="atom-from">{{`${atom.publisher} ${$t('editPage.provided')}`}}</p>
         </div>
         <div class="atom-operate">
-            <bk-button class="select-atom-btn"
+            <bk-button
+                class="select-atom-btn"
                 :class="{ 'disabled': atom.disabled }"
-                size="small"
                 @click="handleUpdateAtomType(atom.atomCode)"
                 :disabled="atom.disabled || atom.atomCode === atomCode"
                 v-if="atom.installed || atom.defaultFlag"
-            >{{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
+            >
+                {{atom.atomCode === atomCode ? $t('editPage.selected') : $t('editPage.select')}}
             </bk-button>
             <bk-button
                 v-else

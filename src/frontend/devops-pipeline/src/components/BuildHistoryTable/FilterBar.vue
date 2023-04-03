@@ -69,7 +69,8 @@
                         searchable: true,
                         multiple: true,
                         clearable: true,
-                        placeholder: 'status',
+                        placeholder: this.$t('status'),
+                        searchPlaceholder: this.$t('status'),
                         paramName: 'value'
                     }
 

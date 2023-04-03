@@ -1,7 +1,7 @@
 <template>
     <div class="intercept-history-wrapper">
         <div class="inner-header">
-            <div class="title">红线记录</div>
+            <div class="title">{{$t('quality.红线记录')}}</div>
         </div>
 
         <section class="sub-view-port"
@@ -12,7 +12,7 @@
             <div class="intercept-history-content" v-if="showContent">
                 <div class="data-list-query">
                     <div class="search-item">
-                        <div class="search-title">状态：</div>
+                        <div class="search-title">{{$t('quality.状态：')}}</div>
                         <bk-select v-model="searchInfo.interceptResult">
                             <bk-option v-for="(option, index) in statusList"
                                 :key="index"
@@ -22,7 +22,7 @@
                         </bk-select>
                     </div>
                     <div class="search-item search-by-pipeline">
-                        <div class="search-title">流水线：</div>
+                        <div class="search-title">{{$t('quality.流水线：')}}</div>
                         <bk-select v-model="searchInfo.pipelineId" :searchable="true">
                             <bk-option v-for="(option, index) in pipelineList"
                                 :key="index"
@@ -32,7 +32,7 @@
                         </bk-select>
                     </div>
                     <div class="search-item search-by-rule">
-                        <div class="search-title">规则：</div>
+                        <div class="search-title">{{$t('quality.规则：')}}</div>
                         <bk-select v-model="searchInfo.ruleHashId" :searchable="true">
                             <bk-option v-for="(option, index) in ruleList"
                                 :key="index"
@@ -42,16 +42,16 @@
                         </bk-select>
                     </div>
                     <div class="search-item search-by-date">
-                        <div class="search-title">时间：</div>
+                        <div class="search-title">{{$t('quality.时间：')}}</div>
                         <bk-date-picker
                             :placement="'bottom-end'"
-                            :placeholder="'起止时间'"
+                            :placeholder="$t('quality.起止时间')"
                             :type="'daterange'"
                             @change="changeDate"
                         ></bk-date-picker>
                     </div>
                     <div class="search-button">
-                        <bk-button theme="primary" @click="query">查询</bk-button>
+                        <bk-button theme="primary" @click="query">{{$t('quality.查询')}}</bk-button>
                     </div>
                 </div>
                 <div class="intercept-table-wrapper" v-if="showContent">
@@ -59,48 +59,48 @@
                         size="small"
                         class="intercept-history-table"
                         :data="interceptList"
-                        :empty-text="'暂时没有拦截记录'"
+                        :empty-text="$t('quality.暂时没有拦截记录')"
                         :pagination="pagination"
                         @page-change="handlePageChange"
                         @page-limit-change="limitChange">
-                        <bk-table-column label="序号" prop="num" width="80">
+                        <bk-table-column :label="$t('quality.序号')" prop="num" width="80">
                             <template slot-scope="props">
-                                <span>{{ props.row.num }}</span>
+                                <span>{{props.row.num}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="关联流水线" prop="pipelineName">
+                        <bk-table-column :label="$t('quality.关联流水线')" prop="pipelineName">
                             <template slot-scope="props">
-                                <span v-if="props.row.pipelineIsDelete" class="disabled-pipeline" :title="props.row.pipelineName">{{ props.row.pipelineName }}</span>
+                                <span v-if="props.row.pipelineIsDelete" class="disabled-pipeline" :title="props.row.pipelineName">{{props.row.pipelineName}}</span>
                                 <a class="item-pipelinename" v-else :title="props.row.pipelineName"
                                     target="_blank"
-                                    :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{ props.row.pipelineName }}
+                                    :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{props.row.pipelineName}}
                                 </a>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="规则名称" prop="ruleName">
+                        <bk-table-column :label="$t('quality.规则名称')" prop="ruleName">
                             <template slot-scope="props">
-                                <span>{{ props.row.ruleName }}</span>
+                                <span>{{props.row.ruleName}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="状态" prop="interceptResult" width="100">
+                        <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="100">
                             <template slot-scope="props">
-                                <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">已通过</span>
-                                <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">已拦截</span>
+                                <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
+                                <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="内容" prop="remark" min-width="200">
+                        <bk-table-column :label="$t('quality.内容')" prop="remark" min-width="200">
                             <template slot-scope="props">
                                 <bk-popover placement="top-start" :delay="500">
-                                    <p class="item-remark">{{ props.row.remark }}</p>
+                                    <p class="item-remark">{{props.row.remark}}</p>
                                     <template slot="content">
-                                        <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ props.row.remark }}</p>
+                                        <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{props.row.remark}}</p>
                                     </template>
                                 </bk-popover>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="拦截时间" prop="timestamp">
+                        <bk-table-column :label="$t('quality.拦截时间')" prop="timestamp">
                             <template slot-scope="props">
-                                {{ localConvertTime(props.row.timestamp) }}
+                                {{localConvertTime(props.row.timestamp)}}
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -118,9 +118,9 @@
             return {
                 showContent: false,
                 statusList: [
-                    { label: '全部', value: 'ALL' },
-                    { label: '已拦截', value: 'FAIL' },
-                    { label: '已通过', value: 'PASS' }
+                    { label: this.$t('quality.全部'), value: 'ALL' },
+                    { label: this.$t('quality.已拦截'), value: 'FAIL' },
+                    { label: this.$t('quality.已通过'), value: 'PASS' }
                 ],
                 pipelineList: [],
                 ruleList: [],
@@ -172,7 +172,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('quality.数据加载中，请稍候')
 
                 try {
                     await this.requestList(pagination.current, pagination.limit)
@@ -253,7 +253,7 @@
                         res.forEach(item => {
                             this.pipelineList.push(item)
                         })
-                        this.pipelineList.unshift({ pipelineId: 'all', pipelineName: '全部' })
+                        this.pipelineList.unshift({ pipelineId: 'all', pipelineName: this.$t('quality.全部') })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err
@@ -278,7 +278,7 @@
                         res.records.forEach(item => {
                             this.ruleList.push(item)
                         })
-                        this.ruleList.unshift({ ruleHashId: 'all', name: '全部' })
+                        this.ruleList.unshift({ ruleHashId: 'all', name: this.$t('quality.全部') })
                     }
                 } catch (err) {
                     const message = err.message ? err.message : err

@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
@@ -45,8 +47,10 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.io.File
+import java.nio.file.Files
 
 @ApiPriority(priority = 9)
 class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
@@ -67,12 +71,22 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun createReportRecord(
+        buildVariables: BuildVariables,
         taskId: String,
         indexFile: String,
         name: String,
         reportType: String?,
-        reportEmail: ReportEmail?
+        reportEmail: ReportEmail?,
+        token: String?
     ): Result<Boolean> {
+        createReportRecordToBkRepo(
+            buildVariables = buildVariables,
+            taskId = taskId,
+            indexFile = indexFile,
+            reportName = name,
+            reportType = reportType,
+            token = token
+        )
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)
         val path =
@@ -80,10 +94,8 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                objectMapper.writeValueAsString(reportEmail)
-            )
+            val requestBody = objectMapper.writeValueAsString(reportEmail)
+                .toRequestBody(JsonMediaType)
             buildPost(path, requestBody)
         }
         val responseContent = request(
@@ -93,10 +105,40 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         return objectMapper.readValue(responseContent)
     }
 
+    private fun createReportRecordToBkRepo(
+        buildVariables: BuildVariables,
+        taskId: String,
+        indexFile: String,
+        reportName: String,
+        reportType: String?,
+        token: String?
+    ) {
+        val userId = buildVariables.variables[PIPELINE_START_USER_ID].toString()
+        val projectId = buildVariables.projectId
+        val pipelineId = buildVariables.pipelineId
+        val buildId = buildVariables.buildId
+        val metadata = mutableMapOf<String, String>()
+        metadata.putAll(bkrepoResourceApi.getPipelineMetadata(buildVariables, taskId))
+        metadata["reportName"] = reportName
+        metadata["reportType"] = reportType ?: ReportTypeEnum.INTERNAL.name
+
+        val fullPath = if (reportType == ReportTypeEnum.THIRDPARTY.name) {
+            metadata["reportUrl"] = indexFile
+            val emptyFile = Files.createTempFile("report", ".tmp").toFile()
+            val filePath = "/$pipelineId/$buildId/$taskId/index.html"
+            bkrepoResourceApi.uploadBkRepoFile(emptyFile, "report", filePath, buildVariables, false, token)
+            emptyFile.delete()
+            filePath
+        } else {
+            "/$pipelineId/$buildId/$taskId/$indexFile"
+        }
+
+        bkrepoResourceApi.saveMetadata(userId, projectId, "report", fullPath, metadata)
+    }
+
     private fun uploadBkRepoReportByToken(
         file: File,
         token: String,
-        task: String,
         relativePath: String,
         buildVariables: BuildVariables
     ) {
@@ -109,11 +151,12 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             destFullPath = "/$pipelineId/$buildId/$elementId/${relativePath.removePrefix("/")}",
             token = token,
             buildVariables = buildVariables,
-            parseAppMetadata = false
+            parseAppMetadata = false,
+            parsePipelineMetadata = false
         )
     }
 
-    private fun uploadBkRepoReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
+    private fun uploadBkRepoReport(file: File, relativePath: String, buildVariables: BuildVariables) {
         val projectId = buildVariables.projectId
         val pipelineId = buildVariables.pipelineId
         val buildId = buildVariables.buildId
@@ -122,8 +165,13 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         val request = buildPut(
             path = url,
-            requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
+            requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
+            headers = bkrepoResourceApi.getUploadHeader(
+                file = file,
+                buildVariables = buildVariables,
+                parseAppMetadata = false,
+                parsePipelineMetadata = false
+            ),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, System.getProperty(LOCALE_LANGUAGE))
@@ -145,9 +193,9 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         token: String?
     ) {
         if (bkrepoResourceApi.tokenAccess()) {
-            uploadBkRepoReportByToken(file, token!!, taskId, relativePath, buildVariables)
+            uploadBkRepoReportByToken(file, token!!, relativePath, buildVariables)
         } else {
-            uploadBkRepoReport(file, taskId, relativePath, buildVariables)
+            uploadBkRepoReport(file, relativePath, buildVariables)
         }
         bkrepoResourceApi.setPipelineMetadata("report", buildVariables)
     }

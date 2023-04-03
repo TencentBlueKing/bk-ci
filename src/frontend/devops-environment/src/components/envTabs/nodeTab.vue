@@ -52,7 +52,10 @@
                 </bk-table-column>
             </bk-table>
         </div>
-        <bk-empty v-if="showContent && !nodeList.length"></bk-empty>
+        <bk-exception
+            v-if="showContent && !nodeList.length"
+            class="exception-wrap-item exception-part" type="empty" scene="part"
+        />
         <node-select :node-select-conf="nodeSelectConf"
             :search-info="searchInfo"
             :cur-user-info="curUserInfo"
@@ -71,12 +74,10 @@
 
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
-    import empty from '@/components/common/empty'
     export default {
         name: 'node-tab',
         components: {
-            nodeSelect,
-            'bk-empty': empty
+            nodeSelect
         },
         props: {
             projectId: {

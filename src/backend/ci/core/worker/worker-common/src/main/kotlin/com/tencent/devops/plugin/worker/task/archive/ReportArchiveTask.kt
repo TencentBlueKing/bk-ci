@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -43,7 +44,6 @@ import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_CHECK_FINISH
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_NOT_IN_FOLDER
@@ -81,6 +81,14 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+        )
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -122,14 +130,6 @@ class ReportArchiveTask : ITask() {
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
-            val token = RepoServiceFactory.getInstance().getRepoToken(
-                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                projectId = buildVariables.projectId,
-                repoName = "report",
-                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-                type = TokenType.UPLOAD,
-                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
-            )
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -174,7 +174,15 @@ class ReportArchiveTask : ITask() {
         }
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
-        api.createReportRecord(elementId, indexFileParam, reportNameParam, reportType, reportEmail)
+        api.createReportRecord(
+            buildVariables = buildVariables,
+            taskId = elementId,
+            indexFile = indexFileParam,
+            name = reportNameParam,
+            reportType = reportType,
+            reportEmail = reportEmail,
+            token = token
+        )
     }
 
     private fun uploadReportFile(

@@ -54,7 +54,8 @@
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}</span>
+                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}
+                            </span>
                         </div>
                         <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
                             <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
@@ -677,7 +678,8 @@
         .source-type-radio {
             display: flex;
             justify-content: space-between;
-            padding-left: 14px;
+            align-items: center;
+            padding: 0 20px 0 14px;
             height: 42px;
             line-height: 38px;
             border-bottom: 1px solid $borderWeightColor;
@@ -742,10 +744,7 @@
         }
 
         .preview-node-btn {
-            float: right;
-            padding-right: 20px;
-            line-height: 42px;
-            width: 82px;
+            flex-shrink: 0;
             cursor: pointer;
             color: $primaryColor;
             font-size: 14px;
