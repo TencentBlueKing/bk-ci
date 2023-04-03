@@ -108,7 +108,7 @@ export default {
           this.hasPermission = hasManagerData?.data;
         })
         .catch(err => {
-          if ([404, 2119042].includes(err.code)) {
+          if ([404, 403, 2119042].includes(err.code)) {
               this.isApprover = true;
               this.errorCode =err.code
           }

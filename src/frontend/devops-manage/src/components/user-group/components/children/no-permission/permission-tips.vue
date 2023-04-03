@@ -34,6 +34,11 @@ export default {
       this.exceptionObj.type = '404';
       this.exceptionObj.title = this.$t('项目不存在');
       this.exceptionObj.description = '';
+    } else if (this.errorCode === 403) {
+      this.exceptionObj.showBtn = false;
+      this.exceptionObj.type = '403';
+      this.exceptionObj.title = this.$t('无项目权限');
+      this.exceptionObj.description = this.$t('你没有项目的查看权限，请先申请', [this.projectCode]);
     } else if (this.errorCode === 2119042) {
       this.exceptionObj.showBtn = false;
       this.exceptionObj.type = '403';
