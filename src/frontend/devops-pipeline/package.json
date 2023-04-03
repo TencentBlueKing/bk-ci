@@ -20,7 +20,7 @@
         "@vue/composition-api": "^1.2.4",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.15-beta.7",
-        "bk-permission": "^0.0.5",
+        "bk-permission": "^0.0.7",
         "bkui-pipeline": "~0.1.29",
         "clipboard": "^1.7.1",
         "moment": "^2.29.2",
