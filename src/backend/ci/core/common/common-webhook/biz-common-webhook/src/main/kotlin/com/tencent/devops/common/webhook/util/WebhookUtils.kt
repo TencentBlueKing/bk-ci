@@ -299,7 +299,7 @@ object WebhookUtils {
         projectId: String,
         pipelineId: String,
         event: P4Event,
-        webHookParams: WebHookParams,
+        webHookParams: WebHookParams
     ): WebhookFilter =
         object : WebhookFilter {
             override fun doFilter(response: WebhookFilterResponse): Boolean {
