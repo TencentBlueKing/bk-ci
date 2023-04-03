@@ -26,22 +26,13 @@
  */
 
 dependencies {
-    api(project(":ext:tencent:dispatch-devcloud:api-dispatch-codecc-tencent"))
     api(project(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent"))
 
     api(project(":core:common:common-dispatch-sdk"))
     api(project(":core:common:common-service"))
-    api(project(":core:common:common-client"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db-base"))
     api(project(":core:log:api-log"))
 
     api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
-
-    api("org.apache.commons:commons-collections4")
-    api("ch.qos.logback:logback-classic")
-    api("org.json:json")
-    api("io.github.openfeign.form:feign-form")
 }

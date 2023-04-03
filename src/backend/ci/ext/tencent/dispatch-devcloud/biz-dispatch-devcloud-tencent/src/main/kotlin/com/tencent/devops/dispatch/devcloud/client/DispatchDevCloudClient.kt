@@ -23,15 +23,12 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.RandomStringUtils
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
-import java.net.URLEncoder
 
 @Component
 class DispatchDevCloudClient {
@@ -737,7 +734,7 @@ class DispatchDevCloudClient {
             var success = true
             var isFinish = false
             val statusResponse = getContainerStatus(projectId, pipelineId,
-                buildId, vmSeqId, userId, containerName)
+                                                    buildId, vmSeqId, userId, containerName)
             val actionCode = statusResponse.optInt("actionCode")
             if (actionCode == 200) {
                 val status = statusResponse.optString("data")
@@ -757,67 +754,6 @@ class DispatchDevCloudClient {
                 else -> DevCloudContainerStatus.RUNNING
             }
         }
-    }
-
-    private fun buildPostRequest(
-        userId: String,
-        url: String,
-        body: String,
-        codeccTaskId: Long
-    ): Request {
-        return Request.Builder()
-            .url(buildUrl(url, codeccTaskId))
-            .headers(buildHeader(userId, codeccTaskId).toHeaders())
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
-            .build()
-    }
-
-    private fun buildGetRequest(
-        userId: String,
-        url: String,
-        codeccTaskId: Long
-    ): Request {
-        return Request.Builder()
-            .url(buildUrl(url, codeccTaskId))
-            .headers(buildHeader(userId, codeccTaskId).toHeaders())
-            .get()
-            .build()
-    }
-
-    private fun buildUrl(uri: String, codeccTaskId: Long): String {
-        return if (codeccTaskId == -3L) {
-            "$devopsIdcProxyGateway/proxy-devnet?" +
-                "url=${URLEncoder.encode(closeSourceUrl + uri, "UTF-8")}"
-        } else {
-            devCloudUrl + uri
-        }
-    }
-
-    private fun buildHeader(userId: String, codeccTaskId: Long): Map<String, String> {
-        return if (codeccTaskId == -3L) {
-            makeIdcProxyHeaders(closeSourceAppId, closeSourceToken, userId)
-        } else {
-            SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)
-        }
-    }
-
-    fun makeIdcProxyHeaders(
-        appId: String,
-        token: String,
-        userId: String
-    ): Map<String, String> {
-        val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["APPID"] = appId
-        val random = RandomStringUtils.randomAlphabetic(8)
-        headerBuilder["RANDOM"] = random
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        headerBuilder["TIMESTP"] = timestamp
-        val encKey = DigestUtils.md5Hex("$token$timestamp$random")
-        headerBuilder["ENCKEY"] = encKey
-        headerBuilder["TIMESTAMP"] = timestamp
-        headerBuilder["X-STAFFNAME"] = userId
-
-        return headerBuilder
     }
 }
 
