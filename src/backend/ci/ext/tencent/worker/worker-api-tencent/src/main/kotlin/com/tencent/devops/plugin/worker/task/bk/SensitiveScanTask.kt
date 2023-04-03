@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.worker.task.bk
 import com.tencent.devops.common.api.constant.I18NConstant.BK_CANNING_SENSITIVE_INFORMATION
 import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_SENSITIVE_INFORMATION
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SENSITIVE_INFORMATION
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -41,7 +42,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.WorkerMessageCode.FOLDER_NOT_EXIST
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -169,9 +169,11 @@ class SensitiveScanTask : ITask() {
             )
         }
         reportArchiveResourceApi.createReportRecord(
+            buildVariables = buildVariables,
             taskId = elementId,
             indexFile = indexFileParam,
-            name = reportNameParam
+            name = reportNameParam,
+            token = token
         )
     }
 

@@ -16,7 +16,7 @@ class TxOpUserService @Autowired constructor(
 
     private val errorUserId = CacheBuilder.newBuilder()
         .maximumSize(1000)
-        .expireAfterAccess(2, TimeUnit.HOURS)
+        .expireAfterWrite(2, TimeUnit.MINUTES)
         .build<String, Boolean>()
 
     override fun checkUser(userId: String): Boolean {
@@ -25,7 +25,7 @@ class TxOpUserService @Autowired constructor(
             return false
         }
         return try {
-            client.get(ServiceTxUserResource::class).get(userId!!)
+            client.get(ServiceTxUserResource::class).get(userId)
             true
         } catch (e: Exception) {
             logger.warn("checkUser $userId is not rtx user")
