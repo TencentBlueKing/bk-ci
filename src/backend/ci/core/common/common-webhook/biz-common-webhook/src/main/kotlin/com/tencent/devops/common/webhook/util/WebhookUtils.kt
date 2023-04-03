@@ -294,11 +294,15 @@ object WebhookUtils {
     fun getP4VersionFilter(event: P4Event, webHookParams: WebHookParams): WebhookFilter =
         object : WebhookFilter {
             override fun doFilter(response: WebhookFilterResponse): Boolean {
-                return event.isCustomTrigger() && getMajorVersion(webHookParams.version) >= P4_CUSTOM_TRIGGER_VERSION
+                return if (getMajorVersion(webHookParams.version) >= P4_CUSTOM_TRIGGER_VERSION) {
+                    event.isCustomTrigger()
+                } else {
+                    true
+                }
             }
         }
 
     fun getMajorVersion(version: String?): Int {
-        return version?.split(".")?.get(0)?.toInt() ?: 0
+        return version?.split(".")?.get(0)?.toInt() ?: 1
     }
 }
