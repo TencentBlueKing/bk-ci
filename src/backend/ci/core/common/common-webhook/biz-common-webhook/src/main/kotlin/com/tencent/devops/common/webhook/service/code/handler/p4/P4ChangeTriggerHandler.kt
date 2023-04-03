@@ -105,6 +105,9 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
+                        return true
+                    }
                     val changeFiles = eventCacheService.getP4ChangelistFiles(
                         repo = repository,
                         projectId = projectId,
