@@ -36,8 +36,10 @@ data class P4ShelveEvent(
     val p4Port: String,
     @JsonProperty("event_type")
     val eventType: String,
-    val user: String? = null
-) : P4Event() {
+    val user: String? = null,
+    // 指定项目触发
+    override val projectId: String? = null
+) : P4Event(projectId = projectId) {
     companion object {
         const val classType = "SHELVE"
         const val SHELVE_COMMIT = "shelve-commit"

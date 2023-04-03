@@ -88,7 +88,9 @@ class P4ShelveTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            val versionFilter = WebhookUtils.getP4VersionFilter(
+            val p4Filter = WebhookUtils.getP4Filter(
+                projectId = projectId,
+                pipelineId = pipelineId,
                 event = event,
                 webHookParams = webHookParams
             )
@@ -121,7 +123,7 @@ class P4ShelveTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(versionFilter, urlFilter, eventTypeFilter, pathFilter)
+            return listOf(p4Filter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 
