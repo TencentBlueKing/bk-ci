@@ -92,6 +92,7 @@ config = {
     bkci = {host = "__BK_CI_FQDN__", port = 80},
     kubernetes = {
         domain = "kubernetes.demo.com",
+        switchAll = false,
         codecc = {domain = "kubernetes.demo.com"}
     }
 }
