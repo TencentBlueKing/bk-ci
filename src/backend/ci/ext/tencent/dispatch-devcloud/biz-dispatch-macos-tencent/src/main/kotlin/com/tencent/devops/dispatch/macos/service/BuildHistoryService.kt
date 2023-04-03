@@ -62,7 +62,6 @@ class BuildHistoryService @Autowired constructor(
                 buildTaskRecord.executeCount = dispatchMessage.executeCount
                 logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] " +
                                 "save buildHistoryId: ${buildHistoryRecord.id}, vmIp: $vmIp")
-                val taskId = buildTaskDao.save(context, buildTaskRecord)
             } else {
                 logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] fail to save buildTask.")
                 throw RuntimeException("Insert into build history table failed.")
