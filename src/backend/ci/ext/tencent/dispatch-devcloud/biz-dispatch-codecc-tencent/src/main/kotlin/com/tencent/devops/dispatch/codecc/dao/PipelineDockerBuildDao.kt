@@ -30,14 +30,11 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.model.dispatch.codecc.tables.TDispatchPipelineDockerBuild
 import com.tencent.devops.model.dispatch.codecc.tables.records.TDispatchPipelineDockerBuildRecord
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class PipelineDockerBuildDao {
-
-    private val logger = LoggerFactory.getLogger(PipelineDockerBuildDao::class.java)
 
     fun startBuild(
         dslContext: DSLContext,

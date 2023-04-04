@@ -117,7 +117,9 @@ class CodeccMQConfiguration @Autowired constructor() {
         @Autowired buildCodeccAgentStartDemoteQueue: Queue,
         @Autowired exchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(buildCodeccAgentStartDemoteQueue).to(exchange).with(buildCodeccAgentStartDemoteQueue.name)
+        return BindingBuilder.bind(buildCodeccAgentStartDemoteQueue)
+            .to(exchange)
+            .with(buildCodeccAgentStartDemoteQueue.name)
     }
 
     @Bean

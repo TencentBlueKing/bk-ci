@@ -55,7 +55,9 @@ class CodeCCDispatchListener @Autowired constructor(
         val buildHistory = pipelineDockerBuildDao.getBuild(dslContext, event.buildId, event.vmSeqId?.toInt() ?: 1)
         // 判断是否有docker vm构建记录，不存在则默认为devcloud构建
         if (buildHistory != null) {
-            pipelineEventDispatcher.dispatch(event.copy(routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix))
+            pipelineEventDispatcher.dispatch(
+                event.copy(routeKeySuffix = DispatchRouteKeySuffix.DOCKER_VM.routeKeySuffix)
+            )
             return
         }
 
@@ -162,7 +164,14 @@ class CodeCCDispatchListener @Autowired constructor(
 
     private fun printLogs(dispatchMessage: DispatchMessage, message: String) {
         try {
-            log(buildLogPrinter, dispatchMessage.buildId, dispatchMessage.containerHashId, dispatchMessage.vmSeqId, message, dispatchMessage.executeCount)
+            log(
+                buildLogPrinter,
+                dispatchMessage.buildId,
+                dispatchMessage.containerHashId,
+                dispatchMessage.vmSeqId,
+                message,
+                dispatchMessage.executeCount
+            )
         } catch (e: Throwable) {
             // 日志有问题就不打日志了，不能影响正常流程
             logger.error("", e)
