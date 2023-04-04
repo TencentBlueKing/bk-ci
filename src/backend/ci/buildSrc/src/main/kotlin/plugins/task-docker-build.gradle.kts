@@ -1,3 +1,5 @@
+import java.io.FileOutputStream
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -102,4 +104,41 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
             image = toImage
         }
     }
+
+    // 编入i18n文件
+    val i18nTask = tasks.register("i18n") {
+        val projectPath = projectDir.absolutePath
+        val bkCiPath = projectPath.split(joinPath("src", "backend", "ci"))[0]
+        val i18nPath: String = joinPath(bkCiPath, "support-files", "i18n")
+        if (File(i18nPath).isDirectory) {
+            println("copy i18n into $name classpath...")
+            val propertyArray = arrayOf("en_US", "zh_CN")
+            for (property in propertyArray) {
+                // set variables for input files
+                val file1 = File(joinPath(i18nPath, "message_$property.properties"))
+                val file2 = File(joinPath(i18nPath, name, "message_$property.properties"))
+                val targetFile = File(joinPath(projectPath, "src", "main", "resources", "message_$property.properties"))
+                if (targetFile.createNewFile()) {
+                    println("create target file : ${targetFile.absolutePath}")
+                    // create output file with first input
+                    if (file1.exists()) {
+                        println("copy file1: ${file1.absolutePath} now...")
+                        file1.copyTo(targetFile, true)
+                    }
+                    // append second input to output file if it exists
+                    if (file2.exists()) {
+                        println("copy file2: ${file2.absolutePath} now...")
+                        file2.inputStream().copyTo(FileOutputStream(targetFile, true))
+                    }
+                }
+                println("Target file generated: ${targetFile.absolutePath}")
+            }
+        }
+    }
+    tasks.getByName("jib").dependsOn(i18nTask)
 }
+
+/**
+ * 返回路径
+ */
+fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
