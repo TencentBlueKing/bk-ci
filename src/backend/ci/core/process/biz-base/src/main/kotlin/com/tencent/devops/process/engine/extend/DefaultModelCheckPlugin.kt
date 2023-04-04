@@ -474,6 +474,8 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             jobControlOption.timeout = obj.minutes
+        } else { // 历史0值兼容
+            jobControlOption.timeout = Timeout.decTimeout(jobControlOption.timeout.toString(), contextMap).minutes
         }
     }
 
