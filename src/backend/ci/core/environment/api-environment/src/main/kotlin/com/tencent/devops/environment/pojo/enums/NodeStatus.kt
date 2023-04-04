@@ -27,23 +27,6 @@
 
 package com.tencent.devops.environment.pojo.enums
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_ABNORMAL
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILDING_IMAGE
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILD_IMAGE_FAILED
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_BUILD_IMAGE_SUCCESS
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_CREATING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_DELETED
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_DELETING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_LOST
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_NORMAL
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_RESTARTING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_RUNNING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STARTING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STOPPED
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_STOPPING
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_UNKNOWN
-
 @Suppress("UNUSED")
 enum class NodeStatus(val statusName: String) {
     NORMAL("正常"),
@@ -141,7 +124,7 @@ enum class NodeStatus(val statusName: String) {
 //            }
         }
 
-        fun i18n(status: String): String {
+       /* fun i18n(status: String): String {
             return when (status) {
                 NORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_NORMAL)
                 ABNORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_ABNORMAL)
@@ -159,6 +142,6 @@ enum class NodeStatus(val statusName: String) {
                 BUILD_IMAGE_FAILED.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_FAILED)
                 else -> MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)
             }
-        }
+        }*/
     }
 }

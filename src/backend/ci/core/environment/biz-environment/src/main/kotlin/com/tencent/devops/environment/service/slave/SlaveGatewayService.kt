@@ -31,7 +31,6 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_SZ
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
-import com.tencent.devops.environment.pojo.enums.GatewayType
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
@@ -61,7 +60,8 @@ class SlaveGatewayService @Autowired constructor(
         }
         gatewayList.forEach {
             if (it.gateway == gateway) {
-                return GatewayType.i18n(it.showName)
+                logger.info("it.showName",it.showName)
+                return MessageCodeUtil.getMessageByLocale(it.showName,"")
             }
         }
         return MessageCodeUtil.getCodeLanMessage(
