@@ -206,8 +206,12 @@
               }
             }
             return ''
-          } else if (location.pathname.match(/^\/console\/store\/(\w+)?/)) {
-            // TODO store没有projectId
+          } else if ([
+            /^\/console\/store\/(\w+)?/,
+            /^\/console\/permission\/(\w+)?/,
+            /^\/console\/manage\/apply/
+          ].some((reg) => location.pathname.match(reg))) {
+            // TODO store、permission、apply project 没有projectId
             return ''
           } else {
             var res = location.pathname.match(reg)

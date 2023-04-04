@@ -28,8 +28,12 @@
     import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab, AuthorityTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -37,6 +41,7 @@
             PipelineEditTab,
             BaseSettingTab,
             NotifyTab,
+            AuthorityTab,
             MiniMap
         },
         mixins: [pipelineOperateMixin],
@@ -61,9 +66,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.edit, {
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
+                                handlePipelineNoPermission({
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
                                 })
                             },
                             text: this.$t('applyPermission')
@@ -120,6 +126,13 @@
                                 }
                             }
                         },
+                        ...(this.isDraftEdit
+                            ? []
+                            : [{
+                                name: 'auth',
+                                label: this.$t('settings.auth'),
+                                component: 'AuthorityTab'
+                            }]),
                         {
                             name: 'baseSetting',
                             label: this.$t('editPage.baseSetting'),

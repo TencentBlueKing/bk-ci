@@ -29,6 +29,13 @@
                         <span class="pipeline-group-header-name">{{block.title}}</span>
                         <span v-bk-tooltips="block.tooltips">
                             <bk-button
+                                v-perm="block.isCheckPermission ?
+                                    {
+                                        hasPermission: block.hasPermission,
+                                        disablePermissionApi: block.disablePermissionApi,
+                                        permissionData: block.permissionData
+                                    }
+                                    : {}"
                                 text
                                 theme="primary"
                                 class="add-pipeline-group-btn"
@@ -144,7 +151,9 @@
     import { cacheViewId } from '@/utils/util'
     import Logo from '@/components/Logo'
     import ExtMenu from '@/components/pipelineList/extMenu'
-
+    import {
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
     export default {
         components: {
             Logo,
@@ -215,20 +224,30 @@
                         icon: view.icon ?? 'pipelineGroup',
                         name: view.i18nKey ? this.$t(view.i18nKey) : view.name,
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: false
                 }, {
                     title: `${this.$t('projectViewList')}(${this.pipelineGroupDict.projectViewList.length - 1})`,
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
                     projected: true,
-                    disabled: !this.isManage,
+                    disabled: this.isManage,
                     tooltips: this.projectedGroupDisableTips,
                     stickyTop: '106px',
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
                         actions: this.pipelineGroupActions(view)
-                    }))
+                    })),
+                    isCheckPermission: true,
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: this.$route.params.projectId,
+                        resourceType: 'project',
+                        resourceCode: this.$route.params.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
                 }]
             },
             projectedGroupDisableTips () {
@@ -291,17 +310,33 @@
                             }
                         ]
                         : []),
-                    // {
-                    //     text: this.$t('pipelineGroupAuth'),
-                    //     handler: () => {
-                    //         this.$router.push({
-                    //             name: 'pipelineListAuth',
-                    //             params: {
-                    //                 viewId: group.id
-                    //             }
-                    //         })
-                    //     }
-                    // },
+                    ...(
+                        group.projected
+                            ? [
+                                {
+                                    text: this.$t('pipelineGroupAuth'),
+                                    handler: () => {
+                                        this.$router.push({
+                                            name: 'PipelineListAuth',
+                                            params: {
+                                                id: group.id,
+                                                groupName: group.name
+                                            }
+                                        })
+                                    },
+                                    hasPermission: this.isManage,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: this.$route.params.projectId,
+                                        resourceType: 'project',
+                                        resourceCode: this.$route.params.projectId,
+                                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                                    }
+                                }
+                            ]
+                            : []
+                    ),
+                    
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,

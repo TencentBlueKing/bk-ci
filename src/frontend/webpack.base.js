@@ -30,12 +30,12 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
             rules: [
                 {
                     test: /\.vue$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
                     loader: 'vue-loader'
                 },
                 {
                     test: /\.js$/,
-                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts')],
+                    include: [path.resolve('src'), path.resolve('../node_modules/vue-echarts'), path.resolve(__dirname, './common-lib')],
                     use: [
                         { loader: 'babel-loader' }
                     ]
@@ -52,7 +52,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     test: /\.(js|vue)$/,
                     loader: 'eslint-loader',
                     enforce: 'pre',
-                    include: [path.resolve('src')],
+                    include: [path.resolve('src'), path.resolve(__dirname, './common-lib')],
                     exclude: /node_modules/,
                     options: {
                         fix: true,

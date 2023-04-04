@@ -1,4 +1,3 @@
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -18,34 +17,38 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-// import Vue from 'vue'
-import eventBus from '../../utils/eventBus'
-import { isObject } from '../../utils/util'
-// import AskPermissionDialog from './AskPermissionDialog'
+import { handleNoPermission } from 'bk-permission'
+import * as BKUI from 'bk-magic-vue'
 
-// const DialogCreator = Vue.extend(AskPermissionDialog)
-// const instance = null
+// 处理流水线无权限的情况
+export const handlePipelineNoPermission = (query) => {
+    return handleNoPermission(
+        BKUI,
+        {
+            resourceType: 'pipeline',
+            ...query
+        },
+        global.pipelineVue.$createElement
+    )
+}
 
-export default function showAskPermissionDialog (props) {
-    if (!isObject(props)) {
-        console.warn('权限弹窗需要传入一个对象')
-        return
-    }
-    console.log('emit')
-    eventBus.$emit('update-permission-props', props)
-    // instance = new DialogCreator({
-    //   propsData: props,
-    //   data: {
-    //     showDialog: true
-    //   },
-    //   methods: {
-    //     close,
-    //     $t (key) {
-    //       return key
-    //     }
-    //   }
-    // })
-    // console.log(instance.$setLocale, instance)
-    // instance.viewmodel = instance.$mount()
-    // document.body.appendChild(instance.viewmodel.$el)
+// 流水线权限动作
+export const RESOURCE_ACTION = {
+    CREATE: 'pipeline_create',
+    EXECUTE: 'pipeline_execute',
+    LIST: 'pipeline_list',
+    VIEW: 'pipeline_view',
+    EDIT: 'pipeline_edit',
+    DOWNLOAD: 'pipeline_download',
+    DELETE: 'pipeline_delete'
+}
+
+export const PROJECT_RESOURCE_ACTION = {
+    MANAGE: 'project_manage',
+    VISIT: 'project_visit',
+    VIEW: 'project_view',
+    VIEWS_MANAGE: 'project_views_manage',
+    CREATE: 'project_create',
+    EDIT: 'project_edit',
+    ENABLE: 'project_enable'
 }

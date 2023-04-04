@@ -1,7 +1,21 @@
 <template>
     <div class="node-content-wrapper">
         <div class="node-content-header">
-            <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
+            <bk-button
+                v-perm="{
+                    hasPermission: curEnvDetail.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+                theme="primary" @click="importNewNode"
+            >
+                {{ $t('environment.import') }}
+            </bk-button>
         </div>
 
         <div class="node-table" v-if="showContent && nodeList.length">
@@ -47,7 +61,20 @@
                 </bk-table-column>
                 <bk-table-column :width="80" :label="$t('environment.operation')">
                     <template slot-scope="props">
-                        <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            class="node-delete delete-node-text"
+                            @click.stop="confirmDelete(props.row)"
+                        >{{ $t('environment.remove') }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -72,6 +99,7 @@
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import empty from '@/components/common/empty'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'node-tab',
         components: {
@@ -98,6 +126,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
                 timer: null,
                 loading: {
                     isLoading: false,
@@ -191,15 +221,21 @@
 
                     message = this.$t('environment.successfullyImported')
                     theme = 'success'
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
                     this.$bkMessage({
                         message,
                         theme
                     })
-
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: this.envHashId,
+                            action: ENV_RESOURCE_ACTION.EDIT
+                        }
+                    )
+                } finally {
                     this.nodeSelectConf.isShow = false
                     this.nodeDialogLoading.isLoading = false
                     this.nodeSelectConf.importText = this.$t('environment.import')
@@ -423,14 +459,21 @@
 
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
-                        } catch (err) {
-                            message = err.data ? err.data.message : err
-                            theme = 'error'
-                        } finally {
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: this.envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            )
+                        } finally {
                             this.requestList()
                         }
                     }

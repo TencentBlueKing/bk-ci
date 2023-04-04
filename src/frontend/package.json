@@ -50,15 +50,24 @@
       "devops-turbo",
       "devops-stream",
       "devops-metrics",
-      "bk-pipeline"
+      "devops-manage",
+      "devops-permission",
+      "bk-pipeline",
+      "bk-permission"
     ],
     "nohoist": [
+      "bk-permission",
+      "bk-permission/**",
       "bkui-pipeline",
       "bkui-pipeline/**",
       "devops-stream",
       "devops-stream/**",
       "devops-metrics",
-      "devops-metrics/**"
+      "devops-metrics/**",
+      "devops-manage",
+      "devops-manage/**",
+      "devops-permission",
+      "devops-permission/**"
     ]
   },
   "dependencies": {
@@ -71,6 +80,7 @@
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
     "uuid": "^8.3.2",
-    "vue-eslint-parser": "^9.0.2"
+    "vue-eslint-parser": "^9.0.2",
+    "copy-webpack-plugin": "9.0.1"
   }
 }
