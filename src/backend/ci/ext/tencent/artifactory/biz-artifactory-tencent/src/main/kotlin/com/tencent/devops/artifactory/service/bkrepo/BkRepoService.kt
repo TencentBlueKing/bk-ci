@@ -269,7 +269,7 @@ class BkRepoService @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }

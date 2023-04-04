@@ -44,6 +44,7 @@ package com.tencent.devops.lambda
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+object openapiMessageCode
 object LambdaMessageCode {
     const val ERROR_LAMBDA_PROJECT_NOT_EXIST = "2128001" // Lambda：项目{0}不存在
     const val ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO = "2128002" // Lambda：offset不可小于0,当前offset={0}
