@@ -494,23 +494,4 @@ class StoreProjectRelDao {
                 .fetch()
         }
     }
-
-    fun getStoreRelProjectCodes(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Record2<String, String>> {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            return dslContext.select(STORE_CODE.`as`(KEY_STORE_CODE), PROJECT_CODE.`as`(KEY_PROJECT_CODE))
-                .from(this)
-                .where(conditions)
-                .groupBy(STORE_CODE, PROJECT_CODE)
-                .fetch()
-        }
-    }
 }

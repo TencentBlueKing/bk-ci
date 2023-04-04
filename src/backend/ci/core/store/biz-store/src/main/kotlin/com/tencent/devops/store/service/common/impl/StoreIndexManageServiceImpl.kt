@@ -38,6 +38,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
+import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
+import com.tencent.devops.model.store.tables.TStoreIndexResult
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
@@ -47,12 +50,6 @@ import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_CODE
-import com.tencent.devops.store.pojo.common.STORE_INDEX_CODE
-import com.tencent.devops.store.pojo.common.STORE_INDEX_DESCRIPTION
-import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_TIPS
-import com.tencent.devops.store.pojo.common.STORE_INDEX_ICON_URL
-import com.tencent.devops.store.pojo.common.STORE_INDEX_LEVEL_NAME
-import com.tencent.devops.store.pojo.common.STORE_INDEX_NAME
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -208,14 +205,17 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val storeCode = it[STORE_CODE] as String
             val storeIndexInfos =
                 storeIndexInfosMap[storeCode]?.toMutableList() ?: emptyList<StoreIndexInfo>().toMutableList()
+            val tStoreIndexResult = TStoreIndexResult.T_STORE_INDEX_RESULT
+            val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
+            val tStoreIndexLevelInfo = TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO
             storeIndexInfos.add(
                 StoreIndexInfo(
-                    indexCode = it[STORE_INDEX_CODE] as String,
-                    indexName = it[STORE_INDEX_NAME] as String,
-                    iconUrl = it[STORE_INDEX_ICON_URL] as String,
-                    description = it[STORE_INDEX_DESCRIPTION] as? String ?: "",
-                    indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
-                    hover = it[STORE_INDEX_ICON_TIPS].toString()
+                    indexCode = it[tStoreIndexResult.INDEX_CODE],
+                    indexName = it[tStoreIndexBaseInfo.INDEX_NAME],
+                    iconUrl = it[tStoreIndexLevelInfo.ICON_URL],
+                    description = it[tStoreIndexBaseInfo.DESCRIPTION],
+                    indexLevelName = it[tStoreIndexLevelInfo.LEVEL_NAME],
+                    hover = it[tStoreIndexResult.ICON_TIPS]
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
