@@ -142,8 +142,7 @@ class BkRepoService @Autowired constructor(
                     ?: throw NotFoundException(
                             MessageUtil.getMessageByLocale(
                                 messageCode = FILE_NOT_EXIST,
-                                language = I18nUtil.getLanguage(userId),
-                                params = arrayOf("")
+                                language = I18nUtil.getLanguage(userId)
                             )
                     )
             RepoUtils.toFileDetail(fileDetail)
@@ -252,7 +251,7 @@ class BkRepoService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException(
                         MessageUtil.getMessageByLocale(
                             messageCode = BUILD_NOT_EXIST,
-                            language = I18nUtil.getLanguage(),
+                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf(crossBuildNo)
                         )
                 )).id
@@ -483,10 +482,8 @@ class BkRepoService @Autowired constructor(
         val fileDetail =
             bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException(
-                        MessageUtil.getMessageByLocale(
-                            messageCode = FILE_NOT_EXIST,
-                            language = I18nUtil.getLanguage(),
-                            params = arrayOf("")
+                    I18nUtil.getCodeLanMessage(
+                            messageCode = FILE_NOT_EXIST
                         )
                 )
 

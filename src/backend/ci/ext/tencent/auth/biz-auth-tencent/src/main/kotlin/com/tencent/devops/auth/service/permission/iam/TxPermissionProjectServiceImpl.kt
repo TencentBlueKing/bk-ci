@@ -107,10 +107,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         if (iamProjectId.isNullOrEmpty()) {
             logger.warn("[IAM] $projectCode iamProject is empty")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
             )
         }
         return iamProjectId.toInt()

@@ -33,7 +33,6 @@ import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_CHATID
 import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
@@ -88,22 +87,19 @@ class RobotService @Autowired constructor(
             return true
         }
         if (robotCallBack.content.contains(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_SESSION_ID,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SESSION_ID
                 )
         ) || robotCallBack.content.contains(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_GROUP_ID,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_GROUP_ID
                 )
         )) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
                 text = MsgInfo(
-                    content = MessageUtil.getMessageByLocale(
-                        messageCode = BK_GROUP_CHATID,
-                        language = I18nUtil.getLanguage()
+                    content = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GROUP_CHATID
                     ) + ": ${robotCallBack.chatId}"
                 )
             )

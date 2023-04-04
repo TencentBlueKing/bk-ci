@@ -31,7 +31,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.constant.CommonMessageCode.ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.SERVICE_TYPE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -58,9 +57,8 @@ abstract class AbstractService(
         val list = image.split(":")
         if (list.size != 2) {
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-            MessageUtil.getMessageByLocale(
-                messageCode = ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT,
-                language = I18nUtil.getLanguage()
+            I18nUtil.getCodeLanMessage(
+                messageCode = ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
             )
                 )
         }

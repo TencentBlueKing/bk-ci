@@ -224,15 +224,13 @@ class V1YamlTrigger @Autowired constructor(
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = GIT_CI_NO_RECOR,
-                            language = I18nUtil.getLanguage()
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = GIT_CI_NO_RECOR
                         ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
-                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
-                        language = I18nUtil.getLanguage()
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE
                     ) + ". ${it.image}")
                 }
             }

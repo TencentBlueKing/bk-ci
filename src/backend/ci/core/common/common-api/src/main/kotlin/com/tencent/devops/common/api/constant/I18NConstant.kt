@@ -70,8 +70,6 @@ object I18NConstant {
     const val BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION = "BkBlueShieldVersionExperienceNotification" //【蓝盾版本体验通知】{0}邀您体验【{1}-{2}】
     const val BK_INVITES_YOU_EXPERIENCE = "BkInvitesYouExperience" //{0}邀您体验【{1}-{2}】
     const val BK_NAME = "BkName" //名称
-    const val BK_BELONG_TO_PROJECT = "BkBelongToProject" //所属项目
-    const val BK_OPERATE = "BkOperate" //操作
     const val BK_VIEW = "BkView"//查看
     const val BK_LATEST_EXPERIENCE_VERSION_SHARING = "BkLatestExperienceVersionSharing"//【{0}】最新体验版本分享
     const val BK_LATEST_INVITES_YOU_EXPERIENCE = "BkLatestInvitesYouExperience"//【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。
@@ -163,7 +161,6 @@ object I18NConstant {
     const val BK_SEND_WECOM_MESSAGE = "BkSendWecomMessage" // send enterprise wechat message(发送企业微信消息):\n{0}\nto\n{1}
     const val BK_INVALID_NOTIFICATION_RECIPIENT = "BkInvalidNotificationRecipient" // 通知接收者不合法:
     const val BK_WECOM_NOTICE = "BkWecomNotice" // 企业微信通知内容:
-    const val BK_MOBILE_VIEW_DETAILS = "BkMobileViewDetails" // {0}\n\n 手机查看详情：{1} \n 电脑查看详情：{2}
     const val BK_SEND_WECOM_CONTENT = "BkSendWecomContent" // 发送企业微信内容: ({0}) 到 {1}
     const val BK_SEND_WECOM_CONTENT_SUCCESSFULLY = "BkSendWecomContentSuccessfully" // 发送企业微信内容: ({0}) 到 {1}成功
     const val BK_SEND_WECOM_CONTENT_FAILED = "BkSendWecomContentFailed" // 发送企业微信内容: ({0}) 到 {1}失败:
@@ -311,6 +308,6 @@ object I18NConstant {
 
     const val BK_CONTAINER_TIMED_OUT = "BkContainerTimedOut"//创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "BkCreationFailedExceptionInformation"//创建失败，异常信息
-    const val BK_WHEN = "BkWhen"//当
+    const val BK_APP_SCAN_COMPLETED = "BkAppScanCompleted"//金刚app扫描完成
 
 }

@@ -161,7 +161,7 @@ class RtxTaskAtom @Autowired constructor(
             // 企业微信通知是否加上详情
             val bodyStr = if (sendDetailFlag) {
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_COMPUTER_VIEW_DETAILS,
+                    messageCode = BK_COMPUTER_VIEW_DETAILS,//{0}\n\n电脑查看详情：{1}\n手机查看详情：{2}
                     language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(bodyStrOrigin, detailUrl, detailOuterUrl)
                 )

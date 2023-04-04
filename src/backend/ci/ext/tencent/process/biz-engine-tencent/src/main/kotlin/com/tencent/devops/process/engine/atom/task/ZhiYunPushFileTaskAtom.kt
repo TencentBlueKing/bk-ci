@@ -110,7 +110,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             buildId = buildId,
             message = MessageUtil.getMessageByLocale(
                 messageCode = BK_START_UPLOADING_CORRESPONDING_FILES,
-                language = I18nUtil.getLanguage(userId)
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + "【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode(
                 "http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName",
                 "UTF-8"
@@ -123,7 +123,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             buildId = buildId,
             message = MessageUtil.getMessageByLocale(
                 messageCode = BK_MATCHING_FILE,
-                language = I18nUtil.getLanguage(userId)
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + "${uploadParams.fileParams.regexPath}($fileSource)",
             tag = task.taskId,
             jobId = task.containerHashId,

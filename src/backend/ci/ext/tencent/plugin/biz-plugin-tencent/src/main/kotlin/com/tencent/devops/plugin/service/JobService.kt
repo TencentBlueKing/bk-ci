@@ -70,7 +70,7 @@ class JobService @Autowired constructor(
         logger.info("listUsableServerEnvs(projectId=$projectId,buildId=$buildId)=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
             messageCode = BK_BUILDID_NOT_FOUND,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
         // 以启动人的身份调用service接口获取信息
@@ -83,7 +83,7 @@ class JobService @Autowired constructor(
         logger.info("listUsableServerNodes(projectId=$projectId,buildId=$buildId)=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
             messageCode = BK_BUILDID_NOT_FOUND,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
         // 以启动人的身份调用service接口获取信息
@@ -96,7 +96,7 @@ class JobService @Autowired constructor(
         logger.info("listRawByEnvHashIds(projectId=$projectId,buildId=$buildId,envHashIds=${envHashIds.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
             messageCode = BK_BUILDID_NOT_FOUND,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
         val result = client.get(ServiceEnvironmentResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
@@ -108,7 +108,7 @@ class JobService @Autowired constructor(
         logger.info("listRawByEnvNames(projectId=$projectId,buildId=$buildId,envNames=${envNames.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
             messageCode = BK_BUILDID_NOT_FOUND,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
         val result = client.get(ServiceEnvironmentResource::class).listRawByEnvNames(userId, projectId, envNames)
@@ -120,7 +120,7 @@ class JobService @Autowired constructor(
         logger.info("listRawNodesByHashIds(projectId=$projectId,buildId=$buildId,nodeHashIds=${nodeHashIds.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
             messageCode = BK_BUILDID_NOT_FOUND,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
         val result = client.get(ServiceNodeResource::class).listRawByHashIds(userId, projectId, nodeHashIds)
@@ -133,7 +133,7 @@ class JobService @Autowired constructor(
         val userId = getLastUpdateUserId(projectId, pipelineId)
             ?: return Result(500, MessageUtil.getMessageByLocale(
                 messageCode = BK_PIPELINEID_NOT_FOUND,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(pipelineId)
             ))
         // 以流水线最后修改人的身份调用service接口获取信息
@@ -147,7 +147,7 @@ class JobService @Autowired constructor(
         val userId = getLastUpdateUserId(projectId, pipelineId)
             ?: return Result(500, MessageUtil.getMessageByLocale(
                 messageCode = BK_PIPELINEID_NOT_FOUND,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(pipelineId)
             ))
         // 以流水线最后修改人的身份调用service接口获取信息

@@ -191,15 +191,13 @@ class V1YamlBuild @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_MANUAL_TRIGGER,
-                language = I18nUtil.getLanguage()
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_MANUAL_TRIGGER
             ), "T-1-1-1")
         val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer =
-            TriggerContainer("0", MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_TRIGGER,
-                language = I18nUtil.getLanguage()
+            TriggerContainer("0", I18nUtil.getCodeLanMessage(
+                messageCode = BK_BUILD_TRIGGER
             ), listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), VMUtils.genStageId(1))
         stageList.add(stage1)
@@ -435,9 +433,8 @@ class V1YamlBuild @Autowired constructor(
         }
 
         return MarketBuildAtomElement(
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_PULL_CODE,
-                language = I18nUtil.getLanguage()
+            name = I18nUtil.getCodeLanMessage(
+                messageCode = BK_PULL_CODE
             ),
             id = null,
             status = null,
@@ -455,15 +452,13 @@ class V1YamlBuild @Autowired constructor(
             // 判断镜像格式是否合法
             val (imageName, imageTag) = it.parseImage()
             val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                ?: throw RuntimeException(MessageUtil.getMessageByLocale(
-                    messageCode = GIT_CI_NO_RECOR,
-                    language = I18nUtil.getLanguage()
+                ?: throw RuntimeException(I18nUtil.getCodeLanMessage(
+                    messageCode = GIT_CI_NO_RECOR
                 ) + ". ${it.image}")
             if (!record.enable) {
                 throw RuntimeException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
-                        language = I18nUtil.getLanguage()
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE
                     )
                 )
             }
@@ -471,9 +466,8 @@ class V1YamlBuild @Autowired constructor(
                 it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
 
             val servicesElement = MarketBuildAtomElement(
-                name = MessageUtil.getMessageByLocale(
+                name = I18nUtil.getCodeLanMessage(
                     messageCode = BK_CREATE_SERVICE,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf(it.getType())
                 ),
                 id = null,
@@ -486,9 +480,8 @@ class V1YamlBuild @Autowired constructor(
             val servicesContainer = NormalContainer(
                 containerId = null,
                 id = null,
-                name = MessageUtil.getMessageByLocale(
+                name = I18nUtil.getCodeLanMessage(
                     messageCode = BK_CREATE_SERVICE,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf(it.getType())
                 ),
                 elements = listOf(servicesElement),

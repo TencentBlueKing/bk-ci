@@ -135,9 +135,8 @@ private fun JsonNode.checkVariablesFormat() {
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
             throw YamlFormatException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ALPHABET_NUMBER_UNDERSCORE,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ALPHABET_NUMBER_UNDERSCORE
                 )
             )
         }
@@ -152,18 +151,16 @@ private fun JsonNode.checkCiRequired() {
         }
     }
     throw YamlFormatException(
-        MessageUtil.getMessageByLocale(
-        messageCode = STAGES_JOBS_STEPS,
-        language = I18nUtil.getLanguage()
+        I18nUtil.getCodeLanMessage(
+        messageCode = STAGES_JOBS_STEPS
     ))
 }
 
 private fun JsonNode.checkExtendsRequired() {
     if (get("stages") == null && get("jobs") == null && get("steps") == null) {
         throw YamlFormatException(
-            MessageUtil.getMessageByLocale(
-                messageCode = STAGES_JOBS_STEPS,
-                language = I18nUtil.getLanguage()
+            I18nUtil.getCodeLanMessage(
+                messageCode = STAGES_JOBS_STEPS
             )
         )
     }

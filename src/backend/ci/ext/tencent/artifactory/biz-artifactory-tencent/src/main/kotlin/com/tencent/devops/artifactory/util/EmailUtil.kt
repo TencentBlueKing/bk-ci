@@ -112,7 +112,7 @@ object EmailUtil {
                 "                                                                                   <p style=\"margin: 0px;color: #c7c7c7\">MD5：$md5</p>\n" +
                 "                                                                                </td>\n" +
                 "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-                "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$downloadUrl\" style=\"color: #3c96ff\">" + MessageUtil.getMessageByLocale(messageCode = BK_DOWNLOAD, language = I18nUtil.getLanguage()) + "</a></td>\n" +
+                "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$downloadUrl\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_DOWNLOAD) + "</a></td>\n" +
                 "                                                                            </tr>\n"
     }
 
@@ -156,9 +156,9 @@ object EmailUtil {
             "                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "                                                <tr>\n" +
-            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + MessageUtil.getMessageByLocale(messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM, language = I18nUtil.getLanguage()) + "</td>\n" +
+            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM) + "</td>\n" +
             "                                                </tr>\n" +
-            "                                                <!-- " + MessageUtil.getMessageByLocale(messageCode = BK_TABLE_CONTENTS, language = I18nUtil.getLanguage()) + " -->\n" +
+            "                                                <!-- " + I18nUtil.getCodeLanMessage(messageCode = BK_TABLE_CONTENTS) + " -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
             "                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
@@ -187,7 +187,7 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + MessageUtil.getMessageByLocale(messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT, language = I18nUtil.getLanguage()) + "</td>\n" +
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT) + "</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +
             "                                                    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
@@ -198,9 +198,8 @@ object EmailUtil {
             "                                        </td>\n" +
             "                                    </tr>\n" +
             "                                    <tr class=\"email-footer\">\n" +
-            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + MessageUtil.getMessageByLocale(
+            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
                     messageCode = BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf(BODY_PROJECT_TEMPLATE)
                 )+ "</td>\n" +
             "                                    </tr>\n" +

@@ -32,9 +32,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.I18NConstant.BK_APP_SCAN_COMPLETED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -49,6 +52,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import com.tencent.devops.plugin.dao.JinGangAppDao
@@ -120,7 +124,13 @@ class JinGangService @Autowired constructor(
 
             buildLogPrinter.addLine(
                 buildId = data.buildId,
-                message = "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_APP_SCAN_COMPLETED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "【<a target='_blank' href='${data.scanUrl}'>" + MessageUtil.getMessageByLocale(
+                    messageCode = BK_VIEW_DETAILS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "</a>】",
                 tag = data.elementId,
                 jobId = "",
                 executeCount = 1

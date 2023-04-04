@@ -193,8 +193,7 @@ class BkRepoPipelineDirService @Autowired constructor(
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.PIPELINE_REPO, normalizedPath)
             ?: throw NotFoundException( MessageUtil.getMessageByLocale(
                     messageCode = FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf("")
+                    language = I18nUtil.getLanguage(userId)
                 )
             )
         return RepoUtils.toFileDetail(fileDetail)

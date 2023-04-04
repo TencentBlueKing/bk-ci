@@ -84,8 +84,6 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = I18nUtil.getCodeLanMessage(messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         val projectRelationId = projectInfo.relationId
 

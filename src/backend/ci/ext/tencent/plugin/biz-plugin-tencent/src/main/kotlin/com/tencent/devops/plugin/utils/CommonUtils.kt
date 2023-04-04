@@ -253,9 +253,8 @@ object CommonUtils {
             encodeUrl(String(Base64Coder.encode(hash)))
         } catch (e: NoSuchAlgorithmException) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = GET_SIGNATURE_ERROR,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GET_SIGNATURE_ERROR
                 ) + "$e"
             )
         }
@@ -282,9 +281,8 @@ object CommonUtils {
             return URLEncoder.encode(input, "UTF-8").replace("+", "%20").replace("*", "%2A")
         } catch (e: UnsupportedEncodingException) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = URL_CODING_ERROR,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = URL_CODING_ERROR
                 ) + "$e"
             )
         }

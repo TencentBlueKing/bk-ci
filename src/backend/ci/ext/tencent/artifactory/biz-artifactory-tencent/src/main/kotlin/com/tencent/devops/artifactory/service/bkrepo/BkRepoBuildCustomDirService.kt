@@ -73,8 +73,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
             ?: throw NotFoundException(I18nUtil.getCodeLanMessage(
                     messageCode = FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf("")
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
                 )
         return RepoUtils.toFileDetail(fileDetail)
@@ -101,7 +100,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
                 throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ))
             }
         }
@@ -111,7 +110,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
                 throw BadRequestException(I18nUtil.getCodeLanMessage(
                     messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ))
             }
 
@@ -138,7 +137,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 throw BadRequestException(I18nUtil.getCodeLanMessage(
                     messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ))
             }
 
@@ -146,7 +145,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
                 throw BadRequestException(
                     I18nUtil.getCodeLanMessage(
                     messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ))
             }
 

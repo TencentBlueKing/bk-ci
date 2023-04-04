@@ -165,9 +165,8 @@ class TXStreamBuildFinishListenerService @Autowired constructor(
                 else -> actionFactory.load(objectMapper.readValue<GitEvent>(requestEvent.event))
             } ?: throw OperationException("stream not support action ${requestEvent.event}")
             else -> TODO(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_NEED_SUPPLEMEN,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_NEED_SUPPLEMEN
                 )
             )
         }

@@ -381,9 +381,8 @@ class PreBuildService @Autowired constructor(
                     if (this == null) {
                         logger.error("getDispatchType , remote , pool is null")
                         throw OperationException(
-                            MessageUtil.getMessageByLocale(
-                                messageCode = POOL_PARAMETER_CANNOT_EMPTY,
-                                language = I18nUtil.getLanguage()
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = POOL_PARAMETER_CANNOT_EMPTY
                             )
                         )
                     }
@@ -684,9 +683,8 @@ class PreBuildService @Autowired constructor(
 
         if (record != null) {
             throw RuntimeException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = TYPE_ALREADY_EXISTS_CANNOT_ADD,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = TYPE_ALREADY_EXISTS_CANNOT_ADD
                 )
             )
         }

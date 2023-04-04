@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFULLY_FAILE
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.AcrossProjectDistributionElement
@@ -87,25 +86,22 @@ class AcrossProjectDistributionAtom @Autowired constructor(
 
         return if (result.isOk()) {
             buildLogPrinter.addLine(buildId,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_SUCCESSFULLY_DISTRIBUTED,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf(result.data.toString())
                 ), task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
             buildLogPrinter.addRedLine(buildId,
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_SUCCESSFULLY_FAILED,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED
                 ) + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode = BK_SUCCESSFULLY_FAILED,
-                    language = I18nUtil.getLanguage()
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED
                 ) + "$result"
             )
         }

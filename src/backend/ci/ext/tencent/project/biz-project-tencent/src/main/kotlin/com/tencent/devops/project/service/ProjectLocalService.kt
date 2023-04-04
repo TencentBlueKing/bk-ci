@@ -600,9 +600,6 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         )
         return authProjectApi.getProjectRoles(
             bsPipelineAuthServiceCode,

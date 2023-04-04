@@ -29,7 +29,7 @@ package com.tencent.devops.common.ci.image
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_CANNOT_EMPTY
 import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_CANNOT_EMPTY_ALL
-import com.tencent.devops.common.api.constant.I18NConstant.BK_WHEN
+import com.tencent.devops.common.api.constant.DANG
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.DispatchType
@@ -63,7 +63,7 @@ enum class PoolType {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY,
@@ -88,7 +88,7 @@ enum class PoolType {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY,
@@ -113,7 +113,7 @@ enum class PoolType {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(MessageUtil.getMessageByLocale(
-                    messageCode = BK_WHEN,
+                    messageCode = DANG,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
                     messageCode = PARAMETER_CANNOT_EMPTY,
@@ -134,7 +134,7 @@ enum class PoolType {
             if (null == pool.container) {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(MessageUtil.getMessageByLocale(
-                    messageCode = BK_WHEN,
+                    messageCode = DANG,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "pool.type=$this, container" + MessageUtil.getMessageByLocale(
                     messageCode = PARAMETER_CANNOT_EMPTY,
@@ -158,7 +158,7 @@ enum class PoolType {
                 logger.error("validatePool, pool.type:{}, macOS is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "pool.type=$this, macOS" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY,
@@ -169,7 +169,7 @@ enum class PoolType {
                 logger.error("validatePool, pool.type:{}, macOS.systemVersion is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "pool.type=$this, macOS.systemVersion" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY,
@@ -180,7 +180,7 @@ enum class PoolType {
                 logger.error("validatePool, pool.type:{} , macOS.xcodeVersion is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "pool.type=$this, macOS.xcodeVersion" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY,
@@ -242,7 +242,7 @@ enum class PoolType {
                 logger.error("validatePool, pool.type:{}, agentName/agentId/envId/envName is null", this)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_WHEN,
+                        messageCode = DANG,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "pool.type=$this, agentName/agentId/envId/envName" + MessageUtil.getMessageByLocale(
                         messageCode = PARAMETER_CANNOT_EMPTY_ALL,

@@ -72,9 +72,8 @@ class TXModelElement @Autowired(required = false) constructor(
                 )
 
                 val servicesElement = MarketBuildAtomElement(
-                    name = MessageUtil.getMessageByLocale(
+                    name = I18nUtil.getCodeLanMessage(
                         messageCode = BK_CREATE_SERVICE,
-                        language = I18nUtil.getLanguage(),
                         params = arrayOf(it.image)
                     ),
                     status = null,

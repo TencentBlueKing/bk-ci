@@ -41,9 +41,8 @@ object PathUtils {
     fun checkAndNormalizeAbsPath(path: String): String {
         val normalizePath = Paths.get(path).normalize().toString()
         if (!normalizePath.startsWith("/")) {
-            throw BadRequestException(MessageUtil.getMessageByLocale(
-                messageCode = BK_ILLEGAL_PATH,
-                language = I18nUtil.getLanguage()
+            throw BadRequestException(I18nUtil.getCodeLanMessage(
+                messageCode = BK_ILLEGAL_PATH
             ))
         }
         return normalizePath

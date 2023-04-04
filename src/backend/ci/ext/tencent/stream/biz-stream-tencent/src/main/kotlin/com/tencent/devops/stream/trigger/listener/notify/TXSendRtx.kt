@@ -94,7 +94,7 @@ object TXSendRtx {
         return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_VIEW_DETAILS,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "]($detailUrl)"
     }
 
@@ -137,7 +137,7 @@ object TXSendRtx {
             "[" +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_VIEW_DETAILS,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "]" +
             "(${
             GitCIPipelineUtils.genGitCIV2BuildUrl(

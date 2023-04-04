@@ -27,11 +27,11 @@
 
 package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_THE_PROJECT
 import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
 import com.tencent.devops.common.api.constant.I18NConstant.BK_INVITES_YOU_EXPERIENCE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATING
 import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
 import com.tencent.devops.common.api.constant.I18NConstant.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
 import com.tencent.devops.common.api.constant.I18NConstant.BK_TABLE_CONTENTS
@@ -100,12 +100,12 @@ object EmailUtil {
             ))
             .replace(TABLE_COLUMN2_TITLE,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_BELONG_TO_PROJECT,
+                    messageCode = BK_BELONG_TO_THE_PROJECT,
                     language = I18nUtil.getLanguage(userId),
                 ))
             .replace(TABLE_COLUMN3_TITLE,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_OPERATE,
+                    messageCode = BK_OPERATING,
                     language = I18nUtil.getLanguage(userId),
                 ))
             .replace(HEADER_TITLE_TEMPLATE, title)

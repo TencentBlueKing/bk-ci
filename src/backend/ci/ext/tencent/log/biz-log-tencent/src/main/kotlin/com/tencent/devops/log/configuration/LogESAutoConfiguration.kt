@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.configuration
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -129,28 +128,22 @@ class LogESAutoConfiguration {
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ES_CLUSTER_ADDRESS_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf("")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ES_CLUSTER_ADDRESS_NOT_CONFIGURED
                 )
             )
         }
         if (e1Cluster.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ES_CLUSTER_NAME_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf("")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ES_CLUSTER_NAME_NOT_CONFIGURED
                 )
             )
         }
         if (e1Name.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ES_UNIQUE_NAME_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf("")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ES_UNIQUE_NAME_NOT_CONFIGURED
                 )
             )
         }
@@ -196,27 +189,24 @@ class LogESAutoConfiguration {
     fun client2(): ESClient {
         if (e2IP.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ES_CLUSTER_ADDRESS_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf("2")
                 )
             )
         }
         if (e2Cluster.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ES_CLUSTER_NAME_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf("2")
                 )
             )
         }
         if (e2Name.isNullOrBlank()) {
             throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ES_UNIQUE_NAME_NOT_CONFIGURED,
-                    language = I18nUtil.getLanguage(),
                     params = arrayOf("2")
                 )
             )

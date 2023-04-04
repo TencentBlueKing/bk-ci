@@ -2,7 +2,6 @@ package com.tencent.devops.prebuild.v2.service
 
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.client.Client
@@ -68,9 +67,8 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         additionalOptions: ElementAdditionalOptions
     ): MarketBuildAtomElement {
         throw CustomException(Response.Status.BAD_REQUEST,
-            MessageUtil.getMessageByLocale(
-                messageCode = CODE_CHECKOUT_NOT_SUPPORTED,
-                language = I18nUtil.getLanguage()
+            I18nUtil.getCodeLanMessage(
+                messageCode = CODE_CHECKOUT_NOT_SUPPORTED
             ))
     }
 
@@ -81,9 +79,8 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         params: String
     ): ServiceJobDevCloudInput? {
             throw CustomException(Response.Status.BAD_REQUEST,
-                MessageUtil.getMessageByLocale(
-                    messageCode = SERVICES_KEYWORD_NOT_SUPPORTED,
-                    language = I18nUtil.getLanguage()
+                I18nUtil.getCodeLanMessage(
+                    messageCode = SERVICES_KEYWORD_NOT_SUPPORTED
                 ))
     }
 
@@ -135,9 +132,8 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
 
             return MarketBuildAtomElement(
                 id = step.taskId,
-                name = step.name ?: MessageUtil.getMessageByLocale(
-                    messageCode = BK_SYNCHRONIZE_LOCAL_CODE,
-                    language = I18nUtil.getLanguage()
+                name = step.name ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SYNCHRONIZE_LOCAL_CODE
                 ),
                 stepId = step.id,
                 atomCode = "syncAgentCode",

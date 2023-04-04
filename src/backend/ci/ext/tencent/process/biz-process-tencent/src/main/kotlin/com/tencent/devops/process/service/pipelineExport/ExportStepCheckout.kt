@@ -2,7 +2,6 @@ package com.tencent.devops.process.service.pipelineExport
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.PipelineExportContext
@@ -37,9 +36,8 @@ object ExportStepCheckout {
                 return mutableMapOf()
             }
         val repo = allInfo.getRepoInfo(allInfo.pipelineInfo.projectId, input.getRepositoryConfig())
-        val url = repo?.url ?: input.repositoryName?.ifBlank { null } ?: MessageUtil.getMessageByLocale(
-            messageCode = LIMIT_MESSAGE,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        val url = repo?.url ?: input.repositoryName?.ifBlank { null } ?: I18nUtil.getCodeLanMessage(
+            messageCode = LIMIT_MESSAGE
         )
 
         val toCheckoutAtom = CheckoutAtomParam(input)
@@ -102,9 +100,8 @@ object ExportStepCheckout {
             input.repositoryUrl ?: ""
         } else {
             val repo = allInfo.getRepoInfo(allInfo.pipelineInfo.projectId, input.getRepositoryConfig())
-            repo?.url ?: input.repositoryName?.ifBlank { null } ?: MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            repo?.url ?: input.repositoryName?.ifBlank { null } ?: I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             )
         }
 
@@ -147,33 +144,26 @@ object ExportStepCheckout {
             val url = fixInputMap["repositoryUrl"] as String?
 
             // 去掉所有插件上的凭证配置
-            fixInputMap.updateIfNotAbsent("credentialId", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("credentialId", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("ticketId", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("ticketId", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("username", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("username", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("password", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("password", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("username", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("username", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("accessToken", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("accessToken", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
-            fixInputMap.updateIfNotAbsent("personalAccessToken", MessageUtil.getMessageByLocale(
-                messageCode = LIMIT_MESSAGE,
-                language = I18nUtil.getLanguage()
+            fixInputMap.updateIfNotAbsent("personalAccessToken", I18nUtil.getCodeLanMessage(
+                messageCode = LIMIT_MESSAGE
             ))
 
             // 去掉原来的仓库指定参数
