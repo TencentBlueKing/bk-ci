@@ -86,12 +86,10 @@ data class DetailWebsocketPush(
 
     override fun buildNotifyMessage(message: SendMessage) {
         try {
-            // #7983 将详情页动态刷新数据直接调整为最新一次执行的record
-            val modelDetail = pipelineBuildService.getBuildRecord(
+            val modelDetail = pipelineBuildService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId!!,
-                executeCount = null,
                 channelCode = ChannelCode.BS
             )
             message.notifyPost.message = JsonUtil.toJson(modelDetail, formatted = false)

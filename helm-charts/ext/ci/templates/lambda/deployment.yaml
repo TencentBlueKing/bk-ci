@@ -77,6 +77,8 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -105,13 +107,8 @@ spec:
           - mountPath: /data/workspace/lambda/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
-          - mountPath: /data1/certificate/
-            name: secret-volume
       volumes:
       - hostPath:
           path: /data
         name: log-volume
-      - name: secret-volume
-        secret:
-          secretName: {{ include "bkci.names.fullname" . }}-lambda
 {{- end -}}
