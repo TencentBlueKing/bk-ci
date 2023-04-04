@@ -73,7 +73,6 @@ import com.tencent.devops.environment.pojo.enums.EnvType
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.enums.SharedEnvType
-import com.tencent.devops.environment.service.AuthEnvService.Companion.logger
 import com.tencent.devops.environment.service.node.EnvCreatorFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
@@ -532,10 +531,8 @@ class EnvService @Autowired constructor(
             } else {
                 ""
             }
-            val nodeType = MessageCodeUtil.getCodeLanMessage(it.nodeType)
-            logger.info("Node type: $nodeType")
-            val nodeStatus = MessageCodeUtil.getCodeLanMessage(it.nodeStatus)
-            logger.info("Node nodeStatus: $nodeStatus")
+            val nodeType = NodeType.i18n(it.nodeType)
+            val nodeStatus = NodeStatus.i18n(it.nodeStatus)
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
