@@ -57,7 +57,7 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL", "UNUSED")
 @Service
-abstract class SimpleProjectServiceImpl @Autowired constructor(
+class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
     dslContext: DSLContext,
     projectDao: ProjectDao,
