@@ -38,9 +38,9 @@ data class SaveAtomIndexStatisticsDailyPO(
     @ApiModelProperty("插件代码")
     val atomCode: String,
     @ApiModelProperty("失败执行次数")
-    var failExecuteCount: Long,
+    var failExecuteCount: Int,
     @ApiModelProperty("失败合规次数")
-    var failComplianceCount: Long,
+    var failComplianceCount: Int,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建人")
