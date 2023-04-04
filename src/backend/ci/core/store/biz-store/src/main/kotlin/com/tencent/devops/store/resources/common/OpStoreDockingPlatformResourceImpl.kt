@@ -48,12 +48,6 @@ class OpStoreDockingPlatformResourceImpl @Autowired constructor(
         return Result(storeDockingPlatformService.create(userId, storeDockingPlatformRequest))
     }
 
-    override fun addErrorPrefix(userId: String, platformCode: String, prefix: Int): Result<Boolean> {
-        return Result(
-            storeDockingPlatformService.addErrorPrefix(userId, platformCode, prefix)
-        )
-    }
-
     override fun update(
         userId: String,
         id: String,

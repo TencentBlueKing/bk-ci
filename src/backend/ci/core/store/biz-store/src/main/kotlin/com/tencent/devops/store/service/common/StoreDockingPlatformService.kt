@@ -45,19 +45,6 @@ interface StoreDockingPlatformService {
     ): Boolean
 
     /**
-     * 添加对接平台错误码前缀信息
-     * @param userId 用户ID
-     * @param platformCode 平台Code
-     * @param prefix 错误码前缀
-     * @return 布尔值
-     */
-    fun addErrorPrefix(
-        userId: String,
-        platformCode: String,
-        prefix: Int
-    ): Boolean
-
-    /**
      * 删除对接平台信息
      * @param userId 用户ID
      * @param id 主键ID

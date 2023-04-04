@@ -62,7 +62,8 @@ class StoreDockingPlatformDao {
                 CREATOR,
                 MODIFIER,
                 OWNER_DEPT_NAME,
-                LABELS
+                LABELS,
+                ERROR_CODE_PREFIX
             )
                 .values(
                     UUIDUtil.generate(),
@@ -75,7 +76,8 @@ class StoreDockingPlatformDao {
                     userId,
                     userId,
                     storeDockingPlatformRequest.ownerDeptName,
-                    storeDockingPlatformRequest.labels?.joinToString(",")
+                    storeDockingPlatformRequest.labels?.joinToString(","),
+                    storeDockingPlatformRequest.errorCodePrefix
                 ).execute()
         }
     }
@@ -98,6 +100,7 @@ class StoreDockingPlatformDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                .set(ERROR_CODE_PREFIX, storeDockingPlatformRequest.errorCodePrefix)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -164,6 +167,14 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
                 .where(PLATFORM_NAME.eq(platformName))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByErrorCodePrefix(dslContext: DSLContext, errorCodePrefix: Int): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectCount().from(this)
+                .where(ERROR_CODE_PREFIX.eq(errorCodePrefix))
                 .fetchOne(0, Int::class.java)!!
         }
     }
