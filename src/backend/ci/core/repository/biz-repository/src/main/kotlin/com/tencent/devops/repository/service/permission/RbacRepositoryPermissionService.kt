@@ -93,14 +93,10 @@ class RbacRepositoryPermissionService(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
-        val resourceCode: String
-        val resourceType: String
-        if (repositoryId != null) {
-            resourceCode = HashUtil.encodeOtherLongId(repositoryId)
-            resourceType = AuthResourceType.CODE_REPERTORY.value
+        val (resourceCode, resourceType) = if (repositoryId != null) {
+            Pair(HashUtil.encodeOtherLongId(repositoryId), AuthResourceType.CODE_REPERTORY.value)
         } else {
-            resourceCode = projectId
-            resourceType = AuthResourceType.PROJECT.value
+            Pair(projectId, AuthResourceType.PROJECT.value)
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
