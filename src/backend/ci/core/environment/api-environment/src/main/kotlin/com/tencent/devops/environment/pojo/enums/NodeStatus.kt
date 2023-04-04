@@ -123,25 +123,5 @@ enum class NodeStatus(val statusName: String) {
 //                else -> UNKNOWN
 //            }
         }
-
-       /* fun i18n(status: String): String {
-            return when (status) {
-                NORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_NORMAL)
-                ABNORMAL.name -> MessageCodeUtil.getCodeLanMessage(BK_ABNORMAL)
-                DELETED.name -> MessageCodeUtil.getCodeLanMessage(BK_DELETED)
-                LOST.name -> MessageCodeUtil.getCodeLanMessage(BK_LOST)
-                CREATING.name -> MessageCodeUtil.getCodeLanMessage(BK_CREATING)
-                RUNNING.name -> MessageCodeUtil.getCodeLanMessage(BK_RUNNING)
-                STARTING.name -> MessageCodeUtil.getCodeLanMessage(BK_STARTING)
-                STOPPING.name -> MessageCodeUtil.getCodeLanMessage(BK_STOPPING)
-                STOPPED.name -> MessageCodeUtil.getCodeLanMessage(BK_STOPPED)
-                RESTARTING.name -> MessageCodeUtil.getCodeLanMessage(BK_RESTARTING)
-                DELETING.name -> MessageCodeUtil.getCodeLanMessage(BK_DELETING)
-                BUILDING_IMAGE.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILDING_IMAGE)
-                BUILD_IMAGE_SUCCESS.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_SUCCESS)
-                BUILD_IMAGE_FAILED.name -> MessageCodeUtil.getCodeLanMessage(BK_BUILD_IMAGE_FAILED)
-                else -> MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN)
-            }
-        }*/
     }
 }

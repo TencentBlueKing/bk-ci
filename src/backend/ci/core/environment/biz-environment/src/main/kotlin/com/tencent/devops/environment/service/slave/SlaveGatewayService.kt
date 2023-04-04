@@ -60,8 +60,8 @@ class SlaveGatewayService @Autowired constructor(
         }
         gatewayList.forEach {
             if (it.gateway == gateway) {
-                logger.info("it.showName",it.showName)
-                return MessageCodeUtil.getMessageByLocale(it.showName,"")
+                logger.info("it.showName", it.showName)
+                return MessageCodeUtil.getMessageByLocale(it.showName, "")
             }
         }
         return MessageCodeUtil.getCodeLanMessage(
