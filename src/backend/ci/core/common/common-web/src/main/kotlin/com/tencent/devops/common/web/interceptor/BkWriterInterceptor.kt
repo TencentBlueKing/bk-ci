@@ -97,6 +97,12 @@ class BkWriterInterceptor : WriterInterceptor {
         context.proceed()
     }
 
+    /**
+     * 获取字段国际化key
+     * @param fieldPath 字段路径
+     * @param i18nFieldInfo 国际化字段信息
+     * @return 字段国际化key
+     */
     private fun getFieldKey(
         fieldPath: String,
         i18nFieldInfo: I18nFieldInfo
@@ -123,6 +129,14 @@ class BkWriterInterceptor : WriterInterceptor {
         return fieldKey
     }
 
+    /**
+     * 处理接口前缀名称列表
+     * @param keyPrefixNames 前缀名称列表
+     * @param fieldPath 字段路径
+     * @param entity 实体对象
+     * @param i18nKeySb 国际化key的StringBuilder对象
+     * @param keyPrefixMap 前缀名称与名称值的map集合
+     */
     private fun handleInterfaceKeyPrefixNames(
         keyPrefixNames: Array<String>,
         fieldPath: String,
