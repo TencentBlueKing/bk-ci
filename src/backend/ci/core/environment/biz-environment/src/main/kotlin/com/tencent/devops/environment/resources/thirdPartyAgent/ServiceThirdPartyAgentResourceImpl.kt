@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
@@ -41,6 +42,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgrad
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
@@ -52,7 +54,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
-    private val agentPipelineService: AgentPipelineService
+    private val agentPipelineService: AgentPipelineService,
+    private val slaveGatewayService: SlaveGatewayService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -160,5 +163,9 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?> {
         return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
+    }
+
+    override fun getGateways(): Result<List<SlaveGateway>> {
+        return Result(slaveGatewayService.getGateway())
     }
 }

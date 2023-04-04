@@ -623,6 +623,10 @@ class PipelineRuntimeService @Autowired constructor(
         return genBuildHistory(record, values, currentTimestamp)
     }
 
+    fun getStartUser(projectId: String, buildId: String): String? {
+        return pipelineBuildDao.getStartUser(dslContext, projectId, buildId)
+    }
+
     fun getBuildHistoryByIds(
         buildIds: Set<String>,
         startBeginTime: String? = null,

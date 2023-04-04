@@ -226,6 +226,8 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   
 # certificate server 配置
 certificate:
