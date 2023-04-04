@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.service.dispatcher.agent
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -159,11 +158,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
-                        + "(System Error) - ${agentResult.message}"
+                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}") +
+                        "(System Error) - ${agentResult.message}"
             )
             return
         }
@@ -174,10 +170,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
+                errorMsg = I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,) +
+                        "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -188,9 +182,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
                 ) + "(System Error) - $dispatchType agent is null"
             )
             return
@@ -203,10 +196,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = MessageUtil.getMessageByLocale(
-                    CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(dispatchType.displayName)
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
+                    params = arrayOf(dispatchType.displayName)
                 )
             )
         } else {
@@ -246,10 +238,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
                     log(
                         event,
-                        MessageUtil.getMessageByLocale(
-                            BUILD_MACHINE_UPGRADE_IN_PROGRESS,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ) + " - ${agent.hostname}/${agent.ip}"
+                        I18nUtil.getCodeLanMessage(BUILD_MACHINE_UPGRADE_IN_PROGRESS) +
+                                " - ${agent.hostname}/${agent.ip}"
                     )
                     return false
                 }
@@ -287,10 +277,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             } else {
                 log(
                     event,
-                    MessageUtil.getMessageByLocale(
-                        BUILD_MACHINE_BUSY,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ) + "(Agent is busy) - ${agent.hostname}/${agent.ip}")
+                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY,) +
+                            "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -411,9 +399,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
                 ) + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
@@ -429,9 +416,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = MessageUtil.getMessageByLocale(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}",
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
                 ) + "System Error) - ${dispatchType.envName}: agent is null"
             )
             return
@@ -447,10 +433,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = MessageUtil.getMessageByLocale(
-                    BUILD_NODE_IS_EMPTY,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(dispatchType.envName)
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_NODE_IS_EMPTY,
+                    params = arrayOf(dispatchType.envName)
                 ) + "build cluster： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return

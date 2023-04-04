@@ -148,7 +148,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
             errorMsg = MessageUtil.getMessageByLocale(
                 ERROR_PIPELINE_NOT_EXISTS,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getLanguage()
             ),
             pipelineId = pipelineId,
             buildId = buildId,
@@ -161,7 +161,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
             errorMsg = MessageUtil.getMessageByLocale(
                 ERROR_PIPELINE_NOT_EXISTS,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                I18nUtil.getLanguage(),
                 arrayOf(vmSeqId)
             ),
             pipelineId = pipelineId,

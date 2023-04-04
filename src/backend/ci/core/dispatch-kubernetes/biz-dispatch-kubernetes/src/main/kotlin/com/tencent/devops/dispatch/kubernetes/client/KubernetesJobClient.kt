@@ -145,10 +145,8 @@ class KubernetesJobClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        MessageUtil.getMessageByLocale(
-                            BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ) + "（Fail to build image, http response code: ${response.code}"
+                        I18nUtil.getCodeLanMessage(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION) +
+                                "（Fail to build image, http response code: ${response.code}"
                     )
                 }
                 val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)

@@ -113,8 +113,7 @@ class StreamTimerService @Autowired constructor(
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                params = arrayOf(""),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                params = arrayOf("")
             )
         }
         crontabExpressions.forEach { crontabExpression ->

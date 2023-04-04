@@ -47,7 +47,7 @@ class BuildScriptResourceImpl @Autowired constructor(private val downloadScriptS
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     CommonMessageCode.ERROR_INVALID_PARAM_,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    I18nUtil.getLanguage(),
                     arrayOf("scriptName")
                 )
             )

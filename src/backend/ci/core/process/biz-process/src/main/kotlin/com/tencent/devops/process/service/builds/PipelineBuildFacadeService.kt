@@ -1918,7 +1918,7 @@ class PipelineBuildFacadeService(
         )
         val result = mutableListOf<IdValue>()
         BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
-            result.add(IdValue(it.name, MessageUtil.getMessageByLocale(it.statusName, it.name)))
+            result.add(IdValue(it.name, I18nUtil.getCodeLanMessage(it.statusName)))
         }
         return result
     }
@@ -2211,10 +2211,7 @@ class PipelineBuildFacadeService(
                 return
             }
         } else {
-            msg = "$msg| ${I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )}"
+            msg = "$msg| ${I18nUtil.getCodeLanMessage(ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)}"
         }
 
         // 添加错误码日志
@@ -2347,11 +2344,6 @@ class PipelineBuildFacadeService(
                     throw ErrorCodeException(
                         statusCode = Response.Status.BAD_REQUEST.statusCode,
                         errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                        defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                            params = arrayOf(buildId),
-                            language = I18nUtil.getLanguage(userId)
-                        ),
                         params = arrayOf(buildId)
                     )
                 }
@@ -2387,11 +2379,6 @@ class PipelineBuildFacadeService(
         throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-            defaultMessage = MessageUtil.getMessageByLocale(
-                messageCode = ProcessMessageCode.ERROR_RESTART_EXSIT,
-                params = arrayOf(buildId),
-                language = I18nUtil.getLanguage(userId)
-            ),
             params = arrayOf(buildId)
         )
     }

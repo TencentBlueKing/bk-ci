@@ -461,10 +461,9 @@ class YamlTemplate<T>(
                 // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
                 if (key.length > 64) {
                     throw YamlFormatException(
-                        MessageUtil.getMessageByLocale(
-                            ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            arrayOf(fromPath, key)
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
+                            params = arrayOf(fromPath, key)
                         )
                     )
                 }

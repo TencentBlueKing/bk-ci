@@ -82,10 +82,9 @@ class StreamQualityService @Autowired constructor(
                 pipelineName,
                 StreamPipelineUtils.genStreamV2BuildUrl(
                     homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
-                        MessageUtil.getMessageByLocale(
-                            STARTUP_CONFIG_MISSING,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            arrayOf(" streamUrl")
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = STARTUP_CONFIG_MISSING,
+                            params = arrayOf(" streamUrl")
                         )
                     ),
                     gitProjectId = gitProjectId,

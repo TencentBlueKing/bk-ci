@@ -310,10 +310,7 @@ class PipelineBuildQualityService(
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorType = ErrorType.USER,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                errorMsg = I18nUtil.getCodeLanMessage(messageCode)
             )
         }
     }
@@ -337,10 +334,9 @@ class PipelineBuildQualityService(
             if (checkResult.success) {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_QUALITY_CHECK_SUCCEED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(atomDesc)
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUALITY_CHECK_SUCCEED,
+                        params = arrayOf(atomDesc)
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -372,10 +368,9 @@ class PipelineBuildQualityService(
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_QUALITY_CHECK_INTERCEPTED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(atomDesc)
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUALITY_CHECK_INTERCEPTED,
+                        params = arrayOf(atomDesc)
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -440,10 +435,9 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(
-                        BK_QUALITY_TO_BE_REVIEW,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(atomDesc, "$auditUsers")
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_QUALITY_TO_BE_REVIEW,
+                        params = arrayOf(atomDesc, "$auditUsers")
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -514,10 +508,9 @@ class PipelineBuildQualityService(
                     if (hasMetadata) return@loop
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = MessageUtil.getMessageByLocale(
-                            BK_POLLING_WAIT_FOR_QUALITY_RESULT,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            arrayOf("$index")
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_POLLING_WAIT_FOR_QUALITY_RESULT,
+                            params = arrayOf("$index")
                         ),
                         tag = elementId,
                         jobId = task.containerHashId,
@@ -530,10 +523,7 @@ class PipelineBuildQualityService(
         } else {
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = MessageUtil.getMessageByLocale(
-                    BK_QUALITY_CHECK_RESULT,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ),
+                message = I18nUtil.getCodeLanMessage(BK_QUALITY_CHECK_RESULT),
                 tag = elementId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -572,10 +562,7 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = taskName + MessageUtil.getMessageByLocale(
-                        BK_AUDIT_TIMEOUT,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
+                    message = taskName + I18nUtil.getCodeLanMessage(BK_AUDIT_TIMEOUT),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -595,10 +582,9 @@ class PipelineBuildQualityService(
                     ManualReviewAction.PROCESS -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = MessageUtil.getMessageByLocale(
-                                BK_AUDIT_RESULT,
-                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                                arrayOf("Continue", actionUser)
+                            message = I18nUtil.getCodeLanMessage(
+                                messageCode = BK_AUDIT_RESULT,
+                                params = arrayOf("Continue", actionUser)
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,
@@ -609,10 +595,9 @@ class PipelineBuildQualityService(
                     ManualReviewAction.ABORT -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = MessageUtil.getMessageByLocale(
-                                BK_AUDIT_RESULT,
-                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                                arrayOf("Overrule", actionUser)
+                            message = I18nUtil.getCodeLanMessage(
+                                messageCode = BK_AUDIT_RESULT,
+                                params = arrayOf("Overrule", actionUser)
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,

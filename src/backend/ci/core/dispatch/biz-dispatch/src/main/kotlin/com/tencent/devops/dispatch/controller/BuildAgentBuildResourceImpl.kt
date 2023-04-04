@@ -42,7 +42,6 @@ import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
-import java.text.MessageFormat
 
 @RestResource
 @Suppress("ALL")
@@ -118,7 +117,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_INVALID_PARAM_,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    I18nUtil.getLanguage(),
                     arrayOf("projectId")
                 )
             )
@@ -127,7 +126,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_INVALID_PARAM_,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    I18nUtil.getLanguage(),
                     arrayOf("agentId")
                 ),
             )
@@ -136,7 +135,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_NEED_PARAM_,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    I18nUtil.getLanguage(),
                     arrayOf("secretKey")
                 )
             )

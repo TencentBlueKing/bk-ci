@@ -42,10 +42,9 @@ object NotifyTemplateUtils {
     private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "CommonShutdownFailureContent"// 【${0}】- 【${1}】#${2} 执行失败，耗时${3}, 触发人：${4}。
 
     fun getCommonShutdownSuccessContent(): String {
-        return MessageUtil.getMessageByLocale(
-            COMMON_SHUTDOWN_SUCCESS_CONTENT,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-            arrayOf(
+        return I18nUtil.getCodeLanMessage(
+            messageCode = COMMON_SHUTDOWN_SUCCESS_CONTENT,
+            params = arrayOf(
                 PROJECT_NAME_CHINESE,
                 PIPELINE_NAME,
                 PIPELINE_BUILD_NUM,
@@ -56,10 +55,9 @@ object NotifyTemplateUtils {
     }
 
     fun getCommonShutdownFailureContent(): String {
-        return MessageUtil.getMessageByLocale(
-            COMMON_SHUTDOWN_FAILURE_CONTENT,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-            arrayOf(
+        return I18nUtil.getCodeLanMessage(
+            messageCode = COMMON_SHUTDOWN_FAILURE_CONTENT,
+            params = arrayOf(
                 PROJECT_NAME_CHINESE,
                 PIPELINE_NAME,
                 PIPELINE_BUILD_NUM,

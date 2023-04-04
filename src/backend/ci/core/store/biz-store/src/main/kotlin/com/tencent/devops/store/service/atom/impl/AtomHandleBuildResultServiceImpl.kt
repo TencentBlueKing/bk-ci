@@ -65,7 +65,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             ?: return MessageUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                language = I18nUtil.getLanguage(storeBuildResultRequest.userId)
             )
         // 防止重复的mq消息造成的状态异常
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {

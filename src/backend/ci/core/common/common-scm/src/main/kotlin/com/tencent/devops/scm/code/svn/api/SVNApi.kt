@@ -150,24 +150,15 @@ object SVNApi {
             if (!response.isSuccessful) {
                 when {
                     response.code == 401 -> throw ScmException(
-                        MessageUtil.getMessageByLocale(
-                            ENGINEERING_REPO_UNAUTHORIZED,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ),
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_UNAUTHORIZED),
                         ScmType.CODE_SVN.name
                     )
                     response.code == 404 -> throw ScmException(
-                        MessageUtil.getMessageByLocale(
-                            ENGINEERING_REPO_NOT_EXIST,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ),
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_NOT_EXIST),
                         ScmType.CODE_SVN.name
                     )
                     else -> throw ScmException(
-                        MessageUtil.getMessageByLocale(
-                            ENGINEERING_REPO_CALL_ERROR,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ),
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_CALL_ERROR,
                         ScmType.CODE_SVN.name
                     )
                 }

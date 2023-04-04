@@ -230,10 +230,7 @@ private fun JsonNode.checkVariablesFormat() {
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
             throw YamlFormatException(
-                MessageUtil.getMessageByLocale(
-                    ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL)
             )
         }
     }

@@ -124,9 +124,8 @@ class LabelDao {
             val type = StoreTypeEnum.getStoreType(type.toInt())
             // 标签信息名称没有配置国际化信息则取标签表里面的名称
             val labelLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${type.name}.label.$labelCode",
-                defaultMessage = labelName,
-                language = com.tencent.devops.common.web.utils.I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                messageCode = "$type.label.$labelCode",
+                defaultMessage = labelName
             )
             return Label(
                 id = id,

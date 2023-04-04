@@ -61,9 +61,7 @@ class StreamYamlService @Autowired constructor(
         logger.info("StreamYamlService|getYamlV2|buildId|$buildId|gitProjectId|$gitProjectId")
         streamSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            MessageUtil.getMessageByLocale(
-                PROJECT_NOT_OPEN_STREAM, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            I18nUtil.getCodeLanMessage(PROJECT_NOT_OPEN_STREAM)
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         // 针对V2版本做替换

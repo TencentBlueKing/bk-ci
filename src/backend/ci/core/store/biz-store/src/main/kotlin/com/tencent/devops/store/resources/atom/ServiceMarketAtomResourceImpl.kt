@@ -86,7 +86,7 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
             return MessageUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
                 params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                language = I18nUtil.getLanguage(username)
                 )
         }
         return marketAtomStatisticService.getAtomPipelinesByCode(atomCode, username, page, pageSize)

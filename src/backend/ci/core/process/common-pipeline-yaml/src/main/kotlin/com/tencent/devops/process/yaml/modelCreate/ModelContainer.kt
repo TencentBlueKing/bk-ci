@@ -132,10 +132,9 @@ class ModelContainer @Autowired(required = false) constructor(
             ).data ?: throw CustomException(
                 // 说明用户填写的name或version不对，直接抛错
                 Response.Status.BAD_REQUEST,
-                MessageUtil.getMessageByLocale(
-                    BK_ENV_NOT_YET_SUPPORTED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(env.key, env.value)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ENV_NOT_YET_SUPPORTED,
+                    params = arrayOf(env.key, env.value)
                 )
             )
         }

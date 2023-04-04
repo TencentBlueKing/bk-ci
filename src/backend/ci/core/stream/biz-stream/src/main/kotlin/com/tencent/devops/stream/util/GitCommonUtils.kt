@@ -29,7 +29,6 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.constant.StreamMessageCode.PARAM_INCORRECT
 import com.tencent.devops.stream.pojo.GitRequestEvent
@@ -164,19 +163,11 @@ object GitCommonUtils {
             }
         } catch (e: Exception) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    PARAM_INCORRECT,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(projectId)
-                )
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_INCORRECT, params = arrayOf(projectId))
             )
         }
         throw OperationException(
-            MessageUtil.getMessageByLocale(
-                PARAM_INCORRECT,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                arrayOf(projectId)
-            )
+            I18nUtil.getCodeLanMessage(messageCode = PARAM_INCORRECT, params = arrayOf(projectId))
         )
     }
 

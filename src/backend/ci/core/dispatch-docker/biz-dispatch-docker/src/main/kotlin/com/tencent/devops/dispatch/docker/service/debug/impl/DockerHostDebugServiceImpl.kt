@@ -256,9 +256,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
-                message = MessageUtil.getMessageByLocale(
+                message = I18nUtil.getCodeLanMessage(
                     "${ErrorCodeEnum.IMAGE_CHECK_LEGITIMATE_OR_RETRY.errorCode}"
-                    , I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + if (!msg.isNullOrBlank()) {
                     "errormessage: $msg"
                 } else {
@@ -280,9 +279,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message =  MessageUtil.getMessageByLocale(
-                        "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}",
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    message =  I18nUtil.getCodeLanMessage(
+                        "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}"
                     )
                 )
             }

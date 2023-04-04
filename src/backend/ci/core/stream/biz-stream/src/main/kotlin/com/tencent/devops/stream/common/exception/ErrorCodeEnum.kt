@@ -30,6 +30,7 @@ package com.tencent.devops.stream.common.exception
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     @BkFieldI18n
@@ -78,6 +79,9 @@ enum class ErrorCodeEnum(
     GET_COMMIT_INFO_ERROR(ErrorType.THIRD_PARTY, 2129026, "2129026"),// Load project [%s] failed. Git api error: %s
     GET_USER_INFO_ERROR(ErrorType.THIRD_PARTY, 2129027, "2129027");// Load user info failed. Git api error: %s
 
+    fun getErrorMessage(): String {
+        return I18nUtil.getCodeLanMessage(this.formatErrorMessage)
+    }
     companion object {
 
         fun get(errorCode: Int): ErrorCodeEnum? {

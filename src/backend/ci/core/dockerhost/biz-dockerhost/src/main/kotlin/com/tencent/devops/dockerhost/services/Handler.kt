@@ -137,10 +137,9 @@ abstract class Handler<T : HandlerContext> constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = MessageUtil.getMessageByLocale(
-                            BK_PULLING_IMAGE,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            arrayOf("$lays", "$currentProgress")
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_PULLING_IMAGE,
+                            params = arrayOf("$lays", "$currentProgress")
                         ),
                         tag = startTaskId,
                         jobId = containerHashId

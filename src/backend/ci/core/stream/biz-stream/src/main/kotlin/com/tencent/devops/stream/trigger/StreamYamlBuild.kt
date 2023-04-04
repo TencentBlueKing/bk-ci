@@ -529,9 +529,9 @@ class StreamYamlBuild @Autowired constructor(
                         action,
                         TriggerReason.PIPELINE_PREPARE_ERROR,
                         listOf(
-                            MessageUtil.getMessageByLocale(
+                            I18nUtil.getCodeLanMessage(
                                 CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
-                                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                I18nUtil.getDefaultLocaleLanguage()
                             )
                         )
                     )

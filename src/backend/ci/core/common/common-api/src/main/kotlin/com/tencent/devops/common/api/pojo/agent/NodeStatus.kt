@@ -29,6 +29,7 @@ package com.tencent.devops.common.api.pojo.agent
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.api.util.MessageUtil
 
 @Suppress("UNUSED")
 enum class NodeStatus(
@@ -55,10 +56,10 @@ enum class NodeStatus(
         fun getStatusName(status: String): String {
             values().forEach {
                 if (it.name == status) {
-                    return it.statusName
+                    return MessageUtil.getMessageByLocale(it.statusName)
                 }
             }
-            return UNKNOWN.statusName
+            return MessageUtil.getMessageByLocale(UNKNOWN.statusName)
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
@@ -106,7 +107,7 @@ enum class NodeStatus(
 
         fun parseByStatusName(statusName: String): NodeStatus {
             values().forEach {
-                if (it.statusName == statusName) {
+                if (MessageUtil.getMessageByLocale(it.statusName) == statusName) {
                     return it
                 }
             }

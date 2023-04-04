@@ -79,7 +79,7 @@ class SubPipelineCallAtom constructor(
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_NO_CORRESPONDING_SUB_PIPELINE,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getLanguage()
                 )
             )
         } else {
@@ -97,7 +97,7 @@ class SubPipelineCallAtom constructor(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = MessageUtil.getMessageByLocale(
                         ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        I18nUtil.getLanguage()
                     )
                 )
             } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
@@ -160,7 +160,7 @@ class SubPipelineCallAtom constructor(
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_BUILD_TASK_SUBPIPELINEID_NULL,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getLanguage()
                 ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
@@ -172,7 +172,7 @@ class SubPipelineCallAtom constructor(
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getLanguage()
                 ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )

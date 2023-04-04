@@ -186,20 +186,16 @@ class DispatchBuildService @Autowired constructor(
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorCode,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.formatErrorMessage,
-                    dispatchBuild.log.troubleShooting +
-                            MessageUtil.getMessageByLocale(BK_INTERFACE_REQUEST_TIMEOUT,
-                                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                            )
+                    dispatchBuild.log.troubleShooting + I18nUtil.getCodeLanMessage(BK_INTERFACE_REQUEST_TIMEOUT)
                 )
             }
             throw BuildFailureException(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                MessageUtil.getMessageByLocale(
-                    BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("${e.message}", "${dispatchBuild.helpUrl}")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE,
+                    params = arrayOf("${e.message}", "${dispatchBuild.helpUrl}")
                 )
             )
         }

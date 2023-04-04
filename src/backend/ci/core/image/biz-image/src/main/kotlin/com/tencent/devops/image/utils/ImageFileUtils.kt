@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.constants.ImageMessageCode.PARSE_MIRROR_FILE_FAILED
 import com.tencent.devops.image.pojo.DockerImage
@@ -57,10 +56,7 @@ object ImageFileUtils {
         throw TaskExecuteException(
             errorCode = PARSE_MIRROR_FILE_FAILED.toInt(),
             errorType = ErrorType.USER,
-            errorMsg = MessageUtil.getMessageByLocale(
-                PARSE_MIRROR_FILE_FAILED,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            errorMsg = I18nUtil.getCodeLanMessage(PARSE_MIRROR_FILE_FAILED)
         )
     }
 

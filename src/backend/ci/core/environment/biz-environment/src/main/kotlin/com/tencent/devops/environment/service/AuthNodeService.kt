@@ -72,9 +72,9 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listByPage(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+            logger.info("$projectId ${I18nUtil.getCodeLanMessage(
                 BK_PROJECT_NO_NODE,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )}")
             return result.buildListInstanceFailResult()
         }
@@ -106,7 +106,7 @@ class AuthNodeService @Autowired constructor(
         if (nodeInfos?.records == null) {
             logger.info("$projectId ${MessageUtil.getMessageByLocale(
                 BK_PROJECT_NO_NODE,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )}")
             return result.buildSearchInstanceFailResult()
         }

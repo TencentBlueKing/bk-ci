@@ -11,6 +11,7 @@ import com.tencent.devops.buildless.rejected.RejectedExecutionFactory
 import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -105,10 +106,9 @@ class ContainerPoolExecutor @Autowired constructor(
         val lock = idlePoolLock
         try {
             if (!lock.tryLock(60, TimeUnit.SECONDS)) {
-                throw BuildLessException(
+                ErrorCodeException(
                     errorType = ErrorCodeEnum.GET_LOCK_FAILED.errorType,
-                    errorCode = ErrorCodeEnum.GET_LOCK_FAILED.errorCode,
-                    errorMsg = ErrorCodeEnum.GET_LOCK_FAILED.formatErrorMessage
+                    errorCode = ErrorCodeEnum.GET_LOCK_FAILED.errorCode.toString()
                 )
             }
 

@@ -179,10 +179,9 @@ class QualityRuleBuildHisService constructor(
             }
         }
         throw OperationException(
-            MessageUtil.getMessageByLocale(
-                CHANGE_QUALITY_GATE_VALUE,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                arrayOf(requestIndicator.enName, "${indicator.thresholdType}", requestIndicator.threshold)
+            I18nUtil.getCodeLanMessage(
+                messageCode = CHANGE_QUALITY_GATE_VALUE,
+                params = arrayOf(requestIndicator.enName, "${indicator.thresholdType}", requestIndicator.threshold)
             )
         )
     }

@@ -29,7 +29,6 @@ package com.tencent.devops.image.utils
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.constants.ImageMessageCode.MIRROR_FILE_SAVE_FAILED
 import org.slf4j.LoggerFactory
@@ -81,10 +80,7 @@ object FileStoreUtils {
             throw TaskExecuteException(
                 errorCode = MIRROR_FILE_SAVE_FAILED.toInt(),
                 errorType = ErrorType.USER,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    MIRROR_FILE_SAVE_FAILED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                errorMsg = I18nUtil.getCodeLanMessage(MIRROR_FILE_SAVE_FAILED)
             )
         } finally {
             closeQuietily(ips)

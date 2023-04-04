@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -69,17 +68,15 @@ class CodeService @Autowired constructor(
             repositoryType = repositoryConfig.repositoryType
         ).data
             ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(
-                    GIT_NOT_FOUND,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("$repoHashId")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GIT_NOT_FOUND,
+                    params = arrayOf("$repoHashId")
                 )
             )) as? CodeSvnRepository
             ?: throw IllegalArgumentException(
-                MessageUtil.getMessageByLocale(
-                    NOT_SVN_CODE_BASE,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("$repoHashId")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = NOT_SVN_CODE_BASE,
+                    params = arrayOf("$repoHashId")
                 )
             )
 
@@ -114,10 +111,9 @@ class CodeService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("[$projectId|$repoHashId|$relativePath] Fail to get SVN directory", t)
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    FAIL_TO_GET_SVN_DIRECTORY,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("${t.message}")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = FAIL_TO_GET_SVN_DIRECTORY,
+                    params = arrayOf("${t.message}")
                 )
             )
         }
@@ -244,10 +240,7 @@ class CodeService @Autowired constructor(
             return RepositoryConfig(null, repoName, RepositoryType.NAME)
         }
         throw OperationException(
-            MessageUtil.getMessageByLocale(
-                REPOSITORY_ID_AND_NAME_ARE_EMPTY,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            I18nUtil.getCodeLanMessage(REPOSITORY_ID_AND_NAME_ARE_EMPTY)
         )
     }
 

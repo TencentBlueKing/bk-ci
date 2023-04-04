@@ -148,11 +148,7 @@ object StreamDispatchUtils {
             // 外部版暂时不支持macos构建机，遇到直接报错
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                MessageUtil.getMessageByLocale(
-                    BUILD_RESOURCE_NOT_EXIST,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("macos")
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_RESOURCE_NOT_EXIST, params = arrayOf("macos"))
             )
         }
 
@@ -194,10 +190,9 @@ object StreamDispatchUtils {
             return DockerDispatchType(defaultImage)
         } else {
             throw CustomException(
-                Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                    BUILD_RESOURCE_NOT_EXIST,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("public")
+                Response.Status.NOT_FOUND, I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_RESOURCE_NOT_EXIST,
+                    params = arrayOf("public")
                 )
             )
         }

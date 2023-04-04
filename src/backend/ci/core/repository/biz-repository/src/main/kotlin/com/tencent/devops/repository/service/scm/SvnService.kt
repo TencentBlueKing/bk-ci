@@ -211,14 +211,11 @@ class SvnService : ISvnService {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
             logger.error(
-                MessageUtil.getMessageByLocale(
-                    BK_LOCAL_REPO_CREATION_FAILED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())), e
+                MessageUtil.getMessageByLocale(BK_LOCAL_REPO_CREATION_FAILED, I18nUtil.getDefaultLocaleLanguage()),
+                e
             )
             throw ScmException(
-                message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR
-                ),
+                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }

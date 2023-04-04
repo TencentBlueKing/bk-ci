@@ -107,9 +107,8 @@ open class GitApi {
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
-        return MessageUtil.getMessageByLocale(
-            messageCode = messageCode,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+        return I18nUtil.getCodeLanMessage(
+            messageCode = messageCode
             params = params
         )
     }

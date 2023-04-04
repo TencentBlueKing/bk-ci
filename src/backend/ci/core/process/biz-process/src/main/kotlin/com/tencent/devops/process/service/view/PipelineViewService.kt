@@ -565,19 +565,10 @@ class PipelineViewService @Autowired constructor(
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
             PIPELINE_VIEW_FAVORITE_PIPELINES -> {
-                I18nUtil.getCodeLanMessage(
-                    ProcessMessageCode.FAVORITE_PIPELINES_LABEL
-                )
+                I18nUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
             }
-
-            PIPELINE_VIEW_MY_PIPELINES -> I18nUtil.getCodeLanMessage(
-                ProcessMessageCode.MY_PIPELINES_LABEL,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
-            PIPELINE_VIEW_ALL_PIPELINES -> I18nUtil.getCodeLanMessage(
-                ProcessMessageCode.ALL_PIPELINES_LABEL,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            PIPELINE_VIEW_MY_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+            PIPELINE_VIEW_ALL_PIPELINES -> I18nUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
             )

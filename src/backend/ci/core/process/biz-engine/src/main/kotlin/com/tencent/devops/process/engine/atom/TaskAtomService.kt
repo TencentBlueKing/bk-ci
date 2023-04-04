@@ -122,7 +122,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorCode = t.errorCode
             atomResponse.errorMsg = MessageUtil.getMessageByLocale(
                 ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
@@ -136,7 +136,7 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
             atomResponse.errorMsg = MessageUtil.getMessageByLocale(
                 ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {

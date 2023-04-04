@@ -30,7 +30,6 @@ package com.tencent.devops.ticket.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -53,10 +52,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
-                BK_NO_CREDENTIAL, 
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )}")
+            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -75,10 +71,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
-            logger.info("$ids ${MessageUtil.getMessageByLocale(
-                BK_NO_CREDENTIAL,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )}")
+            logger.info("$ids ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -108,9 +101,9 @@ class AuthCredentialService @Autowired constructor(
             credentialId = keyword)
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
+            logger.info("$projectId ${I18nUtil.getCodeLanMessage(
                 BK_NO_CERT,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )}")
             return result.buildSearchInstanceFailResult()
         }

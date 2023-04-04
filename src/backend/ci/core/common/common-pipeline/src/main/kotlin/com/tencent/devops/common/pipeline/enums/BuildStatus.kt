@@ -27,7 +27,8 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
 /**
  * [statusName] 状态中文名

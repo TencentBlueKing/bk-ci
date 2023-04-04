@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -319,8 +318,7 @@ class ImageProjectService @Autowired constructor(
         val classifyName = it["classifyName"] as String
         val classifyLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
-            defaultMessage = classifyName,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            defaultMessage = classifyName
         )
         val logoUrl = it["logoUrl"] as? String
         val icon = it["icon"] as? String
@@ -958,8 +956,7 @@ class ImageProjectService @Autowired constructor(
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
         val categoryLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.IMAGE.name}.category.$category",
-            defaultMessage = categoryName,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            defaultMessage = categoryName
         )
         val publisher = it.get(KEY_PUBLISHER) as String
         val publicFlag = it.get(KEY_IMAGE_FEATURE_PUBLIC_FLAG) as Boolean

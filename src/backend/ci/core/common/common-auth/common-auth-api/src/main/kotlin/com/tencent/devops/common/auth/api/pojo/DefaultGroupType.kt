@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth.api.pojo
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 
 /**
  * 项目角色组
@@ -63,7 +64,7 @@ enum class DefaultGroupType(
 
         fun containsDisplayName(displayName: String): Boolean {
             values().forEach {
-                if (displayName == it.displayName) return true
+                if (displayName == it.getDisplayName()) return true
             }
             return false
         }
@@ -77,6 +78,10 @@ enum class DefaultGroupType(
             allGroup.add(QC)
             allGroup.add(TESTER)
             return allGroup
+        }
+
+        fun DefaultGroupType.getDisplayName(): String {
+            return I18nUtil.getCodeLanMessage("defaultGroupType." + this.displayName)
         }
     }
 }

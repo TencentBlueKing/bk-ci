@@ -115,10 +115,9 @@ class StreamEventService @Autowired constructor(
                     block = setting.enableMrBlock && commitCheckBlock,
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
                         streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException(
-                            MessageUtil.getMessageByLocale(
-                                STARTUP_CONFIG_MISSING,
-                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                                arrayOf(" streamGitConfig")
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = STARTUP_CONFIG_MISSING,
+                                params = arrayOf(" streamGitConfig")
                             )
                         ),
                         gitProjectId = getGitProjectId(),

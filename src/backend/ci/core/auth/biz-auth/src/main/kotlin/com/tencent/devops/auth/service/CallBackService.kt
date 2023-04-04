@@ -138,24 +138,14 @@ class CallBackService @Autowired constructor(
     private fun checkPath(path: String) {
         // auth回调接口通道校验
         if (!path.contains("api/open")) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.PATH_CHECK_FAIL,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    AuthMessageCode.PATH_CHECK_FAIL
-                )
-            )
+            throw ErrorCodeException(errorCode = AuthMessageCode.PATH_CHECK_FAIL)
         }
     }
 
     private fun checkGateway(gateway: String) {
         // gateway校验https,http
         if (!gateway.contains("http://") && !gateway.contains("https://")) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.HOST_CHECKOU_FAIL,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    AuthMessageCode.HOST_CHECKOU_FAIL
-                )
-            )
+            throw ErrorCodeException(errorCode = AuthMessageCode.HOST_CHECKOU_FAIL)
         }
     }
 

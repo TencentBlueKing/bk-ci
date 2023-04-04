@@ -187,10 +187,9 @@ object YamlObjects {
 
         if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
             throw YamlFormatException(
-                MessageUtil.getMessageByLocale(
-                    ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(fromPath)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                    params = arrayOf(fromPath)
                 )
             )
         }

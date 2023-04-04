@@ -29,7 +29,6 @@ package com.tencent.devops.dockerhost.resources
 
 import com.tencent.devops.common.api.constant.BK_BUILD_ENV_START_FAILED
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
@@ -53,9 +52,8 @@ class AgentLessDockerHostResourceImpl @Autowired constructor(
                     " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             Result(
                 e.errorCodeEnum.errorCode,
-                MessageUtil.getMessageByLocale(
-                    BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())) +
-                        ": ${e.message}", "")
+                I18nUtil.getCodeLanMessage(BK_BUILD_ENV_START_FAILED) + ": ${e.message}", ""
+            )
         }
     }
 

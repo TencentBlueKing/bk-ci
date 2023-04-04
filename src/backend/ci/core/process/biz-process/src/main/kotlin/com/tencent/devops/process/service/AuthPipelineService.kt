@@ -106,10 +106,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
-                BK_PROJECT_NO_PIPELINE,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )}")
+            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_PROJECT_NO_PIPELINE, I18nUtil.getLanguage())}")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -145,7 +142,7 @@ class AuthPipelineService @Autowired constructor(
         if (pipelineInfos.records.isEmpty()) {
             logger.info("$projectId ${MessageUtil.getMessageByLocale(
                 BK_PROJECT_NO_PIPELINE, 
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getDefaultLocaleLanguage()
             )}")
             return result.buildListInstanceFailResult()
         }
@@ -188,7 +185,7 @@ class AuthPipelineService @Autowired constructor(
             logger.info(
                 "$ids ${MessageUtil.getMessageByLocale(
                     BK_NO_MATCHING_STARTED_PIPELINE,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getDefaultLocaleLanguage()
                 )}"
             )
             return result.buildFetchInstanceFailResult()

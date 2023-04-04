@@ -313,10 +313,9 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         if (existPipelines.contains(pipelineId)) {
             logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(projectId, pipelineId)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
+                    params = arrayOf(projectId, pipelineId)
                 )
             )
         }

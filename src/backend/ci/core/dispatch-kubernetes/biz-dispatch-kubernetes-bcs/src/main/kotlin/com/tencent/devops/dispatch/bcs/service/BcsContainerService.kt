@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -101,18 +100,9 @@ class BcsContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = MessageUtil.getMessageByLocale(
-            BK_READY_CREATE_BCS_BUILD_MACHINE,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        ),
-        startContainerError = MessageUtil.getMessageByLocale(
-            START_BCS_BUILD_CONTAINER_FAIL,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        ),
-        troubleShooting = MessageUtil.getMessageByLocale(
-            THIRD_SERVICE_BCS_BUILD_ERROR,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE),
+        startContainerError = I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL),
+        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR)
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -229,11 +219,8 @@ class BcsContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                MessageUtil.getMessageByLocale(
-                    BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
-                    I18nUtil.getLanguage(userId)
-                ) +
-                " builderName: $builderName "
+                I18nUtil.getCodeLanMessage(BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS) +
+                        " builderName: $builderName "
             )
 
             val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
@@ -246,7 +233,7 @@ class BcsContainerService @Autowired constructor(
                 )
                 logsPrinter.printLogs(
                     this,
-                    MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                         BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
                     I18nUtil.getLanguage(userId)
                 ))
@@ -266,9 +253,7 @@ class BcsContainerService @Autowired constructor(
     }
 
     private fun combinationI18nMessage(message: String, errorMessage: String): String {
-        val language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        return MessageUtil.getMessageByLocale(message, language) +
-                MessageUtil.getMessageByLocale(errorMessage, language)
+        return I18nUtil.getCodeLanMessage(message) + I18nUtil.getCodeLanMessage(errorMessage)
     }
 
     override fun startBuilder(

@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -352,14 +351,13 @@ class GithubService @Autowired constructor(
         }
         throw GithubApiException(
             code,
-            MessageUtil.getMessageByLocale(msg, I18nUtil.getLanguage(I18nUtil.getRequestUserId()), arrayOf(operation))
+            I18nUtil.getCodeLanMessage(messageCode = msg, params = arrayOf(operation))
         )
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
-        return MessageUtil.getMessageByLocale(
+        return I18nUtil.getCodeLanMessage(
             messageCode = messageCode,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             params = params
         )
     }

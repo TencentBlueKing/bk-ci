@@ -53,9 +53,9 @@ class AuthEnvService @Autowired constructor(
         val result = ListInstanceInfo()
         if (envInfos?.records == null) {
             logger.info(
-                "$projectId ${MessageUtil.getMessageByLocale(
-                    BK_PROJECT_NO_ENVIRONMENT,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                "$projectId ${I18nUtil.getCodeLanMessage(
+                    messageCode = BK_PROJECT_NO_ENVIRONMENT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )}"
             )
             return result.buildListInstanceFailResult()
@@ -109,7 +109,7 @@ class AuthEnvService @Autowired constructor(
             logger.info(
                 "$projectId ${MessageUtil.getMessageByLocale(
                     BK_PROJECT_NO_ENVIRONMENT, 
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getDefaultLocaleLanguage()
                 )}"
             )
             return result.buildSearchInstanceFailResult()

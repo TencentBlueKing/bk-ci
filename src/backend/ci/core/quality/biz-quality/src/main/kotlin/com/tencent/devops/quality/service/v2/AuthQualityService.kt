@@ -65,9 +65,9 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info(projectId + MessageUtil.getMessageByLocale(
+            logger.info(projectId + I18nUtil.getCodeLanMessage(
                 BK_PROJECT_QUALITY_RULE,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                I18nUtil.getDefaultLocaleLanguage())
             )
             return result.buildListInstanceFailResult()
         }
@@ -125,9 +125,9 @@ class AuthQualityService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (qualityRuleInfos == null) {
             logger.info(
-                projectId + MessageUtil.getMessageByLocale(
+                projectId + I18nUtil.getCodeLanMessage(
                     BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getDefaultLocaleLanguage()
                 )
             )
             return result.buildSearchInstanceFailResult()
@@ -158,9 +158,9 @@ class AuthQualityService @Autowired constructor(
         val result = ListInstanceInfo()
         if (qualityGroupInfos == null) {
             logger.info(
-                projectId + MessageUtil.getMessageByLocale(
+                projectId + I18nUtil.getCodeLanMessage(
                     BK_PROJECT_QUALITY_GROUPING,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getDefaultLocaleLanguage()
                 )
             )
             return result.buildListInstanceFailResult()
@@ -219,9 +219,9 @@ class AuthQualityService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (qualityGroupInfos == null) {
             logger.info(
-                projectId + MessageUtil.getMessageByLocale(
+                projectId + I18nUtil.getCodeLanMessage(
                     BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getDefaultLocaleLanguage()
                 )
             )
             return result.buildSearchInstanceFailResult()

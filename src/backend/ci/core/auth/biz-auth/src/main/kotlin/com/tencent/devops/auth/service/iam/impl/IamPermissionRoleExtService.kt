@@ -51,6 +51,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -179,20 +180,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
             if (!DefaultGroupType.contains(code)) {
                 // 不在默认分组内则直接报错
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR
-                    )
+                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR
                 )
             }
         } else {
             // 非默认分组,不能使用默认分组组名
             if (DefaultGroupType.contains(code)) {
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
-                    )
+                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
                 )
             }
         }
@@ -205,20 +200,14 @@ open class IamPermissionRoleExtService @Autowired constructor(
             if (!DefaultGroupType.containsDisplayName(name)) {
                 // 不在默认分组内则直接报错
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.DEFAULT_GROUP_ERROR
-                    )
+                    errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR
                 )
             }
         } else {
             // 非默认分组,不能使用默认分组组名
             if (DefaultGroupType.containsDisplayName(name)) {
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
-                    )
+                    errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
                 )
             }
         }
@@ -264,7 +253,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
-        val strategyInfo = strategyService.getStrategyByName(defaultGroup.displayName)
+        val strategyInfo = strategyService.getStrategyByName(defaultGroup.getDisplayName())
             ?: throw ErrorCodeException(errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST)
         logger.info("getGroupStrategy ${strategyInfo.strategy}")
         val projectStrategyList = mutableListOf<String>()

@@ -48,7 +48,6 @@ import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
@@ -78,7 +77,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         if (iamId == null) {
             logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(I18nUtil.getCodeLanMessage(
-                CAN_NOT_FIND_RELATION,
+                messageCode = CAN_NOT_FIND_RELATION,
                 language = I18nUtil.getLanguage(userId))
             )
         }
@@ -103,19 +102,17 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         } catch (iamEx: IamException) {
             logger.warn("create group user fail. code: ${iamEx.errorCode} | msg: ${iamEx.errorMsg}")
             throw OperationException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
-                    params = arrayOf(iamEx.errorMsg),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(iamEx.errorMsg)
                 )
             )
         } catch (e: Exception) {
             logger.warn("create group user fail. code: $e")
             throw OperationException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
-                    params = arrayOf(e.message ?: "unknown"),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(e.message ?: "unknown")
                 )
             )
         }

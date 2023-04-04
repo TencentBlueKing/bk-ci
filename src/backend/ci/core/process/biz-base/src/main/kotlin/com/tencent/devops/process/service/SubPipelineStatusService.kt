@@ -30,7 +30,6 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -100,10 +99,7 @@ class SubPipelineStatusService @Autowired constructor(
                 status = BuildStatus.FAILED.name,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorMsg = MessageUtil.getMessageByLocale(
-                    ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                errorMsg = I18nUtil.getCodeLanMessage(ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE)
             )
         }
     }

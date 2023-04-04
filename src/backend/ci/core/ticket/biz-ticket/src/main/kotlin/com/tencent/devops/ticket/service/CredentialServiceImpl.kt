@@ -79,12 +79,7 @@ class CredentialServiceImpl @Autowired constructor(
         if (!credentialDao.has(dslContext, projectId, credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
-                params = arrayOf(credentialId),
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    CERT_NOT_FOUND,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(credentialId)
-                )
+                params = arrayOf(credentialId)
             )
         }
         if (!credentialHelper.isValid(credential)) {

@@ -102,12 +102,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw ErrorCodeException(
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.NAME_EMPTY, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ),
-                errorCode = ProjectMessageCode.NAME_EMPTY
-            )
+            throw ErrorCodeException(ProjectMessageCode.NAME_EMPTY)
         }
         when (validateType) {
             ProjectValidateType.project_name -> {
@@ -120,12 +115,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
-                    throw ErrorCodeException(
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            ProjectMessageCode., language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ),
-                        errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
-                    )
+                    throw ErrorCodeException(errorCode = ProjectMessageCode.PROJECT_NAME_EXIST)
                 }
             }
             ProjectValidateType.english_name -> {
@@ -744,18 +734,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException(
-            MessageUtil.getMessageByLocale(
-                PROJECT_NOT_EXIST,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            )
+            I18nUtil.getCodeLanMessage(PROJECT_NOT_EXIST)
         )
         val currentRelationId = projectInfo.relationId
         if (!currentRelationId.isNullOrEmpty()) {
             throw InvalidParamException(
-                projectCode + MessageUtil.getMessageByLocale(
-                    BOUND_IAM_GRADIENT_ADMIN,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                projectCode + I18nUtil.getCodeLanMessage(BOUND_IAM_GRADIENT_ADMIN)
             )
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)

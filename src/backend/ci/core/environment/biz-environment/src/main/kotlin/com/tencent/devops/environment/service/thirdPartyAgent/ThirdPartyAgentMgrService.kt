@@ -722,10 +722,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$realEnvName] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "($projectId:$realEnvName)"
+                I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) + "($projectId:$realEnvName)"
             )
         }
         thirdPartyAgentList.addAll(
@@ -756,10 +753,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         envName = sharedEnvName
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
-                        MessageUtil.getMessageByLocale(
-                            THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        ) + "($sharedProjectId:$sharedEnvId)"
+                        I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) +
+                                "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
                         dslContext = dslContext,
@@ -789,10 +784,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 envId = it.envId
             ) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "($sharedProjectId:$sharedEnvId)"
+                I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST) + "($sharedProjectId:$sharedEnvId)"
             )
             if (env.envName != it.envName) {
                 envShareProjectDao.batchUpdateEnvName(dslContext, it.envId, env.envName)
@@ -805,10 +797,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,) +
+                        "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -853,10 +843,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedThirdPartyAgents.isEmpty()) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "($sharedProjectId:$sharedEnvName)"
+                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
+                        "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -883,10 +871,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "($projectId:$envHashId)"
+                I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST,) + "($projectId:$envHashId)"
             )
         }
         val nodeIds = nodes.map {

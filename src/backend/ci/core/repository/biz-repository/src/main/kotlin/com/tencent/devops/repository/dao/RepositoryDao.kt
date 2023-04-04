@@ -294,10 +294,7 @@ class RepositoryDao {
                 query.and(PROJECT_ID.eq(projectId))
             }
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
-                MessageUtil.getMessageByLocale(
-                    GIT_NOT_FOUND, I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("")
-                )
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(""))
             )
         }
     }

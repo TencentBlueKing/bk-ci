@@ -29,7 +29,6 @@ package com.tencent.devops.metrics.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.ERROR_TYPE_NAME_PREFIX
@@ -106,9 +105,6 @@ object QueryParamCheckUtil {
     }
 
     fun getErrorTypeName(errorType: Int): String {
-        return I18nUtil.getCodeLanMessage(
-            ERROR_TYPE_NAME_PREFIX + "$errorType",
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
+        return I18nUtil.getCodeLanMessage(ERROR_TYPE_NAME_PREFIX + "$errorType")
     }
 }

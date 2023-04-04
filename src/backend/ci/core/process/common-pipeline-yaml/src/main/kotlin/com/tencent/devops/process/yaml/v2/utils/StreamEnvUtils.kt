@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.yaml.v2.utils
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED
@@ -38,10 +37,9 @@ object StreamEnvUtils {
         if (env != null) {
             if (env.size > 100) {
                 throw YamlFormatException(
-                    MessageUtil.getMessageByLocale(
-                        ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(fileName ?: "")
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED,
+                        params = arrayOf(fileName ?: "")
                     )
                 )
             }
@@ -49,19 +47,17 @@ object StreamEnvUtils {
             env.forEach { (t, u) ->
                 if (t.length > 128) {
                     throw YamlFormatException(
-                        MessageUtil.getMessageByLocale(
-                            ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                            arrayOf(fileName ?: "", "key", "128", t)
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
+                            params = arrayOf(fileName ?: "", "key", "128", t)
                         )
                     )
                 }
 
                 if (u != null && u.toString().length > 4000) {
-                    throw YamlFormatException(MessageUtil.getMessageByLocale(
-                        ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(fileName ?: "", "value", "4k", t)
+                    throw YamlFormatException(I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
+                        params = arrayOf(fileName ?: "", "value", "4k", t)
                     ))
                 }
             }

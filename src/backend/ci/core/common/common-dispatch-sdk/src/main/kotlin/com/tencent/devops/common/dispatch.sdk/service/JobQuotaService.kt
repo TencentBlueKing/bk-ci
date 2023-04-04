@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
@@ -42,7 +41,6 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-import java.text.MessageFormat
 
 class JobQuotaService constructor(
     private val client: Client,
@@ -91,11 +89,9 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY),
-                        vmType.displayName,
-                        "${RETRY_DELTA / 1000}",
-                        "${startupEvent.retryTime}"
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY,
+                        params = arrayOf(vmType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
@@ -115,10 +111,9 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED),
-                        vmType.displayName,
-                        "$retryTime"
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED,
+                        params = arrayOf(vmType.displayName, "$retryTime")
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
@@ -137,11 +132,9 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        I18nUtil.getCodeLanMessage(BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED),
-                        vmType.displayName,
-                        "${RETRY_DELTA / 1000}",
-                        "${startupEvent.retryTime}"
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED,
+                        params = arrayOf(vmType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,

@@ -503,10 +503,7 @@ class GitService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 val data = it.stringLimit(
                     readLimit = MAX_FILE_SIZE,
-                    errorMsg = MessageUtil.getMessageByLocale(
-                        BK_REQUEST_FILE_SIZE_LIMIT,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    )
+                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT,)
                 )
                 if (!it.isSuccessful) {
                     throw CustomException(
@@ -544,10 +541,7 @@ class GitService @Autowired constructor(
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
                 val body = response.stringLimit(
                     readLimit = MAX_FILE_SIZE,
-                    errorMsg = MessageUtil.getMessageByLocale(
-                        BK_REQUEST_FILE_SIZE_LIMIT,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    )
+                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT)
                 )
                 logger.info("get gitlab content response body: $body")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)

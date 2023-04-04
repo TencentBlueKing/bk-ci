@@ -339,10 +339,9 @@ object ScriptYmlUtils {
             // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
             if (index.length > 64) {
                 throw YamlFormatException(
-                    MessageUtil.getMessageByLocale(
-                        ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf("", index)
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
+                        params = arrayOf("", index)
                     )
                 )
             }
@@ -413,10 +412,9 @@ object ScriptYmlUtils {
                 )
             }
             throw YamlFormatException(
-                MessageUtil.getMessageByLocale(
-                    ERROR_YAML_FORMAT_EXCEPTION,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf("runs-on", "${e.path[0]?.fieldName}", "${e.targetType?.name}", "${e.message}")
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_YAML_FORMAT_EXCEPTION,
+                    params = arrayOf("runs-on", "${e.path[0]?.fieldName}", "${e.targetType?.name}", "${e.message}")
                 )
             )
         }
@@ -436,10 +434,9 @@ object ScriptYmlUtils {
         oldSteps.forEach { preStep ->
             if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
                 throw YamlFormatException(
-                    MessageUtil.getMessageByLocale(
-                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf("oldStep")
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                        params = arrayOf("oldStep")
                     )
                 )
             }
@@ -447,10 +444,9 @@ object ScriptYmlUtils {
             // 校验stepId唯一性
             if (!preStep.id.isNullOrBlank() && stepIdSet.contains(preStep.id)) {
                 throw YamlFormatException(
-                    MessageUtil.getMessageByLocale(
-                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(preStep.id)
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS,
+                        params = arrayOf(preStep.id)
                     )
                 )
             } else if (!preStep.id.isNullOrBlank() && !stepIdSet.contains(preStep.id)) {
@@ -548,10 +544,7 @@ object ScriptYmlUtils {
                 newLabels.add(stageLabel.id)
             } else {
                 throw YamlFormatException(
-                    MessageUtil.getMessageByLocale(
-                        ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    )
+                    I18nUtil.getCodeLanMessage(ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL)
                 )
             }
         }
@@ -987,10 +980,7 @@ object ScriptYmlUtils {
         val list = image.split(":")
         if (list.size != 2) {
             throw YamlFormatException(
-                MessageUtil.getMessageByLocale(
-                    ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                I18nUtil.getCodeLanMessage(ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL)
             )
         }
         return Pair(list[0], list[1])

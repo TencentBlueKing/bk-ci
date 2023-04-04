@@ -583,10 +583,9 @@ class StartActionTaskContainerCmd(
     private fun ElementPostInfo.addPostTipLog(task: PipelineBuildTask) {
         buildLogPrinter.addLine(
             buildId = task.buildId,
-            message = MessageUtil.getMessageByLocale(
+            message = I18nUtil.getCodeLanMessage(
                 messageCode = ATOM_POST_EXECUTE_TIP,
-                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName)
             ),
             tag = task.taskId,
             jobId = task.containerHashId,

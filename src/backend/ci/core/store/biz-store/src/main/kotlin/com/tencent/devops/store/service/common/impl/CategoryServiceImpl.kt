@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.pojo.common.Category
@@ -194,10 +193,10 @@ class CategoryServiceImpl @Autowired constructor(
     override fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>) {
         val categoryCode = it[KEY_CATEGORY_CODE] as String
         val categoryName = it[KEY_CATEGORY_NAME] as String
+        val type = it[KEY_CATEGORY_TYPE] as Int
         val categoryLanName = I18nUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$categoryCode",
-            defaultMessage = categoryName,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            messageCode = "${StoreTypeEnum.getStoreType(type)}.category.$categoryCode",
+            defaultMessage = categoryName
         )
         categoryList.add(
             Category(

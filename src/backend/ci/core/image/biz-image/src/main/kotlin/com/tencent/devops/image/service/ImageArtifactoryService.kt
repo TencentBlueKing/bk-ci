@@ -633,10 +633,7 @@ class ImageArtifactoryService @Autowired constructor(
         val redisKey = "image.copyToBuildImage_$copyFrom"
         if (!redisOperation.get(redisKey).isNullOrBlank()) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(
-                    IMAGE_COPYING_IN_PROGRESS,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                I18nUtil.getCodeLanMessage(IMAGE_COPYING_IN_PROGRESS)
             )
         }
 

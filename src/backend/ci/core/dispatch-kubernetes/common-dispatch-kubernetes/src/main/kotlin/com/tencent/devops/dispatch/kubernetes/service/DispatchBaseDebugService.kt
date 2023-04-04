@@ -58,7 +58,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class DispatchBaseDebugService @Autowired constructor(
@@ -325,10 +324,10 @@ class DispatchBaseDebugService @Autowired constructor(
             logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
                 errorCode = "2103503",
-                defaultMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_STARTUP_FAILED, I18nUtil.getLanguage(userId)
-                    ),
-                    startResult.errMsg ?: ""
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    BK_BUILD_MACHINE_STARTUP_FAILED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(startResult.errMsg ?: "")
                 )
             )
         }

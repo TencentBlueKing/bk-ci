@@ -150,9 +150,6 @@ class StreamLogService @Autowired constructor(
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
             ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(
-                    PIPELINE_NOT_FOUND_OR_DELETED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
+                I18nUtil.getCodeLanMessage(PIPELINE_NOT_FOUND_OR_DELETED)
             )
 }

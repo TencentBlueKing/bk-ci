@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -89,7 +88,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
@@ -114,18 +112,9 @@ class KubernetesContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = MessageUtil.getMessageByLocale(
-            BK_READY_CREATE_KUBERNETES_BUILD_MACHINE,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        ),
-        startContainerError = MessageUtil.getMessageByLocale(
-            START_KUBERNETES_BUILD_CONTAINER_FAIL,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        ),
-        troubleShooting = MessageUtil.getMessageByLocale(
-            KUBERNETES_BUILD_ERROR,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
+        startContainerError = I18nUtil.getCodeLanMessage(START_KUBERNETES_BUILD_CONTAINER_FAIL),
+        troubleShooting = I18nUtil.getCodeLanMessage(KUBERNETES_BUILD_ERROR)
     )
 
     @Value("\${kubernetes.resources.builder.cpu}")
@@ -259,13 +248,7 @@ class KubernetesContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                    ),
-                    builderName
-                )
+                I18nUtil.getCodeLanMessage(BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL, params = arrayOf(builderName))
             )
             return Pair(taskId, builderName)
         }

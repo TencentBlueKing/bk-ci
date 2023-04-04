@@ -118,12 +118,10 @@ class AuthManagerApprovalService @Autowired constructor(
             receivers = manager,
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
-            message = MessageFormat.format(
-                MessageUtil.getMessageByLocale(BK_WEWORK_ROBOT_NOTIFY_MESSAGE, I18nUtil.getLanguage(userId)),
-                userId,
-                authName,
-                authDetail,
-                expiredTime
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_WEWORK_ROBOT_NOTIFY_MESSAGE,
+                I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, authName, authDetail, expiredTime)
             ),
             attachments = WeworkMarkdownAttachment(
                 callbackId = "approval",
@@ -286,12 +284,10 @@ class AuthManagerApprovalService @Autowired constructor(
             receivers = userId,
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
-            message = MessageFormat.format(
-                MessageUtil.getMessageByLocale(BK_WEWORK_ROBOT_NOTIFY_MESSAGE, I18nUtil.getLanguage(userId)),
-                userId,
-                authName,
-                authDetail,
-                expiredTime
+            message = MessageUtil.getMessageByLocale(
+                BK_WEWORK_ROBOT_NOTIFY_MESSAGE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, authName, authDetail, expiredTime)
             ),
             attachments = WeworkMarkdownAttachment(
                 callbackId = "renewal",

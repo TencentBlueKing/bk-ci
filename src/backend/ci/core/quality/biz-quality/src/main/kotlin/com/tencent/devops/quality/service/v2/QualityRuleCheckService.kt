@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -668,21 +667,21 @@ class QualityRuleCheckService @Autowired constructor(
 
             val sb = StringBuilder()
             if (it.pass) {
-                sb.append(MessageUtil.getMessageByLocale(BK_PASSED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+                sb.append(I18nUtil.getCodeLanMessage(BK_PASSED))
             } else {
-                sb.append(MessageUtil.getMessageByLocale(BK_BLOCKED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+                sb.append(I18nUtil.getCodeLanMessage(BK_BLOCKED))
             }
-            val nullMsg = if (it.actualValue == null) MessageUtil.getMessageByLocale(
-                BK_NO_TOOL_OR_RULE_ENABLED,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            ) else ""
+            val nullMsg = if (it.actualValue == null) I18nUtil.getCodeLanMessage(BK_NO_TOOL_OR_RULE_ENABLED) else ""
             val detailMsg = getDetailMsg(it, params)
             Triple(
                 sb.append(
-                    MessageUtil.getMessageByLocale(
-                        BK_VALIDATION_PASSED,
-                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        arrayOf(it.indicatorName, "${it.actualValue}", "$thresholdOperationName${it.value}。 $nullMsg")
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_VALIDATION_PASSED,
+                        params = arrayOf(
+                            it.indicatorName,
+                            "${it.actualValue}",
+                            "$thresholdOperationName${it.value}。 $nullMsg"
+                        )
                     )
                 ).toString(),
                 detailMsg,
@@ -704,8 +703,7 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
-            val bkSeeDetails =
-                MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+            val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>$bkSeeDetails</a>"
             } else {
@@ -799,13 +797,8 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
-        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(
-            BK_INTERCEPTION_RULES, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
-        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(
-            BK_INTERCEPTION_METRICS,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
+        val bkInterceptionRulesI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_RULES)
+        val bkInterceptionMetricsI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_METRICS)
         resultList.forEach { r ->
             messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
             messageResult.append("$bkInterceptionMetricsI18n：\n")
@@ -829,10 +822,9 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildNo" to buildNo
             ),
             bodyParams = mapOf(
-                "title" to MessageUtil.getMessageByLocale(
-                    BK_BUILD_INTERCEPTED_TO_BE_REVIEWED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(pipelineName, buildNo, "$auditNotifyUserList")
+                "title" to I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_INTERCEPTED_TO_BE_REVIEWED,
+                    params = arrayOf(pipelineName, buildNo, "$auditNotifyUserList")
                 ),
                 "projectName" to projectName,
                 "cc" to triggerUserId,
@@ -885,14 +877,8 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
-        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(
-            BK_INTERCEPTION_RULES,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
-        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(
-            BK_INTERCEPTION_METRICS,
-            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )
+        val bkInterceptionRulesI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_RULES)
+        val bkInterceptionMetricsI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_METRICS)
         resultList.forEach { r ->
             messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
             messageResult.append("$bkInterceptionMetricsI18n：\n")
@@ -912,10 +898,9 @@ class QualityRuleCheckService @Autowired constructor(
             notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
             titleParams = mapOf(),
             bodyParams = mapOf(
-                "title" to MessageUtil.getMessageByLocale(
-                    BK_BUILD_INTERCEPTED_TERMINATED,
-                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    arrayOf(pipelineName, buildNo)
+                "title" to I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_INTERCEPTED_TERMINATED,
+                    params = arrayOf(pipelineName, buildNo)
                 ),
                 "projectName" to projectName,
                 "cc" to triggerUserId,

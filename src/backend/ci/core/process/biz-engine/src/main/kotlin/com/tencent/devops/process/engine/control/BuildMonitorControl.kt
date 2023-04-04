@@ -396,7 +396,7 @@ class BuildMonitorControl @Autowired constructor(
             val errorInfo = MessageUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                language = I18nUtil.getLanguage()
             )
             val jobId = "0"
             buildLogPrinter.addRedLine(

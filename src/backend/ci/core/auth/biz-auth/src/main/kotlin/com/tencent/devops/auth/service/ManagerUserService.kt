@@ -269,12 +269,7 @@ class ManagerUserService @Autowired constructor(
         if (whiteRecord == null) {
             LOG.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId),
-                    language = I18nUtil.getLanguage(userId)
-                )
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST
             )
         }
         val managerUser = ManagerUserDTO(
@@ -291,12 +286,7 @@ class ManagerUserService @Autowired constructor(
         if (whiteRecord == null) {
             LOG.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
-                    params = arrayOf(userId),
-                    language = I18nUtil.getLanguage(userId)
-                )
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST
             )
         }
         deleteManagerUser("system", managerId, userId)
@@ -316,11 +306,7 @@ class ManagerUserService @Autowired constructor(
                 if (record != null) {
                     LOG.warn("createWhiteUser $managerId $it is exist")
                     throw ErrorCodeException(
-                        errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                        defaultMessage = MessageUtil.getMessageByLocale(
-                            messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
-                            params = arrayOf(it)
-                        )
+                        errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST
                     )
                 }
 

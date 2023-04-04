@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.constant.MIN_LENGTH
 import com.tencent.devops.common.api.constant.PATTERN_STYLE
 import com.tencent.devops.common.api.constant.REQUIRED
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -67,8 +66,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
             // 如果参数是必填的且值为空则给用户错误提示
             message = I18nUtil.getCodeLanMessage(
                 messageCode = CommonMessageCode.PARAMETER_IS_EMPTY,
-                defaultMessage = message,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = message
             )
             setErrorMessage(constraintValidatorContext, message)
             return false
@@ -81,8 +79,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
             message = I18nUtil.getCodeLanMessage(
                 messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_SHORT,
                 defaultMessage = message,
-                params = arrayOf(minLength.toString()),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                params = arrayOf(minLength.toString())
             )
             setErrorMessage(constraintValidatorContext, message)
             return false
@@ -93,8 +90,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
             message = I18nUtil.getCodeLanMessage(
                 messageCode = CommonMessageCode.PARAMETER_LENGTH_TOO_LONG,
                 defaultMessage = message,
-                params = arrayOf(maxLength.toString()),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                params = arrayOf(maxLength.toString())
             )
             setErrorMessage(constraintValidatorContext, message)
             return false
@@ -104,8 +100,7 @@ class BkFieldValidator : ConstraintValidator<BkField?, Any?> {
         if (!flag && !Pattern.matches(patternStyle.style, paramValueStr)) {
             message = I18nUtil.getCodeLanMessage(
                 messageCode = patternStyle.name,
-                defaultMessage = message,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = message
             )
             setErrorMessage(constraintValidatorContext, message)
             return false

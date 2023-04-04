@@ -233,10 +233,9 @@ class StreamTriggerRequestService @Autowired constructor(
         ) ?: throw StreamTriggerException(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf(MessageUtil.getMessageByLocale(
-                CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
-                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                arrayOf(action.data.setting.enableUser)
+            reasonParams = listOf(I18nUtil.getCodeLanMessage(
+                messageCode = CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
+                params = arrayOf(action.data.setting.enableUser)
             ))
         )
 

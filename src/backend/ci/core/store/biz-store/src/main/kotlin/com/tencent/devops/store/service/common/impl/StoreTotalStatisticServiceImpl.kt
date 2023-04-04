@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.FAIL_NUM
 import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -270,10 +269,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         failNum: Int
     ) {
         totalFailDetail[key] = mapOf(
-            NAME to I18nUtil.getCodeLanMessage(
-                messageCode = key,
-                defaultMessage = key,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+            NAME to I18nUtil.getCodeLanMessage(messageCode = key, defaultMessage = key),
             FAIL_NUM to failNum
         )
     }
