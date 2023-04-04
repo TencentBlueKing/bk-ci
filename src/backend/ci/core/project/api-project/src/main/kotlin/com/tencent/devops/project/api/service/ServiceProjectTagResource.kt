@@ -51,4 +51,13 @@ interface ServiceProjectTagResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/{projectId}/isRbacPermission")
+    @ApiOperation("获取项目网关路由Tag")
+    fun isRbacPermission(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }

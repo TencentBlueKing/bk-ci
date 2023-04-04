@@ -54,6 +54,20 @@ class BkAuthProjectApi constructor(
     private val bkAuthTokenApi: BkAuthTokenApi
 ) : AuthProjectApi {
 
+    override fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        // v0没有project_enable权限,启用/禁用只有管理员才有权限
+        return if (permission == AuthPermission.MANAGE || permission == AuthPermission.ENABLE) {
+            checkProjectManager(userId = user, serviceCode = serviceCode, projectCode = projectCode)
+        } else {
+            checkProjectUser(user = user, serviceCode = serviceCode, projectCode = projectCode)
+        }
+    }
+
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
 //        return emptyList()
         val accessToken = bkAuthTokenApi.getAccessToken(serviceCode)

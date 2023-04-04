@@ -322,13 +322,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         val dataMap = JsonUtil.to(str, Map::class.java)
         val userInfoList = JsonUtil.to(JsonUtil.toJson(dataMap[HTTP_RESULT]!!), List::class.java)
         val users = mutableListOf<String>()
-        userInfoList.forEach {
-            val userInfo = JsonUtil.toJson(it!!)
+        userInfoList.forEachIndexed foreach@{ userIndex, user ->
+            if (userIndex == MAX_USER_OF_DEPARTMENT_RETURNED) return@foreach
+            val userInfo = JsonUtil.toJson(user!!)
             val userInfoMap = JsonUtil.to(userInfo, Map::class.java)
             val userName = userInfoMap["username"].toString()
             users.add(userName)
         }
-
         return users
     }
 
@@ -376,5 +376,6 @@ class AuthDeptServiceImpl @Autowired constructor(
         const val USER_INFO = "api/c/compapi/v2/usermanage/list_users/"
         const val RETRIEVE_DEPARTMENT = "api/c/compapi/v2/usermanage/retrieve_department/"
         const val LIST_PROFILE_DEPARTMENTS = "api/c/compapi/v2/usermanage/list_profile_departments/"
+        const val MAX_USER_OF_DEPARTMENT_RETURNED = 500
     }
 }

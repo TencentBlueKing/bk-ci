@@ -50,6 +50,13 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun pipelineGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+        return authPipelineService.pipelineGroupInfo(
+            callBackInfo = callBackInfo,
+            token = token
+        )
+    }
+
     override fun pipelineInfoByAutoId(
         callBackInfo: CallbackRequestDTO,
         token: String

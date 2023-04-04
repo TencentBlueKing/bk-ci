@@ -759,6 +759,17 @@ class PipelineViewGroupService @Autowired constructor(
 
     private fun ungroupedName() = MessageCodeUtil.getMessageByLocale("未分组", "Ungrouped")
 
+    fun listViewIdsByPipelineId(projectId: String, pipelineId: String): Set<Long> {
+        return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
+    }
+
+    fun listViewIdsByProjectId(projectId: String): Set<Long> {
+        return pipelineViewGroupDao.listByProjectId(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.viewId }.toSet()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
     }

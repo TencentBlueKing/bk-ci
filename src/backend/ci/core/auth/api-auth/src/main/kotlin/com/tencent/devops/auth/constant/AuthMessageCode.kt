@@ -82,4 +82,37 @@ object AuthMessageCode {
     const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
     const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
+
+    /**
+     * 后续的都是21216开始追加,每5一个一组，方便维护
+     */
+    const val RESOURCE_NOT_FOUND = "2121601" // 权限系统：资源{0}不存在
+    const val DEFAULT_GROUP_CONFIG_NOT_FOUND = "2121602" // 权限系统：默认组配置不存在
+    const val RESOURCE_ACTION_EMPTY = "2121603" // 权限系统：资源未绑定动作
+    const val ACTION_NOT_EXIST = "2121604" // 权限系统：操作不存在
+    const val RESOURCE_TYPE_NOT_FOUND = "2121605" // 权限系统：资源{0}不存在
+
+    const val RESOURCE_TYPE_NOT_EMPTY = "2121606" // 权限系统：资源类型不能为空
+    const val APPLY_TO_JOIN_GROUP_FAIL = "2121607" // 权限系统: 申请加入用户组失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121608" // 权限系统: 获取用户组权限信息失败
+    const val GET_IAM_GROUP_FAIL = "2121609" // 权限系统: 获取用户组失败
+    const val GET_REDIRECT_INFORMATION_FAIL = "2121610" // 权限系统: 获取跳转链接失败
+
+    const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121611" // 用户没有管理员权限
+    const val ERROR_AUTH_GROUP_NOT_EXIST = "2121612" // 用户组{0}不存在
+    const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121613" // 用户组配置{0}不存在
+    const val ERROR_ITSM_CALLBACK_APPLICATION_FAIL = "2121614" // 申请单{0}不存在
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2121615" // iam回调方法${0}不支持
+
+    const val ERROR_ITSM_APPLICATION_CANCEL_FAIL = "2121616" // ITSM单据取消失败
+    const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "2121617" // 检验ITSM的token失败
+    const val AUTH_GROUP_MEMBER_EXPIRED_DESC = "2121618" // 已过期
+    const val ERROR_PROJECT_PERMISSION_CLOSE_FAIL = "2121619" // 项目权限管理不能被关闭
+    const val ERROR_DEFAULT_GROUP_DELETE_FAIL = "2121620" // 默认组不能被删除
+
+    const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "2121621" // 默认组不能重命名
+    const val ERROR_GROUP_NAME_TO_LONG = "2121622" // 用户组名不能超过32个字符
+    const val ERROR_GROUP_NAME_TO_SHORT = "2121623" // 用户组名不能不少于5个字符
+
+    const val ERROR_PROJECT_NOT_UPGRADE = "2121624" // 权限系统: 项目尚未升级到新版权限系统
 }

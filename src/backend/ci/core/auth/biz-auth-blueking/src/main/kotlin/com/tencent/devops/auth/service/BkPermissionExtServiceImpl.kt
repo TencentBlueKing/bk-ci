@@ -55,11 +55,13 @@ class BkPermissionExtServiceImpl @Autowired constructor(
     ): Boolean {
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT.value) {
-            ancestors.add(AncestorsApiReq(
-                system = iamConfiguration.systemId,
-                id = projectCode,
-                type = AuthResourceType.PROJECT.value
-            ))
+            ancestors.add(
+                AncestorsApiReq(
+                    system = iamConfiguration.systemId,
+                    id = projectCode,
+                    type = AuthResourceType.PROJECT.value
+                )
+            )
         }
         val iamApiReq = EsbCreateApiReq(
             creator = userId,
@@ -85,4 +87,24 @@ class BkPermissionExtServiceImpl @Autowired constructor(
         }
         return createResult
     }
+
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) = true
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) = true
+
+    override fun resourceCancelRelation(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) = true
 }

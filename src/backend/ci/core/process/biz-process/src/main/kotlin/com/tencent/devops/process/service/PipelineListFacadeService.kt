@@ -75,6 +75,7 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
@@ -696,11 +697,49 @@ class PipelineListFacadeService @Autowired constructor(
                 page = page ?: 1,
                 pageSize = pageSize ?: totalSize.toInt(),
                 count = totalSize,
-                records = pipelineList
+                records = fillPipelinePermissions(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineList = pipelineList
+                )
             )
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
+        }
+    }
+
+    private fun fillPipelinePermissions(
+        userId: String,
+        projectId: String,
+        pipelineList: List<Pipeline>
+    ): List<Pipeline> {
+        val permissionToListMap = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.MANAGE,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.SHARE,
+                AuthPermission.EDIT,
+                AuthPermission.DOWNLOAD,
+                AuthPermission.EXECUTE
+            ),
+            pipelineIds = pipelineList.map { it.pipelineId }
+        )
+        return pipelineList.map { pipeline ->
+            pipeline.copy(
+                permissions = PipelinePermissions(
+                    canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipeline.pipelineId) ?: false,
+                    canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(pipeline.pipelineId) ?: false,
+                    canView = permissionToListMap[AuthPermission.VIEW]?.contains(pipeline.pipelineId) ?: false,
+                    canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(pipeline.pipelineId) ?: false,
+                    canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(pipeline.pipelineId) ?: false,
+                    canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(pipeline.pipelineId) ?: false,
+                    canShare = permissionToListMap[AuthPermission.SHARE]?.contains(pipeline.pipelineId) ?: false
+                )
+            )
         }
     }
 
@@ -1788,7 +1827,7 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
     fun getByAutoIds(
-        ids: List<Int>,
+        ids: List<Long>,
         projectId: String? = null
     ): List<SimplePipeline> {
         val pipelines = pipelineInfoDao.getPipelineByAutoId(

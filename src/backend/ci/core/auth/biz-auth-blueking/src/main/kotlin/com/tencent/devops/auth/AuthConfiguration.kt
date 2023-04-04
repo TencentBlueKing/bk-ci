@@ -35,6 +35,9 @@ import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
+import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dao.AuthGroupDao
 import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
@@ -107,6 +110,20 @@ class AuthConfiguration {
 
     @Bean
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
+    fun iamV2ManagerService() = V2ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
+    fun iamV2PolicyService() = V2PolicyServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @ConditionalOnMissingBean(V2GrantServiceImpl::class)
+    @Bean
+    fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
     @Primary
@@ -255,8 +272,4 @@ class AuthConfiguration {
         iamConfiguration: IamConfiguration?,
         bkPermissionProjectService: BkPermissionProjectService
     ) = BkPermissionUrlService(iamEsbService, iamConfiguration, bkPermissionProjectService)
-
-    @Bean
-    @ConditionalOnMissingBean(GrantServiceImpl::class)
-    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }

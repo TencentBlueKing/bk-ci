@@ -274,14 +274,20 @@ class PipelineInfoDao {
     fun searchByProject(
         dslContext: DSLContext,
         pipelineName: String?,
-        projectCode: String,
+        projectCode: String? = null,
+        pipelineIds: Set<String>? = null,
         limit: Int,
         offset: Int,
         channelCode: ChannelCode? = ChannelCode.BS
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectCode))
+            if (projectCode != null) {
+                conditions.add(PROJECT_ID.eq(projectCode))
+            }
+            if (pipelineIds != null) {
+                conditions.add(PIPELINE_ID.`in`(pipelineIds))
+            }
             conditions.add(DELETE.eq(false))
             if (!pipelineName.isNullOrEmpty()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
@@ -431,7 +437,6 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
             }
@@ -693,7 +698,7 @@ class PipelineInfoDao {
 
     fun getPipelineByAutoId(
         dslContext: DSLContext,
-        ids: List<Int>,
+        ids: List<Long>,
         projectId: String? = null
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {

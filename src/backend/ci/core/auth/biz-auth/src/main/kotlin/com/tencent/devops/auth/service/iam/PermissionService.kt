@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 
 interface PermissionService {
     fun validateUserActionPermission(
@@ -42,6 +43,7 @@ interface PermissionService {
         resourceType: String?
     ): Boolean
 
+    @Suppress("LongParameterList")
     fun validateUserResourcePermissionByRelation(
         userId: String,
         action: String,
@@ -50,6 +52,33 @@ interface PermissionService {
         resourceType: String,
         relationResourceType: String?
     ): Boolean
+
+    fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean
+
+    fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean>
+
+    /**
+     * 根据资源实例批量验证用户资源
+     *
+     * 如果资源有多个父资源，如流水线有项目、流水线组
+     */
+    fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean>
 
     fun getUserResourceByAction(
         userId: String,
@@ -64,4 +93,28 @@ interface PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>>
+
+    /**
+     * 过滤有权限的资源实例列表
+     */
+    fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>>
+
+    /**
+     * 获取拥有某个操作的资源实例和资源父实例列表
+     *
+     * 流水线会返回,pipeline,pipeline_group,project列表
+     * 其他的资源返回 资源类型,project
+     */
+    fun getUserResourceAndParentByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): Map<String /*resourceType*/, List<String> /*resources*/>
 }

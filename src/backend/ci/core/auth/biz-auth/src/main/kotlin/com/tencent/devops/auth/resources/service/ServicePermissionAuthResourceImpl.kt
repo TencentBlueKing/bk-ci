@@ -34,6 +34,7 @@ import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -82,6 +83,24 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceCode = resourceCode,
                 resourceType = resourceType,
                 relationResourceType = relationResourceType
+            )
+        )
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        token: String,
+        type: String?,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Result<Boolean> {
+        return Result(
+            permissionService.validateUserResourcePermissionByInstance(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resource = resource
             )
         )
     }
@@ -150,6 +169,44 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun filterUserResourcesByPermissions(
+        userId: String,
+        token: String,
+        type: String?,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Result<Map<AuthPermission, List<String>>> {
+        return Result(
+            permissionService.filterUserResourcesByActions(
+                userId = userId,
+                actions = actions,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resources = resources
+            )
+        )
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        userId: String,
+        token: String,
+        type: String?,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): Result<Map<String, List<String>>> {
+        return Result(
+            permissionService.getUserResourceAndParentByPermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
+            )
+        )
+    }
+
     override fun resourceCreateRelation(
         userId: String,
         token: String,
@@ -166,7 +223,60 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
-            ))
+            )
+        )
+    }
+
+    override fun resourceModifyRelation(
+        token: String,
+        type: String?,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Result<Boolean> {
+        return Result(
+            permissionExtService.resourceModifyRelation(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        )
+    }
+
+    override fun resourceDeleteRelation(
+        token: String,
+        type: String?,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionExtService.resourceDeleteRelation(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        )
+    }
+
+    override fun resourceCancelRelation(
+        userId: String,
+        token: String,
+        type: String?,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionExtService.resourceCancelRelation(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        )
     }
 
     override fun grantInstancePermission(
@@ -175,9 +285,11 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         projectCode: String,
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
-        return Result(permissionGrantService.grantInstancePermission(
-            projectId = projectCode,
-            grantInfo = grantInstance
-        ))
+        return Result(
+            permissionGrantService.grantInstancePermission(
+                projectId = projectCode,
+                grantInfo = grantInstance
+            )
+        )
     }
 }

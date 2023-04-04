@@ -34,22 +34,38 @@ import java.time.LocalDateTime
 
 object IamGroupUtils {
 
+    private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+    // 用户组默认6个月有效期
+    const val DEFAULT_EXPIRED_AT = 180L
+
     fun buildIamGroup(projectName: String, groupName: String): String {
         return "$projectName-$groupName"
     }
 
     fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
         return "$projectName 用户组:$groupName,由$userId 创建于 " +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
+
+    fun buildGradeManagerName(projectName: String) = "$SYSTEM_DEFAULT_NAME-$projectName"
 
     fun buildManagerDescription(projectName: String, userId: String): String {
         return "$projectName 分级管理员, 由$userId 创建于" +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
+    }
+
+    fun buildManagerUpdateDescription(projectName: String, userId: String): String {
+        return "$projectName 分级管理员, 由$userId 修改于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 
     fun renameSystemLable(groupName: String): String {
         return groupName.substringAfterLast("-")
+    }
+
+    fun buildItsmDefaultReason(projectName: String, userId: String, isCreate: Boolean): String {
+        val createOrUpdate = if (isCreate) "创建" else "修改"
+        return "用户 $userId 申请${createOrUpdate}蓝盾项目 $projectName ,请审批！"
     }
 
     fun defaultRoleCheck(groupName: String): Boolean {
@@ -58,5 +74,43 @@ object IamGroupUtils {
             return true
         }
         return false
+    }
+
+    fun buildGroupStrategyName(resourceType: String, groupCode: String) = "${resourceType}_$groupCode"
+
+    /**
+     * 构建二级管理员用户组名称
+     */
+    fun buildSubsetManagerGroupName(resourceType: String, resourceName: String) =
+        "$SYSTEM_DEFAULT_NAME-$resourceType-$resourceName"
+
+    /**
+     * 获取二级管理员用户组展示名称
+     */
+    fun getGroupDisplayName(groupName: String) =
+        groupName.substringAfterLast("-")
+
+    /**
+     * 构建二级管理员描述
+     */
+    fun buildSubsetManagerDescription(resourceName: String, userId: String): String {
+        return "$resourceName 二级管理员, 由$userId 创建于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
+    }
+
+    /**
+     * 构建二级管理员描述
+     */
+    fun buildSubsetManagerUpdateDescription(resourceName: String, userId: String): String {
+        return "$resourceName 二级管理员, 由$userId 修改于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
+    }
+
+    /**
+     * 构建二级管理员用户组描述
+     */
+    fun buildSubsetManagerGroupDescription(resourceName: String, groupName: String, userId: String): String {
+        return "$resourceName 用户组:$groupName, 由$userId 创建于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 }
