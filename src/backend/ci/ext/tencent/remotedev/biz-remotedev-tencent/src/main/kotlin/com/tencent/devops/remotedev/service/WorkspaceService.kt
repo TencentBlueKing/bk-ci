@@ -1455,6 +1455,7 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.DELETED,
                     dslContext = transactionContext
                 )
+                updateLastHistory(transactionContext, workspaceName, operator)
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
@@ -1533,26 +1534,7 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.SLEEP,
                     dslContext = transactionContext
                 )
-                val lastHistory = workspaceHistoryDao.fetchAnyHistory(
-                    dslContext = transactionContext,
-                    workspaceName = workspaceName
-                )
-                if (lastHistory != null) {
-                    workspaceDao.updateWorkspaceUsageTime(
-                        workspaceName = workspaceName,
-                        usageTime = Duration.between(
-                            lastHistory.startTime, LocalDateTime.now()
-                        ).seconds.toInt(),
-                        dslContext = transactionContext
-                    )
-                    workspaceHistoryDao.updateWorkspaceHistory(
-                        dslContext = transactionContext,
-                        id = lastHistory.id,
-                        stopUserId = operator
-                    )
-                } else {
-                    logger.error("$workspaceName get last history info null")
-                }
+                updateLastHistory(transactionContext, workspaceName, operator)
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
@@ -1613,6 +1595,33 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
+    private fun updateLastHistory(
+        transactionContext: DSLContext,
+        workspaceName: String,
+        operator: String
+    ) {
+        val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+            dslContext = transactionContext,
+            workspaceName = workspaceName
+        )
+        if (lastHistory != null) {
+            workspaceDao.updateWorkspaceUsageTime(
+                workspaceName = workspaceName,
+                usageTime = Duration.between(
+                    lastHistory.startTime, LocalDateTime.now()
+                ).seconds.toInt(),
+                dslContext = transactionContext
+            )
+            workspaceHistoryDao.updateWorkspaceHistory(
+                dslContext = transactionContext,
+                id = lastHistory.id,
+                stopUserId = operator
+            )
+        } else {
+            logger.error("$workspaceName get last history info null")
+        }
+    }
+
     fun initBilling(freeTime: Int? = null) {
         remoteDevBillingDao.monthlyInit(
             dslContext,
@@ -1659,12 +1668,13 @@ class WorkspaceService @Autowired constructor(
 
     /**
      * workspace 正在变更状态时，不能新建任务去执行。但如果超过 60s 便不做该限制。 以免因下游某服务节点故障状态未闭环回传导致问题。
+     * 如果已经销毁，直接返回false
      */
     private fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
-        return WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+        return (WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
             workspace.lastStatusUpdateTime,
             LocalDateTime.now()
-        ).seconds < DEFAULT_WAIT_TIME
+        ).seconds < DEFAULT_WAIT_TIME) || WorkspaceStatus.values()[workspace.status].checkDeleted()
     }
 
     fun getWorkspaceHost(workspaceName: String): String {
