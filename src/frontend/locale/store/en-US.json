@@ -256,6 +256,7 @@
   "不开源原因": "Reason for [not open source]",
   "是否开源不能为空": "[open source or not] field cannot be empty",
   "是否开源": "Open source",
+  "是否开源：": "Open source: ",
   "授权方式": "Authorization",
   "重置授权": "Reset authorization",
   "将使用你的身份进行插件代码库相关操作": "Will use your identity for operations related to plugin code repo",

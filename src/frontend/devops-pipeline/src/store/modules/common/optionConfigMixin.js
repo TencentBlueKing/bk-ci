@@ -63,10 +63,10 @@ const optionConfigMixin = {
                     default: false,
                     list: [{
                         value: false,
-                        label: '自动跳过'
+                        label: this.$t('storeMap.autoSkip')
                     }, {
                         value: true,
-                        label: '手动跳过'
+                        label: this.$t('storeMap.manualSkip')
                     }],
                     extCls: 'manual-skip-options',
                     isHidden: (element) => {

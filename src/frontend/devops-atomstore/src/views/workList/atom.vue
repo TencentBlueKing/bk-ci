@@ -158,7 +158,7 @@
                         </div>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.标识') }} </label>
+                        <label class="bk-label"> {{ $t('store.标识：') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%;">
                                 <input
@@ -528,10 +528,10 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
-    import status from './status'
     import { atomStatusMap } from '@/store/constants'
+    import { debounce } from '@/utils'
+    import status from './status'
 
     export default {
         components: {
@@ -592,7 +592,7 @@
                     show: false,
                     isLoading: false,
                     quickClose: true,
-                    width: 565,
+                    width: 720,
                     title: this.$t('store.新增插件')
                 },
                 offlinesideConfig: {
@@ -1025,6 +1025,11 @@
 </script>
 
 <style lang="scss" scoped>
+    .info-circle-icon {
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+    }
     ::v-deep .atom-dialog-wrapper {
         .bk-form-item{
             .bk-label {

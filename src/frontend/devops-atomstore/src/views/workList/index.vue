@@ -17,8 +17,8 @@
 </template>
 
 <script>
-    import transitionTab from '@/components/transition-tab.vue'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import transitionTab from '@/components/transition-tab.vue'
     import cookie from 'js-cookie'
     let currentProjectCode = cookie.get(X_DEVOPS_PROJECT_ID)
     if (!currentProjectCode) currentProjectCode = (window.projectList[0] || {}).projectCode
@@ -37,29 +37,45 @@
                         name: 'atomWork',
                         label: this.$t('store.流水线插件'),
                         links: [
-                            { name: this.$t('store.插件指引'), link: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008942` },
-                            { name: this.$t('store.debugTask'), link: `/console/pipeline/${currentProjectCode}/atomDebug` }
+                            {
+                                name: this.$t('store.插件指引'),
+                                link: this.BKCI_DOCS.PLUGIN_GUIDE_DOC
+                            },
+                            {
+                                name: this.$t('store.debugTask'),
+                                link: `/console/pipeline/${currentProjectCode}/atomDebug`
+                            }
                         ]
                     },
                     {
                         name: 'templateWork',
                         label: this.$t('store.流水线模板'),
                         links: [
-                            { name: this.$t('store.模版指引'), link: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008944` }
+                            {
+                                name: this.$t('store.模版指引'),
+                                link: this.BKCI_DOCS.TEMPLATE_GUIDE_DOC
+                            }
                         ]
                     },
                     {
                         name: 'imageWork',
                         label: this.$t('store.容器镜像'),
                         links: [
-                            { name: this.$t('store.镜像指引'), link: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=22118721` }
+                            {
+                                name: this.$t('store.镜像指引'),
+                                link: this.BKCI_DOCS.IMAGE_GUIDE_DOC
+                            }
                         ]
                     },
                     {
                         name: 'serviceWork',
                         label: this.$t('store.微扩展'),
                         links: [
-                            { name: this.$t('store.微扩展指引'), link: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=103523086` }
+                            {
+                                name: this.$t('store.微扩展指引'),
+                                link: this.BKCI_DOCS.Ext
+                            }
+                            
                         ]
                     }
                 ]

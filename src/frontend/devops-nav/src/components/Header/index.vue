@@ -91,16 +91,16 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
+    import eventBus from '../../utils/eventBus'
+    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin, isAbsoluteUrl } from '../../utils/util'
 
     @Component({
         components: {
@@ -255,7 +255,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${IWIKI_DOCS_URL}/display/DevOps`)
+            this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
         goToPm (): void {

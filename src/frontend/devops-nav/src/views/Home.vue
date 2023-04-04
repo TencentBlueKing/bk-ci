@@ -69,7 +69,7 @@
                 >{{ item.label }}</span>
                 <div class="bkdevops-button">
                     <a
-                        :href="`${IWIKI_DOCS_URL}/x/kJKj`"
+                        :href="BKCI_DOCS.BKCI_DOC"
                         target="_blank"
                     >
                         <bk-button
@@ -116,7 +116,7 @@
                 <p>
                     {{ $t("bkdevopsDesc") }}
                     <a
-                        :href="`${IWIKI_DOCS_URL}/display/DevOps`"
+                        :href="BKCI_DOCS.BKCI_DOC"
                         class="more"
                         target="_blank"
                     >{{ $t("learnMore") }}</a>
@@ -149,13 +149,13 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action } from 'vuex-class'
-    import NavBox from '../components/NavBox/index.vue'
-    import Logo from '../components/Logo/index.vue'
+    import { Action, State } from 'vuex-class'
     import { Accordion, AccordionItem } from '../components/Accordion'
     import ConsultTools from '../components/ConsultTools/index.vue'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
     
-    import { urlJoin, isAbsoluteUrl } from '@/utils/util'
+    import { isAbsoluteUrl, urlJoin } from '@/utils/util'
 
     @Component({
         components: {
@@ -172,7 +172,7 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        IWIKI_DOCS_URL: string = IWIKI_DOCS_URL
+    
         BK_CI_VERSION: string = window.BK_CI_VERSION
         isAbsoluteUrl = isAbsoluteUrl
 

@@ -94,6 +94,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
+                        :language="mavenLang"
                         @imgAdd="uploadimg('mdHook', ...arguments)"
                     />
                 </bk-form-item>
@@ -238,6 +239,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
+                        :language="mavenLang"
                         @imgAdd="uploadimg('versionMd', ...arguments)"
                     />
                 </bk-form-item>
@@ -252,11 +254,11 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import { toolbars } from '@/utils/editor-options'
-    import selectLogo from '@/components/common/selectLogo'
-    import codeSection from '@/components/common/detailTab/codeSection'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import codeSection from '@/components/common/detailTab/codeSection'
+    import selectLogo from '@/components/common/selectLogo'
+    import { toolbars } from '@/utils/editor-options'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {
@@ -293,7 +295,7 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=22118721`,
+                docsLink: this.BKCI_DOCS.IMAGE_GUIDE_DOC,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
@@ -321,6 +323,9 @@
                     { name: this.$t('store.工作台'), to: { name: 'imageWork' } },
                     { name: `${this.$t('store.上架/升级镜像')}（${this.form.imageCode}）` }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 
