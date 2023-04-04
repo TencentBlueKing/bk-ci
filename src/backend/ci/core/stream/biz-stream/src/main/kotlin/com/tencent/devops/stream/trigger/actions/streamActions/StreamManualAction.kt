@@ -167,6 +167,8 @@ class StreamManualAction(
         return null
     }
 
+    override fun checkIfModify() = event().commitId != null
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
             trigger = TriggerBody(true),

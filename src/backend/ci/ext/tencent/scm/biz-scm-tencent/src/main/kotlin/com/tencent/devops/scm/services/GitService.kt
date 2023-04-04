@@ -84,6 +84,7 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -1779,7 +1780,7 @@ class GitService @Autowired constructor(
                     throw CustomException(
                         status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
                         message = "get Repo($gitProjectId) Member($userId) Info error for " +
-                                "$response: ${response.message}"
+                            "$response: ${response.message}"
                     )
                 }
                 val body = response.body!!.string()
@@ -1848,6 +1849,43 @@ class GitService @Autowired constructor(
                         Result(JsonUtil.to(data, GitCommit::class.java))
                     } catch (e: Exception) {
                         logger.warn("getRepoRecentCommitInfo error: ${e.message}", e)
+                        MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                    }
+                }
+            }
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "get_commit_diff"], value = "bk_tgit_api_time")
+    fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        logger.info("getCommitDiff $gitProjectId|$sha|$tokenType|$path|$ignoreWhiteSpace")
+        val encodeProjectName = URLEncoder.encode(gitProjectId, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha/diff")
+            .also { setToken(tokenType, it, accessToken) }
+            .let { if (!path.isNullOrBlank()) it.append("&path=$path") else it }
+            .let { if (ignoreWhiteSpace != null) it.append("&ignore_white_space=$ignoreWhiteSpace") else it }
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        return RetryUtils.retryFun("getCommitDiff") {
+            RetryUtils.doRetryHttp(request).use {
+                val data = it.body!!.string()
+                logger.info("getCommitDiff, response>> $data")
+                if (!it.isSuccessful) {
+                    MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                } else {
+                    try {
+                        Result(JsonUtil.to(data, object : TypeReference<List<GitDiff>>() {}))
+                    } catch (e: Exception) {
+                        logger.warn("getCommitDiff error: ${e.message}", e)
                         MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
                     }
                 }
