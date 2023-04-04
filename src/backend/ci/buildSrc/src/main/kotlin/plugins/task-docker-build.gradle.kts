@@ -135,7 +135,7 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
             }
         }
     }
-    tasks.getByName("jib").dependsOn(i18nTask)
+    tasks.getByName("compileKotlin").dependsOn(i18nTask.name)
 }
 
 /**
