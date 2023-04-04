@@ -199,11 +199,12 @@ class EnvService @Autowired constructor(
             emptyList()
         }
         val canListEnv = envRecordList.filter { canListEnvIds.contains(it.envId) }
-        val envListResult: List<TEnvRecord>
-        if (canListEnv.isEmpty()) {
+        // 用于兼容rbac和其他版本权限，rbac只会展示出用户有列表权限的环境。而其
+        // 他权限版本，则只要用户具有某个环境的列表权限，就会把该项目下所有的环境都返回
+        val envListResult = if (canListEnv.isEmpty()) {
             return listOf()
         } else {
-            envListResult = environmentPermissionService.getEnvListResult(
+            environmentPermissionService.getEnvListResult(
                 canListEnv = canListEnv,
                 envRecordList = envRecordList
             )
