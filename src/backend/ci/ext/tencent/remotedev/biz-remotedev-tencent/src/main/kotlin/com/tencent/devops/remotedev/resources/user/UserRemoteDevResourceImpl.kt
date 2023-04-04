@@ -30,20 +30,44 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserRemoteDevResource
+import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.core.HttpHeaders
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
-    val remoteDevSettingService: RemoteDevSettingService
+    val remoteDevSettingService: RemoteDevSettingService,
+    val bkgptService: BKGPTService
 ) : UserRemoteDevResource {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(UserRemoteDevResourceImpl::class.java)
+    }
+
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
 
     override fun updateRemoteDevSettings(userId: String, remoteDevSettings: RemoteDevSettings): Result<Boolean> {
         return Result(remoteDevSettingService.updateRemoteDevSettings(userId, remoteDevSettings))
+    }
+
+    override fun bkGPT(
+        userId: String,
+        bkTicket: String,
+        headers: HttpHeaders,
+        data: BKGPT
+    ): Response {
+        return Response
+            .ok(bkgptService.streamCompletions(data, bkTicket), MediaType.APPLICATION_JSON)
+            .header("Cache-Control", "no-cache")
+            .build()
     }
 }

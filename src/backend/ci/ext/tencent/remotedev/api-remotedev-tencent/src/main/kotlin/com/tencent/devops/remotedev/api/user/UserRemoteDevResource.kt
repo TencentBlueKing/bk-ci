@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -40,7 +41,10 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
 @Path("/user/remotedev")
@@ -67,4 +71,19 @@ interface UserRemoteDevResource {
         @ApiParam("工作空间描述", required = false)
         remoteDevSettings: RemoteDevSettings
     ): Result<Boolean>
+
+    @ApiOperation("BK-GPT")
+    @POST
+    @Path("/bkGPT")
+    fun bkGPT(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam("bkTicket")
+        bkTicket: String,
+        @Context
+        headers: HttpHeaders,
+        data: BKGPT
+    ): Response
 }
