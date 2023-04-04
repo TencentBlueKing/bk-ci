@@ -174,9 +174,5 @@ task('injectAsset', parallel(['console', 'pipeline'].map(prefix => {
         .pipe(dest(dir))
 }
 )))
-
-task('clean', () => {
-    return del(dist)
-})
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'))
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'injectAsset')
