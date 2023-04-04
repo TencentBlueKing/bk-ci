@@ -92,17 +92,29 @@ object I18nUtil {
         }
     }
 
-    fun getLanguage (userId: String? = null): String{
-        userId ?: return  getDefaultLocaleLanguage()
+    /**
+     * 获取语言信息
+     * @param userId 用户ID
+     * @return 语言信息
+     */
+    fun getLanguage(userId: String? = null): String {
+        val defaultLanguage = getDefaultLocaleLanguage()
+        userId ?: return defaultLanguage
         val requestChannel = getRequestChannel()
         return if (requestChannel != RequestChannelTypeEnum.BUILD.name) {
+            // 如果请求来源是build接口，先从缓存中获取用户获取的语言信息
             var language = getUserLocaleLanguageFromCache(userId)
-            if (language.isNullOrBlank()){
+            if (language.isNullOrBlank()) {
+                // 缓存中未取到语言则通过接口从db中获取用户设置的语言信息（db中也没有语言信息则给该用户的语言设置为默认语言）
                 val client = SpringContextUtil.getBean(Client::class.java)
-                language = client.get(ServiceLocaleResource::class).getUserLocale(userId).data!!.language
+                language =
+                    client.get(ServiceLocaleResource::class).getUserLocale(userId).data?.language ?: defaultLanguage
+                val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+                // 把查出来的用户语言放入缓存
+                redisOperation.set(LocaleUtil.getUserLocaleLanguageKey(userId), language)
             }
             language
-        }else{
+        } else {
             getDefaultLocaleLanguage()
         }
     }
