@@ -27,7 +27,7 @@ import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
 import './assets/scss/icon/iconcool'
-import { PermissionDirective, handleNoPermission } from 'bk-permission'
+import { PermissionDirective, handleNoPermission, BkPermission } from 'bk-permission'
 import 'bk-permission/dist/main.css'
 import { handleProjectNoPermission } from './utils/permission'
 import VueCompositionAPI from '@vue/composition-api'
@@ -71,6 +71,10 @@ Vue.use(VeeValidate, {
         'en-US': validationENMessages,
         'zh-CN': validationCNMessages
     }
+})
+
+Vue.use(BkPermission, {
+    i18n
 })
 
 VeeValidate.Validator.localize(validDictionary)
