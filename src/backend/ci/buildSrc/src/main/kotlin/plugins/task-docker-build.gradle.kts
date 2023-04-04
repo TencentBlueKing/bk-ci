@@ -122,7 +122,7 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
                             "src",
                             "main",
                             "resources",
-                            "i18n"
+                            "i18n",
                             "message_$property.properties"
                         )
                     )
