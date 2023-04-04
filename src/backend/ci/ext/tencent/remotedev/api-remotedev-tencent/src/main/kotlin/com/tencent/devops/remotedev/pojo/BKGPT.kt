@@ -20,4 +20,4 @@ data class BKGPT(
     var appCode: String?,
     @JsonProperty("bk_ticket")
     var ticket: String?
-    )
+)
