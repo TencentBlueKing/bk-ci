@@ -128,21 +128,6 @@ class StoreDockingPlatformDao {
         }
     }
 
-    fun addErrorPrefix(
-        dslContext: DSLContext,
-        userId: String,
-        platformCode: String,
-        prefix: Int
-    ) {
-        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            dslContext.update(this)
-                .set(ERROR_CODE_PREFIX, prefix)
-                .set(MODIFIER, userId)
-                .where(PLATFORM_CODE.eq(platformCode))
-                .execute()
-        }
-    }
-
     fun delete(dslContext: DSLContext, id: String) {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             dslContext.deleteFrom(this)
