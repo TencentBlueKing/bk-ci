@@ -282,7 +282,7 @@ class BkRepoService @Autowired constructor(
                 message = MessageUtil.getMessageByLocale(
                     messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                     params = arrayOf(lastModifyUser, projectId, targetPipelineId),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -347,7 +347,7 @@ class BkRepoService @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
                 params = arrayOf(userId, projectId, pipelineId),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                language = I18nUtil.getDefaultLocaleLanguage()
             )
         )
 
