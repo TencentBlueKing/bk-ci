@@ -28,14 +28,6 @@ BEGIN
         ALTER TABLE T_STORE_STATISTICS_TOTAL ADD COLUMN `RECENT_EXECUTE_NUM` INT(11) DEFAULT '0' COMMENT '最近执行次数';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                      FROM information_schema.COLUMNS
-                      WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
-                        AND COLUMN_NAME = 'HOT_FLAG') THEN
-        ALTER TABLE T_STORE_STATISTICS_TOTAL ADD HOT_FLAG bit(1) DEFAULT b'1' NULL COMMENT '是否为受欢迎组件';
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
