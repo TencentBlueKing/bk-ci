@@ -189,7 +189,7 @@ class MacBuildListener @Autowired constructor(
                             "Project is or not git project:$isGitProject")
 
             if (buildTaskRecords.isEmpty()) {
-                logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the vm ip")
+                logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Recycling the macos failed.")
                 return
             }
 
