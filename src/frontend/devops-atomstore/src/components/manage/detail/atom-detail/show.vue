@@ -98,7 +98,6 @@
                 }
             }
         },
-
         computed: {
             isEnterprise () {
                 return VERSION_TYPE === 'ee'

@@ -98,7 +98,7 @@ Vue.mixin({
                 viewer: 'role_viewer',
                 creator: 'role_creator'
             }
-        }
+        },
     },
     methods: {
         tencentPermission (url) {

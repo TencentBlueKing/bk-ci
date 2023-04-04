@@ -108,7 +108,9 @@ task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSv
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
-task('build', series([cb => {
+task('build', async () => {
+    const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
+    fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
     const envConfMap = {
@@ -116,51 +118,62 @@ task('build', series([cb => {
         version: type,
         lsVersion
     }
-    Object.keys(envConfMap).forEach((key) => {
-        process.env[key] = envConfMap[key]
+    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
+        acc += ` --env ${key}=${envConfMap[key]}`
+        return acc
+    }, '')
+    console.log(envQueryStr)
+    return new Promise((resolve, reject) => {
+        require('child_process').exec(`lerna run public:${env} ${scopeStr}`, {
+            maxBuffer: 5000 * 1024,
+            env: {
+                ...process.env,
+                dist,
+                lsVersion
+            }
+        }, (err, res) => {
+            if (err) {
+                reject(err)
+                process.exit(1)
+            }
+            spinner.succeed('Finished building bk-ci frontend project')
+            resolve()
+        })
     })
+})
 
-    require('child_process').exec(`lerna run public:master ${scopeStr}`, {
-        maxBuffer: 5000 * 1024
-    }, (err, res) => {
-        if (err) {
-            console.log(err)
-            process.exit(1)
-        }
-        spinner.succeed('Finished building bk-ci frontend project')
-        cb()
-    })
-}], () => {
-    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
+task('clean', () => {
+    return del(dist)
+})
+task('generate-assets-json', () => {
+    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(path.join(__dirname, dist, BUNDLE_NAME), 'utf8')}`
     fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-    return src(`${dist}/assetsBundles.js`)
-        .pipe(hash())
-        .pipe(dest(`${dist}/`))
-}, (cb) => {
-    ['console', 'pipeline'].map(prefix => {
-        const dir = path.join(dist, prefix)
-        const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
-        const fileName = `frontend#${prefix}#index.html`
-        return src(path.join(dir, fileName))
-            .pipe(inject(src([
-                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
-                `${dist}/svg-sprites/${spriteNameGlob}`
-            ], {
-                read: false
-            }), {
-                ignorePath: dist,
-                addRootSlash: false,
-                addPrefix: '__BK_CI_PUBLIC_PATH__'
-            }))
-            .pipe(htmlmin({
-                collapseWhitespace: true,
-                removeComments: true,
-                minifyJS: true
-            }))
-            .pipe(dest(dir))
-    })
-    cb()
-}))
+    return src(`${dist}/assetsBundles.js`).pipe(hash()).pipe(dest(`${dist}/`))
+})
+
+task('injectAsset', parallel(['console', 'pipeline'].map(prefix => {
+    const dir = path.join(dist, prefix)
+    const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
+    const fileName = `frontend#${prefix}#index.html`
+    return () => src(path.join(dir, fileName))
+        .pipe(inject(src([
+            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+            `${dist}/svg-sprites/${spriteNameGlob}`
+        ], {
+            read: false
+        }), {
+            ignorePath: dist,
+            addRootSlash: false,
+            addPrefix: '__BK_CI_PUBLIC_PATH__'
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true
+        }))
+        .pipe(dest(dir))
+}
+)))
 
 task('clean', () => {
     return del(dist)

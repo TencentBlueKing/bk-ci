@@ -73,9 +73,8 @@
                         links: [
                             {
                                 name: this.$t('store.微扩展指引'),
-                                link: this.BKCI_DOCS.Ext
+                                link: this.BKCI_DOCS.EXT_GUIDE_DOC
                             }
-                            
                         ]
                     }
                 ]

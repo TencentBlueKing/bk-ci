@@ -172,9 +172,8 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-    
-        BK_CI_VERSION: string = window.BK_CI_VERSION
         isAbsoluteUrl = isAbsoluteUrl
+        BK_CI_VERSION: string = window.BK_CI_VERSION
 
         get funcArray (): object[] {
             const funcArray = ['issueLabel', 'developLabel', 'testLabel', 'deployLabel', 'operationLabel']
