@@ -110,12 +110,13 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
         doLast {
             val i18nPath = System.getProperty("i18n.path")
             if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
-                println("copy i18n into $name classpath...")
+                val moduleName = project.name.split("-")[1]
+                println("copy i18n into $moduleName classpath...")
                 val propertyArray = arrayOf("en_US", "zh_CN")
                 for (property in propertyArray) {
                     // set variables for input files
                     val file1 = File(joinPath(i18nPath, "message_$property.properties"))
-                    val file2 = File(joinPath(i18nPath, name, "message_$property.properties"))
+                    val file2 = File(joinPath(i18nPath, moduleName, "message_$property.properties"))
                     val targetFile = File(
                         joinPath(
                             projectDir.absolutePath,
