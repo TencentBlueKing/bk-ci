@@ -52,4 +52,6 @@ object DispatchMassageCode {
     const val BUILD_MACHINE_BUSY = "2103104"// 构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}
     const val BUILD_NODE_IS_EMPTY= "2103105"// 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
     const val BUILD_ENV_PREPARATION = "2103106"// 构建环境准备中...
+    const val JOB_NUM_REACHED_MAX_QUOTA = "2103107"// "当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，正在执行JOB数量：{1}, 配额: ${2}"
+    const val JOB_NUM_EXCEED_ALARM_THRESHOLD = "2103108"// "当前项目下正在执行的【{0}】JOB数量已经超过告警阈值，正在执行JOB数量：{1}，配额：{2}，告警阈值：{3}%，当前已经使用：{4}%"
 }

@@ -235,7 +235,7 @@ class BcsContainerService @Autowired constructor(
                     this,
                     I18nUtil.getCodeLanMessage(
                         BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
-                    I18nUtil.getLanguage(userId)
+                    I18nUtil.getDefaultLocaleLanguage()
                 ))
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲

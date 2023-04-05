@@ -219,6 +219,10 @@ object ProcessMessageCode {
     const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101513"// 子流水线参数过滤失败
     const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101514"// 模版下存在无权限的插件
     const val ERROR_RECORD_PARSE_FAILED = "2101515" // 解析构建记录出错
+    const val MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL = "2101516"// 最大并发数量非法
+    const val PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL = "2101517"// 流水线编排数量非法
+    const val MAXIMUM_QUEUE_LENGTH_ILLEGAL = "2101518"// 最大排队时长非法
+    const val MAXIMUM_NUMBER_QUEUES_ILLEGAL = "2101519"// 最大排队数量非法
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}

@@ -38,11 +38,17 @@ import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
+import com.tencent.devops.quality.constant.BK_CREATE_FAIL
+import com.tencent.devops.quality.constant.BK_CREAT_FAIL
+import com.tencent.devops.quality.constant.BK_CREATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_METRIC_DATA_UPDATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
@@ -264,9 +270,9 @@ class QualityIndicatorService @Autowired constructor(
     fun opCreate(userId: String, indicatorUpdate: IndicatorUpdate): Msg {
         checkSystemIndicatorExist(indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "创建成功", true)
+            return Msg(0, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_SUCCESS, language = userId), true)
         }
-        return Msg(-1, "未知的异常，创建失败", false)
+        return Msg(-1, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = userId), false)
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
@@ -293,9 +299,17 @@ class QualityIndicatorService @Autowired constructor(
         checkSystemIndicatorExcludeExist(id, indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         if (indicatorDao.update(userId, id, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "更新指标数据成功", true)
+            return Msg(
+                0,
+                I18nUtil.getCodeLanMessage(messageCode = BK_METRIC_DATA_UPDATE_SUCCESS, language = userId),
+                true
+            )
         }
-        return Msg(code = -1, msg = "未知的异常，更新失败", flag = false)
+        return Msg(
+            code = -1,
+            msg = I18nUtil.getCodeLanMessage(messageCode = BK_UPDATE_FAIL, language = userId),
+            flag = false
+        )
     }
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {

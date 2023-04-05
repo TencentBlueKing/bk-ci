@@ -35,6 +35,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.JOB_NUM_EXCEED_ALARM_THRESHOLD
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.JOB_NUM_REACHED_MAX_QUOTA
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
@@ -220,8 +223,10 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount >= jobQuota) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                            "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = JOB_NUM_REACHED_MAX_QUOTA,
+                        params = arrayOf(vmType.displayName, "$runningJobCount", "$jobQuota")
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -232,10 +237,16 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，" +
-                            "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
-                            "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，" +
-                            "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = JOB_NUM_EXCEED_ALARM_THRESHOLD ,
+                        params = arrayOf(
+                            vmType.displayName,
+                            "$runningJobCount",
+                            "$jobQuota",
+                            normalizePercentage(jobThreshold.toDouble()),
+                            normalizePercentage(runningJobCount * 100.0 / jobQuota)
+                        )
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1

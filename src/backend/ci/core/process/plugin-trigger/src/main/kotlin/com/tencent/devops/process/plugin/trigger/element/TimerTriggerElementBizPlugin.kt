@@ -71,8 +71,7 @@ class TimerTriggerElementBizPlugin constructor(
             val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                    params = arrayOf("")
+                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
             }
             eConvertExpressions.forEach { cron ->
@@ -103,8 +102,7 @@ class TimerTriggerElementBizPlugin constructor(
             logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
             if (result.isNotOk()) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                    params = arrayOf("")
+                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
             }
         } else {

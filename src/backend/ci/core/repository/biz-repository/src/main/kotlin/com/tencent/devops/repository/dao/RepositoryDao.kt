@@ -294,7 +294,7 @@ class RepositoryDao {
                 query.and(PROJECT_ID.eq(projectId))
             }
             return query.and(IS_DELETED.eq(false)).fetchOne() ?: throw NotFoundException(
-                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND, params = arrayOf(""))
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
             )
         }
     }
@@ -305,7 +305,9 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchAny() ?: throw NotFoundException("代码库${repositoryName}不存在")
+                .fetchAny() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = GIT_NOT_FOUND)
+                )
         }
     }
 

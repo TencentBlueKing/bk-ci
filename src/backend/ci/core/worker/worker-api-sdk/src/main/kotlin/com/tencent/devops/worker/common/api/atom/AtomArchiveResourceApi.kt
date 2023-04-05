@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -60,6 +61,7 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_ATOM_FILE_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUGIN_FILE
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -193,7 +195,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
-        val responseContent = request(request, "归档插件文件失败")
+        val responseContent = request(request, I18nUtil.getCodeLanMessage(ARCHIVE_ATOM_FILE_FAIL))
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")

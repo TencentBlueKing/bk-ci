@@ -336,7 +336,8 @@ class PipelineBuildQualityService(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = BK_QUALITY_CHECK_SUCCEED,
-                        params = arrayOf(atomDesc)
+                        params = arrayOf(atomDesc),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -370,7 +371,8 @@ class PipelineBuildQualityService(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = BK_QUALITY_CHECK_INTERCEPTED,
-                        params = arrayOf(atomDesc)
+                        params = arrayOf(atomDesc),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -437,7 +439,8 @@ class PipelineBuildQualityService(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = BK_QUALITY_TO_BE_REVIEW,
-                        params = arrayOf(atomDesc, "$auditUsers")
+                        params = arrayOf(atomDesc, "$auditUsers"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -510,7 +513,8 @@ class PipelineBuildQualityService(
                         buildId = buildId,
                         message = I18nUtil.getCodeLanMessage(
                             messageCode = BK_POLLING_WAIT_FOR_QUALITY_RESULT,
-                            params = arrayOf("$index")
+                            params = arrayOf("$index"),
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ),
                         tag = elementId,
                         jobId = task.containerHashId,
@@ -523,7 +527,10 @@ class PipelineBuildQualityService(
         } else {
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = I18nUtil.getCodeLanMessage(BK_QUALITY_CHECK_RESULT),
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_QUALITY_CHECK_RESULT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = elementId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -562,7 +569,10 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = taskName + I18nUtil.getCodeLanMessage(BK_AUDIT_TIMEOUT),
+                    message = taskName + I18nUtil.getCodeLanMessage(
+                        BK_AUDIT_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -584,7 +594,8 @@ class PipelineBuildQualityService(
                             buildId = buildId,
                             message = I18nUtil.getCodeLanMessage(
                                 messageCode = BK_AUDIT_RESULT,
-                                params = arrayOf("Continue", actionUser)
+                                params = arrayOf("Continue", actionUser),
+                                language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,
@@ -597,7 +608,8 @@ class PipelineBuildQualityService(
                             buildId = buildId,
                             message = I18nUtil.getCodeLanMessage(
                                 messageCode = BK_AUDIT_RESULT,
-                                params = arrayOf("Overrule", actionUser)
+                                params = arrayOf("Overrule", actionUser),
+                                language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,

@@ -27,10 +27,14 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.constants.ImageMessageCode.FILE_NOT_FOUND_CHECK_PATH
 import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.SecureRandom
+import javax.net.ssl.SSLContext
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
@@ -42,11 +46,6 @@ import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.SecureRandom
-import javax.net.ssl.SSLContext
 
 @Suppress("LongParameterList", "MagicNumber")
 object ESConfigUtils {

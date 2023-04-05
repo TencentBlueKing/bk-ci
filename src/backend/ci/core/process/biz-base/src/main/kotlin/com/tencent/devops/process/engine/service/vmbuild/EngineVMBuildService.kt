@@ -55,7 +55,7 @@ import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
-import com.tencent.devops.process.constant.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -505,7 +505,8 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT,
-                        I18nUtil.getLanguage(userId)
+                        ,
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,
                     jobId = task.containerHashId,

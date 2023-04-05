@@ -41,4 +41,7 @@ const val BK_BUILD_INTERCEPTED_TO_BE_REVIEWED = "bkBuildInterceptedToBeReviewed"
 const val BK_BUILD_INTERCEPTED_TERMINATED = "bkBuildInterceptedTerminated"// {0}(#{1})被拦截，已终止
 const val BK_NO_TOOL_OR_RULE_ENABLED = "bkNoToolOrRuleEnabled"// 你可能并未添加工具或打开相应规则。
 const val BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION = "bkUserNoOperateInterceptRulePermission"// 用户没有拦截规则{0}权限
-
+const val BK_CREATE_SUCCESS = "bkCreateSuccess"// 创建成功
+const val BK_CREATE_FAIL = "bkCreateFail"// 未知的异常，创建失败
+const val BK_UPDATE_FAIL = "bkUpdateFail"// 未知的异常，更新失败
+const val BK_METRIC_DATA_UPDATE_SUCCESS = "bkMetricDataUpdateSuccess" // 更新指标数据成功

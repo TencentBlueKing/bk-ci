@@ -406,7 +406,7 @@ class DispatchBuildService @Autowired constructor(
             this,
             "builderName: $builderName " + MessageUtil.getMessageByLocale(
             BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
-            I18nUtil.getLanguage(userId)
+            I18nUtil.getDefaultLocaleLanguage()
         ))
         builderPoolNoDao.setBaseBuildLastBuilder(
             dslContext = dslContext,
@@ -430,7 +430,7 @@ class DispatchBuildService @Autowired constructor(
                 this,
                 MessageUtil.getMessageByLocale(
                     BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START,
-                    I18nUtil.getLanguage(userId)
+                    I18nUtil.getDefaultLocaleLanguage()
             ))
 
             dispatchKubernetesBuildDao.createOrUpdate(

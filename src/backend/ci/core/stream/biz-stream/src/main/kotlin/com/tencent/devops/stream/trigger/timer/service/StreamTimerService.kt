@@ -112,8 +112,7 @@ class StreamTimerService @Autowired constructor(
         val newCrontabExpressions = mutableSetOf<String>()
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                params = arrayOf("")
+                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
             )
         }
         crontabExpressions.forEach { crontabExpression ->

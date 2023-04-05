@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -120,7 +121,10 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
         if (maxConRunningQueueSize <= PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
             maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
         ) {
-            throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
+                params = arrayOf("maxConRunningQueueSize")
+            )
         }
     }
 }

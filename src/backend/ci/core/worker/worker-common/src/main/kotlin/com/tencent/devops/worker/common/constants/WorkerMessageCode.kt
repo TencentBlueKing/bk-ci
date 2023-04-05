@@ -114,12 +114,11 @@ object WorkerMessageCode {
     const val ENTRANCE_FILE_CHECK_FINISH = "2130411"// 入口文件检测完成
     const val UPLOAD_CUSTOM_OUTPUT_SUCCESS = "2130412"// 上传自定义产出物成功，共产生了{0}个文件
     const val NO_MATCHING_ARCHIVE_FILE = "2130413"// 没有匹配到任何待归档文件，请检查工作空间下面的文件
-    const val ARCHIVE_FILE_LIMIT = "2130413"// 单次归档文件数太多，请打包后再归档！
+    const val ARCHIVE_FILE_LIMIT = "2130414"// 单次归档文件数太多，请打包后再归档！
+    const val ARCHIVE_ATOM_FILE_FAIL = "2130415"// 归档插件文件失败
 
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed"// 构建镜像成功！
     const val BK_ARCHIVE_PLUGIN_FILE= "bkArchivePluginFile"// 归档插件文件
     const val BK_NO_FILES_TO_ARCHIVE = "bkNoFilesToArchive"// 脚本执行失败之后没有匹配到任何待归档文件
     const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero"// 每行命令运行返回值非零时，继续执行脚本
-
-
 }
