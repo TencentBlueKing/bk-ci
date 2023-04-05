@@ -36,7 +36,7 @@ package com.tencent.devops.image.constants
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26: stream 27：buildless 28: lambda 29: dispatcher-kubernetes  30: worker 31: dispatcher-docker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -45,11 +45,11 @@ package com.tencent.devops.image.constants
  *
  */
 object ImageMessageCode {
-    const val USER_NOT_UPLOAD_IMAGE_PERMISSION = "2107001"// 用户({0})没有上传镜像权限
-    const val IMAGE_FILE_VALID_IMAGE_COUNT_ZERO = "2107002"// 镜像文件有效镜像个数为零
-    const val IMAGE_COPYING_IN_PROGRESS = "2107003"// 镜像正在拷贝中
-    const val PULL_IMAGE_SUCCESS = "2107004"// 拉取镜像成功，镜像名称：
-        const val MIRROR_FILE_SAVE_FAILED = "2107005"// 镜像文件保存失败
-    const val PARSE_MIRROR_FILE_FAILED = "2107006"// 解析镜像文件失败
-    const val FILE_NOT_FOUND_CHECK_PATH = "2107007"// 未找到 {0} 文件，请检查路径是否正确:
+    const val USER_NOT_UPLOAD_IMAGE_PERMISSION = "2107001" // 用户({0})没有上传镜像权限
+    const val IMAGE_FILE_VALID_IMAGE_COUNT_ZERO = "2107002" // 镜像文件有效镜像个数为零
+    const val IMAGE_COPYING_IN_PROGRESS = "2107003" // 镜像正在拷贝中
+    const val PULL_IMAGE_SUCCESS = "2107004" // 拉取镜像成功，镜像名称：
+    const val MIRROR_FILE_SAVE_FAILED = "2107005" // 镜像文件保存失败
+    const val PARSE_MIRROR_FILE_FAILED = "2107006" // 解析镜像文件失败
+    const val FILE_NOT_FOUND_CHECK_PATH = "2107007" // 未找到 {0} 文件，请检查路径是否正确:
 }

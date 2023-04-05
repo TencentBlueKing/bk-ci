@@ -36,7 +36,7 @@ package com.tencent.devops.auth.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26: stream 27：buildless 28: lambda 29: dispatcher-kubernetes  30: worker 31: dispatcher-docker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -45,42 +45,42 @@ package com.tencent.devops.auth.constant
  *
  */
 object AuthMessageCode {
-    const val GROUP_EXIST = "2121001" // 权限系统： 用户组已存在
-    const val GROUP_NOT_EXIST = "2121002" // 权限系统： 用户组不存在
-    const val GROUP_NOT_BIND_PERSSION = "2121003" // 权限系统：自定义用户组未绑定权限
-    const val GROUP_USER_ALREADY_EXIST = "2121004" // 权限系统：用户已在该用户组
-    const val GROUP_ACTION_EMPTY = "2121005" // 权限系统：用户组未绑定动作
-    const val GRADE_CHECK_FAIL = "2121007" // 权限系统：无分级管理员权限,不允许进行该操作
-    const val DEFAULT_GROUP_ERROR = "2121008" // 权限系统：该分组为默认分组,不允许重复添加
-    const val UN_DEFAULT_GROUP_ERROR = "2121009" // 权限系统：非默认分组与默认分组重名
-    const val DEFAULT_GROUP_UPDATE_NAME_ERROR = "2121010" // 权限系统：该分组为默认分组,不允许重命名
-    const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
-    const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
-    const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
+    const val GROUP_EXIST = "2121001"// 权限系统： 用户组已存在
+    const val GROUP_NOT_EXIST = "2121002"// 权限系统： 用户组不存在
+    const val GROUP_NOT_BIND_PERSSION = "2121003"// 权限系统：自定义用户组未绑定权限
+    const val GROUP_USER_ALREADY_EXIST = "2121004"// 权限系统：用户已在该用户组
+    const val GROUP_ACTION_EMPTY = "2121005"// 权限系统：用户组未绑定动作
+    const val GRADE_CHECK_FAIL = "2121007"// 权限系统：无分级管理员权限,不允许进行该操作
+    const val DEFAULT_GROUP_ERROR = "2121008"// 权限系统：该分组为默认分组,不允许重复添加
+    const val UN_DEFAULT_GROUP_ERROR = "2121009"// 权限系统：非默认分组与默认分组重名
+    const val DEFAULT_GROUP_UPDATE_NAME_ERROR = "2121010"// 权限系统：该分组为默认分组,不允许重命名
+    const val CAN_NOT_FIND_RELATION = "2121011"// 权限系统：用户组无关联系统用户组
+    const val IAM_SYSTEM_ERROR = "2121012"// 权限系统：Iam权限中心异常。异常信息{0}
+    const val USER_NOT_EXIST = "2121013"// 权限系统: 用户中心非法用户/组织
 
-    const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
-    const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
-    const val KEYWORD_TOO_SHORT = "2121108" // 权限系统：搜索关键词长度必须大于2
-    const val TOO_MANY_INFOS = "2121109" // 权限系统：搜索结果过多,请提供精准关键词
-    const val HOST_CHECKOU_FAIL = "2121110" // 权限系统：iam回调域名校验失败
-    const val PATH_CHECK_FAIL = "2121111" // 权限系统：iam回调路径校验失败
-    const val RELATED_RESOURCE_CHECK_FAIL = "2121112" // 权限系统：iam回调关联资源不存在
-    const val RELATED_RESOURCE_EMPTY = "2121113" // 权限系统：绑定系统资源为空
+    const val TOKEN_TICKET_FAIL = "2121106"// 权限系统：token校验失败
+    const val PARENT_TYPE_FAIL = "2121107"// 权限系统：父类资源必须为"项目"
+    const val KEYWORD_TOO_SHORT = "2121108"// 权限系统：搜索关键词长度必须大于2
+    const val TOO_MANY_INFOS = "2121109"// 权限系统：搜索结果过多,请提供精准关键词
+    const val HOST_CHECKOU_FAIL = "2121110"// 权限系统：iam回调域名校验失败
+    const val PATH_CHECK_FAIL = "2121111"// 权限系统：iam回调路径校验失败
+    const val RELATED_RESOURCE_CHECK_FAIL = "2121112"// 权限系统：iam回调关联资源不存在
+    const val RELATED_RESOURCE_EMPTY = "2121113"// 权限系统：绑定系统资源为空
 
-    const val STRATEGT_CHECKOUT_FAIL = "2121201" // 权限系统： 权限集合校验失败
-    const val MANAGER_ORG_CHECKOUT_FAIL = "2121202" // 权限系统： 权限授权校验失败
-    const val MANAGER_ORG_EXIST = "2121203" // 权限系统： 权限授权已存在
-    const val MANAGER_ORG_NOT_EXIST = "2121204" // 权限系统： 权限授权ID{0}不存在
-    const val MANAGER_USER_EXIST = "2121205" // 权限系统： 用户已有该授权
-    const val MANAGER_WHITE_USER_EXIST = "2121206" // 权限系统： 白名单用户{0}已存在
-    const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
-    const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
-    const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
-    const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
-    const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
+    const val STRATEGT_CHECKOUT_FAIL = "2121201"// 权限系统： 权限集合校验失败
+    const val MANAGER_ORG_CHECKOUT_FAIL = "2121202"// 权限系统： 权限授权校验失败
+    const val MANAGER_ORG_EXIST = "2121203"// 权限系统： 权限授权已存在
+    const val MANAGER_ORG_NOT_EXIST = "2121204"// 权限系统： 权限授权ID{0}不存在
+    const val MANAGER_USER_EXIST = "2121205"// 权限系统： 用户已有该授权
+    const val MANAGER_WHITE_USER_EXIST = "2121206"// 权限系统： 白名单用户{0}已存在
+    const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207"// 权限系统： 用户{0}不在白名单内,请先配置策略白名单
+    const val STRATEGT_NAME_EXIST = "2121208"// 权限系统： 权限集合名称重复
+    const val STRATEGT_NAME_NOT_EXIST = "2121209"// 权限系统： 权限集合{0}不存在
+    const val APPROVAL_RECORD_NOT_EXIST = "2121210"// 审批记录不存在
+    const val MANAGER_PERMISSION_EXPIRE = "2121211"// 管理员权限过期
 
-    const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
-    const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
-    const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
-    const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
+    const val LOGIN_THIRD_CODE_INVALID = "2121501"// 权限系统： 第三方登陆code校验失败
+    const val LOGIN_USER_INFO_EXIST = "2121502"// 权限系统： 用户已存在，无需重复创建
+    const val LOGIN_USER_FREEZE = "2121503"// 账号冻结中
+    const val LOGIN_TOKEN_VERIFY_FAILED = "2121504"// 权限系统: token验证失败
 }

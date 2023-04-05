@@ -45,7 +45,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.repository.constants.BK_REQUEST_FILE_SIZE_LIMIT
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_REQUEST_FILE_SIZE_LIMIT
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum

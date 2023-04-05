@@ -49,6 +49,6 @@ object QualityMessageCode {
     const val QUALITY_INDICATOR_ENGLISH_NAME_EXISTS = "2114004" // 英文名({0})的指标已存在
     const val QUALITY_INDICATOR_CHINESE_NAME_EXISTS = "2114005" // 中文名({0})的指标已存在
     const val NEED_QUALITY_INDICATOR_X_PERMISSION = "2114006" // 用户没有拦截规则的[{0}]权限
-    const val INDEX_ENGLISH_NAME_CANNOT_EMPTY = "2114007"// 指标英文名不能为空
-    const val CHANGE_QUALITY_GATE_VALUE = "2114008"// 指标[{0}]值类型为[{1}]，请修改红线阈值[{2}]
+    const val INDEX_ENGLISH_NAME_CANNOT_EMPTY = "2114007" // 指标英文名不能为空
+    const val CHANGE_QUALITY_GATE_VALUE = "2114008" // 指标[{0}]值类型为[{1}]，请修改红线阈值[{2}]
 }
