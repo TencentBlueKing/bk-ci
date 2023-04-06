@@ -56,7 +56,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
-//import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
