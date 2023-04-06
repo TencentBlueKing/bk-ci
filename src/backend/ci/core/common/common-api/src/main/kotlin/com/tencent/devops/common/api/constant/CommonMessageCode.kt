@@ -78,12 +78,11 @@ object CommonMessageCode {
     const val PARAMETER_IS_EMPTY = "2100027"// 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028"// 查询的时间范围跨度错误
 
-
-    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100029"// 用户({0})无权限在工程({1})下{2}流水线({3})
-    const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100030"// 用户 {0}无项目{1}权限
-    const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100031"// 无法获取流水线JOB状态，构建停止
-    const val JOB_BUILD_STOPS = "2100032"// 流水线JOB已经不再运行，构建停止
-    const val PIPELINE_NAME_OCCUPIED = "2100033"// 流水线名称已被他人使用
-    const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100034"// 内部依赖服务异常
+    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100055"// 用户({0})无权限在工程({1})下{2}流水线({3})
+    const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100056"// 用户 {0}无项目{1}权限
+    const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100057"// 无法获取流水线JOB状态，构建停止
+    const val JOB_BUILD_STOPS = "2100058"// 流水线JOB已经不再运行，构建停止
+    const val PIPELINE_NAME_OCCUPIED = "2100059"// 流水线名称已被他人使用
+    const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100060"// 内部依赖服务异常
 
 }

@@ -53,7 +53,7 @@ class ClientExceptionMapper : ExceptionMapper<ClientException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "内部依赖服务异常"
+            I18nUtil.getCodeLanMessage(INTERNAL_DEPENDENCY_SERVICE_EXCEPTION)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE).entity(Result<Void>(status.statusCode, message)).build()
     }

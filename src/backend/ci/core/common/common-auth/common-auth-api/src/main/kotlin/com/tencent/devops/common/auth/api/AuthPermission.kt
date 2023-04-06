@@ -28,7 +28,6 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.MSG_CODE_PERMISSION_PREFIX
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class AuthPermission(val value: String, val alias: String) {

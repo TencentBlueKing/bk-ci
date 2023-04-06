@@ -62,7 +62,6 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_ATOM_FILE_FAIL
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUGIN_FILE
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -179,7 +178,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
         LoggerService.addNormalLine("${
             MessageUtil.getMessageByLocale(
-                BK_ARCHIVE_PLUGIN_FILE,
+                ARCHIVE_PLUGIN_FILE_FAILED,
                 System.getProperty(LOCALE_LANGUAGE)
             )
         }>>> ${file.name}")

@@ -60,10 +60,10 @@ object ArtifactoryMessageCode {
     const val UPLOAD_PIPELINE_FILE_FAILED = "2102013"// 上传流水线文件失败
     const val UPLOAD_FILE_FAILED = "2102014"// 上传文件失败
 
-    const val GET_CREDENTIAL_INFO_FAILED = "2102015"// 获取凭证信息失败
-    const val GET_BUILD_BASE_INFO_FAIL = "2102016"// 获取构建机基本信息失败
-    const val GET_PLUGIN_ENV_INFO_FAILED = "2102017"// 获取插件执行环境信息失败
-    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102018"// 更新插件执行环境信息失败
-    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102019"// 获取插件敏感信息失败
-    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102020"// 归档插件文件失败
+    const val GET_CREDENTIAL_INFO_FAILED = "2102023"// 获取凭证信息失败
+    const val GET_BUILD_BASE_INFO_FAIL = "2102024"// 获取构建机基本信息失败
+    const val GET_PLUGIN_ENV_INFO_FAILED = "2102025"// 获取插件执行环境信息失败
+    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102026"// 更新插件执行环境信息失败
+    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102027"// 获取插件敏感信息失败
+    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102028"// 归档插件文件失败
 }
