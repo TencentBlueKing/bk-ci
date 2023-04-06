@@ -926,7 +926,6 @@ class TemplateFacadeService @Autowired constructor(
         version: Long?,
         versionName: String? = null
     ): TemplateModelDetail {
-        version ?: versionName ?: throw ParamBlankException("version and versionName cannot be empty at the same time")
         var latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         val isConstrainedFlag = latestTemplate.type == TemplateType.CONSTRAINT.name
 
