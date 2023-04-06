@@ -30,9 +30,9 @@ package com.tencent.devops.common.dispatch.sdk.config
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
+import com.tencent.devops.common.event.dispatcher.mq.MQ.EXCHANGE_AGENT_LISTENER_DIRECT
+import com.tencent.devops.common.event.dispatcher.mq.MQ.ROUTE_AGENT_SHUTDOWN
+import com.tencent.devops.common.event.dispatcher.mq.MQ.ROUTE_AGENT_STARTUP
 import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC

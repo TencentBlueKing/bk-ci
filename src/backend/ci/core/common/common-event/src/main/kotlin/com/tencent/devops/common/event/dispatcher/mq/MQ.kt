@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.dispatcher.pipeline.mq
+package com.tencent.devops.common.event.dispatcher.mq
 
 object MQ {
     // 核心交换机及队列 ====================================

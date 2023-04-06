@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.docker.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.mq.MQ
 import com.tencent.devops.dispatch.docker.listener.AgentLessListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
