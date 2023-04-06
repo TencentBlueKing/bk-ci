@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface MarketAtomErrorCodeService {
 
