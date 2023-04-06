@@ -35,6 +35,7 @@ import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -44,7 +45,6 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.Context
 import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
 @Path("/user/remotedev")
@@ -80,10 +80,10 @@ interface UserRemoteDevResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam("bkTicket")
+        @HeaderParam("X-DEVOPS-BK-TICKET")
         bkTicket: String,
         @Context
         headers: HttpHeaders,
         data: BKGPT
-    ): Response
+    ): ChunkedOutput<String>
 }

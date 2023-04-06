@@ -5,10 +5,11 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import org.apache.http.client.methods.HttpPost
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
+import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.StreamingOutput
+import java.util.Scanner
 
 @Service
 class BKGPTService {
@@ -32,34 +33,34 @@ class BKGPTService {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
 
-    fun streamCompletions(data: BKGPT, ticket: String): StreamingOutput {
-        return streamCompletions(
+    private val SEPARATOR = System.getProperty("line.separator")
+
+    fun streamCompletions(data: BKGPT, ticket: String, out: ChunkedOutput<String>) {
+        streamCompletions(
             data.apply {
                 method = this@BKGPTService.method
                 token = this@BKGPTService.token
                 appSecret = this@BKGPTService.appSecret
                 appCode = this@BKGPTService.appCode
                 this.ticket = ticket
-            }
+            }, out
         )
     }
 
-    fun streamCompletions(bkChat: BKGPT): StreamingOutput {
+    fun streamCompletions(bkChat: BKGPT, out: ChunkedOutput<String>) {
         logger.info("start streamCompletions bkgpt $bkChat")
         val request = HttpPost(url)
         request.entity = StringEntity(JsonUtil.toJson(bkChat, false))
         request.addHeader("Content-Type", "application/json")
-        val fileStream = StreamingOutput { output ->
-            HttpClients.createDefault().execute(request).entity.content.use { stream ->
-                val buffer = ByteArray(512)
-                var bytes = stream.read(buffer)
-                while (bytes >= 0) {
-                    output.write(buffer, 0, bytes)
-                    output.flush()
-                    bytes = stream.read(buffer)
+        HttpClients.createDefault().execute(request).entity.content.use { stream ->
+            val scanner = Scanner(stream, "UTF-8")
+            while (scanner.hasNextLine()) {
+                val value = scanner.nextLine()
+                if (!value.isNullOrBlank()) {
+                    logger.info("Event: $value")
+                    out.write(value + SEPARATOR)
                 }
             }
         }
-        return fileStream
     }
 }

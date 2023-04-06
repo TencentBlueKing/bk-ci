@@ -34,11 +34,11 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
 import javax.ws.rs.core.HttpHeaders
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -51,6 +51,8 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserRemoteDevResourceImpl::class.java)
     }
 
+    private val executor = Executors.newCachedThreadPool()
+    private val SEPARATOR = System.getProperty("line.separator")
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))
     }
@@ -64,10 +66,17 @@ class UserRemoteDevResourceImpl @Autowired constructor(
         bkTicket: String,
         headers: HttpHeaders,
         data: BKGPT
-    ): Response {
-        return Response
-            .ok(bkgptService.streamCompletions(data, bkTicket), MediaType.APPLICATION_JSON)
-            .header("Cache-Control", "no-cache")
-            .build()
+    ): ChunkedOutput<String> {
+        val output: ChunkedOutput<String> = ChunkedOutput<String>(String::class.java, SEPARATOR)
+        executor.execute {
+            try {
+                output.use { out ->
+                    bkgptService.streamCompletions(data, bkTicket, out)
+                }
+            } catch (ex: Exception) {
+                logger.warn("Chunked output error!!!!!!")
+            }
+        }
+        return output
     }
 }
