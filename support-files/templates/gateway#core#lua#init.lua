@@ -93,7 +93,12 @@ config = {
     kubernetes = {
         domain = "kubernetes.demo.com",
         switchAll = false,
-        codecc = {domain = "kubernetes.demo.com"}
+        codecc = {domain = "kubernetes.demo.com"},
+        api = {
+            host = "kubernetes.demo.com",
+            port = 6443 ,
+            token = ""
+        }
     }
 }
 
