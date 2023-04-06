@@ -45,11 +45,26 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 },
                 {
                     test: /\.css$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => {
+                                console.log(resourcePath, 111)
+                                return ''
+                            }
+                        }
+                    }, 'css-loader']
                 },
                 {
                     test: /\.scss$/,
-                    use: [MiniCssExtractPlugin.loader, 'css-loader', 'sass-loader']
+                    use: [{
+                        loader: MiniCssExtractPlugin.loader,
+                        options: {
+                            publicPath: (resourcePath, context) => {
+                                return ''
+                            }
+                        }
+                    }, 'css-loader', 'sass-loader']
                 },
                 {
                     test: /\.(js|vue)$/,
@@ -75,6 +90,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                         }
                     },
                     generator: {
+                        // publicPath: 'auto',
                         filename: '[name].[contenthash].[ext]'
                     }
                 }
