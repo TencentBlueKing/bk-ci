@@ -119,24 +119,24 @@ class TxStoreIndexCronService(
                         endTime = endTime
                     )
                     val atomTotalComponentFailCount = atomTotalComponentFailCount(dailyStatisticRecordList)
-                    val atomExecuteCountByCodeRecord = storeStatisticDailyDao.getAtomExecuteCountByCode(
+                    val storeExecuteCountByCodeRecord = storeStatisticDailyDao.getStoreExecuteCountByCode(
                         dslContext = dslContext,
                         storeCode = atomCode,
                         storeType = StoreTypeEnum.ATOM.type.toByte(),
                         startTime = startTime,
                         endTime = endTime
                     )
-                    var atomExecuteCountByCode = 0
-                    if (atomExecuteCountByCodeRecord != null) {
-                        atomExecuteCountByCode = (atomExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as Int +
-                                atomExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as Int)
+                    var storeExecuteCountByCode = 0
+                    if (storeExecuteCountByCodeRecord != null) {
+                        storeExecuteCountByCode = (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as Int +
+                                storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as Int)
                     }
                     // sla计算
                     val atomSlaIndexValue =
-                        if (atomExecuteCountByCode == 0) {
+                        if (storeExecuteCountByCode == 0) {
                             0.0
                         } else {
-                            (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
+                            (1 - (atomTotalComponentFailCount.toDouble() / storeExecuteCountByCode.toDouble())) * 100
                         }
                     val result = if (atomSlaIndexValue > 99.9) BK_UP_TO_PAR else BK_NOT_UP_TO_PAR
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
