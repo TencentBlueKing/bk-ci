@@ -37,7 +37,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -49,7 +48,7 @@ interface OpStoreErrorCodeResource {
 
     @ApiOperation("新增插件通用错误码")
     @POST
-    @Path("type/{storeType}/general/add")
+    @Path("/general/add")
     fun createGeneralErrorCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
