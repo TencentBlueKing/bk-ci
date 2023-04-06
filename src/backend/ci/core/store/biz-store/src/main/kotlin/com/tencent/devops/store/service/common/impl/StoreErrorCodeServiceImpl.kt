@@ -25,16 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.store.service.common.impl
 
-import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreErrorCodeService
 import org.jooq.DSLContext
 import org.slf4j.Logger
@@ -46,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class StoreErrorCodeServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao,
+    private val storeDockingPlatformDao: StoreDockingPlatformDao
 ) : StoreErrorCodeService {
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
@@ -71,6 +73,38 @@ class StoreErrorCodeServiceImpl @Autowired constructor(
             )
         )
         return Result(true)
+    }
+
+    override fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int,
+        errorCodeType: ErrorCodeTypeEnum
+    ): Boolean {
+        try {
+            checkErrorCode(errorCodeType, listOf("$errorCode"))
+        } catch (e: ErrorCodeException) {
+            StoreErrorCodeServiceImpl.logger.warn("errorCode Non-compliance {${e.message}}")
+            return false
+        }
+        if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {
+            val errorCodePrefix = "$errorCode".substring(0, 3)
+            val record =
+                storeDockingPlatformDao.getStoreDockingPlatformByErrorCode(dslContext, errorCodePrefix.toInt())
+            return record?.let {
+                storeDockingPlatformDao.getPlatformErrorCode(
+                    dslContext,
+                    record.platformCode,
+                    errorCode
+                ) != null
+            } ?: false
+        }
+        return storeErrorCodeInfoDao.getStoreErrorCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            errorCode = errorCode
+        ).isNotEmpty
     }
 
     @Suppress("ComplexMethod")

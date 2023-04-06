@@ -42,9 +42,7 @@ import com.tencent.devops.store.dao.common.StoreCommentDao
 import com.tencent.devops.store.dao.common.StoreCommentPraiseDao
 import com.tencent.devops.store.dao.common.StoreCommentReplyDao
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
-import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreEnvVarDao
-import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
@@ -59,14 +57,12 @@ import com.tencent.devops.store.pojo.common.StoreBuildInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionItem
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -136,18 +132,6 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
 
     @Autowired
     lateinit var storeDetailUrlConfig: StoreDetailUrlConfig
-
-    @Autowired
-    lateinit var storeDockingPlatformDao: StoreDockingPlatformDao
-
-    @Autowired
-    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
-
-    @Value("\${store.defaultAtomErrorCodeLength:6}")
-    private var defaultAtomErrorCodeLength: Int = 6
-
-    @Value("\${store.defaultAtomErrorCodePrefix:8}")
-    private lateinit var defaultAtomErrorCodePrefix: String
 
     private val logger = LoggerFactory.getLogger(StoreCommonServiceImpl::class.java)
 
@@ -329,38 +313,6 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         storeType: StoreTypeEnum
     ): HashMap<String, MutableList<Int>>?
 
-    override fun isComplianceErrorCode(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        errorCode: Int,
-        errorCodeType: ErrorCodeTypeEnum
-    ): Boolean {
-        try {
-            checkErrorCode(errorCodeType, listOf("$errorCode"))
-        } catch (e: ErrorCodeException) {
-            StoreErrorCodeServiceImpl.logger.warn("errorCode Non-compliance {${e.message}}")
-            return false
-        }
-        if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {
-            val errorCodePrefix = "$errorCode".substring(0, 3)
-            val record =
-                storeDockingPlatformDao.getStoreDockingPlatformByErrorCode(dslContext, errorCodePrefix.toInt())
-            return record?.let {
-                storeDockingPlatformDao.getPlatformErrorCode(
-                    dslContext,
-                    record.platformCode,
-                    errorCode
-                ) != null
-            } ?: false
-        }
-        return storeErrorCodeInfoDao.getStoreErrorCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType,
-            errorCode = errorCode
-        ).isNotEmpty
-    }
-
     override fun getStoreShowVersionInfo(
         cancelFlag: Boolean,
         releaseType: ReleaseTypeEnum?,
@@ -399,37 +351,5 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
             }
         }
         return StoreShowVersionInfo(showVersionList)
-    }
-
-    @Suppress("ComplexMethod")
-    private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
-        val invalidErrorCodes = mutableListOf<String>()
-        errorCodeInfos.forEach { errorCode ->
-            if (errorCode.length != defaultAtomErrorCodeLength) invalidErrorCodes.add(errorCode)
-            val errorCodePrefix = errorCode.substring(0, 3)
-            when (errorCodeType) {
-                ErrorCodeTypeEnum.ATOM -> {
-                    if (!errorCodePrefix.startsWith(defaultAtomErrorCodePrefix)) {
-                        invalidErrorCodes.add(errorCode)
-                    }
-                }
-                ErrorCodeTypeEnum.GENERAL -> {
-                    if (!errorCodePrefix.startsWith("100")) {
-                        invalidErrorCodes.add(errorCode)
-                    }
-                }
-                ErrorCodeTypeEnum.PLATFORM -> {
-                    if (errorCodePrefix.toInt() !in 101..599) {
-                        invalidErrorCodes.add(errorCode)
-                    }
-                }
-            }
-        }
-        if (invalidErrorCodes.isNotEmpty()) {
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_ERROR_CODE_INVALID,
-                params = arrayOf("[${invalidErrorCodes.joinToString(",")}]")
-            )
-        }
     }
 }
