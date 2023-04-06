@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
@@ -37,6 +38,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.jooq.DSLContext
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -45,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao,
+    val storeDockingPlatformDao: StoreDockingPlatformDao
 ) : MarketAtomErrorCodeService {
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
@@ -53,41 +56,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
 
     @Value("\${store.defaultAtomErrorCodePrefix:8}")
     private lateinit var defaultAtomErrorCodePrefix: String
-
-    override fun createStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
-        // 检查错误码是否规范
-        checkErrorCode(
-            storeErrorCodeInfo.errorCodeType,
-            storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
-        )
-        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
-        return Result(true)
-    }
-
-    override fun updateStoreErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
-        // 检查错误码是否规范
-        checkErrorCode(
-            storeErrorCodeInfo.errorCodeType,
-            storeErrorCodeInfo.errorCodeInfos.map { "${it.errorCode}" }
-        )
-        val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-            dslContext = dslContext,
-            storeCode = storeErrorCodeInfo.storeCode,
-            storeType = storeErrorCodeInfo.storeType,
-            errorCodeType = storeErrorCodeInfo.errorCodeType
-        ).subtract(storeErrorCodeInfo.errorCodeInfos.toSet()).toList()
-        if (errorCodeInfos.isNotEmpty()) {
-            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
-                dslContext = dslContext,
-                storeType = storeErrorCodeInfo.storeType,
-                storeCode = storeErrorCodeInfo.storeCode,
-                errorCodeType = storeErrorCodeInfo.errorCodeType,
-                errorCodes = errorCodeInfos.map { it.errorCode }
-            )
-        }
-        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
-        return Result(true)
-    }
 
     override fun createGeneralErrorCode(
         userId: String,
@@ -100,9 +68,8 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             dslContext,
             userId,
             StoreErrorCodeInfo(
-                storeCode = "devops",
-                storeType = storeType,
-                errorCodeType = ErrorCodeTypeEnum.GENERAL,
+                storeCode = null,
+                storeType = null,
                 errorCodeInfos = listOf(errorCodeInfo)
             )
         )
@@ -144,25 +111,36 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     override fun isComplianceErrorCode(
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCode: String,
+        errorCode: Int,
         errorCodeType: ErrorCodeTypeEnum
     ): Boolean {
         try {
-            checkErrorCode(errorCodeType, listOf(errorCode))
+            checkErrorCode(errorCodeType, listOf("$errorCode"))
         } catch (e: ErrorCodeException) {
             logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
-        return storeErrorCodeInfoDao.getAtomErrorCode(
+        if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {
+            val errorCodePrefix = "$errorCode".substring(0, 3)
+            val record =
+                storeDockingPlatformDao.getStoreDockingPlatformByErrorCode(dslContext, errorCodePrefix.toInt())
+            return record?.let {
+                storeDockingPlatformDao.getPlatformErrorCode(
+                    dslContext,
+                    record.platformCode,
+                    errorCode
+                ) != null
+            } ?: false
+        }
+        return storeErrorCodeInfoDao.getStoreErrorCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,
-            errorCode = errorCode.toInt(),
-            errorCodeType = errorCodeType
+            errorCode = errorCode
         ).isNotEmpty
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
+        val logger: Logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }

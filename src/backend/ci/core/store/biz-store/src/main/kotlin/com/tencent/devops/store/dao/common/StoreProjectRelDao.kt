@@ -31,14 +31,11 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
-import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
-import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -491,25 +488,6 @@ class StoreProjectRelDao {
                 .and(STORE_CODE.`in`(storeCodes))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
-                .fetch()
-        }
-    }
-
-    fun getStoreRelProjectCodes(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        storeCode: String,
-        page: Int,
-        pageSize: Int
-    ): Result<Record2<String, String>> {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(STORE_CODE.eq(storeCode))
-            return dslContext.select(STORE_CODE.`as`(KEY_STORE_CODE), PROJECT_CODE.`as`(KEY_PROJECT_CODE))
-                .from(this)
-                .where(conditions)
-                .groupBy(STORE_CODE, PROJECT_CODE)
                 .fetch()
         }
     }

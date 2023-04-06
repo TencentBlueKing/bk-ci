@@ -57,6 +57,8 @@ data class StoreDockingPlatformRequest(
     @ApiModelProperty("所属机构名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val ownerDeptName: String,
+    @ApiModelProperty("平台所属错误码前缀", required = true)
+    val errorCodePrefix: Int,
     @ApiModelProperty("平台所属错误码信息", required = false)
     val errorCodeInfo: List<ErrorCodeInfo>? = null
 )

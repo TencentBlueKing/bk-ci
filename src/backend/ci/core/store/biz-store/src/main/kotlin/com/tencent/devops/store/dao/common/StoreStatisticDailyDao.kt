@@ -179,7 +179,7 @@ class StoreStatisticDailyDao {
         }
     }
 
-    fun getAtomExecuteCountByCode(
+    fun getStoreExecuteCountByCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,

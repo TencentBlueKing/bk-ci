@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -48,12 +47,11 @@ class StoreErrorCodeInfoDao {
                 dslContext.insertInto(this)
                     .set(ID, UUIDUtil.generate())
                     .set(STORE_CODE, storeErrorCodeInfo.storeCode)
-                    .set(STORE_TYPE, storeErrorCodeInfo.storeType.type.toByte())
+                    .set(STORE_TYPE, storeErrorCodeInfo.storeType?.type?.toByte())
                     .set(ERROR_CODE, it.errorCode)
                     .set(ERROR_MSG_ZH_CN, it.errorMsgZhCn)
                     .set(ERROR_MSG_ZH_TW, it.errorMsgZhTw)
                     .set(ERROR_MSG_EN, it.errorMsgEn)
-                    .set(ERROR_CODE_TYPE, storeErrorCodeInfo.errorCodeType.type.toByte())
                     .set(CREATOR, userId)
                     .set(MODIFIER, userId)
                     .set(CREATE_TIME, LocalDateTime.now())
@@ -68,12 +66,11 @@ class StoreErrorCodeInfoDao {
         }).execute()
     }
 
-    fun getAtomErrorCode(
+    fun getStoreErrorCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCode: Int,
-        errorCodeType: ErrorCodeTypeEnum
+        errorCode: Int
     ): Result<Record> {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             return dslContext.select()
@@ -81,16 +78,14 @@ class StoreErrorCodeInfoDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(ERROR_CODE.eq(errorCode))
-                .and(ERROR_CODE_TYPE.eq(errorCodeType.type.toByte()))
                 .fetch()
         }
     }
 
     fun getStoreErrorCodeInfo(
         dslContext: DSLContext,
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        errorCodeType: ErrorCodeTypeEnum
+        storeCode: String?,
+        storeType: StoreTypeEnum?
     ): List<ErrorCodeInfo> {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             return dslContext.select(
@@ -100,8 +95,7 @@ class StoreErrorCodeInfoDao {
                 ERROR_MSG_EN
             ).from(this)
                 .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .and(ERROR_CODE_TYPE.eq(errorCodeType.type.toByte()))
+                .and(STORE_TYPE.eq(storeType?.type?.toByte()))
                 .fetchInto(ErrorCodeInfo::class.java)
         }
     }
@@ -110,7 +104,6 @@ class StoreErrorCodeInfoDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCodeType: ErrorCodeTypeEnum,
         errorCodes: List<Int>
     ) {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
@@ -118,20 +111,6 @@ class StoreErrorCodeInfoDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(ERROR_CODE.`in`(errorCodes))
-                .and(ERROR_CODE_TYPE.eq(errorCodeType.type.toByte()))
-                .execute()
-        }
-    }
-
-    fun batchDeleteErrorCodeInfo(
-        dslContext: DSLContext,
-        storeCode: String,
-        errorCodeType: ErrorCodeTypeEnum
-    ) {
-        with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
-            dslContext.deleteFrom(this)
-                .where(STORE_CODE.eq(storeCode))
-                .and(ERROR_CODE_TYPE.eq(errorCodeType.type.toByte()))
                 .execute()
         }
     }
