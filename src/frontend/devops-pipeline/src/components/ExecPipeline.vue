@@ -98,9 +98,14 @@
                 <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
                 >.....</bk-button
                 >
-                <bk-tab class="pipeline-exec-error-tab" :label-height="42" type="unborder-card">
+                <bk-tab
+                    class="pipeline-exec-error-tab"
+                    :active="activeTab"
+                    :label-height="42"
+                    type="unborder-card"
+                >
                     <template slot="setting">
-                        <bk-link theme="primary" :href="pipelineErrorGuideLink">
+                        <bk-link theme="primary" :href="pipelineErrorGuideLink" target="_blank">
                             <span class="fix-error-jump">
                                 <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
                                 {{ $t("details.pipelineErrorGuide") }}
@@ -117,6 +122,9 @@
                         </bk-button>
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
+                        <template slot="label">
+                            <span @click="setShowErrorPopup" class="panel-name pointer">{{panel.name}}</span>
+                        </template>
                         <bk-table
                             :data="errorList"
                             :border="false"
@@ -223,6 +231,7 @@
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
+                activeTab: '-1',
                 currentAtom: {},
                 pipelineMode: 'uiMode',
                 showErrors: false,

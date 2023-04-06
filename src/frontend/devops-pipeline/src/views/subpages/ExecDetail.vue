@@ -145,6 +145,7 @@
     import Logo from '@/components/Logo'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
     import { mapThemeOfStatus } from '@/utils/pipelineStatus'
+    import { convertTime } from '@/utils/util'
 
     export default {
         components: {
@@ -210,6 +211,9 @@
                 execDetail: 'getExecDetail'
             }),
             ...mapState(['fetchError']),
+            execFormatStartTime () {
+                return convertTime(this.execDetail?.startTime)
+            },
             panels () {
                 return [
                     {

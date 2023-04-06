@@ -85,7 +85,7 @@
 <script>
     import { mapActions } from 'vuex'
     import MaterialItem from './MaterialItem'
-    import { convertMStoString, convertTime } from '@/utils/util'
+    import { convertMStoString } from '@/utils/util'
     export default {
         components: {
             MaterialItem
@@ -109,9 +109,6 @@
             }
         },
         computed: {
-            execFormatStartTime () {
-                return convertTime(this.execDetail?.startTime)
-            },
             executeTime () {
                 return this.execDetail.model?.timeCost?.totalCost
                 ? convertMStoString(this.execDetail.model?.timeCost?.totalCost)
@@ -196,7 +193,7 @@
   &-info {
     display: grid;
     grid-auto-flow: column;
-    grid-template-columns: minmax(320px, 1fr) minmax(320px, 1fr) 1fr 1fr 1fr;
+    grid-template-columns: 7fr 7fr 3fr 3fr minmax(168px, 4fr);
     font-size: 12px;
     grid-gap: 100px;
 
@@ -229,19 +226,24 @@
             border: 1px solid #dcdee5;
             border-radius: 2px;
             background: white;
-            top: 2px;
+            top: -1px;
+            padding: 0 8px;
             left: 0;
-            padding: 8px 8px 0 8px;
+            :not(:first-child) {
+              .exec-more-material {
+                opacity: 0;
+              }
+            }
           }
           .exec-material-row {
-            padding: 0 0 8px 0;
+            // padding: 0 0 8px 0;
             display: grid;
             grid-gap: 20px;
             grid-auto-flow: column;
+            height: 38px;
             &.visible-material-row {
               border: 1px solid transparent;
               padding-bottom: 0px;
-              height: 38px;
               align-items: center;
             }
             > span {
@@ -267,11 +269,6 @@
             .material-link,
             .material-span {
               @include ellipsis();
-            }
-            &:not(:first-child) {
-              .exec-more-material {
-                opacity: 0;
-              }
             }
           }
         }
