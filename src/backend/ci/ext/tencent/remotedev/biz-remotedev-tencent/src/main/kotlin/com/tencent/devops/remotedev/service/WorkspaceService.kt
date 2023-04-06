@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
@@ -125,7 +126,8 @@ class WorkspaceService @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val commonService: CommonService
+    private val commonService: CommonService,
+    private val profile: Profile
 ) {
 
     private val redisCache = Caffeine.newBuilder()
@@ -1311,6 +1313,7 @@ class WorkspaceService @Autowired constructor(
         creator: String,
         workspaceName: String
     ): Boolean {
+        if (profile.isDebug()) return true
         val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, creator).projectId
             .ifBlank { null } ?: run {
             logger.info("$workspaceName creator not init setting, ignore it.")
