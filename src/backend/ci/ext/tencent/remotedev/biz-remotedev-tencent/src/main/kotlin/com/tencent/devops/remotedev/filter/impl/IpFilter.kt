@@ -7,7 +7,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_IP_LIST_KEY
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
@@ -61,7 +61,7 @@ class IpFilter constructor(
             )
             return true
         }
-        if (!isIpInWhitelist(ip, redisCache.get(REDIS_WHITE_LIST_KEY) ?: return true)) {
+        if (!isIpInWhitelist(ip, redisCache.get(REDIS_IP_LIST_KEY) ?: return true)) {
             logger.info("ip($ip)wants to access the resource(${apiType.path}), but is blocked.")
             return false
         }
@@ -90,22 +90,22 @@ class IpFilter constructor(
         val ips = ip.split(".").toTypedArray()
         val ipAddr = (
             ips[0].toInt() shl 24
-            or (ips[1].toInt() shl 16)
-            or (ips[2].toInt() shl 8) or ips[3].toInt()
-        )
+                or (ips[1].toInt() shl 16)
+                or (ips[2].toInt() shl 8) or ips[3].toInt()
+            )
 
         whitelist.forEach { cidr ->
             val splits = cidr.split("/")
-            val type = splits[1].toInt()
+            val type = if (splits.size == 2) splits[1].toInt() else 32
             val mask = -0x1 shl 32 - type
             val cidrIp = splits[0]
             val cidrIps = cidrIp.split(".").toTypedArray()
             val cidrIpAddr = (
                 cidrIps[0].toInt() shl 24
-                or (cidrIps[1].toInt() shl 16)
-                or (cidrIps[2].toInt() shl 8)
-                or cidrIps[3].toInt()
-            )
+                    or (cidrIps[1].toInt() shl 16)
+                    or (cidrIps[2].toInt() shl 8)
+                    or cidrIps[3].toInt()
+                )
             if (ipAddr and mask == cidrIpAddr and mask) return true
         }
         return false
