@@ -250,8 +250,6 @@ auth:
   envName: prod
   #  开发时需要配置Host解析到iam.service.consul
   url: __BK_IAM_PRIVATE_URL__
-  # iam api网关地址
-  apigwUrl: __BK_CI_ITSM_APIGW_URL__
   appCode: __BK_CI_APP_CODE__
   appSecret: __BK_CI_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
@@ -259,6 +257,10 @@ auth:
   # 用户组权限申请前端跳转页面HOST
   webHost: __BK_CI_IAM_WEB_URL__
   token: __BK_CI_APP_TOKEN__
+  # iam api网关地址
+  apigwUrl: __BK_CI_IAM_APIGW_URL__
+  # iam 系统ID
+  iamSystem: __BK_CI_IAM_SYSTEM_ID__
   #  openapi服务需要配置accessToken鉴权时将enabled设为true，secret设为任意字符串string，expirationTime过期时间（毫秒）
   accessToken:
     enabled: __BK_CI_API_TOKEN_ENABLED__
