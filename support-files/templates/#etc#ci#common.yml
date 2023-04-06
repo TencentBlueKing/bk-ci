@@ -250,6 +250,8 @@ auth:
   envName: prod
   #  开发时需要配置Host解析到iam.service.consul
   url: __BK_IAM_PRIVATE_URL__
+  # iam api网关地址
+  apigwUrl: __BK_CI_ITSM_APIGW_URL__
   appCode: __BK_CI_APP_CODE__
   appSecret: __BK_CI_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2

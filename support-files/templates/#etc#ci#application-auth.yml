@@ -18,7 +18,7 @@ login:
 
 itsm:
   # ITSM API地址
-  url:  __BK_CI_ITSM_API_URL__
+  url:  __BK_CI_IAM_APIGW_URL__
   callback:
     create:
       # 项目创建ITSM回调URL
