@@ -33,7 +33,7 @@ class BKGPTService {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
     }
 
-    private val SEPARATOR = System.getProperty("line.separator")
+    private val separator = System.getProperty("line.separator")
 
     fun streamCompletions(data: BKGPT, ticket: String, out: ChunkedOutput<String>) {
         streamCompletions(
@@ -58,7 +58,7 @@ class BKGPTService {
                 val value = scanner.nextLine()
                 if (!value.isNullOrBlank()) {
                     logger.info("Event: $value")
-                    out.write(value + SEPARATOR)
+                    out.write(value + separator)
                 }
             }
         }
