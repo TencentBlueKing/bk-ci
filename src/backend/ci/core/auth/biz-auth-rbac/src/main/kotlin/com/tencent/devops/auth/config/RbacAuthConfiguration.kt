@@ -94,7 +94,7 @@ class RbacAuthConfiguration {
     val iamApigw = ""
 
     @Bean
-    @ConditionalOnMissingBean
+    @Primary
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean

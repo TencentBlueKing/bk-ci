@@ -48,7 +48,7 @@ spec:
               # 导入模型
               for i in $(find . -name '*.json'|sort)
               do
-               python3 do_migrate.py -t {{ .Values.config.bkIamPrivateUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i
+               python3 do_migrate.py -t {{ .Values.config.bkCiIamApigwUrl }} -a "{{ .Values.config.bkCiAppCode }}" -s "{{ .Values.config.bkCiAppToken }}" -f  $i --apigateway
               done
               # 导入数据库
               cat << EOF > iam.sql
