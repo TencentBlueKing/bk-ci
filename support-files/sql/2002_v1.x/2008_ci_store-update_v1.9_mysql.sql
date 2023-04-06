@@ -147,7 +147,7 @@ BEGIN
     ALTER TABLE T_STORE_ERROR_CODE_INFO COMMENT='store组件错误码信息';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
+    IF EXISTS(SELECT 1
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'

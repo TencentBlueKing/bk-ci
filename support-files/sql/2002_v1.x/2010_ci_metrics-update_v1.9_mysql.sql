@@ -39,11 +39,27 @@ BEGIN
     SELECT DATABASE() INTO db;
 
     IF NOT EXISTS(SELECT 1
+                                      FROM information_schema.statistics
+                                      WHERE TABLE_SCHEMA = db
+                                        AND TABLE_NAME = 'T_ERROR_CODE_INFO'
+                                        AND INDEX_NAME = 'UNI_TECI_CODE') THEN
+    ALTER TABLE T_ERROR_CODE_INFO DROP KEY  `UNI_TECI_CODE`;
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
                                   FROM information_schema.statistics
                                   WHERE TABLE_SCHEMA = db
                                     AND TABLE_NAME = 'T_ERROR_CODE_INFO'
                                     AND INDEX_NAME = 'UNI_TECI_ATOM_CODE') THEN
     ALTER TABLE `T_ERROR_CODE_INFO`ADD INDEX `UNI_TECI_ATOM_CODE` (`ATOM_CODE`);
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                                      FROM information_schema.statistics
+                                      WHERE TABLE_SCHEMA = db
+                                        AND TABLE_NAME = 'T_ERROR_CODE_INFO'
+                                        AND INDEX_NAME = 'INX_TECI_CODE') THEN
+    ALTER TABLE `T_ERROR_CODE_INFO`ADD INDEX `INX_TECI_CODE` (`ERROR_CODE`);
     END IF;
 
     COMMIT;
