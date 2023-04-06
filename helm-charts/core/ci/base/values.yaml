@@ -10,6 +10,10 @@ rbac:
 ## Add labels to all the deployed resources
 commonLabels: {}
 
+# java 启动参数
+java:
+  options: ""
+
 # ingress 配置
 ingress:
   enabled: true
