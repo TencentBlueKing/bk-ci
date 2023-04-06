@@ -130,12 +130,11 @@ function _M:getAllWhitelistIp()
             else
                 --- 开始连接
                 httpc:set_timeout(3000)
-                httpc:connect(kubernetes_api_host, kubernetes_api_port)
-
+                local headers = {["Authorization"] = "Bearer " .. kubernetes_api_token}
                 --- 发送请求
-                local url = "/api/v1/nodes"
-                local res, err = httpc:request({path = url, method = "GET"})
-
+                local res, err = httpc:request_uri("https://" .. kubernetes_api_host .. ":" ..
+                                                       tostring(kubernetes_api_port) .. "/api/v1/nodes",
+                                                   {method = "GET", headers = headers, ssl_verify = false})
                 local useHttp = true
                 if not res then --- 判断是否出错了
                     ngx.log(ngx.ERR, "failed to request get k8s ip: ", err)
@@ -147,19 +146,18 @@ function _M:getAllWhitelistIp()
                         responseBody = white_ip_cold_cache:get(ip_cache_key)
                         useHttp = false
                     else -- 正常
-                        responseBody = res:read_body()
+                        responseBody = res.body
                         useHttp = true
                     end
                 end
-
                 if responseBody == nil then
                     ngx.log(ngx.ERR, "nil responseBody , please check all cache and http api")
                     ngx.exit(401)
                     return
                 else
                     if useHttp then
-                        --- 热缓存5秒
-                        white_ip_hot_cache:set(ip_cache_key, responseBody, 5)
+                        --- 热缓存10秒
+                        white_ip_hot_cache:set(ip_cache_key, responseBody, 10)
                         -- 冷缓存1天
                         white_ip_cold_cache:set(ip_cache_key, responseBody, 86400)
                     end
