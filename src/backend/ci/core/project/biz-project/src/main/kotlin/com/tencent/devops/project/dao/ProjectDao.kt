@@ -536,8 +536,8 @@ class ProjectDao {
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
-                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
-                .let { if (projectId == null) it else it.and(ENGLISH_NAME.eq(projectId)) }
+                .let { it.takeIf { projectName != null }?.and(PROJECT_NAME.like("%${projectName!!.trim()}%")) ?: it }
+                .let { it.takeIf { projectId != null }?.and(ENGLISH_NAME.eq(projectId)) ?: it }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
