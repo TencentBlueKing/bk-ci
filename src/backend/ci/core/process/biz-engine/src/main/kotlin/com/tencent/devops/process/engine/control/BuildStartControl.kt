@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
@@ -82,6 +83,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -95,7 +97,7 @@ import kotlin.math.max
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount", "NestedBlockDepth")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -236,7 +238,7 @@ class BuildStartControl @Autowired constructor(
                     message = "Build #${buildInfo.buildNum} preparing",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
-                handleBuildNo()
+                handleBuildNo(buildInfo)
                 pipelineRuntimeService.startLatestRunningBuild(
                     latestRunningBuild = LatestRunningBuild(
                         projectId = projectId,
@@ -350,28 +352,52 @@ class BuildStartControl @Autowired constructor(
         return checkStart
     }
 
-    private fun PipelineBuildStartEvent.handleBuildNo() {
-        if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
-            // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
-            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
-            try {
-                buildNoLock.lock()
-                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(
+    /**
+     * 防止"每次构建成功+1"读取到相同buildNo的情况：在排队过程中，前面的构建成功结束了，会加1，所以正式启动前设置最新的buildNo
+     *
+     * 注：重试不会执行
+     */
+    private fun PipelineBuildStartEvent.handleBuildNo(buildInfo: BuildInfo) {
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        if (retryFlag || buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT) { // 重试不重新写
+            return
+        }
+        // 防止"每次构建成功+1"读取到相同buildNo的情况：在排队过程中，前面的构建成功结束了，会加1，所以正式启动前设置最新的buildNo
+        PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
+            buildNoLock.lock()
+
+            val buildNo = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId = pipelineId)?.buildNo
+
+            if (buildNo != null) {
+                buildVariableService.setVariable(
                     projectId = projectId,
-                    pipelineId = pipelineId
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    varName = BUILD_NO,
+                    varValue = buildNo
                 )
-                val buildNo = buildSummary?.buildNo
-                if (buildNo != null) {
-                    buildVariableService.setVariable(
+
+                var parameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId = buildId)
+                val startParamMap = mutableMapOf<String, BuildParameters>()
+                parameters.associateByTo(startParamMap) { it.key }
+                startParamMap[BUILD_NO] = BuildParameters(key = BUILD_NO, value = buildNo, readOnly = true)
+                parameters = startParamMap.values.toList()
+
+                val recommendVersionPrefix = PipelineVarUtil.getRecommendVersionPrefix(parameters)
+                if (recommendVersionPrefix != null) {
+                    pipelineRuntimeService.updateRecommendVersion(
                         projectId = projectId,
-                        pipelineId = pipelineId,
                         buildId = buildId,
-                        varName = BUILD_NO,
-                        varValue = buildNo
+                        recommendVersion = "$recommendVersionPrefix.$buildNo"
                     )
                 }
-            } finally {
-                buildNoLock.unlock()
+
+                pipelineRuntimeService.updateBuildParameters(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    buildParameters = parameters
+                )
             }
         }
     }
@@ -533,6 +559,7 @@ class BuildStartControl @Autowired constructor(
                                     return@nextElement
                                 }
                             }
+
                             is CodeGitElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -542,11 +569,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is CodeGitlabElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -556,11 +585,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is GithubElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -570,10 +601,12 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             else -> return@nextElement
                         }
 
@@ -593,6 +626,7 @@ class BuildStartControl @Autowired constructor(
                                     ele.revision = latestRevision.data!!.revision
                                     ele.specifyRevision = true
                                 }
+
                                 is CodeGitElement -> ele.revision = latestRevision.data!!.revision
                                 is GithubElement -> ele.revision = latestRevision.data!!.revision
                                 is CodeGitlabElement -> ele.revision = latestRevision.data!!.revision
