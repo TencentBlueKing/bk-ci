@@ -87,6 +87,7 @@ interface StoreIndexManageService {
     fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean>
 }

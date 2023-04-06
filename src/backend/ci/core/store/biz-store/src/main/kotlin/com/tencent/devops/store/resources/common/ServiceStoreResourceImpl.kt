@@ -35,8 +35,8 @@ import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import com.tencent.devops.store.service.common.StoreBuildService
+import com.tencent.devops.store.service.common.StoreErrorCodeService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
@@ -47,7 +47,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
     private val storeBuildService: StoreBuildService,
-    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
+    private val storeErrorCodeService: StoreErrorCodeService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -82,11 +82,11 @@ class ServiceStoreResourceImpl @Autowired constructor(
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean> {
         return Result(
-            marketAtomErrorCodeService.isComplianceErrorCode(
-                storeCode,
-                storeType,
-                errorCode,
-                errorCodeType
+            storeErrorCodeService.isComplianceErrorCode(
+                storeCode = storeCode,
+                storeType = storeType,
+                errorCode = errorCode,
+                errorCodeType = errorCodeType
             )
         )
     }

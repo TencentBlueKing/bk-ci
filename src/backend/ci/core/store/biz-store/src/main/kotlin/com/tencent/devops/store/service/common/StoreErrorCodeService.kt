@@ -25,30 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-USE devops_ci_metrics;
-SET NAMES utf8mb4;
+package com.tencent.devops.store.service.common
 
-DROP PROCEDURE IF EXISTS ci_metrics_schema_update;
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-DELIMITER <CI_UBF>
-CREATE PROCEDURE ci_metrics_schema_update()
-BEGIN
+interface StoreErrorCodeService {
 
-    DECLARE db VARCHAR(100);
-    SET AUTOCOMMIT = 0;
-    SELECT DATABASE() INTO db;
+    /**
+     * 创建通用组件错误码
+     */
+    fun createGeneralErrorCode(
+        userId: String,
+        errorCodeInfo: ErrorCodeInfo
+    ): Result<Boolean>
 
-    IF NOT EXISTS(SELECT 1
-                                  FROM information_schema.statistics
-                                  WHERE TABLE_SCHEMA = db
-                                    AND TABLE_NAME = 'T_ERROR_CODE_INFO'
-                                    AND INDEX_NAME = 'UNI_TECI_ATOM_CODE') THEN
-    ALTER TABLE `T_ERROR_CODE_INFO`ADD INDEX `UNI_TECI_ATOM_CODE` (`ATOM_CODE`);
-    END IF;
-
-    COMMIT;
-END <CI_UBF>
-DELIMITER ;
-COMMIT;
-
-CALL ci_metrics_schema_update();
+    /**
+     * 判断错误码是否合规
+     */
+    fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int,
+        errorCodeType: ErrorCodeTypeEnum
+    ): Boolean
+}

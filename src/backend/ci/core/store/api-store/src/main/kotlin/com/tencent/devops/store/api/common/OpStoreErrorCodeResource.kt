@@ -30,7 +30,6 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -38,7 +37,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -48,16 +46,13 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStoreErrorCodeResource {
 
-    @ApiOperation("新增插件通用错误码")
+    @ApiOperation("新增通用错误码")
     @POST
-    @Path("type/{storeType}/general/add")
+    @Path("/general/add")
     fun createGeneralErrorCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
-        @PathParam("storeType")
-        storeType: StoreTypeEnum,
         @ApiParam("插件通用错误码信息", required = true)
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean>

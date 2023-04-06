@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,8 +62,14 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     override fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean> {
-        return storeIndexManageService.deleteStoreIndexResultByStoreCode(userId, indexCode, storeCodes)
+        return storeIndexManageService.deleteStoreIndexResultByStoreCode(
+            userId = userId,
+            indexCode = indexCode,
+            storeType = storeType,
+            storeCodes = storeCodes
+        )
     }
 }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -80,7 +81,7 @@ interface BuildStoreIndexInfoResource {
 
     @ApiOperation("根据组件代码删除指标结果")
     @DELETE
-    @Path("/indexCodes/{indexCode}/result/delete")
+    @Path("/types/{storeType}//indexCodes/{indexCode}/result/delete")
     fun deleteStoreIndexResultByStoreCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -88,6 +89,9 @@ interface BuildStoreIndexInfoResource {
         @ApiParam("指标代码", required = true)
         @PathParam("indexCode")
         indexCode: String,
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        storeType: StoreTypeEnum,
         @ApiParam("组件代码列表", required = true)
         storeCodes: List<String>
     ): Result<Boolean>
