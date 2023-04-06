@@ -1,0 +1,271 @@
+{
+  "system_id": "bk_ci_rbac",
+  "operations": [
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "project_instance",
+        "name": "项目",
+        "name_en": "project",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "pipeline_instance",
+        "name": "流水线",
+        "name_en": "pipeline",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "pipeline_group_instance",
+        "name": "流水线组",
+        "name_en": "pipeline group",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline_group"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "repertory_instance",
+        "name": "代码库",
+        "name_en": "repository",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "environment_instance",
+        "name": "环境",
+        "name_en": "environment",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "node_instance",
+        "name": "环境节点",
+        "name_en": "node",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cert_instance",
+        "name": "证书",
+        "name_en": "cert",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "credential_instance",
+        "name": "凭证",
+        "name_en": "credential",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "quality_rule_instance",
+        "name": "质量红线规则",
+        "name_en": "andon rule",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "rule"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "quality_group_instance",
+        "name": "质量红线用户组",
+        "name_en": "andon notice group",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "quality_group"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "experience_task_instance",
+        "name": "版本体验任务",
+        "name_en": "experience_task",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_task"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "experience_group_instance",
+        "name": "版本体验用户组",
+        "name_en": "experience_group",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_group"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "codecc_task_instance",
+        "name": "CodeCC任务",
+        "name_en": "codecc task",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "codecc_rule_set_instance",
+        "name": "CodeCC规则集",
+        "name_en": "codecc rule set",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_rule_set"
+          }
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "turbo_plan_instance",
+        "name": "编译加速方案",
+        "name_en": "turbo plan",
+        "resource_type_chain": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          },
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "turbo_plan"
+          }
+        ]
+      }
+    }
+  ]
+}
