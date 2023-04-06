@@ -93,7 +93,7 @@ class WorkspaceDao {
                     /* value9 = */ workspace.workspaceFolder,
                     /* value10 = */ workspace.hostName,
                     /* value11 = */ 8,
-                    /* value12 = */ 16,
+                    /* value12 = */ 32,
                     /* value13 = */ 100,
                     /* value14 = */ workspaceStatus.ordinal,
                     /* value15 = */ LocalDateTime.now(),
