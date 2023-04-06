@@ -79,7 +79,7 @@ object ProjectMessageCode {
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
     const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
     const val PROJECT_ASSIGN_DATASOURCE_FAIL = "2119034" // 无法为项目分配可用的数据源
-    const val BOUND_IAM_GRADIENT_ADMIN = "2119035" // 已绑定IAM分级管理员
+    const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
 
     const val BK_AUTH_CENTER_CREATE_PROJECT_INFO = "BkAuthCenterCreateProjectInfo" // 权限中心创建项目信息：
 }
