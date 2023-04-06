@@ -59,15 +59,8 @@ BEGIN
     ALTER TABLE T_STORE_DOCKING_PLATFORM ADD UNIQUE INDEX `UNI_INX_TSDP_ERROR` (ERROR_CODE_PREFIX);
     END IF;
 
-        IF NOT EXISTS(SELECT 1
-                              FROM information_schema.COLUMNS
-                              WHERE TABLE_SCHEMA = db
-                                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
-                                AND INDEX_NAME = 'T_STORE_ERROR_CODE_INFO_UN') THEN
-    ALTER TABLE T_STORE_ERROR_CODE_INFO DROP KEY  `T_STORE_ERROR_CODE_INFO_UN`;
-    END IF;
 
-        IF NOT EXISTS(SELECT 1
+     IF NOT EXISTS(SELECT 1
                           FROM information_schema.COLUMNS
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
@@ -75,7 +68,7 @@ BEGIN
     ALTER TABLE T_STORE_ERROR_CODE_INFO ADD UNIQUE INDEX `UNI_TSECI_STORE_TYPE_ERROR` (`STORE_CODE`,`STORE_TYPE`,`ERROR_CODE`);
     END IF;
 
-        IF NOT EXISTS(SELECT 1
+    IF NOT EXISTS(SELECT 1
                           FROM information_schema.COLUMNS
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
