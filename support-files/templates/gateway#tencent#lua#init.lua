@@ -105,7 +105,12 @@ config = {
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
-        codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"}
+        codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
+        api = {
+            host = "__BK_CI_KUBERNETES_API_HOST__",
+            port = __BK_CI_KUBERNETES_API_PORT__ ,
+            token = "__BK_CI_KUBERNETES_API_TOKEN__"
+        }
     },
     openHttps = "__BKCI_OPEN_HTTPS__"
 }
