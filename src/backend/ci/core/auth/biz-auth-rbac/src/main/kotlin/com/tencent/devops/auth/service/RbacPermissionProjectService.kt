@@ -93,7 +93,10 @@ class RbacPermissionProjectService(
             resourceCode = projectCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
-        val v2PageInfoDTO = V2PageInfoDTO().apply { page = 1;pageSize = 1000 }
+        val v2PageInfoDTO = V2PageInfoDTO().apply {
+            page = 1
+            pageSize = 1000
+        }
         val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
@@ -107,7 +110,10 @@ class RbacPermissionProjectService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         groupInfoList.forEach {
             // 3、获取组成员
-            val pageInfoDTO = PageInfoDTO().apply { limit = 1000;offset = 0 }
+            val pageInfoDTO = PageInfoDTO().apply {
+                limit = 1000
+                offset = 0
+            }
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
             logger.info(
                 "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
