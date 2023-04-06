@@ -14,4 +14,5 @@ object RedisKeys {
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
     const val REDIS_WHITE_LIST_KEY = "remotedev:whiteList"
+    const val REDIS_IP_LIST_KEY = "remotedev:ipSubnets"
 }
