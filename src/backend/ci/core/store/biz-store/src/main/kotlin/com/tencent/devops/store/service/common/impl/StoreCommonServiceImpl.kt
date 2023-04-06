@@ -62,7 +62,7 @@ import com.tencent.devops.store.pojo.common.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.MarketAtomErrorCodeServiceImpl
+import com.tencent.devops.store.service.atom.impl.StoreErrorCodeServiceImpl
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -339,7 +339,7 @@ abstract class StoreCommonServiceImpl @Autowired constructor() : StoreCommonServ
         try {
             checkErrorCode(errorCodeType, listOf("$errorCode"))
         } catch (e: ErrorCodeException) {
-            MarketAtomErrorCodeServiceImpl.logger.warn("errorCode Non-compliance {${e.message}}")
+            StoreErrorCodeServiceImpl.logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
         if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {

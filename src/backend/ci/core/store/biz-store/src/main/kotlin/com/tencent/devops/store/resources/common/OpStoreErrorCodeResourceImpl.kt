@@ -31,18 +31,18 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpStoreErrorCodeResource
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
-import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
+import com.tencent.devops.store.service.atom.StoreErrorCodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpStoreErrorCodeResourceImpl @Autowired constructor(
-    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
+    private val storeErrorCodeService: StoreErrorCodeService
 ) : OpStoreErrorCodeResource {
 
     override fun createGeneralErrorCode(
         userId: String,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean> {
-        return marketAtomErrorCodeService.createGeneralErrorCode(userId, errorCodeInfo)
+        return storeErrorCodeService.createGeneralErrorCode(userId, errorCodeInfo)
     }
 }

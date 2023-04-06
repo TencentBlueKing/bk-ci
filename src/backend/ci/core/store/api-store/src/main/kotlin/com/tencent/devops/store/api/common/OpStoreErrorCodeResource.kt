@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpStoreErrorCodeResource {
 
-    @ApiOperation("新增插件通用错误码")
+    @ApiOperation("新增通用错误码")
     @POST
     @Path("/general/add")
     fun createGeneralErrorCode(

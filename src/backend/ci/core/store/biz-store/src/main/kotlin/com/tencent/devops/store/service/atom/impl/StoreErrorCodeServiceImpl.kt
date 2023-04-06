@@ -35,7 +35,7 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
+import com.tencent.devops.store.service.atom.StoreErrorCodeService
 import org.jooq.DSLContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -44,10 +44,10 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
-class MarketAtomErrorCodeServiceImpl @Autowired constructor(
+class StoreErrorCodeServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
-) : MarketAtomErrorCodeService {
+) : StoreErrorCodeService {
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
     private var defaultAtomErrorCodeLength: Int = 6
@@ -106,6 +106,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger: Logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
+        val logger: Logger = LoggerFactory.getLogger(StoreErrorCodeServiceImpl::class.java)
     }
 }

@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 
-interface MarketAtomErrorCodeService {
+interface StoreErrorCodeService {
 
     /**
      * 创建通用组件错误码
