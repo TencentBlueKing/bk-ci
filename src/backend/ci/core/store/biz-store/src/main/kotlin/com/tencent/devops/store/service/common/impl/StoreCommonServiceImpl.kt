@@ -62,7 +62,7 @@ import com.tencent.devops.store.pojo.common.StoreShowVersionItem
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.StoreErrorCodeServiceImpl
+import com.tencent.devops.store.service.common.impl.StoreErrorCodeServiceImpl
 import com.tencent.devops.store.service.common.StoreCommonService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

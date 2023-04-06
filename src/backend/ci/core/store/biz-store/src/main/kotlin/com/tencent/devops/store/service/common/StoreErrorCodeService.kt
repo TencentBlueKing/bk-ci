@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
