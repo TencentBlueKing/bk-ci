@@ -155,7 +155,7 @@ BEGIN
     ALTER TABLE T_STORE_ERROR_CODE_INFO MODIFY COLUMN STORE_CODE varchar(64) CHARACTER SET utf8 COLLATE utf8_general_ci NULL COMMENT '组件代码,为空则表示属于通用错误码';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
+    IF EXISTS(SELECT 1
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
