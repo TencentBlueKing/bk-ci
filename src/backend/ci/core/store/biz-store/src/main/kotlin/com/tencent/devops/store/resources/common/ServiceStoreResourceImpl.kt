@@ -35,11 +35,11 @@ import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import com.tencent.devops.store.service.common.StoreBuildService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
+import com.tencent.devops.store.service.common.impl.StoreCommonServiceImpl
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,7 +47,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
     private val storeBuildService: StoreBuildService,
-    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
+    private val storeCommonServiceImpl: StoreCommonServiceImpl
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -82,7 +82,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
         errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean> {
         return Result(
-            marketAtomErrorCodeService.isComplianceErrorCode(
+            storeCommonServiceImpl.isComplianceErrorCode(
                 storeCode,
                 storeType,
                 errorCode,

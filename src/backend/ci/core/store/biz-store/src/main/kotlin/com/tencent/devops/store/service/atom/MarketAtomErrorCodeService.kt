@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface MarketAtomErrorCodeService {
@@ -42,14 +41,4 @@ interface MarketAtomErrorCodeService {
         storeType: StoreTypeEnum,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean>
-
-    /**
-     * 判断错误码是否合规
-     */
-    fun isComplianceErrorCode(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        errorCode: Int,
-        errorCodeType: ErrorCodeTypeEnum
-    ): Boolean
 }

@@ -30,7 +30,6 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
@@ -47,8 +46,7 @@ import org.springframework.stereotype.Service
 @Service
 class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao,
-    val storeDockingPlatformDao: StoreDockingPlatformDao
+    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
 ) : MarketAtomErrorCodeService {
 
     @Value("\${store.defaultAtomErrorCodeLength:6}")
@@ -106,38 +104,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
                 params = arrayOf("[${invalidErrorCodes.joinToString(",")}]")
             )
         }
-    }
-
-    override fun isComplianceErrorCode(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        errorCode: Int,
-        errorCodeType: ErrorCodeTypeEnum
-    ): Boolean {
-        try {
-            checkErrorCode(errorCodeType, listOf("$errorCode"))
-        } catch (e: ErrorCodeException) {
-            logger.warn("errorCode Non-compliance {${e.message}}")
-            return false
-        }
-        if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {
-            val errorCodePrefix = "$errorCode".substring(0, 3)
-            val record =
-                storeDockingPlatformDao.getStoreDockingPlatformByErrorCode(dslContext, errorCodePrefix.toInt())
-            return record?.let {
-                storeDockingPlatformDao.getPlatformErrorCode(
-                    dslContext,
-                    record.platformCode,
-                    errorCode
-                ) != null
-            } ?: false
-        }
-        return storeErrorCodeInfoDao.getStoreErrorCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType,
-            errorCode = errorCode
-        ).isNotEmpty
     }
 
     companion object {
