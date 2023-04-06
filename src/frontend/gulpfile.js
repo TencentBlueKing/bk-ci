@@ -126,7 +126,7 @@ task('build', async () => {
         return acc
     }, '')
     console.log(envQueryStr)
-    await execAsync(`lerna run public:${env} ${scopeStr}`)
+    await execAsync(`lerna run public:master ${scopeStr}`)
 })
 
 task('generate-assets-json', () => {
