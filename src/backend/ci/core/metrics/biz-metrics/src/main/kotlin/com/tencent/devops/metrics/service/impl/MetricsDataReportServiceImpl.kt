@@ -56,7 +56,7 @@ import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
-import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -887,7 +887,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             }
             else -> return false
         }
-        return client.get(ServiceAtomResource::class).isComplianceErrorCode(
+        return client.get(ServiceStoreResource::class).isComplianceErrorCode(
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM,
             errorCode = errorCode.toInt(),

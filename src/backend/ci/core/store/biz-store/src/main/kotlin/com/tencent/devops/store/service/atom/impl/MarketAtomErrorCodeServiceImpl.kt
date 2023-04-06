@@ -132,7 +132,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
                 ) != null
             } ?: false
         }
-        return storeErrorCodeInfoDao.getAtomErrorCode(
+        return storeErrorCodeInfoDao.getStoreErrorCode(
             dslContext = dslContext,
             storeCode = storeCode,
             storeType = storeType,

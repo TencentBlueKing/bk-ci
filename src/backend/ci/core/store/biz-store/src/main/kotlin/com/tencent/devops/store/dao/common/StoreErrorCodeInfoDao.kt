@@ -66,7 +66,7 @@ class StoreErrorCodeInfoDao {
         }).execute()
     }
 
-    fun getAtomErrorCode(
+    fun getStoreErrorCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
