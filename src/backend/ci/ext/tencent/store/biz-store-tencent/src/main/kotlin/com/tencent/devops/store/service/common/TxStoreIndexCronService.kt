@@ -74,8 +74,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-//    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -196,8 +196,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-//        @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+        @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
