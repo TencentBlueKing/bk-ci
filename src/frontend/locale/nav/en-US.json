@@ -175,5 +175,7 @@
     "documentTitleMetrics": "BK_CI | Tencent BlueKing | Metrics",
     "technicalSupport": "Support",
     "communityForum": "Forum",
-    "ProductOfficialWebsite": "Official "
+    "ProductOfficialWebsite": "Official ",
+    "enableDisableProject": "Enable/Disable Project",
+    "createProject": "Create"
 }
