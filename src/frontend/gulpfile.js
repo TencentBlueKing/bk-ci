@@ -104,6 +104,10 @@ function getScopeStr (scope) {
     }
 }
 
+task('clean', () => {
+    return del(dist)
+})
+
 task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSvgJs('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
@@ -111,7 +115,6 @@ task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 task('build', async () => {
     const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
     fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
-    const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
     const envConfMap = {
         dist,
@@ -123,35 +126,16 @@ task('build', async () => {
         return acc
     }, '')
     console.log(envQueryStr)
-    return new Promise((resolve, reject) => {
-        require('child_process').exec(`lerna run public:${env} ${scopeStr}`, {
-            maxBuffer: 5000 * 1024,
-            env: {
-                ...process.env,
-                dist,
-                lsVersion
-            }
-        }, (err, res) => {
-            if (err) {
-                reject(err)
-                process.exit(1)
-            }
-            spinner.succeed('Finished building bk-ci frontend project')
-            resolve()
-        })
-    })
+    await execAsync(`lerna run public:master ${scopeStr}`)
 })
 
-task('clean', () => {
-    return del(dist)
-})
 task('generate-assets-json', () => {
     const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(path.join(__dirname, dist, BUNDLE_NAME), 'utf8')}`
     fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
     return src(`${dist}/assetsBundles.js`).pipe(hash()).pipe(dest(`${dist}/`))
 })
 
-task('injectAsset', parallel(['console', 'pipeline'].map(prefix => {
+task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
     const dir = path.join(dist, prefix)
     const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
     const fileName = `frontend#${prefix}#index.html`
@@ -174,5 +158,26 @@ task('injectAsset', parallel(['console', 'pipeline'].map(prefix => {
         .pipe(dest(dir))
 }
 )))
+
+async function execAsync (cmd) {
+    const spinner = new Ora('building bk-ci frontend project').start()
+    return new Promise((resolve, reject) => {
+        require('child_process').exec(cmd, {
+            maxBuffer: 5000 * 1024,
+            env: {
+                ...process.env,
+                dist,
+                lsVersion
+            }
+        }, (err, res) => {
+            if (err) {
+                reject(err)
+                process.exit(1)
+            }
+            spinner.succeed('Finished building bk-ci frontend project')
+            resolve()
+        })
+    })
+}
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'injectAsset')
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')
