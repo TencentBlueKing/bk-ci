@@ -1,5 +1,5 @@
 version: "v2.0"
-name: "前端部署Integration"
+name: "前端部署Integration(不要随便修改，以免没权限)"
 variables:
   modules: "nav,pipeline,vs,ticket,codelib,quality,turbo,atomstore,environment,experience,metrics,stream"
   ips: "11.185.145.49"
