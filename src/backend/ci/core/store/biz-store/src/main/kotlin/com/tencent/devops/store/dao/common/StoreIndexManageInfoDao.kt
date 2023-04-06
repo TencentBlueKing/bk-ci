@@ -278,11 +278,13 @@ class StoreIndexManageInfoDao {
     fun deleteStoreIndexResultByStoreCode(
         dslContext: DSLContext,
         indexCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ) {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
             dslContext.deleteFrom(this)
-                .where(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
                 .execute()
         }
     }
@@ -290,11 +292,13 @@ class StoreIndexManageInfoDao {
     fun deleteStoreIndexElementDetailByStoreCode(
         dslContext: DSLContext,
         indexCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ) {
         with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
             dslContext.deleteFrom(this)
-                .where(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
                 .execute()
         }
     }

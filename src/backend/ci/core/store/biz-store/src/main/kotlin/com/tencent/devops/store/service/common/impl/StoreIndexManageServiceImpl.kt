@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -288,12 +289,23 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     override fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
+        storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Result<Boolean> {
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(context, indexCode, storeCodes)
-            storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(context, indexCode, storeCodes)
+            storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(
+                dslContext = context,
+                indexCode = indexCode,
+                storeCodes = storeCodes,
+                storeType = storeType
+            )
+            storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(
+                dslContext = context,
+                indexCode = indexCode,
+                storeCodes = storeCodes,
+                storeType = storeType
+            )
         }
         return Result(true)
     }

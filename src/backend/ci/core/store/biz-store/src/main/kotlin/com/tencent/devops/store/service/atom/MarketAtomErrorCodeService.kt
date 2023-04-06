@@ -38,7 +38,6 @@ interface MarketAtomErrorCodeService {
      */
     fun createGeneralErrorCode(
         userId: String,
-        storeType: StoreTypeEnum,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean>
 }

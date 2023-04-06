@@ -42,9 +42,8 @@ class OpStoreErrorCodeResourceImpl @Autowired constructor(
 
     override fun createGeneralErrorCode(
         userId: String,
-        storeType: StoreTypeEnum,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean> {
-        return marketAtomErrorCodeService.createGeneralErrorCode(userId, storeType, errorCodeInfo)
+        return marketAtomErrorCodeService.createGeneralErrorCode(userId, errorCodeInfo)
     }
 }

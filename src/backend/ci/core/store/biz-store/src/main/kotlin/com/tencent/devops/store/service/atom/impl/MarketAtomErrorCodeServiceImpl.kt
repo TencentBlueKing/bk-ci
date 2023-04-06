@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -57,7 +58,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
 
     override fun createGeneralErrorCode(
         userId: String,
-        storeType: StoreTypeEnum,
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean> {
         // 检查错误码是否规范

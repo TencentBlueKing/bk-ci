@@ -55,9 +55,6 @@ interface OpStoreErrorCodeResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("组件类型", required = true)
-        @PathParam("storeType")
-        storeType: StoreTypeEnum,
         @ApiParam("插件通用错误码信息", required = true)
         errorCodeInfo: ErrorCodeInfo
     ): Result<Boolean>
