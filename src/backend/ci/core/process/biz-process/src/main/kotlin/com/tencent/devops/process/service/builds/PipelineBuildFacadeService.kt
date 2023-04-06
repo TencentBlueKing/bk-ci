@@ -2216,7 +2216,9 @@ class PipelineBuildFacadeService(
 
         // 添加错误码日志
         val realErrorType = ErrorType.getErrorType(simpleResult.error?.errorType)
-        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${realErrorType?.typeName}" }
+        simpleResult.error?.errorType.let { msg = "$msg \nerrorType: ${realErrorType?.typeName?.let { it ->
+            I18nUtil.getCodeLanMessage(it)
+        }}" }
         simpleResult.error?.errorCode.let { msg = "$msg \nerrorCode: ${simpleResult.error?.errorCode}" }
         simpleResult.error?.errorMessage.let { msg = "$msg \nerrorMsg: ${simpleResult.error?.errorMessage}" }
 
@@ -2254,7 +2256,7 @@ class PipelineBuildFacadeService(
                         actionType = ActionType.TERMINATE,
                         reason = msg,
                         errorCode = simpleResult.error?.errorCode ?: 0,
-                        errorTypeName = realErrorType?.typeName
+                        errorTypeName = realErrorType?.typeName?.let { I18nUtil.getCodeLanMessage(it) }
                     )
                 )
             }

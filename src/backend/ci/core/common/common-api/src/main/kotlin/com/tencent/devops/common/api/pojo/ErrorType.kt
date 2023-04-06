@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.api.pojo
 
-import org.intellij.lang.annotations.Language
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
 enum class ErrorType(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "errorType", reusePrefixFlag = false)
     val typeName: String,
     val num: Int
 ) {
@@ -56,10 +58,6 @@ enum class ErrorType(
                 2 -> THIRD_PARTY
                 else -> PLUGIN
             }
-        }
-
-        fun getTypeName(language: String): String {
-            return
         }
     }
 }
