@@ -2,6 +2,7 @@ package service
 
 import (
 	"common/logs"
+	"common/types"
 	"context"
 	"fmt"
 	"remoting/pkg/config"
@@ -73,10 +74,10 @@ func (cm *CommandManager) setTaskState(t *Command, newState remoteTypes.CommandS
 	})
 }
 
-// run 运行 postCreateCommand
+// run 运行 commandManager
 func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 	defer wg.Done()
-	defer logs.Debug("postCreateCommand shutdown")
+	defer logs.Debug("commandManager shutdown")
 
 	cm.init(ctx)
 	logs.Debugf("commands: %v", cm.commands)
@@ -147,6 +148,11 @@ func (cm *CommandManager) init(ctx context.Context) {
 		return
 	}
 
+	// add command
+	addCommand(cm, commands)
+}
+
+func addCommand(cm *CommandManager, commands *types.Commands) {
 	if cm.cfg.WorkSpace.WorkspaceFirstCreate == "true" && commands.PostCreateCommand != "" {
 		cm.commands = append(cm.commands, &Command{
 			CommandStatus: remoteTypes.CommandStatus{
@@ -157,6 +163,15 @@ func (cm *CommandManager) init(ctx context.Context) {
 			commandType: remoteTypes.PostCreateCommand,
 		})
 	}
+
+	cm.commands = append(cm.commands, &Command{
+		CommandStatus: remoteTypes.CommandStatus{
+			Id:    remoteTypes.PostStartCommand,
+			State: remoteTypes.CommandOpening,
+		},
+		command:     getCommand(commands.PostStartCommand),
+		commandType: remoteTypes.PostStartCommand,
+	})
 }
 
 func getCommand(command string) string {

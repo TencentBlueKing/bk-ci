@@ -18,4 +18,5 @@ type CommandType string
 
 const (
 	PostCreateCommand CommandType = "postCreateCommand"
+	PostStartCommand  CommandType = "postStartCommand"
 )

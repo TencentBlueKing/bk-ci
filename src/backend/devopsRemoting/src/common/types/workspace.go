@@ -18,6 +18,8 @@ type Vscode struct {
 type Commands struct {
 	// 工作空间创建后需要执行的命令
 	PostCreateCommand string `json:"postCreateCommand" yaml:"postCreateCommand"`
+	// 工作空间启动时需要执行的命令
+	PostStartCommand string `json:"postStartCommand" yaml:"postStartCommand"`
 }
 
 type Port struct {
