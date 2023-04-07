@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -68,6 +69,13 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
+import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
+import com.tencent.devops.common.archive.pojo.replica.ReplicaType
+import com.tencent.devops.common.archive.pojo.replica.objects.PathConstraint
+import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
+import com.tencent.devops.common.archive.pojo.replica.setting.ConflictStrategy
+import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -80,6 +88,7 @@ import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
@@ -92,6 +101,7 @@ import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
+import java.util.UUID
 import javax.ws.rs.NotFoundException
 
 @Component
@@ -1096,6 +1106,40 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
+    fun createReplicaTask(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        taskType: ReplicaType = ReplicaType.EDGE_PULL
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/replication/api/task/edge/create"
+        val taskCreateRequest = ReplicaTaskCreateRequest(
+            name = "$fullPath-${UUID.randomUUID()}",
+            localProjectId = projectId,
+            replicaObjectType = ReplicaObjectType.PATH,
+            replicaTaskObjects = listOf(
+                ReplicaObjectInfo(
+                    localRepoName = repoName,
+                    remoteProjectId = projectId,
+                    remoteRepoName = repoName,
+                    repoType = RepositoryType.GENERIC,
+                    packageConstraints = null,
+                    pathConstraints = listOf(PathConstraint(fullPath))
+                )
+            ),
+            replicaType = taskType,
+            setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
+            remoteClusterIds = emptySet()
+        )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
+    }
+
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
@@ -1157,6 +1201,8 @@ class BkRepoClient constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
+        private val JSON_MEDIA_TYPE = "application/json; charset=utf-8".toMediaTypeOrNull()
+
         private const val METADATA_PREFIX = "X-BKREPO-META-"
 
         private const val BK_REPO_UID = "X-BKREPO-UID"
@@ -1166,7 +1212,6 @@ class BkRepoClient constructor(
         private const val ERROR_REPO_EXISTED = 251007
 
         private const val BKREPO_REALM = "bkrepo"
-
         const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
         const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
     }
