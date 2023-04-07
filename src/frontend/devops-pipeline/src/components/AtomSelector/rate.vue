@@ -54,8 +54,6 @@
 </script>
 
 <style lang="scss" scoped>
-    @import '@/assets/scss/conf.scss';
-
     .rate-stars {
         .isEdit {
             cursor: pointer;
@@ -69,9 +67,9 @@
             float: left;
             margin-right: 3px;
             enable-background: new 0 0 64 64;
-            fill: $darkWhite;
+            fill: #c5c7d1;
             &.yellow {
-                fill: $starYellow;
+                fill: #ffca2b;
             }
             &:last-child {
                 margin-right: 0;
