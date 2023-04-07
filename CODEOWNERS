@@ -3,9 +3,9 @@
 /CODEOWNERS @irwinsun @zanyzhao @stubenhuang 
 /docs @zanyzhao @irwinsun @stubenhuang 
 /*.md @zanyzhao @irwinsun
-/scripts @Fighterliu @irwinsun @stubenhuang
+/scripts @fighter-liu @irwinsun @stubenhuang
 /src/agent @irwinsun @tangruotian
 /src/gateway @stubenhuang @irwinsun
 /src/frontend @lockiechen @zhanxu33
 /support-files @irwinsun @mingshewhe @stubenhuang
-/src/backend/ci @irwinsun @mingshewhe @stubenhuang @carlyin0801 @royalhuang @randychen @tangruotian
+/src/backend/ci @irwinsun @mingshewhe @stubenhuang @carlyin0801 @royalhuang @randychen2046 @tangruotian
