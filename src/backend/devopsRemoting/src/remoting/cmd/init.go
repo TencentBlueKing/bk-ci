@@ -60,6 +60,7 @@ func newCommandInit() *cobra.Command {
 				return
 			case <-sigInput:
 				// 收到终止信号后传递给devopsRemoting并等待他结束
+				logs.Debug("recevied siginput, terminal all process")
 				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 				defer cancel()
 				shutDownLog := newShutdownLogger()
@@ -156,7 +157,7 @@ func (s *shutdownLogger) terminate(ctx context.Context, pid int) {
 	err = process.Terminate(ctx, pid)
 	if err != nil {
 		if err == process.ErrKilled {
-			s.write("terminate process not finish killed")
+			s.write(fmt.Sprintf("terminate process %s with pid %d not finish killed", stat.Comm, pid))
 		} else {
 			s.write(fmt.Sprintf("terminate main process error: %s", err.Error()))
 		}
