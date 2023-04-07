@@ -406,8 +406,9 @@ class StageBuildRecordService(
                     pipelineId = pipelineId, buildId = buildId,
                     executeCount = executeCount, stageId = stageId
                 )
-                timeCost = recordStage.generateStageTimeCost(recordContainers)
-                stageVar[Stage::timeCost.name] = timeCost
+                recordStage.generateStageTimeCost(recordContainers)?.let {
+                    stageVar[Stage::timeCost.name] = it
+                }
             }
 //            allStageStatus = buildStatus?.let {
 //                fetchHistoryStageStatus(
