@@ -146,6 +146,7 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
         ], {
             read: false
         }), {
+            allowEmpty: true,
             ignorePath: dist,
             addRootSlash: false,
             addPrefix: '__BK_CI_PUBLIC_PATH__'
