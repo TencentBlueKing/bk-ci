@@ -30,6 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -37,6 +38,7 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
@@ -104,5 +106,23 @@ interface ServiceStoreResource {
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
         userId: String
+    ): Result<Boolean>
+
+    @ApiOperation("判断错误码是否合规")
+    @POST
+    @Path("/codes/{storeCode}/errorCode/compliance")
+    fun isComplianceErrorCode(
+        @ApiParam("标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("错误码", required = true)
+        @QueryParam("errorCode")
+        errorCode: Int,
+        @ApiParam("错误码类型", required = true)
+        @QueryParam("errorCodeType")
+        errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>
 }

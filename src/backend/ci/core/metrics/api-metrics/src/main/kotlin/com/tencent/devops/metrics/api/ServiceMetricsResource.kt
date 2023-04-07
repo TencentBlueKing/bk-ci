@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -87,4 +89,19 @@ interface ServiceMetricsResource {
         @QueryParam("endTime")
         endTime: String?
     ): Result<ThirdPlatformOverviewInfoVO>
+
+    @ApiOperation("查询插件合规率信息")
+    @Path("/compliance_atom")
+    @POST
+    fun queryAtomComplianceInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(required = true)
+        userId: String,
+        @ApiParam("插件code", required = true)
+        @QueryParam("atomCode")
+        atomCode: String,
+        @ApiParam("查询区间视图", required = true)
+        queryIntervalVO: QueryIntervalVO
+    ): Result<ComplianceInfoDO?>
 }
