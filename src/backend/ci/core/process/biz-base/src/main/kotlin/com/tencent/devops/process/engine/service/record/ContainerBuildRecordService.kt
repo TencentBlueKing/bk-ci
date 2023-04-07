@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "MagicNumber", "LongMethod")
+@Suppress("LongParameterList", "MagicNumber", "LongMethod", "ComplexMethod")
 @Service
 class ContainerBuildRecordService(
     private val dslContext: DSLContext,
