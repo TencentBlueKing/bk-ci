@@ -151,7 +151,7 @@ func (s *shutdownLogger) terminate(ctx context.Context, pid int) {
 		// 僵尸进程
 		return
 	} else {
-		s.write(fmt.Sprintf("terminate process %s with pid %d (state: %s, cmdlind: %s).", stat.Comm, pid, stat.State, fmt.Sprint(proc.CmdLine())))
+		s.write(fmt.Sprintf("terminate process %s with pid %d (state: %s, cmdlind: %s). at %s", stat.Comm, pid, stat.State, fmt.Sprint(proc.CmdLine()), time.Now().Format("2006-01-02 15:04:05")))
 	}
 	err = process.Terminate(ctx, pid)
 	if err != nil {
