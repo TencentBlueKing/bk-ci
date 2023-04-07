@@ -39,6 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
+import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -61,7 +62,7 @@ class StageBuildRecordService(
     private val dslContext: DSLContext,
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
-    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val recordTaskDao: BuildRecordTaskDao,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineBuildDao: PipelineBuildDao,
     recordModelService: PipelineRecordModelService,
@@ -135,6 +136,10 @@ class StageBuildRecordService(
             cancelUser = null, operation = "stageSkip#$stageId"
         ) {
             recordContainerDao.updateRecordStatus(
+                dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, stageId = stageId, buildStatus = BuildStatus.SKIP
+            )
+            recordTaskDao.updateRecordStatus(
                 dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 executeCount = executeCount, stageId = stageId, buildStatus = BuildStatus.SKIP
             )
