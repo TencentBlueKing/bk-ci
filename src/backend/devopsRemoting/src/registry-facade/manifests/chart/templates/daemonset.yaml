@@ -43,10 +43,8 @@ spec:
             readOnly: true
           - name: {{ .Release.Name }}-cache
             mountPath: /data/workspace/registry-facade/cache
-          {{- if .Values.registry.dockerAuth }}  
           - name: {{ .Release.Name }}-pull-secret
             mountPath: /data/workspace/registry-facade/pull-secret
-          {{- end }}  
           - name: {{ .Values.registry.wsproxyName }}-tls-certs
             mountPath: /data/workspace/registry-facade/tls
             readOnly: true  
@@ -77,14 +75,12 @@ spec:
           items:
             - key: run.json
               path: run.json
-      {{- if .Values.registry.dockerAuth }}        
       - name: {{ .Release.Name }}-pull-secret
         secret:
           secretName: {{ .Release.Name }}-pull-secret
           items:
             - key: .dockerconfigjson
-              path: pull-secret.json
-      {{- end }}        
+              path: pull-secret.json     
       - name: {{ .Values.registry.wsproxyName }}-tls-certs
         configMap:
           name: {{ .Values.registry.wsproxyName }}-tls-certs

@@ -11,9 +11,7 @@ metadata:
 data:
   run.json: |-
     {
-      {{- if .Values.registry.dockerAuth }}
       "dockerAuth": "/data/workspace/registry-facade/pull-secret/pull-secret.json",
-      {{- end }}
       "registry": {
         "port": 9000,
         "prefix": "remote",
