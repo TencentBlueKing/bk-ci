@@ -61,26 +61,26 @@ func newCommandInit() *cobra.Command {
 			case <-sigInput:
 				// 收到终止信号后传递给devopsRemoting并等待他结束
 				logs.Debug("recevied siginput, terminal all process")
-				ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
-				defer cancel()
-				shutDownLog := newShutdownLogger()
-				defer shutDownLog.Close()
-				shutDownLog.write("shut down all processes")
+				// ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
+				// defer cancel()
+				// shutDownLog := newShutdownLogger()
+				// defer shutDownLog.Close()
+				// shutDownLog.write("shut down all processes")
 
-				terminationDone := make(chan struct{})
-				go func() {
-					defer close(terminationDone)
-					shutDownLog.terminate(ctx, cmd.Process.Pid)
-					terminateAllOtherProcesses(ctx, shutDownLog)
-				}()
+				// terminationDone := make(chan struct{})
+				// go func() {
+				// 	defer close(terminationDone)
+				// 	shutDownLog.terminate(ctx, cmd.Process.Pid)
+				// 	terminateAllOtherProcesses(ctx, shutDownLog)
+				// }()
 
-				select {
-				case <-ctx.Done():
-					// 多余提供一些时间给被终止进程
-					time.Sleep(time.Millisecond * 500)
-				case <-terminationDone:
-				}
-				shutDownLog.write("shut down all processes done")
+				// select {
+				// case <-ctx.Done():
+				// 	// 多余提供一些时间给被终止进程
+				// 	time.Sleep(time.Millisecond * 500)
+				// case <-terminationDone:
+				// }
+				// shutDownLog.write("shut down all processes done")
 			}
 		},
 	}
