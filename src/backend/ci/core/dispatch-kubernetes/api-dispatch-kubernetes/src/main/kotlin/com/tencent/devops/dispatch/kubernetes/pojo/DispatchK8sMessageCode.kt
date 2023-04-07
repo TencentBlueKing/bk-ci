@@ -45,15 +45,15 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  *
  */
 object DispatchK8sMessageCode {
-    // 从2129201起
-    const val START_KUBERNETES_BUILD_CONTAINER_FAIL = "2129201"// 启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
-    const val KUBERNETES_BUILD_ERROR = "2129202"// Kubernetes构建异常，请联系蓝盾助手排查，异常信息 -
-    const val START_BCS_BUILD_CONTAINER_FAIL = "2129203"// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
-    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2129204"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
-    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2129205"// 获取构建机详情接口超时
-    const val MACHINE_INTERFACE_ERROR = "2129207" // 操作构建机接口异常
-    const val TROUBLE_SHOOTING = "2129207"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
-    const val NO_EMPTY_BUILDER = "2129208"// BCS构建机启动失败，没有空闲的构建机
-    const val MACHINE_INTERFACE_RETURN_FAIL = "2129209"// 操作构建机接口返回失败
-    const val MACHINE_INTERFACE_TIMEOUT = "2129210"// 操作构建机接口超时
+    // 从2126201起
+    const val START_KUBERNETES_BUILD_CONTAINER_FAIL = "2126201"// 启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+    const val KUBERNETES_BUILD_ERROR = "2126202"// Kubernetes构建异常，请联系蓝盾助手排查，异常信息 -
+    const val START_BCS_BUILD_CONTAINER_FAIL = "2126203"// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
+    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126204"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126205"// 获取构建机详情接口超时
+    const val MACHINE_INTERFACE_ERROR = "2126207" // 操作构建机接口异常
+    const val TROUBLE_SHOOTING = "2126207"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
+    const val NO_EMPTY_BUILDER = "2126208"// BCS构建机启动失败，没有空闲的构建机
+    const val MACHINE_INTERFACE_RETURN_FAIL = "2126209"// 操作构建机接口返回失败
+    const val MACHINE_INTERFACE_TIMEOUT = "2126210"// 操作构建机接口超时
 }
