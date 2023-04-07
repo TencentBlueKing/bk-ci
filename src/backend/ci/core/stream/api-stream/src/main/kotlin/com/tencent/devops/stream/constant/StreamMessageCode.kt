@@ -36,7 +36,7 @@ package com.tencent.devops.stream.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26: stream 27：buildless 28: lambda 29: dispatcher-kubernetes  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -46,15 +46,15 @@ package com.tencent.devops.stream.constant
  */
 
 object StreamMessageCode {
-    // 从2126101起
-    const val BRANCH_INFO_ACCESS_DENIED = "2126101" // 无权限获取分支信息
-    const val PIPELINE_NOT_FOUND_OR_DELETED = "2126102" // 该流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2126103" // 构建任务不存在，无法重试
-    const val USER_NOT_AUTHORIZED = "2126104" // 用户[{0}]尚未进行OAUTH授权，请先授权。
-    const val STARTUP_CONFIG_MISSING = "2126105" // 启动配置缺少 {0}
-    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2126106" // ci开启人{0} 无当前项目执行权限, 请重新授权
-    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2126107" // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
-    const val TIMER_PARAM_TOO_LONG = "2126108" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
-    const val PARAM_INCORRECT = "2126109" // 蓝盾项目ID {0} 不正确
-    const val PROJECT_NOT_OPEN_STREAM = "2126110" // 项目未开启Stream，无法查询
+    // 从2129101起
+    const val BRANCH_INFO_ACCESS_DENIED = "2129101" // 无权限获取分支信息
+    const val PIPELINE_NOT_FOUND_OR_DELETED = "2129102" // 该流水线不存在或已删除，如有疑问请联系蓝盾助手
+    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2129103" // 构建任务不存在，无法重试
+    const val USER_NOT_AUTHORIZED = "2129104" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val STARTUP_CONFIG_MISSING = "2129105" // 启动配置缺少 {0}
+    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2129106" // ci开启人{0} 无当前项目执行权限, 请重新授权
+    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129107" // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
+    const val TIMER_PARAM_TOO_LONG = "2129108" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val PARAM_INCORRECT = "2129109" // 蓝盾项目ID {0} 不正确
+    const val PROJECT_NOT_OPEN_STREAM = "2129110" // 项目未开启Stream，无法查询
 }
