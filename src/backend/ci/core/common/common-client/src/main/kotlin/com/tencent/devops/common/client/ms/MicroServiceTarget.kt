@@ -63,7 +63,7 @@ class MicroServiceTarget<T> constructor(
             })
 
     private val errorInfo =
-        MessageUtil.generateResponseDataObject<String>(
+        I18nUtil.generateResponseDataObject<String>(
             messageCode = ERROR_SERVICE_NO_FOUND,
             params = arrayOf(serviceName),
             language = DEFAULT_LOCALE_LANGUAGE

@@ -154,7 +154,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         )
         val callChannelCode = channelCode ?: ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                     params = arrayOf(buildId),
                     language = I18nUtil.getLanguage(userId)
@@ -171,7 +171,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         try {
             checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
         } catch (e: OperationException) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
                 language = I18nUtil.getLanguage(userId)
             )

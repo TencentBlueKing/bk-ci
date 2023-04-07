@@ -148,14 +148,14 @@ class OpTemplateServiceImpl @Autowired constructor(
         logger.info("approveTemplate userId is :$userId,templateId is :$templateId,approveReq is :$approveReq")
         // 判断模版是否存在
         val template = marketTemplateDao.getTemplate(dslContext, templateId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId),
                 language = I18nUtil.getLanguage(userId)
             )
         val oldStatus = template.templateStatus
         if (oldStatus != TemplateStatusEnum.AUDITING.status.toByte()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId),
                 language = I18nUtil.getLanguage(userId)
@@ -163,7 +163,7 @@ class OpTemplateServiceImpl @Autowired constructor(
         }
         val approveResult = approveReq.result
         if (approveResult != PASS && approveResult != REJECT) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveResult),
                 language = I18nUtil.getLanguage(userId)

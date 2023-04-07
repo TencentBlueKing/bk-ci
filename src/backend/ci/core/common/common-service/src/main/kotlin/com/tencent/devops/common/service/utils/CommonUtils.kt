@@ -148,7 +148,7 @@ object CommonUtils {
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = commonConfig.devopsDefaultLocaleLanguage
                 )

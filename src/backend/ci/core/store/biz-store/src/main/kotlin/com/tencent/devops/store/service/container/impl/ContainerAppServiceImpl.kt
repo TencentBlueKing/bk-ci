@@ -173,7 +173,7 @@ class ContainerAppServiceImpl @Autowired constructor(
         // 判断编译环境名称和操作系统组合是否存在系统
         val count = containerAppsDao.countByNameAndOs(dslContext, containerApp.name, containerApp.os)
         if (count > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(containerApp.name + "+" + containerApp.os),
                 data = false,
@@ -215,7 +215,7 @@ class ContainerAppServiceImpl @Autowired constructor(
             if (null != containerAppInfoRecord &&
                 name != containerAppInfoRecord.name &&
                 os != containerAppInfoRecord.os) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf("$name+$os"),
                     data = false

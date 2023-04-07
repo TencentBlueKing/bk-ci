@@ -30,13 +30,10 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
-import com.tencent.devops.common.api.pojo.Result
-import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
 import java.text.MessageFormat
-import java.util.Locale
-import java.util.Properties
-import java.util.ResourceBundle
+import java.util.*
+import org.slf4j.LoggerFactory
 
 object MessageUtil {
 
@@ -329,30 +326,5 @@ object MessageUtil {
             }
             bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = itemEntity, fieldPath = newFieldPath))
         }
-    }
-
-    /**
-     * 生成请求响应对象
-     * @param messageCode 状态码
-     * @param params 替换状态码描述信息占位符的参数数组
-     * @param data 数据对象
-     * @return Result响应结果对象
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T> generateResponseDataObject(
-        messageCode: String,
-        params: Array<String>? = null,
-        data: T? = null,
-        language: String? = null,
-        defaultMessage: String? = null
-    ): Result<T> {
-        val message = getMessageByLocale(
-            messageCode = messageCode,
-            language = language,
-            params = params,
-            defaultMessage = defaultMessage
-        )
-        // 生成Result对象
-        return Result(messageCode.toInt(), message, data)
     }
 }

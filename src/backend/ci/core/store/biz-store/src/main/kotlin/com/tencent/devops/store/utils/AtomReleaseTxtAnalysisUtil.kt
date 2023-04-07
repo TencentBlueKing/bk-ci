@@ -184,7 +184,7 @@ object AtomReleaseTxtAnalysisUtil {
             matcher.group(2).replace("\"", "")
         } else null
         return if (relativePath.isNullOrBlank()) {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                 arrayOf("releaseInfo.logoUrl"),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -211,7 +211,7 @@ object AtomReleaseTxtAnalysisUtil {
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )

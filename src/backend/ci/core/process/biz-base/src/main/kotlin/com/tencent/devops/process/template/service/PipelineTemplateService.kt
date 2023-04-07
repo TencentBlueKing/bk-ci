@@ -76,7 +76,7 @@ class PipelineTemplateService @Autowired constructor(
     fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
         logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )

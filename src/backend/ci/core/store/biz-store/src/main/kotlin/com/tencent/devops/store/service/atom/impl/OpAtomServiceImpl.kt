@@ -281,7 +281,7 @@ class OpAtomServiceImpl @Autowired constructor(
     override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
         // 判断插件是否存在
         val atom = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
                 language = I18nUtil.getLanguage(userId)
@@ -289,7 +289,7 @@ class OpAtomServiceImpl @Autowired constructor(
 
         val oldStatus = atom.atomStatus
         if (oldStatus != AtomStatusEnum.AUDITING.status.toByte()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
                 language = I18nUtil.getLanguage(userId)
@@ -297,7 +297,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
 
         if (approveReq.result != PASS && approveReq.result != REJECT) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveReq.result),
                 language = I18nUtil.getLanguage(userId)
@@ -380,7 +380,7 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
                 params = arrayOf(TASK_JSON_NAME),
                 language = I18nUtil.getLanguage(userId)
@@ -395,7 +395,7 @@ class OpAtomServiceImpl @Autowired constructor(
             val releaseInfoMap = taskJsonMap["releaseInfo"]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
                 params = arrayOf("releaseInfo"),
                 language = I18nUtil.getLanguage(userId)

@@ -61,7 +61,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         logger.info("addAtomMember params:$userId|$storeMemberReq|$storeType|$collaborationFlag|$sendNotify")
         val atomCode = storeMemberReq.storeCode
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
@@ -73,7 +73,7 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -113,13 +113,13 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
     ): Result<Boolean> {
         logger.info("deleteAtomMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         val memberRecord = storeMemberDao.getById(dslContext, id)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 language = I18nUtil.getLanguage(userId)

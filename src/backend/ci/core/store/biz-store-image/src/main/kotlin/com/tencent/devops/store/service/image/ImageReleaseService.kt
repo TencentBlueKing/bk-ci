@@ -184,7 +184,7 @@ abstract class ImageReleaseService {
         val codeCount = imageDao.countByCode(dslContext, imageCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(imageCode),
                 data = null,
@@ -196,7 +196,7 @@ abstract class ImageReleaseService {
         val nameCount = imageDao.countByName(dslContext, imageName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(imageName),
                 data = null,
@@ -212,7 +212,7 @@ abstract class ImageReleaseService {
                     .verifyUserProjectPermission(accessToken, projectCode, userId).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -220,7 +220,7 @@ abstract class ImageReleaseService {
             logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PERMISSION_DENIED,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -307,7 +307,7 @@ abstract class ImageReleaseService {
         val imageTag = marketImageUpdateRequest.imageTag
         // 判断镜像tag是否为latest
         if (checkLatest && imageTag == LATEST) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageTag),
                 language = I18nUtil.getLanguage(userId)
@@ -315,7 +315,7 @@ abstract class ImageReleaseService {
         }
         val imageCount = imageDao.countByCode(dslContext, imageCode)
         if (imageCount < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
@@ -323,7 +323,7 @@ abstract class ImageReleaseService {
         }
         val imageName = marketImageUpdateRequest.imageName
         // 判断更新的名称是否已存在
-        if (validateNameIsExist(imageCode, imageName)) return MessageUtil.generateResponseDataObject(
+        if (validateNameIsExist(imageCode, imageName)) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
             params = arrayOf(imageName),
             language = I18nUtil.getLanguage(userId)
@@ -363,7 +363,7 @@ abstract class ImageReleaseService {
                 val publicImageListResp = listPublicImagesResult.data
                 if ((null == publicImageListResp ||
                         publicImageListResp.imageList.map { it.repo }.contains(imageRepoName))) {
-                    return MessageUtil.generateResponseDataObject(
+                    return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PERMISSION_DENIED,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -379,7 +379,7 @@ abstract class ImageReleaseService {
             imageTag = imageTag
         ) == 0
         if (!relFlag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(imageTag),
                 language = I18nUtil.getLanguage(userId)
@@ -418,7 +418,7 @@ abstract class ImageReleaseService {
                 )
             }
         if (!requireVersionList.contains(version)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_INVALID,
                 params = arrayOf(version, requireVersionList.toString()),
                 language = I18nUtil.getLanguage(userId)
@@ -436,7 +436,7 @@ abstract class ImageReleaseService {
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
         if (!imageFinalStatusList.contains(imageStatus)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_IMAGE_VERSION_IS_NOT_FINISH,
                 params = arrayOf(imageRecord.imageName, imageRecord.version),
                 language = I18nUtil.getLanguage(userId)
@@ -511,7 +511,7 @@ abstract class ImageReleaseService {
         val status = ImageStatusEnum.CHECKING.status.toByte()
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status, validateUserFlag)
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code!!,
                 params = params,
                 data = false,
@@ -531,7 +531,7 @@ abstract class ImageReleaseService {
     ): Result<Boolean> {
         logger.info("passTest params:[$userId|$imageId|$validateUserFlag]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
                 data = false,
@@ -550,7 +550,7 @@ abstract class ImageReleaseService {
             isNormalUpgrade = isNormalUpgrade
         )
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code!!,
                 params = params,
                 data = false,
@@ -811,7 +811,7 @@ abstract class ImageReleaseService {
         logger.info("getProcessInfo params: [$userId|$imageId]")
         val record = imageDao.getImage(dslContext, imageId)
         if (null == record) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
                 language = I18nUtil.getLanguage(userId)
@@ -852,7 +852,7 @@ abstract class ImageReleaseService {
         // 判断用户是否有权限
         val (checkResult, code, params) = checkImageVersionOptRight(userId, imageId, status)
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code!!,
                 params = params,
                 data = false,
@@ -1004,21 +1004,21 @@ abstract class ImageReleaseService {
                 storeType = StoreTypeEnum.IMAGE.type.toByte()
             ) || !validateUserFlag)
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
         }
         if (!version.isNullOrEmpty()) {
             val imageRecord = imageDao.getImage(dslContext, validImageCode, validVersion!!)
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(validImageCode, validVersion),
                     data = false,
                     language = I18nUtil.getLanguage(userId)
                 )
             if (ImageStatusEnum.RELEASED.status.toByte() != imageRecord.imageStatus) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(validImageCode, validVersion),
                     data = false,

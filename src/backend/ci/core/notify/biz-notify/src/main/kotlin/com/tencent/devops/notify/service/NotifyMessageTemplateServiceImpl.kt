@@ -241,7 +241,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             }
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 if (it.emailType == null || it.bodyFormat == null) {
-                    return MessageUtil.generateResponseDataObject(
+                    return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf("${it.bodyFormat} or ${it.emailType}"),
                         data = false,
@@ -254,7 +254,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
         // 添加的信息中的模板类型是非法数据
         if (notifyTypeScopeSet.size == 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("notifyType"),
                 data = false,
@@ -272,7 +272,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             templateName = addNotifyMessageTemplateRequest.templateName
         )
         if (null != commonTplByCode || null != commonTplByName) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("Code/Name"),
                 data = false,
@@ -345,7 +345,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasEmail = true
                 notifyTypeScopeSet.add(NotifyType.EMAIL.name)
             } else if (it.notifyTypeScope.contains(NotifyType.EMAIL.name) && hasEmail) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
                     data = false,
@@ -357,7 +357,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasRtx = true
                 notifyTypeScopeSet.add(NotifyType.RTX.name)
             } else if (it.notifyTypeScope.contains(NotifyType.RTX.name) && hasRtx) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
                     data = false,
@@ -369,7 +369,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasWechat = true
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             } else if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && hasWechat) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
                     data = false,
@@ -379,7 +379,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         }
 
         if (!updateOtherNotifyMessageTemplate(notifyMessageTemplateRequest, notifyTypeScopeSet)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("notifyType"),
                 data = false,
@@ -544,7 +544,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, templateCode)
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(templateCode),
                     data = false
@@ -702,7 +702,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 1.查出消息模板
         val commonNotifyMessageTemplateRecord =
             commonNotifyMessageTemplateDao.getCommonNotifyMessageTemplateByCode(dslContext, request.templateCode)
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf(request.templateCode),
                     data = null

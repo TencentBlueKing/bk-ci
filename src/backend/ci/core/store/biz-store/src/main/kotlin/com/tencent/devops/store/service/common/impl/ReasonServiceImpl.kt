@@ -102,7 +102,7 @@ class ReasonServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("delete reason, $userId | $id")
         val reason = reasonDao.get(dslContext, id)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 language = I18nUtil.getLanguage(userId)
@@ -110,7 +110,7 @@ class ReasonServiceImpl @Autowired constructor(
         // 若已被使用，不允许删除
         val reasonContent = reason.content
         if (reasonRelDao.isUsed(dslContext, id)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_UNINSTALL_REASON_USED,
                 params = arrayOf(reasonContent),
                 language = I18nUtil.getLanguage(userId),

@@ -77,7 +77,7 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -98,7 +98,7 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -116,7 +116,7 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -134,7 +134,7 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )

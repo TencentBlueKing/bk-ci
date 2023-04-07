@@ -44,7 +44,7 @@ import javax.ws.rs.ext.ExceptionMapper
 
     override fun toResponse(exception: ErrorCodeException): Response {
         logger.warn("Failed with errorCode client exception:$exception")
-        val errorResult = MessageUtil.generateResponseDataObject(
+        val errorResult = I18nUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,

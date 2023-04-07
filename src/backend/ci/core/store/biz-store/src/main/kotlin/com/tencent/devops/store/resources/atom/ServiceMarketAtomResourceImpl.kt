@@ -83,7 +83,7 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
     ): Result<Page<AtomPipeline>> {
         // 提供给openApi使用，暂时先使用username来验证权限，等后续openApi层统一加上具体资源访问权限后再去掉
         if (!atomMemberService.isStoreMember(username, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(username)

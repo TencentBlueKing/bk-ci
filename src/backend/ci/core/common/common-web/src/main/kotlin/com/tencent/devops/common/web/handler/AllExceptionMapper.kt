@@ -52,7 +52,7 @@ class AllExceptionMapper : ExceptionMapper<Exception> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            MessageUtil.generateResponseDataObject<Any>(
+            I18nUtil.generateResponseDataObject<Any>(
                 messageCode = ERROR_REST_EXCEPTION_COMMON_TIP,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ).message

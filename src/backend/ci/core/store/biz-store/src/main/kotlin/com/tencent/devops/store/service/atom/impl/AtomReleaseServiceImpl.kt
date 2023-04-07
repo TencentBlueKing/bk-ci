@@ -185,7 +185,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val codeCount = atomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -196,7 +196,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val nameCount = atomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -305,7 +305,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 判断插件是不是首次创建版本
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
@@ -326,7 +326,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomCode = atomCode,
                 atomName = convertUpdateRequest.name
             )
-        ) return MessageUtil.generateResponseDataObject(
+        ) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
             params = arrayOf(convertUpdateRequest.name),
             language = I18nUtil.getLanguage(userId)
@@ -349,7 +349,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             branch = branch
         )
         if (getAtomConfResult.errorCode != "0") {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
                 params = getAtomConfResult.errorParams,
                 language = I18nUtil.getLanguage(userId)
@@ -411,14 +411,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
             logger.info("quality.json not found , skip...")
         } else if (getAtomQualityResult.errorCode != "0") {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomQualityResult.errorCode,
                 params = getAtomQualityResult.errorParams,
                 language = I18nUtil.getLanguage(userId)
             )
         }
 
-        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return MessageUtil.generateResponseDataObject(
+        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
             messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
             params = arrayOf(KEY_EXECUTION),
             language = I18nUtil.getLanguage(userId)
@@ -919,7 +919,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
         return if (null == record) {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
                 language = I18nUtil.getLanguage(userId)
@@ -1013,7 +1013,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
         val info = logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
                 data = false,

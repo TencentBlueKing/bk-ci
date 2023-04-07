@@ -252,7 +252,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -275,7 +275,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|$containerId|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -305,7 +305,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
         if (count > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(name),
                 data = false,
@@ -338,7 +338,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             // 判断更新的容器名称是否属于自已
             val pipelineContainer = containerDao.getPipelineContainer(dslContext, id)
             if (null != pipelineContainer && name != pipelineContainer.name) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(name),
                     data = false

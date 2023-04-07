@@ -53,13 +53,13 @@ enum class NodeStatus(
     UNKNOWN("unknown");// 未知
 
     companion object {
-        fun getStatusName(status: String): String {
+        fun getStatusName(status: String, language: String): String {
             values().forEach {
                 if (it.name == status) {
-                    return MessageUtil.getMessageByLocale(it.statusName)
+                    return MessageUtil.getMessageByLocale(messageCode = it.statusName, language = language)
                 }
             }
-            return MessageUtil.getMessageByLocale(UNKNOWN.statusName)
+            return MessageUtil.getMessageByLocale(messageCode = UNKNOWN.statusName, language = language)
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
@@ -105,9 +105,9 @@ enum class NodeStatus(
 //            }
         }
 
-        fun parseByStatusName(statusName: String): NodeStatus {
+        fun parseByStatusName(statusName: String, language: String): NodeStatus {
             values().forEach {
-                if (MessageUtil.getMessageByLocale(it.statusName) == statusName) {
+                if (MessageUtil.getMessageByLocale(messageCode = it.statusName, language = language) == statusName) {
                     return it
                 }
             }

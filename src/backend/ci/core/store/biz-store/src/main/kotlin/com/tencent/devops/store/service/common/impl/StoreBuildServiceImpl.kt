@@ -62,7 +62,7 @@ class StoreBuildServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult params:[$pipelineId|$buildId|$storeBuildResultRequest]")
         // 查看该次构建流水线属于研发商店哪个组件类型
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(pipelineId),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

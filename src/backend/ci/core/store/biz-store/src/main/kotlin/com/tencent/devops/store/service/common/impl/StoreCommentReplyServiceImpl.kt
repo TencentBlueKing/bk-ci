@@ -127,7 +127,7 @@ class StoreCommentReplyServiceImpl @Autowired constructor() : StoreCommentReplyS
         storeCommentReplyRequest: StoreCommentReplyRequest
     ): Result<StoreCommentReplyInfo?> {
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
-        ?: return MessageUtil.generateResponseDataObject(
+        ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(commentId),
             language = I18nUtil.getLanguage(userId)

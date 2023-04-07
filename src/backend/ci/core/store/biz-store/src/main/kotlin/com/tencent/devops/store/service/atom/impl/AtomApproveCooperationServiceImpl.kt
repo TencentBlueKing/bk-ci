@@ -81,7 +81,7 @@ class AtomApproveCooperationServiceImpl @Autowired constructor(
         logger.info("approveStoreSpecifyBusInfo params: [$userId|$storeType|$storeCode|$storeApproveRequest]")
         val atomApproveRelRecord = atomApproveRelDao.getByApproveId(dslContext, approveId)
         if (null == atomApproveRelRecord) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveId),
                 data = false,

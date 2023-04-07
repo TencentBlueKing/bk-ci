@@ -170,7 +170,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
         if (!requireVersionList.contains(version)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
                 params = arrayOf(version, requireVersionList.toString()),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -185,7 +185,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 AtomStatusEnum.UNDERCARRIAGED.status.toByte()
             )
             if (!atomFinalStatusList.contains(atomStatus)) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
                     params = arrayOf(atomRecord.name, atomRecord.version),
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

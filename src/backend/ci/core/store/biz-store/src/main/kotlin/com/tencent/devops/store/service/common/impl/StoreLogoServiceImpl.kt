@@ -101,7 +101,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_LOGO_TYPE_IS_NOT_SUPPORT,
                 params = arrayOf(fileType, allowUploadLogoTypes),
                 language = I18nUtil.getLanguage(userId)
@@ -110,7 +110,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         // 校验上传文件大小是否超出限制
         val maxFileSize = maxUploadLogoSize.toLong()
         if (contentLength > maxFileSize) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
                 params = arrayOf((maxFileSize / 1048576).toString() + "M"),
                 language = I18nUtil.getLanguage(userId)
@@ -126,7 +126,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             val height = img.height
             if (sizeLimitFlag != false) {
                 if (width != height || width < allowUploadLogoWidth.toInt()) {
-                    return MessageUtil.generateResponseDataObject(
+                    return I18nUtil.generateResponseDataObject(
                         StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
                         arrayOf(allowUploadLogoWidth, allowUploadLogoHeight),
                         language = I18nUtil.getLanguage(userId)
@@ -149,7 +149,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 output.flush()
             } catch (ignored: Throwable) {
                 logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )

@@ -100,7 +100,7 @@ class LabelServiceImpl @Autowired constructor(
         val codeCount = labelDao.countByCode(dslContext, labelCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(labelCode),
                 data = false,
@@ -112,7 +112,7 @@ class LabelServiceImpl @Autowired constructor(
         val nameCount = labelDao.countByName(dslContext, labelName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(labelName),
                 data = false,
@@ -137,7 +137,7 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelCode != label.labelCode) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelCode),
                     data = false
@@ -152,7 +152,7 @@ class LabelServiceImpl @Autowired constructor(
             val label = labelDao.getLabel(dslContext, id)
             if (null != label && labelName != label.labelName) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(labelName),
                     data = false

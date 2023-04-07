@@ -118,13 +118,13 @@ class StorePipelineServiceImpl : StorePipelineService {
         if (updatePipelineModel.isNullOrBlank()) {
             val pipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
-                    ?: return MessageUtil.generateResponseDataObject(
+                    ?: return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
                         language = I18nUtil.getLanguage(userId)
                     )
             val grayPipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
-                    ?: return MessageUtil.generateResponseDataObject(
+                    ?: return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -171,7 +171,7 @@ class StorePipelineServiceImpl : StorePipelineService {
             }
             ScopeTypeEnum.SPEC.name -> {
                 if (storeCodeList == null) {
-                    return MessageUtil.generateResponseDataObject(
+                    return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                         params = arrayOf("storeCodeList"),
                         language = I18nUtil.getLanguage(userId)

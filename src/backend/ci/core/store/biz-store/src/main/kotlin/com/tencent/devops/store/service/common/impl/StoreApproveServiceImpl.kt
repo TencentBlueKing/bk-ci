@@ -84,7 +84,7 @@ class StoreApproveServiceImpl : StoreApproveService {
     ): Result<Boolean> {
         logger.info("approveStoreInfo params:[$userId|$approveId|$storeApproveRequest]")
         val storeApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveId),
                 data = false,
@@ -94,7 +94,7 @@ class StoreApproveServiceImpl : StoreApproveService {
         val storeType = storeApproveRecord.storeType
         val token = storeApproveRecord.token
         if (!storeApproveRequest.token.isNullOrBlank() && token != storeApproveRequest.token) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -102,7 +102,7 @@ class StoreApproveServiceImpl : StoreApproveService {
         // 判断是否是插件管理员在操作
         val flag = storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType)
         if (!flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -135,7 +135,7 @@ class StoreApproveServiceImpl : StoreApproveService {
         // 判断查看用户是否是当前插件的成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())
         if (!flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -203,7 +203,7 @@ class StoreApproveServiceImpl : StoreApproveService {
                 storeType = storeApproveRecord.storeType
             )
             if (!flag) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PERMISSION_DENIED,
                     language = I18nUtil.getLanguage(userId)
                 )

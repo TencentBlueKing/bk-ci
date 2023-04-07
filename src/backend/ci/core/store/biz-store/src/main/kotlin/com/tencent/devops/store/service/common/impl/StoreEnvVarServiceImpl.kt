@@ -84,7 +84,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val storeCode = storeEnvVarRequest.storeCode
         val storeType = StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte()
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -97,7 +97,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 scope = storeEnvVarRequest.scope,
                 varName = storeEnvVarRequest.varName
         ) != null) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
                 data = false,
@@ -124,7 +124,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|addEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
 
@@ -140,7 +140,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         val storeCode = storeEnvVarRequest.storeCode
         val storeType = StoreTypeEnum.valueOf(storeEnvVarRequest.storeType).type.toByte()
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -176,7 +176,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 varName = storeEnvVarRequest.varName
             ) != null
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(storeEnvVarRequest.varName),
                 data = false,
@@ -228,7 +228,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|updateEnvVar|$storeEnvVarRequest|error=${ignored.message}", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
 
@@ -255,7 +255,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 storeType = storeTypeObj.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -289,7 +289,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
                 storeType = storeTypeObj.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -344,7 +344,7 @@ class StoreEnvVarServiceImpl @Autowired constructor(
         logger.info("storeEnvVar getEnvVarChangeLogList params:[$userId|$storeType|$storeCode|$varName]")
         val storeTypeObj = StoreTypeEnum.valueOf(storeType)
         if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeTypeObj.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

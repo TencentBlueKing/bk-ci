@@ -50,11 +50,11 @@ class ClientErrorMapper : ExceptionMapper<ClientErrorException> {
         logger.error("client exception", exception)
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
-                ?: MessageUtil.generateResponseDataObject<Any>(
+                ?: I18nUtil.generateResponseDataObject<Any>(
                     messageCode = ERROR_CLIENT_REST_ERROR
                 ).message
         } else {
-            MessageUtil.generateResponseDataObject<Any>(
+            I18nUtil.generateResponseDataObject<Any>(
                 messageCode = ERROR_CLIENT_REST_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ).message

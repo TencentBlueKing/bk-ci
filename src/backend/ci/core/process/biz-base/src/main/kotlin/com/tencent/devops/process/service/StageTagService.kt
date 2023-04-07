@@ -90,7 +90,7 @@ class StageTagService @Autowired constructor(
         val count = getCountByNameOrWeight(stageTag, weight)
         if (count > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf("tagName/weight"),
                 data = false,
@@ -113,7 +113,7 @@ class StageTagService @Autowired constructor(
             val pipelineStageTag = pipelineStageTagDao.getStageTag(dslContext, id)
             if (null != pipelineStageTag && stageTagName != pipelineStageTag.stageTagName) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(stageTagName),
                     data = false,

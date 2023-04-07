@@ -113,7 +113,7 @@ class CategoryServiceImpl @Autowired constructor(
         val codeCount = categoryDao.countByCode(dslContext, categoryCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(categoryCode),
                 data = false,
@@ -125,7 +125,7 @@ class CategoryServiceImpl @Autowired constructor(
         val nameCount = categoryDao.countByName(dslContext, categoryName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(categoryName),
                 data = false,
@@ -150,7 +150,7 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryCode != category.categoryCode) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(categoryCode),
                     data = false
@@ -165,7 +165,7 @@ class CategoryServiceImpl @Autowired constructor(
             val category = categoryDao.getCategory(dslContext, id)
             if (null != category && categoryName != category.categoryName) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(categoryName),
                     data = false

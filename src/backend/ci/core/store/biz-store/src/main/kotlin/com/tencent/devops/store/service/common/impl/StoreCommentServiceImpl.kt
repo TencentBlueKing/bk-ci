@@ -93,7 +93,7 @@ class StoreCommentServiceImpl @Autowired constructor(
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
         logger.info("getStoreComment params:[$userId|$commentId]")
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(commentId),
                 language = I18nUtil.getLanguage(userId)
@@ -176,7 +176,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         logger.info("addStoreComment params:[$userId|$storeId|$storeCode|$storeCommentRequest|$storeType")
         val score = storeCommentRequest.score
         // 校验评分是否合法
-        if (!validateScore(score)) return MessageUtil.generateResponseDataObject(
+        if (!validateScore(score)) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("score:$score"),
             language = I18nUtil.getLanguage(userId)
@@ -185,7 +185,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         val latestCommentRecord =
             storeCommentDao.getUserLatestCommentByStoreCode(dslContext, userId, storeCode, storeType.type.toByte())
         if (null != latestCommentRecord) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_COMMENT_IS_INVALID,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -283,7 +283,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         logger.info("updateStoreComment params:[$userId|$commentId|$storeCommentRequest]")
         val score = storeCommentRequest.score
         // 校验评分是否合法
-        if (!validateScore(score)) return MessageUtil.generateResponseDataObject(
+        if (!validateScore(score)) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf("score:$score"),
             data = false,
@@ -291,7 +291,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         )
         // 判断用户更新的记录是不是他自已发表的
         val storeCommentRecord =
-            storeCommentDao.getStoreComment(dslContext, commentId) ?: return MessageUtil.generateResponseDataObject(
+            storeCommentDao.getStoreComment(dslContext, commentId) ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(commentId),
                 data = false,
@@ -299,7 +299,7 @@ class StoreCommentServiceImpl @Autowired constructor(
             )
         val creator = storeCommentRecord.creator
         if (userId != creator) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = null,
                 data = false,
@@ -343,7 +343,7 @@ class StoreCommentServiceImpl @Autowired constructor(
     override fun updateStoreCommentPraiseCount(userId: String, commentId: String): Result<Int> {
         logger.info("updateStoreCommentPraiseCount params:[$userId|$commentId]")
         val commentRecord =
-            storeCommentDao.getStoreComment(dslContext, commentId) ?: return MessageUtil.generateResponseDataObject(
+            storeCommentDao.getStoreComment(dslContext, commentId) ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(commentId),
                 language = I18nUtil.getLanguage(userId)

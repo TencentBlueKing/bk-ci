@@ -248,7 +248,7 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

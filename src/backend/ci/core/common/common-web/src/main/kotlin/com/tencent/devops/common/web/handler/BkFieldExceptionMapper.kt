@@ -53,7 +53,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
      */
     override fun toResponse(exception: ConstraintViolationException): Response {
         val constraintViolations = exception.constraintViolations
-        var errorResult: Result<Any> = MessageUtil.generateResponseDataObject(
+        var errorResult: Result<Any> = I18nUtil.generateResponseDataObject(
             CommonMessageCode.SYSTEM_ERROR,
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
@@ -76,7 +76,7 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                     defaultMessage = propertyShowPath
                 )
                 // 生成错误提示信息
-                errorResult = MessageUtil.generateResponseDataObject(
+                errorResult = I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                     params = arrayOf(parameterName, validateMessage),
                     data = null,

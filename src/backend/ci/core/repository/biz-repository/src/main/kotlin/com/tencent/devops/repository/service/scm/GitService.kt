@@ -592,7 +592,7 @@ class GitService @Autowired constructor(
             val atomRepositoryUrl = dataMap["http_url_to_repo"]
             if (StringUtils.isEmpty(atomRepositoryUrl)) {
                 val validateResult: Result<String?> =
-                    MessageUtil.generateResponseDataObject(
+                    I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -740,7 +740,7 @@ class GitService @Autowired constructor(
                     val dataMap = JsonUtil.toMap(data)
                     val message = dataMap["message"]
                     if (!StringUtils.isEmpty(message)) {
-                        val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
+                        val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                             messageCode = RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL,
                             params = arrayOf(it)
                         )
@@ -797,7 +797,7 @@ class GitService @Autowired constructor(
                         val dataMap = JsonUtil.toMap(data)
                         val message = dataMap["message"]
                         if (!StringUtils.isEmpty(message)) {
-                            val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
+                            val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                                 messageCode = RepositoryMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL,
                                 params = arrayOf(it),
                                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -859,7 +859,7 @@ class GitService @Autowired constructor(
                 val dataMap = JsonUtil.toMap(data)
                 val message = dataMap["message"]
                 if (!StringUtils.isEmpty(message)) {
-                    val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
+                    val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
                     )
                     return Result(
@@ -884,7 +884,7 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
             logger.info("getGitUserInfo response>> $data")
-            if (!it.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -912,7 +912,7 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
             logger.info("GitProjectInfo response>> $data")
-            if (!it.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -956,7 +956,7 @@ class GitService @Autowired constructor(
                 return if (StringUtils.isEmpty(message)) {
                     Result(JsonUtil.to(data, object : TypeReference<List<GitRepositoryDirItem>>() {}))
                 } else {
-                    val result: Result<String?> = MessageUtil.generateResponseDataObject(
+                    val result: Result<String?> = I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.GIT_REPO_PEM_FAIL,
                         language = I18nUtil.getLanguage(userId)
                     )
@@ -993,7 +993,7 @@ class GitService @Autowired constructor(
             val message = dataMap["message"]
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
-                    MessageUtil.generateResponseDataObject(
+                    I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
                     )
                 logger.info("updateGitProjectInfo validateResult>> $validateResult")
@@ -1021,7 +1021,7 @@ class GitService @Autowired constructor(
             gitProjectInfo = gitProjectInfoResult.data
         }
         if (null == gitProjectInfo) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(repoName),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -1046,14 +1046,14 @@ class GitService @Autowired constructor(
                 val dataMap = JsonUtil.toMap(data)
                 val message = dataMap["message"]
                 return if (!StringUtils.isEmpty(message)) {
-                    val validateResult: Result<String?> = MessageUtil.generateResponseDataObject(
+                    val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
                         params = arrayOf(groupCode)
                     )
                     logger.info("moveProjectToGroup validateResult>> $validateResult")
                     Result(validateResult.status, "${validateResult.message}（git error:$message）")
                 } else {
-                    MessageUtil.generateResponseDataObject(
+                    I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
                         params = arrayOf(groupCode)
                     )
@@ -1283,7 +1283,7 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             val data = it.body!!.string()
-            if (!it.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -1373,7 +1373,7 @@ class GitService @Autowired constructor(
             val message = dataMap["message"]
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
-                    MessageUtil.generateResponseDataObject(
+                    I18nUtil.generateResponseDataObject(
                         messageCode = RepositoryMessageCode.CREATE_TAG_FAIL
                     )
                 logger.info("createGitTag validateResult>> $validateResult")

@@ -522,7 +522,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             }
             Result(true)
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$atomCode+$version"),
                 data = false,

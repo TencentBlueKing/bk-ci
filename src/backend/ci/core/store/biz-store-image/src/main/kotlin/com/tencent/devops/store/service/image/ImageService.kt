@@ -987,7 +987,7 @@ abstract class ImageService @Autowired constructor() {
         val type = StoreTypeEnum.IMAGE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, imageCode, type)
         if (!isOwner) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
@@ -996,7 +996,7 @@ abstract class ImageService @Autowired constructor() {
 
         val releasedCnt = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
         if (releasedCnt > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_IMAGE_RELEASED,
                 params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
@@ -1008,7 +1008,7 @@ abstract class ImageService @Autowired constructor() {
         val installedCnt = storeProjectRelDao.countInstalledProject(dslContext, imageCode, type)
         logger.info("$interfaceName:delete:Inner:installedCnt=$installedCnt")
         if (installedCnt > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_IMAGE_USED,
                 params = arrayOf(imageCode),
                 language = I18nUtil.getLanguage(userId)
@@ -1138,7 +1138,7 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:updateImageBaseInfo:Input($userId,$imageCode,$imageBaseInfoUpdateRequest")
         // 判断当前用户是否是该镜像的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, imageCode, StoreTypeEnum.IMAGE.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

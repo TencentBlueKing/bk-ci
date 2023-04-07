@@ -472,7 +472,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
                 language = I18nUtil.getLanguage(userId)
@@ -483,7 +483,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateId),
                 language = I18nUtil.getLanguage(userId)
@@ -552,7 +552,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val type = StoreTypeEnum.TEMPLATE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, type)
         if (!isOwner) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(templateCode),
                 language = I18nUtil.getLanguage(userId)
@@ -561,7 +561,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
         val releasedCnt = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
         if (releasedCnt > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_TEMPLATE_RELEASED,
                 params = arrayOf(templateCode),
                 language = I18nUtil.getLanguage(userId)
@@ -572,7 +572,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 如果已经被安装到其他项目下使用，不能删除关联
         val installedCnt = storeProjectRelDao.countInstalledProject(dslContext, templateCode, type)
         if (installedCnt > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_TEMPLATE_USED,
                 params = arrayOf(templateCode),
                 language = I18nUtil.getLanguage(userId)
@@ -604,7 +604,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
         val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
                 data = false,
@@ -667,7 +667,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         return if (projectCodeList.isNullOrEmpty()) {
             installStoreComponentResult
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_INSTALL_TEMPLATE_CODE_IS_INVALID,
                 params = arrayOf(
                     template.templateName,
@@ -691,7 +691,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         val templateDetail = templateDetailResult.data
         val templateModel = templateDetail?.templateModel
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -1016,7 +1016,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         logger.info("the templateId is:$templateId, templateCode is:$templateCode")
         val count = marketTemplateDao.countByIdAndCode(dslContext, templateId, templateCode)
         if (count < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("templateId:$templateId,templateCode:$templateCode"),
                 data = false,

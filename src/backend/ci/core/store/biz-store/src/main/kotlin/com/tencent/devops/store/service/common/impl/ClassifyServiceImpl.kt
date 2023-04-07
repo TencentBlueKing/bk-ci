@@ -92,7 +92,7 @@ class ClassifyServiceImpl @Autowired constructor(
         val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(classifyCode),
                 data = false,
@@ -104,7 +104,7 @@ class ClassifyServiceImpl @Autowired constructor(
         val nameCount = classifyDao.countByName(dslContext, classifyName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(classifyName),
                 data = false,
@@ -129,7 +129,7 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyCode != classify.classifyCode) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyCode),
                     data = false
@@ -144,7 +144,7 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyName != classify.classifyName) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(classifyName),
                     data = false
@@ -169,7 +169,7 @@ class ClassifyServiceImpl @Autowired constructor(
         if (flag) {
             classifyDao.delete(dslContext, id)
         } else {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_CLASSIFY_IS_NOT_ALLOW_DELETE,
                 data = false,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

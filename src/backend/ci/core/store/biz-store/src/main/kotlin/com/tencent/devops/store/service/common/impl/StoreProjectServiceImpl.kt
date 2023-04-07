@@ -259,7 +259,7 @@ class StoreProjectServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, storeCode, storeType) // 是否能安装
         if (!installFlag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 data = false,
                 language = I18nUtil.getLanguage(userId)
@@ -278,7 +278,7 @@ class StoreProjectServiceImpl @Autowired constructor(
             dataList.removeAll(privilegeProjectCodeList)
             if (dataList.isNotEmpty()) {
                 // 存在用户没有安装权限的项目，抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = StoreMessageCode.USER_PROJECT_IS_NOT_ALLOW_INSTALL,
                     params = arrayOf(dataList.toString()),
                     data = false,

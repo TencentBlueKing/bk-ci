@@ -147,7 +147,7 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("createGitCodeRepository error is :$e", e)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -183,7 +183,7 @@ class RepositoryService @Autowired constructor(
                 )
             )
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -196,7 +196,7 @@ class RepositoryService @Autowired constructor(
             logger.info("gitToken>> $gitToken")
             if (null == gitToken) {
                 // 抛出无效的token提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -256,7 +256,7 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("updateGitCodeRepository error is :$e", e)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -289,7 +289,7 @@ class RepositoryService @Autowired constructor(
             getGitRepositoryTreeInfoResult
         } catch (e: Exception) {
             logger.error("getGitRepositoryTreeInfo error is :$e", e)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -440,7 +440,7 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("moveProjectToGroupResult error is :$e", e)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )

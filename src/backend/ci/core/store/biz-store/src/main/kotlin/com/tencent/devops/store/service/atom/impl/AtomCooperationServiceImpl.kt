@@ -87,7 +87,7 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
             approveType = ApproveTypeEnum.ATOM_COLLABORATOR_APPLY
         )
         if (storeMemberFlag || !flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY,
                 language = I18nUtil.getLanguage(userId)
             )

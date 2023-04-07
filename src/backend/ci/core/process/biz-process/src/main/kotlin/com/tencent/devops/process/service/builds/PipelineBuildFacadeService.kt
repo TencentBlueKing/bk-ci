@@ -1585,7 +1585,7 @@ class PipelineBuildFacadeService(
         }
 
         val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
                 params = arrayOf(buildId),
                 language = I18nUtil.getLanguage(userId)

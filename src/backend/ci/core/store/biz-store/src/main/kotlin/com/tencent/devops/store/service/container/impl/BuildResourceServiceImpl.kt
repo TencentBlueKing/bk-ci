@@ -107,7 +107,7 @@ class BuildResourceServiceImpl @Autowired constructor(
         val count = getCountByCode(buildResourceCode)
         if (count > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(buildResourceCode),
                 data = false,
@@ -140,7 +140,7 @@ class BuildResourceServiceImpl @Autowired constructor(
             val pipelineBuildResource = buildResourceDao.getBuildResource(dslContext, id)
             if (null != pipelineBuildResource && buildResourceCode != pipelineBuildResource.buildResourceCode) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(buildResourceCode),
                     data = false

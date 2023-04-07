@@ -59,7 +59,7 @@ class MarketImageService @Autowired constructor(
             imageCode = imageCode
         )
         if (count < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("imageId:$imageId,imageCode:$imageCode"),
                 data = false,
@@ -78,7 +78,7 @@ class MarketImageService @Autowired constructor(
         logger.info("setImageBuildStatusByImageId params :[$userId|$imageId|$imageStatus|$msg]")
         val imageRecord = imageDao.getImage(dslContext, imageId)
         if (null == imageRecord) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
                 data = false,
@@ -128,7 +128,7 @@ class MarketImageService @Autowired constructor(
             )
             Result(true)
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$imageCode+$version"),
                 data = false,

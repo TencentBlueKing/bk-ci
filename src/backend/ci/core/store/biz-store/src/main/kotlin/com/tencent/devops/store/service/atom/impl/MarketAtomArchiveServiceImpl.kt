@@ -116,7 +116,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
@@ -159,7 +159,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         return if (getAtomConfResult.errorCode != "0") {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
                 params = getAtomConfResult.errorParams,
                 language = I18nUtil.getLanguage(userId)
@@ -190,7 +190,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         if (getAtomConfResult.errorCode != "0") {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
                 params = getAtomConfResult.errorParams,
                 language = I18nUtil.getLanguage(userId)

@@ -89,7 +89,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -200,7 +200,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -273,7 +273,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -331,7 +331,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
         if (userId != storeMember) {
             // 如果要修改其他插件成员的调试项目，则要求修改人是插件的管理员
             if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PERMISSION_DENIED,
                     params = arrayOf(storeCode),
                     language = I18nUtil.getLanguage(userId)
@@ -339,7 +339,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             }
         } else {
             if (!storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PERMISSION_DENIED,
                     params = arrayOf(storeCode),
                     language = I18nUtil.getLanguage(userId)
@@ -356,7 +356,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
             ).data
         } catch (ignored: Throwable) {
             logger.warn("verifyUserProjectPermission error, params[$storeMember|$projectCode]", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -390,7 +390,7 @@ abstract class StoreMemberServiceImpl : StoreMemberService {
     override fun isStoreHasAdmins(storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
         val adminCount = storeMemberDao.countAdmin(dslContext, storeCode, storeType.type.toByte())
         if (adminCount <= 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_COMPONENT_ADMIN_COUNT_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )

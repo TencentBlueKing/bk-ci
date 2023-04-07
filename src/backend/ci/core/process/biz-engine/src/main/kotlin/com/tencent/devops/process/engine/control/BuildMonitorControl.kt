@@ -245,7 +245,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            val errorInfo = MessageUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
                 params = arrayOf("Job", "$minute"),
                 language = I18nUtil.getLanguage(userId)
@@ -393,7 +393,7 @@ class BuildMonitorControl @Autowired constructor(
                 buildStatus = buildInfo.status
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
-            val errorInfo = MessageUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
                 params = arrayOf(event.buildId),
                 language = I18nUtil.getLanguage()

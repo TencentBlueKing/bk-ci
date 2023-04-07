@@ -137,7 +137,7 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val isExists = storeAuditConfDao.countDeptRel(dslContext, id)
         if (isExists == 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 data = false,

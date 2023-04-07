@@ -225,7 +225,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 ).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -233,7 +233,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
@@ -477,7 +477,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-                if (count == 0) return MessageUtil.generateResponseDataObject(
+                if (count == 0) return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("$projectCode+$atomCode")
                 )
@@ -682,7 +682,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val codeCount = atomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomCode),
                 data = false,
@@ -694,7 +694,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val nameCount = atomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
                 data = false,
@@ -703,7 +703,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         // 校验插件分类是否合法
         classifyService.getClassify(atomRequest.classifyId).data
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomRequest.classifyId),
                 data = false,
@@ -735,7 +735,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
         // 校验插件分类是否合法
         classifyService.getClassify(atomUpdateRequest.classifyId).data
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomUpdateRequest.classifyId),
                 data = false,
@@ -813,7 +813,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             Result(true)
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 data = false,
@@ -841,7 +841,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode atomId=$atomId|atomCode=$atomCode")
         val count = atomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("atomId:$atomId,atomCode:$atomCode"),
                 data = false,
@@ -858,7 +858,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode userId=$userId|atomCode=$atomCode")
         val count = atomDao.countByUserIdAndCode(dslContext, userId, atomCode)
         if (count < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = null,
                 data = false,
@@ -1025,7 +1025,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("uninstallAtom, isInstaller=$isInstaller")
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)
@@ -1039,7 +1039,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         ).data
             ?: 0
         if (pipelineCnt > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_USED,
                 params = arrayOf(atomCode, projectCode),
                 language = I18nUtil.getLanguage(userId)
@@ -1082,7 +1082,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updateAtomBaseInfo userId:$userId,atomCode:$atomCode,updateRequest:$atomBaseInfoUpdateRequest")
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

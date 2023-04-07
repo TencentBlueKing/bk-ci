@@ -83,7 +83,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         checkUserAuthority(userId, storeCode, storeType)
         val fieldName = sensitiveConfReq.fieldName
         if (fieldName.isEmpty()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf(fieldName),
                 data = false,
@@ -92,7 +92,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         }
         val fieldValue = sensitiveConfReq.fieldValue
         if (fieldValue.isEmpty()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf(fieldValue),
                 data = false,
@@ -108,7 +108,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             id = null
         )
         if (isNameExist) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(fieldName),
                 data = false,
@@ -149,7 +149,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         logger.info("updateSensitiveConf params: [$storeType | $storeCode | $id | $sensitiveConfReq]")
         checkUserAuthority(userId, storeCode, storeType)
         val sensitiveConfRecord = sensitiveConfDao.getById(dslContext, id)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 data = false,
@@ -166,7 +166,7 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             id = id
         )
         if (isNameExist) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(fieldName),
                 data = false,

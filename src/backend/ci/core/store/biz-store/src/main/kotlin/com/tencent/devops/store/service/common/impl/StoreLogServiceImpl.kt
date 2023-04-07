@@ -164,7 +164,7 @@ class StoreLogServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         // 查询是否是插件的成员，只有插件的成员才能看日志
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRelByPipelineId(dslContext, pipelineId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(pipelineId),
                 language = I18nUtil.getLanguage(userId)
@@ -176,7 +176,7 @@ class StoreLogServiceImpl @Autowired constructor(
             storeType = storeType.type.toByte()
         )
         if (!flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

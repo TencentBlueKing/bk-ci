@@ -62,7 +62,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
                 language = I18nUtil.getLanguage(storeBuildResultRequest.userId)

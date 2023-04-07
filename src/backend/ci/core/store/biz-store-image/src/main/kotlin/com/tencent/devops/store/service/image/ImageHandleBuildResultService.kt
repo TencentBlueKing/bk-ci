@@ -54,7 +54,7 @@ class ImageHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val imageId = storeBuildResultRequest.storeId
         val imageRecord = imageDao.getImage(dslContext, imageId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(imageId),
                 language = I18nUtil.getLanguage(storeBuildResultRequest.userId)
