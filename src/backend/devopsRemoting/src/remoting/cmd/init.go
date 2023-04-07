@@ -8,6 +8,7 @@ import (
 	"os"
 	"os/exec"
 	"os/signal"
+	"path/filepath"
 	"strings"
 	"sync"
 	"syscall"
@@ -107,6 +108,7 @@ func runRemoting() (*exec.Cmd, error) {
 
 func newShutdownLogger() *shutdownLogger {
 	file := "/data/landun/workspace/.devopsRemoting/devopsRemoting-termination.log"
+	os.MkdirAll(filepath.Dir(file), os.ModePerm)
 	fs, err := os.Create(file)
 	if err != nil {
 		logs.WithError(err).WithField("file", file).Error("create shutdown log err")
