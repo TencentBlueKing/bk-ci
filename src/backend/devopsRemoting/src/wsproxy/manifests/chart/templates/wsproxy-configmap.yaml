@@ -18,8 +18,8 @@ data:
       },
       "proxy": {
         "https": {
-          "key": "/data/workspace/wsproxy/config/https/https.key",
-          "crt": "/data/workspace/wsproxy/config/https/https.pem"
+          "key": "/data/workspace/wsproxy/tls/https.key",
+          "crt": "/data/workspace/wsproxy/tls/https.pem"
         },
         "transportConfig": {
           "connectTimeout": "10s",
@@ -65,9 +65,3 @@ data:
   kubeConfig.yaml: |
     {{- .Values.kubeConfig.content | nindent 4 }}
   {{- end }}
-
-  https.pem: |-
-    {{- .Values.https.crt | nindent 4 }}
-
-  https.key: |-  
-    {{- .Values.https.key | nindent 4 }}

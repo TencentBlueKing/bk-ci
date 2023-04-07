@@ -1,5 +1,5 @@
-WORKSPACE_PROXY_LOCAL_REGISTRY=mirrors.tencent.com
-WORKSPACE_PROXY_LOCAL_IMAGE=ruotiantang/wsproxy-demo:0.0.31
+WORKSPACE_PROXY_LOCAL_REGISTRY=local
+WORKSPACE_PROXY_LOCAL_IMAGE=wsproxy:lastet
 
 VERSION=$(shell cd . && git log -1 --pretty=format:"%H")
 

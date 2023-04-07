@@ -1,0 +1,35 @@
+registry:
+  image: 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  staticLayers: 
+    - type: "image"
+      ref: "mirrors.tencent.com/ci/remote-dev-base:0.0.3"
+    - type: "image"
+      ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"
+     
+  remoteSpecProvider:
+    addr: 
+  # cat ~/.docker/config.json | base64 -w0   
+  dockerAuth:
+  # 用来挂载wsproxy配置的参数，不同环境wsproxy名字可能不同
+  wsproxyName: wsproxy
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent  
+
+service:
+  # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+  serviceType: ClusterIP
+  # 部署的service的annotations:
+  serviceAnnotations:
+  # 部署的service对外暴露的端口
+  registryPort: 9000
+  # nodeport模式下nodeport的端口
+  registryNodePort: 31590

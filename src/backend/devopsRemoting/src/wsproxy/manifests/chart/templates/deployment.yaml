@@ -41,6 +41,9 @@ spec:
             - name: {{ .Release.Name }}-config
               mountPath: /data/workspace/wsproxy/config
               readOnly: true
+            - name: {{ .Release.Name }}-tls-certs
+              mountPath: /data/workspace/wsproxy/tls
+              readOnly: true
       volumes:
         - name: {{ .Release.Name }}-config
           configMap:
@@ -54,10 +57,14 @@ spec:
               {{- end}}
               - key: sshkey
                 path: host_keys/sshkey
+        - name: {{ .Release.Name }}-tls-certs
+          configMap:
+            name: {{ .Release.Name }}-tls-certs
+            items:
               - key: https.pem
-                path: https/https.pem
+                path: https.pem
               - key: https.key
-                path: https/https.key    
+                path: https.key           
       {{- if .Values.wsproxy.affinity }}
       affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
       {{- end }}          

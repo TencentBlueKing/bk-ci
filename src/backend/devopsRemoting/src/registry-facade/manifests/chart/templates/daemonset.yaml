@@ -45,6 +45,9 @@ spec:
             mountPath: /data/workspace/registry-facade/cache
           - name: {{ .Release.Name }}-pull-secret
             mountPath: /data/workspace/registry-facade/pull-secret
+          - name: {{ .Values.registry.wsproxyName }}-tls-certs
+            mountPath: /data/workspace/registry-facade/tls
+            readOnly: true  
         readinessProbe:
           httpGet:
             path: /ready
@@ -78,3 +81,12 @@ spec:
           items:
             - key: .dockerconfigjson
               path: pull-secret.json
+      - name: {{ .Values.registry.wsproxyName }}-tls-certs
+        configMap:
+          name: {{ .Values.registry.wsproxyName }}-tls-certs
+          items:
+            - key: https.pem
+              path: https.pem
+            - key: https.key
+              path: https.key 
+        

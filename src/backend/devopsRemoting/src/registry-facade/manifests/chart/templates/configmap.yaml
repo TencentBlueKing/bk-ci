@@ -14,6 +14,7 @@ data:
       "dockerAuth": "/data/workspace/registry-facade/pull-secret/pull-secret.json",
       "registry": {
         "port": 9000,
+        "prefix": "remote",
         {{- if .Values.registry.staticLayers }}
         "staticLayer": {{ toJson .Values.registry.staticLayers }},
         {{- end }}
@@ -23,7 +24,11 @@ data:
           {
             "addr": "{{.Values.registry.remoteSpecProvider.addr}}"
           }
-        ]
+        ],
+        "tls": {
+          "crt": "/data/workspace/registry-facade/tls/https.pem",
+          "key": "/data/workspace/registry-facade/tls/https.key"
+        }
       },
       "readinessProbeAddr": ":8000"
     }

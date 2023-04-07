@@ -1,5 +1,5 @@
-LOCAL_REGISTRY=mirrors.tencent.com
-LOCAL_IMAGE=ruotiantang/registry-facade-demo:0.0.1
+LOCAL_REGISTRY=local
+LOCAL_IMAGE=registry-facade:lastet
 
 VERSION=$(shell cd . && git log -1 --pretty=format:"%H")
 
@@ -21,7 +21,7 @@ clean:
 .PHONY: build
 build.registry.amd64: test clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
- 	go build -trimpath -ldflags "-X cmd.Version=$(VERSION)" \
+ 	go build -trimpath -ldflags "-X registry-facade/cmd.Version=$(VERSION)" \
  	-o ./bin/registry-amd64 main.go
 
 .PHONY: debug.registry.amd64
