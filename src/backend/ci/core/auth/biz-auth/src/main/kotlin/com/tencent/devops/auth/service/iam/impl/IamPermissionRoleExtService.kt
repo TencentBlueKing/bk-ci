@@ -46,7 +46,6 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -197,7 +196,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
         // 校验用户组名称
         if (defaultGroup) {
             // 若为默认分组,需校验提供用户组是否在默认分组内。
-            if (!DefaultGroupType.containsDisplayName(name)) {
+            if (!DefaultGroupType.containsDisplayName(name, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))) {
                 // 不在默认分组内则直接报错
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.DEFAULT_GROUP_ERROR
@@ -205,7 +204,7 @@ open class IamPermissionRoleExtService @Autowired constructor(
             }
         } else {
             // 非默认分组,不能使用默认分组组名
-            if (DefaultGroupType.containsDisplayName(name)) {
+            if (DefaultGroupType.containsDisplayName(name, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))) {
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.UN_DEFAULT_GROUP_ERROR
                 )
@@ -253,8 +252,9 @@ open class IamPermissionRoleExtService @Autowired constructor(
     }
 
     private fun getGroupStrategy(defaultGroup: DefaultGroupType): Pair<List<String>, Map<String, List<String>>> {
-        val strategyInfo = strategyService.getStrategyByName(defaultGroup.getDisplayName())
-            ?: throw ErrorCodeException(errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST)
+        val strategyInfo = strategyService.getStrategyByName(
+            defaultGroup.getDisplayName(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+        ) ?: throw ErrorCodeException(errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST)
         logger.info("getGroupStrategy ${strategyInfo.strategy}")
         val projectStrategyList = mutableListOf<String>()
         val resourceStrategyMap = mutableMapOf<String, List<String>>()

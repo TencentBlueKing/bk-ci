@@ -193,7 +193,7 @@ class PipelineBuildFacadeService(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     I18nUtil.getLanguage(userId),
                     arrayOf(
-                        userId, projectId, permission.getI18n(), pipelineId
+                        userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId
                     )
                 )
             )
@@ -364,7 +364,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, projectId, permission.getI18n(), pipelineId)
+                    arrayOf(userId, projectId, permission.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
                 )
             )
         }
@@ -583,7 +583,7 @@ class PipelineBuildFacadeService(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -683,7 +683,7 @@ class PipelineBuildFacadeService(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -830,7 +830,7 @@ class PipelineBuildFacadeService(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -2330,7 +2330,7 @@ class PipelineBuildFacadeService(
                 arrayOf(
                     userId,
                     projectId,
-                    permission.getI18n(),
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
                     pipelineId
                 )
             )

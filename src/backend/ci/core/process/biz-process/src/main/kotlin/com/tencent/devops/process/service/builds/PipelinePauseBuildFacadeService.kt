@@ -93,7 +93,7 @@ class PipelinePauseBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(), pipelineId)
+                    arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)), pipelineId)
                 )
             )
         }

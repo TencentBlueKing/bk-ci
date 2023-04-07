@@ -352,7 +352,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        AuthPermission.EDIT.getI18n(),
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -364,7 +364,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        AuthPermission.EDIT.getI18n(),
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )

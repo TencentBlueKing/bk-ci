@@ -30,7 +30,7 @@ package com.tencent.devops.common.auth.api.pojo
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.util.MessageUtil
 
 /**
  * 项目角色组
@@ -62,9 +62,9 @@ enum class DefaultGroupType(
             return false
         }
 
-        fun containsDisplayName(displayName: String): Boolean {
+        fun containsDisplayName(displayName: String, language: String): Boolean {
             values().forEach {
-                if (displayName == it.getDisplayName()) return true
+                if (displayName == it.getDisplayName(language)) return true
             }
             return false
         }
@@ -80,8 +80,11 @@ enum class DefaultGroupType(
             return allGroup
         }
 
-        fun DefaultGroupType.getDisplayName(): String {
-            return I18nUtil.getCodeLanMessage("defaultGroupType." + this.displayName)
+        fun DefaultGroupType.getDisplayName(language: String): String {
+            return MessageUtil.getMessageByLocale(
+                messageCode = "defaultGroupType." + this.displayName,
+                language = language
+            )
         }
     }
 }

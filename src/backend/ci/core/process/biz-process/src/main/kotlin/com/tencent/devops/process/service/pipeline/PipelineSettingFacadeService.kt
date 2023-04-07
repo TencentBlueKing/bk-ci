@@ -103,7 +103,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         setting.projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         setting.pipelineId
                     )
                 )
@@ -188,7 +188,7 @@ class PipelineSettingFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )

@@ -51,7 +51,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.util.*
+import java.util.Enumeration
 
 object CommonUtils {
 
@@ -148,10 +148,11 @@ object CommonUtils {
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
                 val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-                return I18nUtil.generateResponseDataObject(
+                val message = MessageUtil.getMessageByLocale(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = commonConfig.devopsDefaultLocaleLanguage
                 )
+                Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }

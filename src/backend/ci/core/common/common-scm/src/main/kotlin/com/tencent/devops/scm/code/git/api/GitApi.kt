@@ -46,7 +46,6 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_ADD_
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_LOCK_UNLOCK_FAIL
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_UPDATE_FAIL
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.utils.SpringContextUtil
@@ -68,13 +67,13 @@ import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
-import java.net.URLEncoder
 
 @Suppress("ALL")
 open class GitApi {
@@ -109,7 +108,6 @@ open class GitApi {
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
         return I18nUtil.getCodeLanMessage(
             messageCode = messageCode
-            params = params
         )
     }
 

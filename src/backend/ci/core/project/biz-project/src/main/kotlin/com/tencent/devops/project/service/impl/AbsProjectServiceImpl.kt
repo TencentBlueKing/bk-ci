@@ -75,16 +75,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -102,7 +102,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
         if (name.isBlank()) {
-            throw ErrorCodeException(ProjectMessageCode.NAME_EMPTY)
+            throw ErrorCodeException(errorCode = ProjectMessageCode.NAME_EMPTY)
         }
         when (validateType) {
             ProjectValidateType.project_name -> {

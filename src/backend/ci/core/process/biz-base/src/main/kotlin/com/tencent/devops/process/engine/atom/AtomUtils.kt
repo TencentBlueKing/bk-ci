@@ -107,9 +107,9 @@ object AtomUtils {
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
-                    errorMsg = MessageUtil.getMessageByLocale(
+                    errorMsg = I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        params = arrayOf(element.name)
+                        params = arrayOf(element.name),
                     ),
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,

@@ -52,10 +52,10 @@ import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServ
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -236,7 +236,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 ),

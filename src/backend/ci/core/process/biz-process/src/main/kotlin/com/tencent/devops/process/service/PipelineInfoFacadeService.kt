@@ -135,7 +135,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 arrayOf(
                     userId,
                     projectId,
-                    permission.getI18n(),
+                    permission.getI18n(I18nUtil.getLanguage(userId)),
                     pipelineId
                 )
             )
@@ -170,7 +170,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
                     messageCode = USER_NEED_PIPELINE_X_PERMISSION,
-                    params = arrayOf(AuthPermission.CREATE.getI18n()),
+                    params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId))),
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -269,7 +269,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            permission.getI18n(),
+                            permission.getI18n(I18nUtil.getLanguage(userId)),
                             "*"
                         )
                     )
@@ -554,7 +554,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -579,7 +579,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            AuthPermission.CREATE.getI18n(),
+                            AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)),
                             "*"
                         )
                     )
@@ -692,7 +692,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            permission.getI18n(),
+                            permission.getI18n(I18nUtil.getLanguage(userId)),
                             pipelineId
                         )
                     )
@@ -840,7 +840,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(),
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
                 )
@@ -946,7 +946,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                         arrayOf(
                             userId,
                             projectId,
-                            permission.getI18n(),
+                            permission.getI18n(I18nUtil.getLanguage(userId)),
                             pipelineId
                         )
                     )

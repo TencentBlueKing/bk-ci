@@ -44,10 +44,10 @@ import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_EXECUTION_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_TIMEOUT
+import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class BcsTaskClient @Autowired constructor(
@@ -79,7 +79,7 @@ class BcsTaskClient @Autowired constructor(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_STATUS_ERROR, I18nUtil.getLanguage(userId)) +
-                    "：http response code: ${response.code()}"
+                    "：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {

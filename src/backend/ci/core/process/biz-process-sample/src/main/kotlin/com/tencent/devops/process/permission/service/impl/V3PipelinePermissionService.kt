@@ -123,7 +123,7 @@ class V3PipelinePermissionService constructor(
                 relationResourceType = authResourceType
             )
         ) {
-            val permissionMsg = permission.getI18n()
+            val permissionMsg = permission.getI18n(I18nUtil.getLanguage(userId))
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,

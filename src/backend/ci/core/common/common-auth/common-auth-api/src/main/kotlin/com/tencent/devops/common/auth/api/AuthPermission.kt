@@ -28,7 +28,7 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.MSG_CODE_PERMISSION_PREFIX
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.util.MessageUtil
 
 enum class AuthPermission(val value: String, val alias: String) {
     CREATE("create", "创建"), // 流水线，凭据，证书，代码仓库
@@ -60,10 +60,11 @@ enum class AuthPermission(val value: String, val alias: String) {
         }
     }
 
-    fun getI18n(): String {
-        return I18nUtil.getCodeLanMessage(
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
             messageCode = "$MSG_CODE_PERMISSION_PREFIX${this.name}",
-            defaultMessage = this.alias
+            defaultMessage = this.alias,
+            language = language
         )
     }
 }

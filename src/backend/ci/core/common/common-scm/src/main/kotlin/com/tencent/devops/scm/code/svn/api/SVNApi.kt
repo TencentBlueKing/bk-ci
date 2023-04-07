@@ -157,7 +157,7 @@ object SVNApi {
                         ScmType.CODE_SVN.name
                     )
                     else -> throw ScmException(
-                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_CALL_ERROR,
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_CALL_ERROR),
                         ScmType.CODE_SVN.name
                     )
                 }

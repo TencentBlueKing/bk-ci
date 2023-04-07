@@ -201,7 +201,7 @@ class QualityNotifyGroupService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 NEED_USER_GROUP_X_PERMISSION,
                 language,
-                arrayOf(authPermission.getI18n())
+                arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
         if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
@@ -249,7 +249,7 @@ class QualityNotifyGroupService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 NEED_USER_GROUP_X_PERMISSION,
                 language,
-                arrayOf(authPermission.getI18n())
+                arrayOf(authpermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
 

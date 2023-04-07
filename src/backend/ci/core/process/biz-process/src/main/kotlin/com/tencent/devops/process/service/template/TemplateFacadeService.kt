@@ -1342,7 +1342,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[instance.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
                     BK_OPERATE_PIPELINE_FAIL,
                     language,
-                    arrayOf(AuthPermission.CREATE.getI18n())
+                    arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
                 )
             }
         }
@@ -1421,7 +1421,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[it.pipelineName] = ignored.message ?: MessageUtil.getMessageByLocale(
                     BK_OPERATE_PIPELINE_FAIL,
                     language,
-                    arrayOf(AuthPermission.EDIT.getI18n())
+                    arrayOf(AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)))
                 )
             }
         }
