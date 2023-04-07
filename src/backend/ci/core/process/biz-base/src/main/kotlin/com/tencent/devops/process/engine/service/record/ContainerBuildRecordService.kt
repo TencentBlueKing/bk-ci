@@ -330,6 +330,10 @@ class ContainerBuildRecordService(
             cancelUser = null, operation = "containerSkip#$containerId"
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
+            recordTaskDao.updateRecordStatus(
+                dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, containerId = containerId, buildStatus = BuildStatus.SKIP
+            )
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,

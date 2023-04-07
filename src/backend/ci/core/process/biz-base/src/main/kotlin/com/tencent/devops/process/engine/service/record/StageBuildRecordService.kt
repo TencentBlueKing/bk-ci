@@ -43,7 +43,6 @@ import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStage
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
-import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
@@ -128,19 +127,17 @@ class StageBuildRecordService(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        executeCount: Int,
-        containers: List<PipelineBuildContainer>
+        executeCount: Int
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|stage_skip|stageId=$stageId")
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "stageSkip#$stageId"
         ) {
-            containers.forEach { container ->
-                containerBuildRecordService.containerSkip(
-                    projectId, pipelineId, buildId, executeCount, container.containerId
-                )
-            }
+            recordContainerDao.updateRecordStatus(
+                dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, stageId = stageId, buildStatus = BuildStatus.SKIP
+            )
             updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,

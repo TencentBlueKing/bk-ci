@@ -101,7 +101,7 @@ class UpdateStateForStageCmdFinally(
             }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
-                pipelineStageService.skipStage(userId = event.userId, buildStage = stage, commandContext.containers)
+                pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
             } else if (commandContext.buildStatus == BuildStatus.QUALITY_CHECK_FAIL) {
                 pipelineStageService.refreshCheckStageStatus(userId = event.userId, buildStage = stage, inOrOut = false)
             }
