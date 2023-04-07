@@ -109,6 +109,10 @@ class AuthConfiguration {
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
     @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
