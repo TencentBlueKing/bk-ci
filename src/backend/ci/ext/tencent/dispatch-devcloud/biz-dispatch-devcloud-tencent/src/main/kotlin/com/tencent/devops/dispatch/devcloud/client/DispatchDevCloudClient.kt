@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
@@ -20,25 +19,19 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
-import java.net.URLEncoder
 
 @Component
-class DispatchDevCloudClient @Autowired constructor(
-    private val bkTag: BkTag
-) {
+class DispatchDevCloudClient {
     private val logger = LoggerFactory.getLogger(DispatchDevCloudClient::class.java)
 
     @Value("\${devCloud.appId}")
@@ -52,9 +45,6 @@ class DispatchDevCloudClient @Autowired constructor(
 
     @Value("\${devCloud.smartProxyToken}")
     val smartProxyToken: String = ""
-
-    @Value("\${devopsGateway.idcProxy:}")
-    val devopsIdcProxyGateway: String = ""
 
     @Value("\${devCloud.cpu}")
     var cpu: Int = 32
@@ -743,10 +733,8 @@ class DispatchDevCloudClient @Autowired constructor(
             // 轮询容器状态
             var success = true
             var isFinish = false
-            val statusResponse = getContainerStatus(
-                projectId, pipelineId,
-                buildId, vmSeqId, userId, containerName
-            )
+            val statusResponse = getContainerStatus(projectId, pipelineId,
+                                                    buildId, vmSeqId, userId, containerName)
             val actionCode = statusResponse.optInt("actionCode")
             if (actionCode == 200) {
                 val status = statusResponse.optString("data")
@@ -766,28 +754,6 @@ class DispatchDevCloudClient @Autowired constructor(
                 else -> DevCloudContainerStatus.RUNNING
             }
         }
-    }
-
-    private fun buildUrl(uri: String): String {
-        return if (isAuto()) {
-            "$devopsIdcProxyGateway/proxy-devnet?" +
-                "url=${URLEncoder.encode(devCloudUrl + uri, "UTF-8")}"
-        } else {
-            devCloudUrl + uri
-        }
-    }
-
-    private fun buildHeader(userId: String): Map<String, String> {
-        return if (isAuto()) {
-            SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, userId)
-        } else {
-            SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)
-        }
-    }
-
-    // 判断是否为auto集群
-    private fun isAuto(): Boolean {
-        return bkTag.getFinalTag().contains("auto")
     }
 }
 
