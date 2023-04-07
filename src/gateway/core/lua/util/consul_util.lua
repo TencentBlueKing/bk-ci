@@ -113,7 +113,7 @@ function _M:getAllWhitelistIp()
 
     -- kubernetes 白名单
     local kubernetes_api_token = config.kubernetes.api.token
-    if kubernetes_api_token ~= "" and kubernetes_api_token ~= nil then
+    if ngx.var.devops_region ~= "DEVNET" and kubernetes_api_token ~= "" and kubernetes_api_token ~= nil then
         local white_ip_hot_cache = ngx.shared.white_ip_hot_store
         local white_ip_cold_cache = ngx.shared.white_ip_cold_store
         local ip_cache_key = "X-DEVOPS-WHITE-IP-K8S"
