@@ -139,14 +139,13 @@ task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
     const dir = path.join(dist, prefix)
     const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
     const fileName = `frontend#${prefix}#index.html`
-    return () => src(path.join(dir, fileName))
+    return () => src(path.join(dir, fileName), { allowEmpty: true })
         .pipe(inject(src([
             ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
             `${dist}/svg-sprites/${spriteNameGlob}`
         ], {
             read: false
         }), {
-            allowEmpty: true,
             ignorePath: dist,
             addRootSlash: false,
             addPrefix: '__BK_CI_PUBLIC_PATH__'
