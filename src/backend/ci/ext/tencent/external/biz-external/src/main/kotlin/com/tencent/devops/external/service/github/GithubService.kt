@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_SPECIFIED_TAG
 import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_TAG_LIST
 import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_WAREHOUSE_LIST
 import com.tencent.devops.common.api.constant.I18NConstant.BK_UPDATE_DETECTION_TASK
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -304,68 +303,56 @@ class GithubService @Autowired constructor(
     private fun handException(operation: String, code: Int) {
         when (code) {
             400 -> throw GithubApiException(code,
-            MessageUtil.getMessageByLocale(
-                messageCode = PARAMETER_ERROR,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = PARAMETER_ERROR
             )
                 )
             401 -> throw GithubApiException(code,
-                MessageUtil.getMessageByLocale(
-                    messageCode = GITHUB_AUTHENTICATION_FAILED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITHUB_AUTHENTICATION_FAILED
                 )
                 )
             403 -> throw GithubApiException(code,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ACCOUNT_NOT_PERMISSIO,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
             404 -> throw GithubApiException(code,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = GITHUB_WAREHOUSE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
             else -> throw GithubApiException(code,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = GITHUB_PLATFORM_FAILED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
         }
     }
 
-    private val OPERATION_ADD_CHECK_RUNS = MessageUtil.getMessageByLocale(
-        messageCode = BK_ADD_DETECTION_TASK,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_ADD_CHECK_RUNS = I18nUtil.getCodeLanMessage(
+        messageCode = BK_ADD_DETECTION_TASK
     )
-    private val OPERATION_UPDATE_CHECK_RUNS = MessageUtil.getMessageByLocale(
-        messageCode = BK_UPDATE_DETECTION_TASK,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_UPDATE_CHECK_RUNS = I18nUtil.getCodeLanMessage(
+        messageCode = BK_UPDATE_DETECTION_TASK
     )
-    private val OPERATION_GET_REPOS =  MessageUtil.getMessageByLocale(
-        messageCode = BK_GET_WAREHOUSE_LIST,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_GET_REPOS =  I18nUtil.getCodeLanMessage(
+        messageCode = BK_GET_WAREHOUSE_LIST
     )
-    private val OPERATION_GET_BRANCH =  MessageUtil.getMessageByLocale(
-        messageCode = BK_GET_SPECIFIED_BRANCH,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_GET_BRANCH =  I18nUtil.getCodeLanMessage(
+        messageCode = BK_GET_SPECIFIED_BRANCH
     )
-    private val OPERATION_GET_TAG =  MessageUtil.getMessageByLocale(
-        messageCode = BK_GET_SPECIFIED_TAG,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_GET_TAG =  I18nUtil.getCodeLanMessage(
+        messageCode = BK_GET_SPECIFIED_TAG
     )
-    private val OPERATION_LIST_BRANCHS =  MessageUtil.getMessageByLocale(
-        messageCode = BK_GET_LIST_OF_BRANCHES,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_LIST_BRANCHS =  I18nUtil.getCodeLanMessage(
+        messageCode = BK_GET_LIST_OF_BRANCHES
     )
-    private val OPERATION_LIST_TAGS =  MessageUtil.getMessageByLocale(
-        messageCode = BK_GET_TAG_LIST,
-        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+    private val OPERATION_LIST_TAGS =  I18nUtil.getCodeLanMessage(
+        messageCode = BK_GET_TAG_LIST
     )
 
     companion object {

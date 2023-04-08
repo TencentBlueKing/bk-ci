@@ -34,7 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ILLEGAL_USER
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ILLEGAL_USER
 import com.tencent.devops.openapi.service.op.AppUserInfoService
 import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory

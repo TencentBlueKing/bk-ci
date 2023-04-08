@@ -81,15 +81,13 @@ class V1StreamYamlService @Autowired constructor(
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = GIT_CI_NO_RECOR,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = GIT_CI_NO_RECOR
                         ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
-                        messageCode = MIRROR_VERSION_NOT_AVAILABLE,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
+                        messageCode = MIRROR_VERSION_NOT_AVAILABLE
                     ) + ". ${it.image}")
                 }
             }
@@ -148,9 +146,8 @@ class V1StreamYamlService @Autowired constructor(
         logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            MessageUtil.getMessageByLocale(
-                messageCode = PROJECT_CANNOT_QUERIED,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = PROJECT_CANNOT_QUERIED
             )
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)

@@ -159,9 +159,8 @@ class LambdaPipelineModelService @Autowired constructor(
     private fun checkParamBlank(param: String?, message: String): String {
         if (param.isNullOrBlank()) {
             throw ParamBlankException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                 messageCode = STARTUP_CONFIGURATION_MISSING,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(message)
             ))
         }

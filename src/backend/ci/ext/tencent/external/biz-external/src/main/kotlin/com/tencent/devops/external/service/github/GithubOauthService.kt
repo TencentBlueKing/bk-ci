@@ -33,11 +33,10 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_GITHUB_
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.repository.pojo.github.GithubOauth
@@ -127,9 +126,8 @@ class GithubOauthService @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code}) and response($data)")
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                     messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 )
             }

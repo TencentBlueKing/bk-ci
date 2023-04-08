@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_REGISTER_IM
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SOURCE_IMAGE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFUL_REGISTRATION_IMAGE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_TARGET_IMAGE
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -154,9 +153,8 @@ class TkeService @Autowired constructor(
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
         buildLogPrinter.addLine(
             buildId = pushImageParam.buildId,
-            message = MessageUtil.getMessageByLocale(
+            message = I18nUtil.getCodeLanMessage(
                 messageCode = BK_SOURCE_IMAGE,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(fromImage)
             ),
             tag = pushImageParam.taskId,
@@ -175,9 +173,8 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
-                message = MessageUtil.getMessageByLocale(
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = BK_TARGET_IMAGE,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(toImageRepo, pushImageParam.targetImageTag)
                 ),
                 tag = pushImageParam.taskId,
@@ -272,9 +269,8 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image success")
                     buildLogPrinter.addLine(
                         buildId = pushImageParam.buildId,
-                        message = MessageUtil.getMessageByLocale(
-                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE
                         ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
@@ -285,9 +281,8 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image failed, msg:$msg")
                     buildLogPrinter.addRedLine(
                         buildId = pushImageParam.buildId,
-                        message = MessageUtil.getMessageByLocale(
-                            messageCode = BK_FAILED_REGISTER_IMAGE,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        message = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_FAILED_REGISTER_IMAGE
                         ) + "$msg",
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
@@ -299,9 +294,8 @@ class TkeService @Autowired constructor(
             logger.error("[${pushImageParam.buildId}]|Import docker image failed exception:", e)
             buildLogPrinter.addRedLine(
                 buildId = pushImageParam.buildId,
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_REGISTER_IMAGE,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILED_REGISTER_IMAGE
                 ) + "${e.message}",
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,

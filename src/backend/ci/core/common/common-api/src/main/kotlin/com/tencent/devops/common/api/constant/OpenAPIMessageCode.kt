@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.statistics.pojo.openapi.constant
+package com.tencent.devops.common.api.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -51,4 +51,7 @@ object OpenAPIMessageCode {
     const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2112004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
     const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
     const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
+    const val USER_CHECK_FAIL = "2112007" // OpenAPI：用户校验失败
+    const val ERROR_USER_EXIST = "2112008" // OpenAPI：重复添加
+    const val ILLEGAL_USER = "2112010" //非法用户
 }

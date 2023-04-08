@@ -47,25 +47,31 @@ package com.tencent.devops.sign.api.constant
 object SignMessageCode {
 
     // sign服务模块业务错误
-    const val ERROR_PARSE_SIGN_INFO_HEADER = "2122001" // 解析签名信息头部失败
-    const val ERROR_CHECK_SIGN_INFO_HEADER = "2122002" // 验证签名信息头部失败
-    const val ERROR_COPY_FILE = "2122003" // 复制并计算MD5失败
-    const val ERROR_SIGN_IPA_ILLEGAL = "2122004" // IPA包解析失败
-    const val ERROR_SIGN_INFO_ILLEGAL = "2122005" // 缺少拓展的签名信息
-    const val ERROR_SIGN_IPA = "2122006" // IPA包签名失败
-    const val ERROR_ARCHIVE_SIGNED_IPA = "2122007" // 归档IPA包失败
-    const val ERROR_MP_NOT_EXIST = "2122008" // 描述文件不存在
-    const val ERROR_ENCODE_SIGN_INFO = "2122009" // 编码签名信息头部失败
-    const val ERROR_PARS_INFO_PLIST = "2122010" // 解析Info.plist失败
-    const val ERROR_RESIGN_TASK_NOT_EXIST = "2122011" // 签名任务不存在
-    const val ERROR_CREATE_DOWNLOAD_URL = "2122012" // 创建下载连接失败
-    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // ipa文件解压并检查签名信息失败
-    const val ERROR_WILDCARD_MP_NOT_EXIST = "2122014" // 通配符描述文件不存在
-    const val ERROR_INSERT_KEYCHAIN_GROUPS = "2122015" // entitlement插入keychain失败
-    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限
-    const val ERROR_UPLOAD_TOKEN_INVALID = "2122017" // 上传IPA使用的token不存在
-    const val ERROR_UPLOAD_TOKEN_EXPIRED = "2122018" // 上传IPA使用的token已过期
+    const val ERROR_PARSE_SIGN_INFO_HEADER = "2122001" //解析签名信息头部失败
+    const val ERROR_CHECK_SIGN_INFO_HEADER = "2122002" //验证签名信息头部失败
+    const val ERROR_COPY_FILE = "2122003" //复制并计算MD5失败
+    const val ERROR_SIGN_IPA_ILLEGAL = "2122004" //IPA包解析失败
+    const val ERROR_SIGN_INFO_ILLEGAL = "2122005" //缺少拓展的签名信息
+    const val ERROR_SIGN_IPA = "2122006" //IPA包签名失败
+    const val ERROR_ARCHIVE_SIGNED_IPA = "2122007" //归档IPA包失败
+    const val ERROR_MP_NOT_EXIST = "2122008" //描述文件不存在
+    const val ERROR_ENCODE_SIGN_INFO = "2122009" //编码签名信息头部失败
+    const val ERROR_PARS_INFO_PLIST = "2122010" //解析Info.plist失败
+    const val ERROR_RESIGN_TASK_NOT_EXIST = "2122011" //签名任务不存在
+    const val ERROR_CREATE_DOWNLOAD_URL = "2122012" //创建下载连接失败
+    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" //ipa文件解压并检查签名信息失败
+    const val ERROR_WILDCARD_MP_NOT_EXIST = "2122014" //通配符描述文件不存在
+    const val ERROR_INSERT_KEYCHAIN_GROUPS = "2122015" //entitlement插入keychain失败
+    const val ERROR_NOT_AUTH_UPLOAD = "2122016" //无发起iOS重签名权限
+    const val ERROR_UPLOAD_TOKEN_INVALID = "2122017" //上传IPA使用的token不存在
+    const val ERROR_UPLOAD_TOKEN_EXPIRED = "2122018" //上传IPA使用的token已过期
     const val ERROR_MP_PARSE_ERROR = "2122019" // 描述文件不存在
     const val IOS_ENTERPRISE_RESIGNATURE = "2122020" //用户({0})无权限在工程({1})的流水线({2})中发起iOS企业重签名.
-    const val KEYSTORE_RESOURCE_NOT_EXISTS = "2122021" // 请求的Keystore应用{0}没有相应证书
+    const val KEYSTORE_RESOURCE_NOT_EXISTS = "2122021" //请求的Keystore应用{0}没有相应证书
+
+    const val BK_SIGNING_TASK_SIGNATURE_INFORMATION = "bkSigningTaskSignatureInformation" //签名任务签名信息(resignId={0})不存在。
+    const val BK_SIGNING_TASK_SIGNATURE_HISTORY = "bkSigningTaskSignatureHistory" //签名任务签名历史(resignId={0})不存在。
+    const val BK_FAILED_CREATE_DOWNLOAD_CONNECTION = "bkFailedCreateDownloadConnection" //创建下载连接失败(resignId={0})
+    const val BK_FAILED_INSERT = "bkFailedInsert" //插入entitlement文件({0})的keychain-access-groups失败。
+    const val BK_DESCRIPTION_FILE_FOR_CERTIFICATE = "bkDescriptionFileForCertificate" //未找到证书[{0}]对应的描述文件，返回空值
 }

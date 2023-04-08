@@ -83,9 +83,8 @@ class StreamOauthService @Autowired constructor(
     ): GitToken {
         val userId = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableUserId
             ?: throw RuntimeException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = PROJECT_STREAM_NOT_ENABLED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(gitProjectId.toString())
                 )
             )

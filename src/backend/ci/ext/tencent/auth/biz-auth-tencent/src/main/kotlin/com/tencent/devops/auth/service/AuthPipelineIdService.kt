@@ -2,7 +2,6 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -30,10 +29,9 @@ class AuthPipelineIdService @Autowired constructor(
             val pipelineInfo = client.get(ServicePipelineResource::class)
                 .getPipelineInfoByPipelineId(resourceCode)?.data
                 ?: throw PermissionForbiddenException(
-                    message = MessageUtil.getMessageByLocale(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PERMISSION_DENIED,
-                        params = arrayOf(resourceCode),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                        params = arrayOf(resourceCode))
                 )
             pipelineInfo!!.id.toString()
         }
@@ -50,10 +48,9 @@ class AuthPipelineIdService @Autowired constructor(
                 val pipelineInfo = client.get(ServiceTXPipelineResource::class)
                     .getPipelineInfobyId(resourceCode.toInt()).data
                     ?: throw PermissionForbiddenException(
-                        message = MessageUtil.getMessageByLocale(
+                        message = I18nUtil.getCodeLanMessage(
                             messageCode = CommonMessageCode.PERMISSION_DENIED,
-                            params = arrayOf(resourceCode),
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                            params = arrayOf(resourceCode))
                     )
                 Pair(pipelineInfo.id.toString(), pipelineInfo.pipelineName)
             } else {
@@ -63,10 +60,9 @@ class AuthPipelineIdService @Autowired constructor(
             val pipelineInfo = client.get(ServicePipelineResource::class)
                 .getPipelineInfoByPipelineId(resourceCode)?.data
                 ?: throw PermissionForbiddenException(
-                    message = MessageUtil.getMessageByLocale(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PERMISSION_DENIED,
-                        params = arrayOf(resourceCode),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        params = arrayOf(resourceCode)
                     )
                 )
             Pair(pipelineInfo.id.toString(), pipelineInfo.pipelineName)

@@ -80,14 +80,17 @@ object ProjectMessageCode {
     const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
     const val PROJECT_ASSIGN_DATASOURCE_FAIL = "2119034" // 无法为项目分配可用的数据源
 
-    const val FAILED_CREATE_PROJECT_V0 = "2119035" // 调用权限中心V0创建项目失败
-    const val PROJECT_ID_INVALID_V0 = "2119036" // 权限中心V0创建的项目ID无效
-    const val ASSOCIATED_SYSTEM_NOT_BOUND = "2119037" // 关联系统未绑定
-    const val NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT = "2119038" // 授权用户数越界
-    const val FAILED_SYNCHRONIZE_PROJECT = "2119039" // 同步项目到BCS失败
-    const val FAILED_UPDATE_PROJECT_INFORMATION = "2119040" // 更新bcs的项目信息失败
-    const val FAILED_UPDATE_LOGO_INFORMATION = "2119041" // 更新bcs的项目LOGO信息失败
-    const val USER_RESIGNED = "2119042" // 用户{0} 已离职
-    const val FAILED_USER_INFORMATION = "2119043" // 获取用户{0} 信息失败
+    const val FAILED_CREATE_PROJECT_V0 = "2119035" //调用权限中心V0创建项目失败
+    const val PROJECT_ID_INVALID_V0 = "2119036" //权限中心V0创建的项目ID无效
+    const val ASSOCIATED_SYSTEM_NOT_BOUND = "2119037" //关联系统未绑定
+    const val NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT = "2119038" //授权用户数越界
+    const val FAILED_SYNCHRONIZE_PROJECT = "2119039" //同步项目到BCS失败
+    const val FAILED_UPDATE_PROJECT_INFORMATION = "2119040" //更新bcs的项目信息失败
+    const val FAILED_UPDATE_LOGO_INFORMATION = "2119041" //更新bcs的项目LOGO信息失败
+    const val USER_RESIGNED = "2119042" //用户{0} 已离职
+    const val FAILED_USER_INFORMATION = "2119043" //获取用户{0} 信息失败
 
+    const val BK_CONTAINER_SERVICE = "bkContainerService" //容器服务
+    const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" //调用BSC接口创建项目失败
+    const val BK_FAILED_GET_PAASCC_INFORMATION = "bkFailedGetPaasccInformation" //获取PAASCC项目信息失败
 }

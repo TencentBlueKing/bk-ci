@@ -23,5 +23,16 @@ object LogMessageCode {
     const val ES_UNIQUE_NAME_NOT_CONFIGURED = "2108003"//ES{0}唯一名称尚未配置
     const val USER_NO_RIGHT_VIEW_PIPELINE = "2108004"//用户({0})无权限在工程({1})下查看流水线
 
-
+    const val BK_FAILED_INSERT_DATA = "bkFailedInsertData" //蓝盾ES集群插入数据失败
+    const val BK_ES_CLUSTER_RECOVERY = "bkEsClusterRecovery" //蓝盾ES集群恢复
+    const val BK_FAILURE = "bkFailure" //失效
+    const val BK_RECOVERY = "bkRecovery" //恢复
+    const val BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION = "bkEsClusterStatusAlarmNotification" //【ES集群状态告警通知】
+    const val BK_NOTIFICATION_PUSH_FROM_BKDEVOP = "bkNotificationPushFrombkdevop" //来自bkDevOps/蓝盾DevOps平台的通知推送
+    const val BK_CLUSTER_NAME = "bkClusterName" //集群名称
+    const val BK_STATUS = "bkStatus" //状态
+    const val BK_EMPTY_DATA = "bkEmptyData" //空数据
+    const val BK_LOOK_FORWARD_IT = "bkLookForwardIt" //敬请期待！
+    const val BK_CONTACT_BLUE_SHIELD_ASSISTANT = "bkContactBlueShieldAssistant" //如有任何问题，可随时联系蓝盾助手。
+    const val BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT = "bkHeadOfBlueShieldLogManagement" //你收到此邮件，是因为你是蓝盾日志管理负责人
 }

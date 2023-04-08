@@ -36,7 +36,7 @@ package com.tencent.devops.common.api.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker 32：statistics）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -78,34 +78,43 @@ object CommonMessageCode {
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
 
-    const val USERS_EXCEEDS_THE_LIMIT = "2100029"//授权用户数越界:{0}
-    const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100030"//查询 Gse Agent 状态失败
-    const val FAILED_TO_GET_AGENT_STATUS = "2100031"//获取agent状态失败
-    const val FAILED_TO_GET_CMDB_NODE = "2100032"//获取 CMDB 节点失败
-    const val FAILED_TO_GET_CMDB_LIST = "2100033"//获取CMDB列表失败
-    const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100034"//stages和steps不能并列存在!
-    const val ILLEGAL_JOB_TYPE = "2100035"//非法的job类型!
-    const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036"//GITCI Service镜像格式非法
-
-    const val THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION = "2100037"//第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -
-    const val CREATE_CONTAINER_INTERFACE_EXCEPTION = "2100038"//创建容器接口异常
-    const val CREATE_CONTAINER_RETURNS_FAILED = "2100039"//创建容器接口返回失败
-    const val CREATE_CONTAINER_TIMED_OUT = "2100040"//创建容器接口超时
-    const val OPERATION_CONTAINER_INTERFACE_EXCEPTION = "2100041"//操作容器接口异常
-    const val OPERATION_CONTAINER_RETURNED_FAILURE = "2100042"//操作容器接口返回失败
-    const val OPERATION_CONTAINER_TIMED_OUT = "2100043"//操作容器接口超时
-    const val GET_STATUS_INTERFACE_EXCEPTION = "2100044"//获取容器状态接口异常
-    const val GET_STATUS_TIMED_OUT = "2100045"//获取容器状态接口超时
-    const val CREATE_MIRROR_INTERFACE_EXCEPTION = "2100046"//创建镜像接口异常
-    const val CREATE_MIRROR_INTERFACE_RETURNED_FAILURE = "2100047"//创建镜像接口返回失败
-    const val CREATE_MIRROR_INTERFACE_EXCEPTION_NEW = "2100048"//创建镜像新版本接口异常
-    const val NEW_MIRROR_INTERFACE_RETURNED_FAILURE = "2100049"//创建镜像新版本接口返回失败
-    const val TASK_STATUS_INTERFACE_EXCEPTION = "2100050"//获取TASK状态接口异常
-    const val TASK_STATUS_TIMED_OUT = "2100051"//获取TASK状态接口超时
-    const val GET_WEBSOCKET_INTERFACE_EXCEPTION = "2100052"//获取websocket接口异常
-    const val PARAMETER_CANNOT_EMPTY = "2100053"//参数不能为空
-    const val PARAMETER_CANNOT_EMPTY_ALL = "2100054"//参数不能全部为空
+    const val USERS_EXCEEDS_THE_LIMIT = "2100029" //授权用户数越界:{0}
+    const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100030" //查询 Gse Agent 状态失败
+    const val FAILED_TO_GET_AGENT_STATUS = "2100031" //获取agent状态失败
+    const val FAILED_TO_GET_CMDB_NODE = "2100032" //获取 CMDB 节点失败
+    const val FAILED_TO_GET_CMDB_LIST = "2100033" //获取CMDB列表失败
+    const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100034" //stages和steps不能并列存在!
+    const val ILLEGAL_JOB_TYPE = "2100035" //非法的job类型!
+    const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036" //GITCI Service镜像格式非法
+    const val THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION = "2100037" //第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -
+    const val CREATE_CONTAINER_INTERFACE_EXCEPTION = "2100038" //创建容器接口异常
+    const val CREATE_CONTAINER_RETURNS_FAILED = "2100039" //创建容器接口返回失败
+    const val CREATE_CONTAINER_TIMED_OUT = "2100040" //创建容器接口超时
+    const val OPERATION_CONTAINER_INTERFACE_EXCEPTION = "2100041" //操作容器接口异常
+    const val OPERATION_CONTAINER_RETURNED_FAILURE = "2100042" //操作容器接口返回失败
+    const val OPERATION_CONTAINER_TIMED_OUT = "2100043" //操作容器接口超时
+    const val GET_STATUS_INTERFACE_EXCEPTION = "2100044" //获取容器状态接口异常
+    const val GET_STATUS_TIMED_OUT = "2100045" //获取容器状态接口超时
+    const val CREATE_MIRROR_INTERFACE_EXCEPTION = "2100046" //创建镜像接口异常
+    const val CREATE_MIRROR_INTERFACE_RETURNED_FAILURE = "2100047" //创建镜像接口返回失败
+    const val CREATE_MIRROR_INTERFACE_EXCEPTION_NEW = "2100048" //创建镜像新版本接口异常
+    const val NEW_MIRROR_INTERFACE_RETURNED_FAILURE = "2100049" //创建镜像新版本接口返回失败
+    const val TASK_STATUS_INTERFACE_EXCEPTION = "2100050" //获取TASK状态接口异常
+    const val TASK_STATUS_TIMED_OUT = "2100051" //获取TASK状态接口超时
+    const val GET_WEBSOCKET_INTERFACE_EXCEPTION = "2100052" //获取websocket接口异常
+    const val PARAMETER_CANNOT_EMPTY_ALL = "2100054" //参数不能全部为空
 
 
-
+    const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" //创建容器超时
+    const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" //创建失败，异常信息
+    const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES = "bkBlueShieldPublicBuildResources" //蓝盾公共构建资源
+    const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW = "bkBlueShieldPublicBuildResourcesNew" //蓝盾公共构建资源(NEW)
+    const val BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL = "bkPublicDockerOnDevnetPhysical" //公共：Docker on Devnet 物理机
+    const val BK_PUBLIC_DOCKER_ON_DEVCLOUD = "bkPublicDockerOnDevcloud" //公共：Docker on DevCloud
+    const val BK_PUBLIC_DOCKER_ON_BCS = "bkPublicDockerOnBcs" //公共：Docker on Bcs
+    const val BK_PRIVATE_SINGLE_BUIL_MACHINE = "bkPrivateSingleBuilMachine" //私有：单构建机
+    const val BK_PRIVATE_BUILD_A_CLUSTER = "bkPrivateBuildACluster" //私有：构建集群
+    const val BK_PCG_PUBLIC_BUILD_RESOURCES = "bkPcgPublicBuildResources" //PCG公共构建资源
+    const val BK_TENCENT_SELF_DEVELOPED_CLOUD= "bkTencentSelfDevelopedCloud" //腾讯自研云（云devnet资源）
+    const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" //云托管：Windows on DevCloud
 }

@@ -42,8 +42,7 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         ) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,

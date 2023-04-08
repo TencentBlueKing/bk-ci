@@ -134,19 +134,17 @@ class FileServiceExt @Autowired constructor(
             val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get jfrog files($url) fail:\n $responseBody")
-                throw RuntimeException(MessageUtil.getMessageByLocale(
+                throw RuntimeException(I18nUtil.getCodeLanMessage(
                     messageCode = PushMessageCode.GET_FILE_FAIL,
-                    params = null,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+                    params = null))
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
                 logger.warn("get jfrog files($url) fail\n$responseBody")
-                throw RuntimeException(MessageUtil.getMessageByLocale(
+                throw RuntimeException(I18nUtil.getCodeLanMessage(
                     messageCode = PushMessageCode.GET_FILE_FAIL,
-                    params = null,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = null
                 ))
             }
         }

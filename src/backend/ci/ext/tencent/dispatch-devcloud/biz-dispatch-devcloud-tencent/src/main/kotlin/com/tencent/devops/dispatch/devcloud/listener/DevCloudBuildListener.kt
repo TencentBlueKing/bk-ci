@@ -2,6 +2,7 @@ package com.tencent.devops.dispatch.devcloud.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_START_DEVCLOUD
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
@@ -11,6 +12,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
@@ -214,7 +216,10 @@ class DevCloudBuildListener @Autowired constructor(
                 e.errorType,
                 e.errorCode,
                 e.formatErrorMessage,
-                (e.message ?: "启动DevCloud构建容器失败，请联系devopsHelper反馈处理.") +
+                (e.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILED_START_DEVCLOUD,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )) +
                     "\n容器构建异常请参考：$devCloudHelpUrl"
             )
         } catch (e: Exception) {

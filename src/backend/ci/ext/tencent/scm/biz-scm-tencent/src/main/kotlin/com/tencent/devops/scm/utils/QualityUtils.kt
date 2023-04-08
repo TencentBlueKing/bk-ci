@@ -28,7 +28,6 @@
 package com.tencent.devops.scm.utils
 
 import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_METRIC
 import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE_OUTPUT
 import com.tencent.devops.common.api.constant.I18NConstant.BK_RESULT
@@ -70,7 +69,7 @@ object QualityUtils {
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\">" +
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_METRIC,
+                    messageCode = BK_QUALITY_RED_LINE_OUTPUT,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "</th>")
         body.append("<th style=\"text-align:left;\">" +

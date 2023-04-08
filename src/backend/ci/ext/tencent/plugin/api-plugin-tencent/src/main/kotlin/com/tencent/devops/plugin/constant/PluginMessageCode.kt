@@ -45,11 +45,15 @@ package com.tencent.devops.plugin.constant
  *
  */
 object PluginMessageCode {
-    const val ERROR_RETRY_3_FAILED = "2113001" // 重试3次仍然失败
-    const val ERROR_CAN_NOT_FIND_TAG = "2113002" // 找不到指定Tag[{0}]
-    const val ERROR_UNKNOWN_REPO = "2113003" // 找不到指定代码库[{0}]
+    const val ERROR_RETRY_3_FAILED = "2113001" //重试3次仍然失败
+    const val ERROR_CAN_NOT_FIND_TAG = "2113002" //找不到指定Tag[{0}]
+    const val ERROR_UNKNOWN_REPO = "2113003" //找不到指定代码库[{0}]
 
-    const val WETEST_FAILED_GET = "2113004" // WeTest获取secretId,secretKey失败，返回码: {0}, 错误消息: {1}
-    const val GET_SIGNATURE_ERROR = "2113005" // 获取Signature错误，err:
-    const val URL_CODING_ERROR = "2113006" // url编码错误, err:
+    const val WETEST_FAILED_GET = "2113004" //WeTest获取secretId,secretKey失败，返回码: {0}, 错误消息: {1}
+    const val GET_SIGNATURE_ERROR = "2113005" //获取Signature错误，err:
+    const val URL_CODING_ERROR = "2113006" //url编码错误, err:
+
+    const val BK_APP_SCAN_COMPLETED = "bkAppScanCompleted" //金刚app扫描完成
+    const val BK_BUILDID_NOT_FOUND = "bkBuildidNotFound" //服务端内部异常，buildId={0}的构建未查到
+    const val BK_PIPELINEID_NOT_FOUND = "bkPipelineidNotFound" //服务端内部异常，pipelineId={0}的构建未查到
 }

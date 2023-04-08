@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.constant
+package com.tencent.devops.statistics.pojo.openapi.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -36,7 +36,7 @@ package com.tencent.devops.openapi.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker 32：statistics）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -44,14 +44,15 @@ package com.tencent.devops.openapi.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object OpenAPIMessageCode {
-    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2112001" // OpenAPI：API Gateway公钥文件未设置
-    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2112002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
-    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2112003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
-    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2112004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
-    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
-    const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
-    const val USER_CHECK_FAIL = "2112007" // OpenAPI：用户校验失败
-    const val ERROR_USER_EXIST = "2112008" // OpenAPI：重复添加
-    const val ILLEGAL_USER = "2112009" //非法用户
+object StatisticsMessageCode {
+
+    const val BK_NO_APIGW_API = "bkNoApigwApi" //Openapi非apigw接口，不需要鉴权。
+    const val BK_PRE_ENHANCEMENT = "bkPreEnhancement" //【前置增强】the method
+    const val BK_PARAMETER_NAME = "bkParameterName" //参数名
+    const val BK_PARAMETER_VALUE = "bkParameterValue" //参数值
+    const val BK_REQUEST_TYPE_APIGWTYPE = "bkRequestTypeApigwtype" //请求类型apigwType[{0}],appCode[{1}],项目[{2}]
+    const val BK_PERMISSION_FOR_PROJECT = "bkPermissionForProject" //判断！！！！请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限.
+    const val BK_PERMISSION_FOR_PROJECT_VERIFIED = "bkPermissionForProjectVerified" //请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限【验证通过】
+    const val BK_VERIFICATION_FAILED = "bkVerificationFailed" //请求类型apigwType[{0}],appCode[{1}],是否有项目[{2}]的权限【验证失败】
+    const val BK_PROJECT_LIST = "bkProjectList" //项目列表
 }

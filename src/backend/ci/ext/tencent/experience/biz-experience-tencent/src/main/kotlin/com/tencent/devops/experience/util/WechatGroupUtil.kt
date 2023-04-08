@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_
 import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_INVITES_YOU_EXPERIENCE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_MOBILE_EXPERIENCE_ADDRESS
 import com.tencent.devops.common.api.constant.I18NConstant.BK_PC_EXPERIENCE_ADDRESS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
@@ -51,9 +50,8 @@ object WechatGroupUtil {
         richtextContentList.add(
             RichtextText(
                 RichtextTextText(
-                    MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(projectName)
                     ) + "\n\n"
         )
@@ -61,18 +59,16 @@ object WechatGroupUtil {
         )
         // body
         richtextContentList.add(RichtextText(RichtextTextText(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(projectName, name, version)
             )
         )))
         richtextContentList.add(
             RichtextView(
                 RichtextViewLink(
-                    MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                     messageCode = BK_PC_EXPERIENCE_ADDRESS,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 innerUrl,
                 1
@@ -80,9 +76,8 @@ object WechatGroupUtil {
             )
         )
         richtextContentList.add(RichtextView(RichtextViewLink(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_MOBILE_EXPERIENCE_ADDRESS,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 outerUrl,
                 1

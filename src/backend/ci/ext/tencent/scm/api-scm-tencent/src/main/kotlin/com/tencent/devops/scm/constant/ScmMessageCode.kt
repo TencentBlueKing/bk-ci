@@ -45,14 +45,22 @@ package com.tencent.devops.scm.constant
  *
  */
 object ScmMessageCode {
-    const val ERROR_GIT_BAD_REQUEST = "2116001" // 参数错误，或是参数格式错误
-    const val ERROR_GIT_UNAUTHORIZED = "2116002" // 认证失败
-    const val ERROR_GIT_FORBIDDEN = "2116003" // 账号并没有该操作的权限
-    const val ERROR_GIT_NOT_FOUND = "2116004" // 资源不存在，也可能是账号没有该项目的权限（为防止黑客撞库获取库列表）
-    const val ERROR_GIT_METHOD_NOT_ALLOWED = "2116005" // 没有该接口
-    const val ERROR_GIT_CONFLICT = "2116006" // 已经有一个同名项目存在了
-    const val ERROR_GIT_UNPROCESSABLE = "2116007" // 操作不能进行
-    const val ERROR_GIT_SERVER_ERROR = "2116008" // 服务器出错
-    const val GIT_TOKEN_EMPTY = "2116009" // Git Token为空
-    const val INCORRECT_GIT_TOKEN = "2116010" // Git Token不正确
+    const val ERROR_GIT_BAD_REQUEST = "2116001" //参数错误，或是参数格式错误
+    const val ERROR_GIT_UNAUTHORIZED = "2116002" //认证失败
+    const val ERROR_GIT_FORBIDDEN = "2116003" //账号并没有该操作的权限
+    const val ERROR_GIT_NOT_FOUND = "2116004" //资源不存在，也可能是账号没有该项目的权限（为防止黑客撞库获取库列表）
+    const val ERROR_GIT_METHOD_NOT_ALLOWED = "2116005" //没有该接口
+    const val ERROR_GIT_CONFLICT = "2116006" //已经有一个同名项目存在了
+    const val ERROR_GIT_UNPROCESSABLE = "2116007" //操作不能进行
+    const val ERROR_GIT_SERVER_ERROR = "2116008" //服务器出错
+    const val GIT_TOKEN_EMPTY = "2116009" //Git Token为空
+    const val INCORRECT_GIT_TOKEN = "2116010" //Git Token不正确
+
+    const val BK_FILE_CANNOT_EXCEED = "bkFileCannotExceed" //请求文件不能超过1M
+    const val BK_LOCAL_WAREHOUSE_CREATION_FAILED = "bkLocalWarehouseCreationFailed" //工程({0})本地仓库创建失败
+    const val BK_TRIGGER_METHOD = "bkTriggerMethod" //触发方式
+    const val BK_QUALITY_RED_LINE = "bkQualityRedLine" //质量红线
+    const val BK_QUALITY_RED_LINE_OUTPUT = "bkQualityRedLineOutput" //质量红线产出插件
+    const val BK_RESULT = "bkResult" //结果
+    const val BK_EXPECT = "bkExpect" //预期
 }

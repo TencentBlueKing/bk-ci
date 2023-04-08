@@ -18,6 +18,24 @@ package com.tencent.devops.worker.common
  *
  */
 object WorkerMessageCode {
-    const val FOLDER_NOT_EXIST = "2130001" //文件夹({0})不存在
-    const val CERTIFICATE_ID_EMPTY = "2130002" //证书ID为空
+    const val FOLDER_NOT_EXIST = "2130011" //文件夹({0})不存在
+    const val CERTIFICATE_ID_EMPTY = "2130012" //证书ID为空
+
+    const val BK_CANNING_SENSITIVE_INFORMATION = "bkCanningSensitiveInformation" //开始敏感信息扫描，待排除目录
+    const val BK_SENSITIVE_INFORMATION = "bkSensitiveInformation" //敏感信息扫描报告
+    const val BK_NO_SENSITIVE_INFORMATION = "bkNoSensitiveInformation" //无敏感信息，无需生成报告
+    const val BK_RELATIVE_PATH_KEYSTORE = "bkRelativePathKeystore" //keystore安装相对路径
+    const val BK_KEYSTORE_INSTALLED_SUCCESSFULLY = "bkKeystoreInstalledSuccessfully" //Keystore安装成功
+    const val BK_FAILED_UPLOAD_BUGLY_FILE = "bkFailedUploadBuglyFile" //上传bugly文件失败
+    const val BK_FAILED_GET_BUILDER_INFORMATION = "bkFailedGetBuilderInformation" //获取构建机基本信息失败
+    const val BK_FAILED_GET_WORKER_BEE = "bkFailedGetWorkerBee" //获取工蜂CI项目Token失败！
+    const val BK_FAILED_GET_PLUG = "bkFailedGetPlug" //获取插件执行环境信息失败
+    const val BK_FAILED_UPDATE_PLUG = "bkFailedUpdatePlug" //更新插件执行环境信息失败
+    const val BK_FAILED_SENSITIVE_INFORMATION = "bkFailedSensitiveInformation" //获取插件敏感信息失败
+    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = "bkFailedEnvironmentVariableInformation" //获取插件开发语言相关的环境变量信息失败
+    const val BK_FAILED_ADD_INFORMATION = "bkFailedAddInformation" //添加插件对接平台信息失败
+    const val BK_ARCHIVE_PLUG_FILES = "bkArchivePlugFiles" //归档插件文件
+    const val BK_FAILED_IOS_CERTIFICATE = "bkFailedIosCertificate" //获取IOS证书失败
+    const val BK_FAILED_ANDROID_CERTIFICATE = "bkFailedAndroidCertificate" //获取Android证书失败
+    const val BK_ENTERPRISE_SIGNATURE_FAILED = "bkEnterpriseSignatureFailed" //企业签名失败
 }

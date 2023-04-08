@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.tx.util.OrganizationUtil
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ERROR_OPENAPI_INNER_SERVICE_FAIL
 import com.tencent.devops.openapi.exception.MicroServiceInvokeFailure
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import org.slf4j.LoggerFactory

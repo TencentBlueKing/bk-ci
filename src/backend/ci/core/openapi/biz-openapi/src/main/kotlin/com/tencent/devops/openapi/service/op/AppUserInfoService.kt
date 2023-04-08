@@ -3,7 +3,7 @@ package com.tencent.devops.openapi.service.op
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode
 import com.tencent.devops.openapi.dao.AppManagerUserDao
 import com.tencent.devops.openapi.pojo.AppManagerInfo
 import org.jooq.DSLContext
