@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.util
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.utils.I18nUtil

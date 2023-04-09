@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -92,14 +91,14 @@ import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.utils.VersionUtils
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.time.LocalDateTime
+import java.util.Base64
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.*
 
 @Suppress("ALL")
 @Service
