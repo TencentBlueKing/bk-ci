@@ -100,9 +100,9 @@ class BcsContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE),
-        startContainerError = I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL),
-        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR)
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getLanguage()),
+        startContainerError = I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getLanguage())
     )
 
     @Value("\${bcs.resources.builder.cpu}")

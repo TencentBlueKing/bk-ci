@@ -86,7 +86,10 @@ class PipelineDispatchService @Autowired constructor(
         if (startupEvent.retryTime == 0) {
             buildLogPrinter.addLine(
                 buildId = startupEvent.buildId,
-                message = I18nUtil.getCodeLanMessage(BUILD_ENV_PREPARATION),
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_ENV_PREPARATION,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
                 tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
                 jobId = startupEvent.containerHashId,
                 executeCount = startupEvent.executeCount ?: 1

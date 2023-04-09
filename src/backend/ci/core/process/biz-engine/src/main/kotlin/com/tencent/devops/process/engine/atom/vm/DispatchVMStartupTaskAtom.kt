@@ -310,7 +310,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         message = MessageUtil.getMessageByLocale(
                             BK_ENV_NOT_YET_SUPPORTED,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getDefaultLocaleLanguage(),
                             arrayOf(env.key, version)
                         ),
                         tag = task.taskId,

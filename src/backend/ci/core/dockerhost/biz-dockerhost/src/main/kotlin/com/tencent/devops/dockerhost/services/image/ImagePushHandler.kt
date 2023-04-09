@@ -66,7 +66,8 @@ class ImagePushHandler(
                         false,
                         I18nUtil.getCodeLanMessage(
                             messageCode = BK_PUSH_IMAGE,
-                            params = arrayOf("$lays", "$currentProgress")
+                            params = arrayOf("$lays", "$currentProgress"),
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ),
                         elementId
                     )

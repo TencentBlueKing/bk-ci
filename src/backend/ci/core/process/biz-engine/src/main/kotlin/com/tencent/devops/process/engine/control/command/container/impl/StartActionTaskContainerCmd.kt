@@ -585,7 +585,8 @@ class StartActionTaskContainerCmd(
             buildId = task.buildId,
             message = I18nUtil.getCodeLanMessage(
                 messageCode = ATOM_POST_EXECUTE_TIP,
-                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName)
+                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName),
+                language = I18nUtil.getLanguage()
             ),
             tag = task.taskId,
             jobId = task.containerHashId,

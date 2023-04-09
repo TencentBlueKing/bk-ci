@@ -505,7 +505,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT,
-                        ,
                         language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = task.taskId,

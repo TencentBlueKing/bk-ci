@@ -238,8 +238,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
                     log(
                         event,
-                        I18nUtil.getCodeLanMessage(BUILD_MACHINE_UPGRADE_IN_PROGRESS) +
-                                " - ${agent.hostname}/${agent.ip}"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_MACHINE_UPGRADE_IN_PROGRESS,
+                            language = I18nUtil.getLanguage()
+                        ) + " - ${agent.hostname}/${agent.ip}"
                     )
                     return false
                 }
@@ -277,7 +279,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             } else {
                 log(
                     event,
-                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY,) +
+                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY, I18nUtil.getLanguage()) +
                             "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
