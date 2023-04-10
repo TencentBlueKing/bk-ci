@@ -24,7 +24,9 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.util.Properties
 
 val i18nPath: String? = System.getProperty("i18n.path")
 if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
@@ -54,19 +56,22 @@ if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
                         "message_$property.properties"
                     )
                 )
+                targetFile.parentFile.mkdir()
+                val targetProperties = Properties()
                 if (targetFile.createNewFile()) {
                     println("create target file : ${targetFile.absolutePath}")
                     // create output file with first input
                     if (file1.exists()) {
                         println("copy file1: ${file1.absolutePath} now...")
-                        file1.copyTo(targetFile, true)
+                        targetProperties.load(FileInputStream(file1))
                     }
                     // append second input to output file if it exists
                     if (file2.exists()) {
                         println("copy file2: ${file2.absolutePath} now...")
-                        file2.inputStream().copyTo(FileOutputStream(targetFile, true))
+                        targetProperties.load(FileInputStream(file2))
                     }
                 }
+                targetProperties.store(FileOutputStream(targetFile), "i18n")
                 println("Target file generated: ${targetFile.absolutePath}")
             }
         }
@@ -87,4 +92,4 @@ fun languages(path: String) = File(path)
         file.isFile && file.name.startsWith("message_") && file.name.endsWith(".properties")
     }?.map { it.name }
     ?.map { it.replace("message_", "").replace(".properties", "") }
-    ?.toMutableList() ?: mutableListOf()
+    ?.toMutableSet() ?: mutableSetOf()
