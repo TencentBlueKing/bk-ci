@@ -222,15 +222,13 @@ class StoreStatisticTotalDao {
         pageSize: Int
     ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType))
-            val baseStep = dslContext.select(
+            return dslContext.select(
                 DSL.sum(DOWNLOADS),
                 DSL.sum(COMMITS),
                 DSL.sum(SCORE),
                 STORE_CODE
             ).from(this)
-            return baseStep.where(conditions)
+            .where(STORE_TYPE.eq(storeType))
                 .orderBy(CREATE_TIME.desc(), ID)
                 .limit((page - 1) * pageSize, pageSize)
                 .fetch()
