@@ -235,9 +235,9 @@ class StoreStatisticTotalDao {
                 conditions.add(STORE_CODE.`in`(storeCodeList))
             }
             return if (null != offset && null != limit) {
-                baseStep.where(conditions).limit(limit).offset(offset).fetch()
+                baseStep.where(conditions).orderBy(CREATE_TIME, ID).limit(limit).offset(offset).fetch()
             } else {
-                baseStep.where(conditions).fetch()
+                baseStep.where(conditions).orderBy(CREATE_TIME, ID).fetch()
             }
         }
     }
