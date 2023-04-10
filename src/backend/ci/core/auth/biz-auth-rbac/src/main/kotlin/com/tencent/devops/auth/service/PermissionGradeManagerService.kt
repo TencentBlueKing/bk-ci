@@ -208,6 +208,46 @@ class PermissionGradeManagerService @Autowired constructor(
         }
     }
 
+    fun migrateGradeManager(
+        projectCode: String,
+        projectName: String
+    ): Int {
+        val name = IamGroupUtils.buildGradeManagerName(
+            projectName = projectName
+        )
+        val manageGroupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = AuthResourceType.PROJECT.value,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage =
+            "${AuthResourceType.PROJECT.value}_${DefaultGroupType.MANAGER.value} group config  not exist"
+        )
+        val description = manageGroupConfig.description
+        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
+            authorizationScopesStr = manageGroupConfig.authorizationScopes,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = projectCode,
+            resourceName = projectName
+        )
+        val subjectScopes = listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
+        val createManagerDTO = CreateManagerDTO.builder()
+            .system(iamConfiguration.systemId)
+            .name(name)
+            .description(description)
+            .members(listOf())
+            .authorization_scopes(authorizationScopes)
+            .subject_scopes(subjectScopes)
+            .sync_perm(true)
+            .groupName(manageGroupConfig.groupName)
+            .build()
+        logger.info("create migrate grade manager|$name")
+        return iamV2ManagerService.createManagerV2(createManagerDTO)
+    }
+
     /**
      * 修改分级管理员
      */

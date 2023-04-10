@@ -23,31 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.service.migrate
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+/**
+ * v3权限策略迁移到rbac
+ *
+ * 权限策略包含：
+ * 1. 蓝盾创建的默认用户组权限
+ * 2. 用户在权限中心创建的用户组权限
+ * 3. 用户自定义权限
+ */
+class MigrateV3PolicyService {
+    /**
+     * 启动迁移任务
+     */
+    fun startMigrateTask() {
 
-@RestResource
-class ServiceProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService,
-    val projectService: ProjectService
-) : ServiceProjectTagResource {
-    override fun checkProjectRouter(projectId: String): Result<Boolean> {
-        return Result(projectTagService.checkProjectTag(projectId))
     }
 
-    override fun isRbacPermission(projectId: String): Result<Boolean> {
-        return Result(projectService.isRbacPermission(projectId))
+    fun migrateGroupPolicy(projectCode: String, gradeManagerId: Int) {
+
     }
 
-    override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
-        return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
+    fun migrateUserCustomPolicy(projectCode: String, gradeManagerId: Int) {
+
+    }
+
+    fun comparePolicy(projectCode: String) {
+
     }
 }

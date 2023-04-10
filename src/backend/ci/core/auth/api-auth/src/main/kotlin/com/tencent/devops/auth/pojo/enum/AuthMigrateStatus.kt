@@ -23,31 +23,16 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.pojo.enum
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ServiceProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService,
-    val projectService: ProjectService
-) : ServiceProjectTagResource {
-    override fun checkProjectRouter(projectId: String): Result<Boolean> {
-        return Result(projectTagService.checkProjectTag(projectId))
-    }
-
-    override fun isRbacPermission(projectId: String): Result<Boolean> {
-        return Result(projectService.isRbacPermission(projectId))
-    }
-
-    override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
-        return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
-    }
+enum class AuthMigrateStatus(val value: Int) {
+    // 迁移中
+    PENDING(0),
+    // 迁移成功
+    SUCCEED(1),
+    // 迁移失败
+    FAILED(2);
 }

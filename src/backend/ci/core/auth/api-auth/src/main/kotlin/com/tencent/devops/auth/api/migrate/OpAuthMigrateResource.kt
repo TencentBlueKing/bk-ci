@@ -23,31 +23,34 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.api.migrate
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.ProjectTagService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService,
-    val projectService: ProjectService
-) : ServiceProjectTagResource {
-    override fun checkProjectRouter(projectId: String): Result<Boolean> {
-        return Result(projectTagService.checkProjectTag(projectId))
-    }
+@Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
+@Path("/op/auth/migrate")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpAuthMigrateResource {
 
-    override fun isRbacPermission(projectId: String): Result<Boolean> {
-        return Result(projectService.isRbacPermission(projectId))
-    }
-
-    override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
-        return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
-    }
+    @POST
+    @Path("/v3ToRbac")
+    @ApiOperation("v3权限升级到rbac权限")
+    fun v3ToRbacAuth(
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String
+    ): Result<Boolean>
 }

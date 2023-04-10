@@ -39,6 +39,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
@@ -62,6 +63,9 @@ import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.migrate.MigrateResourceService
+import com.tencent.devops.auth.service.migrate.MigrateV3PolicyService
+import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.config.CommonConfig
@@ -271,5 +275,35 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         client = client
+    )
+
+    @Bean
+    fun migrateResourceService() = MigrateResourceService(
+
+    )
+
+    @Bean
+    fun migrateV3PolicyService() = MigrateV3PolicyService(
+
+    )
+
+    @Bean
+    @Primary
+    fun rbacAuthMigrateService(
+        client: Client,
+        migrateResourceService: MigrateResourceService,
+        migrateV3PolicyService: MigrateV3PolicyService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        authResourceService: AuthResourceService,
+        dslContext: DSLContext,
+        authMigrationDao: AuthMigrationDao
+    ) = RbacPermissionMigrateService(
+        client = client,
+        migrateResourceService = migrateResourceService,
+        migrateV3PolicyService = migrateV3PolicyService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        authResourceService = authResourceService,
+        dslContext = dslContext,
+        authMigrationDao = authMigrationDao
     )
 }
