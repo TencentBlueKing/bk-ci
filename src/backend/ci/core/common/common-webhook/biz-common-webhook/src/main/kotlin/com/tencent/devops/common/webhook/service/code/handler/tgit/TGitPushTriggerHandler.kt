@@ -177,8 +177,8 @@ class TGitPushTriggerHandler(
                         gitScmService.getChangeFileList(
                             projectId = projectId,
                             repo = repository,
-                            from = event.after,
-                            to = event.before
+                            from = event.before,
+                            to = event.after
                         )
                     }
                     pushChangeFiles = eventPaths
