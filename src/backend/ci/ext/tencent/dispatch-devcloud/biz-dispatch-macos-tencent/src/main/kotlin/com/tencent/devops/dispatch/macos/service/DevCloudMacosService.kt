@@ -10,6 +10,8 @@ import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
+import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -247,6 +249,59 @@ class DevCloudMacosService @Autowired constructor(
             result = 200 == code
         }
         return result
+    }
+
+    fun getVmList(creator: String): List<DevCloudMacosVmInfo> {
+        val url = "$devCloudUrl/api/mac/pool/list?page=1&size=9999"
+        val request = Request.Builder()
+            .url(url)
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .get()
+            .build()
+        val vmInfoList = mutableListOf<DevCloudMacosVmInfo>()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body!!.string()
+            logger.info("DevCloud getVmList http code is ${response.code}, $responseContent")
+            if (!response.isSuccessful) {
+                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                                 "msg: $responseContent")
+                return vmInfoList
+            }
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            val code = responseData["actionCode"] as Int
+            if (200 == code) {
+                val dataMap = responseData["data"] as Map<String, Any>
+                if (dataMap.containsKey("items")) {
+                    val itemsList = dataMap["items"] as List<Any>
+                    itemsList.forEach { item ->
+                        var itemTmp = item as Map<String, Any>
+                        if (itemTmp["ip"] != null) {
+                            vmInfoList.add(
+                                DevCloudMacosVmInfo(
+                                    name = itemTmp["name"] as String ?: "",
+                                    memory = itemTmp["memory"] as String ?: "",
+                                    assetId = itemTmp["assetId"] as String ?: "",
+                                    ip = itemTmp["ip"] as String ?: "",
+                                    disk = itemTmp["disk"] as String ?: "",
+                                    os = itemTmp["os"] as String ?: "",
+                                    id = itemTmp["id"] as Int ?: 0,
+                                    cpu = itemTmp["cpu"] as String ?: ""
+                                )
+                            )
+                        }
+                    }
+                } else {
+                    logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                                     "msg: $responseContent")
+                    return vmInfoList
+                }
+            } else {
+                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                                 "msg: $responseContent")
+                return vmInfoList
+            }
+            return vmInfoList
+        }
     }
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
