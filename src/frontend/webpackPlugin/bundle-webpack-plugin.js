@@ -62,7 +62,7 @@ module.exports = class BundleWebpackPlugin {
                                 .map(encodeURIComponent)
                                 .join('/')
                         )
-                        .map(entryPointPublicPath => {
+                        .map((entryPointPublicPath) => {
                             const extMatch = extensionRegexp.exec(
                                 entryPointPublicPath
                             )
@@ -78,17 +78,17 @@ module.exports = class BundleWebpackPlugin {
                             entryPointPublicPathMap[entryPointPublicPath] = true
                             // ext will contain .js or .css, because .mjs recognizes as .js
                             const ext = extMatch[1] === 'mjs' ? 'js' : extMatch[1]
-                            // 服务均为SPA单入口文件
-                            console.log(entryPointFiles, entryPointPublicPath)
                             assets[ext] = entryPointPublicPath
                         })
-                    
+
                     assetsMap[entryName] = assets
                 }
 
                 let json = {}
                 if (fs.existsSync(SERVICE_ASSETS_JSON_PATH)) {
-                    json = require(SERVICE_ASSETS_JSON_PATH)
+                    json = JSON.parse(
+                        fs.readFileSync(SERVICE_ASSETS_JSON_PATH, 'utf-8').toString()
+                    )
                 }
                 json = {
                     ...json,
@@ -98,7 +98,7 @@ module.exports = class BundleWebpackPlugin {
                     fs.mkdirSync(SERVICE_ASSETS_DIR)
                 }
                 fs.writeFileSync(SERVICE_ASSETS_JSON_PATH, JSON.stringify(json))
-                console.table(json)
+
                 callback()
             }
         )

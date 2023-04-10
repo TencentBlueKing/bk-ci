@@ -22,16 +22,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="__BK_CI_PUBLIC_PATH__/console/static/favicon.ico" type="image/x-icon" />
     <link
       rel="shortcut icon"
-      href="/console/static/favicon.ico"
+      href="__BK_CI_PUBLIC_PATH__/console/static/favicon.ico"
       type="image/x-icon"
     />
-    <link rel="preload" as="script" href="/console/static/vue.min.js" />
-    <link rel="preload" as="script" href="/console/static/vuex.min.js" />
-    <link rel="preload" as="script" href="/console/static/vue-router.min.js" />
-    <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js" />
 
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -47,25 +46,15 @@
     <% for (key in htmlWebpackPlugin.files.css) { %>
     <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
     <% } %>
+    
+    
     <!-- end devops:css -->
-    <title>蓝盾DevOps平台</title>
+    <title></title>
   </head>
   <body>
-    <script>
-      var ajax = new XMLHttpRequest()
-      ajax.open(
-        'GET',
-        '//staticfile.woa.com/bkdevops/bkdevops-icon/latest/bkdevops_sprite.svg',
-        true
-      )
-      ajax.send()
-      ajax.onload = function (e) {
-        var div = document.createElement('div')
-        div.setAttribute('style', 'position: absolute; width: 0; height: 0')
-        div.innerHTML = ajax.responseText
-        document.body.insertBefore(div, document.body.childNodes[0])
-      }
-    </script>
+    <!-- gulp inject: svg sprite js -->
+    <!-- inject:js -->
+    <!-- endinject -->
     <div id="devops-root">
       <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">
@@ -79,19 +68,19 @@
         </div>
       </div>
     </div>
-    <script src="/console/static/vue.min.js"></script>
-    <script src="/console/static/vuex.min.js"></script>
-    <script src="/console/static/vue-router.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js"></script>
+    
     <!-- devops:assets -->
     <!-- end devops:assets -->
 
     <script>
       var API_URL_PREFIX = '/ms' // api接口前缀
+      var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
       var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
       var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
-      var IWIKI_DOCS_URL = '__IWIKI_DOCS_URL__'
       var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
-      var WOA_LOGIN_SERVICE_URL = '__WOA_LOGIN_SERVICE_URL__' // woa login url
       var INIT_LOCALE = '__BK_CI_INIT_LOCALE__' // 国际化配置占位符
       var DEVOPS_LS_VERSION =
         '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
@@ -164,31 +153,30 @@
 
       function setCookie(cname, cvalue, domain) {
         document.cookie =
-          cname +
-          '=' +
-          cvalue +
-          '; ' +
-          'domain=' +
-          domain +
-          '; path=/;expires=Fri, 31 Dec 2030 23:59:59 GMT"'
+          cname + '=' + cvalue + '; ' + 'domain=' + domain + '; path=/'
       }
 
-      function removeCookie(cname, domain) {
+      function deleteCookie(cname, domain) {
+        var date = new Date()
+        date.setTime(date.getTime() - 10000)
         document.cookie =
           cname +
-          '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;' +
+          '=0;' +
           'domain=' +
           domain +
-          ';'
+          '; expires=' +
+          date.toGMTString() +
+          '; path=/'
       }
 
       window.setProjectIdCookie = function (projectId) {
         try {
-          var topDomain = document.domain.split('.').slice(-2).join('.')
+          var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
+          var topDomain =
+            domainMatch.length > 2 ? domainMatch[2] : location.hostname
           if (projectId) {
-            removeCookie(X_DEVOPS_PROJECT_ID, 'woa.com')
-            removeCookie(X_DEVOPS_PROJECT_ID, location.hostname)
-            setCookie(X_DEVOPS_PROJECT_ID, projectId, 'devops.woa.com')
+            deleteCookie(X_DEVOPS_PROJECT_ID, topDomain)
+            setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
             window.GLOBAL_PID = projectId
           }
         } catch (e) {
@@ -215,7 +203,7 @@
             return ''
           } else {
             var res = location.pathname.match(reg)
-            return res && res[1] !== '0' ? res[1] : ''
+            return res ? res[1] : ''
           }
         } catch (e) {
           console.warn(e)
@@ -228,30 +216,25 @@
     </script>
     <script>
       window.getLoginUrl = function () {
-        var loginUrlPlaceholder =
-          location.hostname.indexOf('.woa.com') > -1
-            ? WOA_LOGIN_SERVICE_URL
-            : LOGIN_SERVICE_URL
-
         var cUrl =
           location.origin +
           location.pathname +
           encodeURIComponent(location.search)
-        if (/=%s/.test(loginUrlPlaceholder)) {
-          return loginUrlPlaceholder.replace(/%s/, cUrl)
+        if (/=%s/.test(LOGIN_SERVICE_URL)) {
+          return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
         } else {
-          const loginUrl = new URL(loginUrlPlaceholder)
+          const loginUrl = new URL(LOGIN_SERVICE_URL)
           if (/=$/.test(loginUrl.search)) {
-            return loginUrlPlaceholder + cUrl
+            return LOGIN_SERVICE_URL + cUrl
           } else {
             loginUrl.searchParams.append('c_url', cUrl)
             return loginUrl.href
           }
         }
-        return loginUrlPlaceholder
+        return LOGIN_SERVICE_URL
       }
 
-      function asyncGet(url, pid) {
+      function asyncGet(url, pid, includeCredentials) {
         return new Promise(function (resolve, reject) {
           var xhr = new XMLHttpRequest()
           xhr.onreadystatechange = function () {
@@ -272,7 +255,7 @@
             }
           }
 
-          xhr.withCredentials = true
+          xhr.withCredentials = typeof includeCredentials === 'boolean' ? includeCredentials : true
           xhr.open('GET', url)
           pid && xhr.setRequestHeader(X_DEVOPS_PROJECT_ID, pid)
           xhr.send()
@@ -281,10 +264,6 @@
 
       function fetchAllServices() {
         return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
-      }
-
-      function fetchAssetsJSON() {
-        return asyncGet('/assets_bundle.json?t=' + Math.random())
       }
 
       function fetchAllProjects() {
@@ -310,7 +289,7 @@
 
       function joinUrl(urlArr) {
         const link = urlArr[urlArr.length - 1]
-        if (/^(http(s)?:)?\/\//i.test(link)) {
+        if (/^(http(s)?:)?\/\//.test(link)) {
           return link
         }
         if (Array.isArray(urlArr)) {
@@ -337,14 +316,8 @@
                 : children[j].css_url
               children[j].js_url = jsUrl
               children[j].css_url = cssUrl
-            } else if (children[j].inject_type === 'iframe') {
-              children[j].iframe_url = joinUrl([
-                location.origin,
-                children[j].iframe_url,
-              ])
             }
             serviceMap[mod] = children[j]
-
             if (children[j].inject_type === 'iframe') {
               iframeRoutes.push({
                 path:
@@ -379,7 +352,7 @@
               : undefined
           for (var i = 0; i < projectList.length; i++) {
             var proj = projectList[i]
-            if (proj && !proj.routerTag) {
+            if (proj && !proj.gray) {
               return proj.projectCode
             }
           }
@@ -391,11 +364,11 @@
         }
       }
 
-      function init(projectList, allServices, userInfo, assetsJSON) {
+      function init(projectList, allServices, userInfo) {
         var path = location.pathname.replace('/console', '')
         var headTag = document.head || document.getElementsByTagName('head')[0]
         var pathReg = /^\/(\w+)\/?/
-        var serviceObject = getServiceObject(allServices, assetsJSON)
+        var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
         var serviceMap = serviceObject.serviceMap
         var serviceMatchResult = path.match(pathReg)
         var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
@@ -420,8 +393,8 @@
           var css_url = page.css_url
           var title = page.title
 
-          importScript(js_url, document.body, loadJsAssets)
-          importStyle(css_url, headTag)
+          importScript(window.PUBLIC_URL_PREFIX + js_url, document.body, loadJsAssets)
+          importStyle(window.PUBLIC_URL_PREFIX + css_url, headTag)
         } else {
           loadJsAssets()
         }
@@ -452,12 +425,10 @@
       }
 
       function fetchData() {
-        console.log(pathPid)
         return Promise.all([
           fetchAllProjects(),
           fetchAllServices(),
           requestUser(),
-          fetchAssetsJSON(),
           fetchProjectById(pathPid),
         ]).then((response) => {
           var project = response.pop()
@@ -529,7 +500,7 @@
             : '后端服务异常，请稍后重试'
         document.writeln(
           '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' +
-            '<img src="/console/static/' +
+            '<img src="__BK_CI_PUBLIC_PATH__/console/static/' +
             (status || 503) +
             '.png" />' +
             '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' +
@@ -546,34 +517,6 @@
             importScript(js, document.body)
           }
         }
-      }
-
-      // 接入mta统计
-      var _mtac = {}
-      ;(function () {
-        var mta = document.createElement('script')
-        mta.src = '//pingjs.qq.com/h5/stats.js?v2.0.4'
-        mta.setAttribute('name', 'MTAH5')
-        mta.setAttribute('sid', '500630653')
-
-        var s = document.getElementsByTagName('script')[0]
-        s.parentNode.insertBefore(mta, s)
-      })()
-
-      function JSONP(url, callback) {
-        console.log(url)
-        const cbId = 'jsonp_callback_' + Math.round(100000 * Math.random())
-
-        window[cbId] = function (data) {
-          delete window[cbId]
-          document.body.removeChild(scriptNode)
-          callback(data)
-        }
-
-        var scriptNode = document.createElement('script')
-        scriptNode.src =
-          url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbId
-        document.body.appendChild(scriptNode)
       }
 
       function handleVisibilityChange() {

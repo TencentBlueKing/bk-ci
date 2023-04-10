@@ -2,7 +2,6 @@
     <bk-select v-bind="dropdownConf"
         :name="name"
         :loading="isLoading"
-        :placeholder="isLoading ? $t('editPage.loadingData') : placeholder"
         :value="value"
         :disabled="disabled || isLoading"
         @selected="handleSelect"
@@ -59,11 +58,13 @@
                 }
             },
             dropdownConf () {
-                const { searchable, multiple, clearable } = this.mergedOptionsConf
+                const { searchable, multiple, clearable, placeholder, searchPlaceholder } = this.mergedOptionsConf
                 return {
                     searchable,
                     multiple,
-                    clearable
+                    clearable,
+                    placeholder: this.isLoading ? this.$t('editPage.loadingData') : placeholder,
+                    searchPlaceholder: searchPlaceholder ?? placeholder
                 }
             }
         },

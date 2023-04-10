@@ -4,6 +4,7 @@
             <router-link
                 class="header-logo"
                 to="/console/"
+                @click.native="setDocumentTitle"
             >
                 <Logo
                     name="devops-logo"
@@ -56,11 +57,8 @@
                 class="service-title"
                 @click="goHome"
             >
-                <img v-if="isAbsoluteUrl(serviceLogo)" :src="serviceLogo" class="service-logo" />
                 <logo
-                    v-else
                     :name="serviceLogo"
-                    class="service-logo"
                     size="20"
                 />
                 {{ title }}
@@ -68,9 +66,8 @@
         </div>
         <div class="header-right-bar">
             <locale-switcher v-if="!isInIframe"></locale-switcher>
-            <qrcode class="feed-back-icon" />
             <span class="seperate-line">|</span>
-            
+            <!-- <feed-back class='feed-back-icon'></feed-back> -->
             <i
                 class="devops-icon icon-helper"
                 @click.stop="goToDocs"
@@ -94,19 +91,17 @@
     import { State, Action, Getter } from 'vuex-class'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
-    import Qrcode from './Qrcode.vue'
     import Logo from '../Logo/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import eventBus from '../../utils/eventBus'
-    import { urlJoin, isAbsoluteUrl } from '../../utils/util'
+    import { urlJoin } from '../../utils/util'
 
     @Component({
         components: {
             User,
             NavMenu,
-            Qrcode,
             ProjectDialog,
             Logo,
             DevopsSelect,
@@ -127,7 +122,6 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
-        isAbsoluteUrl = isAbsoluteUrl
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList
@@ -222,19 +216,17 @@
             }
 
             reload
-              ? location.href = path
-              : this.$router.replace({
+? location.href = path
+: this.$router.replace({
                 path
             })
         }
 
         handleProjectChange (id: string) {
             const { projectId } = this.$route.params
-            const oldProject = this.selectProjectList.find(project => project.projectCode === projectId) || {}
-            const project = this.selectProjectList.find(project => project.projectCode === id) || {}
+            const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
+            const project = this.selectProjectList.find(project => project.projectCode === id)
             
-            window.setProjectIdCookie(id)
-
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
             } else {
@@ -244,8 +236,9 @@
                     }
                 })
             }
-            
-            if (project.routerTag !== oldProject.routerTag) {
+            window.setProjectIdCookie(id)
+
+            if ((!oldProject && project.gray) || (oldProject && oldProject.gray !== project.gray)) {
                 this.goHomeById(id, true)
             }
         }
@@ -255,7 +248,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${IWIKI_DOCS_URL}/display/DevOps`)
+            this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
         goToPm (): void {
@@ -274,6 +267,10 @@
 
         closeTooltip (): void {
             this.isShowTooltip = false
+        }
+
+        setDocumentTitle () {
+            document.title = String(this.$t('documentTitleHome'))
         }
     }
 </script>
@@ -331,7 +328,7 @@
                     outline: none;
                 }
                 .bk-select-dropdown .bk-select-name {
-                    color: $fontLighterColor;
+                    color: $fontLigtherColor;
                     height: 36px;
                     line-height: 36px;
                     font-size: 14px;
@@ -345,7 +342,7 @@
                 height: 100%;
                 padding: 0 18px;
                 margin-left: 10px;
-                color: $fontLighterColor;
+                color: $fontLigtherColor;
                 font-size: 14px;
                 cursor: pointer;
 
@@ -353,9 +350,7 @@
                     color: white;
                     background-color: black;
                 }
-                .service-logo {
-                    width: 20px;
-                    height: 20px;
+                > svg {
                     margin-right: 5px;
                 }
             }
@@ -380,14 +375,14 @@
             > .seperate-line {
                 padding: 0 5px;
                 font-size: 20px;
-                // color: $fontLighterColor;
+                // color: $fontLigtherColor;
                 line-height: $headerHeight;
             }
 
             > .devops-icon {
                 padding: 0 10px;
                 font-size: 20px;
-                color: $fontLighterColor;
+                color: $fontLigtherColor;
                 line-height: $headerHeight;
                 cursor: pointer;
             }

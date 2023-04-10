@@ -28,7 +28,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            quality: './src/index'
+            quality: './src/entry'
         },
         publicPath: '/quality/',
         dist: '/quality',

@@ -1,31 +1,24 @@
 <template>
     <div class="notify-setting-comp" v-if="subscription">
         <bk-form>
-            <bk-form-item :label="$t('settings.noticeType')">
+            <bk-form-item :label="$t('settings.noticeType')" :required="true">
                 <bk-checkbox-group :value="subscription.types" @change="value => updateSubscription('types', value)">
                     <bk-checkbox v-for="item in noticeList" :key="item.id" :value="item.value">
                         {{ item.name }}
                     </bk-checkbox>
                 </bk-checkbox-group>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.noticeGroup')">
-                <bk-checkbox-group :value="subscription.groups" @change="value => updateSubscription('groups', value)">
-                    <bk-checkbox v-for="item in projectGroupAndUsers" :key="item.groupId" :value="item.groupId">
-                        {{ item.groupName }}
-                        <bk-popover placement="top">
-                            <span class="info-notice-length">({{ item.users.length }})</span>
-                            <div slot="content" style="max-width: 300px;word-wrap:break-word; word-break: normal">{{ item.users.length ? item.users.join(';') : $t('settings.emptyNoticeGroup') }}</div>
-                        </bk-popover>
-                    </bk-checkbox>
-                </bk-checkbox-group>
+            <bk-form-item :label="$t('settings.additionUser')" :required="true">
+                <staff-input
+                    :handle-change="(name, value) => subscription.users = value.join(',')"
+                    :value="subscription.users.split(',').filter(Boolean)"
+                    :placeholder="$t('settings.additionUserPlaceholder')">
+                </staff-input>
             </bk-form-item>
-            <bk-form-item :label="$t('settings.additionUser')">
-                <staff-input :handle-change="handleUsers" name="users" :value="pipelineSettingUser"></staff-input>
-            </bk-form-item>
-            <bk-form-item :label="$t('settings.noticeContent')">
+            <bk-form-item :label="$t('settings.noticeContent')" :required="true">
                 <textarea name="desc" v-model="subscription.content" class="bk-form-textarea"></textarea>
             </bk-form-item>
-            <bk-form-item>
+            <!-- <bk-form-item>
                 <atom-checkbox style="width: auto"
                     :handle-change="updateSubscription"
                     name="detailFlag"
@@ -33,8 +26,8 @@
                     :desc="$t('settings.pipelineLinkDesc')"
                     :value="subscription.detailFlag">
                 </atom-checkbox>
-            </bk-form-item>
-            <bk-form-item>
+            </bk-form-item> -->
+            <bk-form-item v-if="subscription.wechatGroupFlag">
                 <atom-checkbox
                     style="width: auto"
                     name="wechatGroupFlag"
@@ -43,7 +36,7 @@
                     :handle-change="updateSubscription"
                     :value="subscription.wechatGroupFlag">
                 </atom-checkbox>
-                <group-id-selector style="margin-left: -150px" class="item-groupid" v-if="subscription.wechatGroupFlag"
+                <group-id-selector style="margin-left: -150px" class="item-groupid"
                     :handle-change="updateSubscription"
                     name="wechatGroup"
                     :value="subscription.wechatGroup"
@@ -53,7 +46,7 @@
                 </group-id-selector>
                 <atom-checkbox
                     v-if="subscription.wechatGroupFlag"
-                    style="width: auto;margin-top: 10px;"
+                    style="width: auto;margin-top: -45px;"
                     name="wechatGroupMarkdownFlag"
                     :text="$t('settings.wechatGroupMarkdownFlag')"
                     :handle-change="updateSubscription"
@@ -65,46 +58,29 @@
 </template>
 
 <script>
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
     import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
-    import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
-    import { mapActions } from 'vuex'
+    import StaffInput from '@/components/atomFormField/StaffInput'
     export default {
         name: 'notify-setting',
         components: {
-            StaffInput,
             GroupIdSelector,
-            AtomCheckbox
+            StaffInput
         },
         props: {
             subscription: Object,
-            updateSubscription: Function,
-            projectGroupAndUsers: Array
+            updateSubscription: Function
         },
         computed: {
             noticeList () {
                 return [
-                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'RTX' },
-                    { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
-                    { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
+                    { id: 1, name: this.$t('settings.rtxNotice'), value: 'WEWORK' }
+                    // { id: 4, name: this.$t('settings.emailNotice'), value: 'EMAIL' },
+                    // { id: 2, name: this.$t('settings.wechatNotice'), value: 'WECHAT' },
+                    // { id: 3, name: this.$t('settings.smsNotice'), value: 'SMS' }
                 ]
             },
             groupIdDesc () {
                 return this.$t('settings.groupIdDesc')
-            },
-            pipelineSettingUser () {
-                return this.subscription && this.subscription.users ? this.subscription.users.split(',') : []
-            }
-        },
-        created () {
-            this.requestProjectGroupAndUsers(this.$route.params)
-        },
-        methods: {
-            ...mapActions('pipelines', [
-                'requestProjectGroupAndUsers'
-            ]),
-            handleUsers (name, value) {
-                this.updateSubscription(name, value.join(','))
             }
         }
     }
@@ -117,6 +93,11 @@
             line-height: 34px;
             padding: 0;
             width: 180px;
+        }
+        .notify-setting-no-data {
+            vertical-align: top;
+            font-size: 12px;
+            color: #63656e;
         }
     }
 </style>

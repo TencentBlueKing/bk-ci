@@ -1,16 +1,13 @@
 <template>
-    <bk-dropdown-menu :class="{ &quot;devops-button-dropdown&quot;: true, &quot;disabled&quot;: disabled }">
+    <bk-dropdown-menu :class="{ 'devops-button-dropdown': true, 'disabled': disabled }">
         <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
             <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">
-            <template v-for="typeLabel in codelibTypes">
-                <li v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing"
-                    :key="typeLabel" @click="createCodelib(typeLabel)">
-                    {{ $t(`codelib.${typeLabel}`) + $t('codelib.repo') }}
-                </li>
-            </template>
+            <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
+                {{ $t('codelib.typeCodelib', [typeLabel])}}
+            </li>
         </ul>
     </bk-dropdown-menu>
 </template>
@@ -27,22 +24,11 @@
             disabled: {
                 type: Boolean,
                 default: false
-            },
-            isBlueKing: {
-                type: Boolean,
-                default: false
             }
         },
         computed: {
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
-            },
             codelibTypes () {
-                let typeList = codelibTypes
-                if (!this.isExtendTx) {
-                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
-                }
-                return typeList
+                return codelibTypes
             }
         }
     }

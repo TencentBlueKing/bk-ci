@@ -2,6 +2,8 @@
   "codelib": "代码库",
   "linkCodelib": "关联代码库",
   "repo": "代码库",
+  "linkCodelibLabel": "关联{0}代码库",
+  "typeCodelib": "{0}代码库",
   "link": "关联",
   "codelibDesc": "代码库服务可以将项目已有的 SVN 及 GIT 工程关联至CI，它将作为流水线的原材料",
   "laodingTitle": "正在加载仓库列表",
