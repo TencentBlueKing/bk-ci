@@ -119,7 +119,7 @@ class StoreStatisticTotalDao {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             dslContext.update(this)
                 .set(HOT_FLAG, hotFlag)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .where(STORE_TYPE.eq(storeType).and(STORE_CODE.eq(storeCode)))
                 .execute()
         }
     }
@@ -217,10 +217,9 @@ class StoreStatisticTotalDao {
      */
     fun batchGetStatisticByStoreCode(
         dslContext: DSLContext,
-        storeCodeList: List<String?>,
         storeType: Byte,
-        limit: Int? = null,
-        offset: Int? = null
+        page: Int,
+        pageSize: Int
     ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val conditions = mutableListOf<Condition>()
@@ -231,14 +230,10 @@ class StoreStatisticTotalDao {
                 DSL.sum(SCORE),
                 STORE_CODE
             ).from(this)
-            if (storeCodeList.isNotEmpty()) {
-                conditions.add(STORE_CODE.`in`(storeCodeList))
-            }
-            return if (null != offset && null != limit) {
-                baseStep.where(conditions).orderBy(CREATE_TIME, ID).limit(limit).offset(offset).fetch()
-            } else {
-                baseStep.where(conditions).orderBy(CREATE_TIME, ID).fetch()
-            }
+            return baseStep.where(conditions)
+                .orderBy(CREATE_TIME.desc(), ID)
+                .limit((page - 1) * pageSize, pageSize)
+                .fetch()
         }
     }
 

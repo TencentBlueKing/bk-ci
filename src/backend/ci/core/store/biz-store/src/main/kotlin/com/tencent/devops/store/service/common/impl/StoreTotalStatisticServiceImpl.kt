@@ -107,20 +107,19 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                         TimeUnit.DAYS.toSeconds(1L)
                     )
                 }
-                var offset = 0
+                var page = 1
                 do {
                     val statistics = storeStatisticTotalDao.batchGetStatisticByStoreCode(
                         dslContext = dslContext,
-                        storeCodeList = listOf(),
                         storeType = storeType.type.toByte(),
-                        offset = offset,
-                        limit = DEFAULT_PAGE_SIZE
+                        page = page,
+                        pageSize = DEFAULT_PAGE_SIZE
                     )
                     calculateAndStorage(
                         storeType = storeType.type.toByte(),
                         statistics = statistics
                     )
-                    offset += DEFAULT_PAGE_SIZE
+                    page++
                 } while (statistics.size == DEFAULT_PAGE_SIZE)
             }
             logger.info("$taskName:stat:end")
