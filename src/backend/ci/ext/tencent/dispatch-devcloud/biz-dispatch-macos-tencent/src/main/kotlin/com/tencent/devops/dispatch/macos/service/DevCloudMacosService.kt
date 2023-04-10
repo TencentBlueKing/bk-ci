@@ -11,7 +11,6 @@ import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -263,8 +262,10 @@ class DevCloudMacosService @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("DevCloud getVmList http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
-                                 "msg: $responseContent")
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
                 return vmInfoList
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -291,13 +292,17 @@ class DevCloudMacosService @Autowired constructor(
                         }
                     }
                 } else {
-                    logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
-                                     "msg: $responseContent")
+                    logger.error(
+                        "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                            "msg: $responseContent"
+                    )
                     return vmInfoList
                 }
             } else {
-                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
-                                 "msg: $responseContent")
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
                 return vmInfoList
             }
             return vmInfoList
