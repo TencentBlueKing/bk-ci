@@ -129,7 +129,8 @@ class TxStoreIndexCronService(
                     if (storeExecuteCountByCodeRecord != null) {
                         val sumDailySuccessNum =
                             (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as? BigDecimal)?.toInt() ?: 0
-                        val sumDailyFailNum = (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as? BigDecimal)?.toInt() ?: 0
+                        val sumDailyFailNum =
+                            (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as? BigDecimal)?.toInt() ?: 0
                         storeExecuteCountByCode = sumDailyFailNum + sumDailySuccessNum
                     }
                     // sla计算
