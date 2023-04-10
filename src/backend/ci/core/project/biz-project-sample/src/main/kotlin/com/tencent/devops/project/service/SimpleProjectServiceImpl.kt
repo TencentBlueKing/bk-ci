@@ -104,7 +104,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = logoFile,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                logo = true
+            )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }

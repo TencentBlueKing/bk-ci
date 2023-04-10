@@ -23,31 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.resources
 
+import com.tencent.devops.auth.api.migrate.OpAuthMigrateResource
+import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectService
-import com.tencent.devops.project.service.ProjectTagService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService,
-    val projectService: ProjectService
-) : ServiceProjectTagResource {
-    override fun checkProjectRouter(projectId: String): Result<Boolean> {
-        return Result(projectTagService.checkProjectTag(projectId))
-    }
+class OpAuthMigrateResourceImpl @Autowired constructor(
+    private val permissionMigrateService: PermissionMigrateService
+) : OpAuthMigrateResource {
 
-    override fun isRbacPermission(projectId: String): Result<Boolean> {
-        return Result(projectService.isRbacPermission(projectId))
-    }
-
-    override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
-        return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
+    override fun v3ToRbacAuth(projectCode: String): Result<Boolean> {
+        return Result(permissionMigrateService.v3ToRbacAuth(projectCode = projectCode))
     }
 }
