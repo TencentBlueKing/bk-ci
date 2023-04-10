@@ -197,7 +197,7 @@ class TxStoreIndexCronService(
      * 计算插件质量指标数据
      */
 //        @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0/10 * * * ?") // 每小时执行一次
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
@@ -221,7 +221,7 @@ class TxStoreIndexCronService(
             lock.lock()
             val startTime = LocalDateTime.now().minusMonths(1)
             val endTime = LocalDateTime.now()
-            logger.info("begin computeAtomSlaIndexData!!")
+            logger.info("begin computeAtomQualityIndexInfo!!")
             do {
                 val atomCodes = atomDao.getPublishedAtoms(
                     dslContext = dslContext,
