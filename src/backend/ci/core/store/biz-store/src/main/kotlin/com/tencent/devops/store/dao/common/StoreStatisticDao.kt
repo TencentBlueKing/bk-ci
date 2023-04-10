@@ -66,7 +66,7 @@ class StoreStatisticDao {
             }
             val finalStep = baseStep.where(conditions)
                 .groupBy(STORE_CODE)
-
+                .orderBy(STORE_ID)
             return if (null != offset && null != limit) {
                 finalStep.limit(limit).offset(offset).fetch()
             } else {
