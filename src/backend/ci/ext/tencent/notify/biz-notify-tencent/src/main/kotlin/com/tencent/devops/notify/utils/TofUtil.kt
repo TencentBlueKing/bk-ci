@@ -27,7 +27,7 @@ object TofUtil {
                     "paasId" to extTof4SecurityInfo.passId,
                     "token" to extTof4SecurityInfo.token,
                     "host" to version4Systems["host"]!!,
-                    "sys-id" to extTof4SecurityInfo.passId // 兼容数据库
+                    "sys-id" to "tof4" // 兼容数据库
                 )
             }
             // 其次处理蓝盾tof4
@@ -36,7 +36,7 @@ object TofUtil {
                 "paasId" to version4Systems["paas-id"]!!,
                 "token" to version4Systems["token"]!!,
                 "host" to version4Systems["host"]!!,
-                "sys-id" to version4Systems["paas-id"]!! // 兼容数据库
+                "sys-id" to "tof4" // 兼容数据库
             )
         }
         // 最后处理蓝盾tof3
