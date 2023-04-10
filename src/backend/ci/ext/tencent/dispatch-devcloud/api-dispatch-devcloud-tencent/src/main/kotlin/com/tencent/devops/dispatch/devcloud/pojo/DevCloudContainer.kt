@@ -14,9 +14,8 @@ data class DevCloudContainer(
     val replica: Int,           // 容器副本数，最小1，最大10
     val ports: List<Ports>?,    // 服务协议端口
     val password: String,       // 密码,需8到16位,至少包括两项[a-z,A-Z],[0-9]和[()`~!@#$%^&*-+=_
-    val params: Params?
-/*    val regionId: String? = "ap-guangzhou",       // 区域Id，默认值ap-guangzhou（广州）
-    val clusterType: String? = "normal"   // 集群类型，默认值normal。normal：一般类型，gitCI：工蜂CI*/
+    val params: Params?,
+    val clusterType: String? = "normal"
 )
 
 data class Params(

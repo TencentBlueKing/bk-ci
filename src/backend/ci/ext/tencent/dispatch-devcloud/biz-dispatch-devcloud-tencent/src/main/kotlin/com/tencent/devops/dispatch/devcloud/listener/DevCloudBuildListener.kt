@@ -83,6 +83,9 @@ class DevCloudBuildListener @Autowired constructor(
     @Value("\${devCloud.disk}")
     var disk: String = "500G"
 
+    @Value("\${devCloud.clusterType:normal}")
+    var clusterType: String? = "normal"
+
     @Value("\${devCloud.entrypoint}")
     val entrypoint: String = "devcloud_init.sh"
 
@@ -289,24 +292,26 @@ class DevCloudBuildListener @Autowired constructor(
             }
 
             val (devCloudTaskId, createName) = dispatchDevCloudClient.createContainer(
-                this, DevCloudContainer(
-                "brief",
-                buildId,
-                ContainerType.DEV.getValue(),
-                "$name:$tag",
-                Registry(host, userName, password),
-                threadLocalCpu.get(),
-                threadLocalMemory.get(),
-                threadLocalDisk.get(),
-                1,
-                emptyList(),
-                generatePwd(),
-                Params(
+                this,
+                DevCloudContainer(
+                    life = "brief",
+                    name = buildId,
+                    type = ContainerType.DEV.getValue(),
+                    image = "$name:$tag",
+                    registry = Registry(host, userName, password),
+                    cpu = threadLocalCpu.get(),
+                    memory = threadLocalMemory.get(),
+                    disk = threadLocalDisk.get(),
+                    replica = 1,
+                    ports = emptyList(),
+                    password = generatePwd(),
+                    params = Params(
                         env = generateEnvs(this),
                         command = listOf("/bin/sh", entrypoint),
                         labels = containerLabels,
                         ipEnabled = false
-                    )
+                    ),
+                    clusterType = clusterType
                 )
             )
             logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
