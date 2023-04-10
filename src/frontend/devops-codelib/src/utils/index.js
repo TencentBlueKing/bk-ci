@@ -18,12 +18,12 @@
  */
 
 import {
-    regionList,
-    isTGit,
-    isSvn,
     isGit,
     isGitLab,
-    isGithub
+    isGithub,
+    isSvn,
+    isTGit,
+    regionList
 } from '../config'
 
 export function parsePathAlias (type, path, authType, svnType) {
@@ -83,7 +83,6 @@ export function parsePathAlias (type, path, authType, svnType) {
 export function extendParsePathAlias (type, path, authType, svnType) {
     let reg = ''
     let msg = ''
-    let alias = ''
     let nameMatchIndex = 1
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
     // const preReg = /\_proj\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
@@ -149,7 +148,7 @@ export function extendParsePathAlias (type, path, authType, svnType) {
 
     return matchResult
         ? {
-            alias: alias || matchResult[nameMatchIndex]
+            alias: matchResult[nameMatchIndex]
         }
         : {
             msg
