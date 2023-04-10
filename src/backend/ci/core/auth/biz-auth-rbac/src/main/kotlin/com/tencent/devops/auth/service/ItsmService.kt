@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
-import com.tencent.devops.auth.pojo.ItsmResponseDTO
+import com.tencent.devops.auth.pojo.ResponseDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -28,7 +28,7 @@ class ItsmService @Autowired constructor(
     private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
-        val itsmResponseDTO = executeHttpPost<ItsmResponseDTO>(
+        val itsmResponseDTO = executeHttpPost(
             urlSuffix = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
@@ -45,7 +45,7 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val param = mapOf("token" to token)
-        val itsmResponseDTO = executeHttpPost<ItsmResponseDTO>(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
+        val itsmResponseDTO = executeHttpPost(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
         val itsmApiResData = itsmResponseDTO.data as Map<*, *>
         logger.info("itsmApiResData:$itsmApiResData")
 
@@ -58,9 +58,9 @@ class ItsmService @Autowired constructor(
         }
     }
 
-    private inline fun <reified T> executeHttpPost(urlSuffix: String, body: Any): T {
+    private fun executeHttpPost(urlSuffix: String, body: Any): ResponseDTO {
         val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
-
+            .replace("\\s".toRegex(), "")
         val requestBody = objectMapper.writeValueAsString(body)
             .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         val url = itsmUrlPrefix + urlSuffix
@@ -73,21 +73,21 @@ class ItsmService @Autowired constructor(
         return executeHttpRequest(url, request)
     }
 
-    private inline fun <reified T> executeHttpRequest(url: String, request: Request): T {
+    private fun executeHttpRequest(url: String, request: Request): ResponseDTO {
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                logger.warn("itsm request failed, uri:($url)|response: ($it)")
-                throw RemoteServiceException("itsm request failed, response:($it)")
+                logger.warn("request failed, uri:($url)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
             }
             val responseStr = it.body!!.string()
-            val responseDTO = objectMapper.readValue<ItsmResponseDTO>(responseStr)
+            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
             if (responseDTO.code != 0L || !responseDTO.result) {
                 // 请求错误
-                logger.warn("itsm request failed, url:($url)|response:($it)")
-                throw RemoteServiceException("itsm request failed, response:(${responseDTO.message})")
+                logger.warn("request failed, url:($url)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
             }
-            logger.info("itsm request response：${objectMapper.writeValueAsString(responseDTO.data)}")
-            return responseDTO as T
+            logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            return responseDTO
         }
     }
 
