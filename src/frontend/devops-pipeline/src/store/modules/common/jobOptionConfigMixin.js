@@ -46,6 +46,7 @@ const jobOptionConfigMixin = {
                     rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualTimeout'),
+                    desc: this.$t('storeMap.timeoutDesc'),
                     placeholder: this.$t('storeMap.mutualTimeoutPlaceholder'),
                     default: '900',
                     required: true,

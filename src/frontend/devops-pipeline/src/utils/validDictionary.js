@@ -48,7 +48,7 @@ const dictionary = {
             nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
-            timeoutsRule: field => '请输入0-10080之间的整数，或流水线变量'
+            timeoutsRule: field => '请输入1-10080之间的整数，或流水线变量'
         }
     },
     'en-US': {
@@ -79,7 +79,7 @@ const dictionary = {
             nonVarRule: field => 'This field does not need to be included ${{}}',
             notStartWithBKCI: field => "Field can not start with 'BK_CI'",
             paramsRule: () => 'Field only support English letter, numbers and underscores',
-            timeoutsRule: field => 'Please enter an integer between 0-10080, or a pipeline variable'
+            timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable'
         }
     }
 }
