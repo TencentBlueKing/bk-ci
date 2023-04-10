@@ -48,7 +48,7 @@ const dictionary = {
             nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
             paramsRule: field => '字段只能包含英文字母、数字及下划线',
-            timeoutsRule: field => '请输入1-10080之间的整数，或流水线变量'
+            timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量'
         }
     },
     'en-US': {
