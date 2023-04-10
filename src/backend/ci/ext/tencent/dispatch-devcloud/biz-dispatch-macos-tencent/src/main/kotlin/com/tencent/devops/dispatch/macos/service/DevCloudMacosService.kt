@@ -254,7 +254,7 @@ class DevCloudMacosService @Autowired constructor(
     fun getVmList(creator: String): List<DevCloudMacosVmInfo> {
         val url = "$devCloudUrl/api/mac/pool/list?page=1&size=9999"
         val request = Request.Builder()
-            .url(url)
+            .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
