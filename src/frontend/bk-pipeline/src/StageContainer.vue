@@ -22,6 +22,7 @@
             :is="jobComponentName"
             v-bind="jobComponentProps"
             v-on="$listeners"
+            ref="jobBox"
         />
     </div>
 </template>

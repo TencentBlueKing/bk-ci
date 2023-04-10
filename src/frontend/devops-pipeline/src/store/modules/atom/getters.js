@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import { buildEnvMap, jobConst } from '@/utils/pipelineConst'
 import Vue from 'vue'
+import { getAtomModalKey, isCodePullAtom, isNewAtomTemplate, isNormalContainer, isTriggerContainer, isVmContainer } from './atomUtil'
 import { buildNoRules, defaultBuildNo, platformList } from './constants'
-import { getAtomModalKey, isVmContainer, isTriggerContainer, isNormalContainer, isCodePullAtom, isNewAtomTemplate } from './atomUtil'
-import { jobConst, buildEnvMap } from '@/utils/pipelineConst'
 
 function isSkip (status) {
     return status === 'SKIP'
@@ -346,7 +346,7 @@ export default {
                         elements,
                         groupContainers: container.groupContainers.filter(groupContainer => !isSkip(groupContainer.status)).map(groupContainer => {
                             const subElements = groupContainer.elements.filter(
-                                (element, index) => !isSkip(element.status ?? container.elements?.[index]?.status)
+                                (element, index) => !isSkip(element.status ?? elements[index]?.status)
                             )
                             return {
                                 ...groupContainer,
@@ -365,12 +365,11 @@ export default {
                 containers
             }
         })
-        return {
-            ...state.execDetail,
+        return Object.assign({}, state.execDetail, {
             model: {
                 ...state.execDetail.model,
                 stages
             }
-        }
+        })
     }
 }

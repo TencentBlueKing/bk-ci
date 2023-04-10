@@ -3,7 +3,7 @@
         'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
     }]">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
-            <div class="matrix-name" @click.stop="toggleMatrixOpen">
+            <div class="matrix-name" @click.stop="toggleMatrixOpen()">
                 <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
                 <span :class="matrixTitleCls">
                     {{matrix.name || t('jobMatrix')}}
@@ -26,6 +26,7 @@
                 :container="job"
                 :container-group-index="jobIndex"
                 v-bind="restProps"
+                :ref="job.containerId"
             >
             </Job>
         </section>
@@ -115,13 +116,13 @@
                 return this.matrix.groupContainers.map(container => {
                     container.elements = container.elements.map((element, index) => {
                         const eleItem = this.matrix.elements[index] || {}
-                        return {
+                        return Object.assign(element, {
                             ...eleItem,
                             ...element,
                             '@type': eleItem['@type'],
                             classType: eleItem.classType,
                             atomCode: eleItem.atomCode
-                        }
+                        })
                     })
                     return container
                 })
@@ -136,8 +137,8 @@
             }
         },
         methods: {
-            toggleMatrixOpen () {
-                this.isMatrixOpen = !this.isMatrixOpen
+            toggleMatrixOpen (open) {
+                this.isMatrixOpen = open ?? !this.isMatrixOpen
                 this.updateCruveConnectHeight()
             },
             showMatrixPanel () {

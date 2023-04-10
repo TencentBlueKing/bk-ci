@@ -72,6 +72,7 @@
             <div class="exec-pipeline-ui-wrapper">
                 <bk-pipeline
                     :editable="false"
+                    ref="bkPipeline"
                     is-exec-detail
                     :current-exec-count="executeCount"
                     :cancel-user-id="cancelUserId"
@@ -397,10 +398,10 @@
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
-            if (this.errorList?.length > 0) {
-                this.setAtomLocate(this.errorList[0])
-                this.setShowErrorPopup()
-            }
+            // if (this.errorList?.length > 0) {
+            //     this.setAtomLocate(this.errorList[0])
+            //     this.setShowErrorPopup()
+            // }
         },
         beforeDestroy () {
             this.togglePropertyPanel({
@@ -592,23 +593,28 @@
                     this.skipTask = false
                 }
             },
-            locateAtom (row, isLocate = true) {
+            async locateAtom (row, isLocate = true) {
                 try {
                     const { stageId, containerId, taskId, matrixFlag } = row
                     const stage = this.curPipeline.stages.find((stage) => stage.id === stageId)
+                    const numContainerId = parseInt(containerId, 10)
+                    const matrixId = Math.floor(numContainerId / 1000)
                     let container
                     if (matrixFlag) {
                         container = stage.containers
                             .filter((item) => Array.isArray(item.groupContainers))
                             .map((item) => item.groupContainers)
                             .flat()
-                            .find((matrix) => matrix.id === containerId)
+                            .find((item) => item.id === containerId)
+                        console.log(container)
                     } else {
                         container = stage.containers.find((item) => item.id === containerId)
                     }
+                    await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
                     const element = container.elements.find((element) => element.id === taskId)
-
                     this.$set(element, 'locateActive', isLocate)
+
+                    console.log(element, taskId, this.$store.state.atom.execDetail.model.stages[1])
                 } catch (e) {
                     console.log(e)
                 }
@@ -619,7 +625,7 @@
                     this.locateAtom(this.activeErrorAtom, false)
                 }
                 this.hideErrorPopup()
-                this.locateAtom(row, true)
+                this.locateAtom(row)
                 this.activeErrorAtom = row
             },
             handleExecuteCountChange (executeCount) {

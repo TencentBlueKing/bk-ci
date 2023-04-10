@@ -79,6 +79,7 @@
         >
             <stage-container
                 v-for="(container, index) in computedContainer"
+                :ref="container.containerId"
                 :key="container.containerId"
                 :stage-index="stageIndex"
                 :container-index="index"

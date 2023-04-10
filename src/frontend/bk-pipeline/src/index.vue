@@ -8,6 +8,7 @@
         <Stage
             class="list-item"
             v-for="(stage, index) in computedStages"
+            :ref="stage.id"
             :key="stage.id"
             :editable="editable"
             :stage="stage"
@@ -251,6 +252,21 @@
             },
             handleDeleteStage (stageId) {
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
+            },
+            expandMatrix (stageId, matrixId, containerId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox
+                        jobInstance?.toggleMatrixOpen?.(true)
+                        this.$nextTick(() => {
+                            jobInstance?.$refs[containerId]?.[0]?.toggleShowAtom(true)
+                            resolve(true)
+                        })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
             }
         }
     }

@@ -53,7 +53,7 @@
                 v-if="showMatrixFold"
                 name="angle-circle-down"
                 size="18"
-                @click.stop="toggleShowAtom"
+                @click.stop="toggleShowAtom()"
                 :class="matrixFoldLogoCls"
             >
             </Logo>
@@ -251,8 +251,8 @@
             }
         },
         methods: {
-            toggleShowAtom () {
-                this.showAtomList = !this.showAtomList
+            toggleShowAtom (show) {
+                this.showAtomList = show ?? !this.showAtomList
                 this.updateCruveConnectHeight()
             },
             deleteJob () {
