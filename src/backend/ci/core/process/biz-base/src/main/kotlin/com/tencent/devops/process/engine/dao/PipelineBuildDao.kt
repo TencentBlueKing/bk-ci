@@ -141,7 +141,7 @@ class PipelineBuildDao {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_START_WITH_ERROR,
-                defaultMessage = "流水线启动准备失败: ${t.message}"
+                params = arrayOf(t.message ?: "")
             )
         }
     }

@@ -32,12 +32,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -84,7 +84,7 @@ class BcsJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
+                    "$TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
                             "http response code: ${response.code}"
                 )
             }
@@ -108,7 +108,7 @@ class BcsJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取Job logs接口异常" +
+                    "${TROUBLE_SHOOTING}获取Job logs接口异常" +
                             "（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }

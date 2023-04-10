@@ -29,12 +29,14 @@ package com.tencent.devops.plugin.codecc.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.codecc.config.CodeccScriptConfig
 import com.tencent.devops.plugin.codecc.dao.PluginCodeccDao
 import com.tencent.devops.plugin.codecc.pojo.BlueShieldRequest
@@ -213,7 +215,7 @@ class CodeccService @Autowired constructor(
         val taskId = redisOperation.get("code_cc_${projectId}_${pipelineId}_${buildId}_done")
         return if (taskId != null && taskId != "" && taskId != "null") {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc/" +
-                "?proj_id=$taskId'>查看详情</a>"
+                "?proj_id=$taskId'>${I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)}</a>"
         } else ""
     }
 

@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
@@ -39,6 +40,7 @@ import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.quality.pojo.RuleCheckSingleResult
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -57,6 +59,14 @@ import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
+import com.tencent.devops.quality.constant.BK_BLOCKED
+import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TERMINATED
+import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TO_BE_REVIEWED
+import com.tencent.devops.quality.constant.BK_INTERCEPTION_METRICS
+import com.tencent.devops.quality.constant.BK_INTERCEPTION_RULES
+import com.tencent.devops.quality.constant.BK_NO_TOOL_OR_RULE_ENABLED
+import com.tencent.devops.quality.constant.BK_PASSED
+import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
@@ -657,15 +667,23 @@ class QualityRuleCheckService @Autowired constructor(
 
             val sb = StringBuilder()
             if (it.pass) {
-                sb.append("已通过：")
+                sb.append(I18nUtil.getCodeLanMessage(BK_PASSED))
             } else {
-                sb.append("已拦截：")
+                sb.append(I18nUtil.getCodeLanMessage(BK_BLOCKED))
             }
-            val nullMsg = if (it.actualValue == null) "你可能并未添加工具或打开相应规则。" else ""
+            val nullMsg = if (it.actualValue == null) I18nUtil.getCodeLanMessage(BK_NO_TOOL_OR_RULE_ENABLED) else ""
             val detailMsg = getDetailMsg(it, params)
             Triple(
-                sb.append("${it.indicatorName}当前值(${it.actualValue})，期望$thresholdOperationName${it.value}。 $nullMsg")
-                    .toString(),
+                sb.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_VALIDATION_PASSED,
+                        params = arrayOf(
+                            it.indicatorName,
+                            "${it.actualValue}",
+                            "$thresholdOperationName${it.value}。 $nullMsg"
+                        )
+                    )
+                ).toString(),
                 detailMsg,
                 it.pass
             )
@@ -685,8 +703,9 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
+            val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
-                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
+                "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>$bkSeeDetails</a>"
             } else {
                 val detailUrl = if (!record.logPrompt.isNullOrBlank()) {
                     record.logPrompt!!
@@ -697,7 +716,7 @@ class QualityRuleCheckService @Autowired constructor(
                     .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)
                     .replace("##detail##", record.detail!!)
-                "<a target='_blank' href='/console$fillDetailUrl'>查看详情</a>"
+                "<a target='_blank' href='/console$fillDetailUrl'>$bkSeeDetails</a>"
             }
         } else {
             record.logPrompt ?: ""
@@ -778,11 +797,13 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
+        val bkInterceptionRulesI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_RULES)
+        val bkInterceptionMetricsI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_METRICS)
         resultList.forEach { r ->
-            messageResult.append("拦截规则：${r.ruleName}\n")
-            messageResult.append("拦截指标：\n")
-            emailResult.append("拦截规则：${r.ruleName}<br>")
-            emailResult.append("拦截指标：<br>")
+            messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
+            messageResult.append("$bkInterceptionMetricsI18n：\n")
+            emailResult.append("$bkInterceptionRulesI18n：${r.ruleName}<br>")
+            emailResult.append("$bkInterceptionMetricsI18n：<br>")
             r.messagePairs.forEach {
                 messageResult.append(it.first + "\n")
                 emailResult.append(it.first + "<br>")
@@ -801,7 +822,10 @@ class QualityRuleCheckService @Autowired constructor(
                 "buildNo" to buildNo
             ),
             bodyParams = mapOf(
-                "title" to "$pipelineName(#$buildNo)被拦截，待审核(审核人$auditNotifyUserList)",
+                "title" to I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_INTERCEPTED_TO_BE_REVIEWED,
+                    params = arrayOf(pipelineName, buildNo, "$auditNotifyUserList")
+                ),
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,
@@ -853,11 +877,13 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
+        val bkInterceptionRulesI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_RULES)
+        val bkInterceptionMetricsI18n = I18nUtil.getCodeLanMessage(BK_INTERCEPTION_METRICS)
         resultList.forEach { r ->
-            messageResult.append("拦截规则：${r.ruleName}\n")
-            messageResult.append("拦截指标：\n")
-            emailResult.append("拦截规则：${r.ruleName}<br>")
-            emailResult.append("拦截指标：<br>")
+            messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
+            messageResult.append("$bkInterceptionMetricsI18n：\n")
+            emailResult.append("$bkInterceptionRulesI18n：${r.ruleName}<br>")
+            emailResult.append("$bkInterceptionMetricsI18n：<br>")
             r.messagePairs.forEach {
                 messageResult.append(it.first + "\n")
                 emailResult.append(it.first + "<br>")
@@ -872,7 +898,10 @@ class QualityRuleCheckService @Autowired constructor(
             notifyType = endNotifyTypeList.map { it.name }.toMutableSet(),
             titleParams = mapOf(),
             bodyParams = mapOf(
-                "title" to "$pipelineName(#$buildNo)被拦截，已终止",
+                "title" to I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_INTERCEPTED_TERMINATED,
+                    params = arrayOf(pipelineName, buildNo)
+                ),
                 "projectName" to projectName,
                 "cc" to triggerUserId,
                 "time" to time,

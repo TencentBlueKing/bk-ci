@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
@@ -41,11 +41,10 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Date
-import java.util.concurrent.TimeUnit
 
 /**
  * 三方构建机的业务监控拓展
@@ -81,9 +80,10 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         val heartbeatInfo = agentDetail.heartbeatInfo
 
         logMessage.append(
-            MessageCodeUtil.getCodeLanMessage(
+            I18nUtil.getCodeLanMessage(
                 messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
-                params = arrayOf(event.projectId, agentDetail.nodeId)
+                params = arrayOf(event.projectId, agentDetail.nodeId),
+                language = I18nUtil.getDefaultLocaleLanguage()
             )
         )
 

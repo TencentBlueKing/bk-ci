@@ -182,12 +182,12 @@ class DockerHostUtils @Autowired constructor(
             }
             throw DockerServiceException(errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                errorMsg = "构建机启动失败，没有空闲的构建机了！")
+                errorMsg = ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage)
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
             throw DockerServiceException(errorType = ErrorCodeEnum.POOL_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.POOL_VM_ERROR.errorCode,
-                errorMsg = "容器并发池分配异常")
+                errorMsg = ErrorCodeEnum.POOL_VM_ERROR.formatErrorMessage)
         } finally {
             lock.unlock()
         }

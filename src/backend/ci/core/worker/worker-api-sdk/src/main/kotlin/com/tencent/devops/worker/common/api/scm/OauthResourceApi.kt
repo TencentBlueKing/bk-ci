@@ -28,16 +28,22 @@
 package com.tencent.devops.worker.common.api.scm
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_OAUTH_INFO_FAIL
 
 class OauthResourceApi : AbstractBuildResourceApi(), OauthSDKApi {
 
     override fun get(userId: String): Result<GitToken> {
         val path = "/ms/repository/api/build/oauth/git/$userId"
         val request = buildGet(path)
-        val responseContent = request(request, "获取oauth认证信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_OAUTH_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+        )
         return objectMapper.readValue(responseContent)
     }
 }

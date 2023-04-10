@@ -27,21 +27,25 @@
 
 package com.tencent.devops.dispatch.bcs.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "Dispatcher-bcs系统错误"),
-    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2123003, "第三方服务-BCS 异常，异常信息 - 构建机创建失败"),
-    CREATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123005, "第三方服务-BCS 异常，异常信息 - 创建构建机接口异常"),
-    CREATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2123006, "第三方服务-BCS 异常，异常信息 - 创建构建机接口返回失败"),
-    OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123007, "第三方服务-BCS 异常，异常信息 - 操作构建机接口异常"),
-    OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2123008, "第三方服务-BCS 异常，异常信息 - 操作构建机接口返回失败"),
-    VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123009, "第三方服务-BCS 异常，异常信息 - 获取构建机详情接口异常"),
-    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123010, "第三方服务-BCS 异常，异常信息 - 创建镜像接口异常"),
-    TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123014, "第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常"),
-    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2123015, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常"),
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2126101, "2126101"),// Dispatcher-bcs系统错误
+    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2126103, "2126103"),// 第三方服务-BCS 异常，异常信息 - 构建机创建失败
+    CREATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126105, "2126105"),// 第三方服务-BCS 异常，异常信息 - 创建构建机接口异常
+    CREATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126106, "2126106"),// 第三方服务-BCS 异常，异常信息 - 创建构建机接口返回失败
+    OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126107, "2126107"),// 第三方服务-BCS 异常，异常信息 - 操作构建机接口异常
+    OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126108, "2126108"),// 第三方服务-BCS 异常，异常信息 - 操作构建机接口返回失败
+    VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126109, "2126109"),// 第三方服务-BCS 异常，异常信息 - 获取构建机详情接口异常
+    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126110, "2126110"),// 第三方服务-BCS 异常，异常信息 - 创建镜像接口异常
+    TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126114, "2126114"),// 第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常
+    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126115, "2126115");//第三方服务-BCS 异常，异常信息 - 获取websocket接口异常
 }

@@ -27,11 +27,15 @@
 
 package com.tencent.devops.dispatch.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_NEED_PARAM_
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
@@ -110,13 +114,31 @@ class BuildAgentBuildResourceImpl constructor(
 
     private fun checkParam(projectId: String, agentId: String, secretKey: String) {
         if (projectId.isBlank()) {
-            throw ParamBlankException("无效的项目ID")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(),
+                    arrayOf("projectId")
+                )
+            )
         }
         if (agentId.isBlank()) {
-            throw ParamBlankException("无效的Agent ID")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_INVALID_PARAM_,
+                    I18nUtil.getLanguage(),
+                    arrayOf("agentId")
+                ),
+            )
         }
         if (secretKey.isBlank()) {
-            throw ParamBlankException("Agent SecretKey 为空")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_NEED_PARAM_,
+                    I18nUtil.getLanguage(),
+                    arrayOf("secretKey")
+                )
+            )
         }
     }
 }

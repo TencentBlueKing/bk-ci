@@ -27,13 +27,16 @@
 
 package com.tencent.devops.worker.common.utils
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.util.KeyReplacement
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.worker.common.COMMON_ENV_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
+import com.tencent.devops.worker.common.constants.WorkerMessageCode
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
@@ -84,7 +87,12 @@ object WorkspaceUtils {
                         object : KeyReplacement {
                             override fun getReplacement(key: String): String? {
                                 return variables[key]
-                                    ?: throw IllegalArgumentException("工作空间未定义变量(undefined variable): $workspace")
+                                    ?: throw IllegalArgumentException(
+                                        MessageUtil.getMessageByLocale(
+                                            WorkerMessageCode.UNDEFINED_VARIABLE,
+                                            System.getProperty(LOCALE_LANGUAGE)
+                                        ) + " $workspace"
+                                    )
                             }
                         },
                         mapOf(
@@ -97,7 +105,12 @@ object WorkspaceUtils {
                 }
                 val workspaceDir = getPipelineWorkspace(pipelineId, replaceWorkspace)
                 if (!workspaceDir.exists() && !workspaceDir.mkdirs()) { // #5555 第三方构建机工作空间校验
-                    throw FileNotFoundException("无法创建工作空间(illegal workspace): [$workspaceDir]")
+                    throw FileNotFoundException(
+                        MessageUtil.getMessageByLocale(
+                            WorkerMessageCode.ILLEGAL_WORKSPACE,
+                            System.getProperty(LOCALE_LANGUAGE)
+                        ) + " [$workspaceDir]"
+                    )
                 }
 
                 initCommonEnvDir(workspaceDir)
@@ -105,7 +118,12 @@ object WorkspaceUtils {
                 return workspaceDir
             }
             else -> {
-                throw IllegalArgumentException("未知的BuildType类型: $buildType")
+                throw IllegalArgumentException(
+                    MessageUtil.getMessageByLocale(
+                        WorkerMessageCode.UNBEKNOWN_BUILD_TYPE,
+                        System.getProperty(LOCALE_LANGUAGE)
+                    ) + " $buildType"
+                )
             }
         }
     }

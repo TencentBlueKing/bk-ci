@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import javax.ws.rs.NameBinding
 
-@Target(AnnotationTarget.FIELD)
+@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 @NameBinding
 annotation class BkFieldI18n(

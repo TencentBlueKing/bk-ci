@@ -33,8 +33,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishStageData
@@ -44,13 +46,13 @@ import com.tencent.devops.stream.trigger.actions.data.context.isSuccess
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 @Suppress("NestedBlockDepth")
 @Component
@@ -203,7 +205,12 @@ class SendCommitCheck @Autowired constructor(
             checkOut = pair.second
         }
         return StreamPipelineUtils.genStreamV2BuildUrl(
-            homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+            homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = STARTUP_CONFIG_MISSING,
+                    params = arrayOf(" streamUrl")
+                )
+            ),
             gitProjectId = action.data.getGitProjectId(),
             pipelineId = action.data.context.pipeline!!.pipelineId,
             buildId = finishData.buildId,

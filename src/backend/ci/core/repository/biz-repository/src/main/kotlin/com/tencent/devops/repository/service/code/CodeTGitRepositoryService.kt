@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -100,7 +100,7 @@ class CodeTGitRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
+            throw OperationException(I18nUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
         }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
@@ -161,12 +161,12 @@ class CodeTGitRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(

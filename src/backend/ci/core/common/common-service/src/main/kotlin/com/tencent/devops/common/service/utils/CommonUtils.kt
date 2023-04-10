@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
@@ -39,6 +40,7 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.config.CommonConfig
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -49,7 +51,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.util.*
+import java.util.Enumeration
 
 object CommonUtils {
 
@@ -145,7 +147,12 @@ object CommonUtils {
             val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = commonConfig.devopsDefaultLocaleLanguage
+                )
+                Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }

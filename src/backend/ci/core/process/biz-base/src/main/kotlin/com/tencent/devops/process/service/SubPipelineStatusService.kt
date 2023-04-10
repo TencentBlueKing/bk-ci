@@ -34,6 +34,8 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCas
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import org.springframework.beans.factory.annotation.Autowired
@@ -97,7 +99,7 @@ class SubPipelineStatusService @Autowired constructor(
                 status = BuildStatus.FAILED.name,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorMsg = "找不到对应子流水线的构建记录"
+                errorMsg = I18nUtil.getCodeLanMessage(ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE)
             )
         }
     }

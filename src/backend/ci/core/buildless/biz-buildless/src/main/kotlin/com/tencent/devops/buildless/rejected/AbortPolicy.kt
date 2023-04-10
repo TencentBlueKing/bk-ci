@@ -28,18 +28,17 @@
 package com.tencent.devops.buildless.rejected
 
 import com.tencent.devops.buildless.common.ErrorCodeEnum
-import com.tencent.devops.buildless.exception.NoIdleContainerException
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class AbortPolicy : RejectedExecutionHandler {
     override fun rejectedExecution(buildLessStartInfo: BuildLessStartInfo): Boolean {
-        throw NoIdleContainerException(
-            errorCode = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorCode,
-            errorType = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorType,
-            errorMsg = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.formatErrorMessage
+        throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorCode.toString(),
+            errorType = ErrorCodeEnum.NO_IDLE_CONTAINER_ERROR.errorType
         )
     }
 

@@ -32,10 +32,15 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_GROUPING
+import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_RULE
+import com.tencent.devops.quality.constant.BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
@@ -60,7 +65,10 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info("$projectId 项目下红线规则")
+            logger.info(projectId + I18nUtil.getCodeLanMessage(
+                BK_PROJECT_QUALITY_RULE,
+                I18nUtil.getDefaultLocaleLanguage())
+            )
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -85,7 +93,7 @@ class AuthQualityService @Autowired constructor(
             ruleIds = ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (qualityRuleInfos == null || qualityRuleInfos.isEmpty()) {
-            logger.info("$ids 无红线规则")
+            logger.info("$ids not quality rule")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -116,7 +124,12 @@ class AuthQualityService @Autowired constructor(
             name = keyword)
         val result = SearchInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info("$projectId 项目下无红线用户组")
+            logger.info(
+                projectId + I18nUtil.getCodeLanMessage(
+                    BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
+                    I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -144,7 +157,12 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityGroupInfos == null) {
-            logger.info("$projectId 项目下红线分组")
+            logger.info(
+                projectId + I18nUtil.getCodeLanMessage(
+                    BK_PROJECT_QUALITY_GROUPING,
+                    I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -169,7 +187,7 @@ class AuthQualityService @Autowired constructor(
         )
         val result = FetchInstanceInfo()
         if (qualityGroupInfos == null || qualityGroupInfos.isEmpty()) {
-            logger.info("$ids 无红线规则")
+            logger.info("$ids not quality rule")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -200,7 +218,12 @@ class AuthQualityService @Autowired constructor(
             name = keyword)
         val result = SearchInstanceInfo()
         if (qualityGroupInfos == null) {
-            logger.info("$projectId 项目下无红线用户组")
+            logger.info(
+                projectId + I18nUtil.getCodeLanMessage(
+                    BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
+                    I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

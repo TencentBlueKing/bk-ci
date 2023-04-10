@@ -27,8 +27,11 @@
 
 package com.tencent.devops.worker.common.api.quality
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SAVE_SCRIPT_METADATA_FAILURE
 import com.tencent.devops.worker.common.logger.LoggerService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -53,10 +56,15 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
                 objectMapper.writeValueAsString(data)
             )
             val request = buildPost(path, requestBody)
-            val responseContent = request(request, "保存脚本元数据失败")
+            val responseContent = request(
+                request,
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            )
             return Result(responseContent)
         } catch (ignore: Exception) {
-            LoggerService.addErrorLine("保存脚本元数据失败: ${ignore.message}")
+            LoggerService.addErrorLine("${
+                MessageUtil.getMessageByLocale(SAVE_SCRIPT_METADATA_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            }: ${ignore.message}")
             logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
         return Result("")

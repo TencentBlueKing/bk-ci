@@ -27,8 +27,11 @@
 
 package com.tencent.devops.dispatch.listener
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
+import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.exception.VMTaskFailException
 import com.tencent.devops.dispatch.service.PipelineDispatchService
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -78,12 +81,16 @@ class ThirdPartyAgentListener @Autowired constructor(
         if (statusResult.isNotOk() || statusResult.data == null) {
             logger.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
-            throw VMTaskFailException("无法获取流水线JOB状态，构建停止")
+            throw VMTaskFailException(
+                I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
+            )
         }
 
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
-            throw VMTaskFailException("流水线JOB已经不再运行，构建停止")
+            throw VMTaskFailException(
+                I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
+            )
         }
 
         return true

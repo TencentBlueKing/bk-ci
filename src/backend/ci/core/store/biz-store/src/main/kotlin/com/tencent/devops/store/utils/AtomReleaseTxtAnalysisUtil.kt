@@ -32,11 +32,12 @@ import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -183,9 +184,10 @@ object AtomReleaseTxtAnalysisUtil {
             matcher.group(2).replace("\"", "")
         } else null
         return if (relativePath.isNullOrBlank()) {
-            MessageCodeUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo.logoUrl")
+                arrayOf("releaseInfo.logoUrl"),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         } else {
             Result(relativePath)
@@ -209,7 +211,10 @@ object AtomReleaseTxtAnalysisUtil {
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             return Result(true)
         }

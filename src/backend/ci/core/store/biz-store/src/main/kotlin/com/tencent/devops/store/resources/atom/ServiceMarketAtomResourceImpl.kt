@@ -30,8 +30,8 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
@@ -82,9 +82,11 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
     ): Result<Page<AtomPipeline>> {
         // 提供给openApi使用，暂时先使用username来验证权限，等后续openApi层统一加上具体资源访问权限后再去掉
         if (!atomMemberService.isStoreMember(username, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
-                params = arrayOf(atomCode))
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(username)
+                )
         }
         return marketAtomStatisticService.getAtomPipelinesByCode(atomCode, username, page, pageSize)
     }

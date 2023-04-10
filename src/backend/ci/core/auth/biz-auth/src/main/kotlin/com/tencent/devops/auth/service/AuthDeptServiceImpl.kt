@@ -50,10 +50,11 @@ import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.auth.pojo.vo.UserAndDeptInfoVo
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -293,7 +294,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                             " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
                     )
                 )
@@ -308,10 +309,9 @@ class AuthDeptServiceImpl @Autowired constructor(
                             " | response = ($it)"
                 )
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
-                    )
-                )
+                    ))
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return objectMapper.writeValueAsString(responseDTO.data)

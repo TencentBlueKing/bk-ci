@@ -25,22 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch
+package com.tencent.devops.dockerhost.services.container
 
-const val QUEUE_BUILD = "queue_build"
-const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
-const val EXCHANGE_BUILD = "exchange_build"
-const val ROUTE_BUILD = "build"
-const val ROUTE_BUILD_NEED_END = "build_need_end"
-
-const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
-const val ROUTE_BUILD_ABORT = "route_build_abort"
-const val QUEUE_BUILD_ABORT = "queue_build_abort"
-
-const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
-const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
-const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
-const val EXCHANGE_TASK = "exchange_vm_task"
-const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
-const val ROUTE_TASK_END = "dispatch_vm_task_end"
-const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"
+const val BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START = "bkSelfDevelopedPublicImageLocalStart"// 自研公共镜像，不从仓库拉取，直接从本地启动...
+const val BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL = "bkNoPermissionPullImageCheckPathOrCredential"// 无权限拉取镜像:{0}，请检查镜像路径或凭证是否正确
+const val BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL = "bkImageNotExistCheckPathOrCredential"// 镜像不存在：{0}，请检查镜像路径或凭证是否正确；
+const val BK_PULL_IMAGE_FAILED_ERROR_MESSAGE = "bkPullImageFailedErrorMessage"// 拉取镜像失败，错误信息：
+const val BK_TRY_LOCAL_IMAGE_START = "bkTryLocalImageStart"// 尝试使用本地镜像启动...
+const val BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV = "bkPullImageSuccessReadyStartBuildEnv"// 拉取镜像成功，准备启动构建环境...
+const val BK_PUSH_IMAGE = "BkPushImage"// 正在推送镜像,第{0}层，进度：{1}
+const val BK_BUILD_IMAGE_NOT_EXIST = "bkBuildImageNotExist"// 构建镜像不存在

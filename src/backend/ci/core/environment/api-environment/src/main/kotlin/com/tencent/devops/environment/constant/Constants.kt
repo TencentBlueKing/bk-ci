@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.common
+package com.tencent.devops.environment.constant
 
-object ConstantsMessage {
-    const val TROUBLE_SHOOTING = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
-    const val NO_EMPTY_BUILDER = "Kubernetes构建机启动失败，没有空闲的构建机"
-}
+const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
+const val DEFAULT_SYTEM_USER = "devops"
+const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment"// 项目下无环境
+const val BK_PROJECT_NO_NODE = "BkProjectNoNode"// 项目下无节点

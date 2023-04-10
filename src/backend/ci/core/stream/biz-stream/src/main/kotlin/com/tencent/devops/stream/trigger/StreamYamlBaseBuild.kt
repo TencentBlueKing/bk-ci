@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
@@ -36,6 +37,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineBuildCommitResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -51,6 +53,8 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -516,7 +520,13 @@ class StreamYamlBaseBuild @Autowired constructor(
                         action.metaData.isStreamMr(),
                     context = "${pipeline.filePath}@${action.metaData.streamObjectKind.name}",
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                        homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+                        homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = STARTUP_CONFIG_MISSING,
+                                params = arrayOf(" streamUrl"),
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        ),
                         gitProjectId = action.data.getGitProjectId(),
                         pipelineId = pipeline.pipelineId,
                         buildId = buildId

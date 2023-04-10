@@ -185,7 +185,7 @@ class GithubOAuthService @Autowired constructor(
                 throw CustomException(
                     Response.Status.fromStatusCode(response.code)
                         ?: Response.Status.BAD_REQUEST,
-                    "获取Github access_token失败: $data"
+                    "get Github access_token fail: $data"
                 )
             }
             return objectMapper.readValue(data)

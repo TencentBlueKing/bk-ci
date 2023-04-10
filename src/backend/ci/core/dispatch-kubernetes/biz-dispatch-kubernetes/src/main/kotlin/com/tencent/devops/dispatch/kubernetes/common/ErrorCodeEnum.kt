@@ -27,31 +27,31 @@
 
 package com.tencent.devops.dispatch.kubernetes.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2129001, "Dispatcher-kubernetes系统错误"),
-    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2129002, "Dispatcher-kubernetes 构建机启动失败，没有空闲的构建机"),
-    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2129003, "Dispatcher-kubernetes 异常，异常信息 - 构建机创建失败"),
-    START_VM_ERROR(ErrorType.THIRD_PARTY, 2129004, "Dispatcher-kubernetes 异常，异常信息 - 构建机启动失败"),
-    CREATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129005, "Dispatcher-kubernetes 异常，异常信息 - 创建容器接口异常"),
-    CREATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129006, "Dispatcher-kubernetes 异常，异常信息 - 创建容器接口返回失败"),
-    OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129007, "Dispatcher-kubernetes 异常，异常信息 - 操作容器接口异常"),
-    OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129008, "Dispatcher-kubernetes 异常，异常信息 - 操作容器接口返回失败"),
-    VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129009, "Dispatcher-kubernetes 异常，异常信息 - 获取容器状态接口异常"),
-    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129010, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口异常"),
-    CREATE_IMAGE_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2129011, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口返回失败"),
-    CREATE_IMAGE_VERSION_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129012, "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口异常"),
-    CREATE_IMAGE_VERSION_INTERFACE_FAIL(
-        ErrorType.THIRD_PARTY,
-        2129013,
-        "Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败"
-    ),
-    TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129014, "Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常"),
-    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2129015, "Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常"),
-    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2129016, "请检查webConsole网关代理配置"),
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2126001, "2126001"),// Dispatcher-kubernetes系统错误
+    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2126002, "2126002"),// Dispatcher-kubernetes 构建机启动失败，没有空闲的构建机
+    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2126003, "2126003"),// Dispatcher-kubernetes 异常，异常信息 - 构建机创建失败
+    START_VM_ERROR(ErrorType.THIRD_PARTY, 2126004, "2126004"),// Dispatcher-kubernetes 异常，异常信息 - 构建机启动失败
+    CREATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126005, "2126005"),// Dispatcher-kubernetes 异常，异常信息 - 创建容器接口异常
+    CREATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126006, "2126006"),// Dispatcher-kubernetes 异常，异常信息 - 创建容器接口返回失败
+    OPERATE_VM_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126007, "2126007"),// Dispatcher-kubernetes 异常，异常信息 - 操作容器接口异常
+    OPERATE_VM_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126008, "2126008"),// Dispatcher-kubernetes 异常，异常信息 - 操作容器接口返回失败
+    VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126009, "2126009"),// Dispatcher-kubernetes 异常，异常信息 - 获取容器状态接口异常
+    CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126010, "2126010"),// Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口异常
+    CREATE_IMAGE_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126011, "2126011"),// Dispatcher-kubernetes 异常，异常信息 - 创建镜像接口返回失败
+    CREATE_IMAGE_VERSION_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126012, "2126012"),// Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口异常
+    CREATE_IMAGE_VERSION_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126013, "2126013"),// Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败
+    TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126014, "2126014"),// Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常
+    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126015, "2126015"),// Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常
+    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2126016, "2126016");// 请检查webConsole网关代理配置
 }

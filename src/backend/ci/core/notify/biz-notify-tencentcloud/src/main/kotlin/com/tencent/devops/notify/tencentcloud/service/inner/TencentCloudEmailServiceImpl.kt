@@ -37,6 +37,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL
@@ -191,8 +192,6 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             if (it.response.error != null) {
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL,
-                    defaultMessage = "通知服务：腾讯云邮件通知发送失败,${it.response.error.message} " +
-                            "返回错误码 ${it.response.error.code}",
                     params = arrayOf(it.response.error.code)
                 )
             }

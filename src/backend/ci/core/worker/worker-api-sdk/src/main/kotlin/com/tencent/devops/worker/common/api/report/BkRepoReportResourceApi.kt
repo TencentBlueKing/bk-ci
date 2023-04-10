@@ -29,8 +29,10 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -38,6 +40,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.CREATE_REPORT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_ROOT_PATH_FAILURE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -58,7 +63,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/process/api/build/reports/$taskId/rootUrl"
         val request = buildGet(path)
-        val responseContent = request(request, "获取报告跟路径失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -90,7 +98,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 .toRequestBody(JsonMediaType)
             buildPost(path, requestBody)
         }
-        val responseContent = request(request, "创建报告失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, System.getProperty(LOCALE_LANGUAGE))
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -163,10 +174,11 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             ),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val responseContent = request(request, "上传自定义报告失败")
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+        val responseContent = request(request, message)
         try {
             val obj = objectMapper.readTree(responseContent)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义报告失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             LoggerService.addNormalLine(e.message ?: "")
             throw RemoteServiceException("report archive fail: $responseContent")

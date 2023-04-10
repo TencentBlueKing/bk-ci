@@ -41,6 +41,12 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_MACHINE_BUSY
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_MACHINE_UPGRADE_IN_PROGRESS
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.BUILD_NODE_IS_EMPTY
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
+import com.tencent.devops.dispatch.constants.DispatchMassageCode.THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -152,7 +158,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败(System Error) - ${agentResult.message}"
+                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}") +
+                        "(System Error) - ${agentResult.message}"
             )
             return
         }
@@ -163,7 +170,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = "第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline) " +
+                errorMsg = I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,) +
                         "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
@@ -175,7 +182,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败(System Error) - $dispatchType agent is null"
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
+                ) + "(System Error) - $dispatchType agent is null"
             )
             return
         }
@@ -187,7 +196,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（${dispatchType.displayName}）并发任务数设置并稍后重试."
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
+                    params = arrayOf(dispatchType.displayName)
+                )
             )
         } else {
             // 上报monitor数据
@@ -224,7 +236,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             if (redisLock.tryLock()) {
                 if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agent.agentId)) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
-                    log(event, "构建机升级中，重新调度(Agent is upgrading) - ${agent.hostname}/${agent.ip}")
+                    log(
+                        event,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BUILD_MACHINE_UPGRADE_IN_PROGRESS,
+                            language = I18nUtil.getLanguage()
+                        ) + " - ${agent.hostname}/${agent.ip}"
+                    )
                     return false
                 }
 
@@ -259,7 +277,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 log(event, "调度构建机(Scheduling selected Agent): ${agent.hostname}/${agent.ip}")
                 return true
             } else {
-                log(event, "构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}")
+                log(
+                    event,
+                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY, I18nUtil.getLanguage()) +
+                            "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -380,7 +401,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
+                ) + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
@@ -395,7 +418,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: agent is null"
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
+                ) + "System Error) - ${dispatchType.envName}: agent is null"
             )
             return
         }
@@ -410,8 +435,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = "构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
-                        "构建集群： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
+                errorMessage = I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_NODE_IS_EMPTY,
+                    params = arrayOf(dispatchType.envName)
+                ) + "build cluster： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return
         }

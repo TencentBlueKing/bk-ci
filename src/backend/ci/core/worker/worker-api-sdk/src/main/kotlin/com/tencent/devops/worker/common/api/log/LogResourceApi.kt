@@ -28,12 +28,18 @@
 package com.tencent.devops.worker.common.api.log
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOG_STORAGE_STATUS_FAILED
+import okhttp3.MediaType
 import okhttp3.RequestBody
 
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
@@ -47,7 +53,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path, requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = "上报日志失败",
+            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, System.getProperty(LOCALE_LANGUAGE)),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L
@@ -70,7 +76,10 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         if (logMode != null) path.append("&logMode=${logMode.name}")
         val requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         val request = buildPut(path.toString(), requestBody)
-        val responseContent = request(request, "上报结束状态失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, System.getProperty(LOCALE_LANGUAGE))
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -87,7 +96,10 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path.toString(), requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = "上报日志存储状态失败",
+            errorMessage = MessageUtil.getMessageByLocale(
+                LOG_STORAGE_STATUS_FAILED,
+                System.getProperty(LOCALE_LANGUAGE)
+            ),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L

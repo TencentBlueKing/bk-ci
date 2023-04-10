@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.dao
 
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.ticket.tables.TCert
 import com.tencent.devops.model.ticket.tables.records.TCertRecord
 import org.jooq.DSLContext
@@ -52,7 +53,12 @@ class CertDao {
             return dslContext.selectFrom(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(CERT_ID.eq(certId))
-                    .fetchOne() ?: throw NotFoundException("证书($certId)不存在")
+                    .fetchOne() ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = CERT_NOT_FOUND,
+                    params = arrayOf(certId)
+                )
+            )
         }
     }
 

@@ -35,7 +35,7 @@ package com.tencent.devops.quality.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  * @since: 2019-03-05
@@ -49,4 +49,6 @@ object QualityMessageCode {
     const val QUALITY_INDICATOR_ENGLISH_NAME_EXISTS = "2114004" // 英文名({0})的指标已存在
     const val QUALITY_INDICATOR_CHINESE_NAME_EXISTS = "2114005" // 中文名({0})的指标已存在
     const val NEED_QUALITY_INDICATOR_X_PERMISSION = "2114006" // 用户没有拦截规则的[{0}]权限
+    const val INDEX_ENGLISH_NAME_CANNOT_EMPTY = "2114007" // 指标英文名不能为空
+    const val CHANGE_QUALITY_GATE_VALUE = "2114008" // 指标[{0}]值类型为[{1}]，请修改红线阈值[{2}]
 }

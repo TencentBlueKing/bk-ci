@@ -42,12 +42,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.CsvUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
@@ -352,12 +353,12 @@ class PipelineAtomService @Autowired constructor(
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
-            MessageCodeUtil.getCodeLanMessage(PIPELINE_URL),
-            MessageCodeUtil.getCodeLanMessage(VERSION),
-            MessageCodeUtil.getCodeLanMessage(LATEST_MODIFIER),
-            MessageCodeUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTOR),
-            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
+            I18nUtil.getCodeLanMessage(PIPELINE_URL, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(VERSION, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_MODIFIER, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTOR, language = I18nUtil.getLanguage(userId)),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME, language = I18nUtil.getLanguage(userId))
         )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)
@@ -392,12 +393,22 @@ class PipelineAtomService @Autowired constructor(
         checkPermission: Boolean = true
     ): Result<Map<String, AtomProp>?> {
         if (checkPermission) {
+            val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
             )
         }
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)

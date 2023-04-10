@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -51,7 +52,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -225,13 +225,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 ).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
         }
@@ -473,9 +477,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-                if (count == 0) return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf("$projectCode+$atomCode")
+                if (count == 0) return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$projectCode+$atomCode")
                 )
             }
         }
@@ -629,7 +633,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
                 val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = MessageCodeUtil.getCodeLanMessage("$storeAtomStatusPrefix$atomStatusName")
+                val atomStatusMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "$storeAtomStatusPrefix$atomStatusName"
+                )
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
@@ -676,10 +682,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val codeCount = atomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomName = atomRequest.name
@@ -687,18 +694,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val nameCount = atomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 校验插件分类是否合法
         classifyService.getClassify(atomRequest.classifyId).data
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomRequest.classifyId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val classType = handleClassType(atomRequest.os)
         atomRequest.os.sort() // 给操作系统排序
@@ -726,10 +735,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
         // 校验插件分类是否合法
         classifyService.getClassify(atomUpdateRequest.classifyId).data
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomUpdateRequest.classifyId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         return if (null != atomRecord) {
@@ -803,7 +813,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id), false)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -826,10 +841,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode atomId=$atomId|atomCode=$atomCode")
         val count = atomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("atomId:$atomId,atomCode:$atomCode"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return Result(true)
@@ -842,7 +858,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode userId=$userId|atomCode=$atomCode")
         val count = atomDao.countByUserIdAndCode(dslContext, userId, atomCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = null,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         return Result(true)
     }
@@ -1004,7 +1025,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("uninstallAtom, isInstaller=$isInstaller")
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         // 是否还有流水线使用待卸载的插件
@@ -1014,9 +1039,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         ).data
             ?: 0
         if (pipelineCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_USED,
-                params = arrayOf(atomCode, projectCode)
+                params = arrayOf(atomCode, projectCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -1056,7 +1082,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updateAtomBaseInfo userId:$userId,atomCode:$atomCode,updateRequest:$atomBaseInfoUpdateRequest")
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         // 查询插件的最新记录
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)

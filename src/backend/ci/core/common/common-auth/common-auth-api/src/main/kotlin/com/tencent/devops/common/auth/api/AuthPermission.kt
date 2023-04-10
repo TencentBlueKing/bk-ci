@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.MSG_CODE_PERMISSION_PREFIX
+import com.tencent.devops.common.api.util.MessageUtil
+
 enum class AuthPermission(val value: String, val alias: String) {
     CREATE("create", "创建"), // 流水线，凭据，证书，代码仓库
     DEPLOY("deploy", "部署"), // 流水线，容器，自定义目录
@@ -55,5 +58,13 @@ enum class AuthPermission(val value: String, val alias: String) {
             }
             throw IllegalArgumentException("No enum for constant $value")
         }
+    }
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "$MSG_CODE_PERMISSION_PREFIX${this.name}",
+            defaultMessage = this.alias,
+            language = language
+        )
     }
 }

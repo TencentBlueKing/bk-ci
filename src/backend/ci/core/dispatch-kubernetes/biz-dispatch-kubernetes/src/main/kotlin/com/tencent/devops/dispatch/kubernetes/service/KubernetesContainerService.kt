@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
@@ -45,11 +46,15 @@ import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.KUBERNETES_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_KUBERNETES_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -107,9 +112,9 @@ class KubernetesContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = "准备创建kubernetes构建机...",
-        startContainerError = "启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
+        startContainerError = I18nUtil.getCodeLanMessage(START_KUBERNETES_BUILD_CONTAINER_FAIL),
+        troubleShooting = I18nUtil.getCodeLanMessage(KUBERNETES_BUILD_ERROR)
     )
 
     @Value("\${kubernetes.resources.builder.cpu}")
@@ -242,7 +247,8 @@ class KubernetesContainerService @Autowired constructor(
                     "taskId:($taskId)"
             )
             logsPrinter.printLogs(
-                this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
+                this,
+                I18nUtil.getCodeLanMessage(BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL, params = arrayOf(builderName))
             )
             return Pair(taskId, builderName)
         }

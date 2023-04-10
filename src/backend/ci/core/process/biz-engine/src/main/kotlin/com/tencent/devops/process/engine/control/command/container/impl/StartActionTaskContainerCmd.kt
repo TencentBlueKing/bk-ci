@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.expression.ExpressionParseException
@@ -38,7 +39,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -582,10 +583,11 @@ class StartActionTaskContainerCmd(
     private fun ElementPostInfo.addPostTipLog(task: PipelineBuildTask) {
         buildLogPrinter.addLine(
             buildId = task.buildId,
-            message = MessageCodeUtil.getCodeMessage(
+            message = I18nUtil.getCodeLanMessage(
                 messageCode = ATOM_POST_EXECUTE_TIP,
-                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName)
-            ) ?: "",
+                params = arrayOf((parentElementJobIndex + 1).toString(), parentElementName),
+                language = I18nUtil.getLanguage()
+            ),
             tag = task.taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1

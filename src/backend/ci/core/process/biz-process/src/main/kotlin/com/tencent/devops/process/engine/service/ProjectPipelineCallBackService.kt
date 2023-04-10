@@ -129,7 +129,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 successEvents.add(it.name)
             } catch (e: Throwable) {
                 logger.error("Fail to create callback|$projectId|${it.name}|$callBackUrl", e)
-                failureEvents[it.name] = e.message ?: "创建callback失败"
+                failureEvents[it.name] = e.message ?: "Fail to create callback"
             }
         }
         return CreateCallBackResult(

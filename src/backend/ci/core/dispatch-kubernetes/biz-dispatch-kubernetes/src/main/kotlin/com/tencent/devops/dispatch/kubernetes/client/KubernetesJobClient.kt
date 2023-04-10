@@ -30,11 +30,14 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
@@ -85,7 +88,7 @@ class KubernetesJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
+                    "${TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
                             "http response code: ${response.code}"
                 )
             }
@@ -110,7 +113,7 @@ class KubernetesJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取Job logs接口异常" +
+                    "${TROUBLE_SHOOTING}获取Job logs接口异常" +
                             "（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
@@ -142,7 +145,8 @@ class KubernetesJobClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        "构建并推送接口异常（Fail to build image, http response code: ${response.code}"
+                        I18nUtil.getCodeLanMessage(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION) +
+                                "（Fail to build image, http response code: ${response.code}"
                     )
                 }
                 val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)
@@ -154,7 +158,7 @@ class KubernetesJobClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "${ConstantsMessage.TROUBLE_SHOOTING} 构建并镜像接口返回失败: ${responseData.message}"
+                        "$TROUBLE_SHOOTING 构建并镜像接口返回失败: ${responseData.message}"
                     )
                 }
             }

@@ -30,7 +30,8 @@ package com.tencent.devops.repository.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -76,7 +77,10 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
         )
         return Result(
             gitService.getGitFileContent(
@@ -94,7 +98,10 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
         )
         return Result(
             data = gitService.getRepoMembers(
@@ -109,7 +116,10 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
         )
         return Result(
             data = gitService.getRepoAllMembers(
@@ -124,7 +134,10 @@ class CommonRepoFileService @Autowired constructor(
         val token = AESUtil.decrypt(
             key = aesKey,
             content = gitTokenDao.getAccessToken(dslContext, userId)?.accessToken
-                ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                ?: return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
         )
         val projectUser = gitService.getProjectMembersAll(
             gitProjectId = GitUtils.getProjectName(repoUrl),

@@ -32,7 +32,6 @@ import com.tencent.devops.auth.dao.AuthUserInfoDao
 import com.tencent.devops.auth.entity.UserInfoEntity
 import com.tencent.devops.auth.pojo.enum.UserStatus
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,10 +48,7 @@ class UserInfoService @Autowired constructor(
             val userInfo = userInfoDao.getUserInfo(dslContext, entity.userId, entity.userType)
             if (userInfo != null) {
                 logger.warn("${userInfo.userid} ${userInfo.userType} is exist")
-                throw ErrorCodeException(
-                    errorCode = AuthMessageCode.LOGIN_USER_INFO_EXIST,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.LOGIN_USER_INFO_EXIST)
-                )
+                throw ErrorCodeException(errorCode = AuthMessageCode.LOGIN_USER_INFO_EXIST)
             }
         }
         return userInfoDao.createUser(dslContext, entity) == 1

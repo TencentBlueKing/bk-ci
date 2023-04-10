@@ -34,7 +34,6 @@ import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -57,7 +56,7 @@ class JobServiceExt @Autowired constructor(
         if (taskInstanceId <= 0) {
             // 失败处理
             logger.warn("start jobDevOpsFastPushfile failed")
-            throw ErrorCodeException(errorCode = MessageCodeUtil.getCodeLanMessage(PushMessageCode.JOB_EXECUTE_FAIL))
+            throw ErrorCodeException(errorCode = PushMessageCode.JOB_EXECUTE_FAIL)
         }
         return taskInstanceId
     }

@@ -29,12 +29,13 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
@@ -121,7 +122,9 @@ class HeartbeatControl @Autowired constructor(
             "\n 可能原因(Maybe):" +
             "\n 1. 构建机网络不通，检查构建机网络代理、或所在企业安全鉴权会话是否过期。(Network or proxy not working properly.)" +
             "\n 2. 业务构建进程进程被操作系统或其他程序杀掉，需自查并降低负载后重试。(Builder process was killed.)" +
-            "\n 3. 其他参考链接[Link] ${MessageCodeUtil.getCodeLanMessage(BUILD_WORKER_DEAD_ERROR)}" +
+            "\n 3. 其他参考链接[Link] ${I18nUtil.getCodeLanMessage(
+                BUILD_WORKER_DEAD_ERROR, language = I18nUtil.getLanguage()
+            )}" +
             "\n 4. 平台级故障导致大面积超时。(System error, please wait)"
 
         // #2365 在运行中的插件中记录心跳超时信息

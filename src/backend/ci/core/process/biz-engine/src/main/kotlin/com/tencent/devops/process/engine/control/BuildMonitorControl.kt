@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
@@ -37,7 +38,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
@@ -244,9 +245,10 @@ class BuildMonitorControl @Autowired constructor(
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
-                params = arrayOf("Job", "$minute")
+                params = arrayOf("Job", "$minute"),
+                language = I18nUtil.getLanguage(userId)
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -391,9 +393,10 @@ class BuildMonitorControl @Autowired constructor(
                 buildStatus = buildInfo.status
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
-                params = arrayOf(event.buildId)
+                params = arrayOf(event.buildId),
+                language = I18nUtil.getLanguage()
             )
             val jobId = "0"
             buildLogPrinter.addRedLine(
