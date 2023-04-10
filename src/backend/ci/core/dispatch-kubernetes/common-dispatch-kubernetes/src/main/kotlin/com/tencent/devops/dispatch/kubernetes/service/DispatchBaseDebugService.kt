@@ -273,11 +273,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 } else {
                     logger.info(
                         "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                            "debugBuilderName:$debugBuilderName " +
-                                MessageUtil.getMessageByLocale(
-                                    BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE,
-                                    I18nUtil.getLanguage(userId)
-                                )
+                                "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中"
                     )
                 }
             } else {

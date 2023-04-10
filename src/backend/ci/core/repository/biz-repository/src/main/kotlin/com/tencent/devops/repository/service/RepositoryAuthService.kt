@@ -59,7 +59,7 @@ class RepositoryAuthService @Autowired constructor(
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
         if (repositoryInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_PROJECT_NO_CODE_BASE)}")
+            logger.info("project $projectId no code base")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

@@ -106,7 +106,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_PROJECT_NO_PIPELINE, I18nUtil.getLanguage())}")
+            logger.info("project $projectId no pipeline")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

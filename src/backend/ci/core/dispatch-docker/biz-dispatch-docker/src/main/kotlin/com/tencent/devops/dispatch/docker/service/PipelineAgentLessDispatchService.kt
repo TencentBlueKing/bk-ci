@@ -143,7 +143,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             LOG.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
             val message = MessageUtil.getMessageByLocale(
-                "$PIPELINE_STATUS_ERROR",
+                PIPELINE_STATUS_ERROR.toString(),
                 I18nUtil.getLanguage(event.userId)
             )
             throw BuildFailureException(
@@ -157,7 +157,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         if (!statusResult.data!!.isRunning()) {
             LOG.warn("The build event($event) is not running")
             val message = MessageUtil.getMessageByLocale(
-                "$PIPELINE_NOT_RUNNING",
+                PIPELINE_NOT_RUNNING.toString(),
                 I18nUtil.getLanguage(event.userId)
             )
             throw BuildFailureException(

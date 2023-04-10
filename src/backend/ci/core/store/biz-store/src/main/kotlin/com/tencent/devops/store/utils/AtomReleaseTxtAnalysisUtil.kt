@@ -165,7 +165,8 @@ object AtomReleaseTxtAnalysisUtil {
                     serviceUrlPrefix = serviceUrlPrefix,
                     file = file,
                     fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                    logo = true
+                    logo = true,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ).data
                 fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
             } else {

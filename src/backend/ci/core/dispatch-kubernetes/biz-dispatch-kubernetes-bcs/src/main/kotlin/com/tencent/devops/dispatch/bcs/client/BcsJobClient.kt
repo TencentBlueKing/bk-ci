@@ -43,6 +43,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.exception.ErrorCodeException
 
 @Component
 class BcsJobClient @Autowired constructor(
@@ -80,12 +81,10 @@ class BcsJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "$TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
-                            "http response code: ${response.code}"
+                throw ErrorCodeException(
+                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
+                    defaultMessage = "查询Job status接口异常（Fail to getJobStatus, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -104,12 +103,10 @@ class BcsJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${TROUBLE_SHOOTING}获取Job logs接口异常" +
-                            "（Fail to getJobLogs, http response code: ${response.code}"
+                throw ErrorCodeException(
+                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                    defaultMessage = "获取Job logs接口异常（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)

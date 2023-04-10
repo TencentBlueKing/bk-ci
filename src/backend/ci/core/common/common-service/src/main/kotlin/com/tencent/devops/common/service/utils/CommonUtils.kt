@@ -40,7 +40,6 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import com.tencent.devops.common.service.config.CommonConfig
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -138,7 +137,8 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false
+        logo: Boolean = false,
+        language: String
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
                 "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
@@ -147,10 +147,9 @@ object CommonUtils {
             val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
-                val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
                 val message = MessageUtil.getMessageByLocale(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
-                    language = commonConfig.devopsDefaultLocaleLanguage
+                    language = language
                 )
                 Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
             }

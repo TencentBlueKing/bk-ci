@@ -170,7 +170,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,) +
+                errorMsg = I18nUtil.getCodeLanMessage(THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR) +
                         "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
@@ -279,7 +279,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             } else {
                 log(
                     event,
-                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY, I18nUtil.getLanguage()) +
+                    I18nUtil.getCodeLanMessage(BUILD_MACHINE_BUSY, I18nUtil.getDefaultLocaleLanguage()) +
                             "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }

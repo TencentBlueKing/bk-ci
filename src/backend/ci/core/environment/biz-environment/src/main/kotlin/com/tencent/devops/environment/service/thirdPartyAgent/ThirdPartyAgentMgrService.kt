@@ -797,7 +797,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,) +
+                I18nUtil.getCodeLanMessage(ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV) +
                         "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
@@ -871,7 +871,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST,) + "($projectId:$envHashId)"
+                I18nUtil.getCodeLanMessage(ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST) + "($projectId:$envHashId)"
             )
         }
         val nodeIds = nodes.map {

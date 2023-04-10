@@ -503,7 +503,7 @@ class GitService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 val data = it.stringLimit(
                     readLimit = MAX_FILE_SIZE,
-                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT,)
+                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT)
                 )
                 if (!it.isSuccessful) {
                     throw CustomException(

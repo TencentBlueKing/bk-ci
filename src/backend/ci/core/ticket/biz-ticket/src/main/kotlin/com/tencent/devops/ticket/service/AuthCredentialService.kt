@@ -52,7 +52,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
+            logger.info("$projectId no credential")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -101,10 +101,7 @@ class AuthCredentialService @Autowired constructor(
             credentialId = keyword)
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(
-                BK_NO_CERT,
-                I18nUtil.getDefaultLocaleLanguage()
-            )}")
+            logger.info("$projectId no cert")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

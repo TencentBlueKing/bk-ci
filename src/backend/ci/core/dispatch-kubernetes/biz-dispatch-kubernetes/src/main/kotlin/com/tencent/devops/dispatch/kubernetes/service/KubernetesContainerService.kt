@@ -248,7 +248,11 @@ class KubernetesContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                I18nUtil.getCodeLanMessage(BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL, params = arrayOf(builderName))
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
+                    params = arrayOf(builderName),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
             return Pair(taskId, builderName)
         }

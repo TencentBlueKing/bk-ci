@@ -30,18 +30,11 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.GET_BUILD_MACHINE_DETAILS_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_RETURN_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
@@ -68,12 +61,6 @@ class KubernetesBuilderClient @Autowired constructor(
         private val logger = LoggerFactory.getLogger(KubernetesBuilderClient::class.java)
     }
 
-    private fun combinationI18nMessage(message: String, errorMessage: String, userId: String? = null): String {
-        val language = I18nUtil.getLanguage(userId ?: I18nUtil.getRequestUserId())
-        return MessageUtil.getMessageByLocale(message, language) +
-                MessageUtil.getMessageByLocale(errorMessage, language)
-    }
-
     fun getBuilderDetail(
         buildId: String,
         vmSeqId: String,
@@ -97,12 +84,11 @@ class KubernetesBuilderClient @Autowired constructor(
                     return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
                 }
 
-                throw BuildFailureException(
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage +
-                            "（Fail to get builder detail, http response code: ${response.code}"
+                throw ErrorCodeException(
+                    errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode.toString(),
+                    defaultMessage =
+                    "获取构建机详情接口异常（Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -115,14 +101,10 @@ class KubernetesBuilderClient @Autowired constructor(
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
-                throw BuildFailureException(
+                throw ErrorCodeException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = MessageUtil.getMessageByLocale(
-                        GET_BUILD_MACHINE_DETAILS_TIMEOUT,
-                        I18nUtil.getLanguage(userId)
-                    )+ ", url: $url"
+                    errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode.toString(),
+                    defaultMessage = "获取构建机详情接口超时, url: $url"
                 )
             }
         }
@@ -167,12 +149,10 @@ class KubernetesBuilderClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_ERROR, userId) +
-                            "（Fail to $action docker, http response code: ${response.code}"
+                    throw ErrorCodeException(
+                        errorType = errorTypeErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode.toString(),
+                        defaultMessage = "操作构建机接口异常（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] operator builder: $name response: $responseContent")
@@ -181,22 +161,19 @@ class KubernetesBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
-                    throw BuildFailureException(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL, userId) + "：$msg"
+                    throw ErrorCodeException(
+                        errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode.toString(),
+                        defaultMessage = "操作构建机接口返回失败：$msg"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
             logger.error("[$buildId]|[$vmSeqId] operateBuilder get SocketTimeoutException.", e)
-            throw BuildFailureException(
+            throw ErrorCodeException(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_TIMEOUT, userId) +
-                        ", url: $url"
+                errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode.toString(),
+                defaultMessage = "操作构建机接口超时, url: $url"
             )
         }
     }
@@ -220,15 +197,10 @@ class KubernetesBuilderClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] create builder response: ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        combinationI18nMessage(
-                            TROUBLE_SHOOTING,
-                            "${ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode}",
-                            userId
-                        ) + ": Fail to createBuilder, http response code: ${response.code}"
+                    throw ErrorCodeException(
+                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode.toString(),
+                        defaultMessage = "创建构建机接口异常: Fail to createBuilder, http response code: ${response.code}"
                     )
                 }
 
@@ -237,15 +209,10 @@ class KubernetesBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
-                    throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        combinationI18nMessage(
-                            TROUBLE_SHOOTING,
-                            "${ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL}",
-                            userId
-                        ) + ": $msg"
+                    throw ErrorCodeException(
+                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode.toString(),
+                        defaultMessage = "创建构建机接口返回失败: $msg"
                     )
                 }
             }
@@ -254,12 +221,10 @@ class KubernetesBuilderClient @Autowired constructor(
                 "[$buildId]|[$vmSeqId] create builder get SocketTimeoutException",
                 e
             )
-            throw BuildFailureException(
+            throw ErrorCodeException(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = combinationI18nMessage(TROUBLE_SHOOTING, MACHINE_INTERFACE_RETURN_FAIL, userId) +
-                "${TROUBLE_SHOOTING}创建构建机接口超时, url: $url"
+                errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode.toString(),
+                defaultMessage = "创建构建机接口超时, url: $url"
             )
         }
     }
@@ -324,10 +289,10 @@ class KubernetesBuilderClient @Autowired constructor(
                 logger.info("$projectId|$staffName|$builderName Get websocketUrl response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
-                    throw BuildFailureException(
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    throw ErrorCodeException(
+                        errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode.toString(),
+                        defaultMessage =
                         "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                     )
                 }
@@ -340,11 +305,10 @@ class KubernetesBuilderClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
-            throw BuildFailureException(
+            throw ErrorCodeException(
                 errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
+                defaultMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }
     }

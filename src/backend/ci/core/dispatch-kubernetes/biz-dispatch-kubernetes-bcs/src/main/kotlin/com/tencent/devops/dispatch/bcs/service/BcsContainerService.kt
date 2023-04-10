@@ -219,8 +219,10 @@ class BcsContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                I18nUtil.getCodeLanMessage(BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS) +
-                        " builderName: $builderName "
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " builderName: $builderName "
             )
 
             val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
@@ -235,8 +237,9 @@ class BcsContainerService @Autowired constructor(
                     this,
                     I18nUtil.getCodeLanMessage(
                         BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
-                    I18nUtil.getDefaultLocaleLanguage()
-                ))
+                        I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName)

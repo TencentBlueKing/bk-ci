@@ -72,10 +72,7 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listByPage(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(
-                BK_PROJECT_NO_NODE,
-                I18nUtil.getDefaultLocaleLanguage()
-            )}")
+            logger.info("project $projectId no node")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

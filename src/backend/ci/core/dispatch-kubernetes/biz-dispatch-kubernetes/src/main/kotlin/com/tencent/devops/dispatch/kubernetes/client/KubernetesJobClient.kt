@@ -84,12 +84,10 @@ class KubernetesJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("Get job: $jobName status response: $responseContent")
             if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
-                            "http response code: ${response.code}"
+                throw ErrorCodeException(
+                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
+                    defaultMessage = "查询Job status接口异常（Fail to getJobStatus,http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -109,12 +107,10 @@ class KubernetesJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("Get job: $jobName logs response: $responseContent")
             if (!response.isSuccessful) {
-                throw BuildFailureException(
-                    ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                    ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${TROUBLE_SHOOTING}获取Job logs接口异常" +
-                            "（Fail to getJobLogs, http response code: ${response.code}"
+                throw ErrorCodeException(
+                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
+                    defaultMessage = "获取Job logs接口异常（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -154,21 +150,19 @@ class KubernetesJobClient @Autowired constructor(
                 if (responseData.isOk()) {
                     return responseData.data!!.taskId
                 } else {
-                    throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "$TROUBLE_SHOOTING 构建并镜像接口返回失败: ${responseData.message}"
+                    throw ErrorCodeException(
+                        errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode.toString(),
+                        defaultMessage = "构建并镜像接口返回失败: ${responseData.message}"
                     )
                 }
             }
         } catch (e: Exception) {
             logger.error("$userId build and push image failed.", e)
-            throw BuildFailureException(
+            throw ErrorCodeException(
                 errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                errorMessage = "构建并推送接口超时, url: $url"
+                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode.toString(),
+                defaultMessage = "构建并推送接口超时, url: $url"
             )
         }
     }

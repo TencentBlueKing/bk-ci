@@ -45,7 +45,8 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            logo = true
+            logo = true,
+            language = userId
         ).data
         // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
         return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)

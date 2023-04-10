@@ -497,7 +497,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             val existsNotifyType =
                 JsonUtil.getObjectMapper().readValue(record, List::class.java) as ArrayList<String>
             logger.info(
-                I18nUtil.getCodeLanMessage(BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO,) +
+                I18nUtil.getCodeLanMessage(BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO) +
                         "$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}"
             )
             when (notifyType) {
