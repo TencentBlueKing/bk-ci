@@ -37,8 +37,10 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
+import org.jooq.Record4
 import org.jooq.Record7
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -207,6 +209,39 @@ class StoreStatisticTotalDao {
                 conditions.add(STORE_CODE.`in`(storeCodeList))
             }
             return baseStep.where(conditions).fetch()
+        }
+    }
+
+    /**
+     * 批量获取统计数据oo
+     */
+    fun batchGetStatisticByStoreCode(
+        dslContext: DSLContext,
+        storeCodeList: List<String?>,
+        storeType: Byte,
+        limit: Int? = null,
+        offset: Int? = null
+    ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            val conditions = mutableListOf<Condition>()
+            val baseStep = dslContext.select(
+                DSL.sum(DOWNLOADS),
+                DSL.sum(COMMITS),
+                DSL.sum(SCORE),
+                STORE_CODE
+            ).from(this)
+            if (storeCodeList.isNotEmpty()) {
+                conditions.add(STORE_CODE.`in`(storeCodeList))
+            }
+            conditions.add(STORE_TYPE.eq(storeType))
+            val finalStep = baseStep.where(conditions)
+                .groupBy(STORE_CODE)
+                .orderBy(CREATE_TIME, ID)
+            return if (null != offset && null != limit) {
+                finalStep.limit(limit).offset(offset).fetch()
+            } else {
+                finalStep.fetch()
+            }
         }
     }
 
