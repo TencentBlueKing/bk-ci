@@ -26,7 +26,6 @@ const jobOptionConfigMixin = {
                     default: false
                 },
                 mutexGroupName: {
-                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.mutualGroupName'),
                     placeholder: this.$t('storeMap.mutualGroupNamePlaceholder'),
