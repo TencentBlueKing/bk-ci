@@ -104,6 +104,7 @@ import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
@@ -119,7 +120,9 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
+import com.tencent.devops.store.service.common.StoreHonorService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -177,6 +180,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
 
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
@@ -295,6 +304,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -309,6 +320,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
+                val atomHonorInfos = atomHonorInfoMap[atomCode]
+                val atomIndexInfos = atomIndexInfosMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
@@ -356,7 +369,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                        indexInfos = atomIndexInfos,
+                        honorInfos = atomHonorInfos,
+                        hotFlag = statistic?.hotFlag
                     )
                 )
             }
@@ -644,12 +660,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         projectCode: String,
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
-        val atomCode = storeErrorCodeInfo.storeCode
+        val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf(KEY_STORE_CODE)
+        )
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
             storeCode = atomCode,
-            storeType = storeErrorCodeInfo.storeType.type.toByte()
+            storeType = StoreTypeEnum.ATOM.type.toByte()
         )
         if (!isStoreMember) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
@@ -683,14 +702,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeErrorCodeInfo = storeErrorCodeInfo
         )
         val dbErrorCodes = storeErrorCodeInfoDao.getStoreErrorCodes(
-            dslContext = dslContext, storeCode = storeErrorCodeInfo.storeCode, storeType = storeErrorCodeInfo.storeType
+            dslContext = dslContext, storeCode = atomCode, storeType = StoreTypeEnum.ATOM
         ).toMutableSet()
         dbErrorCodes.removeAll(errorCodes)
         if (dbErrorCodes.isNotEmpty()) {
             storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
                 dslContext = dslContext,
-                storeCode = storeErrorCodeInfo.storeCode,
-                storeType = storeErrorCodeInfo.storeType,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM,
                 errorCodes = dbErrorCodes
             )
         }
@@ -792,8 +811,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     // 开启插件yml显示
                     yamlFlag = true,
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }
