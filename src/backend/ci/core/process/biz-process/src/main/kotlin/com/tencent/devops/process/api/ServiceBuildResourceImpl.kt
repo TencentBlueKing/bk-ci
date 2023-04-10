@@ -74,11 +74,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
+            throw ParamBlankException("Invalid buildId, it must not empty.")
         }
         return Result(
             pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
-                ?: throw ParamBlankException("Invalid buildId")
+                ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }
 
