@@ -2,17 +2,6 @@ package com.tencent.devops.dispatch.devcloud.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_MACHINE_FAILS_START
-import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTAINER_BUILD_EXCEPTIONS
-import com.tencent.devops.common.api.constant.I18NConstant.BK_DEVCLOUD_EXCEPTION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_CREATE_BUILD_MACHINE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_START_DEVCLOUD
-import com.tencent.devops.common.api.constant.I18NConstant.BK_INTERFACE_REQUEST_TIMEOUT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_FREE_BUILD_MACHINE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_WAITING_MACHINE_START
-import com.tencent.devops.common.api.constant.I18NConstant.BK_WAIT_AGENT_START
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -27,6 +16,17 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_DEVCLOUD_EXCEPTION
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_START_DEVCLOUD
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_INTERFACE_REQUEST_TIMEOUT
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_NO_FREE_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAIT_AGENT_START
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao

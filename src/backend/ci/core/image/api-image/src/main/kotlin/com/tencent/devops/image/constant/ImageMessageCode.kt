@@ -1,4 +1,4 @@
-package com.tencent.devops.image.constants
+package com.tencent.devops.image.constant
 
 object ImageMessageCode {
     const val BK_SOURCE_IMAGE = "bkSourceImage" //源镜像：{0}

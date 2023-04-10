@@ -1,4 +1,4 @@
-package com.tencent.devops.dockerhost.constants
+package com.tencent.devops.dockerhost.constant
 
 object DockerhostMessageCode {
     const val BK_DOCKER_BUILDER_RUNS_TOO_MANY = "bkDockerBuilderRunsTooMany" //Docker构建机运行的容器太多，母机IP:{0}，容器数量: {1}

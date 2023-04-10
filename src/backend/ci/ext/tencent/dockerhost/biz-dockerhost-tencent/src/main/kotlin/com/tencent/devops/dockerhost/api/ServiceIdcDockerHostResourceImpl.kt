@@ -32,10 +32,10 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.constants.DockerhostMessageCode.BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY
-import com.tencent.devops.dockerhost.constants.DockerhostMessageCode.BK_DOCKER_BUILDER_RUNS_TOO_MANY
-import com.tencent.devops.dockerhost.constants.DockerhostMessageCode.BK_FAILED_TO_START_ERROR_MESSAGE
-import com.tencent.devops.dockerhost.constants.DockerhostMessageCode.BK_FAILED_TO_START_IMAGE_NOT_EXIST
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_DOCKER_BUILDER_RUNS_TOO_MANY
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_FAILED_TO_START_ERROR_MESSAGE
+import com.tencent.devops.dockerhost.constant.DockerhostMessageCode.BK_FAILED_TO_START_IMAGE_NOT_EXIST
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService

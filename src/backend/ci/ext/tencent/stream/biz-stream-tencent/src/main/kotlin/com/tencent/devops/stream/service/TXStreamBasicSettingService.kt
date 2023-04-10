@@ -27,7 +27,6 @@
 
 package com.tencent.devops.stream.service
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NEED_SUPPLEMEN
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.utils.GitCIUtils

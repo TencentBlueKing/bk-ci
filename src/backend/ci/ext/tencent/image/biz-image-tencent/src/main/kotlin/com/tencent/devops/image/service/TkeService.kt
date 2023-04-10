@@ -42,10 +42,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
-import com.tencent.devops.image.constants.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
-import com.tencent.devops.image.constants.ImageMessageCode.BK_SOURCE_IMAGE
-import com.tencent.devops.image.constants.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
-import com.tencent.devops.image.constants.ImageMessageCode.BK_TARGET_IMAGE
+import com.tencent.devops.image.constant.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
+import com.tencent.devops.image.constant.ImageMessageCode.BK_SOURCE_IMAGE
+import com.tencent.devops.image.constant.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
+import com.tencent.devops.image.constant.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
