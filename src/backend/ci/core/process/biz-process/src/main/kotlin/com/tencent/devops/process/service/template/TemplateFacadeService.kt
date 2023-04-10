@@ -1318,13 +1318,21 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelinesId.add(pipelineId)
                 }
             } catch (ignored: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
+                logger.warn("TemplateCreateInstanceDuplicate|$projectId|$instance|$userId|${ignored.message}")
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = "流水线已经存在"
+                messages[instance.pipelineName] = "duplicate!"
+            } catch (exception: ErrorCodeException) {
+                logger.warn("TemplateCreateInstanceErrorCode|$projectId|$instance|$userId|${exception.message}")
+                messages[instance.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
             } catch (ignored: Throwable) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
+                logger.warn("TemplateCreateInstanceThrowable|$projectId|$instance|$userId|${ignored.message}")
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = ignored.message ?: "创建流水线失败"
+                messages[instance.pipelineName] = ignored.message ?: "create instance fail"
             }
         }
 
@@ -1388,13 +1396,21 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 successPipelines.add(it.pipelineName)
             } catch (ignored: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
+                logger.warn("updateTemplateInstancesDuplicate|$projectId|$it|$userId|${ignored.message}")
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
+                messages[it.pipelineName] = " exist!"
+            } catch (exception: ErrorCodeException) {
+                logger.warn("updateTemplateInstancesErrorCode|$projectId|$it|$userId|${exception.message}")
+                messages[it.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
             } catch (ignored: Throwable) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
+                logger.warn("updateTemplateInstancesThrowable|$projectId|$it|$userId|${ignored.message}")
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = ignored.message ?: "更新流水线失败"
+                messages[it.pipelineName] = ignored.message ?: "update instance fail"
             }
         }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
