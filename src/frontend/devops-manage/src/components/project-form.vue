@@ -273,7 +273,7 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
 
 onMounted(async () => {
   await fetchUserDetail();
-  await fetchDepartmentList();
+  // await fetchDepartmentList();
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -331,7 +331,7 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
+    <!-- <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.bgId"
@@ -383,7 +383,7 @@ onBeforeUnmount(() => {
           />
         </bk-select>
       </div>
-    </bk-form-item>
+    </bk-form-item> -->
     <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
       <bk-radio-group
         v-model="projectData.authSecrecy"

@@ -344,7 +344,7 @@ onMounted(async () => {
                     <div>{{ projectData.afterDescription }}</div>
                   </div>
                 </bk-form-item>
-                <bk-form-item :label="t('项目所属组织')" property="bg">
+                <!-- <bk-form-item :label="t('项目所属组织')" property="bg">
                   <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
                   <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
                     <p class="update-title">
@@ -354,7 +354,7 @@ onMounted(async () => {
                     {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
                   </span>
                   </div>
-                </bk-form-item>
+                </bk-form-item> -->
                 <bk-form-item :label="t('项目性质')" property="authSecrecy">
                   <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
                   <div class="diff-content" v-if="projectData.afterAuthSecrecy">
@@ -400,8 +400,8 @@ onMounted(async () => {
                     :content="statusDisabledTips[projectData.approvalStatus]"
                     :disabled="![1, 4].includes(projectData.approvalStatus)"
                     v-perm="{
-                      disablePermissionApi: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
-                      hasPermission: !projectData.projectCode || [1, 4].includes(projectData.approvalStatus),
+                      disablePermissionApi: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
+                      hasPermission: !projectData.projectCode || [1, 3, 4].includes(projectData.approvalStatus),
                       permissionData: {
                         projectId: projectData.projectCode,
                         resourceType: RESOURCE_TYPE,
