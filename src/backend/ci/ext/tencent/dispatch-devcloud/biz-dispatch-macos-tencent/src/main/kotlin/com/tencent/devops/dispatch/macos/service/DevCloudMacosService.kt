@@ -270,41 +270,45 @@ class DevCloudMacosService @Autowired constructor(
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
-            if (200 == code) {
-                val dataMap = responseData["data"] as Map<String, Any>
-                if (dataMap.containsKey("items")) {
-                    val itemsList = dataMap["items"] as List<Any>
-                    itemsList.forEach { item ->
-                        var itemTmp = item as Map<String, Any>
-                        if (itemTmp["ip"] != null) {
-                            vmInfoList.add(
-                                DevCloudMacosVmInfo(
-                                    name = itemTmp["name"] as String ?: "",
-                                    memory = itemTmp["memory"] as String ?: "",
-                                    assetId = itemTmp["assetId"] as String ?: "",
-                                    ip = itemTmp["ip"] as String ?: "",
-                                    disk = itemTmp["disk"] as String ?: "",
-                                    os = itemTmp["os"] as String ?: "",
-                                    id = itemTmp["id"] as Int ?: 0,
-                                    cpu = itemTmp["cpu"] as String ?: ""
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    logger.error(
-                        "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
-                            "msg: $responseContent"
-                    )
-                    return vmInfoList
-                }
-            } else {
+            if (200 != code) {
                 logger.error(
                     "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
                         "msg: $responseContent"
                 )
                 return vmInfoList
             }
+
+            val dataMap = responseData["data"] as Map<String, Any>
+            if (!dataMap.containsKey("items")) {
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
+                return vmInfoList
+            }
+
+            val itemsList = dataMap["items"] as List<Any>
+            itemsList.forEach { item ->
+                val itemTmp = item as Map<String, Any>
+
+                if (itemTmp["ip"] == null) {
+                    return@forEach
+                }
+
+                vmInfoList.add(
+                    DevCloudMacosVmInfo(
+                        name = itemTmp["name"] as String ?: "",
+                        memory = itemTmp["memory"] as String ?: "",
+                        assetId = itemTmp["assetId"] as String ?: "",
+                        ip = itemTmp["ip"] as String ?: "",
+                        disk = itemTmp["disk"] as String ?: "",
+                        os = itemTmp["os"] as String ?: "",
+                        id = itemTmp["id"] as Int ?: 0,
+                        cpu = itemTmp["cpu"] as String ?: ""
+                    )
+                )
+            }
+
             return vmInfoList
         }
     }
