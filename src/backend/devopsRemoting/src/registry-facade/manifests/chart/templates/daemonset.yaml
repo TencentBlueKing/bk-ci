@@ -75,6 +75,10 @@ spec:
           items:
             - key: run.json
               path: run.json
+            {{- if .Values.registry.fixedSpec }}   
+            - key: fixed.json
+              path: fixed.json 
+            {{- end }}
       - name: {{ .Release.Name }}-pull-secret
         secret:
           secretName: {{ .Release.Name }}-pull-secret

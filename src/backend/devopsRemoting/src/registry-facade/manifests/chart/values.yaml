@@ -11,14 +11,15 @@ registry:
     - type: "image"
       ref: "mirrors.tencent.com/ci/remote-dev-base:0.0.3"
     - type: "image"
-      ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"
-     
+      ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"     
   remoteSpecProvider:
     addr: 
   # cat ~/.docker/config.json | base64 -w0   
   dockerAuth:
   # 用来挂载wsproxy配置的参数，不同环境wsproxy名字可能不同
   wsproxyName: wsproxy
+  # 填写后添加固定镜像，方便测试
+  fixedSpec:
 
 # 镜像配置
 backendImage:

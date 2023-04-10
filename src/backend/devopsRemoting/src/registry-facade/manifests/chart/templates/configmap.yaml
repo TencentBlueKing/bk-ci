@@ -30,5 +30,10 @@ data:
           "key": "/data/workspace/registry-facade/tls/https.key"
         }
       },
+      {{- if .Values.registry.fixedSpec }}
+      "fixedSpecFN": "/data/workspace/registry-facade/config/fixed.json"
+      {{- end }}
       "readinessProbeAddr": ":8000"
     }
+  fixed.json: |
+    {{- .Values.registry.fixedSpec | nindent 4 }}
