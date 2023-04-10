@@ -54,7 +54,6 @@ import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import jdk.internal.platform.Container.metrics
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
