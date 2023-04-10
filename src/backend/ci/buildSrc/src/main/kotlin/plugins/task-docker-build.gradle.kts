@@ -1,5 +1,3 @@
-import java.io.FileOutputStream
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -104,53 +102,4 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
             image = toImage
         }
     }
-
-    // 编入i18n文件
-    val i18nTask = tasks.register("i18n") {
-        doLast {
-            val i18nPath = System.getProperty("i18n.path")
-            if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
-                val moduleName = project.name.split("-")[1]
-                println("copy i18n into $moduleName classpath...")
-                val propertyArray = arrayOf("en_US", "zh_CN")
-                for (property in propertyArray) {
-                    // set variables for input files
-                    val file1 = File(joinPath(i18nPath, "message_$property.properties"))
-                    val file2 = File(joinPath(i18nPath, moduleName, "message_$property.properties"))
-                    val targetFile = File(
-                        joinPath(
-                            projectDir.absolutePath,
-                            "src",
-                            "main",
-                            "resources",
-                            "i18n",
-                            "message_$property.properties"
-                        )
-                    )
-                    if (targetFile.createNewFile()) {
-                        println("create target file : ${targetFile.absolutePath}")
-                        // create output file with first input
-                        if (file1.exists()) {
-                            println("copy file1: ${file1.absolutePath} now...")
-                            file1.copyTo(targetFile, true)
-                        }
-                        // append second input to output file if it exists
-                        if (file2.exists()) {
-                            println("copy file2: ${file2.absolutePath} now...")
-                            file2.inputStream().copyTo(FileOutputStream(targetFile, true))
-                        }
-                    }
-                    println("Target file generated: ${targetFile.absolutePath}")
-                }
-            } else {
-                println("i18n path: $i18nPath is not exists")
-            }
-        }
-    }
-    tasks.getByName("compileKotlin").dependsOn(i18nTask.name)
 }
-
-/**
- * 返回路径
- */
-fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
