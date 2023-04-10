@@ -174,13 +174,12 @@ class TGitPushTriggerHandler(
                             to = event.before
                         )
                     } else {
-                        val changeFiles = mutableSetOf<String>()
-                        commits?.forEach { commit ->
-                            changeFiles.addAll(commit.added ?: listOf())
-                            changeFiles.addAll(commit.removed ?: listOf())
-                            changeFiles.addAll(commit.modified ?: listOf())
-                        }
-                        changeFiles
+                        gitScmService.getChangeFileList(
+                            projectId = projectId,
+                            repo = repository,
+                            from = event.before,
+                            to = event.after
+                        )
                     }
                     pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
