@@ -28,8 +28,8 @@ class ItsmService @Autowired constructor(
     private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
-        val itsmResponseDTO = doHttpPost(
-            uri = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
+        val itsmResponseDTO = executeHttpPost<ItsmResponseDTO>(
+            urlSuffix = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
         if (itsmResponseDTO.message != "success") {
@@ -44,47 +44,36 @@ class ItsmService @Autowired constructor(
     }
 
     fun verifyItsmToken(token: String) {
-        val param: MutableMap<String, String> = mutableMapOf()
-        param["token"] = token
-        logger.info("param:${param["token"]}")
-        val itsmResponseDTO = doHttpPost(
-            uri = ITSM_TOKEN_VERITY_URL_SUFFIX,
-            body = param
-        )
-        val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
+        val param = mapOf("token" to token)
+        val itsmResponseDTO = executeHttpPost<ItsmResponseDTO>(ITSM_TOKEN_VERITY_URL_SUFFIX, param)
+        val itsmApiResData = itsmResponseDTO.data as Map<*, *>
         logger.info("itsmApiResData:$itsmApiResData")
-        val isPassed = itsmApiResData["is_passed"]
-        if (!isPassed!!) {
+
+        if (!itsmApiResData["is_passed"].toString().toBoolean()) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_ITSM_APPLICATION_CANCEL_FAIL,
+                errorCode = AuthMessageCode.ERROR_ITSM_VERIFY_TOKEN_FAIL,
                 defaultMessage = "verify itsm token failed!"
             )
         }
     }
 
-    private fun doHttpPost(uri: String, body: Any): ItsmResponseDTO {
-        val header: MutableMap<String, String> = HashMap()
-        header["bk_app_code"] = appCode
-        header["bk_app_secret"] = appSecret
-        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
-        val jsonBody = objectMapper.writeValueAsString(body)
-        logger.info("jsonBody:$jsonBody")
-        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
-        logger.info("headerStr:$headerStr")
-        val url = itsmUrlPrefix + uri
+    private inline fun <reified T> executeHttpPost(urlSuffix: String, body: Any): T {
+        val headerStr = objectMapper.writeValueAsString(mapOf("bk_app_code" to appCode, "bk_app_secret" to appSecret))
+
+        val requestBody = objectMapper.writeValueAsString(body)
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val url = itsmUrlPrefix + urlSuffix
+
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
             .build()
-        return doRequest(url, request)
+        return executeHttpRequest(url, request)
     }
 
-    private fun doRequest(
-        url: String,
-        request: Request
-    ): ItsmResponseDTO {
+    private inline fun <reified T> executeHttpRequest(url: String, request: Request): T {
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 logger.warn("itsm request failed, uri:($url)|response: ($it)")
@@ -92,13 +81,13 @@ class ItsmService @Autowired constructor(
             }
             val responseStr = it.body!!.string()
             val responseDTO = objectMapper.readValue<ItsmResponseDTO>(responseStr)
-            if (responseDTO.code != 0L || responseDTO.result == false) {
+            if (responseDTO.code != 0L || !responseDTO.result) {
                 // 请求错误
                 logger.warn("itsm request failed, url:($url)|response:($it)")
                 throw RemoteServiceException("itsm request failed, response:(${responseDTO.message})")
             }
             logger.info("itsm request response：${objectMapper.writeValueAsString(responseDTO.data)}")
-            return responseDTO
+            return responseDTO as T
         }
     }
 
