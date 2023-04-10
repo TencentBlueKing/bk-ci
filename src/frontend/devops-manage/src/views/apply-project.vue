@@ -17,6 +17,7 @@ const projectData = ref({
   projectName: '',
   englishName: '',
   description: '',
+  projectType: '',
   logoAddr: '',
   bgId: 0,
   bgName: '',

@@ -62,6 +62,29 @@ const rules = {
   ],
 };
 
+const projectTypeList = [
+  {
+    id: 1,
+    name: t('手游')
+  },
+  {
+    id: 2,
+    name: t('端游')
+  },
+  {
+    id: 3,
+    name: t('页游')
+  },
+  {
+    id: 4,
+    name: t('平台产品')
+  },
+  {
+    id: 5,
+    name: t('支撑产品')
+  }
+]
+
 const projectData = ref<any>(props.data);
 
 const deptLoading = ref({
@@ -384,6 +407,21 @@ onBeforeUnmount(() => {
         </bk-select>
       </div>
     </bk-form-item> -->
+    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+      <bk-select
+        v-model="projectData.projectType"
+        :placeholder="t('选择项目类型')"
+        name="center"
+        searchable
+      >
+        <bk-option
+          v-for="type in projectTypeList"
+          :value="type.id"
+          :key="type.id"
+          :label="type.name"
+        />
+      </bk-select>
+    </bk-form-item>
     <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
       <bk-radio-group
         v-model="projectData.authSecrecy"

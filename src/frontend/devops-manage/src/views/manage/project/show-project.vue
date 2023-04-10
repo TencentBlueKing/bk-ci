@@ -109,6 +109,10 @@ const fieldMap = [
     after: 'afterDeptName',
   },
   {
+    current: 'projectType',
+    after: 'afterProjectType'
+  },
+  {
     current: 'centerName',
     after: 'afterCenterName',
   },
@@ -281,6 +285,15 @@ const tipsStatusMap = {
     message: t('更新项目信息审批被拒绝。'),
   },
 };
+
+const projectTypeNameMap = {
+  0: '--',
+  1: t('手游'),
+  2: t('端游'),
+  3: t('页游'),
+  4: t('平台产品'),
+  5: t('支撑产品'),
+}
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
@@ -355,6 +368,15 @@ onMounted(async () => {
                   </span>
                   </div>
                 </bk-form-item> -->
+                <bk-form-item :label="t('项目类型')" property="bg">
+                  <span>{{ projectTypeNameMap[projectData.projectType] }}</span>
+                  <div class="diff-content" v-if="projectData.afterProjectType">
+                    <p class="update-title">
+                      {{ t('本次更新：') }}
+                    </p>
+                    <span>{{ projectTypeNameMap[projectData.afterProjectType] }}</span>
+                  </div>
+                </bk-form-item>
                 <bk-form-item :label="t('项目性质')" property="authSecrecy">
                   <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
                   <div class="diff-content" v-if="projectData.afterAuthSecrecy">
