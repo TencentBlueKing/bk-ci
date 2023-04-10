@@ -2,7 +2,6 @@ package com.tencent.devops.dispatch.pcg.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     val errorCode: Int,
@@ -15,7 +14,4 @@ enum class ErrorCodeEnum(
     START_UP_RESPONSE_JSON_ERROR(2124004, "2124004"),//Fail to start up pcg docker, parse responseJson error
     START_UP_FAIL(2124005, "2124005");//Fail to start up pcg docker
 
-    fun getErrorMessage(): String {
-        return I18nUtil.getCodeLanMessage(this.formatErrorMessage)
-    }
 }

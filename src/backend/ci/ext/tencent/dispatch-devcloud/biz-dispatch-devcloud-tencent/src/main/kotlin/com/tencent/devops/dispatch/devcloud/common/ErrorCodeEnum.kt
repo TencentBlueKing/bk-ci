@@ -33,8 +33,4 @@ enum class ErrorCodeEnum(
     CREATE_VM_USER_ERROR(ErrorType.USER, 2122003, "2122003"),//第三方服务-DEVCLOUD 异常，异常信息 - 用户操作异常
     CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2122050, "2122050");//已超过DevCloud创建Job容器上限.
 
-    fun getErrorMessage(): String {
-        return I18nUtil.getCodeLanMessage(this.formatErrorMessage)
-    }
-
 }

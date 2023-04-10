@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.pojo.ErrorType
 class BuildFailureException(
     val errorType: ErrorType,
     val errorCode: Int,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "errorCodeEnum", reusePrefixFlag = false)
     val formatErrorMessage: String,
     errorMessage: String
 ) : Exception(errorMessage)

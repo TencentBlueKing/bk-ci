@@ -3,7 +3,6 @@ package com.tencent.devops.common.environment.agent.pojo.devcloud
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     @BkFieldI18n
@@ -26,9 +25,5 @@ enum class ErrorCodeEnum(
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2122014, "2122014"),//第三方服务-DEVCLOUD 异常，异常信息 - 获取TASK状态接口异常
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2122015, "2122015"),//第三方服务-DEVCLOUD 异常，异常信息 - 获取websocket接口异常
     CREATE_VM_USER_ERROR(ErrorType.USER, 2122003, "2122003");//第三方服务-DEVCLOUD 异常，异常信息 - 用户操作异常
-
-    fun getErrorMessage(): String {
-        return I18nUtil.getCodeLanMessage(this.formatErrorMessage)
-    }
 
 }

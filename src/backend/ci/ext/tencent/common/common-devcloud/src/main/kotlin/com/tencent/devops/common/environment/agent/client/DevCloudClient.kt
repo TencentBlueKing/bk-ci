@@ -133,7 +133,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = MessageUtil.getMessageByLocale(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -154,7 +154,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
                         errorMessage = MessageUtil.getMessageByLocale(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -172,7 +172,7 @@ class DevCloudClient {
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = MessageUtil.getMessageByLocale(
                     messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -216,7 +216,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = MessageUtil.getMessageByLocale(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -237,7 +237,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
                         errorMessage = MessageUtil.getMessageByLocale(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -253,7 +253,7 @@ class DevCloudClient {
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = MessageUtil.getMessageByLocale(
                     messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -314,7 +314,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                        formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = MessageUtil.getMessageByLocale(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                             language = I18nUtil.getDefaultLocaleLanguage()
@@ -336,7 +336,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = GET_STATUS_TIMED_OUT,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -380,7 +380,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -402,7 +402,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -433,7 +433,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -454,7 +454,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -491,7 +491,7 @@ class DevCloudClient {
                             throw BuildFailureException(
                                 errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                                 errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                                formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                                formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
                                 errorMessage = MessageUtil.getMessageByLocale(
                                     messageCode = TASK_STATUS_INTERFACE_EXCEPTION,
                                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -516,7 +516,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = TASK_STATUS_TIMED_OUT,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -541,7 +541,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -597,7 +597,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -627,7 +627,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                    formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = MessageUtil.getMessageByLocale(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION,
                         language = I18nUtil.getDefaultLocaleLanguage()

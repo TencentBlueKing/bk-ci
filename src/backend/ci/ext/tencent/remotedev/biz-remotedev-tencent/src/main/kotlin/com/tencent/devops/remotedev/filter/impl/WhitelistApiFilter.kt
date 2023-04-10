@@ -2,9 +2,10 @@ package com.tencent.devops.remotedev.filter.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
@@ -80,11 +81,12 @@ class WhitelistApiFilter constructor(
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
-                        MessageCodeUtil.generateResponseDataObject(
+                        MessageUtil.generateResponseDataObject(
                             messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
                             params = null,
                             data = null,
-                            defaultMessage = ErrorCodeEnum.DENIAL_OF_SERVICE.formatErrorMessage
+                            defaultMessage = ErrorCodeEnum.DENIAL_OF_SERVICE.formatErrorMessage,
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                     )
                     .build()
