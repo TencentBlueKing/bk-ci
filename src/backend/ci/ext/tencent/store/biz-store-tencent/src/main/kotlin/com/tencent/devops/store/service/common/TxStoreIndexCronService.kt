@@ -59,6 +59,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.math.BigDecimal
+import jdk.internal.platform.Container.metrics
 
 @Service
 class TxStoreIndexCronService(
@@ -74,7 +76,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -127,8 +130,9 @@ class TxStoreIndexCronService(
                     )
                     var storeExecuteCountByCode = 0
                     if (storeExecuteCountByCodeRecord != null) {
-                        storeExecuteCountByCode = (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as Int +
-                                storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as Int)
+                        storeExecuteCountByCode =
+                            (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as BigDecimal).toInt() +
+                                (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as BigDecimal).toInt()
                     }
                     // sla计算
                     val atomSlaIndexValue =
@@ -195,7 +199,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-        @Scheduled(cron = "0 0 1 * * ?")
+//        @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
