@@ -246,7 +246,7 @@
         position: absolute;
         color: #C4C6CC;
         bottom: 0;
-        right: 68px;
+        right: 95px;
         width: 160px;
         text-align: right;
     }
