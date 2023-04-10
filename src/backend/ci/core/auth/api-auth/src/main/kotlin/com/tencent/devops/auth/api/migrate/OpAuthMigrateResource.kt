@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 interface OpAuthMigrateResource {
 
     @POST
-    @Path("/v3ToRbac")
+    @Path("/v3ToRbac/{projectCode}")
     @ApiOperation("v3权限升级到rbac权限")
     fun v3ToRbacAuth(
         @PathParam("projectCode")

@@ -28,6 +28,19 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.pojo.ResponseDTO
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.OkhttpUtils
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+
 /**
  * v3权限策略迁移到rbac
  *
@@ -36,7 +49,14 @@ package com.tencent.devops.auth.service.migrate
  * 2. 用户在权限中心创建的用户组权限
  * 3. 用户自定义权限
  */
-class MigrateV3PolicyService {
+@Service
+class MigrateV3PolicyService @Autowired constructor(
+    private val objectMapper: ObjectMapper
+) {
+    // todo 这里路径，还没在配置文件配置
+    @Value("\${iam.url:#{null}}")
+    private val iamUrlPrefix: String = ""
+
     /**
      * 启动迁移任务
      */
@@ -54,5 +74,58 @@ class MigrateV3PolicyService {
 
     fun comparePolicy(projectCode: String) {
 
+    }
+
+    private fun executeHttpGet(urlSuffix: String, params: Map<String, String>?): ResponseDTO {
+        val url = iamUrlPrefix + urlSuffix.addParams(params)
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        return executeHttpRequest(url, request)
+    }
+
+    private fun executeHttpPost(urlSuffix: String, body: Any, params: Map<String, String>?): ResponseDTO {
+        val requestBody = objectMapper.writeValueAsString(body)
+            .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
+        val url = iamUrlPrefix + urlSuffix.addParams(params)
+        val request = Request.Builder()
+            .url(url)
+            .post(requestBody)
+            .build()
+        return executeHttpRequest(url, request)
+    }
+
+    private fun String.addParams(args: Map<String, String>?): String {
+        return if (args == null)
+            this
+        else {
+            val params = args.entries.joinToString(separator = "&") { (name, value) ->
+                "$name=$value"
+            }
+            "$this?$params"
+        }
+    }
+
+    private fun executeHttpRequest(url: String, request: Request): ResponseDTO {
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                logger.warn("request failed, uri:($url)|response: ($it)")
+                throw RemoteServiceException("request failed, response:($it)")
+            }
+            val responseStr = it.body!!.string()
+            val responseDTO = objectMapper.readValue<ResponseDTO>(responseStr)
+            if (responseDTO.code != 0L || !responseDTO.result) {
+                // 请求错误
+                logger.warn("request failed, url:($url)|response:($it)")
+                throw RemoteServiceException("request failed, response:(${responseDTO.message})")
+            }
+            logger.info("request response：${objectMapper.writeValueAsString(responseDTO.data)}")
+            return responseDTO
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
     }
 }
