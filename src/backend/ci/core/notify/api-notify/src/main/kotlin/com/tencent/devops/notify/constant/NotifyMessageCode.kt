@@ -49,4 +49,8 @@ object NotifyMessageCode {
     const val ERROR_NOTIFY_INVALID_NOTIFY_TYPE = "2111004" // 通知服务：无效的通知参数类型：{0}
     const val ERROR_NOTIFY_SEND_FAIL = "2111005" // 通知服务：通知发送失败
     const val ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL = "2111006" // 通知服务：腾讯云邮件通知发送失败 返回错误码{0}
+
+    const val BK_CONTROL_MESSAGE_LENGTH = "bkControlMessageLength" //...(消息长度超{0} 已截断,请控制消息长度)
+    const val BK_LINE_BREAKS_WILL_ESCAPED = "bkLineBreaksWillEscaped" //(注意: 换行会被转义为\\n)
+    const val BK_DESIGNATED_APPROVER_APPROVAL = "bkDesignatedApproverApproval" //指定审批人审批
 }

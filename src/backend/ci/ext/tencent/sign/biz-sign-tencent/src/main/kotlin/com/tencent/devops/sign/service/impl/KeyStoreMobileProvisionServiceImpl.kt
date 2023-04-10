@@ -31,8 +31,6 @@ import com.dd.plist.NSArray
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
-import com.tencent.devops.common.api.constant.I18NConstant.BK_DESCRIPTION_FILE_FOR_CERTIFICATE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_INSERT
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -42,6 +40,8 @@ import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.constant.SignMessageCode.BK_DESCRIPTION_FILE_FOR_CERTIFICATE
+import com.tencent.devops.sign.api.constant.SignMessageCode.BK_FAILED_INSERT
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.service.MobileProvisionService.Companion.KEYCHAIN_ACCESS_GROUPS_KEY

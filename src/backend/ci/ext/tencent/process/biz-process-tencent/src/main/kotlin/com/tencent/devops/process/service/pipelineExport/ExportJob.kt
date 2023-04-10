@@ -1,8 +1,5 @@
 package com.tencent.devops.process.service.pipelineExport
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_CLUSTERS_THROUGH
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NOTE_DEFAULT_XCODE_VERSION
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -18,6 +15,9 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_CLUSTERS_THROUGH
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NOTE_DEFAULT_XCODE_VERSION
 import com.tencent.devops.process.pojo.JobPipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo

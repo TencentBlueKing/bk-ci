@@ -27,8 +27,6 @@
 
 package com.tencent.devops.prebuild.resources
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_AGENT_NOT_INSTALLED
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_YAML
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
@@ -41,6 +39,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_AGENT_NOT_INSTALLED
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_ILLEGAL_YAML
 import com.tencent.devops.prebuild.api.UserPreBuildResource
 import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.prebuild.pojo.HistoryResponse

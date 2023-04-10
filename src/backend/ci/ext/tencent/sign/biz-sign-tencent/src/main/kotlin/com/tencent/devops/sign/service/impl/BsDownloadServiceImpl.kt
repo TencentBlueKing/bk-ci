@@ -29,9 +29,6 @@ package com.tencent.devops.sign.service.impl
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_CREATE_DOWNLOAD_CONNECTION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SIGNING_TASK_SIGNATURE_HISTORY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SIGNING_TASK_SIGNATURE_INFORMATION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
@@ -39,6 +36,9 @@ import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
+import com.tencent.devops.sign.api.constant.SignMessageCode.BK_FAILED_CREATE_DOWNLOAD_CONNECTION
+import com.tencent.devops.sign.api.constant.SignMessageCode.BK_SIGNING_TASK_SIGNATURE_HISTORY
+import com.tencent.devops.sign.api.constant.SignMessageCode.BK_SIGNING_TASK_SIGNATURE_INFORMATION
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.DownloadService

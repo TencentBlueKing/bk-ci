@@ -30,7 +30,6 @@ package com.tencent.devops.support.robot
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.auth.api.manager.ServiceManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_CHATID
 import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
 import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
 import com.tencent.devops.common.client.Client
@@ -39,6 +38,7 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
+import com.tencent.devops.support.constant.SupportMessageCode.BK_GROUP_CHATID
 import com.tencent.devops.support.robot.pojo.RobotCallback
 import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
 import org.slf4j.LoggerFactory

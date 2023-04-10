@@ -56,14 +56,14 @@ object ProcessMessageCode {
 
     const val OK = 0
 
-    const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" // 子流水线id不存在
-    const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = "2101002" // 子流水线不存在
-    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" // 最多允许同时保存30个视图
-    const val ERROR_PIPELINE_VIEW_NOT_FOUND = "2101004" // 视图({0})不存在
-    const val ERROR_PIPELINE_VIEW_HAD_EXISTS = "2101005" // 视图({0})已存在
-    const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = "2101006" // 用户({0})无权限删除视图({1})
-    const val ERROR_EDIT_PIPELINE_VIEW_NO_PERM = "2101007" // 用户({0})无权限编辑视图({1})
-    const val ERROR_ATOM_NOT_FOUND = "2101010" // 插件不存在
+    const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" //子流水线id不存在
+    const val ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS = "2101002" //子流水线不存在
+    const val ERROR_PIPELINE_VIEW_MAX_LIMIT = "2101003" //最多允许同时保存30个视图
+    const val ERROR_PIPELINE_VIEW_NOT_FOUND = "2101004" //视图({0})不存在
+    const val ERROR_PIPELINE_VIEW_HAD_EXISTS = "2101005" //视图({0})已存在
+    const val ERROR_DEL_PIPELINE_VIEW_NO_PERM = "2101006" //用户({0})无权限删除视图({1})
+    const val ERROR_EDIT_PIPELINE_VIEW_NO_PERM = "2101007" //用户({0})无权限编辑视图({1})
+    const val ERROR_ATOM_NOT_FOUND = "2101010" //插件不存在
 
     const val USER_NEED_PIPELINE_X_PERMISSION = "2101008" // 流水线: 用户无{0}权限
     const val ERROR_PIPELINE_CHANNEL_CODE = "2101009" // 流水线: 流水线渠道来源不符合({0})
@@ -142,14 +142,14 @@ object ProcessMessageCode {
     const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
     const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
-    const val INCORRECT_EXCEL_FORMAT = "2101083" // Excel格式错误，或文件不存在
-    const val ILLEGAL_MAXIMUM_QUEUE_LENGTH = "2101518" // 最大排队时长非法
-    const val ILLEGAL_MAXIMUM_NUMBER = "2101519" // 最大排队数量非法
-    const val TCLS_ENVIRONMENT_MESSAGE = "2101086" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
-    const val TCLS_ENVIRONMENT = "2101087" // 获取 TCLS 环境失败，请检查用户名密码是否正确
-    const val USER_NOT_PERMISSION_DOWNLOAD = "2101088" // 用户({0})在工程({1})下没有流水线{2}下载构建权限
-    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2101089" // 公共构建资源池不存在，请检查yml配置.
-    const val FAILED_GET_USER_INFORMATION = "2101090" // 获取用户{0} 信息失败
+    const val INCORRECT_EXCEL_FORMAT = "2101138" //Excel格式错误，或文件不存在
+    const val ILLEGAL_MAXIMUM_QUEUE_LENGTH = "2101518" //最大排队时长非法
+    const val ILLEGAL_MAXIMUM_NUMBER = "2101519" //最大排队数量非法
+    const val TCLS_ENVIRONMENT_MESSAGE = "2101139" //获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
+    const val TCLS_ENVIRONMENT = "2101140" //获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val USER_NOT_PERMISSION_DOWNLOAD = "2101141" //用户({0})在工程({1})下没有流水线{2}下载构建权限
+    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2101142" //公共构建资源池不存在，请检查yml配置.
+    const val FAILED_GET_USER_INFORMATION = "2101143" //获取用户{0} 信息失败
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" //跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" //跨项目构件分发失败，

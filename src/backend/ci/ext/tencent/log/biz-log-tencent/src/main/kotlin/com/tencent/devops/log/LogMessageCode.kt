@@ -18,10 +18,10 @@ package com.tencent.devops.log
  *
  */
 object LogMessageCode {
-    const val ES_CLUSTER_ADDRESS_NOT_CONFIGURED = "2108001"//ES{0}集群地址尚未配置
-    const val ES_CLUSTER_NAME_NOT_CONFIGURED = "2108002"//ES{0}集群名称尚未配置
-    const val ES_UNIQUE_NAME_NOT_CONFIGURED = "2108003"//ES{0}唯一名称尚未配置
-    const val USER_NO_RIGHT_VIEW_PIPELINE = "2108004"//用户({0})无权限在工程({1})下查看流水线
+    const val ES_CLUSTER_ADDRESS_NOT_CONFIGURED = "2108001" //ES{0}集群地址尚未配置
+    const val ES_CLUSTER_NAME_NOT_CONFIGURED = "2108002" //ES{0}集群名称尚未配置
+    const val ES_UNIQUE_NAME_NOT_CONFIGURED = "2108003" //ES{0}唯一名称尚未配置
+    const val USER_NO_RIGHT_VIEW_PIPELINE = "2108004" //用户({0})无权限在工程({1})下查看流水线
 
     const val BK_FAILED_INSERT_DATA = "bkFailedInsertData" //蓝盾ES集群插入数据失败
     const val BK_ES_CLUSTER_RECOVERY = "bkEsClusterRecovery" //蓝盾ES集群恢复

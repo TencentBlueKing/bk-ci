@@ -27,11 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_COMPUTER_VIEW_DETAILS
-import com.tencent.devops.common.api.constant.I18NConstant.BK_EMPTY_TITLE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MESSAGE_CONTENT_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_RECEIVER_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_WECOM_MESSAGE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -54,6 +49,11 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_COMPUTER_VIEW_DETAILS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EMPTY_TITLE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MESSAGE_CONTENT_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RECEIVER_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEND_WECOM_MESSAGE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask

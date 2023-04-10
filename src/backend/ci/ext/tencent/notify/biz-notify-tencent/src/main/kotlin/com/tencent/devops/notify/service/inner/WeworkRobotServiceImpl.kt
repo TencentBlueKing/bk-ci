@@ -28,7 +28,6 @@
 package com.tencent.devops.notify.service.inner
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
-import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -39,6 +38,7 @@ import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WEWORK
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage

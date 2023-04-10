@@ -28,15 +28,15 @@
 package com.tencent.devops.monitoring.resources
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_ENTERPRISE_GROUP_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_TIMESTAMP_RANGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_INCORRECT_PASSWORD
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SENT_SUCCESSFULLY
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.SlaMonitorResource
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_ILLEGAL_ENTERPRISE_GROUP_ID
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_ILLEGAL_TIMESTAMP_RANGE
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_INCORRECT_PASSWORD
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_SENT_SUCCESSFULLY
 import com.tencent.devops.monitoring.job.MonitorNotifyJob
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import com.tencent.devops.monitoring.services.SlaMonitorService

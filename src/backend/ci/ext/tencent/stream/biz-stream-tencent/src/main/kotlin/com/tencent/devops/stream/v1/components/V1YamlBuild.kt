@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATE_SERVICE
 import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PULL_CODE
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
@@ -98,6 +97,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.constant.StreamMessageCode.BK_PULL_CODE
 import com.tencent.devops.stream.constant.StreamMessageCode.GIT_CI_NO_RECOR
 import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline

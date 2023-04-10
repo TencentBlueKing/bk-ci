@@ -22,7 +22,7 @@ object PreBuildMessageCode {
     const val USER_NOT_PERMISSION_OPERATE = "2125003" //用户{0}没有操作权限
     const val TYPE_ALREADY_EXISTS_CANNOT_ADD = "2125004" //已存在当前插件类型的版本信息，无法新增
     const val CHECK_YML_CONFIGURATION = "2125005" //run命令不支持在agentless下执行，请检查yml配置.
-    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST= "2125006" //公共构建资源池不存在，请检查yml配置.
+    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2125006" //公共构建资源池不存在，请检查yml配置.
     const val PIPELINE_NAME_CREATOR_CANNOT_EMPTY = "2125007" //流水线名称、创建人均不能为空
     const val PIPELINE_MUST_AT_LEAST_ONE = "2125008" //流水线Stages至少为1个
     const val ALPHABET_NUMBER_UNDERSCORE = "2125009" //变量名称必须是英文字母、数字或下划线(_)
@@ -30,7 +30,7 @@ object PreBuildMessageCode {
     const val PRECI_SUPPORTS_REMOTE_TEMPLATES = "2125011" //PreCI仅支持远程模板
     const val REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY = "2125012" //远程仓关键字不能为空: repository, name
     const val CODE_CHECKOUT_NOT_SUPPORTED = "2125013" //不支持checkout关键字进行代码检出
-    const val SERVICES_KEYWORD_NOT_SUPPORTED= "2125014" //不支持services关键字
+    const val SERVICES_KEYWORD_NOT_SUPPORTED = "2125014" //不支持services关键字
 
     const val BK_AGENT_NOT_INSTALLED = "bkAgentNotInstalled" //Agent未安装，请安装Agent.
     const val BK_ILLEGAL_YAML = "bkIllegalYaml" //YAML非法:

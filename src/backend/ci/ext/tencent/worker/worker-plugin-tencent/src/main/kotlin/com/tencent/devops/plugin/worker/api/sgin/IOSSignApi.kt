@@ -27,10 +27,10 @@
 
 package com.tencent.devops.plugin.worker.api.sgin
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ENTERPRISE_SIGNATURE_FAILED
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_ENTERPRISE_SIGNATURE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService

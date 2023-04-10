@@ -1,11 +1,15 @@
 package com.tencent.devops.dispatch.devcloud.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
     SYSTEM_ERROR(ErrorType.SYSTEM, 2122001, "2122001"),//Dispatcher-devcloud系统错误

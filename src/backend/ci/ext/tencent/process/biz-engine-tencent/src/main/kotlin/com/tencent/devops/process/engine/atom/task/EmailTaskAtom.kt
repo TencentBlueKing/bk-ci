@@ -27,9 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.task
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_EMAIL_NOTIFICATION_CONTENT_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MESSAGE_SUBJECT_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_RECIPIENT_EMPTY
 import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -43,6 +40,9 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EMAIL_NOTIFICATION_CONTENT_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MESSAGE_SUBJECT_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_RECIPIENT_EMPTY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask

@@ -28,8 +28,6 @@
 package com.tencent.devops.plugin.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILDID_NOT_FOUND
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINEID_NOT_FOUND
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
@@ -39,6 +37,8 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_BUILDID_NOT_FOUND
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_PIPELINEID_NOT_FOUND
 import com.tencent.devops.process.api.builds.BuildHistoryBuildResource
 import com.tencent.devops.process.api.service.ServiceOperationResource
 import org.slf4j.LoggerFactory

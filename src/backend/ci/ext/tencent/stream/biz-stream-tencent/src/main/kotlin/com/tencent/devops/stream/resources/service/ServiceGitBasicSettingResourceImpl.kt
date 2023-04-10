@@ -27,8 +27,6 @@
 
 package com.tencent.devops.stream.resources.service
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_WORKER_BEE_PROJECT_NOT_EXIST
-import com.tencent.devops.common.api.constant.I18NConstant.BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -46,6 +44,8 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.store.constant.StoreMessageCode.BK_WORKER_BEE_PROJECT_NOT_EXIST
+import com.tencent.devops.store.constant.StoreMessageCode.BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig

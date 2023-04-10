@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.common.api.constant.I18NConstant.BK_APP_SCAN_COMPLETED
 import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -55,6 +54,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_APP_SCAN_COMPLETED
 import com.tencent.devops.plugin.dao.JinGangAppDao
 import com.tencent.devops.plugin.dao.JinGangAppMetaDao
 import com.tencent.devops.plugin.pojo.JinGangApp

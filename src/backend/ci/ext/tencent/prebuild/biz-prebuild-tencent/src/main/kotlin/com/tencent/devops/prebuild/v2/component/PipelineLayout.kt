@@ -29,8 +29,6 @@ package com.tencent.devops.prebuild.v2.component
 
 import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_COMPILATION_ENVIRONMENT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -71,6 +69,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_NO_COMPILATION_ENVIRONMENT
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.prebuild.PreBuildMessageCode.CHECK_YML_CONFIGURATION
 import com.tencent.devops.prebuild.PreBuildMessageCode.PIPELINE_MUST_AT_LEAST_ONE
 import com.tencent.devops.prebuild.PreBuildMessageCode.PIPELINE_NAME_CREATOR_CANNOT_EMPTY

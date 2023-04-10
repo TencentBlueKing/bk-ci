@@ -73,10 +73,10 @@ object ExperienceMessageCode {
     const val EXPERIENCE_NOT_EXIST = "2106024" //体验({0})不存在
     const val FILE_NOT_EXIST = "2106025" //文件({0})不存在
 
-    const val USER_NEED_EXP_X_PERMISSION = "2106026" // 体验: 用户没有体验的{0}权限
-    const val USER_NEED_EXP_GROUP_X_PERMISSION = "2106027" // 体验：用户没有体验组的{0}权限
-    const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2106028" // 体验：体验未与流水线绑定
-    const val USER_NOT_IN_EXP_GROUP = "2106029" // 体验：用户{0}不在体验用户名单中
+    const val USER_NEED_EXP_X_PERMISSION = "2106026" //体验: 用户没有体验的{0}权限
+    const val USER_NEED_EXP_GROUP_X_PERMISSION = "2106027" //体验：用户没有体验组的{0}权限
+    const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2106028" //体验：体验未与流水线绑定
+    const val USER_NOT_IN_EXP_GROUP = "2106029" //体验：用户{0}不在体验用户名单中
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" //更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" //更新成功
@@ -87,7 +87,7 @@ object ExperienceMessageCode {
     const val BK_NO_EXPERIENCE = "bkNoExperience" //无体验
     const val BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT = "bkNoExperienceGroupUnderProject" //{0} 项目下无体验组
     const val BK_NO_EXPERIENCE_USER_GROUP = "bkNoExperienceUserGroup" //无体验用户组
-    const val BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT= "bkNoExperienceUserGroupUnderProject" //{0} 项目下无体验用户组
+    const val BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT = "bkNoExperienceUserGroupUnderProject" //{0} 项目下无体验用户组
     const val BK_USER_BOUND_DEVICE_SUCCESSFULLY = "bkUserBoundDeviceSuccessfully" //用户绑定设备成功！
     const val BK_NOT_REPEATEDLY_BIND = "bkNotRepeatedlyBind" //请勿重复绑定同台设备！
     const val BK_USER_MODIFIED_DEVICE_SUCCESSFULLY = "bkUserModifiedDeviceSuccessfully" //用户修改设备成功！

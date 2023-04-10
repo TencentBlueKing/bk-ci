@@ -27,14 +27,6 @@
 
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_AFTER_IMAGE_STORE_ONLINE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_AUTOMATICALLY_CONVERTED
-import com.tencent.devops.common.api.constant.I18NConstant.BK_COPY_FOR_BUILD_IMAGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_IMAGE_STORE_ONLINE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OLD_VERSION_BUILD_IMAGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OTHER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINED_JOB
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_MANAGER_CAN_OPERATION
 import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -46,6 +38,14 @@ import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.store.constant.StoreMessageCode.BK_AFTER_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_AUTOMATICALLY_CONVERTED
+import com.tencent.devops.store.constant.StoreMessageCode.BK_COPY_FOR_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_OLD_VERSION_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_OTHER
+import com.tencent.devops.store.constant.StoreMessageCode.BK_PIPELINED_JOB
+import com.tencent.devops.store.constant.StoreMessageCode.BK_PROJECT_MANAGER_CAN_OPERATION
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao

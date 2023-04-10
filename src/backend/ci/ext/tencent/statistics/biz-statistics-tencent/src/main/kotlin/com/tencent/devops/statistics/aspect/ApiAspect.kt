@@ -26,18 +26,18 @@
  */
 package com.tencent.devops.statistics.aspect
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_APIGW_API
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PARAMETER_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PARAMETER_VALUE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PERMISSION_FOR_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PERMISSION_FOR_PROJECT_VERIFIED
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PRE_ENHANCEMENT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_REQUEST_TYPE_APIGWTYPE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VERIFICATION_FAILED
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.statistics.filter.ApiFilter
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_NO_APIGW_API
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PARAMETER_NAME
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PARAMETER_VALUE
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PERMISSION_FOR_PROJECT
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PERMISSION_FOR_PROJECT_VERIFIED
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PRE_ENHANCEMENT
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_REQUEST_TYPE_APIGWTYPE
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_VERIFICATION_FAILED
 import com.tencent.devops.statistics.service.openapi.op.AppCodeService
 import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint

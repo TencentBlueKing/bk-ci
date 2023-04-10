@@ -27,8 +27,6 @@
 
 package com.tencent.devops.plugin.worker.task.cert
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -39,6 +37,8 @@ import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.worker.common.WorkerMessageCode.CERTIFICATE_ID_EMPTY
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService

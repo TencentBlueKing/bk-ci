@@ -32,7 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FILE_CANNOT_EXCEED
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
@@ -71,6 +70,7 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_FILE_CANNOT_EXCEED
 import com.tencent.devops.scm.constant.ScmMessageCode.GIT_TOKEN_EMPTY
 import com.tencent.devops.scm.constant.ScmMessageCode.INCORRECT_GIT_TOKEN
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -100,7 +100,6 @@ import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
-import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp

@@ -27,11 +27,11 @@
 
 package com.tencent.devops.scm.services
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LOCAL_WAREHOUSE_CREATION_FAILED
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_LOCAL_WAREHOUSE_CREATION_FAILED
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
 import com.tencent.devops.scm.pojo.SvnFileInfo

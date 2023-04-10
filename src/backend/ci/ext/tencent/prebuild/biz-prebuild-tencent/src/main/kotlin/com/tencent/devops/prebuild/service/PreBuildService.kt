@@ -29,7 +29,6 @@ package com.tencent.devops.prebuild.service
 
 import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_COMPILATION_ENVIRONMENT
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
@@ -78,6 +77,7 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentRe
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_NO_COMPILATION_ENVIRONMENT
 import com.tencent.devops.prebuild.PreBuildMessageCode.CURRENT_PROJECT_NOT_INITIALIZED
 import com.tencent.devops.prebuild.PreBuildMessageCode.POOL_PARAMETER_CANNOT_EMPTY
 import com.tencent.devops.prebuild.PreBuildMessageCode.TYPE_ALREADY_EXISTS_CANNOT_ADD

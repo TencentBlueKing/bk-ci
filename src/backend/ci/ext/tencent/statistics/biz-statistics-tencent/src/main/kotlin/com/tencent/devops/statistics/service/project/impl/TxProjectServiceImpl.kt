@@ -27,12 +27,12 @@
 
 package com.tencent.devops.statistics.service.project.impl
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_LIST
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.statistics.dao.project.ProjectDao
 import com.tencent.devops.statistics.jmx.api.project.ProjectJmxApi
+import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PROJECT_LIST
 import com.tencent.devops.statistics.service.project.ProjectPermissionService
 import com.tencent.devops.statistics.service.project.ProjectService
 import com.tencent.devops.statistics.util.project.ProjectUtils

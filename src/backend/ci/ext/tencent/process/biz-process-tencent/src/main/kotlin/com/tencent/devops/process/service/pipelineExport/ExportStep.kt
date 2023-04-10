@@ -1,9 +1,5 @@
 package com.tencent.devops.process.service.pipelineExport
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OLD_PLUG_NOT_SUPPORT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_USE_STAGE_AUDIT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PLUG_NOT_SUPPORTED
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
@@ -12,6 +8,10 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OLD_PLUG_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLEASE_USE_STAGE_AUDIT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLUG_NOT_SUPPORTED
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo

@@ -18,7 +18,7 @@ package com.tencent.devops.worker.common
  *
  */
 object WorkerMessageCode {
-    const val FOLDER_NOT_EXIST = "2130011" //文件夹({0})不存在
+    const val FOLDER_NOT_EXIST = "2130409" //文件夹{0}不存在
     const val CERTIFICATE_ID_EMPTY = "2130012" //证书ID为空
 
     const val BK_CANNING_SENSITIVE_INFORMATION = "bkCanningSensitiveInformation" //开始敏感信息扫描，待排除目录

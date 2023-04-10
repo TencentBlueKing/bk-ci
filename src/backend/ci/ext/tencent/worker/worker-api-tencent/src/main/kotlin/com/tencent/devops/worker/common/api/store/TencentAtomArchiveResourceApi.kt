@@ -31,12 +31,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ARCHIVE_PLUG_FILES
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_ADD_INFORMATION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_PLUG
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_SENSITIVE_INFORMATION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -54,6 +48,12 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_ARCHIVE_PLUG_FILES
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_ADD_INFORMATION
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_GET_PLUG
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ApiPriority

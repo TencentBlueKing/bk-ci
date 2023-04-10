@@ -1,6 +1,5 @@
 package com.tencent.devops.prebuild.v2.service
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
@@ -11,6 +10,7 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.prebuild.PreBuildMessageCode.CODE_CHECKOUT_NOT_SUPPORTED
 import com.tencent.devops.prebuild.PreBuildMessageCode.SERVICES_KEYWORD_NOT_SUPPORTED
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent

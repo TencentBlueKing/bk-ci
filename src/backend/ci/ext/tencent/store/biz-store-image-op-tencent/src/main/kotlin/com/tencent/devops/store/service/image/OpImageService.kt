@@ -27,13 +27,13 @@
 
 package com.tencent.devops.store.service.image
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_HISTORYDATA_DATA
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode.BK_HISTORYDATA_DATA
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao

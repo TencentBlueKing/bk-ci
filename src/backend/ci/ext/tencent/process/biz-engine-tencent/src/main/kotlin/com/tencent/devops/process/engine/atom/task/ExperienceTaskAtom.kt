@@ -28,10 +28,6 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
-import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPERIENCE_PATH_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FILE_NOT_EXIST
-import com.tencent.devops.common.api.constant.I18NConstant.BK_INCORRECT_NOTIFICATION_METHOD
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,6 +44,10 @@ import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EXPERIENCE_PATH_EMPTY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FILE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_INCORRECT_NOTIFICATION_METHOD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask

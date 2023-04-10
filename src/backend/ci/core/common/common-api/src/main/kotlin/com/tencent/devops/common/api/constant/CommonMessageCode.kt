@@ -78,12 +78,7 @@ object CommonMessageCode {
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
 
-    const val USERS_EXCEEDS_THE_LIMIT = "2100029" //授权用户数越界:{0}
-    const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100030" //查询 Gse Agent 状态失败
-    const val FAILED_TO_GET_AGENT_STATUS = "2100031" //获取agent状态失败
-    const val FAILED_TO_GET_CMDB_NODE = "2100032" //获取 CMDB 节点失败
-    const val FAILED_TO_GET_CMDB_LIST = "2100033" //获取CMDB列表失败
-    const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100034" //stages和steps不能并列存在!
+
     const val ILLEGAL_JOB_TYPE = "2100035" //非法的job类型!
     const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036" //GITCI Service镜像格式非法
     const val THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION = "2100037" //第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -
@@ -103,7 +98,12 @@ object CommonMessageCode {
     const val TASK_STATUS_TIMED_OUT = "2100051" //获取TASK状态接口超时
     const val GET_WEBSOCKET_INTERFACE_EXCEPTION = "2100052" //获取websocket接口异常
     const val PARAMETER_CANNOT_EMPTY_ALL = "2100054" //参数不能全部为空
-
+    const val USERS_EXCEEDS_THE_LIMIT = "2100055" //授权用户数越界:{0}
+    const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100056" //查询 Gse Agent 状态失败
+    const val FAILED_TO_GET_AGENT_STATUS = "2100057" //获取agent状态失败
+    const val FAILED_TO_GET_CMDB_NODE = "2100058" //获取 CMDB 节点失败
+    const val FAILED_TO_GET_CMDB_LIST = "2100059" //获取CMDB列表失败
+    const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100060" //stages和steps不能并列存在!
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" //创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" //创建失败，异常信息
@@ -115,6 +115,6 @@ object CommonMessageCode {
     const val BK_PRIVATE_SINGLE_BUIL_MACHINE = "bkPrivateSingleBuilMachine" //私有：单构建机
     const val BK_PRIVATE_BUILD_A_CLUSTER = "bkPrivateBuildACluster" //私有：构建集群
     const val BK_PCG_PUBLIC_BUILD_RESOURCES = "bkPcgPublicBuildResources" //PCG公共构建资源
-    const val BK_TENCENT_SELF_DEVELOPED_CLOUD= "bkTencentSelfDevelopedCloud" //腾讯自研云（云devnet资源）
+    const val BK_TENCENT_SELF_DEVELOPED_CLOUD = "bkTencentSelfDevelopedCloud" //腾讯自研云（云devnet资源）
     const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" //云托管：Windows on DevCloud
 }

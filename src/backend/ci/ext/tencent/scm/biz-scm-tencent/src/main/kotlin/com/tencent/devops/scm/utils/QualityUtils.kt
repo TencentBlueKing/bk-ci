@@ -27,13 +27,13 @@
 
 package com.tencent.devops.scm.utils
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_QUALITY_RED_LINE_OUTPUT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_RESULT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_TRIGGER_METHOD
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_EXPECT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_QUALITY_RED_LINE
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_QUALITY_RED_LINE_OUTPUT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_RESULT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_TRIGGER_METHOD
 
 @Suppress("MaxLineLength")
 object QualityUtils {

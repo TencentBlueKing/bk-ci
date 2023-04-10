@@ -28,8 +28,6 @@ package com.tencent.devops.notify.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.I18NConstant.BK_DESIGNATED_APPROVER_APPROVAL
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -41,6 +39,8 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DESIGNATED_APPROVER_APPROVAL
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao

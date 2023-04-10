@@ -19,7 +19,7 @@ package com.tencent.devops.stream.constant
 object StreamMessageCode {
     const val PROJECT_ALREADY_EXISTS = "2129111" //项目已存在
     const val PROJECT_NOT_EXIST = "2129112" //项目不存在
-    const val NOT_AUTHORIZED_BY_OAUTH = "2129113" //用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val NOT_AUTHORIZED_BY_OAUTH = "2129104" //用户[{0}]尚未进行OAUTH授权，请先授权。
     const val PROJECT_STREAM_NOT_ENABLED = "2129114" //工蜂项目{0}未开启Stream
     const val NO_RECORD_MIRROR_VERSION = "2129115" //没有此镜像版本记录
     const val MIRROR_VERSION_NOT_AVAILABLE = "2129116" //镜像版本不可用
@@ -28,9 +28,9 @@ object StreamMessageCode {
     const val STARTUP_CONFIGURATION_MISSING = "2129119" //启动配置缺少 rtx.v2GitUrl
     const val GIT_CI_NO_RECOR = "2129120" //Git CI没有此镜像版本记录
     const val PROJECT_CANNOT_OPEN_STREAM = "2129121" //项目无法开启Stream，请联系蓝盾助手
-    const val PROJECT_CANNOT_QUERIED = "2129122" //项目未开启Stream，无法查询
+    const val PROJECT_CANNOT_QUERIED = "2129110" //项目未开启Stream，无法查询
     const val PIPELINE_NOT_EXIST_OR_DELETED = "2129123" //流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val BUILD_TASK_NOT_EXIST = "2129124" //构建任务不存在，无法重试
+    const val BUILD_TASK_NOT_EXIST = "2129103" //构建任务不存在，无法重试
     const val USER_NOT_PERMISSION_FOR_WORKER_BEE = "2129125" //用户没有工蜂项目权限，无法获取下载链接
     const val INCORRECT_ID_BLUE_SHIELD_PROJECT = "2129126" //蓝盾项目ID不正确
 

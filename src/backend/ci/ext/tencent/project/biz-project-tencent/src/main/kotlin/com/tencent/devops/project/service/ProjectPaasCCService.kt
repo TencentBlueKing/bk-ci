@@ -29,12 +29,12 @@ package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_BSC_CREATE_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_PAASCC_INFORMATION
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_FAILED_BSC_CREATE_PROJECT
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_FAILED_GET_PAASCC_INFORMATION
 import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_SYNCHRONIZE_PROJECT
 import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_LOGO_INFORMATION
 import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_UPDATE_PROJECT_INFORMATION
