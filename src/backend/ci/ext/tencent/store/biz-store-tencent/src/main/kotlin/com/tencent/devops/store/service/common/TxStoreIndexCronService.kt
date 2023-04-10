@@ -41,7 +41,6 @@ import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.BK_ATOM_SLA
 import com.tencent.devops.store.pojo.common.BK_CODE_QUALITY
@@ -53,14 +52,14 @@ import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_SUCCESS_NUM
 import com.tencent.devops.store.pojo.common.BK_UP_TO_PAR
 import com.tencent.devops.store.pojo.common.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import jdk.internal.platform.Container.metrics
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.math.BigDecimal
-import jdk.internal.platform.Container.metrics
 
 @Service
 class TxStoreIndexCronService(
@@ -68,7 +67,6 @@ class TxStoreIndexCronService(
     private val redisOperation: RedisOperation,
     private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val atomDao: AtomDao,
-    private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val client: Client
 ) {
