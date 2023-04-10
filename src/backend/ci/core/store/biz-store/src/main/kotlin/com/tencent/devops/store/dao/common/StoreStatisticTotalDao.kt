@@ -224,6 +224,7 @@ class StoreStatisticTotalDao {
     ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType))
             val baseStep = dslContext.select(
                 DSL.sum(DOWNLOADS),
                 DSL.sum(COMMITS),
@@ -233,14 +234,10 @@ class StoreStatisticTotalDao {
             if (storeCodeList.isNotEmpty()) {
                 conditions.add(STORE_CODE.`in`(storeCodeList))
             }
-            conditions.add(STORE_TYPE.eq(storeType))
-            val finalStep = baseStep.where(conditions)
-                .groupBy(STORE_CODE)
-                .orderBy(CREATE_TIME, ID)
             return if (null != offset && null != limit) {
-                finalStep.limit(limit).offset(offset).fetch()
+                baseStep.where(conditions).limit(limit).offset(offset).fetch()
             } else {
-                finalStep.fetch()
+                baseStep.where(conditions).fetch()
             }
         }
     }
