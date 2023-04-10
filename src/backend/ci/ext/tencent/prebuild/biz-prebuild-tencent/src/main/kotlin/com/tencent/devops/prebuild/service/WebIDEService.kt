@@ -29,8 +29,8 @@ package com.tencent.devops.prebuild.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.MessageUtil

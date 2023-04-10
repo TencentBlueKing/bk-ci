@@ -35,8 +35,6 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.I18NConstant.BK_CONSTRUCTION_NUMBER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -64,6 +62,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST

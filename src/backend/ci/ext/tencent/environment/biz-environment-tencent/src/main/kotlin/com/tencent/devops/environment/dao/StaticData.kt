@@ -27,14 +27,14 @@
 
 package com.tencent.devops.environment.dao
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ESTIMATED_DELIVERY_TIME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_HIGH_END_VERSION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_INTEL_XEON_SKYLAKE_PROCESSOR
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MEMORY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NORMAL_VERSION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SOLID_STATE_DISK
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_ESTIMATED_DELIVERY_TIME
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_HIGH_END_VERSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_INTEL_XEON_SKYLAKE_PROCESSOR
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_MEMORY
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_NORMAL_VERSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_SOLID_STATE_DISK
 import com.tencent.devops.environment.pojo.DevCloudModel
 
 object StaticData {

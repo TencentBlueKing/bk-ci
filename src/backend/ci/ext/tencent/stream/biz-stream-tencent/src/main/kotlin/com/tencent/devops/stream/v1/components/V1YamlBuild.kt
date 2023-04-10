@@ -29,9 +29,9 @@ package com.tencent.devops.stream.v1.components
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATE_SERVICE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATE_SERVICE
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils

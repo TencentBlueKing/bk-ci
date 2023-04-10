@@ -117,4 +117,23 @@ object CommonMessageCode {
     const val BK_PCG_PUBLIC_BUILD_RESOURCES = "bkPcgPublicBuildResources" //PCG公共构建资源
     const val BK_TENCENT_SELF_DEVELOPED_CLOUD = "bkTencentSelfDevelopedCloud" //腾讯自研云（云devnet资源）
     const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" //云托管：Windows on DevCloud
+
+    const val BK_FILE_NAME = "bkFileName" //文件名
+    const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" //所属项目
+    const val BK_OPERATING = "bkOperating" //操作
+    const val BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM = "bkPushFromBlueShieldDevopsPlatform" //来自蓝盾DevOps平台的推送
+    const val BK_TABLE_CONTENTS = "bkTableContents" //表格内容
+    const val BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT = "bkPleaseFeelToContactBlueShieldAssistant" //如有任何问题，可随时联系蓝盾助手
+    const val BK_ETH1_NETWORK_CARD_IP_EMPTY = "bkEth1NetworkCardIpEmpty" //eth1 网卡Ip为空，因此，获取eth0的网卡ip
+    const val BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY = "bkLoopbackAddressOrNicEmpty" //loopback地址或网卡名称为空
+    const val BK_FAILED_GET_NETWORK_CARD = "bkFailedGetNetworkCard" //获取网卡失败
+    const val BK_MANUAL_TRIGGER = "bkManualTrigger" //手动触发
+    const val BK_BUILD_TRIGGER = "bkBuildTrigger" //构建触发
+    const val BK_VIEW_DETAILS = "bkSeeDetails" //查看详情
+    const val BK_PROJECT_ID = "bkProjectId" //# 项目ID:
+    const val BK_PIPELINE_NAME = "bkPipelineName" //# 流水线名称:
+    const val BK_CREATE_SERVICE = "bkCreateService" //创建{0}服务
+    const val BK_SESSION_ID = "bkSessionId" //会话ID
+    const val BK_GROUP_ID = "bkGroupId" //群ID
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" //本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
 }

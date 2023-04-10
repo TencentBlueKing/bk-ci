@@ -28,9 +28,9 @@
 package com.tencent.devops.stream.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_THIS_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_THIS_GROUP_ID
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil

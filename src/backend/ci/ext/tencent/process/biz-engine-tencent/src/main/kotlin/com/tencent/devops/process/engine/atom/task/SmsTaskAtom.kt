@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil

@@ -29,7 +29,6 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_GITHUB_ACCESS_TOKEN
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
@@ -37,6 +36,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_FAILED_GET_GITHUB_ACCESS_TOKEN
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.repository.pojo.github.GithubOauth

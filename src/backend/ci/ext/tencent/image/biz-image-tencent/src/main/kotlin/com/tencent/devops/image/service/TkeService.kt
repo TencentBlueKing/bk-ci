@@ -35,10 +35,6 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_REGISTER_IMAGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SOURCE_IMAGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFUL_REGISTRATION_IMAGE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_TARGET_IMAGE
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -46,6 +42,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
+import com.tencent.devops.image.constants.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_SOURCE_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
+import com.tencent.devops.image.constants.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam

@@ -2,7 +2,7 @@ package com.tencent.devops.common.api.constant
 
 object I18NConstant {
     //public
-    const val BK_FILE_NAME = "bkFileName" //文件名
+/*    const val BK_FILE_NAME = "bkFileName" //文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" //所属项目
     const val BK_OPERATING = "bkOperating" //操作
     const val BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM = "bkPushFromBlueShieldDevopsPlatform" //来自蓝盾DevOps平台的推送
@@ -19,18 +19,18 @@ object I18NConstant {
     const val BK_CREATE_SERVICE = "bkCreateService" //创建{0}服务
     const val BK_SESSION_ID = "bkSessionId" //会话ID
     const val BK_GROUP_ID = "bkGroupId" //群ID
-    const val BK_THIS_GROUP_ID = "bkThisGroupId" //本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_THIS_GROUP_ID = "bkThisGroupId" //本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。*/
 
     //artifactory
-    const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}文件
+/*    const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}文件
     const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
     const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime" //{0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
     const val BK_DOWNLOAD = "bkDownload" //下载
     const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkbkReceivedThisEmailBecauseYouFollowedProject" //你收到此邮件，是因为你关注了 {0} 项目，或其它人@了你
-    const val BK_ILLEGAL_PATH = "bkIllegalPath" //非法路径
+    const val BK_ILLEGAL_PATH = "bkIllegalPath" //非法路径*/
 
     //common
-    const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" //创建容器超时
+  /*  const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" //创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" //创建失败，异常信息
     const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES = "bkBlueShieldPublicBuildResources" //蓝盾公共构建资源
     const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW = "bkBlueShieldPublicBuildResourcesNew" //蓝盾公共构建资源(NEW)
@@ -41,24 +41,24 @@ object I18NConstant {
     const val BK_PRIVATE_BUILD_A_CLUSTER = "bkPrivateBuildACluster" //私有：构建集群
     const val BK_PCG_PUBLIC_BUILD_RESOURCES = "bkPcgPublicBuildResources" //PCG公共构建资源
     const val BK_TENCENT_SELF_DEVELOPED_CLOUD= "bkTencentSelfDevelopedCloud" //腾讯自研云（云devnet资源）
-    const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" //云托管：Windows on DevCloud
+    const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" //云托管：Windows on DevCloud*/
 
     //dockerhost
-    const val BK_DOCKER_BUILDER_RUNS_TOO_MANY = "bkDockerBuilderRunsTooMany" //Docker构建机运行的容器太多，母机IP:{0}，容器数量: {1}
+   /* const val BK_DOCKER_BUILDER_RUNS_TOO_MANY = "bkDockerBuilderRunsTooMany" //Docker构建机运行的容器太多，母机IP:{0}，容器数量: {1}
     const val BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY = "bkBuildEnvironmentStartsSuccessfully" //构建环境启动成功，等待Agent启动...
     const val BK_FAILED_TO_START_IMAGE_NOT_EXIST = "bkFailedToStartImageNotExist" //构建环境启动失败，镜像不存在, 镜像:{0}
-    const val BK_FAILED_TO_START_ERROR_MESSAGE = "bkFailedToStartErrorMessage" //构建环境启动失败，错误信息
+    const val BK_FAILED_TO_START_ERROR_MESSAGE = "bkFailedToStartErrorMessage" //构建环境启动失败，错误信息*/
 
     //environment
-    const val BK_NORMAL_VERSION = "bkNormalVersion" //8核16G（普通版）
+/*    const val BK_NORMAL_VERSION = "bkNormalVersion" //8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" //2.5GHz 64核 Intel Xeon Skylake 6133处理器
     const val BK_MEMORY = "bkMemory" //32GB*12 DDR3 内存
     const val BK_SOLID_STATE_DISK = "bkSolidStateDisk" //{0}GB 固态硬盘
     const val BK_ESTIMATED_DELIVERY_TIME = "bkEstimatedDeliveryTime" //预计交付周期：{0}分钟
-    const val BK_HIGH_END_VERSION = "bkHighEndVersion" //32核64G（高配版）
+    const val BK_HIGH_END_VERSION = "bkHighEndVersion" //32核64G（高配版）*/
 
     //experience
-    const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" //更新成功,已置为
+    /*const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" //更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" //更新成功
     const val BK_NEW_SEARCH_RECOMMENDATION_SUCCEEDED = "bkNewSearchRecommendationSucceeded" //新增搜索推荐成功
     const val BK_DELETE_SEARCH_RECOMMENDATION_SUCCEEDED = "bkDeleteSearchRecommendationSucceeded" //删除搜索推荐成功
@@ -96,23 +96,23 @@ object I18NConstant {
     const val BK_LATEST_INVITES_YOU_EXPERIENCE = "bkLatestInvitesYouExperience" //【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。
     const val BK_PC_EXPERIENCE_ADDRESS = "bkPcExperienceAddress" //\nPC体验地址
     const val BK_MOBILE_EXPERIENCE_ADDRESS = "bkMobileExperienceAddress" //\n手机体验地址
-    const val BK_LATEST_EXPERIENCE_VERSION_INFO = "bkLatestExperienceVersionInfo" //【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。\nPC体验地址：{3}\n手机体验地址：{4}
+    const val BK_LATEST_EXPERIENCE_VERSION_INFO = "bkLatestExperienceVersionInfo" //【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。\nPC体验地址：{3}\n手机体验地址：{4}*/
 
     //external
-    const val BK_FAILED_GET_GITHUB_ACCESS_TOKEN = "bkFailedGetGithubAccessToken" //获取Github access_token失败
+    /*const val BK_FAILED_GET_GITHUB_ACCESS_TOKEN = "bkFailedGetGithubAccessToken" //获取Github access_token失败
     const val BK_ADD_DETECTION_TASK = "bkAddDetectionTask" //添加检测任务
     const val BK_UPDATE_DETECTION_TASK = "bkUpdateDetectionTask" //更新检测任务
     const val BK_GET_WAREHOUSE_LIST = "bkGetWarehouseList" //获取仓库列表
     const val BK_GET_SPECIFIED_BRANCH = "bkGetSpecifiedBranch" //获取指定分支
     const val BK_GET_SPECIFIED_TAG = "bkGetSpecifiedTag" //获取指定Tag
     const val BK_GET_LIST_OF_BRANCHES = "bkGetListOfBranches" //获取分支列表
-    const val BK_GET_TAG_LIST = "bkGetTagList" //获取Tag列表
+    const val BK_GET_TAG_LIST = "bkGetTagList" //获取Tag列表*/
 
     //image
-    const val BK_SOURCE_IMAGE = "bkSourceImage" //源镜像：{0}
+    /*const val BK_SOURCE_IMAGE = "bkSourceImage" //源镜像：{0}
     const val BK_TARGET_IMAGE = "bkTargetImage" //目标镜像：{0}:{1}
     const val BK_SUCCESSFUL_REGISTRATION_IMAGE = "bkSuccessfulRegistrationImage" //注册镜像成功
-    const val BK_FAILED_REGISTER_IMAGE = "bkFailedRegisterImage" //注册镜像失败，错误信息：
+    const val BK_FAILED_REGISTER_IMAGE = "bkFailedRegisterImage" //注册镜像失败，错误信息：*/
 
     //log
   /*  const val BK_FAILED_INSERT_DATA = "bkFailedInsertData" //蓝盾ES集群插入数据失败

@@ -27,9 +27,9 @@
 
 package com.tencent.devops.support.services
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_THIS_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_THIS_GROUP_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil

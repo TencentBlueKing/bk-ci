@@ -1,6 +1,6 @@
 package com.tencent.devops.stream.trigger.listener.notify
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus

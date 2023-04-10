@@ -27,8 +27,8 @@
 
 package com.tencent.devops.prebuild.service
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
-import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGER
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS

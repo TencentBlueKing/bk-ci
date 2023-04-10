@@ -29,8 +29,8 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINE_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PIPELINE_NAME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PROJECT_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil

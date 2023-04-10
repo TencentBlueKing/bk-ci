@@ -27,18 +27,18 @@
 
 package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_THE_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
-import com.tencent.devops.common.api.constant.I18NConstant.BK_INVITES_YOU_EXPERIENCE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATING
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
-import com.tencent.devops.common.api.constant.I18NConstant.BK_TABLE_CONTENTS
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BELONG_TO_THE_PROJECT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_OPERATING
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TABLE_CONTENTS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_INVITES_YOU_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NAME
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.*

@@ -28,7 +28,7 @@
 package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService

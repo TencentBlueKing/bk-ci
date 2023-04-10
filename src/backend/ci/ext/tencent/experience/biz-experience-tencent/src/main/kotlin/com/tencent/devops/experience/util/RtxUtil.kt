@@ -27,9 +27,9 @@
 
 package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_INFO
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_INFO
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 
 @SuppressWarnings("LongParameterList")

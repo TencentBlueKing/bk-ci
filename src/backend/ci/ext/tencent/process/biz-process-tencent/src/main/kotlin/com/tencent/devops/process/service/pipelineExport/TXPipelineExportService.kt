@@ -34,8 +34,8 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINE_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PIPELINE_NAME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PROJECT_ID
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil

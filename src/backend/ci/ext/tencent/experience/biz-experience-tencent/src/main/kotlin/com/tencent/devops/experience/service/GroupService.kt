@@ -29,7 +29,6 @@ package com.tencent.devops.experience.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.I18NConstant.BK_USER_NOT_EDIT_PERMISSION_GROUP
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -42,6 +41,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION_GROUP
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao

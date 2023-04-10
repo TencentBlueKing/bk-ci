@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.atom.task.deploy
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil

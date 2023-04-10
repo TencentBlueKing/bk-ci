@@ -27,18 +27,18 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_DOWNLOAD
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_THE_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU
-import com.tencent.devops.common.api.constant.I18NConstant.BK_DOWNLOAD
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FILE_NAME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATING
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
-import com.tencent.devops.common.api.constant.I18NConstant.BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME
-import com.tencent.devops.common.api.constant.I18NConstant.BK_TABLE_CONTENTS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BELONG_TO_THE_PROJECT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FILE_NAME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_OPERATING
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TABLE_CONTENTS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil

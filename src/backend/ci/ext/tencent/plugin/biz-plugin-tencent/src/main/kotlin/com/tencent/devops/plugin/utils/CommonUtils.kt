@@ -28,9 +28,9 @@
 package com.tencent.devops.plugin.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ETH1_NETWORK_CARD_IP_EMPTY
-import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_NETWORK_CARD
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_GET_NETWORK_CARD
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil

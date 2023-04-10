@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_TRIGGER
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil

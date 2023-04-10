@@ -27,10 +27,10 @@
 
 package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.constant.I18NConstant.BK_HAS_BEEN_UPDATED
-import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_HAS_BEEN_UPDATED
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 
 @SuppressWarnings("LongParameterList")

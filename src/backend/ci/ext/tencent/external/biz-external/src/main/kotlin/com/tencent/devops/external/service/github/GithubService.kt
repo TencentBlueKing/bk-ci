@@ -29,13 +29,6 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.I18NConstant.BK_ADD_DETECTION_TASK
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_LIST_OF_BRANCHES
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_SPECIFIED_BRANCH
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_SPECIFIED_TAG
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_TAG_LIST
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_WAREHOUSE_LIST
-import com.tencent.devops.common.api.constant.I18NConstant.BK_UPDATE_DETECTION_TASK
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -43,6 +36,13 @@ import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.external.constant.ExternalMessageCode.ACCOUNT_NOT_PERMISSIO
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_ADD_DETECTION_TASK
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_LIST_OF_BRANCHES
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_BRANCH
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_TAG
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_TAG_LIST
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_WAREHOUSE_LIST
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_UPDATE_DETECTION_TASK
 import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_AUTHENTICATION_FAILED
 import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_PLATFORM_FAILED
 import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_WAREHOUSE_NOT_EXIST

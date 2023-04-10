@@ -31,11 +31,6 @@ package com.tencent.devops.experience.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_UNDER_PROJECT
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_USER_GROUP
-import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
@@ -43,13 +38,17 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NO_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NO_EXPERIENCE_UNDER_PROJECT
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NO_EXPERIENCE_USER_GROUP
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class AuthExperienceService @Autowired constructor(

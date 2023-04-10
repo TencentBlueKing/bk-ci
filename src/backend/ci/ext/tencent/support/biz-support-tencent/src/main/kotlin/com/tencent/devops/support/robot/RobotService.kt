@@ -30,8 +30,8 @@ package com.tencent.devops.support.robot
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.auth.api.manager.ServiceManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
-import com.tencent.devops.common.api.constant.I18NConstant.BK_GROUP_ID
-import com.tencent.devops.common.api.constant.I18NConstant.BK_SESSION_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
