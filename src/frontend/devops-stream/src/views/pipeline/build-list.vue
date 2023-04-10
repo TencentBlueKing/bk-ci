@@ -754,6 +754,7 @@
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
                     this.uiFormSchema = res.schema || {}
                     this.formData.yaml = res.yaml || ''
+                    this.formData.inputs = {}
                     this.disableManual = res.enable === false
                 }).catch((err) => {
                     if (err.code === 2129028) {
