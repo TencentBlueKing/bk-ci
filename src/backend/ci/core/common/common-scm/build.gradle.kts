@@ -26,6 +26,8 @@
  */
 
 dependencies {
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
     api("org.slf4j:slf4j-api")
     api("org.tmatesoft.svnkit:svnkit")

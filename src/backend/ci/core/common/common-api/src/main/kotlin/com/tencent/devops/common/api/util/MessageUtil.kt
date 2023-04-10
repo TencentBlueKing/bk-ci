@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import java.lang.reflect.Field
 import java.text.MessageFormat
+import java.util.Locale
 import java.util.Properties
+import java.util.ResourceBundle
 import org.slf4j.LoggerFactory
 
 object MessageUtil {
