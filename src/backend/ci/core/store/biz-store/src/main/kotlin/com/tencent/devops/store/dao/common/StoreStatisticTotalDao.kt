@@ -29,12 +29,15 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
-import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -105,6 +108,20 @@ class StoreStatisticTotalDao {
         }
     }
 
+    fun updateStatisticDataHotFlag(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        hotFlag: Boolean
+    ) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            dslContext.update(this)
+                .set(HOT_FLAG, hotFlag)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
+
     fun batchUpdatePipelineNum(
         dslContext: DSLContext,
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>,
@@ -147,7 +164,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte
-    ): Record6<Int, Int, BigDecimal, Int, Int, String>? {
+    ): Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
                 DOWNLOADS,
@@ -155,7 +172,8 @@ class StoreStatisticTotalDao {
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
-                STORE_CODE
+                STORE_CODE,
+                HOT_FLAG.`as`(KEY_HOT_FLAG)
             )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -170,7 +188,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCodeList: List<String?>,
         storeType: Byte
-    ): Result<Record6<Int, Int, BigDecimal, Int, Int, String>>? {
+    ): Result<Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(
                 DOWNLOADS,
@@ -178,7 +196,8 @@ class StoreStatisticTotalDao {
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
-                STORE_CODE
+                STORE_CODE.`as`(KEY_STORE_CODE),
+                HOT_FLAG.`as`(KEY_HOT_FLAG)
             )
                 .from(this)
 
@@ -208,6 +227,28 @@ class StoreStatisticTotalDao {
                 baseStep.orderBy(CREATE_TIME.asc(), ID)
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
+
+    fun getCountByType(dslContext: DSLContext, storeType: StoreTypeEnum): Int {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun getStorePercentileValue(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        index: Int
+    ): Record1<Int>? {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            return dslContext.select(RECENT_EXECUTE_NUM)
+                .from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
+                .orderBy(RECENT_EXECUTE_NUM.asc(), CREATE_TIME, STORE_CODE)
+                .limit(index - 1, 1).fetchOne()
         }
     }
 }

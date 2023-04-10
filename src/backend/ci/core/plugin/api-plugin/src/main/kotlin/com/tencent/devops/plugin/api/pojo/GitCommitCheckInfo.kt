@@ -41,5 +41,6 @@ data class GitCommitCheckInfo(
     val userId: String,
     val webhookType: String,
     val webhookEventType: String,
-    val enableCheck: Boolean
+    val enableCheck: Boolean,
+    val targetBranch: String?
 )

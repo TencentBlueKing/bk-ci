@@ -144,7 +144,32 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        thirdPartyAgentService.setParallelTaskCount(userId, projectId, nodeHashId, parallelTaskCount)
+        thirdPartyAgentService.setParallelTaskCount(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = null
+        )
+        return Result(true)
+    }
+
+    override fun setAgentDockerParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        count: Int
+    ): Result<Boolean> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        thirdPartyAgentService.setParallelTaskCount(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            parallelTaskCount = null,
+            dockerParallelTaskCount = count
+        )
         return Result(true)
     }
 

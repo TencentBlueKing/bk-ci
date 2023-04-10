@@ -58,6 +58,8 @@ import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -474,6 +476,15 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             jobControlOption.timeout = obj.minutes
+        } else { // 历史0值兼容
+            val obj = Timeout.decTimeout(jobControlOption.timeout.toString(), contextMap)
+            if (obj.change) {
+                jobControlOption.timeout = obj.minutes
+                logger.info(
+                    "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
+                        "|bad timeout: ${obj.beforeChangeStr}"
+                )
+            }
         }
     }
 

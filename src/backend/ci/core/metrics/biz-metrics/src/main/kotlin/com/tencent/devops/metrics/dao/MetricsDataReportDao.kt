@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
@@ -43,6 +44,7 @@ import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
@@ -243,6 +245,33 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveAtomOverviewDataPO.modifier)
                     .set(UPDATE_TIME, saveAtomOverviewDataPO.updateTime)
                     .set(CREATE_TIME, saveAtomOverviewDataPO.createTime)
+                    .execute()
+            }
+        }
+    }
+
+    fun batchSaveAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        saveAtomIndexStatisticsDailyPOs: List<SaveAtomIndexStatisticsDailyPO>
+    ) {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomIndexStatisticsDailyPO.id)
+                    .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                    .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
+                    .onDuplicateKeyUpdate()
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
                     .execute()
             }
         }
