@@ -127,9 +127,10 @@ class TxStoreIndexCronService(
                     )
                     var storeExecuteCountByCode = 0
                     if (storeExecuteCountByCodeRecord != null) {
-                        storeExecuteCountByCode =
-                            (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as BigDecimal).toInt() +
-                                (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as BigDecimal).toInt()
+                        val sumDailySuccessNum =
+                            (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_SUCCESS_NUM) as? BigDecimal)?.toInt() ?: 0
+                        val sumDailyFailNum = (storeExecuteCountByCodeRecord.get(BK_SUM_DAILY_FAIL_NUM) as? BigDecimal)?.toInt() ?: 0
+                        storeExecuteCountByCode = sumDailyFailNum + sumDailySuccessNum
                     }
                     // sla计算
                     val atomSlaIndexValue =
