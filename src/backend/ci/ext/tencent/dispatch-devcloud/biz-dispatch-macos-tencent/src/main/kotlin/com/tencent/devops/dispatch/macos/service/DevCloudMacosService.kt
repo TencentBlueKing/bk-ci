@@ -257,7 +257,7 @@ class DevCloudMacosService @Autowired constructor(
             .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
-        val vmInfoList = mutableListOf<DevCloudMacosVmInfo>()
+
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
             logger.info("DevCloud getVmList http code is ${response.code}, $responseContent")
@@ -266,7 +266,7 @@ class DevCloudMacosService @Autowired constructor(
                     "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
                         "msg: $responseContent"
                 )
-                return vmInfoList
+                return emptyList()
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
@@ -275,7 +275,7 @@ class DevCloudMacosService @Autowired constructor(
                     "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
                         "msg: $responseContent"
                 )
-                return vmInfoList
+                return emptyList()
             }
 
             val dataMap = responseData["data"] as Map<String, Any>
@@ -284,33 +284,40 @@ class DevCloudMacosService @Autowired constructor(
                     "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
                         "msg: $responseContent"
                 )
-                return vmInfoList
+                return emptyList()
             }
 
-            val itemsList = dataMap["items"] as List<Any>
-            itemsList.forEach { item ->
-                val itemTmp = item as Map<String, Any>
-
-                if (itemTmp["ip"] == null) {
-                    return@forEach
-                }
-
-                vmInfoList.add(
-                    DevCloudMacosVmInfo(
-                        name = itemTmp["name"] as String ?: "",
-                        memory = itemTmp["memory"] as String ?: "",
-                        assetId = itemTmp["assetId"] as String ?: "",
-                        ip = itemTmp["ip"] as String ?: "",
-                        disk = itemTmp["disk"] as String ?: "",
-                        os = itemTmp["os"] as String ?: "",
-                        id = itemTmp["id"] as Int ?: 0,
-                        cpu = itemTmp["cpu"] as String ?: ""
-                    )
-                )
-            }
-
-            return vmInfoList
+            return getVMInfos(dataMap)
         }
+    }
+
+    private fun getVMInfos(
+        dataMap: Map<String, Any>
+    ): List<DevCloudMacosVmInfo> {
+        val vmInfoList = mutableListOf<DevCloudMacosVmInfo>()
+        val itemsList = dataMap["items"] as List<Any>
+        itemsList.forEach { item ->
+            val itemTmp = item as Map<String, Any>
+
+            if (itemTmp["ip"] == null) {
+                return@forEach
+            }
+
+            vmInfoList.add(
+                DevCloudMacosVmInfo(
+                    name = itemTmp["name"] as String ?: "",
+                    memory = itemTmp["memory"] as String ?: "",
+                    assetId = itemTmp["assetId"] as String ?: "",
+                    ip = itemTmp["ip"] as String ?: "",
+                    disk = itemTmp["disk"] as String ?: "",
+                    os = itemTmp["os"] as String ?: "",
+                    id = itemTmp["id"] as Int ?: 0,
+                    cpu = itemTmp["cpu"] as String ?: ""
+                )
+            )
+        }
+
+        return vmInfoList
     }
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
