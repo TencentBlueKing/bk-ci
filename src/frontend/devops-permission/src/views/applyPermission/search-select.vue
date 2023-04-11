@@ -284,6 +284,18 @@ export default {
         this.searchSelectValue = []
       },
       deep: true
+    },
+    curProject: {
+      async handler (val) {
+        if (val && val.englishName !== this.$route.query.project_code) {
+          this.$emit('change', [])
+          return
+        }
+        if (val || val === undefined) {
+          await this.initApplyQuery()
+        }
+      },
+      deep: true
     }
   },
   data() {
@@ -313,7 +325,6 @@ export default {
   },
   async created() {
     await this.getResourceTypesList();
-    await this.initApplyQuery();
   },
   methods: {
     async initApplyQuery() {

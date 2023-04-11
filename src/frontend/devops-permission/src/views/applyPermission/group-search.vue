@@ -162,7 +162,8 @@ const handleChangeSearch = (data) => {
     if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
       applyTips.value = t('根据筛选条件，匹配到如下用户组:');
     }
-    if (resourceType && !userGroupList.value.length && !data.length) return
+    if (!props.curProject) return
+    // if (resourceType && !userGroupList.value.length && !data.length) return
     fetchGroupList(data);
   }, 100);
 };
@@ -333,7 +334,7 @@ const columns = [
       :search-list="searchList"
       :is-disabled="isDisabled"
       :project-code="projectCode"
-      :cur-project="curProject"
+      :cur-project="props.curProject"
       @change="handleChangeSearch">
     </search-select>
     <div class="apply-tips">
