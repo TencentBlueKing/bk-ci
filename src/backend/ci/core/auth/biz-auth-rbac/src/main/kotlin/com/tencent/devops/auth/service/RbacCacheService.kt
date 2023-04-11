@@ -120,21 +120,12 @@ class RbacCacheService constructor(
     }
 
     fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        val projectCodes = projectManager.getIfPresent(userId)
-        if (projectCodes != null && projectCodes.contains(projectCode)) {
-            return true
-        }
-        val hasProjectManage = validateUserProjectPermission(
+        // TODO 开启管理员缓存，会存在当把用户从管理员移除，用户还是能够进入用户管理界面，但是iam那边会报错，所以先不缓存，后期优化
+        return validateUserProjectPermission(
             userId = userId,
             projectCode = projectCode,
             permission = AuthPermission.MANAGE
         )
-        if (hasProjectManage) {
-            val newProjectCodes = projectManager.getIfPresent(userId)?.toMutableList() ?: mutableListOf()
-            newProjectCodes.add(projectCode)
-            projectManager.put(userId, newProjectCodes)
-        }
-        return hasProjectManage
     }
 
     private fun validateUserProjectPermission(

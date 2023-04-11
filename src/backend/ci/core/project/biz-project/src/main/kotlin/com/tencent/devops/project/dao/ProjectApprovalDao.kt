@@ -74,7 +74,8 @@ class ProjectApprovalDao {
                 LOGO_ADDR,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                TIPS_STATUS
+                TIPS_STATUS,
+                PROJECT_TYPE
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -93,7 +94,8 @@ class ProjectApprovalDao {
                 projectCreateInfo.logoAddress ?: "",
                 JsonUtil.toJson(subjectScopes, false),
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                tipsStatus
+                tipsStatus,
+                projectCreateInfo.projectType
             ).execute()
         }
     }
@@ -123,6 +125,7 @@ class ProjectApprovalDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
+                .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -218,7 +221,8 @@ class ProjectApprovalDao {
                 authSecrecy = authSecrecy,
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
                 approver = approver,
-                tipsStatus = tipsStatus
+                tipsStatus = tipsStatus,
+                projectType = projectType
             )
         }
     }
