@@ -37,10 +37,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
-import org.jooq.Record4
 import org.jooq.Record7
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -102,6 +100,32 @@ class StoreStatisticTotalDao {
                 .set(COMMITS, comments)
                 .set(SCORE, score)
                 .set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
+                .set(RECENT_EXECUTE_NUM, recentExecuteNum)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
+
+    fun updateStatisticData(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        recentExecuteNum: Int
+    ) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            dslContext.insertInto(this).columns(
+                ID,
+                STORE_CODE,
+                STORE_TYPE,
+                RECENT_EXECUTE_NUM
+            ).values(
+                UUIDUtil.generate(),
+                storeCode,
+                storeType,
+                recentExecuteNum
+            ).onDuplicateKeyUpdate()
                 .set(RECENT_EXECUTE_NUM, recentExecuteNum)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(STORE_CODE.eq(storeCode))
@@ -218,21 +242,16 @@ class StoreStatisticTotalDao {
     fun batchGetStatisticByStoreCode(
         dslContext: DSLContext,
         storeType: Byte,
-        page: Int,
-        pageSize: Int
-    ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
+        offset: Int,
+        limit: Int
+    ): List<String> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            return dslContext.select(
-                DSL.sum(DOWNLOADS),
-                DSL.sum(COMMITS),
-                DSL.sum(SCORE),
-                STORE_CODE
-            ).from(this)
+            return dslContext.select(STORE_CODE).from(this)
             .where(STORE_TYPE.eq(storeType))
                 .groupBy(STORE_CODE)
                 .orderBy(CREATE_TIME.desc(), ID)
-                .limit((page - 1) * pageSize, pageSize)
-                .fetch()
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
         }
     }
 
