@@ -13,7 +13,7 @@ class ServiceVMResourceImpl @Autowired constructor(
 ) : ServiceVMResource {
     override fun list(): Result<List<VirtualMachineInfo>> {
         val macosVMList = mutableListOf<VirtualMachineInfo>()
-        val devcloudMacosVmList = devCloudMacosService.getVmList("")
+        val devcloudMacosVmList = devCloudMacosService.getVmList()
         devcloudMacosVmList.forEach {
             val vmInfo = VirtualMachineInfo(it.id)
             vmInfo.name = it.name
