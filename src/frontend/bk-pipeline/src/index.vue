@@ -254,6 +254,7 @@
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
             },
             expandMatrix (stageId, matrixId, containerId) {
+                console.log('expandMatrix', stageId, matrixId, containerId)
                 return new Promise((resolve, reject) => {
                     try {
                         const jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox

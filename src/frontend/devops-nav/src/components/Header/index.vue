@@ -124,10 +124,10 @@
         isShowTooltip: boolean = true
 
         get headerLogoName (): string {
-            const logoArr = ['color-logo-devops-logo']
+            const logoArr = ['devops-logo']
             const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
             if (localeConst) {
-                return logoArr.push(localeConst)
+                logoArr.push(localeConst)
             }
             return logoArr.join('-')
         }

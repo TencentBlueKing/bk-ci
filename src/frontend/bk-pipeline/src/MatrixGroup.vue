@@ -22,11 +22,11 @@
         <section class="matrix-body" v-if="isMatrixOpen && hasMatrixJob">
             <Job
                 v-for="(job, jobIndex) in computedJobs"
-                :key="job.containerId"
+                :key="job.id"
                 :container="job"
                 :container-group-index="jobIndex"
                 v-bind="restProps"
-                :ref="job.containerId"
+                :ref="job.id"
             >
             </Job>
         </section>
