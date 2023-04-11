@@ -40,7 +40,6 @@ import org.jooq.Record1
 import org.jooq.Record4
 import org.jooq.Record7
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -220,12 +219,12 @@ class StoreStatisticTotalDao {
         storeType: Byte,
         page: Int,
         pageSize: Int
-    ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
+    ): Result<Record4<Int, Int, Int, String>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
-                DSL.sum(DOWNLOADS),
-                DSL.sum(COMMITS),
-                DSL.sum(SCORE),
+                DOWNLOADS,
+                COMMITS,
+                SCORE,
                 STORE_CODE
             ).from(this)
             .where(STORE_TYPE.eq(storeType))
