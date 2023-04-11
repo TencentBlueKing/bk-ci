@@ -111,8 +111,8 @@ object StoreMessageCode {
     const val USER_IMAGE_USED = "2120305" // 研发商店：镜像{0}已安装到其他项目下使用，请勿移除
     const val USER_IMAGE_NOT_INSTALLED = "2120306" // 研发商店：项目{0}未安装镜像{1}，无法使用
     const val USER_IMAGE_UNKNOWN_SOURCE_TYPE = "2120307" // 研发商店：镜像原始来源类型未知：{0}
-    const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 镜像范畴未知：{0}
-    const val USER_IMAGE_NOT_EXIST = "2120309" // 镜像[{0}]不存在
+    const val USER_IMAGE_UNKNOWN_IMAGE_CATEGORY = "2120308" // 研发商店：镜像范畴未知：{0}
+    const val USER_IMAGE_NOT_EXIST = "2120309" // 研发商店：镜像[{0}]不存在
     const val USER_IMAGE_VERSION_NOT_EXIST = "2120310" // 标识为{0}版本号为{1}的镜像不存在
     const val USER_IMAGE_PROJECT_IS_INVALID = "2120311" // 研发商店：容器镜像[{0}]在项目[{1}]下不可用，请联系镜像发布者调整可见范围，调整后手动安装镜像
 
@@ -143,5 +143,19 @@ object StoreMessageCode {
     const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
     const val USER_HIS_VERSION_UPGRADE_INVALID = "2120913" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
     const val USER_UPLOAD_FILE_PATH_ERROR = "2120914" // 研发商店：文件路径[{0}]错误
-    const val USER_LOCALE_FILE_NOT_EXIST = "2120915" // 研发商店：未提供系统[{0}]语言的配置文件
+    const val USER_ERROR_CODE_INVALID = "2120915" // 研发商店：错误码{0}格式错误
+    const val USER_LOCALE_FILE_NOT_EXIST = "2120916" // 研发商店：未提供系统[{0}]语言的配置文件
+
+    const val BK_OTHER = "bkOther" //其他
+    const val BK_PIPELINED_JOB = "bkPipelinedJob" //流水线Job
+    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" //容器镜像商店上线，历史镜像数据自动生成
+    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" //旧版的构建镜像，通过拷贝为构建镜像入口生成
+    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" //已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
+    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" //旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
+    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" //容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
+    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" //项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
+    const val BK_HISTORYDATA_DATA = "bkHistorydataData" //historyData数据迁移自动通过
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" //工蜂项目信息不存在，请检查链接
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" //工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+
 }

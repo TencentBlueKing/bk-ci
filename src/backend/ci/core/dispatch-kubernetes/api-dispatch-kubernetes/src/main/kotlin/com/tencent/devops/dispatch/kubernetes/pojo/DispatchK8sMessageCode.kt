@@ -56,7 +56,6 @@ object DispatchK8sMessageCode {
     const val NO_EMPTY_BUILDER = "2126208"// BCS构建机启动失败，没有空闲的构建机
     const val MACHINE_INTERFACE_RETURN_FAIL = "2126209"// 操作构建机接口返回失败
     const val MACHINE_INTERFACE_TIMEOUT = "2126210"// 操作构建机接口超时
-
     const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126211"// 获取kubernetes task({0})状态接口异常
     const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126212"// 获取kubernetes task状态接口超时
     const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126213"// 获取kubernetes任务执行超时

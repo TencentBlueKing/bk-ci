@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.openapi.constant
+package com.tencent.devops.common.api.constant
 
 /**
  * 环境管理微服务模块请求返回状态码
@@ -52,4 +52,5 @@ object OpenAPIMessageCode {
     const val USER_CHECK_FAIL = "2112007" // OpenAPI：用户校验失败
     const val ERROR_USER_EXIST = "2112008" // OpenAPI：重复添加
     const val PARAM_VERIFY_FAIL = "2112009" // 参数校验失败:{0}
+    const val ILLEGAL_USER = "2112010" //非法用户
 }

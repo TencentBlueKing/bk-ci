@@ -26,10 +26,10 @@
  */
 package com.tencent.devops.openapi.utils
 
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR
 import com.tencent.devops.openapi.exception.InvalidConfigException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value

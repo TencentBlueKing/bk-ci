@@ -82,10 +82,17 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_SHARE_PROJECT_EMPTY = "2105036" // 环境管理：共享的项目列表为空
     const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
+    const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
     const val ERROR_PIPE_NOT_FOUND  = "2105039" // 环境管理：不存在该管道信息
     const val ERROR_NOT_THIRD_PARTY_BUILD_MACHINE = "2105040" // 环境管理：这个节点不是第三方构建机
     const val THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST = "2105041" // 第三方构建机环境不存在
     const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
     const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
-    const val ERROR_NODE_NAME_OR_ID_INVALID = "2105044" // 环境管理：获取节点失败，请求节点hash id或别名有误
+
+    const val BK_NORMAL_VERSION = "bkNormalVersion" //8核16G（普通版）
+    const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" //2.5GHz 64核 Intel Xeon Skylake 6133处理器
+    const val BK_MEMORY = "bkMemory" //32GB*12 DDR3 内存
+    const val BK_SOLID_STATE_DISK = "bkSolidStateDisk" //{0}GB 固态硬盘
+    const val BK_ESTIMATED_DELIVERY_TIME = "bkEstimatedDeliveryTime" //预计交付周期：{0}分钟
+    const val BK_HIGH_END_VERSION = "bkHighEndVersion" //32核64G（高配版）
 }
