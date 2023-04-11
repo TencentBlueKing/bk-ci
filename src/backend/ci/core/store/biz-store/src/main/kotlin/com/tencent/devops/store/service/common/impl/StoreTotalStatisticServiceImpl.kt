@@ -85,8 +85,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         private const val DEFAULT_PERCENTILE = 0.8
     }
 
-    //    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
-    @Scheduled(cron = "0 0/10 * * * ?")
+    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
     fun stat() {
         val lock = RedisLock(redisOperation, "storeTotalStatistic", 60000L)
         try {
