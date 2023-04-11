@@ -79,9 +79,7 @@ class MigrateResourceService @Autowired constructor(
                 resourceType = resourceType
             )
             logger.info("resourceData:$resourceData")
-            val resources = resourceData.data.result
-            val resourceCount = resourceData.data.count
-            resources.forEach {
+            resourceData.data.result.forEach {
                 val resourceCode = convertResourceCode(resourceType, it.id)
                 logger.info("resourceCode:$resourceCode")
                 authResourceService.getOrNull(projectCode, resourceType, resourceCode)?.run {
@@ -95,7 +93,7 @@ class MigrateResourceService @Autowired constructor(
                 }
             }
             offset += limit
-        } while (resourceCount == limit)
+        } while (resourceData.data.count == limit)
     }
 
     private fun getInstanceByResource(offset: Long, limit: Long, resourceType: String): ListInstanceInfo =
