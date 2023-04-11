@@ -65,7 +65,7 @@ class MigrateResourceService @Autowired constructor(
         logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
         // 迁移各个资源类型下的资源
         resourceTypes.forEach { resourceType -> resourceCreateRelation(projectCode, resourceType) }
-        logger.info("MigrateResourceService|It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
+        logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
     }
 
     @SuppressWarnings("MagicNumber")
