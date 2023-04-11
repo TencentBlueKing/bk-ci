@@ -95,6 +95,11 @@ interface AtomService {
     fun getProjectElements(projectCode: String): Result<Map<String, String>>
 
     /**
+     * 获取项目下所有可用的插件信息
+     */
+    fun getProjectElementsInfo(projectCode: String): Result<Map<String, String>>
+
+    /**
      * 根据插件代码和版本号获取插件信息
      */
     fun getPipelineAtom(
