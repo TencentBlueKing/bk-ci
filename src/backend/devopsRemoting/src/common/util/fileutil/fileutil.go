@@ -43,9 +43,9 @@ func Chmod(file string, perm os.FileMode) error {
 	return err
 }
 
-func CopyDir(src, dst string) error {
+func CopyDir(src, dst string, exclude []string) error {
 	if err := os.MkdirAll(dst, os.ModePerm); err != nil && !os.IsExist(err) {
 		return err
 	}
-	return copyfile.CopyDir(src, dst)
+	return copyfile.CopyDir(src, dst, exclude)
 }

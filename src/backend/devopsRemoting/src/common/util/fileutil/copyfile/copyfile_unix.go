@@ -11,7 +11,7 @@ import (
 	"syscall"
 )
 
-func CopyDir(scrDir, dest string) error {
+func CopyDir(scrDir, dest string, exclude []string) error {
 	entries, err := os.ReadDir(scrDir)
 	if err != nil {
 		return err
@@ -35,7 +35,7 @@ func CopyDir(scrDir, dest string) error {
 			if err := CreateIfNotExists(destPath, 0755); err != nil {
 				return err
 			}
-			if err := CopyDir(sourcePath, destPath); err != nil {
+			if err := CopyDir(sourcePath, destPath, exclude); err != nil {
 				return err
 			}
 		case os.ModeSymlink:
@@ -43,7 +43,7 @@ func CopyDir(scrDir, dest string) error {
 				return err
 			}
 		default:
-			if err := Copy(sourcePath, destPath); err != nil {
+			if err := Copy(sourcePath, destPath, exclude); err != nil {
 				return err
 			}
 		}
@@ -67,7 +67,13 @@ func CopyDir(scrDir, dest string) error {
 	return nil
 }
 
-func Copy(srcFile, dstFile string) error {
+func Copy(srcFile, dstFile string, exclude []string) error {
+	for _, file := range exclude {
+		if srcFile == file {
+			return nil
+		}
+	}
+
 	out, err := os.Create(dstFile)
 	if err != nil {
 		return err

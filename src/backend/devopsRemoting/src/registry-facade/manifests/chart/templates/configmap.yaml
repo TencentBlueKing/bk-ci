@@ -31,7 +31,7 @@ data:
         }
       },
       {{- if .Values.registry.fixedSpec }}
-      "fixedSpecFN": "/data/workspace/registry-facade/config/fixed.json"
+      "fixedSpecFN": "/data/workspace/registry-facade/config/fixed.json",
       {{- end }}
       "readinessProbeAddr": ":8000"
     }

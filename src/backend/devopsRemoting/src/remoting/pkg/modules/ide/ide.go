@@ -90,10 +90,15 @@ func StartAndWatchIDE(
 
 	// 对于ssh插件因为工作空间可能清空的问题，需要主动copy下插件
 	if ide == DesktopIDE {
-		logs.Debug("copy vscode ssh extensions")
+		exclude := []string{}
+		if cfg.WorkSpace.WorkspaceFirstCreate == "true" {
+			exclude = append(exclude, filepath.Join(constant.RemotingUserHome, ".vscode-server", "extensions", "extensions.json"))
+		}
+		logs.Debugf("copy vscode ssh extensions exclude %+v", exclude)
 		if err := fileutil.CopyDir(
 			filepath.Join(constant.RemotingUserHome, ".vscode-server", "extensions"),
 			filepath.Join(cfg.WorkSpace.WorkspaceRootPath, ".vscode-server", "extensions"),
+			[]string{},
 		); err != nil {
 			logs.WithError(err).Error("copy vscode ssh extensions fail")
 		}
