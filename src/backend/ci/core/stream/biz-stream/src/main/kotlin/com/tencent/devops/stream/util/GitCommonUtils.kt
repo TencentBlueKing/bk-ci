@@ -48,7 +48,7 @@ object GitCommonUtils {
 
     private const val httpsPrefix = "https://"
 
-    private const val gitEnd = ".git"
+    const val gitEnd = ".git"
 
     fun getPathWithNameSpace(url: String?): String? {
         if (url.isNullOrBlank()) {

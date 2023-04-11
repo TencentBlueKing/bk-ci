@@ -169,7 +169,7 @@
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
-                    {{ $t('applyPermission') }}
+                    {{ $t('apply') }}
                 </bk-button>
                 <template
                     v-else-if="props.row.hasPermission"
