@@ -267,7 +267,8 @@ class ProjectApprovalService @Autowired constructor(
                 authSecrecy = authSecrecy,
                 ccAppId = projectInfo.ccAppId,
                 ccAppName = projectInfo.ccAppName,
-                kind = projectInfo.kind
+                kind = projectInfo.kind,
+                projectType = projectType ?: 0
             )
         }
         val logoAddress = projectUpdateInfo.logoAddress

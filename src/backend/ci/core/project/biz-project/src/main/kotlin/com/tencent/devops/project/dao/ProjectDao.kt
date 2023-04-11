@@ -374,6 +374,7 @@ class ProjectDao {
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
+                .set(PROJECT_TYPE, projectUpdateInfo.projectType)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
