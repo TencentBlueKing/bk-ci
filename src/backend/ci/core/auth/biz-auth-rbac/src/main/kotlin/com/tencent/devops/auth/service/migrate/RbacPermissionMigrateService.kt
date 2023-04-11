@@ -55,7 +55,7 @@ class RbacPermissionMigrateService constructor(
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
-): PermissionMigrateService {
+) : PermissionMigrateService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
@@ -105,12 +105,19 @@ class RbacPermissionMigrateService constructor(
             }
             // 3. 异步迁移资源
             val resourceFuture = CompletableFuture.supplyAsync(
-                { migrateResourceService.migrateResource(projectCode = projectCode) },
+                {
+                    migrateResourceService.migrateResource(projectCode = projectCode)
+                },
                 executorService
             )
             // 4. 异步迁移v3用户组
             val policyFuture = CompletableFuture.supplyAsync(
-                { migrateV3PolicyService.migrateGroupPolicy(projectCode = projectCode, gradeManagerId = gradeManagerId) },
+                {
+                    migrateV3PolicyService.migrateGroupPolicy(
+                        projectCode = projectCode,
+                        gradeManagerId = gradeManagerId
+                    )
+                },
                 executorService
             )
             // 5. 等待资源和用户组迁移完成
