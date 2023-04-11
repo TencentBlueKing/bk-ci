@@ -264,16 +264,8 @@ class PipelineBuildFacadeService(
                 containerType = null,
                 glob = null,
                 properties = null,
-                label = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_LABEL,
-                    defaultMessage = "构建信息",
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                placeholder = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_MANUAL,
-                    defaultMessage = "手动触发",
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                label = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_LABEL),
+                placeholder = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_MANUAL),
                 propertyType = BuildPropertyType.BUILD.name
             )
         )
