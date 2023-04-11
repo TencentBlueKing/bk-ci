@@ -258,7 +258,7 @@
             :auto-close="false"
         >
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
-                <p class="dialog-tip">{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
+                <p class="dialog-tip">{{$t('store.删除时将清理数据。删除后不可恢复！')}}</p>
                 <p class="dialog-tip">{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
                 <bk-form-item property="projectName">
                     <bk-input
@@ -337,8 +337,8 @@
                 itemUrl: '/console/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
-                specificationDocUrl: `${DOCS_URL_PREFIX}/Services/Store/plugins/plugin-specification.md`,
-                errorCodeDocUrl: `${DOCS_URL_PREFIX}/Services/Store/plugins/plugin-error-code.md`,
+                specificationDocUrl: this.BKCI_DOCS.PLUGIN_SPECIFICATE_DOC,
+                errorCodeDocUrl: this.BKCI_DOCS.PLUGIN_ERROR_CODE_DOC,
                 renderList: [],
                 projectList: [],
                 languageList: [],

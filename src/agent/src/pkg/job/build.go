@@ -226,6 +226,10 @@ func getBuild(buildType api.BuildJobType) (*api.ThirdPartyBuildInfo, error) {
 
 // runBuild 启动构建
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
+	defer func() {
+		// 防止因为某种场景无法进入构建时也要删除预构建任务，防止产生干扰
+		GBuildManager.DeletePreInstance(buildInfo.BuildId)
+	}()
 
 	workDir := systemutil.GetWorkDir()
 	agentJarPath := config.BuildAgentJarPath()
@@ -483,7 +487,7 @@ func removeFileThan7Days(dir string, f fs.DirEntry) {
 		logs.Error("removeFileThan7Days|read file info error ", "file: ", f.Name(), " error: ", err)
 		return
 	}
-	if (time.Now().Sub(info.ModTime())) > 7*24*time.Hour {
+	if (time.Since(info.ModTime())) > 7*24*time.Hour {
 		err = os.Remove(dir + "/" + f.Name())
 		if err != nil {
 			logs.Error("removeFileThan7Days|remove file error ", "file: ", f.Name(), " error: ", err)

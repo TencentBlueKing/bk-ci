@@ -498,16 +498,10 @@
             },
             toDeleteRule (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, this.$t('quality.确定删除规则({{0}})？', { 0: row.name }))
-
                     this.$bkInfo({
-                        title: this.$t('quality.删除'),
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: this.$t('quality.确定删除规则({0})？', [row.name]),
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }
@@ -661,7 +655,7 @@
                         style: {
                             textAlign: 'center'
                         }
-                    }, this.$t('quality.确定{{0}}规则({{1}})？', { 0: infoTitle, 1: row.name }))
+                    }, this.$t('quality.确定{0}规则({1})？', [infoTitle, row.name]))
 
                     this.$bkInfo({
                         title: infoTitle,

@@ -168,7 +168,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
+                docsLink: this.BKCI_DOCS.TEMPLATE_GUIDE_DOC,
                 sortList: [],
                 labelList: [],
                 categoryList: [],

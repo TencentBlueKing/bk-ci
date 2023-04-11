@@ -15,7 +15,7 @@
             <div class="query-template-row">
                 <span class="template-prompt">{{$t('quality.选中后将对该模板当前和后续实例化的流水线生效')}}</span>
                 <div class="search-input-row">
-                    <input class="bk-form-input" type="text" :placeholder="$t('quality.请输入...')"
+                    <input class="bk-form-input" type="text"
                         v-model="searchName"
                         @keyup.enter="toSearchPipeline()">
                     <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>

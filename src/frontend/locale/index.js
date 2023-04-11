@@ -35,7 +35,6 @@ function getSubDoamin () {
             } else {
                 acc.push(item)
             }
-            console.log(acc)
             return acc
         }, []).slice(1)
     } catch (error) {
@@ -59,7 +58,7 @@ function setLsLocale (locale) {
         subDomains.forEach(domain => {
             cookies.remove(LS_KEY, { domain, path: '/' })
         })
-        cookies.set(LS_KEY, formateLocale, { domain: location.hostname, path: '/' })
+        cookies.set(LS_KEY, formateLocale, { domain: subDomains[0] ?? location.hostname, path: '/' })
     }
 }
 

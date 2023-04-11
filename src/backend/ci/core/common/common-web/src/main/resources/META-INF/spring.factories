@@ -5,4 +5,5 @@ com.tencent.devops.common.web.mq.CoreRabbitMQConfiguration,\
 com.tencent.devops.common.web.mq.ExtendRabbitMQConfiguration,\
 com.tencent.devops.common.web.FeignConfiguration,\
 com.tencent.devops.common.web.FilterAutoConfiguration,\
-com.tencent.devops.common.web.SensitiveApiAutoConfiguration
+com.tencent.devops.common.web.SensitiveApiAutoConfiguration,\
+com.tencent.devops.common.web.BuildApiAutoConfiguration

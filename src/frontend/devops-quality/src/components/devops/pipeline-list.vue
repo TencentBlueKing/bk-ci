@@ -26,9 +26,12 @@
                     </bk-option-group>
                 </bk-select> -->
                 <div class="search-input-row">
-                    <input class="bk-form-input" type="text" :placeholder="$t('quality.请输入...')"
+                    <input
+                        class="bk-form-input"
+                        type="text"
                         v-model="searchName"
-                        @keyup.enter="toSearchPipeline()">
+                        @keyup.enter="toSearchPipeline()"
+                    >
                     <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>
                 </div>
             </div>

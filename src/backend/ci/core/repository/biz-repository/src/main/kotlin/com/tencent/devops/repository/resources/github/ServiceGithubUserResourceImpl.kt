@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.resources.github
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.sdk.github.response.GetUserEmailResponse
 import com.tencent.devops.common.sdk.github.response.GetUserResponse
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
@@ -43,6 +44,12 @@ class ServiceGithubUserResourceImpl @Autowired constructor(
     override fun getUser(token: String): Result<GetUserResponse?> {
         return Result(
             githubUserService.getUser(token)
+        )
+    }
+
+    override fun getUserEmail(token: String): Result<List<GetUserEmailResponse>> {
+        return Result(
+            githubUserService.getUserEmail(token)
         )
     }
 }

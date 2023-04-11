@@ -22,6 +22,8 @@ const (
 	DockerContainerRunError
 	DockerContainerDoneStatusError
 	DockerChmodInitshError
+	DockerCredGetError
+	DockerDockerOptions
 )
 
 type ErrorTypes string
@@ -58,6 +60,11 @@ var (
 		Code:    DockerRunShStatError,
 		Message: "获取Docker构建机初始化脚本状态失败",
 	}
+	DockerCredGetErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerCredGetError,
+		Message: "获取docker凭据错误",
+	}
 	DockerClientCreateErrorEnum = &ErrorEnum{
 		Type:    User,
 		Code:    DockerClientCreateError,
@@ -77,6 +84,11 @@ var (
 		Type:    User,
 		Code:    DockerMakeTmpDirError,
 		Message: "创建Docker构建临时目录失败",
+	}
+	DockerDockerOptionsErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerDockerOptions,
+		Message: "添加Docker options错误",
 	}
 	DockerMountCreateErrorEnum = &ErrorEnum{
 		Type:    User,

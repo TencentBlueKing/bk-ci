@@ -75,10 +75,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import emptyData from './empty_data'
     import createGroup from '@/components/devops/create_group'
     import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {
@@ -312,16 +312,10 @@
             },
             toDeleteGruop (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, this.$t('quality.确定删除通知组({{0}})？', { 0: row.name }))
-
                     this.$bkInfo({
-                        title: this.$t('quality.删除'),
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: this.$t('quality.确定删除通知组({0})？', [row.name]),
                         confirmFn: async () => {
                             let message, theme
 

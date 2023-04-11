@@ -187,7 +187,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,

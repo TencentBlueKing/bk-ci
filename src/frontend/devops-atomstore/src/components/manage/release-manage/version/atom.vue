@@ -72,19 +72,19 @@
             <template slot="content">
                 <atom-detail :detail="detail" v-bkloading="{ isLoading: detailLoading }" class="version-detail">
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.发布者：') }}：</span>
+                        <span class="detail-label">{{ $t('store.发布者：') }}</span>
                         <span>{{ detail.publisher || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.发布类型：') }}：</span>
+                        <span class="detail-label">{{ $t('store.发布类型：') }}</span>
                         <span>{{ releaseMap[detail.releaseType] || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.版本：') }}：</span>
+                        <span class="detail-label">{{ $t('store.版本：') }}</span>
                         <span>{{ detail.version || '--' }}</span>
                     </li>
                     <li class="detail-item">
-                        <span class="detail-label">{{ $t('store.版本日志') }}：</span>
+                        <span class="detail-label">{{ $t('store.版本日志：') }}</span>
                         <mavon-editor
                             :editable="false"
                             default-open="preview"

@@ -18,7 +18,9 @@
                         </li>
                     </ul>
                     <div class="search-input-row">
-                        <input class="bk-form-input" type="text" :placeholder="$t('quality.请输入指标名称...')"
+                        <input class="bk-form-input"
+                            type="text"
+                            :placeholder="$t('quality.请输入指标名称')"
                             v-model="searchName"
                             @keyup.enter="toSearch()">
                         <i class="devops-icon icon-search" @click="toSearch()"></i>

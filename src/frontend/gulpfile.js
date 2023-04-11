@@ -9,6 +9,8 @@ const hash = require('gulp-hash')
 const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
+const del = require('del')
+
 const argv = yargs.alias({
     dist: 'd',
     env: 'e',
@@ -139,5 +141,9 @@ task('build', series([cb => {
     })
     cb()
 }))
+
+task('clean', () => {
+    return del(dist)
+})
   
-exports.default = parallel('devops', 'pipeline', 'copy', 'build')
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'))

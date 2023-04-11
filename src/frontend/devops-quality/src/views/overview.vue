@@ -153,7 +153,7 @@
                 showContent: false,
                 isEmptyRule: false,
                 totalInterceptRecor: 0,
-                docsUrl: `${DOCS_URL_PREFIX.replace('持续集成平台', '质量红线')}/Intro/README.md`,
+                docsUrl: this.BKCI_DOCS?.GATE_DOC ?? '',
                 pipelineListLabel: [],
                 pipelineListValue: [],
                 trendList: [],

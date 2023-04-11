@@ -7,15 +7,15 @@
                     <span class="item-name">{{ detail.name }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.标识') }}：</span>
+                    <span class="detail-label">{{ $t('store.标识：') }}</span>
                     <span>{{ detail.atomCode || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.范畴') }}：</span>
+                    <span class="detail-label">{{ $t('store.范畴：') }}</span>
                     <span>{{ categoryMap[detail.category] || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.分类') }}：</span>
+                    <span class="detail-label">{{ $t('store.分类：') }}</span>
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
@@ -29,19 +29,19 @@
                     </div>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.发布包') }}：</span>
+                    <span class="detail-label">{{ $t('store.发布包：') }}</span>
                     <span>{{ detail.pkgName || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.功能标签') }}：</span>
+                    <span class="detail-label">{{ $t('store.功能标签：') }}</span>
                     <label-list :label-list="labelNameList"></label-list>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.简介') }}：</span>
+                    <span class="detail-label">{{ $t('store.简介：') }}</span>
                     <span>{{ detail.summary || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.详细描述') }}：</span>
+                    <span class="detail-label">{{ $t('store.详细描述：') }}</span>
                     <mavon-editor
                         :editable="false"
                         default-open="preview"
@@ -61,8 +61,8 @@
 </template>
 
 <script>
-    import labelList from '../../../labelList'
     import defaultPic from '../../../../images/defaultPic.svg'
+    import labelList from '../../../labelList'
 
     export default {
         components: {

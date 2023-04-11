@@ -137,7 +137,8 @@
                     </table>
                     <p class="error-tips open-tips" v-if="includeOpenINdicator">{{$t('quality.腾讯开源规范指标不支持修改')}}</p>
                     <div class="no-metadata-row" v-if="!createRuleForm.indicators.length">
-                        {{$t('quality.还未添加指标，')}}<span @click="selectMetadata(0)">{{$t('quality.立即添加')}}</span>
+                        {{$t('quality.还未添加指标，')}}
+                        <span @click="selectMetadata(0)">{{$t('quality.立即添加')}}</span>
                     </div>
                     <p class="info-title" style="margin-top: 28px;">{{$t('quality.控制点')}}
                         <bk-popover placement="right">
@@ -179,7 +180,7 @@
                         <devops-form-item :label="$t('quality.控制点前缀')" :property="'id'" :is-error="errors.has('gatewayId')" :error-msg="errors.first('gatewayId')">
                             <bk-input
                                 class="rule-name-input"
-                                :placeholder="$t('quality.默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1.')"
+                                :placeholder="$t('quality.默认可不填，不填则对所有控制点生效。仅支持英文和数字，例如gate1')"
                                 name="gatewayId"
                                 v-model="createRuleForm.gatewayId"
                                 v-validate="{
@@ -225,12 +226,18 @@
                                     </bk-table-column>
                                     <bk-table-column :label="$t('quality.相关插件')" min-width="260">
                                         <template slot-scope="props">
-                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="$t('quality.缺少指标所需的{{0}}插件', { 0: getPipelineStatus(props.row.lackPointElement) })">
-                                                <span class="mark-circle"></span>{{$t('quality.缺少指标所需的')}}{{getPipelineStatus(props.row.lackPointElement)}}{{$t('quality.插件')}}
+                                            <p v-if="props.row.lackPointElement.length" class="atom-tips" :title="$t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)])">
+                                                <span class="mark-circle"></span>
+                                                {{$t('quality.缺少指标所需的{0}插件', [getPipelineStatus(props.row.lackPointElement)])}}
                                             </p>
-                                            <p v-if="checkAtomAsync(props.row.existElement)" class="atom-tips" :title="$t('quality.{{0}}插件不是同步，无法及时获取产出结果', { 0: getAsyncAtom(props.row.existElement) })">
-                                                <span class="mark-circle"></span>{{getAsyncAtom(props.row.existElement)}}{{$t('quality.插件不是同步，无法及时获取产出结果')}}</p>
-                                            <p style="color: #00C873"
+                                            <p
+                                                v-if="checkAtomAsync(props.row.existElement)"
+                                                class="atom-tips"
+                                                :title="$t('quality.{0}插件不是同步，无法及时获取产出结果', [getAsyncAtom(props.row.existElement)])"
+                                            >
+                                                <span class="mark-circle"></span>
+                                                {{$t('quality.{0}插件不是同步，无法及时获取产出结果', [getAsyncAtom(props.row.existElement)])}}
+                                            </p><p style="color: #00C873"
                                                 v-if="!props.row.lackPointElement.length && !checkAtomAsync(props.row.existElement) && !props.row.isSetPipeline">
                                                 {{$t('quality.指标所需插件完整')}}
                                             </p>
@@ -351,7 +358,7 @@
             <header class="metadata-panel-header" slot="header">
                 <span>{{sideSliderConfig.title}}</span>
                 <div class="search-input-row" :class="{ 'crtl-point-panel': isCtrPointPanel }">
-                    <input class="bk-form-input" type="text" :placeholder="$t('quality.请输入...')"
+                    <input class="bk-form-input" type="text"
                         v-model="searchKey"
                         @keyup.enter="handleSearch()">
                     <i class="bk-icon icon-search" @click="handleSearch()"></i>
@@ -394,13 +401,13 @@
         >
         </pipeline-list>
 
-        <template-list
+        <TemplateList
             :is-show="showTemplateList"
             :selected-templates="selectedTemplates"
             @comfire="comfireTemplateList"
             @close="closeTemplateList"
         >
-        </template-list>
+        </TemplateList>
 
         <createGroup
             :node-select-conf="nodeSelectConf"
@@ -416,20 +423,21 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import metadataPanel from '@/components/devops/metadata-panel'
     import UserInput from '@/components/devops/UserInput/index.vue'
-    import pipelineList from '@/components/devops/pipeline-list'
-    import templateList from '@/components/devops/template-list'
     import createGroup from '@/components/devops/create_group'
     import emptyTips from '@/components/devops/emptyTips'
+    import metadataPanel from '@/components/devops/metadata-panel'
+    import pipelineList from '@/components/devops/pipeline-list'
+    import TemplateList from '@/components/devops/template-list'
+    import i18nImages from '@/utils/i18nImages'
     import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
             createGroup,
             pipelineList,
-            templateList,
+            TemplateList,
             metadataPanel,
             UserInput,
             emptyTips
@@ -448,8 +456,8 @@
                 curFastType: '',
                 lastClickCount: '',
                 title: this.$t('quality.创建红线规则'),
-                beforeSiteImg: require('@/images/admission-preview.png'),
-                afterSiteImg: require('@/images/prompt-preview.png'),
+                beforeSiteImg: i18nImages.beforeSiteImage[this.$i18n.locale],
+                afterSiteImg: i18nImages.afterSiteImage[this.$i18n.locale],
                 templateName: [this.$t('quality.日常构建'), this.$t('quality.版本转测'), this.$t('quality.发布上线')],
                 optionBoolean: [
                     { label: this.$t('quality.是'), value: 'true' },
@@ -698,7 +706,7 @@
             comfireInfo (tpl, type) {
                 const h = this.$createElement
                 const isComfire = type === 'comfire'
-                const title = isComfire ? this.$t('quality.使用{{0}}红线模板', { 0: tpl.name }) : this.$t('quality.取消使用{{0}}红线模板', { 0: tpl.name })
+                const title = isComfire ? this.$t('quality.使用{0}红线模板', [tpl.name]) : this.$t('quality.取消使用{0}红线模板', [tpl.name])
                 const msg = isComfire ? this.$t('quality.确认使用后，之前填写的信息将会被覆盖。') : this.$t('quality.取消使用后，之前填写的信息将会被清空。')
                 const content = h('p', {
                     style: {
@@ -754,7 +762,7 @@
                     }, msg)
 
                     this.$bkInfo({
-                        title: this.$t('quality.删除{{0}}指标', { 0: indicator.cnName }),
+                        title: this.$t('quality.删除{0}指标', [indicator.cnName]),
                         subHeader: content,
                         confirmFn: async () => {
                             this.createRuleForm.indicators.splice(index, 1)
@@ -1776,10 +1784,6 @@
                         display: block;
                     }
                 }
-            }
-            .bk-checkbox-text {
-                max-width: 144px;
-                overflow: hidden;
             }
             .notice-name {
                 display: inline-block;

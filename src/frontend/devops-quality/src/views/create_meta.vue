@@ -122,7 +122,7 @@
                     </devops-form-item>
                     <bk-form-item :label="$t('quality.使用说明')">
                         <div class="meta-desc">
-                            <img src="../images/indicator-desc.png" class="use-nstruction">
+                            <img :src="indicatorDescUrl" class="use-nstruction">
                         </div>
                     </bk-form-item>
                     <bk-form-item>
@@ -136,6 +136,7 @@
 </template>
 
 <script>
+    import i18nImages from '@/utils/i18nImages'
     export default {
         data () {
             return {
@@ -202,6 +203,9 @@
             },
             metaId () {
                 return this.$route.params.metaId
+            },
+            indicatorDescUrl () {
+                return i18nImages.indicatorImage[this.$i18n.locale]
             }
         },
         watch: {
