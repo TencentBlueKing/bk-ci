@@ -261,7 +261,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun setParallelTaskCount(userId: String, projectId: String, nodeHashId: String, parallelTaskCount: Int) {
+    fun setParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         checkEditPermmission(userId, projectId, nodeId)
 
@@ -272,7 +278,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                     params = arrayOf(nodeHashId)
                 )
-            agentRecord.parallelTaskCount = parallelTaskCount
+            agentRecord.parallelTaskCount = parallelTaskCount ?: agentRecord.parallelTaskCount
+            agentRecord.dockerParallelTaskCount = dockerParallelTaskCount ?: agentRecord.dockerParallelTaskCount
             thirdPartyAgentDao.saveAgent(context, agentRecord)
         }
     }

@@ -236,8 +236,8 @@ class BuildMonitorControl @Autowired constructor(
 
         buildLogPrinter.addDebugLine(
             buildId = buildId,
-            message = "[SystemLog]Check job timeout: ${controlOption.jobControlOption.timeout} minutes, " +
-                "${TimeUnit.MILLISECONDS.toSeconds(usedTimeMills)} seconds passed!",
+            message = "[SystemLog]Check job timeout(${controlOption.jobControlOption.timeout} minutes), " +
+                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
             tag = VMUtils.genStartVMTaskId(containerId),
             jobId = containerHashId,
             executeCount = executeCount
@@ -327,8 +327,8 @@ class BuildMonitorControl @Autowired constructor(
 
         buildLogPrinter.addDebugLine(
             buildId = buildId,
-            message = "Monitor| check stage review($inOrOut) timeout($hours) hours, " +
-                "(${TimeUnit.MILLISECONDS.toSeconds(usedTimeMills)}) seconds passed!",
+            message = "Monitor| check stage review($inOrOut) timeout($hours hours), " +
+                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)}) minutes!",
             tag = stageId,
             jobId = "",
             executeCount = executeCount

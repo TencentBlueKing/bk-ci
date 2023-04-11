@@ -41,6 +41,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
@@ -58,11 +60,13 @@ import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomTrendInfoDO
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
@@ -170,6 +174,30 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         return AtomTrendInfoVO(
             atomTrendInfoMap.values.toList()
         )
+    }
+
+    override fun queryAtomComplianceInfo(
+        userId: String,
+        atomCode: String,
+        queryIntervalVO: QueryIntervalVO
+    ): ComplianceInfoDO? {
+        val queryAtomComplianceInfo = atomStatisticsDao.queryAtomComplianceInfo(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            startDateTime = queryIntervalVO.startDateTime,
+            endDateTime = queryIntervalVO.endDateTime
+        )
+        if (queryAtomComplianceInfo != null) {
+            val failExecuteCount = queryAtomComplianceInfo.get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?
+            val failComplianceCount = queryAtomComplianceInfo.get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?
+            if (failExecuteCount != null && failComplianceCount != null) {
+                return ComplianceInfoDO(
+                    failExecuteCount.toInt(),
+                    failComplianceCount.toInt()
+                )
+            }
+        }
+        return null
     }
 
     override fun queryAtomExecuteStatisticsInfo(

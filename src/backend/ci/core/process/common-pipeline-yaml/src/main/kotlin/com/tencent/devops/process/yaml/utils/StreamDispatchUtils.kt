@@ -130,8 +130,8 @@ object StreamDispatchUtils {
                     credentialId = info.credId,
                     acrossTemplateId = info.acrossTemplateId,
                     jobId = job.id
-                )
-
+                ),
+                options = info.options
             )
 
             return ThirdPartyAgentEnvDispatchType(
@@ -218,7 +218,8 @@ object StreamDispatchUtils {
                 userName = container.credentials?.username,
                 password = container.credentials?.password,
                 credId = null,
-                acrossTemplateId = null
+                acrossTemplateId = null,
+                options = container.options
             )
         } catch (e: Exception) {
             val container = YamlUtil.getObjectMapper().readValue(
@@ -231,7 +232,8 @@ object StreamDispatchUtils {
                 userName = null,
                 password = null,
                 credId = container.credentials,
-                acrossTemplateId = buildTemplateAcrossInfo?.templateId
+                acrossTemplateId = buildTemplateAcrossInfo?.templateId,
+                options = container.options
             )
         }
     }

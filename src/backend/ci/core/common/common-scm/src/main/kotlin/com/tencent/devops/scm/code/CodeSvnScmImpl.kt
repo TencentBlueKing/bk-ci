@@ -185,7 +185,8 @@ class CodeSvnScmImpl constructor(
         targetUrl: String,
         context: String,
         description: String,
-        block: Boolean
+        block: Boolean,
+        targetBranch: List<String>?
     ) = Unit
 
     override fun addMRComment(mrId: Long, comment: String) = Unit
