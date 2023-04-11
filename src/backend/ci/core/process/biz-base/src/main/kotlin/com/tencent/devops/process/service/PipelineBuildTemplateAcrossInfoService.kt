@@ -30,6 +30,21 @@ class PipelineBuildTemplateAcrossInfoService @Autowired constructor(
         )
     }
 
+    fun batchUpdateAcrossInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        templateAcrossInfos: List<BuildTemplateAcrossInfo>
+    ) {
+        templateAcrossInfoDao.batchUpdate(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            templateAcrossInfos = templateAcrossInfos
+        )
+    }
+
     fun getAcrossInfo(
         projectId: String,
         pipelineId: String?,
