@@ -30,13 +30,10 @@ package com.tencent.devops.environment.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.constant.BK_PROJECT_NO_ENVIRONMENT
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -52,9 +49,7 @@ class AuthEnvService @Autowired constructor(
             envService.listEnvironmentByLimit(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (envInfos?.records == null) {
-            logger.info(
-                "$projectId ${I18nUtil.getCodeLanMessage(messageCode = BK_PROJECT_NO_ENVIRONMENT)}"
-            )
+            logger.info("There is no environment under the project $projectId ")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -73,7 +68,7 @@ class AuthEnvService @Autowired constructor(
         val envInfos = envService.listRawEnvByHashIdsAllType(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (envInfos == null || envInfos.isEmpty()) {
-            logger.info("$hashId 下无环境")
+            logger.info("$hashId no env")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -103,12 +98,7 @@ class AuthEnvService @Autowired constructor(
             envName = keyword)
         val result = SearchInstanceInfo()
         if (envInfos?.records == null) {
-            logger.info(
-                "$projectId ${MessageUtil.getMessageByLocale(
-                    BK_PROJECT_NO_ENVIRONMENT, 
-                    I18nUtil.getDefaultLocaleLanguage()
-                )}"
-            )
+            logger.info("There is no environment under the project $projectId ")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
