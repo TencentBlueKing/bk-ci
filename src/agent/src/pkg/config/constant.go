@@ -72,6 +72,8 @@ const (
 	DockerInitFile = "agent_docker_init.sh"
 )
 
+const DEFAULT_LANGUAGE_TYPE = "zh-CN"
+
 // Auth Header
 
 const AuthHeaderBuildType = "X-DEVOPS-BUILD-TYPE"       // 构建类型

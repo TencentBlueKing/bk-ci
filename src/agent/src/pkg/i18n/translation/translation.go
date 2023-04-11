@@ -10,7 +10,31 @@ var Translations map[string][]*i18n.Message = make(map[string][]*i18n.Message)
 func init() {
 	Translations["en-US"] = []*i18n.Message{
 		{
-			ID: "GetPullImageLogError", Other: "failed to get pull image information log: {{.err}}"},
+			ID: "WorkerExit", Other: "worker pid[%d] exit"},
+		{
+			ID: "DockerOnlySupportLinux", Other: "currently only supports linux system to use docker build machine."},
+		{
+			ID: "LinkDockerError", Other: "link docker client error|{{.err}}"},
+		{
+			ID: "CreateDockerTmpDirError", Other: "create docker tmp directory failed: {{.err}}"},
+		{
+			ID: "ExecutableFileMissing", Other: "\nMissing {{.filename}}, `run install.sh` or `unzip agent.zip` in {{.dir}}."},
+		{
+			ID: "CreateStartScriptFailed", Other: "create start script failed: {{.err}}"},
+		{
+			ID: "PullImageError", Other: "failed to pull image {{.name}}|{{.err}}"},
+		{
+			ID: "LocalExistImage", Other: "there is a mirror locally, ready to start the build environment..."},
+		{
+			ID: "StatDockerInitScriptError", Other: "getting docker build machine init script status failed|{{.err}}"},
+		{
+			ID: "ContainerExitCodeNotZero", Other: "wait container {{.name}} done exit code {{.code}} not 0 \n {{.msg}}"},
+		{
+			ID: "ReadDockerMountsError", Other: "Failed to prepare Docker mount directory: {{.err}}"},
+		{
+			ID: "BuildProcessErr", Other: "build process err, pid: {{.pid}}, err: {{.err}}."},
+		{
+			ID: "WaitContainerError", Other: "wait container {{.name}} done error|{{.err}}"},
 		{
 			ID: "StartContainerError", Other: "start container {{.name}} error|{{.err}}"},
 		{
@@ -18,94 +42,86 @@ func init() {
 		{
 			ID: "CreateTmpDirectoryFailed", Other: "create tmp directory failed: {{.err}}"},
 		{
-			ID: "StartWorkerProcessFailed", Other: "start worker process failed: {{.err}}"},
+			ID: "FirstPullTips", Other: "[Tip] When the image is relatively large, the first pull time will be longer. You can pre-pull the image locally on the build machine to improve the pipeline startup speed."},
 		{
 			ID: "DownloadDockerInitScriptError", Other: "failed to download docker build machine init script|{{.err}}"},
 		{
-			ID: "PullImageError", Other: "failed to pull image {{.name}}|{{.err}}"},
-		{
-			ID: "GetDockerImagesError", Other: "error getting docker image list|{{.err}}"},
-		{
-			ID: "CreateDockerTmpDirError", Other: "create docker tmp directory failed: {{.err}}"},
-		{
-			ID: "CreateContainerError", Other: "create container {{.name}} error|{{.err}}"},
-		{
-			ID: "CreateStartScriptFailed", Other: "create start script failed: {{.err}}"},
-		{
-			ID: "BuilderProcessWasKilled", Other: "Builder process was killed, it may be killed by the operating system or other programs. You need to self-check and reduce the load and try again, or unzip agent.zip, restore the installation, restart the agent and try again."},
-		{
-			ID: "BuildProcessErr", Other: "build process err, pid: {{.pid}}, err: {{.err}}."},
-		{
-			ID: "WorkerExit", Other: "worker pid[%d] exit"},
-		{
-			ID: "StatDockerInitScriptError", Other: "getting docker build machine init script status failed|{{.err}}"},
-		{
-			ID: "WaitContainerError", Other: "wait container {{.name}} done error|{{.err}}"},
-		{
-			ID: "ContainerExitCodeNotZero", Other: "wait container {{.name}} done exit code {{.code}} not 0 \n {{.msg}}"},
-		{
-			ID: "ExecutableFileMissing", Other: "\nMissing {{.filename}}, `run install.sh` or `unzip agent.zip` in {{.dir}}."},
-		{
-			ID: "DockerOnlySupportLinux", Other: "currently only supports linux system to use docker build machine."},
-		{
-			ID: "LinkDockerError", Other: "link docker client error|{{.err}}"},
+			ID: "GetDockerCertError", Other: "getting docker credentials error|{{.err}}"},
 		{
 			ID: "StartPullImage", Other: "start to pull the image, image name: {{.name}}"},
 		{
-			ID: "FirstPullTips", Other: "[Tip] When the image is relatively large, the first pull time will be longer. You can pre-pull the image locally on the build machine to improve the pipeline startup speed."},
+			ID: "CreateContainerError", Other: "create container {{.name}} error|{{.err}}"},
+		{
+			ID: "GetDockerImagesError", Other: "error getting docker image list|{{.err}}"},
+		{
+			ID: "PullLatest", Other: "The mirror version is latest to pull the latest version by default"},
 		{
 			ID: "CheckDockerInitScriptAuthError", Other: "failed to verify and modify the permissions of the docker startup script|{{.err}}"},
 		{
-			ID: "LocalExistImage", Other: "there is a mirror locally, ready to start the build environment..."},
+			ID: "GetPullImageLogError", Other: "failed to get pull image information log: {{.err}}"},
+		{
+			ID: "DockerContainerLog", Other: "Docker container log is: \n"},
+		{
+			ID: "StartWorkerProcessFailed", Other: "start worker process failed: {{.err}}"},
+		{
+			ID: "BuilderProcessWasKilled", Other: "Builder process was killed, it may be killed by the operating system or other programs. You need to self-check and reduce the load and try again, or unzip agent.zip, restore the installation, restart the agent and try again."},
 	}
 	Translations["zh-CN"] = []*i18n.Message{
 		{
-			ID: "StartPullImage", Other: "开始拉取镜像，镜像名称：{{.name}}"},
+			ID: "FirstPullTips", Other: "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。"},
+		{
+			ID: "CreateStartScriptFailed", Other: "准备构建脚本生成失败: {{.err}}"},
 		{
 			ID: "PullImageError", Other: "拉取镜像 {{.name}} 失败|{{.err}}"},
 		{
-			ID: "StartContainerError", Other: "启动容器 {{.name}} 失败|{{.err}}"},
+			ID: "CreateDockerTmpDirError", Other: "创建Docker构建临时目录失败: {{.err}}"},
 		{
-			ID: "AttemptToRestoreFailed", Other: "\n尝试恢复 {{.filename}} 执行文件失败，请到 {{.dir}} 目录下执行 install.sh 或解压 agent.zip 还原安装目录"},
-		{
-			ID: "CreateTmpDirectoryFailed", Other: "创建临时目录失败: {{.err}}"},
-		{
-			ID: "BuildProcessErr", Other: "构建进程运行错误, 进程号: {{.pid}}, 错误: {{.err}}."},
+			ID: "ReadDockerMountsError", Other: "准备Docker挂载目录失败: {{.err}}"},
 		{
 			ID: "CheckDockerInitScriptAuthError", Other: "校验并修改Docker启动脚本权限失败|{{.err}}"},
 		{
 			ID: "LinkDockerError", Other: "链接docker客户端错误|{{.err}}"},
 		{
-			ID: "WorkerExit", Other: "构建进程 {{.pid}} 退出"},
-		{
-			ID: "CreateDockerTmpDirError", Other: "创建Docker构建临时目录失败: {{.err}}"},
-		{
-			ID: "WaitContainerError", Other: "等待容器 {{.name}} 结束错误|{{.err}}"},
-		{
-			ID: "StartWorkerProcessFailed", Other: "启动构建进程失败: {{.err}}"},
-		{
-			ID: "DockerOnlySupportLinux", Other: "目前仅支持linux系统使用docker构建机"},
-		{
-			ID: "GetDockerImagesError", Other: "获取docker镜像列表错误|{{.err}}"},
-		{
-			ID: "GetPullImageLogError", Other: "获取拉取镜像信息日志失败：{{.err}}"},
-		{
-			ID: "CreateContainerError", Other: "创建容器 {{.name}} 失败|{{.err}}"},
-		{
-			ID: "FirstPullTips", Other: "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。"},
+			ID: "StartPullImage", Other: "开始拉取镜像，镜像名称：{{.name}}"},
 		{
 			ID: "LocalExistImage", Other: "本地存在镜像，准备启动构建环境..."},
 		{
-			ID: "ContainerExitCodeNotZero", Other: "等待容器 {{.name}} 结束状态码为 {{.code}} 不为0 \n {{.msg}}"},
+			ID: "StartContainerError", Other: "启动容器 {{.name}} 失败|{{.err}}"},
 		{
-			ID: "ExecutableFileMissing", Other: "\n{{.filename}} 执行文件丢失，请到 {{.dir}} 目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"},
+			ID: "DockerContainerLog", Other: "Docker容器日志为: \n"},
 		{
-			ID: "CreateStartScriptFailed", Other: "准备构建脚本生成失败: {{.err}}"},
+			ID: "DockerOnlySupportLinux", Other: "目前仅支持linux系统使用docker构建机"},
+		{
+			ID: "StatDockerInitScriptError", Other: "获取Docker构建机初始化脚本状态失败|{{.err}}"},
+		{
+			ID: "CreateTmpDirectoryFailed", Other: "创建临时目录失败: {{.err}}"},
 		{
 			ID: "BuilderProcessWasKilled", Other: "业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，或解压 agent.zip 还原安装后重启agent再重试。"},
 		{
+			ID: "WorkerExit", Other: "构建进程 {{.pid}} 退出"},
+		{
+			ID: "GetDockerImagesError", Other: "获取docker镜像列表错误|{{.err}}"},
+		{
+			ID: "WaitContainerError", Other: "等待容器 {{.name}} 结束错误|{{.err}}"},
+		{
 			ID: "DownloadDockerInitScriptError", Other: "下载Docker构建机初始化脚本失败|{{.err}}"},
 		{
-			ID: "StatDockerInitScriptError", Other: "获取Docker构建机初始化脚本状态失败|{{.err}}"},
+			ID: "CreateContainerError", Other: "创建容器 {{.name}} 失败|{{.err}}"},
+		{
+			ID: "ExecutableFileMissing", Other: "\n{{.filename}} 执行文件丢失，请到 {{.dir}} 目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"},
+		{
+			ID: "BuildProcessErr", Other: "构建进程运行错误, 进程号: {{.pid}}, 错误: {{.err}}."},
+		{
+			ID: "GetPullImageLogError", Other: "获取拉取镜像信息日志失败：{{.err}}"},
+		{
+			ID: "ContainerExitCodeNotZero", Other: "等待容器 {{.name}} 结束状态码为 {{.code}} 不为0 \n {{.msg}}"},
+		{
+			ID: "AttemptToRestoreFailed", Other: "\n尝试恢复 {{.filename}} 执行文件失败，请到 {{.dir}} 目录下执行 install.sh 或解压 agent.zip 还原安装目录"},
+		{
+			ID: "StartWorkerProcessFailed", Other: "启动构建进程失败: {{.err}}"},
+		{
+			ID: "GetDockerCertError", Other: "获取docker凭据错误|{{.err}}"},
+		{
+			ID: "PullLatest", Other: "镜像版本为latest默认拉取最新版本"},
 	}
 }

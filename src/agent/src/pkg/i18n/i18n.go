@@ -30,10 +30,9 @@ package i18n
 import (
 	"sync"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n/translation"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/types"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n/translation"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
 )
@@ -42,7 +41,7 @@ import (
 
 var localizer *localizerType
 
-var defaultLocalTag = language.Make(types.Chinese.String())
+var defaultLocalTag = language.Make(config.DEFAULT_LANGUAGE_TYPE)
 
 type localizerType struct {
 	nowLocalizer language.Tag

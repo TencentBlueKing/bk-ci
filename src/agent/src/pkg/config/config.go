@@ -41,14 +41,14 @@ import (
 	"strings"
 	"sync"
 
+	languageUtil "golang.org/x/text/language"
 	"gopkg.in/ini.v1"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/types"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (
@@ -385,22 +385,13 @@ func LoadAgentConfig() error {
 		}
 	}
 
-	language := types.Chinese.String()
+	language := DEFAULT_LANGUAGE_TYPE
 	if conf.Section("").HasKey(KeyLanguage) {
 		language = conf.Section("").Key(KeyLanguage).String()
-		// 在这里校验language的合法性
-		if language == "" || !func() bool {
-			if len(types.SupportAgentLanguage) == 0 {
-				return false
-			}
-			for _, lang := range types.SupportAgentLanguage {
-				if language == lang.String() {
-					return true
-				}
-			}
-			return false
-		}() {
-			language = types.Chinese.String()
+		_, err := languageUtil.Parse(language)
+		if err != nil {
+			logs.Errorf("not support language %s", language)
+			language = DEFAULT_LANGUAGE_TYPE
 		}
 	}
 

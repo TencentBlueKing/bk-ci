@@ -7,8 +7,10 @@ require (
 	github.com/gofrs/flock v0.8.1
 	github.com/influxdata/telegraf v1.25.3
 	github.com/kardianos/service v1.2.2
+	github.com/nicksnyder/go-i18n/v2 v2.2.1
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
+	golang.org/x/text v0.7.0
 	gopkg.in/ini.v1 v1.67.0
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0
 	gotest.tools/v3 v3.0.3

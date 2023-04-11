@@ -39,13 +39,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade/download"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/i18n"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
@@ -152,7 +153,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	dockerBuildInfo := buildInfo.DockerBuildInfo
 	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
 		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
-		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker凭据错误|"+dockerBuildInfo.Credential.ErrMsg, api.DockerCredGetErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, i18n.Localize("GetDockerCertError", map[string]interface{}{"err": dockerBuildInfo.Credential.ErrMsg}), api.DockerCredGetErrorEnum))
 		return
 	}
 	ctx := context.Background()
@@ -196,10 +197,10 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	// 本地没有镜像的获取版本号为最新的，需要拉取新的镜像
 	if !localExist || isLatest {
 		if isLatest {
-			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
+			postLog(false, i18n.Localize("PullLatest", nil), buildInfo, api.LogtypeLog)
 		}
-		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo)
-		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo)
+		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo, api.LogtypeLog)
+		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo, api.LogtypeLog)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
 			RegistryAuth: generateDockerAuth(dockerBuildInfo.Credential),
 		})
@@ -247,7 +248,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
-		errMsg := fmt.Sprintf("准备Docker挂载目录失败: %s", err.Error())
+		errMsg := i18n.Localize("ReadDockerMountsError", map[string]interface{}{"err": err.Error()})
 		logs.Error("DOCKER_JOB| ", err)
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
@@ -389,7 +390,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				if msg == "" {
 					msg = containerLog
 				} else {
-					go postLog(false, "Docker容器日志为: \n"+containerLog, buildInfo, api.LogtypeDebug)
+					go postLog(false, i18n.Localize("DockerContainerLog", nil)+containerLog, buildInfo, api.LogtypeDebug)
 				}
 
 				if msg == longLogTag {
