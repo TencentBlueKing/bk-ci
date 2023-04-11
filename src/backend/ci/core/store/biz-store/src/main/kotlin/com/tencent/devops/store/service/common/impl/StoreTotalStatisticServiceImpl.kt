@@ -119,9 +119,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                     val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
                         dslContext = dslContext,
                         storeCodeList = storeCodes,
-                        storeType = type,
-                        offset = offset,
-                        limit = DEFAULT_PAGE_SIZE
+                        storeType = type
                     )
                     calculateAndStorage(
                         storeType = type,
