@@ -54,11 +54,13 @@ class MigrateResourceService @Autowired constructor(
     private val authResourceService: AuthResourceService,
     private val client: Client
 ) {
-    fun migrateResource(projectCode: String, gradeManagerId: Int) {
-        logger.info("start to migrate resource:$projectCode|$gradeManagerId")
+    fun migrateResource(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
+        logger.info("start to migrate resource:$projectCode")
+
         val resourceTypes = rbacCacheService.listResourceTypes()
             .map { it.resourceType }.filterNot { noNeedToMigrateResourceType.contains(it) }
+
         logger.info("resourceTypes:$resourceTypes")
         resourceTypes.forEach { resourceType -> resourceCreateRelation(projectCode, resourceType) }
         logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
