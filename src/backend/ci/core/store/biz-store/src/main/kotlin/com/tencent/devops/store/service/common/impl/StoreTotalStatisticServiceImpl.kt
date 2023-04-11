@@ -85,7 +85,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         private const val DEFAULT_PERCENTILE = 0.8
     }
 
-    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
+    //    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0/10 * * * ?")
     fun stat() {
         val lock = RedisLock(redisOperation, "storeTotalStatistic", 60000L)
         try {
@@ -96,6 +97,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val taskName = "StoreTotalStatisticTask"
             logger.info("$taskName:stat:start")
             StoreTypeEnum.values().forEach { storeType ->
+                val type = storeType.type.toByte()
                 val percentileValue = percentileCalculation(storeType, DEFAULT_PERCENTILE)
                 logger.info("StoreTotalStatisticTask getStorePercentileValue $percentileValue")
                 // 类型组件百分位数计算正常，放入缓存待用
@@ -106,20 +108,28 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                         TimeUnit.DAYS.toSeconds(1L)
                     )
                 }
-                var page = 1
+                var offset = 0
                 do {
-                    val statistics = storeStatisticTotalDao.batchGetStatisticByStoreCode(
+                    val storeCodes = storeStatisticTotalDao.batchGetStatisticByStoreCode(
                         dslContext = dslContext,
-                        storeType = storeType.type.toByte(),
-                        page = page,
-                        pageSize = DEFAULT_PAGE_SIZE
+                        storeType = type,
+                        offset = offset,
+                        limit = DEFAULT_PAGE_SIZE
+                    )
+                    val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+                        dslContext = dslContext,
+                        storeCodeList = storeCodes,
+                        storeType = type,
+                        offset = offset,
+                        limit = DEFAULT_PAGE_SIZE
                     )
                     calculateAndStorage(
-                        storeType = storeType.type.toByte(),
-                        statistics = statistics
+                        storeType = type,
+                        statistics = statistics,
+                        storeCodes = storeCodes
                     )
-                    page++
-                } while (statistics.size == DEFAULT_PAGE_SIZE)
+                    offset += DEFAULT_PAGE_SIZE
+                } while (storeCodes.size == DEFAULT_PAGE_SIZE)
             }
             logger.info("$taskName:stat:end")
         } catch (ignored: Throwable) {
@@ -128,16 +138,61 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             lock.unlock()
         }
     }
+    private fun calculateAndStorage(
+        storeType: Byte,
+        storeCodes: List<String>,
+        statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>
+    ) {
+        storeCodes.forEach { storeCode ->
+            val statistic = statistics.firstOrNull{it.value4().toString() == storeCode}
+            if (statistic != null) {
+                // 下载量
+                val downloads = statistic.value1().toInt()
+                // 评论数量
+                val comments = statistic.value2().toInt()
+                // 评论总分
+                val score = statistic.value3().toDouble()
+                calculateAndStorage(
+                    storeType = storeType,
+                    downloads = downloads,
+                    comments = comments,
+                    score = score,
+                    storeCode = storeCode,
+                    syncFlag = true
+                )
+            } else {
+                calculateAndStorage(
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    syncFlag = false
+                )
+            }
+        }
+    }
 
     override fun updateStoreTotalStatisticByCode(storeCode: String, storeType: Byte) {
-        calculateAndStorage(
-            storeType = storeType,
-            statistics = storeStatisticDao.batchGetStatisticByStoreCode(
-                dslContext = dslContext,
-                storeCodeList = listOf(storeCode),
-                storeType = storeType
-            )
+        val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCodeList = listOf(storeCode),
+            storeType = storeType
         )
+        statistics.forEach {
+            // 下载量
+            val downloads = it.value1().toInt()
+            // 评论数量
+            val comments = it.value2().toInt()
+            // 评论总分
+            val score = it.value3().toDouble()
+            val code = it.value4().toString()
+            calculateAndStorage(
+                storeType = storeType,
+                downloads = downloads,
+                comments = comments,
+                score = score,
+                storeCode = code,
+                syncFlag = true
+            )
+        }
     }
 
     override fun getStatisticByCode(
@@ -306,59 +361,65 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
 
     private fun calculateAndStorage(
         storeType: Byte,
-        statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>
+        storeCode: String,
+        downloads: Int? = null,
+        comments: Int? = null,
+        score: Double? = null,
+        syncFlag: Boolean
     ) {
-        statistics.forEach {
-            // 下载量
-            val downloads = it.value1().toInt()
-            // 评论数量
-            val comments = it.value2().toInt()
-            // 评论总分
-            val score = it.value3().toDouble()
-            val code = it.value4().toString()
-            // 评论均分
-            val scoreAverage: Double = if (score > 0 && comments > 0) {
+        // 评论均分
+        val scoreAverage: Double? = if (comments != null && score != null) {
+            if (score > 0 && comments > 0) {
                 score.div(comments)
             } else 0.toDouble()
-            // 统计最近组件执行次数
-            val endTime = LocalDateTime.now()
-            val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
-                storeCode = code,
-                storeType = storeType,
-                startTime = DateTimeUtil.convertDateToLocalDateTime(
-                    DateTimeUtil.getFutureDate(
-                        localDateTime = LocalDateTime.now(),
-                        unit = Calendar.MONTH,
-                        timeSpan = timeSpanMonth
-                    )
-                ),
-                endTime = endTime
-            )
-            var totalExecuteNum = 0
-            dailyStatisticList?.forEach { dailyStatistic ->
-                totalExecuteNum += dailyStatistic.dailySuccessNum
-                totalExecuteNum += dailyStatistic.dailyFailNum
-            }
+        } else null
+        // 统计最近组件执行次数
+        val endTime = LocalDateTime.now()
+        val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
+            storeCode = storeCode,
+            storeType = storeType,
+            startTime = DateTimeUtil.convertDateToLocalDateTime(
+                DateTimeUtil.getFutureDate(
+                    localDateTime = LocalDateTime.now(),
+                    unit = Calendar.MONTH,
+                    timeSpan = timeSpanMonth
+                )
+            ),
+            endTime = endTime
+        )
+        var totalExecuteNum = 0
+        dailyStatisticList?.forEach { dailyStatistic ->
+            totalExecuteNum += dailyStatistic.dailySuccessNum
+            totalExecuteNum += dailyStatistic.dailyFailNum
+        }
+        if (syncFlag) {
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
-                storeCode = code,
+                storeCode = storeCode,
                 storeType = storeType,
-                downloads = downloads,
-                comments = comments,
-                score = score.toInt(),
-                scoreAverage = scoreAverage,
+                downloads = downloads!!,
+                comments = comments!!,
+                score = score!!.toInt(),
+                scoreAverage = scoreAverage!!,
                 recentExecuteNum = totalExecuteNum
             )
-            val percentileValue =
-                redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
-            if (percentileValue != null) {
-                storeStatisticTotalDao.updateStatisticDataHotFlag(
-                    dslContext = dslContext,
-                    storeCode = code,
-                    storeType = storeType,
-                    hotFlag = totalExecuteNum >= percentileValue.toDouble()
-                )
-            }
+        } else {
+            storeStatisticTotalDao.updateStatisticData(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                recentExecuteNum = totalExecuteNum
+            )
+        }
+        val percentileValue =
+            redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
+        if (percentileValue != null) {
+            storeStatisticTotalDao.updateStatisticDataHotFlag(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                hotFlag = totalExecuteNum >= percentileValue.toDouble()
+            )
         }
     }
 
