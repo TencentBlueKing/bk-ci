@@ -37,7 +37,7 @@ import (
 	"golang.org/x/text/language"
 )
 
-//go:generate go run ../../cmd/translation_generator/translation_generator.go
+//go:generate go run ../../cmd/translation_generator/translation_generator.go $I18N_DIR
 
 var localizer *localizerType
 
