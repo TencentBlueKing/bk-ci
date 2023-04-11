@@ -59,18 +59,17 @@ class MigrateResourceService @Autowired constructor(
         logger.info("start to migrate resource:$projectCode")
 
         val resourceTypes = rbacCacheService.listResourceTypes()
-            .map { it.resourceType }.filterNot { noNeedToMigrateResourceType.contains(it) }
+            .map { it.resourceType }
+            .filterNot { noNeedToMigrateResourceType.contains(it) }
 
         logger.info("resourceTypes:$resourceTypes")
+        // 迁移各个资源类型下的资源
         resourceTypes.forEach { resourceType -> resourceCreateRelation(projectCode, resourceType) }
         logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
     }
 
     @SuppressWarnings("MagicNumber")
-    private fun resourceCreateRelation(
-        resourceType: String,
-        projectCode: String
-    ) {
+    private fun resourceCreateRelation(resourceType: String, projectCode: String) {
         var offset = 0L
         val limit = 100L
         do {
