@@ -242,5 +242,6 @@
     "拦截后审核终止": "Audit",
     "拦截后审核继续": "Continue",
     "拦截后超时终止": "Termination",
+    "拦截后直接终止": "Termination",
     "从用户组导入": "Import"
 }
