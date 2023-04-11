@@ -92,7 +92,7 @@ object WebhookUtils {
     private val separatorPattern = Pattern.compile("[,;]")
     private const val MAX_VARIABLE_COUNT = 32
     // p4自定义触发器插件版本号
-    const val P4_CUSTOM_TRIGGER_VERSION = 2
+    const val CUSTOM_P4_TRIGGER_VERSION = 2
 
     private val logger = LoggerFactory.getLogger(WebhookUtils::class.java)
 
@@ -303,9 +303,11 @@ object WebhookUtils {
     ): WebhookFilter =
         object : WebhookFilter {
             override fun doFilter(response: WebhookFilterResponse): Boolean {
-                logger.info("$pipelineId|triggerOn:${webHookParams.version}|" +
-                    "projectId:$projectId|eventProjectId:${event.projectId}|version filter")
-                return if (getMajorVersion(webHookParams.version) >= P4_CUSTOM_TRIGGER_VERSION) {
+                logger.info(
+                    "$pipelineId|triggerOn:${webHookParams.version}|" +
+                        "projectId:$projectId|eventProjectId:${event.projectId}|version filter"
+                )
+                return if (isCustomP4TriggerVersion(webHookParams.version)) {
                     // 2.0以后,由用户配置的触发器触发
                     // 2.0以后，触发的项目必须跟匹配的项目相同才能触发
                     event.isCustomTrigger() && projectId == event.projectId
@@ -318,5 +320,9 @@ object WebhookUtils {
 
     fun getMajorVersion(version: String?): Int {
         return version?.split(".")?.get(0)?.toInt() ?: 1
+    }
+
+    fun isCustomP4TriggerVersion(version: String?): Boolean {
+        return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
     }
 }

@@ -106,12 +106,19 @@ class P4ShelveTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val changeFiles = client.get(ServiceP4Resource::class).getShelvedFiles(
-                        projectId = projectId,
-                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                        repositoryType = repositoryConfig.repositoryType,
-                        change = event.change
-                    ).data?.map { it.depotPathString } ?: emptyList()
+                    if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
+                        return true
+                    }
+                    val changeFiles = if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                        event.files ?: emptyList()
+                    } else {
+                        client.get(ServiceP4Resource::class).getShelvedFiles(
+                            projectId = projectId,
+                            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                            repositoryType = repositoryConfig.repositoryType,
+                            change = event.change
+                        ).data?.map { it.depotPathString } ?: emptyList()
+                    }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,

@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.pojo.code.p4
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModelProperty
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class P4ChangeEvent(
@@ -37,6 +38,8 @@ data class P4ChangeEvent(
     @JsonProperty("event_type")
     val eventType: String,
     val user: String? = null,
+    @ApiModelProperty("文件变更列表")
+    val files: List<String>? = null,
     // 指定项目触发
     override val projectId: String? = null
 ) : P4Event(projectId = projectId) {

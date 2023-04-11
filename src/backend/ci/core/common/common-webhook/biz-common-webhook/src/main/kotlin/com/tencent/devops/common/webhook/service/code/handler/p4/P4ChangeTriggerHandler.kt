@@ -108,13 +108,19 @@ class P4ChangeTriggerHandler(
                     if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
                         return true
                     }
-                    val changeFiles = eventCacheService.getP4ChangelistFiles(
-                        repo = repository,
-                        projectId = projectId,
-                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                        repositoryType = repositoryConfig.repositoryType,
-                        change = event.change
-                    )
+                    // 用户配置的脚本触发,变更文件由触发脚本解析
+                    val changeFiles =
+                        if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                            event.files ?: emptyList()
+                        } else {
+                            eventCacheService.getP4ChangelistFiles(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType,
+                                change = event.change
+                            )
+                        }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,

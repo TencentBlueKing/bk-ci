@@ -224,7 +224,7 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
                 ScmType.CODE_P4 ->
-                    if (WebhookUtils.getMajorVersion(version) >= WebhookUtils.P4_CUSTOM_TRIGGER_VERSION) {
+                    if (WebhookUtils.isCustomP4TriggerVersion(version)) {
                         val repo = client.get(ServiceRepositoryResource::class).get(
                             pipelineWebhook.projectId,
                             repositoryConfig.getURLEncodeRepositoryId(),
