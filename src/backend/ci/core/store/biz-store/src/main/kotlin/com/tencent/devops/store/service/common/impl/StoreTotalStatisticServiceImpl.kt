@@ -48,6 +48,10 @@ import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record7
@@ -58,10 +62,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 @Suppress("ALL")
@@ -154,14 +154,12 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                     downloads = downloads,
                     comments = comments,
                     score = score,
-                    storeCode = storeCode,
-                    syncFlag = true
+                    storeCode = storeCode
                 )
             } else {
                 calculateAndStorage(
                     storeType = storeType,
-                    storeCode = storeCode,
-                    syncFlag = false
+                    storeCode = storeCode
                 )
             }
         }
@@ -186,8 +184,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 downloads = downloads,
                 comments = comments,
                 score = score,
-                storeCode = code,
-                syncFlag = true
+                storeCode = code
             )
         }
     }
@@ -361,8 +358,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         storeCode: String,
         downloads: Int? = null,
         comments: Int? = null,
-        score: Double? = null,
-        syncFlag: Boolean
+        score: Double? = null
     ) {
         // 评论均分
         val scoreAverage: Double? = if (comments != null && score != null) {
@@ -389,33 +385,26 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             totalExecuteNum += dailyStatistic.dailySuccessNum
             totalExecuteNum += dailyStatistic.dailyFailNum
         }
-        if (syncFlag) {
+        val statisticTotal = storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
+        if (statisticTotal != null) {
+            val percentileValue =
+                redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = storeCode,
                 storeType = storeType,
-                downloads = downloads!!,
-                comments = comments!!,
-                score = score!!.toInt(),
-                scoreAverage = scoreAverage!!,
-                recentExecuteNum = totalExecuteNum
+                downloads = downloads,
+                comments = comments,
+                score = score?.toInt(),
+                scoreAverage = scoreAverage,
+                recentExecuteNum = totalExecuteNum,
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
             )
         } else {
-            storeStatisticTotalDao.updateStatisticData(
+            storeStatisticTotalDao.initStatisticData(
                 dslContext = dslContext,
                 storeCode = storeCode,
-                storeType = storeType,
-                recentExecuteNum = totalExecuteNum
-            )
-        }
-        val percentileValue =
-            redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
-        if (percentileValue != null) {
-            storeStatisticTotalDao.updateStatisticDataHotFlag(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType,
-                hotFlag = totalExecuteNum >= percentileValue.toDouble()
+                storeType = storeType
             )
         }
     }

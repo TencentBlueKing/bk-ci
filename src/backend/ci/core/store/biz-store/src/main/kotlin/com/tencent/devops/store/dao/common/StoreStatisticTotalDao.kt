@@ -33,6 +33,8 @@ import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
@@ -40,8 +42,6 @@ import org.jooq.Record1
 import org.jooq.Record7
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -69,67 +69,34 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        downloads: Int,
-        comments: Int,
-        score: Int,
-        scoreAverage: Double,
-        recentExecuteNum: Int
+        downloads: Int?,
+        comments: Int?,
+        score: Int?,
+        scoreAverage: Double?,
+        recentExecuteNum: Int,
+        hotFlag: Boolean?
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            dslContext.insertInto(this).columns(
-                ID,
-                STORE_CODE,
-                STORE_TYPE,
-                DOWNLOADS,
-                COMMITS,
-                SCORE,
-                SCORE_AVERAGE,
-                RECENT_EXECUTE_NUM
-            ).values(
-                UUIDUtil.generate(),
-                storeCode,
-                storeType,
-                downloads,
-                comments,
-                score,
-                scoreAverage.toBigDecimal(),
-                recentExecuteNum
-            )
-                .onDuplicateKeyUpdate()
-                .set(DOWNLOADS, downloads)
-                .set(COMMITS, comments)
-                .set(SCORE, score)
-                .set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
-                .set(RECENT_EXECUTE_NUM, recentExecuteNum)
+            val baseStep = dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
-                .execute()
-        }
-    }
-
-    fun updateStatisticData(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte,
-        recentExecuteNum: Int
-    ) {
-        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            dslContext.insertInto(this).columns(
-                ID,
-                STORE_CODE,
-                STORE_TYPE,
-                RECENT_EXECUTE_NUM
-            ).values(
-                UUIDUtil.generate(),
-                storeCode,
-                storeType,
-                recentExecuteNum
-            ).onDuplicateKeyUpdate()
                 .set(RECENT_EXECUTE_NUM, recentExecuteNum)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType))
+            if (downloads != null) {
+                baseStep.set(DOWNLOADS, downloads)
+            }
+            if (comments != null) {
+                baseStep.set(COMMITS, comments)
+            }
+            if (score != null) {
+                baseStep.set(SCORE, score)
+            }
+            if (scoreAverage != null) {
+                baseStep.set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
+            }
+            if (hotFlag != null) {
+                baseStep.set(HOT_FLAG, hotFlag)
+            }
+            baseStep.where(STORE_TYPE.eq(storeType))
+                .and(STORE_CODE.eq(storeCode))
                 .execute()
         }
     }
@@ -202,7 +169,7 @@ class StoreStatisticTotalDao {
                 HOT_FLAG.`as`(KEY_HOT_FLAG)
             )
                 .from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .where(STORE_TYPE.eq(storeType).and(STORE_CODE.eq(storeCode)))
                 .fetchOne()
         }
     }
@@ -249,7 +216,7 @@ class StoreStatisticTotalDao {
             return dslContext.select(STORE_CODE).from(this)
             .where(STORE_TYPE.eq(storeType))
                 .groupBy(STORE_CODE)
-                .orderBy(CREATE_TIME.desc(), ID)
+                .orderBy(CREATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetchInto(String::class.java)
         }
