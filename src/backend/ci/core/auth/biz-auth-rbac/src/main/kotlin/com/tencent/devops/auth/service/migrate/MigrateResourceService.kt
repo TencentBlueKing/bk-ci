@@ -78,7 +78,7 @@ class MigrateResourceService @Autowired constructor(
                 limit = limit,
                 resourceType = resourceType
             )
-            logger.info("resourceData:$resourceData")
+            logger.info("MigrateResourceService|resourceData:$resourceData")
             resourceData.data.result.forEach {
                 val resourceCode = convertResourceCode(resourceType, it.id)
                 logger.info("MigrateResourceService|resourceCode:$resourceCode")
