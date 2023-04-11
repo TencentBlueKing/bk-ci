@@ -7,7 +7,7 @@
                 @click.native="setDocumentTitle"
             >
                 <Logo
-                    name="devops-logo"
+                    :name="headerLogoName"
                     width="auto"
                     height="28"
                 />
@@ -122,6 +122,15 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+
+        get headerLogoName (): string {
+            const logoArr = ['devops-logo']
+            const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
+            if (localeConst) {
+                logoArr.push(localeConst)
+            }
+            return logoArr.join('-')
+        }
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList
