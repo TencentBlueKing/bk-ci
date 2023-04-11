@@ -47,7 +47,7 @@
     "启用和停用规则": "enable & disable rule",
     "之后需满足": "Need to be satisfied after that.",
     "来源": "Source",
-    "流水线": "Pipeline",r
+    "流水线": "Pipeline",
     "操作": "Operation",
     "没有权限": "No permission",
     "内容": "Content",
@@ -242,5 +242,6 @@
     "拦截后审核终止": "Audit",
     "拦截后审核继续": "Continue",
     "拦截后超时终止": "Termination",
+    "拦截后直接终止": "Termination",
     "从用户组导入": "Import"
 }
