@@ -18,6 +18,9 @@ spec:
   {{- if not .Values.gateway.autoscaling.enabled }}
   replicas: {{ .Values.gateway.replicas }}
   {{- end }}
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 1
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
