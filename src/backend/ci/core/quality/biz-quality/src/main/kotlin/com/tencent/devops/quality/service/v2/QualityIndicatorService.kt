@@ -47,9 +47,7 @@ import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.util.ElementUtils
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
