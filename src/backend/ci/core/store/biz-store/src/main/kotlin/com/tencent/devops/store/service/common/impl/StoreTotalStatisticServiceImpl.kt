@@ -50,7 +50,7 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
@@ -386,9 +386,9 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             totalExecuteNum += dailyStatistic.dailyFailNum
         }
         val statisticTotal = storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
+        val percentileValue =
+            redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
         if (statisticTotal != null) {
-            val percentileValue =
-                redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = storeCode,
@@ -404,7 +404,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             storeStatisticTotalDao.initStatisticData(
                 dslContext = dslContext,
                 storeCode = storeCode,
-                storeType = storeType
+                storeType = storeType,
+                downloads = downloads,
+                comments = comments,
+                score = score?.toInt(),
+                scoreAverage = scoreAverage,
+                recentExecuteNum = totalExecuteNum,
+                hotFlag = percentileValue?.let { totalExecuteNum >= percentileValue.toDouble() }
             )
         }
     }

@@ -50,18 +50,26 @@ class StoreStatisticTotalDao {
     fun initStatisticData(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: Byte
+        storeType: Byte,
+        downloads: Int? = null,
+        comments: Int? = null,
+        score: Int? = null,
+        scoreAverage: Double? = null,
+        recentExecuteNum: Int = 0,
+        hotFlag: Boolean? = null
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            dslContext.insertInto(this).columns(
-                ID,
-                STORE_CODE,
-                STORE_TYPE
-            ).values(
-                UUIDUtil.generate(),
-                storeCode,
-                storeType
-            ).execute()
+            val record = dslContext.newRecord(this)
+            record.id = UUIDUtil.generate()
+            record.storeCode = storeCode
+            record.storeType = storeType
+            downloads?.let { record.downloads = downloads }
+            comments?.let { record.commits = comments }
+            score?.let { record.score = score }
+            scoreAverage?.let { record.scoreAverage = scoreAverage.toBigDecimal() }
+            record.recentExecuteNum = recentExecuteNum
+            hotFlag?.let { record.hotFlag = hotFlag }
+            dslContext.insertInto(this).set(record).execute()
         }
     }
 
@@ -80,21 +88,11 @@ class StoreStatisticTotalDao {
             val baseStep = dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(RECENT_EXECUTE_NUM, recentExecuteNum)
-            if (downloads != null) {
-                baseStep.set(DOWNLOADS, downloads)
-            }
-            if (comments != null) {
-                baseStep.set(COMMITS, comments)
-            }
-            if (score != null) {
-                baseStep.set(SCORE, score)
-            }
-            if (scoreAverage != null) {
-                baseStep.set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
-            }
-            if (hotFlag != null) {
-                baseStep.set(HOT_FLAG, hotFlag)
-            }
+            downloads?.let { baseStep.set(DOWNLOADS, downloads) }
+            comments?.let { baseStep.set(COMMITS, comments) }
+            score?.let { baseStep.set(SCORE, score) }
+            scoreAverage?.let { baseStep.set(SCORE_AVERAGE, scoreAverage.toBigDecimal()) }
+            hotFlag?.let { baseStep.set(HOT_FLAG, hotFlag) }
             baseStep.where(STORE_TYPE.eq(storeType))
                 .and(STORE_CODE.eq(storeCode))
                 .execute()
