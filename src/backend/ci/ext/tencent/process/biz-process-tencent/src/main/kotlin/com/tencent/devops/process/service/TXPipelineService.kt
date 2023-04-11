@@ -464,13 +464,11 @@ class TXPipelineService @Autowired constructor(
         val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
             val gitCINotSupportTip =
-                "# ======== " + MessageUtil.getMessageByLocale(
+                "# ======== " + I18nUtil.getCodeLanMessage(
                     messageCode = BK_NOT_CONFIRMED_CAN_EXECUTED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(it.name)
-                ) + MessageUtil.getMessageByLocale(
-                            messageCode = BK_CONTACT_PLUG_DEVELOPER,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CONTACT_PLUG_DEVELOPER
                         ) + "（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
@@ -603,14 +601,12 @@ class TXPipelineService @Autowired constructor(
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append(
-                        MessageUtil.getMessageByLocale(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = BK_PLUG_NOT_SUPPORTED,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             params = arrayOf(it.name, it.getClassType())
-                        ) + "！" + MessageUtil.getMessageByLocale(
-                            messageCode = BK_CHECK_INTEGRITY_YAML,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                        )+ "。\n"
+                        ) + "！" + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CHECK_INTEGRITY_YAML
+                        ) + "。\n"
                     )
                     if (isGitCI) {
                         val task = OldVersionTask(
@@ -621,13 +617,11 @@ class TXPipelineService @Autowired constructor(
                         taskList.add(
                             TaskData(
                                 task,
-                                "# ======== " + MessageUtil.getMessageByLocale(
-                                    messageCode = BK_BEE_CI_NOT_SUPPORT,
-                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                "# ======== " + I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_BEE_CI_NOT_SUPPORT
                                 ) + " ${it.name} ，" +
-                                        MessageUtil.getMessageByLocale(
-                                            messageCode = BK_SEARCH_STORE,
-                                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                        I18nUtil.getCodeLanMessage(
+                                            messageCode = BK_SEARCH_STORE
                                         ) + " ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
@@ -746,13 +740,11 @@ class TXPipelineService @Autowired constructor(
 
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = BK_NOT_EXIST_UNDER_NEW_BUSINESS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_AGENT_ENV.value, dispatchType.value)
-            ) + MessageUtil.getMessageByLocale(
-                        messageCode = BK_CHECK_OPERATING_SYSTEM_CORRECT,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CHECK_OPERATING_SYSTEM_CORRECT
                     ) + "! \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
@@ -811,13 +803,11 @@ class TXPipelineService @Autowired constructor(
 
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_AGENT_ID.value, dispatchType.value)
-            ) + MessageUtil.getMessageByLocale(
-                messageCode = BK_PLEASE_MANUALLY_MODIFY,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ) + I18nUtil.getCodeLanMessage(
+                messageCode = BK_PLEASE_MANUALLY_MODIFY
             ) + "！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
@@ -873,9 +863,8 @@ class TXPipelineService @Autowired constructor(
 
     private fun getPcgPool(dispatchType: DispatchType, comment: StringBuilder): Pool? {
         comment.append(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = BK_ONLY_VISIBLE_PCG_BUSINESS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_PCG.value)
             ))
         return if (dispatchType is PCGDispatchType) {
@@ -1222,8 +1211,7 @@ class TXPipelineService @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_WORKER_BEE_CI_NOT_SUPPORT,
                     language = I18nUtil.getLanguage(userId)
-                ) +
-                        MessageUtil.getMessageByLocale(
+                ) + MessageUtil.getMessageByLocale(
                             messageCode = BK_MODIFICATION_GUIDELINES,
                             language = I18nUtil.getLanguage(userId)
                         ))

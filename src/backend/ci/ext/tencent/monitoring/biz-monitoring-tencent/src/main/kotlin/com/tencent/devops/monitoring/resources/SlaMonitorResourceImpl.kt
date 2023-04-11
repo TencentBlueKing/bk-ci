@@ -27,9 +27,7 @@
 
 package com.tencent.devops.monitoring.resources
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.SlaMonitorResource
@@ -49,14 +47,12 @@ class SlaMonitorResourceImpl @Autowired constructor(
     private val slaMonitorService: SlaMonitorService,
     private val monitorNotifyJob: MonitorNotifyJob
 ) : SlaMonitorResource {
-    @BkInterfaceI18n
     override fun codeccQuery(bgId: String, startTime: Long, endTime: Long): Result<SlaCodeccResponseData> {
         if (startTime > System.currentTimeMillis() || startTime > endTime) {
             logger.error("wrong timestamp , startTime:$startTime , endTime:$endTime")
             return Result(-1,
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_ILLEGAL_TIMESTAMP_RANGE,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ILLEGAL_TIMESTAMP_RANGE
                 )
                 )
         }
@@ -64,9 +60,8 @@ class SlaMonitorResourceImpl @Autowired constructor(
         if (!NumberUtils.isParsable(bgId)) {
             logger.error("wrong bgId , bgId:$bgId")
             return Result(-2,
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_ILLEGAL_ENTERPRISE_GROUP_ID,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ILLEGAL_ENTERPRISE_GROUP_ID
                 )
                 )
         }
@@ -76,16 +71,14 @@ class SlaMonitorResourceImpl @Autowired constructor(
 
     override fun emailTest(pwd: String): Result<String> {
         if (pwd != "234lsd&QWfjno1!") return Result(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_INCORRECT_PASSWORD,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_INCORRECT_PASSWORD
             )
         )
         monitorNotifyJob.notifyDaily()
         return Result(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_SENT_SUCCESSFULLY,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_SENT_SUCCESSFULLY
             )
         )
     }

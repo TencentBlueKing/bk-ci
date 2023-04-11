@@ -41,6 +41,7 @@ import com.tencent.devops.monitoring.pojo.UsersStatus
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_USER_INFORMATION
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.USER_RESIGNED
@@ -337,8 +338,8 @@ class TOFService @Autowired constructor(
                 path,
                 ParentDeptInfoRequest(tofAppCode!!, tofAppSecret!!, groupId, level),
                 I18nUtil.getCodeLanMessage(
-                    messageCode = QUERY_ORG_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                    messageCode = QUERY_ORG_FAIL
+                )
             )
             val response: Response<List<DeptInfo>> = objectMapper.readValue(responseContent)
             if (response.data == null) {
@@ -349,12 +350,11 @@ class TOFService @Autowired constructor(
                     statusMessage = response.message,
                     errorCode = QUERY_ORG_FAIL,
                     errorMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = QUERY_ORG_FAIL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                        messageCode = QUERY_ORG_FAIL)
                 )
                 throw OperationException(I18nUtil.getCodeLanMessage(
-                    messageCode = QUERY_ORG_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+                    messageCode = QUERY_ORG_FAIL
+                ))
             }
             uploadTofStatus(
                 requestTime = startTime,
@@ -367,9 +367,10 @@ class TOFService @Autowired constructor(
             return response.data
         } catch (t: Throwable) {
             logger.warn("Fail to get the parent dept info of group $groupId and level $level", t)
-            throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = QUERY_PAR_DEPARTMENT_FAIL
+            ))
         }
     }
 

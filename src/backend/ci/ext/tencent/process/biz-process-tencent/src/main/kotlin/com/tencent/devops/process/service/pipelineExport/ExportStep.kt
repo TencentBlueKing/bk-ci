@@ -262,9 +262,8 @@ object ExportStep {
                             name = null,
                             id = step.stepId,
                             ifFiled = null,
-                            uses = "### [${step.name}] " + MessageUtil.getMessageByLocale(
-                                messageCode = BK_PLEASE_USE_STAGE_AUDIT,
-                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            uses = "### [${step.name}] " + I18nUtil.getCodeLanMessage(
+                                messageCode = BK_PLEASE_USE_STAGE_AUDIT
                             ),
                             with = null,
                             timeoutMinutes = null,
@@ -280,13 +279,11 @@ object ExportStep {
                 else -> {
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     context.yamlSb.append(
-                        MessageUtil.getMessageByLocale(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = BK_PLUG_NOT_SUPPORTED,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             params = arrayOf(element.name, element.getClassType())
-                        ) + "," + MessageUtil.getMessageByLocale(
-                            messageCode = BK_FIND_RECOMMENDED_REPLACEMENT_PLUG,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ) + "," + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
                         ) + "\n"
                     )
                     stepList.add(
@@ -294,9 +291,8 @@ object ExportStep {
                             name = null,
                             id = element.stepId,
                             ifFiled = null,
-                            uses = "### [${element.name}] " + MessageUtil.getMessageByLocale(
-                                messageCode = BK_OLD_PLUG_NOT_SUPPORT,
-                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            uses = "### [${element.name}] " + I18nUtil.getCodeLanMessage(
+                                messageCode = BK_OLD_PLUG_NOT_SUPPORT
                             ),
                             with = null,
                             timeoutMinutes = null,

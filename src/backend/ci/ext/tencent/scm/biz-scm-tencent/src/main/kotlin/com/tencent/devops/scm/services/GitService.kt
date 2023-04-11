@@ -950,9 +950,8 @@ class GitService @Autowired constructor(
                     )
                 }
                 return it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg =
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_FILE_CANNOT_EXCEED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FILE_CANNOT_EXCEED
                 ))
             }
         } finally {

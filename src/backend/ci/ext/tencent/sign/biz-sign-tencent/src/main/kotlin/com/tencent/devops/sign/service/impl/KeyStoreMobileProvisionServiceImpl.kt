@@ -169,9 +169,8 @@ KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionSer
             }
         } catch (ignore: Exception) {
             logger.warn(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_FAILED_INSERT,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(entitlementFile.canonicalPath)
                 ), ignore)
             throw ErrorCodeException(
@@ -194,9 +193,8 @@ KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionSer
         val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId.toUpperCase()]
         if (wildcardMobileProvisionId.isNullOrBlank()) {
             logger.warn(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_DESCRIPTION_FILE_FOR_CERTIFICATE,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(ipaSignInfo.certId)
                 )
             )

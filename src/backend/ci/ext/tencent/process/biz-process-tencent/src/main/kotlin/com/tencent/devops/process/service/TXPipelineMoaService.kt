@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -59,13 +58,11 @@ class TXPipelineMoaService @Autowired constructor(
     private val appSecret = ""
 
     private val ignoredMoaMessage = listOf(
-        MessageUtil.getMessageByLocale(
-            messageCode = BK_QUICK_APPROVAL_MOA,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        I18nUtil.getCodeLanMessage(
+            messageCode = BK_QUICK_APPROVAL_MOA
         ),
-        MessageUtil.getMessageByLocale(
-            messageCode = BK_QUICK_APPROVAL_PC,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        I18nUtil.getCodeLanMessage(
+            messageCode = BK_QUICK_APPROVAL_PC
         ))
 
     /**

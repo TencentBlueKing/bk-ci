@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.util
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_HAS_BEEN_UPDATED
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW
@@ -48,14 +47,12 @@ object AppNotifyUtil {
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
-        message.title =  MessageUtil.getMessageByLocale(
+        message.title = I18nUtil.getCodeLanMessage(
                 messageCode = BK_HAS_BEEN_UPDATED,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(experienceName, appVersion)
             )
-        message.body = MessageUtil.getMessageByLocale(
+        message.body = I18nUtil.getCodeLanMessage(
             messageCode = BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             params = arrayOf(experienceName)
         )
         message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"

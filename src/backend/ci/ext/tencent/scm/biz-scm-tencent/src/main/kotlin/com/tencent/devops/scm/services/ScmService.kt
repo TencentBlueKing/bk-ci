@@ -344,8 +344,7 @@ class ScmService @Autowired constructor(
             statusMessage = e.message
             throw ScmException(
                 e.message ?: I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         } finally {

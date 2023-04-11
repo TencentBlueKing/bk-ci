@@ -220,9 +220,8 @@ class SignInfoService(
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (ignore: Throwable) {
             logger.warn(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ERROR_PARSE_SIGN_INFO_HEADER,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_PARSE_SIGN_INFO_HEADER
                 ) + "：$ignore")
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
@@ -238,9 +237,8 @@ class SignInfoService(
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
         } catch (ignored: Throwable) {
             logger.warn(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ERROR_ENCODE_SIGN_INFO,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_ENCODE_SIGN_INFO
                 ) + "：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }

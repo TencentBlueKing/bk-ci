@@ -145,9 +145,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         }
                     ).apply {
                         if (param.valueType == ManualReviewParamType.STRING) {
-                            description += MessageUtil.getMessageByLocale(
-                                messageCode = BK_LINE_BREAKS_WILL_ESCAPED,
-                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            description += I18nUtil.getCodeLanMessage(
+                                messageCode = BK_LINE_BREAKS_WILL_ESCAPED
                             )
                         }
                     }
@@ -176,9 +175,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                     )
                 ),
                 detailView = detailView,
-                activity = MessageUtil.getMessageByLocale(
-                    messageCode = BK_DESIGNATED_APPROVER_APPROVAL,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                activity = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DESIGNATED_APPROVER_APPROVAL
                 ),
                 category = MoaWorkitemCreateCategoryType.IT.id,
                 callbackUrl = moaTplRecord.callbackUrl,
@@ -218,9 +216,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         request.receivers.map { receiver ->
             client.get(ServiceMessageApproveResource::class).createMoaWorkItemMessageComplete(
                 CompleteMoaWorkItemRequest(
-                    activity = MessageUtil.getMessageByLocale(
-                        messageCode = BK_DESIGNATED_APPROVER_APPROVAL,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    activity = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DESIGNATED_APPROVER_APPROVAL
                     ),
                     category = MoaWorkitemCreateCategoryType.IT.id,
                     handler = receiver,

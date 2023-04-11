@@ -29,7 +29,6 @@ package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.constant.ScmMessageCode.BK_LOCAL_WAREHOUSE_CREATION_FAILED
 import com.tencent.devops.scm.exception.ScmException
@@ -206,15 +205,13 @@ class SvnService {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
             logger.error(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_LOCAL_WAREHOUSE_CREATION_FAILED,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(url)
                 ), e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -231,8 +228,7 @@ class SvnService {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+                    messageCode = RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -282,8 +278,7 @@ class SvnService {
         } catch (e: SVNException) {
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())),
+                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }

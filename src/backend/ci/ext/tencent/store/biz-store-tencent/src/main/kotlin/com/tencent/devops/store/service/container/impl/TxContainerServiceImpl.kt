@@ -112,12 +112,9 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 containerResourceValue = envNodeList?.map {
                     it.name
                 }?.toList()
-                val normalName = I18nUtil.getCodeLanMessage(messageCode = NORMAL,
-                    language = I18nUtil.getLanguage(userId))
-                val exceptionName = I18nUtil.getCodeLanMessage(messageCode = EXCEPTION,
-                    language = I18nUtil.getLanguage(userId))
-                val numUnit = I18nUtil.getCodeLanMessage(messageCode = NUM_UNIT,
-                    language = I18nUtil.getLanguage(userId))
+                val normalName = I18nUtil.getCodeLanMessage(messageCode = NORMAL)
+                val exceptionName = I18nUtil.getCodeLanMessage(messageCode = EXCEPTION)
+                val numUnit = I18nUtil.getCodeLanMessage(messageCode = NUM_UNIT)
                 envNodeList?.map {
                     AgentResponse(
                         id = it.envHashId,
@@ -146,8 +143,7 @@ class TxContainerServiceImpl @Autowired constructor() : ContainerServiceImpl() {
                 }
             }
             BuildType.ESXi -> {
-                val macPublicBuildResourceName = I18nUtil.getCodeLanMessage(messageCode = "macPublicBuildResourceName",
-                    language = I18nUtil.getLanguage(userId))
+                val macPublicBuildResourceName = I18nUtil.getCodeLanMessage(messageCode = "macPublicBuildResourceName")
                 val l = listOf(MacOSNode(macPublicBuildResourceName, macPublicBuildResourceName))
                 containerResourceValue = l.map {
                     it.name

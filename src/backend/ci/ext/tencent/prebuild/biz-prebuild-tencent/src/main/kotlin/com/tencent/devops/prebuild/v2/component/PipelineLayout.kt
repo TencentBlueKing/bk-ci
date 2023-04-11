@@ -768,14 +768,12 @@ class PipelineLayout private constructor(
             val stageList = mutableListOf<Stage>()
             val triggerContainer = TriggerContainer(
                 id = "0",
-                name = MessageUtil.getMessageByLocale(
-                    messageCode = BK_BUILD_TRIGGER,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                name = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BUILD_TRIGGER
                 ),
                 elements = listOf(ManualTriggerElement(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_MANUAL_TRIGGER,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_MANUAL_TRIGGER
                 ), "T-1-1-1")),
                 params = emptyList()
             )
@@ -790,17 +788,15 @@ class PipelineLayout private constructor(
          */
         fun build(): Model {
             if (pipelineName.isBlank() || creator.isBlank()) {
-                throw CustomException(Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
-                    messageCode = PIPELINE_NAME_CREATOR_CANNOT_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                throw CustomException(Response.Status.BAD_REQUEST, I18nUtil.getCodeLanMessage(
+                    messageCode = PIPELINE_NAME_CREATOR_CANNOT_EMPTY
                 ))
             }
 
             if (stages.isEmpty()) {
                 throw CustomException(Response.Status.BAD_REQUEST,
-                    MessageUtil.getMessageByLocale(
-                        messageCode = PIPELINE_MUST_AT_LEAST_ONE,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = PIPELINE_MUST_AT_LEAST_ONE
                     ))
             }
 

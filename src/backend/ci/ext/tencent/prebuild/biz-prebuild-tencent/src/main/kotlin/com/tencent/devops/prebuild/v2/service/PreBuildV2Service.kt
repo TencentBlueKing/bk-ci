@@ -229,9 +229,8 @@ class PreBuildV2Service @Autowired constructor(
     ): String {
         if (param.targetRepo == null) {
             throw CustomException(Response.Status.BAD_REQUEST,
-                MessageUtil.getMessageByLocale(
-                    messageCode = PRECI_SUPPORTS_REMOTE_TEMPLATES,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = PRECI_SUPPORTS_REMOTE_TEMPLATES
                 )
                 )
         }
@@ -240,9 +239,8 @@ class PreBuildV2Service @Autowired constructor(
         ) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
                 )
             )
         }

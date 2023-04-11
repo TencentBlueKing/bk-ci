@@ -30,7 +30,6 @@ package com.tencent.devops.process.api.user
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_MAXIMUM_NUMBER
@@ -92,9 +91,8 @@ class TXUserPipelineResourceImpl @Autowired constructor(
                     setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
             ) {
                 throw InvalidParamException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = ILLEGAL_MAXIMUM_QUEUE_LENGTH,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ILLEGAL_MAXIMUM_QUEUE_LENGTH
                     )
                 )
             }
@@ -102,9 +100,8 @@ class TXUserPipelineResourceImpl @Autowired constructor(
                     setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
             ) {
                 throw InvalidParamException(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = ILLEGAL_MAXIMUM_NUMBER,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ILLEGAL_MAXIMUM_NUMBER
                     )
                 )
             }

@@ -322,62 +322,52 @@ class TXPipelineExportService @Autowired constructor(
                 "#########################################\n"
         )
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-            messageCode = BK_PROJECT_ID,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+            messageCode = BK_PROJECT_ID
         ) + " $projectId \n")
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-            messageCode = BK_PIPELINED_ID,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+            messageCode = BK_PIPELINED_ID
         ) + " $pipelineId \n")
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_PIPELINE_NAME,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_PIPELINE_NAME
             ) + " ${model.name} \n")
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_EXPORT_TIME,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_EXPORT_TIME
             ) + " ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_EXPORT_SYSTEM_CREDENTIALS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_EXPORT_SYSTEM_CREDENTIALS
             )
         )
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS
             )
         )
         if (isGitCI) {
             yamlSb.append(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_STREAM_NOT_SUPPORT,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_STREAM_NOT_SUPPORT
                 )
             )
         }
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_PARAMETERS_BE_EXPORTED,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_PARAMETERS_BE_EXPORTED
             )
         )
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_IDENTIFIED_SENSITIVE_INFORMATION,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_IDENTIFIED_SENSITIVE_INFORMATION
             )
         )
         yamlSb.append(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_UNKNOWN_CONTEXT_EXISTS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_UNKNOWN_CONTEXT_EXISTS
             )
         )
         yamlSb.append(

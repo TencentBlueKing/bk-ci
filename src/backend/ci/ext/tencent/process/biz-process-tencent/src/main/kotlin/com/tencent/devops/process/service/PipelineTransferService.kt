@@ -98,7 +98,6 @@ class PipelineTransferService @Autowired constructor(
             )
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
-                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -306,7 +305,6 @@ class PipelineTransferService @Autowired constructor(
             )
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
-                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -388,7 +386,6 @@ class PipelineTransferService @Autowired constructor(
             )
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
-                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(
@@ -467,7 +464,6 @@ class PipelineTransferService @Autowired constructor(
             )
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
-                language = I18nUtil.getLanguage(userId),
                 defaultMessage = defaultMessage
             )
             throw ErrorCodeException(

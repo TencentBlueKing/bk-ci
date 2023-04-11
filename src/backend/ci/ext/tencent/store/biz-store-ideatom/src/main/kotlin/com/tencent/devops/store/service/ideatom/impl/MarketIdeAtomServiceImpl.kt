@@ -186,8 +186,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         result.add(MarketIdeAtomMainItem(
                 key = LATEST,
-                label = I18nUtil.getCodeLanMessage(messageCode = LATEST,
-                    language = I18nUtil.getLanguage(userId)),
+                label = I18nUtil.getCodeLanMessage(messageCode = LATEST),
                 records = doList(
                         userId = userId,
                         keyword = null,
@@ -205,8 +204,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
 
         result.add(MarketIdeAtomMainItem(
                 key = HOTTEST,
-                label = I18nUtil.getCodeLanMessage(messageCode = HOTTEST,
-                    language = I18nUtil.getLanguage(userId)),
+                label = I18nUtil.getCodeLanMessage(messageCode = HOTTEST),
                 records = doList(
                         userId = userId,
                         keyword = null,
@@ -228,8 +226,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
             val classifyName = it["classifyName"] as String
             val classifyLanName = I18nUtil.getCodeLanMessage(
                 messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = classifyName,
-                language = I18nUtil.getLanguage(userId)
+                defaultMessage = classifyName
             )
             result.add(MarketIdeAtomMainItem(
                     key = classifyCode,

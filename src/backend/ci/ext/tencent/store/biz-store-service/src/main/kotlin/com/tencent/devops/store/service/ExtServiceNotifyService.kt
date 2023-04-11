@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.service
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -89,8 +88,7 @@ class ExtServiceNotifyService {
             "version" to serviceRecord.version,
             "publisher" to serviceRecord.publisher,
             "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
-                messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt()),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
             ) else "",
             "versionDesc" to (serviceVersionLogRecord.content ?: ""),
             "nameInBody" to serviceName,

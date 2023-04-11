@@ -41,7 +41,6 @@ data class SlaCodeccResponseData(
     @ApiModelProperty("成功率")
     val successRate: Double,
     @ApiModelProperty("错误码分布")
-    @BkFieldI18n
     val errorPie: List<ErrorPie>
 ) {
     companion object {
@@ -59,7 +58,6 @@ data class ErrorPie(
     @ApiModelProperty("错误码")
     val code: String?,
     @ApiModelProperty("错误信息")
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "slaPluginError", reusePrefixFlag = false)
     val message: String?,
     @ApiModelProperty("次数")
     val count: Int

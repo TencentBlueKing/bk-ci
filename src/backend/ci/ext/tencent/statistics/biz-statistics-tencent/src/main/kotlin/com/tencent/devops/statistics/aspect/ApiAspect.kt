@@ -27,17 +27,7 @@
 package com.tencent.devops.statistics.aspect
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.statistics.filter.ApiFilter
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_NO_APIGW_API
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PARAMETER_NAME
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PARAMETER_VALUE
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PERMISSION_FOR_PROJECT
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PERMISSION_FOR_PROJECT_VERIFIED
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_PRE_ENHANCEMENT
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_REQUEST_TYPE_APIGWTYPE
-import com.tencent.devops.statistics.pojo.openapi.constant.StatisticsMessageCode.BK_VERIFICATION_FAILED
 import com.tencent.devops.statistics.service.openapi.op.AppCodeService
 import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -66,21 +56,12 @@ class ApiAspect(
     @Before("within(com.tencent.devops.statistics.openapi.resources.apigw..*)")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_APIGW_API,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                )
-            )
+            logger.info("Openapi is not an apigw interface and does not require authentication.")
             return
         }
 
         val methodName: String = jp.signature.name
-        logger.info(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_PRE_ENHANCEMENT,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-            ) + " 【$methodName】")
+        logger.info("[Pre-enhanced] the method 【$methodName】")
         // 参数value
         val parameterValue = jp.args
         // 参数key
@@ -89,19 +70,11 @@ class ApiAspect(
         var appCode: String? = null
         var apigwType: String? = null
         parameterNames.forEach {
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_PARAMETER_NAME,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "[$it]")
+            logger.info("parameter name[$it]")
         }
 
         parameterValue.forEach {
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_PARAMETER_VALUE,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                ) + "[$it]")
+            logger.info("parameter value[$it]")
         }
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
@@ -120,36 +93,13 @@ class ApiAspect(
                 else -> null
             }
         }
-        logger.info(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_REQUEST_TYPE_APIGWTYPE,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                params = arrayOf(apigwType.toString(), appCode.toString(), projectId.toString())
-            )
-)
+        logger.info("request class apigwType[$apigwType],appCode[$appCode],project[$projectId]")
         if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_PERMISSION_FOR_PROJECT,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                    params = arrayOf(apigwType.toString(), appCode.toString(), projectId.toString())
-                )
-            )
+            logger.info("judge！！！！request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]permission.")
             if (appCodeService.validAppCode(appCode, projectId)) {
-                logger.info(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_PERMISSION_FOR_PROJECT_VERIFIED,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        params = arrayOf(apigwType.toString(), appCode.toString(), projectId.toString())
-                    )
-                )
+                logger.info("request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]Permissions [Verification Passed]")
             } else {
-                val message =
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_VERIFICATION_FAILED,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
-                        params = arrayOf(apigwType.toString(), appCode.toString(), projectId.toString())
-                    )
+                val message = "request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]Permissions【verification failed】"
                 throw PermissionForbiddenException(
                     message = message
                 )

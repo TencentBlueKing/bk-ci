@@ -4,7 +4,6 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -95,22 +94,24 @@ class TencentP4Service(
         val username = credentials[0]
         if (username.isEmpty()) {
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY
+                )
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.PWD_EMPTY
                 )
             )
         }
         val password = credentials[1]
         if (password.isEmpty()) {
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(messageCode = RepositoryMessageCode.PWD_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.PWD_EMPTY
+                )
             )
         }
         return Triple(repository, username, password)

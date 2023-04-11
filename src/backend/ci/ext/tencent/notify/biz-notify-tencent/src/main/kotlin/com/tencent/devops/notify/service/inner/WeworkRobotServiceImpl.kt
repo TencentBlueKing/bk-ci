@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
@@ -84,9 +83,8 @@ class WeworkRobotServiceImpl @Autowired constructor(
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
             weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
-                    MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = BK_CONTROL_MESSAGE_LENGTH,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(WEWORK_MAX_SIZE.toString())
                     )
         }

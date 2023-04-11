@@ -116,9 +116,8 @@ object EmailUtil {
         return "                                                                            <tr>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+MessageUtil.getMessageByLocale(
-            messageCode = BK_VIEW,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+I18nUtil.getCodeLanMessage(
+            messageCode = BK_VIEW
             )+"</a></td>\n" +
             "                                                                            </tr>\n"
     }
@@ -163,15 +162,13 @@ object EmailUtil {
             "                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "                                                <tr>\n" +
-            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">"+MessageUtil.getMessageByLocale(
-            messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )+"</td>\n" +
+            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">"+I18nUtil.getCodeLanMessage(
+            messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+        ) + "</td>\n" +
             "                                                </tr>\n" +
-            "                                                <!-- "+MessageUtil.getMessageByLocale(
-            messageCode = BK_TABLE_CONTENTS,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-        )+" -->\n" +
+            "                                                <!-- " + I18nUtil.getCodeLanMessage(
+            messageCode = BK_TABLE_CONTENTS
+        ) + " -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
             "                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
@@ -200,9 +197,8 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">"+MessageUtil.getMessageByLocale(
-            messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">"+I18nUtil.getCodeLanMessage(
+            messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
         )+"</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +

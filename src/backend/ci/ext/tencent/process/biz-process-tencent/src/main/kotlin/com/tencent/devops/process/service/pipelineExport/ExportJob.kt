@@ -1,6 +1,5 @@
 package com.tencent.devops.process.service.pipelineExport
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -117,9 +116,8 @@ object ExportJob {
                         is ThirdPartyAgentEnvDispatchType -> {
                             RunsOn(
                                 selfHosted = true,
-                                poolName = MessageUtil.getMessageByLocale(
-                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED,
-                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                poolName = I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
                                 ),
                                 container = null,
                                 agentSelector = listOf(job.baseOS.name.toLowerCase()),
@@ -165,12 +163,10 @@ object ExportJob {
                         is MacOSDispatchType -> {
                             RunsOn(
                                 selfHosted = null,
-                                poolName = MessageUtil.getMessageByLocale(
-                                    messageCode = BK_BUILD_CLUSTERS_THROUGH,
-                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                                ) + MessageUtil.getMessageByLocale(
-                                            messageCode = BK_NOTE_DEFAULT_XCODE_VERSION,
-                                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                poolName = I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_BUILD_CLUSTERS_THROUGH
+                                ) + I18nUtil.getCodeLanMessage(
+                                            messageCode = BK_NOTE_DEFAULT_XCODE_VERSION
                                         ),
                                 container = null,
                                 agentSelector = null
@@ -179,9 +175,8 @@ object ExportJob {
                         else -> {
                             RunsOn(
                                 selfHosted = null,
-                                poolName = MessageUtil.getMessageByLocale(
-                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED,
-                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                poolName = I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
                                 ),
                                 container = null,
                                 agentSelector = null

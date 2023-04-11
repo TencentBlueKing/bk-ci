@@ -202,9 +202,8 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .get().build()
         val responseContent = request(request,
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_GET_PAASCC_INFORMATION,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_FAILED_GET_PAASCC_INFORMATION
             ))
         val result = objectMapper.readValue<Result<BcsProjectInfo>>(responseContent)
         if (result.code != 0) {

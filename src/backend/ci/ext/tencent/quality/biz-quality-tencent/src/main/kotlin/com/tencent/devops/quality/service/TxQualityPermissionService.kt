@@ -31,7 +31,6 @@ import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -78,7 +77,6 @@ class TxQualityPermissionService @Autowired constructor(
             )) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                language = I18nUtil.getLanguage(userId),
                 defaultMessage = authPermission.alias
             )
             throw PermissionForbiddenException(
@@ -218,8 +216,7 @@ class TxQualityPermissionService @Autowired constructor(
                 )) {
                 val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                    defaultMessage = authPermission.alias,
-                    language = I18nUtil.getLanguage(userId)
+                    defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
                     message = message,
@@ -252,8 +249,7 @@ class TxQualityPermissionService @Autowired constructor(
                 )) {
                 val permissionMsg = I18nUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                    defaultMessage = authPermission.alias,
-                    language = I18nUtil.getLanguage(userId)
+                    defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
                     message = message,

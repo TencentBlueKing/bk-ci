@@ -1,6 +1,12 @@
 package com.tencent.devops.dispatch.macos.enums
 
-enum class MacJobStatus(val title: String) {
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
+enum class MacJobStatus(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "macJobStatus", reusePrefixFlag = false)
+    val title: String
+    ) {
     Running("running"),//执行中
     Done("done"),//完成
     Failure("failure"),//失败

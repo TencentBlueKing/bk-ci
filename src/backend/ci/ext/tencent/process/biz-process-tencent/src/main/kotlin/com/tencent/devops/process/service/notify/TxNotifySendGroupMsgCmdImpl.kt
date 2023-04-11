@@ -29,7 +29,6 @@ package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -131,9 +130,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (detailFlag) {
                 richtextContentList.add(
                     RichtextView(
-                        RichtextViewLink(text = MessageUtil.getMessageByLocale(
-                            messageCode = BK_VIEW_DETAILS,
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        RichtextViewLink(text = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_VIEW_DETAILS
                         ), key = detailUrl, browser = 1)
                     )
                 )
@@ -153,9 +151,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         logger.info("send group msg by robot: $chatId, $content")
         if (markerDownFlag) {
             val textContent = if (detailFlag) {
-                "$content\n[" + MessageUtil.getMessageByLocale(
-                    messageCode = BK_VIEW_DETAILS,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                "$content\n[" + I18nUtil.getCodeLanMessage(
+                    messageCode = BK_VIEW_DETAILS
                 ) + "]($detailUrl)"
             } else content
             val msg = RobotMarkdownSendMsg(
@@ -167,9 +164,8 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             wechatWorkRobotService.send(msg.toJsonString())
         } else {
             val textContent = if (detailFlag) {
-                "$content\n\n" + MessageUtil.getMessageByLocale(
-                        messageCode = BK_VIEW_DETAILS,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                "$content\n\n" + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_VIEW_DETAILS
                 ) + ": $detailUrl"
             } else content
             val msg = RobotTextSendMsg(

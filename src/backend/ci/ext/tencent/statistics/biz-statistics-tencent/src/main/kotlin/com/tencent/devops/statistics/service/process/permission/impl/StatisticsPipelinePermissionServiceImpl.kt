@@ -115,8 +115,7 @@ class StatisticsPipelinePermissionServiceImpl @Autowired constructor(
         ) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias,
-                language = I18nUtil.getLanguage(userId)
+                defaultMessage = permission.alias
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,

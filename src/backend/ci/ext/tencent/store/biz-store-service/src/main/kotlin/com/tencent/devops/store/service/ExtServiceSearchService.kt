@@ -29,7 +29,6 @@ package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.service.ServiceInfoResource
@@ -80,8 +79,7 @@ class ExtServiceSearchService @Autowired constructor(
         result.add(
             ExtServiceMainItemVo(
                 key = LATEST,
-                label = I18nUtil.getCodeLanMessage(messageCode = LATEST,
-                    language = I18nUtil.getLanguage(userId)),
+                label = I18nUtil.getCodeLanMessage(messageCode = LATEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -101,8 +99,7 @@ class ExtServiceSearchService @Autowired constructor(
             ExtServiceMainItemVo(
                 key = HOTTEST,
                 label = I18nUtil.getCodeLanMessage(
-                    messageCode = HOTTEST,
-                    language = I18nUtil.getLanguage(userId)),
+                    messageCode = HOTTEST),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,

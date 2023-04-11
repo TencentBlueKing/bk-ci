@@ -28,7 +28,6 @@ package com.tencent.devops.monitoring.services
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_MONITORING_OBJEC
@@ -88,9 +87,8 @@ class GrafanaWebhookService @Autowired constructor(
                         notifyType = mutableSetOf(grafanaMessage.notifyType?.name ?: "RTX"),
                         titleParams = mapOf(),
                         bodyParams = mapOf("data" to grafanaMessage.notifyMessage, "url" to
-                                MessageUtil.getMessageByLocale(
-                                    messageCode = BK_WARNING_MESSAGE_FROM_GRAFANA,
-                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_WARNING_MESSAGE_FROM_GRAFANA
                                 ))
                     )
                 }
@@ -104,9 +102,8 @@ class GrafanaWebhookService @Autowired constructor(
                 evalMatches.forEach {
                     val metricName = it.metric
                     val metricValue = it.value
-                    notifyMessage["data"] += MessageUtil.getMessageByLocale(
+                    notifyMessage["data"] += I18nUtil.getCodeLanMessage(
                         messageCode = BK_MONITORING_OBJEC,
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(metricName, metricValue)
                     )
                     busiDataList.add(NocNoticeBusData(metricName, metricValue))
@@ -116,9 +113,8 @@ class GrafanaWebhookService @Autowired constructor(
             return client.get(ServiceNotifyMessageTemplateResource::class)
                 .sendNotifyMessageByTemplate(sendMessage.copy(bodyParams = notifyMessage))
         }
-        return Result(data = false, message = MessageUtil.getMessageByLocale(
-            messageCode = BK_SEND_MONITORING_MESSAGES,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        return Result(data = false, message = I18nUtil.getCodeLanMessage(
+            messageCode = BK_SEND_MONITORING_MESSAGES
         ))
     }
 }

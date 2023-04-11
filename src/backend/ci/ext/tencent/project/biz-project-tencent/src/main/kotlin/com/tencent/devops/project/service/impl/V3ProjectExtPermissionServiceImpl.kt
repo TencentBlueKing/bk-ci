@@ -138,8 +138,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
                 throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
                     defaultMessage = e.message,
-                    params = arrayOf(it),
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    params = arrayOf(it)
                 ))
             }
             memberList.add(
@@ -155,8 +154,8 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
                 defaultMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
+                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+                )
             )
         }
 

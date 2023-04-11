@@ -210,8 +210,7 @@ class ProjectLocalService @Autowired constructor(
                     " not project[$projectId] permission "
             )
             throw OperationException((I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.ORG_NOT_PROJECT,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                messageCode = ProjectMessageCode.ORG_NOT_PROJECT
             )))
         }
         var queryProject: ProjectVO? = null
@@ -242,8 +241,7 @@ class ProjectLocalService @Autowired constructor(
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
             else -> {
                 throw OperationException((I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.ORG_TYPE_ERROR,
-                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    messageCode = ProjectMessageCode.ORG_TYPE_ERROR
                 )))
             }
         }

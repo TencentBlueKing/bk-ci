@@ -103,22 +103,17 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = BEGIN,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), BEGIN, NUM_ONE, SUCCESS))
+            messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = COMMIT,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), COMMIT, NUM_TWO, UNDO))
+            messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
         if (isNormalUpgrade) {
             processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_THREE, UNDO))
+                messageCode = END), END, NUM_THREE, UNDO))
         } else {
             processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = APPROVE,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), APPROVE, NUM_THREE, UNDO))
+                messageCode = APPROVE), APPROVE, NUM_THREE, UNDO))
             processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END,
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())), END, NUM_FOUR, UNDO))
+                messageCode = END), END, NUM_FOUR, UNDO))
         }
         return processInfo
     }

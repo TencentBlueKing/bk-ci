@@ -83,11 +83,6 @@ object ExperienceMessageCode {
     const val BK_NEW_SEARCH_RECOMMENDATION_SUCCEEDED = "bkNewSearchRecommendationSucceeded" //新增搜索推荐成功
     const val BK_DELETE_SEARCH_RECOMMENDATION_SUCCEEDED = "bkDeleteSearchRecommendationSucceeded" //删除搜索推荐成功
     const val BK_CREATED_SUCCESSFULLY = "bkCreatedSuccessfully" //创建成功
-    const val BK_NO_EXPERIENCE_UNDER_PROJECT = "bkNoExperienceUnderProject" //{0} 项目下无体验
-    const val BK_NO_EXPERIENCE = "bkNoExperience" //无体验
-    const val BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT = "bkNoExperienceGroupUnderProject" //{0} 项目下无体验组
-    const val BK_NO_EXPERIENCE_USER_GROUP = "bkNoExperienceUserGroup" //无体验用户组
-    const val BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT = "bkNoExperienceUserGroupUnderProject" //{0} 项目下无体验用户组
     const val BK_USER_BOUND_DEVICE_SUCCESSFULLY = "bkUserBoundDeviceSuccessfully" //用户绑定设备成功！
     const val BK_NOT_REPEATEDLY_BIND = "bkNotRepeatedlyBind" //请勿重复绑定同台设备！
     const val BK_USER_MODIFIED_DEVICE_SUCCESSFULLY = "bkUserModifiedDeviceSuccessfully" //用户修改设备成功！
