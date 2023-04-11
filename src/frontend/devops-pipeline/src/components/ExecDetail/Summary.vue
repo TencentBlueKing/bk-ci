@@ -38,14 +38,14 @@
                 </div>
                 <span class="no-exec-material" v-else>--</span>
             </div>
-            <div>
+            <!-- <div>
                 <span class="exec-detail-summary-info-block-title">{{ $t("总耗时") }}</span>
                 <div class="exec-detail-summary-info-block-content">
                     {{ executeTime }}
                 </div>
-            </div>
+            </div> -->
             <div>
-                <span class="exec-detail-summary-info-block-title">{{ $t("编排版本号") }}</span>
+                <span class="exec-detail-summary-info-block-title">{{ $t("history.tableMap.pipelineVersion") }}</span>
                 <div class="exec-detail-summary-info-block-content">
                     v.{{ execDetail.curVersion }}
                 </div>
@@ -124,13 +124,14 @@
                 return null
             },
             webhookInfo () {
-                return this.execDetail?.webhookInfo
-                ? {
-                    aliasName: this.execDetail.webhookInfo.webhookAliasName,
-                    branchName: this.execDetail.webhookInfo.webhookBranch,
-                    newCommitId: this.execDetail.webhookInfo.webhookCommitId
-                }
-                : null
+                // return this.execDetail?.webhookInfo
+                // ? {
+                //     aliasName: this.execDetail.webhookInfo.webhookAliasName,
+                //     branchName: this.execDetail.webhookInfo.webhookBranch,
+                //     newCommitId: this.execDetail.webhookInfo.webhookCommitId
+                // }
+                // : null
+                return null
             }
         },
         watch: {
@@ -193,7 +194,7 @@
   &-info {
     display: grid;
     grid-auto-flow: column;
-    grid-template-columns: 7fr 7fr 3fr 3fr minmax(168px, 4fr);
+    grid-template-columns: 8fr 8fr 3fr minmax(168px, 4fr);
     font-size: 12px;
     grid-gap: 100px;
 
