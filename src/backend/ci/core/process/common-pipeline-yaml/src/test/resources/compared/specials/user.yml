@@ -91,6 +91,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -137,6 +138,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -206,6 +208,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -314,6 +317,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -466,6 +470,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -585,6 +590,7 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
       xcode: null

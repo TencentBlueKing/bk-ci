@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("查询错误码信息查询条件对象")
 data class QueryErrorCodeInfoQO(
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
     @ApiModelProperty("错误类型")
     val errorTypes: List<Int>?,
     @ApiModelProperty("搜索关键字")

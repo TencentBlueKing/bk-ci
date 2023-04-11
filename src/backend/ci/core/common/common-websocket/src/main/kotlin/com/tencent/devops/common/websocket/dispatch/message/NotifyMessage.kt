@@ -34,7 +34,7 @@ data class NotifyMessage(
     val projectId: String,
     val pipelineId: String,
     override val userId: String,
-    override val sessionList: List<String>,
+    override val sessionList: Set<String>?,
     override var page: String?,
     override var notifyPost: NotifyPost
 ) : SendMessage(userId, page, sessionList, notifyPost)

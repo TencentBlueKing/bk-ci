@@ -49,6 +49,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 )
@@ -141,14 +142,19 @@ const longLogTag = "toolong"
 
 // doDockerJob 使用docker启动构建
 func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
-	// 各种情况退出时减运行任务数量
 	defer func() {
+		// 各种情况退出时减运行任务数量
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
 	}()
 
 	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
+	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
+		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
+		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker凭据错误|"+dockerBuildInfo.Credential.ErrMsg, api.DockerCredGetErrorEnum))
+		return
+	}
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -157,7 +163,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	imageName := dockerBuildInfo.Image
+	imageName := strings.TrimSpace(dockerBuildInfo.Image)
 
 	// 判断本地是否已经有镜像了
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
@@ -176,8 +182,22 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	}
 
-	// 本地没有镜像的需要拉取新的镜像
-	if !localExist {
+	imageStrSub := strings.Split(imageStr, ":")
+	isLatest := false
+	// mirrors.tencent.com/ruotiantang/image-test:latest
+	// 长度为2说明第二个就是tag
+	if len(imageStrSub) == 2 && imageStrSub[1] == "latest" {
+		isLatest = true
+	} else if len(imageStr) == 1 {
+		// 等于1说明没填tag按照docker的规则默认会去拉取最新的为 latest
+		isLatest = true
+	}
+
+	// 本地没有镜像的获取版本号为最新的，需要拉取新的镜像
+	if !localExist || isLatest {
+		if isLatest {
+			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
+		}
 		postLog(false, i18n.Localize("StartPullImage", map[string]interface{}{"name": imageName}), buildInfo)
 		postLog(false, i18n.Localize("FirstPullTips", nil), buildInfo)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
@@ -193,13 +213,13 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		_, err = io.Copy(buf, reader)
 		if err != nil {
 			logs.Error("DOCKER_JOB|write image message error ", err)
-			postLog(true, i18n.Localize("GetPullImageLogError", map[string]interface{}{"err": err.Error()}), buildInfo)
+			postLog(true, i18n.Localize("GetPullImageLogError", map[string]interface{}{"err": err.Error()}), buildInfo, api.LogtypeLog)
 		} else {
 			// 异步打印，防止过大卡住主流程
-			go postLog(false, buf.String(), buildInfo)
+			go postLog(false, buf.String(), buildInfo, api.LogtypeLog)
 		}
 	} else {
-		postLog(false, i18n.Localize("LocalExistImage", nil)+imageName, buildInfo)
+		postLog(false, i18n.Localize("LocalExistImage", nil)+imageName, buildInfo, api.LogtypeLog)
 	}
 
 	// 创建docker构建机运行准备空间，拉取docker构建机初始化文件
@@ -212,35 +232,61 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
+	// 解析docker options
+	var dockerConfig *job_docker.ContainerConfig = nil
+	if dockerBuildInfo.Options != nil {
+		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+		if err != nil {
+			logs.Error("DOCKER_JOB|" + err.Error())
+			dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
+			return
+		}
+	}
+
 	// 创建容器
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
+		errMsg := fmt.Sprintf("准备Docker挂载目录失败: %s", err.Error())
 		logs.Error("DOCKER_JOB| ", err)
-		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerMountCreateErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
 	}
-	var resources container.Resources
-	if dockerBuildInfo.DockerResource != nil {
-		resources = container.Resources{
-			Memory:    dockerBuildInfo.DockerResource.MemoryLimitBytes,
-			CPUQuota:  dockerBuildInfo.DockerResource.CpuQuota,
-			CPUPeriod: dockerBuildInfo.DockerResource.CpuPeriod,
+
+	var confg *container.Config
+	var hostConfig *container.HostConfig
+	var netConfig *network.NetworkingConfig
+	if dockerConfig != nil {
+		confg = dockerConfig.Config
+		confg.Image = imageStr
+		confg.Cmd = []string{}
+		confg.Entrypoint = []string{"/bin/sh", "-c", entryPointCmd}
+		confg.Env = parseContainerEnv(dockerBuildInfo)
+
+		hostConfig = dockerConfig.HostConfig
+		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
+		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
+		hostConfig.NetworkMode = container.NetworkMode("bridge")
+
+		netConfig = dockerConfig.NetworkingConfig
+	} else {
+		confg = &container.Config{
+			Image:      imageStr,
+			Cmd:        []string{},
+			Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
+			Env:        parseContainerEnv(dockerBuildInfo),
 		}
-	}
-	hostConfig := &container.HostConfig{
-		CapAdd:      []string{"SYS_PTRACE"},
-		Mounts:      mounts,
-		NetworkMode: container.NetworkMode("bridge"),
-		Resources:   resources,
+
+		hostConfig = &container.HostConfig{
+			CapAdd:      []string{"SYS_PTRACE"},
+			Mounts:      mounts,
+			NetworkMode: container.NetworkMode("bridge"),
+		}
+
+		netConfig = nil
 	}
 
-	creatResp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:      imageStr,
-		Cmd:        []string{},
-		Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
-		Env:        parseContainerEnv(dockerBuildInfo),
-	}, hostConfig, nil, nil, containerName)
+	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
 		dockerBuildFinish(buildInfo.ToFinish(
@@ -252,6 +298,10 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	defer func() {
+		if config.IsDebug {
+			logs.Debug("debug no remove container")
+			return
+		}
 		if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
 		}
@@ -316,23 +366,30 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 				} else {
 					msg = content
 				}
-				// 这里可能就是docker最开始执行时报错，拿一下docker log
-				if msg == "" {
-					logs, err := cli.ContainerLogs(ctx, creatResp.ID, types.ContainerLogsOptions{
-						ShowStdout: true,
-						ShowStderr: true,
-					})
+
+				// 这里可能就是docker最开始执行时报错，拿一下docker log，如果原本有docker.log 则容器日志上传为debug日志，否则上传为结束日志
+				containerLogB, err := cli.ContainerLogs(ctx, creatResp.ID, types.ContainerLogsOptions{
+					ShowStdout: true,
+					ShowStderr: true,
+				})
+				var containerLog = ""
+				if err == nil {
+					buf := new(strings.Builder)
+					_, err := io.Copy(buf, containerLogB)
 					if err != nil {
-						msg = ""
+						logs.Error("copy container error", err)
+						containerLog = ""
 					} else {
-						buf := new(strings.Builder)
-						_, err := io.Copy(buf, logs)
-						if err != nil {
-							msg = ""
-						} else {
-							msg = buf.String()
-						}
+						containerLog = buf.String()
 					}
+				} else {
+					logs.Error("get container error", err)
+				}
+
+				if msg == "" {
+					msg = containerLog
+				} else {
+					go postLog(false, "Docker容器日志为: \n"+containerLog, buildInfo, api.LogtypeDebug)
 				}
 
 				if msg == longLogTag {
@@ -374,7 +431,7 @@ func dockerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 }
 
 // postLog 向后台上报日志
-func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo) {
+func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo, logType api.LogType) {
 	taskId := "startVM-" + buildInfo.VmSeqId
 
 	logMessage := &api.LogMessage{
@@ -382,7 +439,7 @@ func postLog(red bool, message string, buildInfo *api.ThirdPartyBuildInfo) {
 		Timestamp:    time.Now().UnixMilli(),
 		Tag:          taskId,
 		JobId:        buildInfo.ContainerHashId,
-		LogType:      api.LogtypeLog,
+		LogType:      logType,
 		ExecuteCount: buildInfo.ExecuteCount,
 		SubTag:       nil,
 	}
@@ -451,7 +508,13 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	})
 
 	// 创建并挂载data和log
-	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	// data目录优先选择用户自定的工作空间
+	dataDir := ""
+	if buildInfo.Workspace == "" {
+		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	} else {
+		dataDir = buildInfo.Workspace
+	}
 	err := mkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
@@ -489,14 +552,6 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	envs = append(envs, "devops_gateway="+config.GetGateWay())
 	// 通过环境变量区分agent docker
 	envs = append(envs, "agent_build_env=DOCKER")
-
-	if dockerBuildInfo.Envs == nil {
-		return envs
-	}
-
-	for k, v := range dockerBuildInfo.Envs {
-		envs = append(envs, k+"="+v)
-	}
 
 	return envs
 }

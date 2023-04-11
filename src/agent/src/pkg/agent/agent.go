@@ -39,8 +39,8 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
 )
 
-func Run() {
-	config.Init()
+func Run(isDebug bool) {
+	config.Init(isDebug)
 
 	// 初始化国际化
 	i18n.InitAgentI18n()

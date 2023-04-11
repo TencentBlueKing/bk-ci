@@ -77,7 +77,7 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
 	b.instances.Store(processId, buildInfo)
 	// 启动构建了就删除preInstance
-	b.preInstances.Delete(buildInfo.BuildId)
+	b.DeletePreInstance(buildInfo.BuildId)
 
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
@@ -139,4 +139,8 @@ func (b *buildManager) GetPreInstancesCount() int {
 
 func (b *buildManager) AddPreInstance(buildId string) {
 	b.preInstances.Store(buildId, true)
+}
+
+func (b *buildManager) DeletePreInstance(buildId string) {
+	b.preInstances.Delete(buildId)
 }

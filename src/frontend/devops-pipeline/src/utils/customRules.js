@@ -92,6 +92,11 @@ const customeRules = {
         validate: function (value, args) {
             return /^[\w-{}() +?.:$"]{1,256}$/.test(value)
         }
+    },
+    timeoutsRule: {
+        validate: function (value, args) {
+            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
+        }
     }
 }
 

@@ -47,28 +47,32 @@ type ThirdPartyBuildInfo struct {
 	ContainerHashId string                     `json:"containerHashId"`
 }
 
+type BuildJobType string
+
+const (
+	AllBuildType    BuildJobType = "ALL"
+	DockerBuildType BuildJobType = "DOCKER"
+	BinaryBuildType BuildJobType = "BINARY"
+)
+
 type ThirdPartyDockerBuildInfo struct {
-	AgentId        string            `json:"agentId"`
-	SecretKey      string            `json:"secretKey"`
-	Image          string            `json:"image"`
-	Credential     *Credential       `json:"credential"`
-	Envs           map[string]string `json:"envs"`
-	DockerResource *DockerResourceOptions
+	AgentId    string         `json:"agentId"`
+	SecretKey  string         `json:"secretKey"`
+	Image      string         `json:"image"`
+	Credential *Credential    `json:"credential"`
+	Options    *DockerOptions `json:"options"`
 }
 
 type Credential struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
+	ErrMsg   string `json:"errMsg"`
 }
 
-type DockerResourceOptions struct {
-	MemoryLimitBytes    int64
-	CpuPeriod           int64
-	CpuQuota            int64
-	BlkioDeviceWriteBps int64
-	BlkioDeviceReadBps  int64
-	Disk                int
-	Description         string
+type DockerOptions struct {
+	Volumes []string `json:"volumes"`
+	Gpus    string   `json:"gpus"`
+	Mounts  []string `json:"mounts"`
 }
 
 type ThirdPartyBuildWithStatus struct {

@@ -35,7 +35,7 @@ data class PipelineMessage(
     val projectId: String,
     val startTime: Long,
     override val userId: String,
-    override val sessionList: List<String>?,
+    override val sessionList: Set<String>?,
     override var page: String?,
     override var notifyPost: NotifyPost
 ) : SendMessage(userId, page, sessionList, notifyPost)

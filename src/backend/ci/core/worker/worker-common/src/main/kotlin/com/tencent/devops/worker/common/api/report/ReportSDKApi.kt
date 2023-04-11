@@ -51,11 +51,13 @@ interface ReportSDKApi : WorkerRestApiSDK {
      * 创建报告要上传的记录
      */
     fun createReportRecord(
+        buildVariables: BuildVariables,
         taskId: String,
         indexFile: String,
         name: String,
         reportType: String? = ReportTypeEnum.INTERNAL.name,
-        reportEmail: ReportEmail? = null
+        reportEmail: ReportEmail? = null,
+        token: String?
     ): Result<Boolean>
 
     /**
