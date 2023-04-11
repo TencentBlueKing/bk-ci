@@ -1329,6 +1329,7 @@ class TemplateFacadeService @Autowired constructor(
                     data = null,
                     defaultMessage = exception.defaultMessage
                 ).message ?: exception.defaultMessage ?: "unknown!"
+                failurePipelines.add(instance.pipelineName)
             } catch (ignored: Throwable) {
                 logger.warn("TemplateCreateInstanceThrowable|$projectId|$instance|$userId|${ignored.message}")
                 failurePipelines.add(instance.pipelineName)
@@ -1407,6 +1408,7 @@ class TemplateFacadeService @Autowired constructor(
                     data = null,
                     defaultMessage = exception.defaultMessage
                 ).message ?: exception.defaultMessage ?: "unknown!"
+                failurePipelines.add(it.pipelineName)
             } catch (ignored: Throwable) {
                 logger.warn("updateTemplateInstancesThrowable|$projectId|$it|$userId|${ignored.message}")
                 failurePipelines.add(it.pipelineName)
