@@ -37,6 +37,12 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeP4WebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
@@ -74,7 +80,13 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
+@Suppress(
+    "LongParameterList",
+    "ComplexMethod",
+    "ReturnCount",
+    "NestedBlockDepth",
+    "LongMethod"
+)
 @Service
 class PipelineBuildRecordService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
@@ -256,13 +268,42 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId
         )
 
+        // TODO 临时解析旧触发器获取实际触发信息，后续触发器完善需要改回
+        val triggerInfo = if (buildInfo.trigger == StartType.WEB_HOOK.name) {
+            triggerContainer.elements.find { it.status == BuildStatus.SUCCEED.name }?.let {
+                when (it) {
+                    is CodeGitWebHookTriggerElement -> {
+                        "Git事件"
+                    }
+                    is CodeTGitWebHookTriggerElement -> {
+                        "Git事件"
+                    }
+                    is CodeGithubWebHookTriggerElement -> {
+                        "GitHub事件"
+                    }
+                    is CodeGitlabWebHookTriggerElement -> {
+                        "Gitlab事件"
+                    }
+                    is CodeP4WebHookTriggerElement -> {
+                        "P4事件"
+                    }
+                    is CodeSVNWebHookTriggerElement -> {
+                        "SVN事件"
+                    }
+                    else -> null
+                }
+            } ?: "仓库事件"
+        } else {
+            StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode)
+        }
+
         return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
             userId = buildInfo.startUser,
             triggerUser = buildInfo.triggerUser,
-            trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            trigger = triggerInfo,
             queueTime = buildRecordModel?.queueTime ?: buildInfo.queueTime,
             startTime = buildRecordModel?.startTime?.timestampmilli()
                 ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
@@ -303,14 +344,17 @@ class PipelineBuildRecordService @Autowired constructor(
                 totalCost = buildInfo.executeTime + queueCost
             )
         }
-        detail.stages.forEach { stage ->
-            stage.containers.forEach { container ->
+        detail.stages.forEach nextStage@{ stage ->
+            if (!hasTimeCost(stage.status)) return@nextStage
+            stage.containers.forEach nextContainer@{ container ->
+                if (!hasTimeCost(container.status)) return@nextContainer
                 container.timeCost = BuildRecordTimeCost(
                     systemCost = container.systemElapsed ?: 0,
                     executeCost = container.elementElapsed ?: 0,
                     totalCost = (container.systemElapsed ?: 0) + (container.elementElapsed ?: 0)
                 )
-                container.elements.forEach { element ->
+                container.elements.forEach nextElement@{ element ->
+                    if (!hasTimeCost(element.status)) return@nextElement
                     element.timeCost = BuildRecordTimeCost(
                         executeCost = element.elapsed ?: 0,
                         totalCost = element.elapsed ?: 0
@@ -319,6 +363,10 @@ class PipelineBuildRecordService @Autowired constructor(
             }
         }
     }
+
+    private fun hasTimeCost(status: String?) =
+        BuildStatus.parse(status).isFinish() &&
+            !BuildStatus.parse(status).isSkip()
 
     fun buildCancel(
         projectId: String,
