@@ -602,8 +602,8 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.indicatorRange != projectId) return@forEach
-            if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-            if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
+            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
         }
         return false
     }
