@@ -142,7 +142,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         statistics: Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>>
     ) {
         storeCodes.forEach { storeCode ->
-            val statistic = statistics.firstOrNull{it.value4().toString() == storeCode}
+            val statistic = statistics.firstOrNull{ it.value4().toString() == storeCode }
             if (statistic != null) {
                 // 下载量
                 val downloads = statistic.value1().toInt()
