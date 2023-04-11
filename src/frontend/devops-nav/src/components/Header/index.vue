@@ -8,7 +8,7 @@
             >
                 <Logo
                     name="devops-logo"
-                    width="100"
+                    width="auto"
                     height="28"
                 />
             </router-link>
@@ -88,15 +88,15 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
-    import User from '../User/index.vue'
-    import NavMenu from './NavMenu.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
+    import User from '../User/index.vue'
+    import NavMenu from './NavMenu.vue'
 
     @Component({
         components: {
