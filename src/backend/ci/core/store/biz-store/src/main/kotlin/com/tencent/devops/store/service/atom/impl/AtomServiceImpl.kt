@@ -463,6 +463,30 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(atomNameMap)
     }
 
+    override fun getProjectElementsInfo(projectCode: String): Result<Map<String, String>> {
+        // 从缓存中取出插件的名称集合信息
+        val cacheKey = projectCode + "_info"
+        var atomNameMap = atomNameCache.getIfPresent(cacheKey)
+        if (atomNameMap == null) {
+            // 缓存中没有名称信息则实时去DB查
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
+            atomNameMap = defaultAtomCodeRecords.associate {
+                it.value1() to StoreProjectTypeEnum.COMMON.name
+            }.toMutableMap()
+            val projectAtomCodeRecords = storeProjectRelDao.getValidStoreCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeType = StoreTypeEnum.ATOM
+            )
+            projectAtomCodeRecords?.map {
+                atomNameMap[it.value1()] = StoreProjectTypeEnum.getProjectType(it.value2().toInt())
+            }
+            // 把插件的名称信息放入缓存
+            atomNameCache.put(cacheKey, atomNameMap)
+        }
+        return Result(atomNameMap)
+    }
+
     /**
      * 根据插件代码和版本号获取插件信息
      */

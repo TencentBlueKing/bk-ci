@@ -88,6 +88,15 @@ interface ServiceMarketAtomResource {
         projectCode: String
     ): Result<Map<String/* atomCode */, String/* cnName */>>
 
+    @ApiOperation("获取所有默认插件和自定义插件信息")
+    @GET
+    @Path("/project/{projectCode}/projectElementInfo")
+    fun getProjectElementsInfo(
+        @ApiParam("项目编码", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<Map<String/* atomCode */, String/* installType */>>
+
     @ApiOperation("根据插件代码获取插件详细信息")
     @GET
     @Path("/{atomCode}")
