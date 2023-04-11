@@ -19,9 +19,9 @@ spec:
   replicas: {{ .Values.gateway.replicas }}
   {{- end }}
   strategy:
-    rollingUpdate:
+    rollingUpdate: # 一台台更新
       maxSurge: 1
-      maxUnavailable: 1
+      maxUnavailable: 0
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
