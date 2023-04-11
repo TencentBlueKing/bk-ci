@@ -20,8 +20,11 @@ test-unit:
 	@echo "==> Running unit tests <=="
 	GO111MODULE=on go test -tags=${BUILD_OUT_TAG} -run . ./...
 
+# 相对于代码生成器的位置
+I18N_DIR := "../../../../../support-files/i18n/agent/"
+
 i18nfilegen: 
-	go generate -x src/pkg/i18n/i18n.go
+	I18N_DIR=${I18N_DIR} go generate -x src/pkg/i18n/i18n.go
 
 all: linux windows macos_no_cgo
 

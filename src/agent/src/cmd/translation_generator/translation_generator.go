@@ -35,6 +35,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"golang.org/x/text/language"
@@ -45,11 +46,22 @@ func main() {
 	workDir, err := os.Getwd()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "get workdir error %s \n", err.Error())
-		return
+		exit()
+	}
+	if len(os.Args) < 2 {
+		fmt.Fprintf(os.Stderr, "no i18n file path\n")
+		exit()
 	}
 
-	// 拿到项目的根目录，目前的运行目录是 (root)/src/pkg/i18n/, 所以需要往上三个目录
-	rootPath := filepath.Dir(filepath.Dir(filepath.Dir(workDir)))
+	i18nFileDir := os.Args[1]
+	// 拿到国际化文件路径，不是绝对路径的转为绝对路径
+	if !filepath.IsAbs(i18nFileDir) {
+		if i18nFileDir, err = filepath.Abs(i18nFileDir); err != nil {
+			fmt.Fprintf(os.Stderr, "i18n file path abs error\n")
+			exit()
+		}
+	}
+	fmt.Fprintf(os.Stdout, "i18n file path dir %s\n", i18nFileDir)
 
 	g := Generator{}
 
@@ -65,11 +77,10 @@ func main() {
 	g.Printf("func init(){\n")
 
 	// 读取用户配置的国际化文件
-	i18nFileDir := filepath.Join(rootPath, "i18n")
 	files, err := ioutil.ReadDir(i18nFileDir)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "read i18ndir error %s \n", err.Error())
-		return
+		exit()
 	}
 	for _, f := range files {
 		if f.IsDir() {
@@ -82,16 +93,23 @@ func main() {
 		fileContent, err := os.ReadFile(filepath.Join(i18nFileDir, fileName))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "read i18nfile %s error %s \n", filepath.Join(i18nFileDir, fileName), err.Error())
-			return
+			exit()
 		}
 
 		// 解析国际化内容
-		lanuageValue := &map[string]map[string]string{}
-		err = json.Unmarshal(fileContent, lanuageValue)
+		lanuageValue := map[string]map[string]string{}
+		err = json.Unmarshal(fileContent, &lanuageValue)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "json umarshal i18nfile %s error %s \n", filepath.Join(i18nFileDir, fileName), err.Error())
-			return
+			exit()
 		}
+
+		// 拿到id排序方便每次输出一致
+		keys := []string{}
+		for key := range lanuageValue {
+			keys = append(keys, key)
+		}
+		sort.Sort(sort.StringSlice(keys))
 
 		// 打印代码内容
 		// 获取并校验语言类型
@@ -99,21 +117,22 @@ func main() {
 		lanuagTag, err := language.Parse(lanuagStr)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "go not support lanuage name %s error %s\n", lanuagStr, err.Error())
-			return
+			exit()
 		}
 		g.Printf("Translations[\"%s\"] = []*i18n.Message{\n", lanuagTag.String())
 		// 拼接 i18n.Message 对象，并校验
-		for id, v := range *lanuageValue {
+		for _, id := range keys {
+			v := lanuageValue[id]
 			g.Printf("{\n")
 			if id == "" {
 				fmt.Fprintf(os.Stderr, "build i18nmessage error file %s id is blank \n", filepath.Join(i18nFileDir, fileName))
-				return
+				exit()
 			}
 			g.Printf("ID: \"%s\",", id)
 			other, ok := v["other"]
 			if !ok {
 				fmt.Fprintf(os.Stderr, "build i18nmessage error file %s id %s no 'other' key \n", filepath.Join(i18nFileDir, fileName), id)
-				return
+				exit()
 			}
 			// 将换行符转义
 			other = strings.ReplaceAll(other, "\n", "\\n")
@@ -133,7 +152,7 @@ func main() {
 	err = os.WriteFile(outputName, src, 0644)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "writing output: %s", err)
-		return
+		exit()
 	}
 }
 
@@ -153,4 +172,8 @@ func (g *Generator) format() []byte {
 		return g.buf.Bytes()
 	}
 	return src
+}
+
+func exit() {
+	os.Exit(1)
 }
