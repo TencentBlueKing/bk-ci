@@ -6,11 +6,13 @@
                 to="/console/"
                 @click.native="setDocumentTitle"
             >
-                <Logo
-                    :name="headerLogoName"
-                    width="auto"
-                    height="28"
-                />
+                <span>
+                    <Logo
+                        :name="headerLogoName"
+                        width="auto"
+                        height="28"
+                    />
+                </span>
             </router-link>
             <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
@@ -310,6 +312,11 @@
                 margin-left: 15px;
                 margin-right: 15px;
                 width: 230px;
+                display: flex;
+                > span {
+                    display: inline-flex;
+
+                }
             }
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {
