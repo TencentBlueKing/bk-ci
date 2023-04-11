@@ -1537,12 +1537,21 @@ class TemplateFacadeService @Autowired constructor(
                         templateInstanceUpdate = templateInstanceUpdate
                     )
                     successPipelines.add(templateInstanceUpdate.pipelineName)
+                } catch (exception: ErrorCodeException) {
+                    logger.info("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|${exception.message}")
+                    val message = MessageCodeUtil.generateResponseDataObject(
+                        messageCode = exception.errorCode,
+                        params = exception.params,
+                        data = null,
+                        defaultMessage = exception.defaultMessage
+                    ).message ?: exception.defaultMessage ?: "unknown!"
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                 } catch (t: Throwable) {
-                    logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
                     val message =
                         if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
                             t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
+                    logger.warn("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|$message")
                 }
             }
             // 发送执行任务结果通知
@@ -1821,7 +1830,7 @@ class TemplateFacadeService @Autowired constructor(
         val templatePipelines = associatePipelines.map {
             val pipelineId = it[KEY_PIPELINE_ID] as String
             val pipelineSetting = pipelineSettings[pipelineId]
-            if (pipelineSetting == null || pipelineSetting.isEmpty()) {
+            if (pipelineSetting.isNullOrEmpty()) {
                 throw ErrorCodeException(
                     defaultMessage = "流水线设置配置不存在",
                     errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
@@ -1845,19 +1854,19 @@ class TemplateFacadeService @Autowired constructor(
                 status = templatePipelineStatus
             )
         }
-        val sortTemplatePipelines = templatePipelines.sortedWith(
-            Comparator { a, b ->
-                when (sortType) {
-                    TemplateSortTypeEnum.PIPELINE_NAME -> {
-                        a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
-                    }
-                    TemplateSortTypeEnum.STATUS -> {
-                        b.status.name.compareTo(a.status.name)
-                    }
-                    else -> 0
+        val sortTemplatePipelines = templatePipelines.sortedWith { a, b ->
+            when (sortType) {
+                TemplateSortTypeEnum.PIPELINE_NAME -> {
+                    a.pipelineName.lowercase().compareTo(b.pipelineName.lowercase())
                 }
+
+                TemplateSortTypeEnum.STATUS -> {
+                    b.status.name.compareTo(a.status.name)
+                }
+
+                else -> 0
             }
-        )
+        }
         return TemplateInstancePage(
             projectId = projectId,
             templateId = templateId,
