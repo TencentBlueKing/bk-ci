@@ -1122,7 +1122,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envs = mapOf(),
                     props = mapOf(),
                     dockerParallelTaskCount = -1,
-                    language = commonConfig.devopsDefaultLocale
+                    language = commonConfig.devopsDefaultLocaleLanguage
                 )
             }
 
@@ -1234,7 +1234,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 envs = mapOf(),
                                 props = mapOf(),
                                 dockerParallelTaskCount = -1,
-                                language = commonConfig.devopsDefaultLocale
+                                language = commonConfig.devopsDefaultLocaleLanguage
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1271,7 +1271,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 fileGateway = agentRecord.fileGateway,
                 props = oldUserProps,
                 dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0,
-                language = commonConfig.devopsDefaultLocale
+                language = commonConfig.devopsDefaultLocaleLanguage
             )
         }
     }

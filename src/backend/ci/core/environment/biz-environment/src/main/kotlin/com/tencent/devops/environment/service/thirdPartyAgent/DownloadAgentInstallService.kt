@@ -281,7 +281,7 @@ class DownloadAgentInstallService @Autowired constructor(
             "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn,
-            "language" to commonConfig.devopsDefaultLocale
+            "language" to commonConfig.devopsDefaultLocaleLanguage
         )
     }
 
