@@ -28,10 +28,10 @@
 package com.tencent.devops.common.api.pojo
 
 enum class ErrorType(val typeName: String, val num: Int) {
-    SYSTEM("系统运行错误", 0), // 0 系统运行报错
-    USER("用户配置错误", 1), // 1 用户配置报错
-    THIRD_PARTY("第三方系统错误", 2), // 2 第三方系统接入错误
-    PLUGIN("插件执行错误", 3); // 3 插件执行错误
+    SYSTEM("system", 0), // 0 系统运行报错
+    USER("user", 1), // 1 用户配置报错
+    THIRD_PARTY("third_party", 2), // 2 第三方系统接入错误
+    PLUGIN("plugin", 3); // 3 插件执行错误
 
     companion object {
 
