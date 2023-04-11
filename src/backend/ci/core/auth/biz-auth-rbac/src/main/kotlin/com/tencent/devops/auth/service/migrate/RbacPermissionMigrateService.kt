@@ -105,7 +105,7 @@ class RbacPermissionMigrateService constructor(
             }
             // 3. 异步迁移资源
             val resourceFuture = CompletableFuture.supplyAsync(
-                { migrateResourceService.migrateResource(projectCode = projectCode, gradeManagerId = gradeManagerId) },
+                { migrateResourceService.migrateResource(projectCode = projectCode) },
                 executorService
             )
             // 4. 异步迁移v3用户组

@@ -28,12 +28,113 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.RbacPermissionResourceService
+import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.api.service.ServicePipelineResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
 /**
  * 将资源迁移到权限中心
  */
-class MigrateResourceService {
+class MigrateResourceService @Autowired constructor(
+    private val resourceService: ResourceService,
+    private val rbacCacheService: RbacCacheService,
+    private val rbacPermissionResourceService: RbacPermissionResourceService,
+    private val authResourceService: AuthResourceService,
+    private val client: Client
+) {
+    fun migrateResource(projectCode: String) {
+        val startEpoch = System.currentTimeMillis()
+        logger.info("start to migrate resource:$projectCode")
 
-    fun migrateResource(projectCode: String, gradeManagerId: Int) {
+        val resourceTypes = rbacCacheService.listResourceTypes()
+            .map { it.resourceType }.filterNot { noNeedToMigrateResourceType.contains(it) }
 
+        logger.info("resourceTypes:$resourceTypes")
+        resourceTypes.forEach { resourceType -> resourceCreateRelation(projectCode, resourceType) }
+        logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private fun resourceCreateRelation(
+        resourceType: String,
+        projectCode: String
+    ) {
+        var offset = 0L
+        val limit = 100L
+        do {
+            val resourceData = getInstanceByResource(
+                offset = offset,
+                limit = limit,
+                resourceType = resourceType
+            )
+            logger.info("resourceData:$resourceData")
+            val resources = resourceData.data.result
+            val resourceCount = resourceData.data.count
+            resources.forEach {
+                val resourceCode = convertResourceCode(resourceType, it.id)
+                logger.info("resourceCode:$resourceCode")
+                authResourceService.getOrNull(projectCode, resourceType, resourceCode)?.run {
+                    rbacPermissionResourceService.resourceCreateRelation(
+                        userId = it.iamApprover[0],
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = it.displayName
+                    )
+                }
+            }
+            offset += limit
+        } while (resourceCount == limit)
+    }
+
+    private fun getInstanceByResource(offset: Long, limit: Long, resourceType: String): ListInstanceInfo =
+        resourceService.getInstanceByResource(
+            callBackInfo = CallbackRequestDTO().apply {
+                type = resourceType
+                method = CallbackMethodEnum.LIST_INSTANCE
+                filter = null
+                page = PageInfoDTO().apply {
+                    this.offset = offset
+                    this.limit = limit
+                }
+            }, token = "token"
+        ) as ListInstanceInfo
+
+    private fun convertResourceCode(resourceType: String, resourceCode: String): String {
+        return if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+            // 如果资源类型是流水线，得转化成pipelineId
+            val pipelineInfo = client.get(ServicePipelineResource::class)
+                .getPipelineInfobyAutoId(resourceCode.toLong()).data
+                ?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                    params = arrayOf(resourceCode),
+                    defaultMessage = "the resourceCode $resourceCode not exists"
+                )
+            pipelineInfo.pipelineId
+        } else resourceCode
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
+        private val noNeedToMigrateResourceType = listOf(
+            AuthResourceType.CODECC_TASK.value,
+            AuthResourceType.CODECC_IGNORE_TYPE.value,
+            AuthResourceType.CODECC_RULE_SET.value,
+            AuthResourceType.PIPELINE_GROUP.value,
+            AuthResourceType.TURBO.value,
+            AuthResourceType.PROJECT
+        )
     }
 }
