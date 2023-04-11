@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
