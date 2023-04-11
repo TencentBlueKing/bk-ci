@@ -278,8 +278,18 @@ class RbacAuthConfiguration {
     )
 
     @Bean
-    fun migrateResourceService() = MigrateResourceService(
-
+    fun migrateResourceService(
+        resourceService: ResourceService,
+        rbacCacheService: RbacCacheService,
+        rbacPermissionResourceService: RbacPermissionResourceService,
+        authResourceService: AuthResourceService,
+        client: Client
+    ) = MigrateResourceService(
+        resourceService = resourceService,
+        rbacCacheService = rbacCacheService,
+        rbacPermissionResourceService = rbacPermissionResourceService,
+        authResourceService = authResourceService,
+        client = client
     )
 
     @Bean
