@@ -209,6 +209,7 @@ class PermissionGradeManagerService @Autowired constructor(
     }
 
     fun migrateGradeManager(
+        userId: String,
         projectCode: String,
         projectName: String
     ): Int {
@@ -245,7 +246,19 @@ class PermissionGradeManagerService @Autowired constructor(
             .groupName(manageGroupConfig.groupName)
             .build()
         logger.info("create migrate grade manager|$name")
-        return iamV2ManagerService.createManagerV2(createManagerDTO)
+        val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
+        authResourceService.create(
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName,
+            iamResourceCode = projectCode,
+            enable = true,
+            relationId = gradeManagerId.toString()
+        )
+        syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode, projectName = projectName)
+        return gradeManagerId
     }
 
     /**

@@ -31,14 +31,12 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
-import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -51,7 +49,7 @@ class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
-    private val permissionResourceService: PermissionResourceService,
+    private val permissionGradeManagerService: PermissionGradeManagerService,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
@@ -102,10 +100,11 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                createGradeManager(projectCode, projectInfo)
-            } ?: run {
-                logger.info("project $projectCode gradle manager not found")
-                return false
+                permissionGradeManagerService.migrateGradeManager(
+                    userId = projectInfo.creator!!,
+                    projectCode = projectCode,
+                    projectName = projectInfo.projectName
+                )
             }
             // 3. 迁移资源
             migrateResourceService.migrateResource(
@@ -154,24 +153,5 @@ class RbacPermissionMigrateService constructor(
         } finally {
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate $projectCode")
         }
-    }
-
-    private fun createGradeManager(
-        projectCode: String,
-        projectInfo: ProjectVO
-    ): Int? {
-        client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        permissionResourceService.resourceCreateRelation(
-            userId = projectInfo.creator ?: "",
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectInfo.projectName
-        )
-        return authResourceService.getOrNull(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )?.relationId?.toInt()
     }
 }
