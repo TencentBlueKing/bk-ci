@@ -63,6 +63,7 @@ import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
@@ -278,23 +279,44 @@ class RbacAuthConfiguration {
     )
 
     @Bean
+    fun migrateResourceCodeConverter(
+        client: Client
+    ) = MigrateResourceCodeConverter(
+        client = client
+    )
+
+    @Bean
     fun migrateResourceService(
         resourceService: ResourceService,
         rbacCacheService: RbacCacheService,
         rbacPermissionResourceService: RbacPermissionResourceService,
         authResourceService: AuthResourceService,
-        client: Client
+        migrateResourceCodeConverter: MigrateResourceCodeConverter
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
         rbacPermissionResourceService = rbacPermissionResourceService,
         authResourceService = authResourceService,
-        client = client
+        migrateResourceCodeConverter = migrateResourceCodeConverter
     )
 
     @Bean
-    fun migrateV3PolicyService() = MigrateV3PolicyService(
-
+    fun migrateV3PolicyService(
+        v2ManagerService: V2ManagerServiceImpl,
+        iamConfiguration: IamConfiguration,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        authResourceCodeConverter: AuthResourceCodeConverter
+    ) = MigrateV3PolicyService(
+        v2ManagerService = v2ManagerService,
+        iamConfiguration = iamConfiguration,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        authResourceCodeConverter = authResourceCodeConverter
     )
 
     @Bean
@@ -303,7 +325,7 @@ class RbacAuthConfiguration {
         client: Client,
         migrateResourceService: MigrateResourceService,
         migrateV3PolicyService: MigrateV3PolicyService,
-        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionResourceService: PermissionResourceService,
         authResourceService: AuthResourceService,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao
@@ -311,7 +333,7 @@ class RbacAuthConfiguration {
         client = client,
         migrateResourceService = migrateResourceService,
         migrateV3PolicyService = migrateV3PolicyService,
-        permissionGradeManagerService = permissionGradeManagerService,
+        permissionResourceService = permissionResourceService,
         authResourceService = authResourceService,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao

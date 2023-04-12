@@ -116,4 +116,12 @@ interface ServiceProjectApprovalResource {
         @QueryParam("approver")
         approver: String
     ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}/createMigration")
+    fun createMigration(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
 }
