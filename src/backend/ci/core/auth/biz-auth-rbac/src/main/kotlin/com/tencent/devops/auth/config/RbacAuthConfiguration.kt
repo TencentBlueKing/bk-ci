@@ -67,11 +67,12 @@ import com.tencent.devops.auth.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.migrate.MigrateResourceService
 import com.tencent.devops.auth.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -82,36 +83,23 @@ import org.springframework.context.annotation.Primary
 @Suppress("TooManyFunctions", "LongParameterList")
 class RbacAuthConfiguration {
 
-    @Value("\${auth.url:}")
-    val iamBaseUrl = ""
-
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
-
-    @Value("\${auth.appCode:}")
-    val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    val appSecret = ""
-
-    @Value("\${auth.apigwUrl:#{null}}")
-    val iamApigw = ""
+    @Bean
+    fun iamV2ManagerService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    @Primary
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+    fun iamV2PolicyService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2PolicyServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
-
-    @Bean
-    fun iamV2ManagerService() = V2ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-    @Bean
-    fun iamV2PolicyService() = V2PolicyServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-    @Bean
-    fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+    fun grantV2Service(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2GrantServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
     fun tokenService(
@@ -291,13 +279,17 @@ class RbacAuthConfiguration {
         rbacCacheService: RbacCacheService,
         rbacPermissionResourceService: RbacPermissionResourceService,
         authResourceService: AuthResourceService,
-        migrateResourceCodeConverter: MigrateResourceCodeConverter
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        tokenApi: AuthTokenApi,
+        projectAuthServiceCode: ProjectAuthServiceCode
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
         rbacPermissionResourceService = rbacPermissionResourceService,
         authResourceService = authResourceService,
-        migrateResourceCodeConverter = migrateResourceCodeConverter
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        tokenApi = tokenApi,
+        projectAuthServiceCode = projectAuthServiceCode
     )
 
     @Bean

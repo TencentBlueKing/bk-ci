@@ -36,19 +36,24 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
  * 将资源迁移到权限中心
  */
+@Suppress("LongParameterList")
 class MigrateResourceService @Autowired constructor(
     private val resourceService: ResourceService,
     private val rbacCacheService: RbacCacheService,
     private val rbacPermissionResourceService: RbacPermissionResourceService,
     private val authResourceService: AuthResourceService,
-    private val migrateResourceCodeConverter: MigrateResourceCodeConverter
+    private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
+    private val tokenApi: AuthTokenApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) {
     fun migrateResource(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
@@ -114,7 +119,8 @@ class MigrateResourceService @Autowired constructor(
                     this.offset = offset
                     this.limit = limit
                 }
-            }, token = ""
+            },
+            token = tokenApi.getAccessToken(projectAuthServiceCode)
         ) as ListInstanceInfo?
 
 
