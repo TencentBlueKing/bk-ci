@@ -60,7 +60,11 @@ class MigrateResourceService @Autowired constructor(
 
         logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
         // 迁移各个资源类型下的资源
-        resourceTypes.forEach { resourceType -> resourceCreateRelation(projectCode, resourceType) }
+        resourceTypes.forEach { resourceType ->
+            resourceCreateRelation(
+                resourceType = resourceType, projectCode = projectCode
+            )
+        }
         logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
     }
 
@@ -73,12 +77,20 @@ class MigrateResourceService @Autowired constructor(
                 offset = offset,
                 limit = limit,
                 resourceType = resourceType
-            )
+            ) ?: return
             logger.info("MigrateResourceService|resourceData:$resourceData")
             resourceData.data.result.forEach {
-                val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(resourceType, it.id)
+                val resourceCode =
+                    migrateResourceCodeConverter.v3ToRbacResourceCode(
+                        resourceType = resourceType,
+                        resourceCode = it.id
+                    )
                 logger.info("MigrateResourceService|resourceCode:$resourceCode")
-                authResourceService.getOrNull(projectCode, resourceType, resourceCode)?.run {
+                authResourceService.getOrNull(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode
+                )?.run {
                     rbacPermissionResourceService.resourceCreateRelation(
                         userId = it.iamApprover[0],
                         projectCode = projectCode,
@@ -92,7 +104,7 @@ class MigrateResourceService @Autowired constructor(
         } while (resourceData.data.count == limit)
     }
 
-    private fun getInstanceByResource(offset: Long, limit: Long, resourceType: String): ListInstanceInfo =
+    private fun getInstanceByResource(offset: Long, limit: Long, resourceType: String) =
         resourceService.getInstanceByResource(
             callBackInfo = CallbackRequestDTO().apply {
                 type = resourceType
@@ -103,7 +115,7 @@ class MigrateResourceService @Autowired constructor(
                     this.limit = limit
                 }
             }, token = ""
-        ) as ListInstanceInfo
+        ) as ListInstanceInfo?
 
 
     companion object {
