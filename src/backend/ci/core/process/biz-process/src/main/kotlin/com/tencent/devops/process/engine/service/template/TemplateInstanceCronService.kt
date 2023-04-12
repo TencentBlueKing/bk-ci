@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.template
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -35,6 +36,10 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.process.tables.records.TTemplateRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -74,15 +79,26 @@ class TemplateInstanceCronService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
-    @Value("\${template.maxErrorReasonLength:400}")
-    private val maxErrorReasonLength: Int = 400
+    @Value("\${template.maxErrorReasonLength:200}")
+    private val maxErrorReasonLength: Int = 200
 
     @Scheduled(cron = "0 0/1 * * * ?")
     fun templateInstance() {
-        val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
+        val profile = SpringContextUtil.getBean(Profile::class.java)
+        val activeProfiles = profile.getActiveProfiles()
+        val key = if (activeProfiles.size > 1) {
+            val sb = StringBuilder()
+            activeProfiles.forEach { activeProfile ->
+                sb.append("$activeProfile:")
+            }
+            sb.append(LOCK_KEY).toString()
+        } else {
+            LOCK_KEY
+        }
+        val lock = RedisLock(redisOperation, key, 3000)
         try {
             if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
+                logger.info("get lock[$key] failed, skip")
                 return
             }
             val statusList = listOf(TemplateInstanceBaseStatus.INIT.name, TemplateInstanceBaseStatus.INSTANCING.name)
@@ -96,6 +112,7 @@ class TemplateInstanceCronService @Autowired constructor(
             templateInstanceBaseList?.forEach { templateInstanceBase ->
                 val baseId = templateInstanceBase.id
                 val projectId = templateInstanceBase.projectId
+                val templateId = templateInstanceBase.templateId
                 val projectRouterTagCheck =
                     client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data
                 if (!projectRouterTagCheck!!) {
@@ -119,10 +136,23 @@ class TemplateInstanceCronService @Autowired constructor(
                     baseId = baseId
                 )
                 if (templateInstanceItemCount < 1) {
+                    templateInstanceBaseDao.deleteByBaseId(dslContext, projectId, baseId)
                     return@forEach
                 }
                 val templateVersion = templateInstanceBase.templateVersion.toLong()
-                val template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
+                val template: TTemplateRecord?
+                try {
+                    template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
+                } catch (e: ErrorCodeException) {
+                    if (e.errorCode == ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS) {
+                        // 模板版本记录如果已经被删，则无需执行更新任务并把任务记录删除
+                        logger.warn("the version[$templateVersion] of template[$templateId] is not exist,skip the task")
+                        deleteTemplateInstanceTaskRecord(projectId, baseId)
+                        return@forEach
+                    } else {
+                        throw e
+                    }
+                }
                 val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
                 // 分页切片处理当前批次的待处理任务
                 for (page in 1..totalPages) {
@@ -148,7 +178,7 @@ class TemplateInstanceCronService @Autowired constructor(
                                 userId = userId,
                                 useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
                                 projectId = projectId,
-                                templateId = templateInstanceBase.templateId,
+                                templateId = templateId,
                                 templateVersion = template.version,
                                 versionName = template.versionName,
                                 templateContent = template.template,
@@ -170,11 +200,8 @@ class TemplateInstanceCronService @Autowired constructor(
                         }
                     }
                 }
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    templateInstanceItemDao.deleteByBaseId(context, projectId, baseId)
-                    templateInstanceBaseDao.deleteByBaseId(context, projectId, baseId)
-                }
+                // 删除模板更新任务记录
+                deleteTemplateInstanceTaskRecord(projectId, baseId)
                 // 发送执行任务结果通知
                 TempNotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
                     client = client,
@@ -186,9 +213,17 @@ class TemplateInstanceCronService @Autowired constructor(
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("templateInstance failed", ignored)
+            logger.error("BKSystemErrorMonitor|templateInstance|error=${ignored.message}", ignored)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun deleteTemplateInstanceTaskRecord(projectId: String, baseId: String) {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templateInstanceItemDao.deleteByBaseId(context, projectId, baseId)
+            templateInstanceBaseDao.deleteByBaseId(context, projectId, baseId)
         }
     }
 }

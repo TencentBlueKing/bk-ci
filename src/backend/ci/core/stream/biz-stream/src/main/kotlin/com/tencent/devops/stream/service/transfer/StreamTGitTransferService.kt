@@ -38,7 +38,7 @@ import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitCreateFile
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -251,7 +251,7 @@ class StreamTGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).gitCreateFile(
             gitProjectId = gitProjectId,
             token = getAndCheckOauthToken(userId).accessToken,
-            gitCreateFile = GitCreateFile(
+            gitOperationFile = GitOperationFile(
                 filePath = streamCreateFile.filePath,
                 branch = streamCreateFile.branch,
                 encoding = when (streamCreateFile.encoding) {

@@ -30,10 +30,10 @@ package com.tencent.devops.process.plugin.trigger.timer.quartz
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.plugin.trigger.lock.PipelineTimerTriggerLock
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
 import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
@@ -181,11 +181,7 @@ class PipelineJobBean(
             val scheduledFireTime = DateFormatUtils.format(context.scheduledFireTime, "yyyyMMddHHmmss")
             // 相同触发的要锁定，防止误差导致重复执行
             watcher.start("redisLock")
-            val redisLock = RedisLock(
-                redisOperation = redisOperation,
-                lockKey = "process:pipeline:timer:trigger:$pipelineId:$scheduledFireTime",
-                expiredTimeInSeconds = 58
-            )
+            val redisLock = PipelineTimerTriggerLock(redisOperation, pipelineId, scheduledFireTime)
             if (redisLock.tryLock()) {
                 try {
                     logger.info("[$comboKey]|PIPELINE_TIMER|scheduledFireTime=$scheduledFireTime")

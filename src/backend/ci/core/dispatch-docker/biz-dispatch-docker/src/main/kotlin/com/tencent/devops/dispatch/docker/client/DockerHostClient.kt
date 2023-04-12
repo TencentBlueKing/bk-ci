@@ -29,10 +29,6 @@ package com.tencent.devops.dispatch.docker.client
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
-import com.tencent.devops.buildless.pojo.BuildLessEndInfo
-import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -66,7 +62,7 @@ import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -238,33 +234,7 @@ class DockerHostClient @Autowired constructor(
             customBuildEnv = event.customBuildEnv
         )
 
-        // 测试
-        if (event.projectId == "test-sawyer2") {
-            startBuildLessBuild(agentId, secretKey, event)
-        } else {
-            dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
-        }
-    }
-
-    private fun startBuildLessBuild(
-        agentId: String,
-        secretKey: String,
-        event: PipelineBuildLessStartupDispatchEvent
-    ) {
-        with(event) {
-            client.get(ServiceBuildlessResource::class).startBuild(
-                BuildLessStartInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = Integer.valueOf(vmSeqId),
-                    executionCount = event.executeCount ?: 1,
-                    agentId = agentId,
-                    secretKey = secretKey,
-                    rejectedExecutionType = RejectedExecutionType.ABORT_POLICY
-                )
-            )
-        }
+        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
     }
 
     fun endBuild(
@@ -277,21 +247,6 @@ class DockerHostClient @Autowired constructor(
         poolNo: Int,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (clusterType == DockerHostClusterType.AGENT_LESS) {
-            client.get(ServiceBuildlessResource::class).endBuild(
-                BuildLessEndInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    containerId = containerId
-                )
-            )
-
-            return
-        }
-
         val requestBody = DockerHostBuildInfo(
             projectId = projectId,
             agentId = "",
@@ -317,12 +272,12 @@ class DockerHostClient @Autowired constructor(
             clusterType = clusterType
         ).delete(
             RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            JsonUtil.toJson(requestBody)
-        )).build()
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            )).build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             LOG.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
@@ -357,14 +312,17 @@ class DockerHostClient @Autowired constructor(
             dockerHostIp = dockerIp,
             dockerHostPort = dockerHostPort,
             clusterType = clusterType
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerHostBuildInfo)))
+        ).post(RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            JsonUtil.toJson(dockerHostBuildInfo)
+        ))
             .build()
 
-        LOG.info("dockerStart|${dockerHostBuildInfo.buildId}|$retryTime|$dockerIp|${request.url()}")
+        LOG.info("dockerStart|${dockerHostBuildInfo.buildId}|$retryTime|$dockerIp|${request.url}")
         try {
             OkhttpUtils.doLongHttp(request).use { resp ->
                 if (resp.isSuccessful) {
-                    val responseBody = resp.body()!!.string()
+                    val responseBody = resp.body!!.string()
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     when {
                         response["status"] == 0 -> {
@@ -408,7 +366,7 @@ class DockerHostClient @Autowired constructor(
                         dockerIp = dockerIp,
                         dockerHostBuildInfo = dockerHostBuildInfo,
                         driftIpInfo = driftIpInfo,
-                        errorMessage = resp.message(),
+                        errorMessage = resp.message,
                         unAvailableIpList = unAvailableIpList,
                         clusterType = clusterType
                     )

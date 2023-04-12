@@ -29,15 +29,19 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.pojo.PipelineCollation
+import com.tencent.devops.process.pojo.PipelineSortType
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
+import org.jooq.OrderField
 import org.jooq.Record1
 import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.SortField
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -77,7 +81,6 @@ class PipelineInfoDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT,
-                PIPELINE_NAME_PINYIN,
                 ID
             )
                 .values(
@@ -92,7 +95,6 @@ class PipelineInfoDao {
                     if (manualStartup) 1 else 0,
                     if (canElementSkip) 1 else 0,
                     taskCount,
-                    nameToPinyin(pipelineName),
                     id
                 )
                 .execute()
@@ -126,7 +128,6 @@ class PipelineInfoDao {
 
             if (!pipelineName.isNullOrBlank()) {
                 update.set(PIPELINE_NAME, pipelineName)
-                update.set(PIPELINE_NAME_PINYIN, nameToPinyin(pipelineName))
             }
             if (!pipelineDesc.isNullOrBlank()) {
                 update.set(PIPELINE_DESC, pipelineDesc)
@@ -244,15 +245,21 @@ class PipelineInfoDao {
         projectId: String? = null,
         limit: Int,
         offset: Int,
-        deleteFlag: Boolean = false,
-        timeDescFlag: Boolean = true
+        deleteFlag: Boolean? = false,
+        timeDescFlag: Boolean = true,
+        channelCode: ChannelCode? = null
     ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             if (projectId != null) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            conditions.add(DELETE.eq(deleteFlag))
+            if (null != deleteFlag) {
+                conditions.add(DELETE.eq(deleteFlag))
+            }
+            if (null != channelCode) {
+                conditions.add(CHANNEL.eq(channelCode.name))
+            }
             val baseQuery = dslContext.selectFrom(this).where(conditions)
             if (timeDescFlag) {
                 baseQuery.orderBy(CREATE_TIME.desc(), PIPELINE_ID)
@@ -310,10 +317,15 @@ class PipelineInfoDao {
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun listDeletePipelineIdByProject(
         dslContext: DSLContext,
         projectId: String,
-        days: Long?
+        days: Long?,
+        offset: Int? = null,
+        limit: Int? = null,
+        sortType: PipelineSortType,
+        collation: PipelineCollation
     ): Result<TPipelineInfoRecord>? {
         with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
@@ -322,8 +334,60 @@ class PipelineInfoDao {
             if (days != null) {
                 conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
             }
-            return dslContext.selectFrom(this)
-                .where(conditions).fetch()
+            return dslContext
+                .selectFrom(this)
+                .where(conditions)
+                .let {
+                    val st = when (sortType) {
+                        PipelineSortType.UPDATE_TIME -> transferOrder(
+                            UPDATE_TIME,
+                            collation
+                        )
+                        PipelineSortType.NAME -> transferOrder(
+                            PIPELINE_NAME,
+                            collation
+                        )
+                        else -> transferOrder(
+                            CREATE_TIME,
+                            collation
+                        )
+                    }
+                    it.orderBy(st)
+                }
+                .let { if (offset != null && limit != null) it.limit(offset, limit) else it }
+                .fetch()
+        }
+    }
+
+    private fun <T> transferOrder(
+        field: Field<T>,
+        collation: PipelineCollation,
+        desc: ((field: Field<T>) -> SortField<T>) = { it.desc() },
+        asc: ((field: Field<T>) -> SortField<T>) = { it.asc() }
+    ): OrderField<T> {
+        return if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.DESC) {
+            desc(field)
+        } else {
+            asc(field)
+        }
+    }
+
+    fun countDeletePipeline(
+        dslContext: DSLContext,
+        projectId: String,
+        days: Long?
+    ): Int {
+        with(T_PIPELINE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(DELETE.eq(true))
+            if (days != null) {
+                conditions.add(UPDATE_TIME.greaterOrEqual(LocalDateTime.now().minusDays(days)))
+            }
+            return dslContext
+                .selectCount().from(this)
+                .where(conditions)
+                .fetchOne()?.value1() ?: 0
         }
     }
 
@@ -606,10 +670,10 @@ class PipelineInfoDao {
         }
     }
 
-    fun listByProject(dslContext: DSLContext, projectCode: String): Result<Record2<String, Long>> {
+    fun listByProject(dslContext: DSLContext, projectId: String): Result<Record2<String, Long>> {
         return with(T_PIPELINE_INFO) {
             dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
-                .where(PROJECT_ID.eq(projectCode).and(DELETE.eq(false))).fetch()
+                .where(PROJECT_ID.eq(projectId).and(DELETE.eq(false))).fetch()
         }
     }
 
@@ -622,6 +686,24 @@ class PipelineInfoDao {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
                 .fetchAny()
+        }
+    }
+
+    fun countExcludePipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        excludePipelineIds: List<String>,
+        channelCode: ChannelCode? = null,
+        includeDelete: Boolean = false
+    ): Int {
+        with(T_PIPELINE_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.notIn(excludePipelineIds))
+                .let { if (channelCode == null) it else it.and(CHANNEL.eq(channelCode.name)) }
+                .let { if (includeDelete) it else it.and(DELETE.eq(false)) }
+                .fetchOne()?.value1() ?: 0
         }
     }
 
@@ -640,28 +722,6 @@ class PipelineInfoDao {
         }
     }
 
-    @Suppress("MagicNumber")
-    fun batchUpdatePipelineNamePinYin(dslContext: DSLContext) {
-        val limit = 1000
-        var offset = 0
-        var fetchSize = 0
-        do {
-            with(T_PIPELINE_INFO) {
-                val fetch = dslContext.select(PROJECT_ID, PIPELINE_ID, PIPELINE_NAME).from(this)
-                    .orderBy(CREATE_TIME, PIPELINE_ID)
-                    .limit(offset, limit).fetch()
-                fetch.map {
-                    dslContext.update(this).set(PIPELINE_NAME_PINYIN, nameToPinyin(it[PIPELINE_NAME]))
-                        .where(PIPELINE_ID.eq(it[PIPELINE_ID]).and(PROJECT_ID.eq(it[PROJECT_ID])))
-                        .execute()
-                }
-                val size = fetch.size
-                offset += size
-                fetchSize = size
-            }
-        } while (fetchSize == 1000)
-    }
-
     fun updateLatestStartTime(
         dslContext: DSLContext,
         projectId: String,
@@ -678,10 +738,5 @@ class PipelineInfoDao {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineInfoDao::class.java)
-    }
-
-    private fun nameToPinyin(pipelineName: String): String {
-        val fieldLength = T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.dataType.length()
-        return PinyinUtil.toPinyin(pipelineName).take(fieldLength)
     }
 }

@@ -45,6 +45,15 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(TEMPLATE_NAME)
+                .from(this)
+                .where(TEMPLATE_CODE.eq(storeCode).and(LATEST_FLAG.eq(true)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(TEMPLATE_NAME).from(this)

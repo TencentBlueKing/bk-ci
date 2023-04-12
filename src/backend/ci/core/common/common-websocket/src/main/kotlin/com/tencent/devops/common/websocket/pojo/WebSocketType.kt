@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.websocket.pojo
 
+@Suppress("ComplexCondition")
 enum class WebSocketType {
     CODECC, // codecc错误推送
     WEBHOOK, // webhook错误推送
@@ -34,7 +35,8 @@ enum class WebSocketType {
     HISTORY, // 历史页
     AMD, // 其他页面推送
     NOTIFY, // 消息推送
-    DETAIL; // 详情页
+    DETAIL, // 详情页
+    RECORD; // 详情记录页
 
     companion object {
         fun changWebType(webSocketType: WebSocketType): String
@@ -42,7 +44,8 @@ enum class WebSocketType {
             if (webSocketType == CODECC || webSocketType == WEBHOOK) {
                 return "NAV"
             }
-            if (webSocketType == STATUS || webSocketType == HISTORY || webSocketType == DETAIL) {
+            if (webSocketType == STATUS || webSocketType == HISTORY ||
+                webSocketType == DETAIL || webSocketType == RECORD) {
                 return "IFRAME"
             }
 

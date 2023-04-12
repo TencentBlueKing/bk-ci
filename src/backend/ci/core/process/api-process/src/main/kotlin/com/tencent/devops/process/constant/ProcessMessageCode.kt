@@ -52,7 +52,6 @@ object ProcessMessageCode {
     const val FAVORITE_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_FAVORITE" // "我的收藏"
     const val MY_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_MY" // "我的流水线"
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
-
     const val OK = 0
 
     const val ERROR_BUILD_TASK_SUBPIPELINEID_NULL = "2101001" // 子流水线id不存在
@@ -137,6 +136,10 @@ object ProcessMessageCode {
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
+    const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
+    const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
+    const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -158,13 +161,13 @@ object ProcessMessageCode {
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
     const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
-    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101105" // 触发不在审核状态中
+    const val ERROR_RECORD_PARSE_FAILED = "2101111" // 解析构建记录出错
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
 
     // 构建时错误
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101113" // bcsInstNum is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101114" // instVersionId is not init
@@ -191,9 +194,11 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
+
     // 质量红线(准入)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
+
     // 质量红线(准出)配置有误：Fail to find quality gate intercept element
     const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
@@ -244,14 +249,19 @@ object ProcessMessageCode {
 
     // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
     const val BUILD_WORKER_DEAD_ERROR = "2101318"
+
     // 构建机Agent详情链接
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
-
-    // 人工审核插件编辑时输入参数错误
-    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 
     // 标签与标签组错误21014开头
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
     const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
     const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
+
+    // 流水线组错误21016开头
+    const val ERROR_VIEW_GROUP_NO_PERMISSION = "2101601" // 没有修改流水线组权限
+    const val ERROR_VIEW_GROUP_IS_PROJECT_NO_SAME = "2101602" // 流水线组的视图范围不一致
+    const val ERROR_VIEW_EXCEED_THE_LIMIT = "2101603" // 流水线组创建太多了
+    const val ERROR_VIEW_DUPLICATE_NAME = "2101604" // 流水线组名称重复
+    const val ERROR_VIEW_NAME_ILLEGAL = "2101605" // 流水线组名称不合法
 }

@@ -18,8 +18,8 @@
             <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <bk-button v-for="typeLabel in codelibTypes" theme="primary" :key="typeLabel" @click="createCodelib(typeLabel)">
-                {{ `${$t('codelib.link')}${typeLabel}${$t('codelib.codelib')}` }}
+            <bk-button v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
+                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
             </bk-button>
         </empty-tips>
         <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">

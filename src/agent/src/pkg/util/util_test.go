@@ -95,3 +95,27 @@ func TestContains(t *testing.T) {
 		})
 	}
 }
+
+func TestRandStringRunes(t *testing.T) {
+	type args struct {
+		n int
+	}
+	tests := []struct {
+		name string
+		args args
+		want string
+	}{
+		{
+			name: "测试随机字符串8位",
+			args: args{n: 8},
+			want: "abcdefgh",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := RandStringRunes(tt.args.n); len(got) != len(tt.want) {
+				t.Errorf("RandStringRunes() = %v, want %v", len(got), len(tt.want))
+			}
+		})
+	}
+}

@@ -27,13 +27,13 @@ template:
   maxSaveVersionNum: 300
   maxSaveVersionRecordNum: 2
   maxUpdateInstanceNum: 100
-  maxErrorReasonLength: 400
+  maxErrorReasonLength: 200
   
 
 build:
   atomMonitorData:
     report:
-      switch: false
+      switch: true
       maxMonitorDataSize: 1677216
  
 # 流水线相关配置 

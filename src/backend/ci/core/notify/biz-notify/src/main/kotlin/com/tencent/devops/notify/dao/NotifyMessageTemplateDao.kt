@@ -41,7 +41,6 @@ import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -81,13 +80,13 @@ class NotifyMessageTemplateDao {
         }
     }
 
-    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): Record1<String>? {
+    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): String? {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             val baseStep = dslContext.select(NOTIFY_TYPE_SCOPE)
                 .from(this)
                 .where(ID.eq(templateId))
 
-            return baseStep.fetchOne()
+            return baseStep.fetchOne(NOTIFY_TYPE_SCOPE)
         }
     }
 
@@ -286,6 +285,7 @@ class NotifyMessageTemplateDao {
                 COMMON_TEMPLATE_ID,
                 TITLE,
                 BODY,
+                BODY_MD,
                 CREATOR,
                 MODIFIOR,
                 CREATE_TIME,
@@ -296,6 +296,7 @@ class NotifyMessageTemplateDao {
                     id,
                     notifyTemplateMessage.title,
                     notifyTemplateMessage.body,
+                    notifyTemplateMessage.bodyMD,
                     userId,
                     userId,
                     LocalDateTime.now(),
@@ -346,6 +347,14 @@ class NotifyMessageTemplateDao {
             return dslContext.deleteFrom(this)
                 .where(ID.eq(id))
                 .execute()
+        }
+    }
+
+    fun updateTXSESTemplateId(dslContext: DSLContext, templateId: String, sesTemplateId: Int?): Boolean {
+        with(TEmailsNotifyMessageTemplate.T_EMAILS_NOTIFY_MESSAGE_TEMPLATE) {
+            return dslContext.update(this).set(TENCENT_CLOUD_TEMPLATE_ID, sesTemplateId).where(
+                COMMON_TEMPLATE_ID.eq(templateId)
+            ).execute() == 1
         }
     }
 
@@ -422,6 +431,7 @@ class NotifyMessageTemplateDao {
                 .set(this.MODIFIOR, userId)
                 .set(this.TITLE, notifyMessageTemplate.title)
                 .set(this.BODY, notifyMessageTemplate.body)
+                .set(this.BODY_MD, notifyMessageTemplate.bodyMD)
                 .set(this.UPDATE_TIME, LocalDateTime.now())
                 .where(this.COMMON_TEMPLATE_ID.eq(templateId))
                 .execute()

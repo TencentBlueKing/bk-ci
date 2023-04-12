@@ -38,7 +38,7 @@ import (
 	"path/filepath"
 	"strconv"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 func Exists(file string) bool {
