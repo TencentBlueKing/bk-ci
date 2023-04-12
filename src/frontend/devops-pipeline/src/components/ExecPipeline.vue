@@ -398,10 +398,10 @@
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
-            // if (this.errorList?.length > 0) {
-            //     this.setAtomLocate(this.errorList[0])
-            //     this.setShowErrorPopup()
-            // }
+            if (this.errorList?.length > 0) {
+                this.setAtomLocate(this.errorList[0])
+                this.setShowErrorPopup()
+            }
         },
         beforeDestroy () {
             this.togglePropertyPanel({
