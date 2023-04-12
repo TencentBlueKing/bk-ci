@@ -106,7 +106,7 @@ class MigrateV3PolicyService constructor(
 
 
     // iam迁移的token
-    @Value("\${migrate.iamToken:#{null}}")
+    @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
 
     @Value("\${auth.url:}")
