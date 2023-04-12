@@ -23,8 +23,9 @@ function _M:isSafe()
 
     local host = ngx.var.host
     local path = ngx.var.uri
+    local header_clb = ngx.var.http_x_clb_lbid
     -- 外部链接安全检查
-    if string.find(host, "bkdevops.qq.com") ~= nil then -- bkdevops.qq.com 相关域名
+    if string.find(host, "bkdevops.qq.com") ~= nil or header_clb ~= nil then -- bkdevops.qq.com 相关域名或者传了lb的ID
         if string.find(path, "/api/app/") == nil -- app 路径
         and string.find(path, "/api/open/") == nil -- open路径
         and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
