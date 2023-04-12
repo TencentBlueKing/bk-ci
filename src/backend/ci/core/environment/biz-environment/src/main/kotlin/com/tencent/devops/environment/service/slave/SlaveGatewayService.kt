@@ -28,8 +28,6 @@
 package com.tencent.devops.environment.service.slave
 
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.SHENZHEN
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
@@ -53,24 +51,22 @@ class SlaveGatewayService @Autowired constructor(
     private var lastUpdate: Long = 0
 
     fun getShowName(gateway: String): String {
-        logger.info("gateway",gateway)
-        logger.info("cache",cache)
+        logger.info("gateway = $gateway")
+        logger.info("cache = $cache")
         val gatewayList = if (cache.isEmpty()) {
             getGateway()
         } else {
             cache
         }
         gatewayList.forEach {
-            logger.info("it.gateway",it.gateway)
+            logger.info("it.gateway = ${it.gateway}")
             if (it.gateway == gateway) {
-                logger.info("it.showName", it.showName)
+                logger.info("it.showName = ${it.showName}")
                 return it.showName
             }
         }
-        logger.info("it.showName")
-        return MessageCodeUtil.getCodeLanMessage(
-            messageCode = SHENZHEN
-        )
+        logger.info("defaultGateway","深圳")
+        return "深圳"
     }
 
     fun getFileGateway(zoneName: String?): String? {
