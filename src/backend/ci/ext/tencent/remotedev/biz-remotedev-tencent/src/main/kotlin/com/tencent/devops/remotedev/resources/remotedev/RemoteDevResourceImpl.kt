@@ -94,18 +94,6 @@ class RemoteDevResourceImpl @Autowired constructor(
         return Result(workspaceService.getWorkspaceProxyDetail(workspaceName))
     }
 
-    override fun preCiAgent(
-        signature: String,
-        workspaceName: String,
-        timestamp: String,
-        agentId: String
-    ): Result<Boolean> {
-        if (!checkSignature(signature, workspaceName, timestamp)) {
-            return Result(status = 403, message = "Forbidden request")
-        }
-        return Result(workspaceService.preCiAgent(agentId, workspaceName))
-    }
-
     private fun checkSignature(signature: String, key: String, timestamp: String): Boolean {
         val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (key + timestamp).toByteArray())
         logger.info("signature($signature) and generate signature ($genSignature)")

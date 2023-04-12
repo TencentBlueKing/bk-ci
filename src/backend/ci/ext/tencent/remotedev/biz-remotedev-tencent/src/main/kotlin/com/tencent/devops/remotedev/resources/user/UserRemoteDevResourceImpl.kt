@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import com.tencent.devops.remotedev.service.BKGPTService
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.WorkspaceService
 import org.glassfish.jersey.server.ChunkedOutput
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,8 +44,9 @@ import javax.ws.rs.core.HttpHeaders
 @RestResource
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
-    val remoteDevSettingService: RemoteDevSettingService,
-    val bkgptService: BKGPTService
+    private val remoteDevSettingService: RemoteDevSettingService,
+    private val bkgptService: BKGPTService,
+    private val workspaceService: WorkspaceService
 ) : UserRemoteDevResource {
 
     companion object {
@@ -83,5 +85,13 @@ class UserRemoteDevResourceImpl @Autowired constructor(
             }
         }
         return output
+    }
+
+    override fun preCiAgent(
+        userId: String,
+        workspaceName: String,
+        agentId: String
+    ): Result<Boolean> {
+        return Result(workspaceService.preCiAgent(agentId, workspaceName))
     }
 }
