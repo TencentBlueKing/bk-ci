@@ -30,7 +30,9 @@ package com.tencent.devops.auth.service.migrate
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
@@ -81,7 +83,8 @@ class MigrateResourceService @Autowired constructor(
             val resourceData = getInstanceByResource(
                 offset = offset,
                 limit = limit,
-                resourceType = resourceType
+                resourceType = resourceType,
+                projectCode = projectCode
             ) ?: return
             logger.info("MigrateResourceService|resourceData:$resourceData")
             resourceData.data.result.forEach {
@@ -109,12 +112,24 @@ class MigrateResourceService @Autowired constructor(
         } while (resourceData.data.count == limit)
     }
 
-    private fun getInstanceByResource(offset: Long, limit: Long, resourceType: String) =
-        resourceService.getInstanceByResource(
+    private fun getInstanceByResource(
+        offset: Long,
+        limit: Long,
+        resourceType: String,
+        projectCode: String
+    ): ListInstanceInfo? {
+        val pathInfoDTO = PathInfoDTO().apply {
+            type = AuthResourceType.PROJECT.value
+            id = projectCode
+        }
+        val filterDTO = FilterDTO().apply {
+            parent = pathInfoDTO
+        }
+        return resourceService.getInstanceByResource(
             callBackInfo = CallbackRequestDTO().apply {
                 type = resourceType
                 method = CallbackMethodEnum.LIST_INSTANCE
-                filter = null
+                filter = filterDTO
                 page = PageInfoDTO().apply {
                     this.offset = offset
                     this.limit = limit
@@ -122,7 +137,7 @@ class MigrateResourceService @Autowired constructor(
             },
             token = tokenApi.getAccessToken(projectAuthServiceCode)
         ) as ListInstanceInfo?
-
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
