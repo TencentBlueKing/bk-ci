@@ -291,7 +291,7 @@ export default {
           this.$emit('change', [])
           return
         }
-        if (val || val === undefined) {
+        if (val) {
           await this.initApplyQuery()
         }
       },
