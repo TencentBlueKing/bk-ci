@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.annotations.ApiModel
@@ -84,6 +85,12 @@ data class MarketItem(
     val installed: Boolean? = null,
     @ApiModelProperty("每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
+    @ApiModelProperty("荣誉信息列表")
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null,
     @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null
+    val recentExecuteNum: Int? = null,
+    @ApiModelProperty("是否为受欢迎组件")
+    val hotFlag: Boolean? = null
 )

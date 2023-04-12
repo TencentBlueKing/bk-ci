@@ -61,8 +61,8 @@
 </template>
 
 <script>
-    import labelList from '../../../labelList'
     import defaultPic from '../../../../images/defaultPic.svg'
+    import labelList from '../../../labelList'
 
     export default {
         components: {

@@ -30,7 +30,8 @@
                         class="bk-form-input"
                         type="text"
                         v-model="searchName"
-                        @keyup.enter="toSearchPipeline()">
+                        @keyup.enter="toSearchPipeline()"
+                    >
                     <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>
                 </div>
             </div>

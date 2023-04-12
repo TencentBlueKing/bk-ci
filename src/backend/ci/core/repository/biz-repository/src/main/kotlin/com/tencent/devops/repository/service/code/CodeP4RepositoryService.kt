@@ -61,7 +61,8 @@ class CodeP4RepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeP4Repository): Long {
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        // 触发器可以由用户自己配置,可能存在ci不能访问p4服务器,但是需要p4服务器能访问ci,也能支持事件触发,所以p4不再校验用户名密码
+        // checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -95,7 +96,7 @@ class CodeP4RepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_P4.name) {
             throw OperationException(I18nUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        // checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
