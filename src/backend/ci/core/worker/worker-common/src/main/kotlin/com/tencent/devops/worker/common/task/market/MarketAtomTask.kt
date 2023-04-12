@@ -229,7 +229,7 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_VERSION to atomData.version,
                 PIPELINE_TASK_NAME to taskName,
                 PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString(),
-                LOCALE_LANGUAGE to (System.getProperty(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE)
+                LOCALE_LANGUAGE to (AgentEnv.getLocaleLanguage())
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }

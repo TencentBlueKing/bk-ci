@@ -106,6 +106,7 @@ import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
@@ -122,8 +123,8 @@ import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreHonorService
-import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -671,14 +672,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     ): Result<Boolean> {
         val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
             errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-            params = arrayOf("atomCode")
+            params = arrayOf(KEY_STORE_CODE)
         )
-        val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
             storeCode = atomCode,
-            storeType = storeErrorCodeInfo.storeType!!.type.toByte()
+            storeType = StoreTypeEnum.ATOM.type.toByte()
         )
         if (!isStoreMember) {
             return I18nUtil.generateResponseDataObject(
@@ -716,14 +716,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeErrorCodeInfo = storeErrorCodeInfo
         )
         val dbErrorCodes = storeErrorCodeInfoDao.getStoreErrorCodes(
-            dslContext = dslContext, storeCode = storeErrorCodeInfo.storeCode, storeType = storeErrorCodeInfo.storeType
+            dslContext = dslContext, storeCode = atomCode, storeType = StoreTypeEnum.ATOM
         ).toMutableSet()
         dbErrorCodes.removeAll(errorCodes)
         if (dbErrorCodes.isNotEmpty()) {
             storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
                 dslContext = dslContext,
-                storeCode = storeErrorCodeInfo.storeCode,
-                storeType = storeErrorCodeInfo.storeType,
+                storeCode = atomCode,
+                storeType = StoreTypeEnum.ATOM,
                 errorCodes = dbErrorCodes
             )
         }

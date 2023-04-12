@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
@@ -50,6 +51,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/i18n/messages")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("project")
 interface ServiceI18nMessageResource {
 
     @ApiOperation("批量添加国际化信息")

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.worker.common.env
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.PropertyUtil
@@ -241,5 +243,13 @@ object AgentEnv {
 
     fun setLogMode(storageMode: LogStorageMode) {
         logStorageMode = storageMode
+    }
+
+    /**
+     * 获取国际化语言信息
+     * @return 国际化语言信息
+     */
+    fun getLocaleLanguage(): String {
+        return System.getProperty(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
     }
 }

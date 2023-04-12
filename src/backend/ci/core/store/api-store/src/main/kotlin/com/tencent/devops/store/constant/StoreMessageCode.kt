@@ -31,7 +31,7 @@ package com.tencent.devops.store.constant
  * 流水线微服务模块请求返回状态码
  * 返回码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
  * 1、返回码总长度为7位，
- * 2、前2位数字代表系统名称（如21代表平台）
+ * 2、前2位数字代表系统名称（如21代表持续集成平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务

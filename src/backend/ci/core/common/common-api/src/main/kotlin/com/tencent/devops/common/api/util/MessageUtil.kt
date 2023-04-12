@@ -58,12 +58,13 @@ object MessageUtil {
         baseName: String = DEFAULT_BASE_NAME,
         defaultMessage: String? = null
     ): String {
-        val localeObj = Locale(language)
-        // 根据locale和baseName生成resourceBundle对象
-        val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
-        // 通过resourceBundle获取对应语言的描述信息
         var message: String? = null
         try {
+            val arrs = language.split("_")
+            val localeObj = Locale(arrs[0], arrs[1])
+            // 根据locale和baseName生成resourceBundle对象
+            val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
+            // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
         } catch (ignored: Throwable) {
             logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)

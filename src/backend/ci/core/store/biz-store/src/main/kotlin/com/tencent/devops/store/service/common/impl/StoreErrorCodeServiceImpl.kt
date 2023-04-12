@@ -64,12 +64,12 @@ class StoreErrorCodeServiceImpl @Autowired constructor(
         // 检查错误码是否规范
         checkErrorCode(ErrorCodeTypeEnum.GENERAL, listOf("${errorCodeInfo.errorCode}"))
         storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
-            dslContext,
-            userId,
-            StoreErrorCodeInfo(
+            dslContext = dslContext,
+            userId = userId,
+            storeErrorCodeInfo = StoreErrorCodeInfo(
                 storeCode = null,
                 storeType = null,
-                errorCodeInfos = listOf(errorCodeInfo)
+                errorCodes = setOf(errorCodeInfo.errorCode)
             )
         )
         return Result(true)
@@ -84,7 +84,7 @@ class StoreErrorCodeServiceImpl @Autowired constructor(
         try {
             checkErrorCode(errorCodeType, listOf("$errorCode"))
         } catch (e: ErrorCodeException) {
-            StoreErrorCodeServiceImpl.logger.warn("errorCode Non-compliance {${e.message}}")
+            logger.warn("errorCode Non-compliance {${e.message}}")
             return false
         }
         if (errorCodeType == ErrorCodeTypeEnum.PLATFORM) {

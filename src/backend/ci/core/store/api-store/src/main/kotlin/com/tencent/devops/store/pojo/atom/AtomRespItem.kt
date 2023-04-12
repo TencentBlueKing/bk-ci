@@ -27,9 +27,9 @@
 
 package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.annotations.ApiModel

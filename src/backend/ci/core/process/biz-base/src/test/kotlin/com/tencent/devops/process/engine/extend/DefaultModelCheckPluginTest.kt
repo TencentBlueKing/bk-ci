@@ -178,6 +178,7 @@ class DefaultModelCheckPluginTest : TestBase() {
             InstalledAtom(
                 atomId = "atomId",
                 atomCode = atomCode,
+                version = "1.*",
                 name = "atomName",
                 logoUrl = "logoUrl",
                 classifyCode = "classifyCode",
