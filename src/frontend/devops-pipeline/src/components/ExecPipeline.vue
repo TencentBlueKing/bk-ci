@@ -564,7 +564,7 @@
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
                         theme = 'success'
-                        this.handleExecuteCountChange(this.executeCounts.length + 1)
+                        res?.executeCount && this.handleExecuteCountChange(res.executeCount)
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
