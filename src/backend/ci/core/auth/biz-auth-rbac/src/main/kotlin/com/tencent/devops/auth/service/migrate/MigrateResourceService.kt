@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
@@ -117,7 +118,7 @@ class MigrateResourceService @Autowired constructor(
         limit: Long,
         resourceType: String,
         projectCode: String
-    ): ListInstanceInfo? {
+    ): ListInstanceResponseDTO? {
         val pathInfoDTO = PathInfoDTO().apply {
             type = AuthResourceType.PROJECT.value
             id = projectCode
@@ -136,7 +137,7 @@ class MigrateResourceService @Autowired constructor(
                 }
             },
             token = tokenApi.getAccessToken(projectAuthServiceCode)
-        ) as ListInstanceInfo?
+        ) as ListInstanceResponseDTO?
     }
 
     companion object {
