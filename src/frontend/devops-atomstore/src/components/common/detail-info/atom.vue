@@ -187,6 +187,8 @@
             starWidth () {
                 if (this.detail.score >= 5) {
                     return '16px'
+                } else if (this.detail.score <= 0) {
+                    return '0px'
                 } else {
                     return '8px'
                 }
