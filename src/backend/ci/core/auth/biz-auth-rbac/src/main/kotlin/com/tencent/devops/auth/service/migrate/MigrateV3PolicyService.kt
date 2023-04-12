@@ -364,9 +364,10 @@ class MigrateV3PolicyService constructor(
                         resourceCode = resourceCode
                     )
                     val rbacManagerPath = ManagerPath().apply {
-                       system = iamConfiguration.systemId
-                       id = iamResourceCode
-                       type = managerPath.type
+                        system = iamConfiguration.systemId
+                        id = iamResourceCode
+                        name = managerPath.name
+                        type = managerPath.type
                     }
                     rbacManagerPaths.add(rbacManagerPath)
                 }
