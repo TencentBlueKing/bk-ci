@@ -93,7 +93,10 @@ class RbacPermissionMigrateService constructor(
                 return false
             }
             // 1. 启动迁移任务
-            migrateV3PolicyService.startMigrateTask(projectInfo.relationId!!)
+            migrateV3PolicyService.startMigrateTask(
+                projectCode = projectCode,
+                v3GradeManagerId = projectInfo.relationId!!
+            )
             // 2. 创建分级管理员
             val gradeManagerId = authResourceService.getOrNull(
                 projectCode = projectCode,
