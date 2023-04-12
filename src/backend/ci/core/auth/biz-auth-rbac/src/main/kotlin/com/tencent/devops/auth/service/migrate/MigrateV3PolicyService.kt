@@ -181,7 +181,10 @@ class MigrateV3PolicyService constructor(
             object : TypeReference<ResponseDTO<MigrateTaskResp>>() {}
         ).data
         if (migrateTaskResp.status != SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS) {
-            logger.info("$projectCode migrate task status not success, sleep $SLEEP_LOOP_IAM_GET_MIGRATE_TASK(s)")
+            logger.info(
+                "$projectCode migrate task status ${migrateTaskResp.status} not success, " +
+                    "sleep $SLEEP_LOOP_IAM_GET_MIGRATE_TASK(s)"
+            )
             Thread.sleep(SLEEP_LOOP_IAM_GET_MIGRATE_TASK)
             loopTaskStatus(projectCode)
         }
