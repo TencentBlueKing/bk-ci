@@ -48,7 +48,6 @@
     "之后需满足": "Need to be satisfied after that.",
     "来源": "Source",
     "流水线": "Pipeline",
-    "{{0}}分{{1}}": "{{0}} minute {{1}}",
     "操作": "Operation",
     "没有权限": "No permission",
     "内容": "Content",
@@ -146,7 +145,7 @@
     "创建规则": "Create a rule",
     "立即添加": "Add now",
     "查看更多": "See more.",
-    "个": "A",
+    "个": "",
     "删除{0}指标": "Delete {0} metrics",
     "了解更多质量红线": "Learn more about quality red-lines",
     "创建人": "Creator",
@@ -193,7 +192,7 @@
     "关联流水线": "Associated pipeline",
     "否": "No",
     "数值类型不能为空": "Numeric type cannot be empty",
-    "条": "Strip",
+    "条": "",
     "支持自定义指标，由脚本任务插件上报指标数值": "Custom indexes are supported, and index values are reported by script task plugins",
     "编辑脚本任务指标": "Edit script task indexes",
     "控制点": "Control point",
@@ -243,5 +242,6 @@
     "拦截后审核终止": "Audit",
     "拦截后审核继续": "Continue",
     "拦截后超时终止": "Termination",
+    "拦截后直接终止": "Termination",
     "从用户组导入": "Import"
 }
