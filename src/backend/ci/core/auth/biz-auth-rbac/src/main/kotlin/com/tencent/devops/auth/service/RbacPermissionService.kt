@@ -100,17 +100,31 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        } else {
+            val projectResourceInstance = AuthResourceInstance(
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                parents = listOf(projectResourceInstance)
+            )
+        }
         return validateUserResourcePermissionByInstance(
             userId = userId,
             action = action,
             projectCode = projectCode,
-            resource = AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
+            resource = resource
         )
     }
 
+    @Suppress("ReturnCount")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
