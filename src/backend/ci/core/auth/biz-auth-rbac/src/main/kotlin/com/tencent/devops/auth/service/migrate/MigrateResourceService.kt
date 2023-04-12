@@ -131,7 +131,7 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.CODECC_RULE_SET.value,
             AuthResourceType.PIPELINE_GROUP.value,
             AuthResourceType.TURBO.value,
-            AuthResourceType.PROJECT
+            AuthResourceType.PROJECT.value
         )
     }
 }
