@@ -192,7 +192,7 @@
             </div>
             <ul class="pipeline-time-detail-sum-list">
                 <li v-for="cost in timeDetailRows" :key="cost.field">
-                    <span>{{ cost.label }}:</span>
+                    <span>{{ cost.label }}</span>
                     <span>{{ cost.value }}</span>
                 </li>
             </ul>
@@ -208,7 +208,7 @@
 
 <script>
     import { mapState, mapActions } from 'vuex'
-    import { convertTime, convertMStoString } from '@/utils/util'
+    import { convertTime, convertMillSec } from '@/utils/util'
     import CheckAtomDialog from '@/components/CheckAtomDialog'
     import CompleteLog from '@/components/ExecDetail/completeLog'
     import { errorTypeMap } from '@/utils/pipelineConst'
@@ -279,18 +279,18 @@
                     field: key,
                     label: this.$t(`details.${key}`),
                     value: this.execDetail?.model?.timeCost?.[key]
-                        ? convertMStoString(this.execDetail.model.timeCost[key])
+                        ? convertMillSec(this.execDetail.model.timeCost[key])
                         : '--'
                 }))
             },
             queueCost () {
                 return this.execDetail?.model?.timeCost?.queueCost
-                ? convertMStoString(this.execDetail.model.timeCost.queueCost)
+                ? convertMillSec(this.execDetail.model.timeCost.queueCost)
                 : '--'
             },
             totalCost () {
                 return this.execDetail?.model?.timeCost?.totalCost
-                ? convertMStoString(this.execDetail.model.timeCost.totalCost)
+                ? convertMillSec(this.execDetail.model.timeCost.totalCost)
                 : '--'
             },
             errorsTableColumns () {
@@ -827,9 +827,7 @@
   width: 160px;
   .pipeline-time-detail-sum {
     display: flex;
-    justify-content: space-between;
     > span {
-      flex: 1;
       color: #63656e;
       text-align: left;
       font-weight: 600;
@@ -838,7 +836,8 @@
     > span:first-child {
       color: #979ba5;
       font-weight: normal;
-      width: 56px;
+      width: 60px;
+      flex-shrik: 0;
     }
   }
   &.time-detail-popup .pipeline-time-detail-sum {
@@ -849,16 +848,15 @@
   .pipeline-time-detail-sum-list {
     > li {
       display: flex;
-      justify-content: space-between;
       margin-bottom: 8px;
       > span {
-        flex: 1;
         color: #63656e;
         text-align: left;
       }
       > span:first-child {
         color: #979ba5;
-        width: 56px;
+        width: 60px;
+        flex-shrik: 0;
       }
       &:last-child {
         margin-bottom: 0;

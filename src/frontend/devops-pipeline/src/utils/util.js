@@ -17,10 +17,10 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { v4 as uuidv4 } from 'uuid'
 import {
     ALL_PIPELINE_VIEW_ID
 } from '@/store/constants'
+import { v4 as uuidv4 } from 'uuid'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -268,6 +268,20 @@ export function convertMStoString (time) {
     }
 
     return time ? getDays(Math.floor(time / 1000)) : `0${window.pipelineVue.$i18n.t('timeMap.seconds')}`
+}
+
+export function convertMillSec (ms) {
+    const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
+
+    const seconds = Math.floor(ms / 1000) % 60
+    const minutes = Math.floor(ms / 1000 / 60) % 60
+    const hours = Math.floor(ms / 1000 / 60 / 60) % 24
+
+    return `${[
+        seconds,
+        minutes,
+        hours
+    ].filter(item => item !== 0).map(prezero).join(' : ')}${millseconds}`
 }
 
 /**

@@ -667,7 +667,7 @@
     "goRepo": "去制品库",
     "artifact": "制品",
     "addRemarkForBuild": "为本次构建添加一个备注",
-    "triggerRepo": "触发库",
+    "triggerRepo": "触发材料",
     "hideSkipStep": "隐藏跳过的步骤",
     "num": "第",
     "times": "次",
