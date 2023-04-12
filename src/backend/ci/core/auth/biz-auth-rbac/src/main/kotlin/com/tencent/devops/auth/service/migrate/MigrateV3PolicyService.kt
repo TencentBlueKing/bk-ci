@@ -87,7 +87,7 @@ class MigrateV3PolicyService constructor(
 
     companion object {
         // 启动iam迁移任务
-        private const val IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/task"
+        private const val IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/task/"
 
         // 获取iam迁移数据
         private const val IAM_GET_MIGRATE_DATA = "api/v2/open/migration/bkci/data/"
