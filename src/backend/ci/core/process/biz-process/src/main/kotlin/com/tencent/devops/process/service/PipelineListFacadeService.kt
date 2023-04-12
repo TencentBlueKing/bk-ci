@@ -1634,95 +1634,49 @@ class PipelineListFacadeService @Autowired constructor(
         skipPipelineIds: List<String> = emptyList()
     ): PipelineViewPipelinePage<QualityPipeline> {
 
-        val watch = StopWatch()
-        watch.start("perm_r_perm")
-        val authPipelines = if (authPipelineIds.isEmpty()) {
-            pipelinePermissionService.getResourceByPermission(
-                userId, projectId, AuthPermission.LIST
-            )
-        } else {
-            authPipelineIds
-        }
-        watch.stop()
-
-        watch.start("s_r_summary")
-        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
-            projectId = projectId,
-            channelCode = channelCode,
-            page = page,
-            pageSize = pageSize
-        )
-        watch.stop()
-
-        watch.start("s_r_fav")
-        val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: -1
-        var slqLimit: SQLLimit? = null
-        if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-
-        val offset = slqLimit?.offset ?: 0
-        val limit = slqLimit?.limit ?: -1
-        var count = 0L
+        val watcher = Watcher(id = "listQualityViewPipelines|$projectId|$userId")
         try {
-
-            val list = if (buildPipelineRecords.isNotEmpty) {
-
-                val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-                val pipelines = buildPipelines(
-                    pipelineInfoRecords = buildPipelineRecords,
-                    favorPipelines = favorPipelines,
-                    authPipelines = authPipelines,
-                    projectId = projectId
+            val pageNotNull = if (page == null || page <= 0) 1 else page
+            val pageSizeNotNull = if (pageSize == null || pageSize <= 0) 10 else pageSize
+            val hasPermissionList = if (checkPermission) {
+                watcher.start("perm_r_perm")
+                val hasPermissionList = pipelinePermissionService.getResourceByPermission(
+                    userId = userId, projectId = projectId, permission = AuthPermission.LIST
                 )
-                val allFilterPipelines = filterViewPipelines(
-                    projectId = projectId,
-                    pipelines = pipelines,
-                    filterByName = filterByPipelineName,
-                    filterByCreator = filterByCreator,
-                    filterByLabels = filterByLabels
-                )
-
-                val hasPipelines = allFilterPipelines.isNotEmpty()
-
-                if (!hasPipelines) {
+                watcher.stop()
+                if (hasPermissionList.isEmpty()) {
                     return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, 0, emptyList())
                 }
-
-                val filterPipelines = when (viewId) {
-                    PIPELINE_VIEW_FAVORITE_PIPELINES -> {
-                        logger.info("User($userId) favorite pipeline ids($favorPipelines)")
-                        allFilterPipelines.filter { favorPipelines.contains(it.pipelineId) }
-                    }
-                    PIPELINE_VIEW_MY_PIPELINES -> {
-                        logger.info("User($userId) my pipelines")
-                        allFilterPipelines.filter {
-                            authPipelines.contains(it.pipelineId)
-                        }
-                    }
-                    PIPELINE_VIEW_ALL_PIPELINES -> {
-                        logger.info("User($userId) all pipelines")
-                        allFilterPipelines
-                    }
-                    else -> {
-                        logger.info("User($userId) filter view($viewId)")
-                        filterViewPipelines(userId, projectId, allFilterPipelines, viewId)
-                    }
-                }
-
-                val permissionList = filterPipelines.filter { it.hasPermission }.toMutableList()
-                sortPipelines(permissionList, sortType)
-                count = permissionList.size.toLong()
-
-                val toIndex =
-                    if (limit == -1 || permissionList.size <= (offset + limit)) permissionList.size else offset + limit
-
-                if (offset >= permissionList.size) mutableListOf() else permissionList.subList(offset, toIndex)
+                hasPermissionList
             } else {
-                mutableListOf()
+                emptyList()
             }
-            watch.stop()
 
-            val records = list.map {
+            watcher.start("s_r_summary")
+            val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
+                projectId = projectId,
+                channelCode = channelCode,
+                pipelineIds = hasPermissionList,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                sortType = sortType
+            )
+            watcher.stop()
+
+            val pipelines = buildPipelines(
+                pipelineInfoRecords = buildPipelineRecords,
+                projectId = projectId
+            )
+            val allFilterPipelines = filterViewPipelines(
+                projectId = projectId,
+                pipelines = pipelines,
+                filterByName = filterByPipelineName,
+                filterByCreator = filterByCreator,
+                filterByLabels = filterByLabels
+            )
+
+            val count = allFilterPipelines.size.toLong()
+            val records = allFilterPipelines.map {
                 QualityPipeline(
                     projectId = it.projectId,
                     pipelineId = it.pipelineId,
@@ -1736,8 +1690,8 @@ class PipelineListFacadeService @Autowired constructor(
             }
             return PipelineViewPipelinePage(pageNotNull, pageSizeNotNull, count, records)
         } finally {
-            logger.info("listViewPipelines|[$projectId]|$userId|watch=$watch")
-            processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watch.totalTimeMillis)
+            logger.info("listQualityViewPipelines|[$projectId]|$userId|watch=$watcher")
+            processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
         }
     }
 
