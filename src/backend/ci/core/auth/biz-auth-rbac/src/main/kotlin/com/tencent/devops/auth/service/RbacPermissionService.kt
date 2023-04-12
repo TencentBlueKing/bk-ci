@@ -137,7 +137,7 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
             val useAction = if (!action.contains("_")) {
                 RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resource.resourceType))
             } else {
