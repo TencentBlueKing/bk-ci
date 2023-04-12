@@ -31,14 +31,14 @@ package com.tencent.devops.auth.service.migrate
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
-import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
+import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -51,7 +51,7 @@ class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
-    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
@@ -59,12 +59,12 @@ class RbacPermissionMigrateService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
-        private val executorService = Executors.newFixedThreadPool(2)
     }
 
-    @Value("\${migrate.projectTag:#{\"\"}}")
+    @Value("\${migrate.projectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
+    @Suppress("LongMethod", "ReturnCount")
     override fun v3ToRbacAuth(projectCode: String): Boolean {
         logger.info("Start migrate $projectCode from v3 to rbac")
         val startEpoch = System.currentTimeMillis()
@@ -82,9 +82,6 @@ class RbacPermissionMigrateService constructor(
                 projectCode = projectCode,
                 status = AuthMigrateStatus.PENDING.value
             )
-            // 1. 启动迁移任务
-            migrateV3PolicyService.startMigrateTask()
-            // 2. 创建分级管理员
             val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data ?: run {
                 logger.warn("project $projectCode not exist")
                 return false
@@ -93,40 +90,45 @@ class RbacPermissionMigrateService constructor(
                 logger.info("project $projectCode has been migrated")
                 return true
             }
+            if (projectInfo.relationId == null) {
+                logger.info("project $projectCode not v3 auth")
+                return false
+            }
+            // 1. 启动迁移任务
+            migrateV3PolicyService.startMigrateTask(projectInfo.relationId!!)
+            // 2. 创建分级管理员
             val gradeManagerId = authResourceService.getOrNull(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                permissionGradeManagerService.migrateGradeManager(
-                    projectCode = projectCode,
-                    projectName = projectInfo.projectName
-                )
+                createGradeManager(projectCode, projectInfo)
+            } ?: run {
+                logger.info("project $projectCode gradle manager not found")
+                return false
             }
-            // 3. 异步迁移资源
-            val resourceFuture = CompletableFuture.supplyAsync(
-                {
-                    migrateResourceService.migrateResource(projectCode = projectCode)
-                },
-                executorService
+            // 3. 迁移资源
+            migrateResourceService.migrateResource(
+                projectCode = projectCode
             )
-            // 4. 异步迁移v3用户组
-            val policyFuture = CompletableFuture.supplyAsync(
-                {
-                    migrateV3PolicyService.migrateGroupPolicy(
-                        projectCode = projectCode,
-                        gradeManagerId = gradeManagerId
-                    )
-                },
-                executorService
+            // 4. 迁移v3用户组
+            migrateV3PolicyService.migrateGroupPolicy(
+                projectCode = projectCode,
+                projectName = projectInfo.projectName,
+                gradeManagerId = gradeManagerId
             )
-            // 5. 等待资源和用户组迁移完成
-            CompletableFuture.allOf(resourceFuture, policyFuture).join()
-            // 7. 迁移用户自定义权限
-            migrateV3PolicyService.migrateUserCustomPolicy(projectCode = projectCode, gradeManagerId = gradeManagerId)
-            // 8. 对比迁移结果
-            migrateV3PolicyService.comparePolicy(projectCode = projectCode)
-            // 9. 设置项目路由tag
+            // 5. 迁移用户自定义权限
+            migrateV3PolicyService.migrateUserCustomPolicy(
+                projectCode = projectCode,
+                gradeManagerId = gradeManagerId
+            )
+            // 6. 对比迁移结果
+            val compareResult = migrateV3PolicyService.comparePolicy(projectCode = projectCode)
+            if (!compareResult) {
+                logger.warn("Failed to compare $projectCode policy")
+                return false
+            }
+            // 7. 设置项目路由tag
             if (migrateProjectTag.isNotBlank()) {
                 client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
                     projectCode = projectCode,
@@ -152,5 +154,24 @@ class RbacPermissionMigrateService constructor(
         } finally {
             logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate $projectCode")
         }
+    }
+
+    private fun createGradeManager(
+        projectCode: String,
+        projectInfo: ProjectVO
+    ): Int? {
+        client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
+        permissionResourceService.resourceCreateRelation(
+            userId = projectInfo.creator ?: "",
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectInfo.projectName
+        )
+        return authResourceService.getOrNull(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )?.relationId?.toInt()
     }
 }

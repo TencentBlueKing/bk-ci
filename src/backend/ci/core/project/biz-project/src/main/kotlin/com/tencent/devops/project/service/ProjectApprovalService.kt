@@ -31,6 +31,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.callback.AuthConstants
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
@@ -338,6 +339,47 @@ class ProjectApprovalService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             tipsStatus = tipsStatus
+        )
+    }
+
+    /**
+     * 升级权限时,创建项目审批单
+     */
+    fun createMigration(projectId: String) {
+        logger.info("project create migration|$projectId")
+        val projectInfo =
+            projectDao.getByEnglishName(dslContext = dslContext, englishName = projectId) ?: throw ErrorCodeException(
+                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                params = arrayOf(projectId),
+                defaultMessage = "project $projectId is not exist"
+            )
+        val projectCreateInfo = with(projectInfo) {
+            ProjectCreateInfo(
+                projectName = projectName,
+                englishName = englishName,
+                projectType = projectType ?: 0,
+                description = description ?: "",
+                bgId = bgId?.toLong() ?: 0L,
+                bgName = bgName ?: "",
+                deptId = deptId?.toLong() ?: 0L,
+                deptName = deptName ?: "",
+                centerId = centerId?.toLong() ?: 0L,
+                centerName = centerName ?: "",
+                kind = kind ?: 0,
+                logoAddress = logoAddr
+            )
+        }
+        create(
+            userId = projectInfo.creator,
+            projectCreateInfo = projectCreateInfo,
+            approvalStatus = ProjectApproveStatus.APPROVED.status,
+            subjectScopes = listOf(
+                SubjectScopeInfo(
+                    id = AuthConstants.ALL_MEMBERS,
+                    type = AuthConstants.ALL_MEMBERS,
+                    name = AuthConstants.ALL_MEMBERS_NAME
+                )
+            )
         )
     }
 }
