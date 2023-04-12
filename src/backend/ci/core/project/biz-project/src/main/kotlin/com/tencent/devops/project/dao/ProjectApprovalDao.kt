@@ -106,7 +106,7 @@ class ProjectApprovalDao {
                 .set(CENTER_ID, projectCreateInfo.centerId)
                 .set(CENTER_NAME, projectCreateInfo.centerName)
                 .set(LOGO_ADDR, projectCreateInfo.logoAddress)
-                .set(SUBJECT_SCOPES, projectCreateInfo.subjectScopes?.let { JsonUtil.toJson(it) })
+                .set(SUBJECT_SCOPES, JsonUtil.toJson(subjectScopes, false))
                 .set(AUTH_SECRECY, projectCreateInfo.authSecrecy)
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(UPDATED_AT, LocalDateTime.now())
