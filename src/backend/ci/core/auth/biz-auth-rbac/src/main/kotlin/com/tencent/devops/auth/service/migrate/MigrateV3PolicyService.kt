@@ -117,7 +117,8 @@ class MigrateV3PolicyService constructor(
      *
      * @param v3GradeManagerId v3分级管理员ID
      */
-    fun startMigrateTask(v3GradeManagerId: String) {
+    fun startMigrateTask(projectCode: String, v3GradeManagerId: String) {
+        logger.info("start $projectCode migrate task $v3GradeManagerId")
         val data = JsonUtil.toJson(listOf(v3GradeManagerId)).toRequestBody(mediaType)
         val request = Request.Builder()
             .url("$iamBaseUrl/$IAM_MIGRATE_TASK?token=$migrateIamToken")
@@ -127,7 +128,7 @@ class MigrateV3PolicyService constructor(
     }
 
     fun migrateGroupPolicy(projectCode: String, projectName: String, gradeManagerId: Int) {
-        loopTaskStatus()
+        loopTaskStatus(projectCode = projectCode)
         val managerGroupId = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectCode,
@@ -169,7 +170,8 @@ class MigrateV3PolicyService constructor(
     /**
      * 轮询获取迁移任务状态,如果状态没有成功,等待30s再重试
      */
-    private fun loopTaskStatus() {
+    private fun loopTaskStatus(projectCode: String) {
+        logger.info("loop $projectCode migrate task status")
         val request = Request.Builder()
             .url("$iamBaseUrl/$IAM_MIGRATE_TASK?token=$migrateIamToken")
             .get()
@@ -179,8 +181,9 @@ class MigrateV3PolicyService constructor(
             object : TypeReference<ResponseDTO<MigrateTaskResp>>() {}
         ).data
         if (migrateTaskResp.status != SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS) {
+            logger.info("$projectCode migrate task status not success, sleep $SLEEP_LOOP_IAM_GET_MIGRATE_TASK(s)")
             Thread.sleep(SLEEP_LOOP_IAM_GET_MIGRATE_TASK)
-            loopTaskStatus()
+            loopTaskStatus(projectCode)
         }
     }
 
@@ -214,6 +217,14 @@ class MigrateV3PolicyService constructor(
                 projectCode = projectCode,
                 managerGroupId = managerGroupId,
                 result = result
+            )
+            logger.info(
+                "migrate group|${result.projectId}|${result.subject.name}|${
+                    JsonUtil.toJson(
+                        rbacAuthorizationScopeList,
+                        false
+                    )
+                }"
             )
 
             if (rbacAuthorizationScopeList.isEmpty()) {
@@ -327,13 +338,20 @@ class MigrateV3PolicyService constructor(
         return rbacActions
     }
 
+    @Suppress("NestedBlockDepth")
     private fun buildRbacManagerResources(
         projectCode: String,
         permission: AuthorizationScopes
     ): List<ManagerResources> {
-        return permission.resources.map { resource ->
-            val rbacManagerPaths = resource.paths.map { managerPaths ->
-                managerPaths.map { managerPath ->
+        val rbacManagerResources = mutableListOf<ManagerResources>()
+        permission.resources.forEach resource@{ resource ->
+            val rbacPaths = mutableListOf<List<ManagerPath>>()
+            resource.paths.forEach paths@{ managerPaths ->
+                val rbacManagerPaths = mutableListOf<ManagerPath>()
+                managerPaths.forEach managerPath@{ managerPath ->
+                    if (managerPath.id == "*") {
+                        return@managerPath
+                    }
                     // 先将v3资源code转换成rbac资源code
                     val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(
                         resourceType = managerPath.type,
@@ -345,19 +363,24 @@ class MigrateV3PolicyService constructor(
                         resourceType = managerPath.type,
                         resourceCode = resourceCode
                     )
-                    val rbacManagerPath = ManagerPath()
-                    rbacManagerPath.system = iamConfiguration.systemId
-                    rbacManagerPath.id = iamResourceCode
-                    rbacManagerPath.type = managerPath.type
-                    rbacManagerPath
+                    val rbacManagerPath = ManagerPath().apply {
+                       system = iamConfiguration.systemId
+                       id = iamResourceCode
+                       type = managerPath.type
+                    }
+                    rbacManagerPaths.add(rbacManagerPath)
                 }
+                rbacPaths.add(rbacManagerPaths)
             }
-            ManagerResources.builder()
-                .system(iamConfiguration.systemId)
-                .type(resource.type)
-                .paths(rbacManagerPaths)
-                .build()
+            rbacManagerResources.add(
+                ManagerResources.builder()
+                    .system(iamConfiguration.systemId)
+                    .type(resource.type)
+                    .paths(rbacPaths)
+                    .build()
+            )
         }
+        return rbacManagerResources
     }
 
     private fun batchAddGroupMember(groupId: Int, members: List<RoleGroupMemberInfo>) {
