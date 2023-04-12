@@ -55,6 +55,7 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
@@ -87,6 +88,7 @@ class StreamYamlBuild @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService,
+    private val streamGitService: StreamGitService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val pipelineResourceDao: GitPipelineResourceDao,
@@ -450,7 +452,8 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.getChangeSet(),
-            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
+            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action),
+            checkIfModify = action.checkIfModify()
         )
 
         return Pair(modelCreateEvent, modelParams)
@@ -499,6 +502,10 @@ class StreamYamlBuild @Autowired constructor(
                 job.runsOn.poolName = getEnvName(action, job.runsOn.poolName, yaml.resource?.pools)
             }
         }
+        // 替换finally中的构建机
+        yaml.finally?.forEach { fina ->
+            fina.runsOn.poolName = getEnvName(action, fina.runsOn.poolName, yaml.resource?.pools)
+        }
         return yaml
     }
 
@@ -509,29 +516,25 @@ class StreamYamlBuild @Autowired constructor(
 
         pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
             if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
+                val repoNameAndPool = it.from!!.split("@")
+                if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
+                    return@label
+                }
 
-                    val gitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                        gitProjectKey = repoNameAndPool[0],
-                        action = action,
-                        getProjectInfo = action.api::getGitProjectInfo
-                    )!!
-
-                    val result = GitCommonUtils.getCiProjectId(
-                        "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
-                        streamGitConfig.getScmType()
+                val gitProjectInfo = streamGitService.getProjectInfo(repoNameAndPool[0])
+                    ?: throw StreamTriggerException(
+                        action,
+                        TriggerReason.PIPELINE_PREPARE_ERROR,
+                        listOf("跨项目引用第三方构建资源池错误: 获取远程仓库(${repoNameAndPool[0]})信息失败, 请检查填写是否正确")
                     )
 
-                    logger.info("StreamYamlBuild|getEnvName|envName|$result")
-                    return result
-                } catch (e: Exception) {
-                    logger.warn("StreamYamlBuild|getEnvName|$poolName|error", e)
-                    return poolName
-                }
+                val result = GitCommonUtils.getCiProjectId(
+                    "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
+                    streamGitConfig.getScmType()
+                )
+
+                logger.info("StreamYamlBuild|getEnvName|envName|$result")
+                return result
             }
         }
         logger.info("StreamYamlBuild|getEnvName|no match. envName|$poolName")

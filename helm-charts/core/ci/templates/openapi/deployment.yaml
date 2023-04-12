@@ -77,6 +77,8 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -95,7 +97,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -104,7 +106,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -113,8 +115,25 @@ spec:
           - mountPath: /data/workspace/openapi/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          {{ if .Values.openapi.secret.enabled }}
+          - mountPath: {{ .Values.config.bkCiOpenapiApiPubOuter | splitList "/" | initial | join "/" }}
+            name: bk-key-volume
+            readOnly: true
+          {{ end }}
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data
         name: log-volume
+      {{ if .Values.openapi.secret.enabled }}
+      - name: bk-key-volume
+        secret:
+          secretName: openapi-bk-key
+      {{ end }}
 {{- end -}}

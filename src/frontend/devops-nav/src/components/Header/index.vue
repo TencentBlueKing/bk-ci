@@ -6,11 +6,13 @@
                 to="/console/"
                 @click.native="setDocumentTitle"
             >
-                <Logo
-                    name="devops-logo"
-                    width="100"
-                    height="28"
-                />
+                <span>
+                    <Logo
+                        :name="headerLogoName"
+                        width="auto"
+                        height="28"
+                    />
+                </span>
             </router-link>
             <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
@@ -88,15 +90,15 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
-    import User from '../User/index.vue'
-    import NavMenu from './NavMenu.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
+    import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
+    import User from '../User/index.vue'
+    import NavMenu from './NavMenu.vue'
 
     @Component({
         components: {
@@ -122,6 +124,15 @@
 
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
+
+        get headerLogoName (): string {
+            const logoArr = ['devops-logo']
+            const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
+            if (localeConst) {
+                logoArr.push(localeConst)
+            }
+            return logoArr.join('-')
+        }
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList
@@ -248,7 +259,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${DOCS_URL_PREFIX}/产品简介/README.md`)
+            this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
         goToPm (): void {
@@ -301,6 +312,11 @@
                 margin-left: 15px;
                 margin-right: 15px;
                 width: 230px;
+                display: flex;
+                > span {
+                    display: inline-flex;
+
+                }
             }
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {

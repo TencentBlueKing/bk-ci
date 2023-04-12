@@ -33,28 +33,29 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
-import org.jooq.Record2
-import org.jooq.SelectConditionStep
 
 @Suppress("ALL")
 @Repository
@@ -97,7 +98,6 @@ class PipelineBuildDao {
                     PIPELINE_ID,
                     PARENT_BUILD_ID,
                     PARENT_TASK_ID,
-                    START_TIME,
                     START_USER,
                     TRIGGER_USER,
                     STATUS,
@@ -120,7 +120,6 @@ class PipelineBuildDao {
                     pipelineId,
                     parentBuildId,
                     parentTaskId,
-                    LocalDateTime.now(),
                     startUser,
                     triggerUser,
                     status.ordinal,
@@ -181,7 +180,23 @@ class PipelineBuildDao {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
+                .fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroupNull(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
                 .fetch()
         }
     }
@@ -195,6 +210,15 @@ class PipelineBuildDao {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
                 .fetchAny()
+        }
+    }
+
+    fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.select(START_USER)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, String::class.java)
         }
     }
 
@@ -223,15 +247,6 @@ class PipelineBuildDao {
             dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
-        }
-    }
-
-    fun deletePipelineBuilds(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
         }
     }
 
@@ -328,7 +343,7 @@ class PipelineBuildDao {
             if (pipelineId != null) {
                 select.and(PIPELINE_ID.eq(pipelineId))
             }
-            select.orderBy(QUEUE_TIME.asc()).limit(1)
+            select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
     }
@@ -340,15 +355,13 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        startTime: LocalDateTime? = null,
-        retry: Boolean = false
+        startTime: LocalDateTime?,
+        executeCount: Int?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
-            if (!retry) {
-                update.set(START_TIME, startTime)
-            }
-            update.set(IS_RETRY, retry)
+            startTime?.let { update.set(START_TIME, startTime) }
+            executeCount?.let { update.set(EXECUTE_COUNT, executeCount) }
             update.setNull(ERROR_INFO)
             update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
@@ -372,7 +385,10 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(RECOMMEND_VERSION, recommendVersion)
+
+            if (!recommendVersion.isNullOrBlank()) {
+                baseQuery.set(RECOMMEND_VERSION, recommendVersion)
+            }
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)
@@ -524,12 +540,18 @@ class PipelineBuildDao {
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
                 retryFlag = t.isRetry,
+                executeCount = t.executeCount,
                 executeTime = t.executeTime ?: 0,
                 concurrencyGroup = t.concurrencyGroup,
                 webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                buildMsg = t.buildMsg,
                 errorType = t.errorType,
                 errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorMsg = t.errorMsg,
+                material = t.material?.let {
+                    JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
+                },
+                remark = t.remark
             )
         }
     }
@@ -838,6 +860,25 @@ class PipelineBuildDao {
         }
     }
 
+    fun getBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.select(BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetch(BUILD_ID)
+        }
+    }
+
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,
@@ -894,11 +935,27 @@ class PipelineBuildDao {
 
     fun getBuildParameters(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
-            val record = dslContext.selectFrom(this)
+            return dslContext.select(BUILD_PARAMETERS)
+                .from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
-            return record?.buildParameters
+                .fetchAny(0, String::class.java)
+        }
+    }
+
+    fun updateBuildParameters(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildParameters: Collection<BuildParameters>
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute() == 1
         }
     }
 
@@ -930,6 +987,23 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
+        }
+    }
+
+    fun countBuildNumByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VERSION.eq(version))
+            dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

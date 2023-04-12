@@ -87,6 +87,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
@@ -123,7 +124,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val upgradeService: UpgradeService,
+    private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
     private val envShareProjectDao: EnvShareProjectDao
@@ -160,6 +161,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
         val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
+        val dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString()
         val agentHostInfo = try {
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
@@ -187,6 +189,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentInstallPath = agentRecord.agentInstallPath ?: "",
             maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
             parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = dockerParallelTaskCount,
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),
@@ -194,8 +197,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             ncpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            currentAgentVersion = upgradeService.getAgentVersion(),
-            currentWorkerVersion = upgradeService.getWorkerVersion()
+            currentAgentVersion = agentPropsScope.getAgentVersion(),
+            currentWorkerVersion = agentPropsScope.getWorkerVersion()
         )
 
         if (needHeartbeatInfo) {
@@ -251,7 +254,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun setParallelTaskCount(userId: String, projectId: String, nodeHashId: String, parallelTaskCount: Int) {
+    fun setParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         checkEditPermmission(userId, projectId, nodeId)
 
@@ -262,7 +271,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                     params = arrayOf(nodeHashId)
                 )
-            agentRecord.parallelTaskCount = parallelTaskCount
+            agentRecord.parallelTaskCount = parallelTaskCount ?: agentRecord.parallelTaskCount
+            agentRecord.dockerParallelTaskCount = dockerParallelTaskCount ?: agentRecord.dockerParallelTaskCount
             thirdPartyAgentDao.saveAgent(context, agentRecord)
         }
     }
@@ -641,7 +651,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -673,7 +684,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -884,7 +896,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(it.secretKey),
                 createUser = it.createdUser,
                 createTime = it.createdTime.timestamp(),
-                parallelTaskCount = it.parallelTaskCount
+                parallelTaskCount = it.parallelTaskCount,
+                dockerParallelTaskCount = it.dockerParallelTaskCount
             )
         }.plus(sharedThridPartyAgentList)
     }
@@ -1105,7 +1118,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
                     envs = mapOf(),
-                    props = mapOf()
+                    props = mapOf(),
+                    dockerParallelTaskCount = -1
                 )
             }
 
@@ -1149,7 +1163,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     AgentProps(
                         arch = newHeartbeatInfo.props!!.arch,
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
-                        userProps = oldUserProps
+                        userProps = oldUserProps,
+                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo
                     ),
                     false
                 )
@@ -1157,6 +1172,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     agentRecord.agentProps = props
                     agentChanged = true
                 }
+            }
+            if (newHeartbeatInfo.dockerParallelTaskCount != null && agentRecord.dockerParallelTaskCount == null) {
+                agentRecord.dockerParallelTaskCount = newHeartbeatInfo.dockerParallelTaskCount
+                agentChanged = true
             }
             if (agentChanged) {
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
@@ -1210,7 +1229,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
                                 envs = mapOf(),
-                                props = mapOf()
+                                props = mapOf(),
+                                dockerParallelTaskCount = -1
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1233,8 +1253,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
-                masterVersion = upgradeService.getAgentVersion(),
-                slaveVersion = upgradeService.getWorkerVersion(),
+                masterVersion = agentPropsScope.getAgentVersion(),
+                slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
                 ParallelTaskCount = agentRecord.parallelTaskCount,
                 envs = if (agentRecord.agentEnvs.isNullOrBlank()) {
@@ -1245,7 +1265,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 },
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
-                props = oldUserProps
+                props = oldUserProps,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
             )
         }
     }

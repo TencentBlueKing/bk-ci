@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -77,14 +78,29 @@ import javax.ws.rs.core.MediaType
 interface ServiceBuildResource {
     @ApiOperation("通过buildId获取流水线pipelineId")
     @GET
-    @Path("/getPipelineIdFromBuildId")
+    @Path("/{projectId}/get_pipeline_id_from_build_id")
     fun getPipelineIdFromBuildId(
         @ApiParam(value = "项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
+    ): Result<String>
+
+    @ApiOperation("通过buildNumber 和 pipelineId 获取流水线buildId")
+    @GET
+    @Path("/{projectId}/get_build_id_from_build_number")
+    fun getBuildIdFromBuildNumber(
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建号", required = true)
+        @QueryParam("buildNumber")
+        buildNumber: Int
     ): Result<String>
 
     @ApiOperation("Notify process that the vm startup for the build")
@@ -351,6 +367,30 @@ interface ServiceBuildResource {
         channelCode: ChannelCode
     ): Result<ModelDetail>
 
+    @ApiOperation("根据执行次数获取构建详情")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/record")
+    fun getBuildRecordByExecuteCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode
+    ): Result<ModelRecord>
+
     @ApiOperation("获取流水线构建历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/history")
@@ -570,6 +610,26 @@ interface ServiceBuildResource {
         endBeginTime: String? = null
     ): Result<List<BuildHistory>>
 
+    @ApiOperation("获取流水线构建历史, 返回buildid")
+    @GET
+    @Path("/{projectId}/batch_get_builds")
+    fun getBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("状态id", required = false)
+        @QueryParam("buildStatus")
+        buildStatus: Set<BuildStatus>? = null,
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS
+    ): Result<List<String>>
+
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
@@ -783,5 +843,26 @@ interface ServiceBuildResource {
         buildId: String,
         @ApiParam("备注信息", required = true)
         remark: BuildHistoryRemark?
+    ): Result<Boolean>
+
+    @ApiOperation("尝试将异常导致流水线中断的继续运转下去（结果可能是：失败结束 or 继续运行）")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/try_fix_stuck_builds")
+    fun tryFinishStuckBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128, required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64, required = true)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(minLength = 32, maxLength = 34, required = true)
+        pipelineId: String,
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
+        @BkField(required = true)
+        buildIds: Set<String>
     ): Result<Boolean>
 }

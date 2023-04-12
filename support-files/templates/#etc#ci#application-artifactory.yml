@@ -25,7 +25,6 @@ artifactory:
       clear:
         enable: false
         expireTimeDays: 7
-#  当realm=bkrepo时，需要部署好bkrepo服务，并且将以下配置打开
-  bkrepo:
-   baseUrl:  __BK_REPO_API_URL__               # bkrepo的地址
-   authorization: __BK_REPO_AUTHORIZATION__    # 访问bkrepo鉴权信息，例如Token串
+
+bkrepo:
+  dockerRegistry: __BK_REPO_DOCKER_REGISTRY__

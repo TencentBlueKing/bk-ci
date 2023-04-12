@@ -35,27 +35,16 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.ElementBaseInfo
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
-import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
-import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.PipelinePostElementService
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.utils.QualityUtils
 import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
@@ -90,10 +79,7 @@ class PipelineBuildService(
     private val pipelineInterceptorChain: PipelineInterceptorChain,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineBuildQualityService: PipelineBuildQualityService,
-    private val pipelineElementService: PipelinePostElementService,
-    private val templateService: TemplateService,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator,
+    private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator
@@ -154,7 +140,7 @@ class PipelineBuildService(
             // 只有新构建才需要填充Post插件与质量红线插件
             val isNewBuild = !pipelineParamMap.containsKey(PIPELINE_RETRY_COUNT)
             if (isNewBuild) {
-                fillElementWhenNewBuild(
+                pipelineElementService.fillElementWhenNewBuild(
                     model = model,
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -239,14 +225,14 @@ class PipelineBuildService(
             pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
+            val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
+
             // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
             setting?.concurrencyGroup?.let {
                 val varMap = pipelineParamMap.values.associate { param -> param.key to param.value.toString() }
                 setting.concurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
                 logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
             }
-
-            val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
 
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
@@ -280,116 +266,6 @@ class PipelineBuildService(
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
-            }
-        }
-    }
-
-    private fun fillElementWhenNewBuild(
-        model: Model,
-        projectId: String,
-        pipelineId: String,
-        startValues: Map<String, String>? = null,
-        startParamsMap: MutableMap<String, BuildParameters>,
-        handlePostFlag: Boolean = true
-    ) {
-        val templateId = if (model.instanceFromTemplate == true) {
-            templateService.getTemplateIdByPipeline(projectId, pipelineId)
-        } else {
-            null
-        }
-        val ruleMatchList = pipelineBuildQualityService.getMatchRuleList(projectId, pipelineId, templateId)
-        val qualityRuleFlag = ruleMatchList.isNotEmpty()
-        var beforeElementSet: List<String>? = null
-        var afterElementSet: List<String>? = null
-        var elementRuleMap: Map<String, List<Map<String, Any>>>? = null
-        if (qualityRuleFlag) {
-            val triple = pipelineBuildQualityService.generateQualityRuleElement(ruleMatchList)
-            beforeElementSet = triple.first
-            afterElementSet = triple.second
-            elementRuleMap = triple.third
-        }
-        val qaSet = setOf(QualityGateInElement.classType, QualityGateOutElement.classType)
-        model.stages.forEachIndexed { index, stage ->
-            if (index == 0) {
-                return@forEachIndexed
-            }
-            stage.containers.forEach { container ->
-                val finalElementList = mutableListOf<Element>()
-                val originalElementList = container.elements
-                val elementItemList = mutableListOf<ElementBaseInfo>()
-                originalElementList.forEachIndexed nextElement@{ elementIndex, element ->
-                    // 清空质量红线相关的element
-                    if (element.getClassType() in qaSet) {
-                        return@nextElement
-                    }
-                    var skip = false
-                    if (startValues != null) {
-                        // 优化循环
-                        val key = SkipElementUtils.getSkipElementVariableName(element.id)
-                        if (startValues[key] == "true") {
-                            startParamsMap[key] = BuildParameters(
-                                key = key, value = "true", valueType = BuildFormPropertyType.TEMPORARY
-                            )
-                            skip = true
-                            logger.info("[$pipelineId]|${element.id}|${element.name} will be skipped.")
-                        }
-                    }
-                    // 处理质量红线逻辑
-                    if (!qualityRuleFlag) {
-                        finalElementList.add(element)
-                    } else {
-                        if (!skip && beforeElementSet!!.contains(element.getAtomCode())) {
-                            val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, true)
-                            if (insertElement != null) finalElementList.add(insertElement)
-                        }
-
-                        finalElementList.add(element)
-
-                        if (!skip && afterElementSet!!.contains(element.getAtomCode())) {
-                            val insertElement = QualityUtils.getInsertElement(element, elementRuleMap!!, false)
-                            if (insertElement != null) finalElementList.add(insertElement)
-                        }
-                    }
-                    if (handlePostFlag) {
-                        // 处理插件post逻辑
-                        if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
-                            var version = element.version
-                            if (version.isBlank()) {
-                                version = "1.*"
-                            }
-                            val atomCode = element.getAtomCode()
-                            var elementId = element.id
-                            if (elementId == null) {
-                                elementId = modelTaskIdGenerator.getNextId()
-                            }
-                            elementItemList.add(
-                                ElementBaseInfo(
-                                    elementId = elementId,
-                                    elementName = element.name,
-                                    atomCode = atomCode,
-                                    version = version,
-                                    elementJobIndex = elementIndex
-                                )
-                            )
-                        }
-                    }
-                }
-                if (handlePostFlag && elementItemList.isNotEmpty()) {
-                    // 校验插件是否能正常使用并返回带post属性的插件
-                    pipelineElementService.handlePostElements(
-                        projectId = projectId,
-                        elementItemList = elementItemList,
-                        originalElementList = originalElementList,
-                        finalElementList = finalElementList,
-                        startValues = startValues,
-                        finallyStage = stage.finally
-                    )
-                }
-                if (finalElementList.size > originalElementList.size) {
-                    // 最终生成的元素集合比原元素集合数量多，则说明包含post任务
-                    container.containPostTaskFlag = true
-                }
-                container.elements = finalElementList
             }
         }
     }

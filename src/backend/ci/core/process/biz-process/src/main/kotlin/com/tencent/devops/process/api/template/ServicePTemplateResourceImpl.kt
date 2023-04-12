@@ -65,6 +65,10 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return pipelineTemplateService.getTemplateDetailInfo(templateCode)
     }
 
+    override fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
+        return pipelineTemplateService.checkImageReleaseStatus(userId, templateCode)
+    }
+
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {
         return templateFacadeService.getSrcTemplateCodes(projectId)
     }
@@ -105,6 +109,21 @@ class ServicePTemplateResourceImpl @Autowired constructor(
             userId = userId,
             templateId = templateId,
             version = version
+        ))
+    }
+
+    override fun getTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String?
+    ): Result<TemplateModelDetail> {
+        return Result(templateFacadeService.getTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = null,
+            versionName = versionName
         ))
     }
 

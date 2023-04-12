@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
@@ -60,9 +61,12 @@ import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.UUID
+import java.util.concurrent.Executors
 
 @Service
 class StreamTriggerRequestService @Autowired constructor(
@@ -84,6 +88,8 @@ class StreamTriggerRequestService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
+
+    private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
 
     fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
         logger.info("StreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType|$webHookType")
@@ -153,12 +159,20 @@ class StreamTriggerRequestService @Autowired constructor(
                     return true
                 }
                 // 为了不影响主逻辑对action进行深拷贝
-                streamTriggerRequestRepoService.repoTriggerBuild(
-                    triggerPipelineList = repoTriggerPipelineList,
-                    eventStr = event,
-                    actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
-                    actionContext = objectMapper.writeValueAsString(action.data.context)
-                )
+                val bizId = MDC.get(TraceTag.BIZID)
+                val newId = UUID.randomUUID().toString()
+                logger.info("stream start repo trigger|old bizId:$bizId| new bizId:$newId")
+                executors.submit {
+                    // 新线程biz id会断，需要重新注入
+                    MDC.put(TraceTag.BIZID, newId)
+                    logger.info("stream start repo trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
+                    streamTriggerRequestRepoService.repoTriggerBuild(
+                        triggerPipelineList = repoTriggerPipelineList,
+                        eventStr = event,
+                        actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
+                        actionContext = objectMapper.writeValueAsString(action.data.context)
+                    )
+                }
             } catch (ignore: Throwable) {
                 logger.warn("StreamTriggerRequestService|start|${action.data.eventCommon.gitProjectName}|error", ignore)
             }
@@ -220,6 +234,9 @@ class StreamTriggerRequestService @Autowired constructor(
         )
 
         action.data.context.defaultBranch = projectInfo.defaultBranch
+        action.data.context.repoCreatedTime = projectInfo.repoCreatedTime
+        action.data.context.repoCreatorId = projectInfo.repoCreatorId
+        action.parseStreamTriggerContext()
         // 校验mr请求是否产生冲突
         if (!action.checkMrConflict(path2PipelineExists = path2PipelineExists)) {
             return false
@@ -278,6 +295,8 @@ class StreamTriggerRequestService @Autowired constructor(
             yamlMap[index] = yamlMap[index]?.also { it.add(yamlPath) } ?: mutableListOf(yamlPath)
         }
 
+        val bizId = MDC.get(TraceTag.BIZID)
+
         yamlMap.forEach { (i, yamlList) ->
             val triggers = if (!confirmProjectUseTriggerCache) {
                 null
@@ -332,8 +351,15 @@ class StreamTriggerRequestService @Autowired constructor(
                             reasonParams = listOf(filePath)
                         )
                     }
-
+                    val newId = UUID.randomUUID().toString()
+                    logger.info("stream start local trigger $filePath|old bizId:$bizId| new bizId:$newId")
+                    MDC.put(TraceTag.BIZID, newId)
+                    logger.info(
+                        "stream start local trigger $filePath|old bizId:$bizId|" +
+                            " new bizId:${MDC.get(TraceTag.BIZID)}"
+                    )
                     trigger(action = action, trigger = trigger)
+                    MDC.put(TraceTag.BIZID, bizId)
                 }
             }
         }
@@ -343,6 +369,7 @@ class StreamTriggerRequestService @Autowired constructor(
         return true
     }
 
+    @Suppress("ProtectedMemberInFinalClass")
     protected fun trigger(
         action: BaseAction,
         trigger: String?

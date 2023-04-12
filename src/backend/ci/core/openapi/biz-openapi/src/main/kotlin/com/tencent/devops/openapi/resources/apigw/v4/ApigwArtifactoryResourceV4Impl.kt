@@ -143,7 +143,8 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|list custom files|$projectId|$fullPath|$includeFolder|$deep" +
@@ -156,7 +157,8 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             includeFolder = includeFolder,
             deep = deep,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
         )
     }
 

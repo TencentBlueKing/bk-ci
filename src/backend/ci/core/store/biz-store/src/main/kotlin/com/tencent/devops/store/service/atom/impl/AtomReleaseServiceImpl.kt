@@ -60,7 +60,6 @@ import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
-import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
@@ -106,6 +105,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.AtomIndexTriggerCalService
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
@@ -158,6 +158,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var atomQualityService: AtomQualityService
     @Autowired
+    lateinit var atomIndexTriggerCalService: AtomIndexTriggerCalService
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -178,7 +180,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     private fun validateAddMarketAtomReq(
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String>? {
         val atomCode = marketAtomCreateRequest.atomCode
         // 判断插件代码是否存在
         val codeCount = atomDao.countByCode(dslContext, atomCode)
@@ -186,8 +188,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomCode),
-                false
+                arrayOf(atomCode)
             )
         }
         val atomName = marketAtomCreateRequest.name
@@ -197,23 +198,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomName),
-                false
+                arrayOf(atomName)
             )
         }
-        return Result(true)
+        return null
     }
 
     @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("addMarketAtom userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
         val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest)
-        logger.info("the validateResult is :$validateResult")
-        if (validateResult.isNotOk()) {
+        if (validateResult != null) {
+            logger.info("the validateResult is :$validateResult")
             return validateResult
         }
         val handleAtomPackageResult = handleAtomPackage(marketAtomCreateRequest, userId, atomCode)
@@ -222,9 +222,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
         }
         val handleAtomPackageMap = handleAtomPackageResult.data
+        val id = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val id = UUIDUtil.generate()
             // 添加插件基本信息
             marketAtomDao.addMarketAtom(
                 dslContext = context,
@@ -278,7 +278,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         }
-        return Result(true)
+        return Result(id)
     }
 
     abstract fun handleAtomPackage(
@@ -588,14 +588,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     }
                     storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
                 }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
-                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
-                )
+                // 无意义的抛出异常
+//            } else {
+//                throw ErrorCodeException(
+//                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
+//                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
+//                )
             }
-        } catch (ignored: Throwable) {
-            logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
+        } catch (ignored: Exception) {
+            logger.warn("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
     }
 
@@ -1090,6 +1091,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     version = atomReleaseRequest.version,
                     releaseFlag = true
+                )
+                // 计算插件指标数据
+                atomIndexTriggerCalService.upgradeTriggerCalculate(
+                    userId = userId,
+                    atomCode = atomCode,
+                    version = atomReleaseRequest.version,
+                    releaseType = releaseType
                 )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)

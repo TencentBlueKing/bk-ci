@@ -16,9 +16,6 @@ stages:
   jobs:
     job_1:
       name: "源代码规范性检查"
-      runs-on:
-        needs:
-          jdk: "1.8.0_161"
       steps:
         - checkout: self
           name: "预合并 BK-CI代码"
@@ -59,13 +56,14 @@ stages:
             scriptType: "SHELL"
             languageRuleSetMap:
               JAVA_RULE:
-              - "codecc_default_java"
+              - "bk_ci_java_sec"
               KOTLIN_RULE:
-              - "codecc_default_kotlin"
-              JS_RULE: []
+              - "bk_ci_kotlin"
+              JS_RULE:
+              - "js_eslint_sec"
               RUBY_RULE: []
               GOLANG_RULE:
-              - "codecc_default_go"
+              - "bk_ci_go_sec"
             C_CPP_RULE: []
             rtxReceiverType: "4"
             rtxReceiverList: []

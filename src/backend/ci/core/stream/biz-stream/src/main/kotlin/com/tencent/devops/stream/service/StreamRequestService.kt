@@ -81,6 +81,7 @@ class StreamRequestService @Autowired constructor(
             projectId = projectId,
             userId = null,
             messageType = null,
+            messageId = null,
             haveRead = null
         )
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
@@ -90,6 +91,7 @@ class StreamRequestService @Autowired constructor(
             userId = null,
             messageType = null,
             haveRead = null,
+            messageId = null,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )

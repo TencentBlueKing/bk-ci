@@ -187,7 +187,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>> {
         val fileList = archiveFileService.listCustomFiles(
             userId = userId,
@@ -196,7 +197,8 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
             includeFolder = includeFolder,
             deep = deep,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
         )
         return Result(fileList)
     }

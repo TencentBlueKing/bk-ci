@@ -127,13 +127,11 @@ class QualityHisMetadataDao {
     fun getHisMetadataByCreateTime(
         dslContext: DSLContext,
         time: Long,
-        offset: Long,
         pageSize: Int = 10000
     ): Result<TQualityHisDetailMetadataRecord> {
         return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
             dslContext.selectFrom(this)
                 .where(CREATE_TIME.lt(time).or(CREATE_TIME.isNull))
-                .offset(offset)
                 .limit(pageSize)
                 .fetch()
         }
@@ -144,6 +142,14 @@ class QualityHisMetadataDao {
             dslContext.deleteFrom(this)
                 .where(CREATE_TIME.lt(time).or(CREATE_TIME.isNull))
                 .limit(pageSize)
+                .execute()
+        }
+    }
+
+    fun deleteHisMetaByBuildId(dslContext: DSLContext, buildId: String): Int {
+        return with(TQualityHisDetailMetadata.T_QUALITY_HIS_DETAIL_METADATA) {
+            dslContext.deleteFrom(this)
+                .where(BUILD_ID.eq(buildId))
                 .execute()
         }
     }

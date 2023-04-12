@@ -2,9 +2,10 @@
     "name": "devops-pipeline",
     "version": "1.0.1",
     "description": "devops-pipeline",
+    "private": true,
     "author": "",
     "scripts": {
-        "dev": "webpack-dev-server --mode development --progress",
+        "dev": "webpack-cli serve --mode development --progress",
         "dll": "webpack --mode production --config webpack.dll.config.js",
         "public": "npm run dll && webpack --mode production",
         "public:dev": "cross-env NODE_ENV=dev  npm run public --",
@@ -13,13 +14,15 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.0.4",
+        "@blueking/search-select": "0.0.1-beta.2",
+        "@blueking/log": "2.0.10",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
-        "bk-magic-vue": "2.4.14",
-        "bkui-pipeline": "~0.1.27",
+        "bk-magic-vue": "2.4.15-beta.7",
+        "bkui-pipeline": "~0.1.29",
         "clipboard": "^1.7.1",
         "moment": "^2.29.2",
+        "js-base64": "^3.7.2",
         "monaco-editor": "^0.30.1",
         "monaco-editor-webpack-plugin": "^6.0.0",
         "portal-vue": "^1.5.1",
@@ -31,7 +34,11 @@
         "vue-json-viewer": "^2.2.5",
         "vue-router": "^2.8.1",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0"
+        "vuex": "^2.4.0",
+        "xterm": "^4.15.0",
+        "xterm-addon-attach": "^0.6.0",
+        "xterm-addon-fit": "^0.5.0",
+        "mavon-editor": "^2.10.4"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",
@@ -51,11 +58,14 @@
         "@babel/preset-env": "^7.15.8",
         "@babel/preset-react": "^7.16.0",
         "@vue/babel-preset-jsx": "^1.2.4",
+        "@webpack-cli/serve": "^1.7.0",
+        "add-asset-html-webpack-plugin": "^5.0.2",
         "babel-helper-vue-jsx-merge-props": "^2.0.3",
         "babel-loader": "^8.2.2",
         "babel-plugin-transform-vue-jsx": "^4.0.1",
         "copy-webpack-plugin": "9.0.1",
         "css-loader": "^6.4.0",
+        "css-minimizer-webpack-plugin": "^4.2.1",
         "eslint": "^7.3.1",
         "eslint-config-standard": "^16.0.3",
         "eslint-friendly-formatter": "~4.0.1",
@@ -70,7 +80,8 @@
         "sass": "^1.42.1",
         "sass-loader": "^12.1.0",
         "style-loader": "^3.3.1",
-        "vue-loader": "^15.9.8",
+        "terser-webpack-plugin": "^5.3.6",
+        "vue-loader": "15.9.8",
         "vue-template-compiler": "2.6.12",
         "webpack": "^5.58.1"
     }

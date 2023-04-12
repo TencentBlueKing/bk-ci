@@ -9,7 +9,7 @@
             isLoading: loading
         }">
             <div class="pipeline-list-header">
-                <div class="title">选择流水线</div>
+                <div class="title">{{$t('quality.选择流水线')}}</div>
                 <div><i class="devops-icon icon-close" @click="cancel()" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="query-pipeline-row">
@@ -26,9 +26,12 @@
                     </bk-option-group>
                 </bk-select> -->
                 <div class="search-input-row">
-                    <input class="bk-form-input" type="text" placeholder="请输入..."
+                    <input
+                        class="bk-form-input"
+                        type="text"
                         v-model="searchName"
-                        @keyup.enter="toSearchPipeline()">
+                        @keyup.enter="toSearchPipeline()"
+                    >
                     <i class="devops-icon icon-search" @click="toSearchPipeline()"></i>
                 </div>
             </div>
@@ -38,37 +41,37 @@
                     ref="effectPipeline"
                     class="effect-pipeline-table"
                     :data="pipelineList"
-                    :empty-text="'暂无数据'"
+                    :empty-text="$t('quality.暂无数据')"
                     :pagination="pagination"
                     @page-change="handlePageChange"
                     @select="selectItem"
                     @select-all="selectAll">
                     <bk-table-column type="selection" width="60" align="center"></bk-table-column>
-                    <bk-table-column label="流水线名称" prop="pipelineName" width="360">
+                    <bk-table-column :label="$t('quality.流水线名称')" prop="pipelineName" width="360">
                         <template slot-scope="props">
-                            <span :title="props.row.pipelineName">{{ props.row.pipelineName }}</span>
+                            <span :title="props.row.pipelineName">{{props.row.pipelineName}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="插件个数" prop="taskCount">
+                    <bk-table-column :label="$t('quality.插件个数')" prop="taskCount">
                         <template slot-scope="props">
-                            <span>{{ props.row.taskCount }}</span>
+                            <span>{{props.row.taskCount}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="执行总次数" prop="buildCount">
+                    <bk-table-column :label="$t('quality.执行总次数')" prop="buildCount">
                         <template slot-scope="props">
-                            <span>{{ props.row.buildCount }}</span>
+                            <span>{{props.row.buildCount}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="最后执行时间" prop="latestBuildStartTime">
+                    <bk-table-column :label="$t('quality.最后执行时间')" prop="latestBuildStartTime">
                         <template slot-scope="props">
-                            <span>{{ !props.row.latestBuildStartTime ? '-' : localConvertTime(props.row.latestBuildStartTime) }}</span>
+                            <span>{{!props.row.latestBuildStartTime ? '-' : localConvertTime(props.row.latestBuildStartTime)}}</span>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
             <div class="footer">
-                <button class="bk-button bk-primary" type="button" @click="confirm()">确认</button>
-                <button class="bk-button bk-default" type="button" @click="cancel()">取消</button>
+                <button class="bk-button bk-primary" type="button" @click="confirm()">{{$t('quality.确认')}}</button>
+                <button class="bk-button bk-default" type="button" @click="cancel()">{{$t('quality.取消')}}</button>
             </div>
         </div>
     </bk-dialog>

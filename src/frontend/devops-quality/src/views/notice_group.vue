@@ -1,7 +1,7 @@
 <template>
     <div class="notice-group-wrapper">
         <div class="inner-header">
-            <div class="title">通知组</div>
+            <div class="title">{{$t('quality.通知组')}}</div>
         </div>
 
         <section
@@ -13,44 +13,44 @@
 
             <div class="group-content">
                 <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
-                    @click="toCreateGroup">新增</bk-button>
+                    @click="toCreateGroup">{{$t('quality.新增')}}</bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
                         size="small"
                         class="experience-table"
                         :data="noticeGroupList">
-                        <bk-table-column label="名称" prop="name">
+                        <bk-table-column :label="$t('quality.名称')" prop="name">
                             <template slot-scope="props">
-                                <span>{{ props.row.name }}</span>
+                                <span>{{props.row.name}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="通知人员" prop="innerUsersCount">
+                        <bk-table-column :label="$t('quality.通知人员')" prop="innerUsersCount">
                             <template slot-scope="props">
                                 <bk-popover placement="bottom" v-if="props.row.innerUsersCount">
-                                    <span class="handler-inner">{{ props.row.innerUsersCount }}</span>
+                                    <span class="handler-inner">{{props.row.innerUsersCount}}</span>
                                     <template slot="content">
                                         <p style="max-width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
-                                            <span v-for="(entry, index) in props.row.innerUsers" :key="index">{{ entry.replace('"', '') }}<span v-if="index !== (props.row.innerUsers.length - 1)">,</span></span>
+                                            <span v-for="(entry, index) in props.row.innerUsers" :key="index">{{entry.replace('"', '')}}<span v-if="index !== (props.row.innerUsers.length - 1)">,</span></span>
                                         </p>
                                     </template>
                                 </bk-popover>
-                                <span class="handler-inner" v-else>{{ props.row.innerUsersCount }}</span>
+                                <span class="handler-inner" v-else>{{props.row.innerUsersCount}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="创建人" prop="creator">
+                        <bk-table-column :label="$t('quality.创建人')" prop="creator">
                             <template slot-scope="props">
-                                <span>{{ props.row.creator }}</span>
+                                <span>{{props.row.creator}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="描述" prop="remark" min-width="160">
+                        <bk-table-column :label="$t('quality.描述')" prop="remark" min-width="160">
                             <template slot-scope="props">
-                                <span>{{ props.row.remark }}</span>
+                                <span>{{props.row.remark}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="操作" width="150">
+                        <bk-table-column :label="$t('quality.操作')" width="150">
                             <template slot-scope="props">
-                                <span class="handler-btn edit-btn" @click="toEditGroup(props.row)">编辑</span>
-                                <span class="handler-btn delete-btn" @click="toDeleteGruop(props.row)">删除</span>
+                                <span class="handler-btn edit-btn" @click="toEditGroup(props.row)">{{$t('quality.编辑')}}</span>
+                                <span class="handler-btn delete-btn" @click="toDeleteGruop(props.row)">{{$t('quality.删除')}}</span>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -75,10 +75,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import emptyData from './empty_data'
     import createGroup from '@/components/devops/create_group'
     import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {
@@ -114,8 +114,8 @@
                     nameError: false
                 },
                 emptyInfo: {
-                    title: '暂无通知组',
-                    desc: '您可以新增一个通知组'
+                    title: this.$t('quality.暂无通知组'),
+                    desc: this.$t('quality.您可以新增一个通知组')
                 },
                 urlParams: getQueryString('groupId') || ''
             }
@@ -155,7 +155,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('quality.数据加载中，请稍候')
 
                 try {
                     this.requestList()
@@ -207,7 +207,7 @@
                     desc: ''
                 }
                 // document.getElementById('placeholder-text').style.display = 'block';
-                this.nodeSelectConf.title = '新增通知组'
+                this.nodeSelectConf.title = this.$t('quality.新增通知组')
                 this.nodeSelectConf.isShow = true
             },
             onChange (name, val) {
@@ -252,7 +252,7 @@
                         })
                     }
 
-                    message = '保存成功'
+                    message = this.$t('quality.保存成功')
                     theme = 'success'
                     this.requestList()
                     this.nodeSelectConf.isShow = false
@@ -275,7 +275,7 @@
             },
             async toEditGroup (row) {
                 if (row.permissions.canEdit) {
-                    this.nodeSelectConf.title = '编辑通知组'
+                    this.nodeSelectConf.title = this.$t('quality.编辑通知组')
                     this.nodeSelectConf.isShow = true
                     this.dialogLoading.isLoading = true
 
@@ -302,7 +302,7 @@
                 } else {
                     const params = {
                         noPermissionList: [
-                            { resource: '通知组', option: '编辑' }
+                            { resource: this.$t('quality.通知组'), option: this.$t('quality.编辑') }
                         ],
                         applyPermissionUrl: PERM_URL_PREFIX
                     }
@@ -312,16 +312,10 @@
             },
             toDeleteGruop (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, `确定删除通知组(${row.name})？`)
-
                     this.$bkInfo({
-                        title: '删除',
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: this.$t('quality.确定删除通知组({0})？', [row.name]),
                         confirmFn: async () => {
                             let message, theme
 
@@ -331,7 +325,7 @@
                                     groupHashId: row.groupHashId
                                 })
 
-                                message = '删除成功'
+                                message = this.$t('quality.删除成功')
                                 theme = 'success'
                             } catch (err) {
                                 message = err.data ? err.data.message : err
@@ -349,7 +343,7 @@
                 } else {
                     const params = {
                         noPermissionList: [
-                            { resource: '通知组', option: '删除' }
+                            { resource: this.$t('quality.通知组'), option: this.$t('quality.删除') }
                         ],
                         applyPermissionUrl: PERM_URL_PREFIX
                     }

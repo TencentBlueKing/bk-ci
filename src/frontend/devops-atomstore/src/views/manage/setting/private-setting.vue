@@ -148,7 +148,7 @@
             },
 
             handlePrivateFocus () {
-                if (this.privateId !== '' && !this.hasClearPrivate) {
+                if (this.privateId !== '' && !this.hasClearPrivate && this.privateObj.fieldType === 'BACKEND') {
                     this.privateObj.fieldValue = ''
                     this.hasClearPrivate = true
                 }

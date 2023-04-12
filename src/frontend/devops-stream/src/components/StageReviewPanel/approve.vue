@@ -127,15 +127,15 @@
         padding-bottom: 54px;
     }
     .approve-footer {
-        position: absolute;
+        position: fixed;
         right: 0;
-        left: 0;
         bottom: 0;
         border-top: 1px solid transparent;
         background-color: rgb(250, 251, 253);
         height: 54px;
         display: flex;
         align-items: center;
+        width: 876px;
     }
     .approve-button {
         margin: 0 8px 0 24px;

@@ -38,9 +38,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -54,11 +53,13 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import com.tencent.devops.scm.pojo.TapdWorkItem
@@ -500,7 +501,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getGitFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
@@ -541,16 +542,27 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return gitService.enableCi(
+            projectName = projectName, token = token, tokenType = tokenType, enable = enable
+        )
+    }
+
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
         return gitService.gitCreateFile(
             gitProjectId = gitProjectId,
             token = token,
-            gitCreateFile = gitCreateFile,
+            gitOperationFile = gitOperationFile,
             tokenType = tokenType
         )
     }
@@ -561,6 +573,16 @@ class ServiceGitResourceImpl @Autowired constructor(
     ): Result<GitUserInfo> {
         return Result(
             gitService.getUserInfoByToken(
+                token,
+                tokenType
+            )
+        )
+    }
+
+    override fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum): Result<GitUserInfo> {
+        return Result(
+            gitService.getUserInfoById(
+                userId,
                 token,
                 tokenType
             )
@@ -602,6 +624,24 @@ class ServiceGitResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             type = type,
             iid = iid
+        )
+    }
+
+    override fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        return gitService.getCommitDiff(
+            accessToken = accessToken,
+            tokenType = tokenType,
+            gitProjectId = gitProjectId,
+            sha = sha,
+            path = path,
+            ignoreWhiteSpace = ignoreWhiteSpace
         )
     }
 }

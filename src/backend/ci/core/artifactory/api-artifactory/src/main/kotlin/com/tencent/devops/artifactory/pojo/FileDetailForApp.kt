@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.pojo
 
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -64,5 +65,7 @@ data class FileDetailForApp(
     @ApiModelProperty("md5", required = true)
     val md5: String,
     @ApiModelProperty("构建号", required = true)
-    val buildNum: Int
+    val buildNum: Int,
+    @ApiModelProperty("nodeMetadata数据", required = true)
+    val nodeMetadata: List<MetadataModel> = emptyList()
 )

@@ -253,9 +253,9 @@ class QueueInterceptor @Autowired constructor(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
                 message = "流水线设置不存在/Setting not found"
             )
-        val concurrencyGroup = setting.concurrencyGroup
+        val concurrencyGroup = setting.concurrencyGroup ?: task.pipelineInfo.pipelineId
         return when {
-            !concurrencyGroup.isNullOrBlank() -> {
+            concurrencyGroup.isNotBlank() -> {
                 if (setting.concurrencyCancelInProgress) {
                     val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
@@ -266,12 +266,25 @@ class QueueInterceptor @Autowired constructor(
                         needShortUrl = false
                     )
                     // cancel-in-progress: true时， 若有相同 group 的流水线正在执行，则取消正在执行的流水线，新来的触发开始执行
-                    val status = listOf(BuildStatus.RUNNING, BuildStatus.QUEUE)
-                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+                    // status 取所有没有完成的状态
+                    val status = BuildStatus.values().filterNot { it.isFinish() }
+                    val builds = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                         projectId = projectId,
                         concurrencyGroup = concurrencyGroup,
                         status = status
-                    ).forEach { (pipelineId, buildId) ->
+                    ).toMutableList()
+                    // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
+                    if (concurrencyGroup == task.pipelineInfo.pipelineId) {
+                        builds.addAll(
+                            0,
+                            pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                                projectId = projectId,
+                                pipelineId = task.pipelineInfo.pipelineId,
+                                status = status
+                            )
+                        )
+                    }
+                    builds.forEach { (pipelineId, buildId) ->
                         cancelBuildPipeline(
                             projectId = projectId,
                             pipelineId = pipelineId,

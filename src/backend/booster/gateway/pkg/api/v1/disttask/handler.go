@@ -10,7 +10,7 @@
 package disttask
 
 import (
-	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"sort"
@@ -18,13 +18,11 @@ import (
 	"strings"
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/types"
-	"github.com/opesun/goquery"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
 	"github.com/Tencent/bk-ci/src/booster/common/codec"
 	commonMySQL "github.com/Tencent/bk-ci/src/booster/common/mysql"
 	commonTypes "github.com/Tencent/bk-ci/src/booster/common/types"
-	"github.com/Tencent/bk-ci/src/booster/common/version"
 	"github.com/Tencent/bk-ci/src/booster/gateway/pkg/api"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine"
 	"github.com/Tencent/bk-ci/src/booster/server/pkg/engine/disttask"
@@ -34,29 +32,48 @@ import (
 
 // ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
-	url := version.DisttaskRepo
-	res, err := goquery.ParseUrl(url)
+	filePath := "./data/VersionList.txt"
+	f, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		blog.Errorf("list client version failed, err: %v", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, ErrCode: commonTypes.ServerErrListVersionFailed, Message: err.Error()})
+		blog.Error("List Version error:(%v)", err)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
-	result := make([]string, 0, 100)
-	nodes := res.Find("a")
-	for _, v := range nodes {
-		buf := &bytes.Buffer{}
-		version.Search(buf, v)
-		s := buf.String()
-		if strings.HasPrefix(s, "install_v") {
-			i1 := strings.Index(s, "_v")
-			i2 := strings.Index(s, ".sh")
-			if i2 < i1 {
-				continue
-			}
-			result = append(result, s[i1+1:i2])
-		}
+	s := string(f)
+	if strings.HasSuffix(s, "\n") {
+		s = s[:len(s)-1]
 	}
+	result := strings.Split(s, "\n")
+
 	sort.Sort(sort.Reverse(sort.StringSlice(result)))
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
+}
+
+// ListWorkerImages handle the http request for listing worker images
+func ListWorkerImages(req *restful.Request, resp *restful.Response) {
+	args := req.Request.URL.Query()
+	queueName := args.Get("queue_name")
+
+	filePath := "./data/DisttaskWorkerList.json"
+
+	result := commonTypes.WorkerImage{
+		Mesos: make([]commonTypes.Image, 0, 100),
+		K8s:   make([]commonTypes.Image, 0, 100),
+	}
+	data, _ := ioutil.ReadFile(filePath)
+	err := json.Unmarshal([]byte(data), &result)
+	if err != nil {
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
+	}
+
+	switch queueName {
+	case "shenzhen", "shanghai", "chengdu", "tianjin":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.Mesos})
+	case "K8S://gd":
+		api.ReturnRest(&api.RestResponse{Resp: resp, Data: result.K8s})
+	default:
+		message := fmt.Sprintf("unknown queue name : %s", queueName)
+		api.ReturnRest(&api.RestResponse{Resp: resp, Message: message})
+	}
 }
 
 // ListTask handle the http request for listing task with conditions.

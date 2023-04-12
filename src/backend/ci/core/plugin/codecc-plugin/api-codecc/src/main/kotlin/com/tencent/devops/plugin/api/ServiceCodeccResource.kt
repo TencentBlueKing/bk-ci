@@ -166,4 +166,13 @@ interface ServiceCodeccResource {
         @ApiParam(value = "开发语言", required = true)
         languages: List<String>
     ): Result<Boolean>
+
+    @ApiOperation("根据代码库获取codecc开源扫描信息")
+    @GET
+    @Path("opensource/measurement")
+    fun getCodeccOpensourceMeasurement(
+        @ApiParam("代码库Url", required = true)
+        @QueryParam("codeSrc")
+        codeSrc: String
+    ): Result<Map<String, Any>>
 }

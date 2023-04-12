@@ -177,7 +177,7 @@ class TriggerMatcher @Autowired constructor(
         repoHooks: List<Any>? = null
     ): List<String> {
         logger.info("checkRepoHook|repoHook=$repoHooks")
-        if (repoHooks == null) {
+        if (repoHooks == null || action.data.eventCommon.branch != action.data.context.defaultBranch) {
             return emptyList()
         }
         val repositoryHookList = try {
@@ -340,6 +340,13 @@ class TriggerMatcher @Autowired constructor(
 
             if (UserMatchUtils.isIgnoreUserMatch(tagRule.usersIgnore, userId)) {
                 return TriggerBody().triggerFail("on.tag.users-ignore", "trigger user($userId) match")
+            }
+
+            if (fromBranch == null && !tagRule.fromBranches.isNullOrEmpty()) {
+                return TriggerBody().triggerFail(
+                    "on.tag.from-branches",
+                    "client push tag not support from-branches"
+                )
             }
 
             if (fromBranch != null && !BranchMatchUtils.isBranchMatch(tagRule.fromBranches, fromBranch)) {

@@ -8,6 +8,7 @@ type ConfigYaml struct {
 	Gateway           Gateway           `json:"gateway"`
 	Dispatch          Dispatch          `json:"dispatch"`
 	BuildAndPushImage BuildAndPushImage `json:"buildAndPushImage"`
+	ApiServer         ApiServer         `json:"apiServer"`
 }
 
 type Server struct {
@@ -36,7 +37,6 @@ type Gateway struct {
 }
 
 type Dispatch struct {
-	ApiToken       ApiToken         `json:"apiToken"`
 	Label          string           `json:"label"`
 	Watch          Watch            `json:"watch"`
 	Builder        Builder          `json:"builder"`
@@ -48,11 +48,6 @@ type Dispatch struct {
 
 type DedicatedMachine struct {
 	Label string `json:"label"`
-}
-
-type ApiToken struct {
-	Key   string `json:"key"`
-	Value string `json:"value"`
 }
 
 type Watch struct {
@@ -125,4 +120,18 @@ type Registry struct {
 	Server   string `json:"server"`
 	Username string `json:"username"`
 	Password string `json:"password"`
+}
+
+type ApiServer struct {
+	Auth Auth `json:"auth"`
+}
+
+type Auth struct {
+	ApiToken      ApiToken `json:"apiToken"`
+	RsaPrivateKey string   `json:"rsaPrivateKey"`
+}
+
+type ApiToken struct {
+	Key   string `json:"key"`
+	Value string `json:"value"`
 }

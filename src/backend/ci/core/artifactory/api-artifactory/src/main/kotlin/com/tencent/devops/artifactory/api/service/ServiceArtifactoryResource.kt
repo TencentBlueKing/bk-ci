@@ -329,6 +329,9 @@ interface ServiceArtifactoryResource {
         page: Int?,
         @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("是否按modifiedTime倒序排列", required = false, defaultValue = "false")
+        @QueryParam("modifiedTimeDesc")
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>>
 }

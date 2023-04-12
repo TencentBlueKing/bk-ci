@@ -22,6 +22,8 @@ import (
 	"time"
 
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/Tencent/bk-ci/src/booster/common/codec"
+	"github.com/Tencent/bk-ci/src/booster/common/http/httpclient"
 	"github.com/Tencent/bk-ci/src/booster/server/config"
 	op "github.com/Tencent/bk-ci/src/booster/server/pkg/resource/crm/operator"
 
@@ -35,6 +37,7 @@ import (
 )
 
 var (
+	//EnableBCSApiGw define
 	EnableBCSApiGw = ""
 )
 
@@ -42,6 +45,8 @@ var (
 const (
 	bcsAPIK8SBaseURI   = "%s/tunnels/clusters/%s/"
 	bcsAPIGWK8SBaseURI = "%s/clusters/%s/"
+	bcsAPIFederatedURI = "%s/clusters/%s/apis/federated.bkbcs.tencent.com/v1/namespaces/%s/availableresource"
+	FederationCluster  = "Federation"
 
 	disableLabel = "tbs/disabled"
 	appLabel     = "tbs/name"
@@ -57,8 +62,10 @@ const (
 	templateVarInstance         = "__crm_instance__"
 	templateVarCPU              = "__crm_cpu__"
 	templateVarMem              = "__crm_mem__"
+	templateStorage             = "__crm_storage__"
 	templateLimitVarCPU         = "__crm_limit_cpu__"
 	templateLimitVarMem         = "__crm_limit_mem__"
+	templateLimitStorage        = "__crm_limit_storage__"
 	templateVarEnv              = "__crm_env__"
 	templateVarEnvKey           = "__crm_env_key__"
 	templateVarEnvValue         = "__crm_env_value__"
@@ -143,6 +150,9 @@ type clusterClientSet struct {
 
 // GetResource get specific cluster's resources.
 func (o *operator) GetResource(clusterID string) ([]*op.NodeInfo, error) {
+	if o.conf.BcsClusterType == FederationCluster {
+		return o.getFederationResource(clusterID)
+	}
 	return o.getResource(clusterID)
 }
 
@@ -238,16 +248,167 @@ func (o *operator) getResource(clusterID string) ([]*op.NodeInfo, error) {
 	return nodeInfoList, nil
 }
 
+func (o *operator) getClient() *httpclient.HTTPClient {
+	return httpclient.NewHTTPClient()
+}
+
+func (o *operator) request(method, uri string, requestHeader http.Header, data []byte) (raw []byte, err error) {
+	var r *httpclient.HttpResponse
+
+	client := o.getClient()
+	before := time.Now().Local()
+
+	// add auth token in header
+	header := http.Header{}
+	if requestHeader != nil {
+		for k := range requestHeader {
+			header.Set(k, requestHeader.Get(k))
+		}
+	}
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", o.conf.BcsAPIToken))
+	switch strings.ToUpper(method) {
+	case "GET":
+		if r, err = client.Get(uri, header, data); err != nil {
+			return
+		}
+	case "POST":
+		if r, err = client.Post(uri, header, data); err != nil {
+			return
+		}
+	case "PUT":
+		if r, err = client.Put(uri, header, data); err != nil {
+			return
+		}
+	case "DELETE":
+		if r, err = client.Delete(uri, header, data); err != nil {
+			return
+		}
+	}
+	raw = r.Reply
+
+	now := time.Now().Local()
+	if before.Add(1 * time.Second).Before(now) {
+		blog.Warnf("crm: operator request [%s] %s for too long: %s", method, uri, now.Sub(before).String())
+	}
+
+	if r.StatusCode != http.StatusOK {
+		err = fmt.Errorf("crm: failed to request, http(%d)%s: %s", r.StatusCode, r.Status, uri)
+		return
+	}
+	return
+}
+
+//FederationResourceParam define
+type FederationResourceParam struct {
+	Resources     ResRequests       `json:"resources"`
+	ClusterID     string            `json:"clusterID"` //子集群ID，非联邦集群ID
+	ClusterLabels map[string]string `json:"clusterLabels"`
+	NodeSelector  map[string]string `json:"nodeSelector"`
+}
+
+//ResRequests define
+type ResRequests struct {
+	Requests ResRequest `json:"requests"`
+}
+
+//ResRequest define
+type ResRequest struct {
+	CPU    string `json:"cpu"`
+	Memory string `json:"memory"`
+}
+
+//FederationData define
+type FederationData struct {
+	Total int `json:"total"`
+}
+
+//FederationResult define
+type FederationResult struct {
+	Code int            `json:"code"`
+	Msg  string         `json:"msg"`
+	Data FederationData `json:"data"`
+}
+
+func (o *operator) getFederationTotalNum(url string, ist config.InstanceType) (FederationResult, error) {
+	var result FederationResult
+	param := &FederationResourceParam{
+		Resources: ResRequests{
+			Requests: ResRequest{
+				CPU:    fmt.Sprintf("%f", ist.CPUPerInstance),
+				Memory: fmt.Sprintf("%fM", ist.MemPerInstance),
+			},
+		},
+		NodeSelector: map[string]string{
+			o.platformLabelKey: ist.Platform,
+			o.cityLabelKey:     ist.Group,
+		},
+	}
+	var data []byte
+	_ = codec.EncJSON(param, &data)
+	// add auth token in header
+	header := http.Header{}
+	header.Set("Authorization", fmt.Sprintf("Bearer %s", o.conf.BcsAPIToken))
+	res, err := o.request("POST", url, header, data)
+	if err != nil {
+		blog.Errorf("k8s operator: get federation resource param(%v), token(%v) failed: %v", param, header, err)
+		return result, err
+	}
+
+	if err = codec.DecJSON(res, &result); err != nil {
+		blog.Errorf("k8s operator: get federation decode url(%s) param(%v) token(%v) failed: %v", url, param, header, err)
+		return result, err
+	}
+	return result, nil
+}
+
+func (o *operator) getFederationResource(clusterID string) ([]*op.NodeInfo, error) {
+	nodeInfoList := make([]*op.NodeInfo, 0, 1000)
+	if o.conf.BcsNamespace == "" {
+		return nil, fmt.Errorf("crm: get federation resource request failed clusterID(%s): namespace is nil", clusterID)
+	}
+	url := fmt.Sprintf(bcsAPIFederatedURI, o.conf.BcsAPIPool.GetAddress(), clusterID, o.conf.BcsNamespace)
+	for _, ist := range o.conf.InstanceType {
+		result, err := o.getFederationTotalNum(url, ist)
+		if err != nil {
+			blog.Errorf("crm: get federation resource request failed url(%s) clusterID(%s) group(%s), platform(%s) : %v",
+				url, clusterID, ist.Group, ist.Platform, err)
+			continue
+		}
+		if result.Code != 0 {
+			blog.Errorf("crm: get federation resource request failed url(%s) clusterID(%s) group(%s), platform(%s): (%v)%s",
+				url, clusterID, ist.Group, ist.Platform, result.Code, result.Msg)
+			continue
+		}
+		totalIst := float64(result.Data.Total)
+		nodeInfoList = append(nodeInfoList, &op.NodeInfo{
+			IP:       clusterID + "-" + o.conf.BcsNamespace + "-" + ist.Platform + "-" + ist.Group,
+			Hostname: clusterID + "-" + o.conf.BcsNamespace + "-" + ist.Platform + "-" + ist.Group,
+			DiskLeft: totalIst,
+			MemLeft:  totalIst * ist.MemPerInstance,
+			CPULeft:  totalIst * ist.CPUPerInstance,
+			Attributes: map[string]string{
+				op.AttributeKeyPlatform: ist.Platform,
+				op.AttributeKeyCity:     ist.Group,
+			},
+		})
+
+	}
+	blog.Debugf("k8s-operator: success to get federation resource clusterID(%s)", clusterID)
+	return nodeInfoList, nil
+}
+
 func (o *operator) getServerStatus(clusterID, namespace, name string) (*op.ServiceInfo, error) {
 	info := &op.ServiceInfo{}
 
 	if err := o.getDeployments(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("k8s-operator: get server status, get deployments failed: %v", err)
+		blog.Errorf("k8s-operator: get server status, get deployments clusterID(%s) namespace(%s) failed: %v",
+			clusterID, namespace, err)
 		return nil, err
 	}
 
 	if err := o.getPods(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("k8s-operator: get server status, get pods failed: %v", err)
+		blog.Errorf("k8s-operator: get server status, get pods clusterID(%s) namespace(%s) failed: %v",
+			clusterID, namespace, err)
 		return nil, err
 	}
 
@@ -421,7 +582,7 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 			protocol: param.Ports[port],
 			port:     portNum,
 		}
-		index += 1
+		index++
 
 		randPortsNames = append(randPortsNames, enginePort2K8SPort(port))
 	}
@@ -462,6 +623,7 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 	data = strings.ReplaceAll(data, templateVarCity, city)
 	data = strings.ReplaceAll(data, templateVarCityKey, o.cityLabelKey)
 
+	//set instance default value
 	varCPU := o.conf.BcsCPUPerInstance
 	varMem := o.conf.BcsMemPerInstance
 	varLimitCPU := o.conf.BcsCPUPerInstance
@@ -493,10 +655,21 @@ func (o *operator) getYAMLFromTemplate(param op.BcsLaunchParam) (string, error) 
 		}
 		break
 	}
+	storageRequest := ""
+	storageLimitRequest := ""
+	if o.conf.BcsStoragePerInstance > 0.0 {
+		storageRequest = fmt.Sprintf("ephemeral-storage: %.2fGi", o.conf.BcsStoragePerInstance)
+		storageLimitRequest = storageRequest
+	}
+	if o.conf.BcsStorageLimitPerInstance > 0.0 {
+		storageLimitRequest = fmt.Sprintf("ephemeral-storage: %.2fGi", o.conf.BcsStorageLimitPerInstance)
+	}
 	data = strings.ReplaceAll(data, templateVarCPU, fmt.Sprintf("%.2f", varCPU*1000))
 	data = strings.ReplaceAll(data, templateVarMem, fmt.Sprintf("%.2f", varMem))
+	data = strings.ReplaceAll(data, templateStorage, storageRequest)
 	data = strings.ReplaceAll(data, templateLimitVarCPU, fmt.Sprintf("%.2f", varLimitCPU*1000))
 	data = strings.ReplaceAll(data, templateLimitVarMem, fmt.Sprintf("%.2f", varLimitMem))
+	data = strings.ReplaceAll(data, templateLimitStorage, storageLimitRequest)
 	return data, nil
 }
 
@@ -543,10 +716,12 @@ func (o *operator) getClientSetFromCache(clusterID string) (*clusterClientSet, b
 
 func (o *operator) generateClient(clusterID string) (*clusterClientSet, error) {
 	address := o.conf.BcsAPIPool.GetAddress()
+	var host string
 	if o.conf.EnableBCSApiGw {
-		EnableBCSApiGw = "1"
+		host = fmt.Sprintf(bcsAPIGWK8SBaseURI, address, clusterID)
+	} else {
+		host = fmt.Sprintf(bcsAPIK8SBaseURI, address, clusterID)
 	}
-	host := fmt.Sprintf(getBcsK8SBaseUri(), address, clusterID)
 
 	blog.Infof("k8s-operator: try generate client with host(%s) token(%s)", host, o.conf.BcsAPIToken)
 	// get client set by real api-server address
@@ -615,7 +790,7 @@ func insertYamlPorts(data string, ports map[string]portsMap) string {
 
 		portsYaml += "\n" + content
 
-		index += 1
+		index++
 	}
 
 	data = strings.ReplaceAll(data, templateVarPorts, portsYaml)
@@ -730,7 +905,7 @@ func maxResourceList(list, new coreV1.ResourceList) {
 	}
 }
 
-func getBcsK8SBaseUri() string {
+func getBcsK8SBaseURL() string {
 	if len(EnableBCSApiGw) > 0 {
 		return bcsAPIGWK8SBaseURI
 	}

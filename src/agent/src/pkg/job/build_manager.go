@@ -30,18 +30,17 @@ package job
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"os"
 	"sync"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
-// buildManager 当前构建对象管理
+// buildManager 二进制构建对象管理
 type buildManager struct {
-	// Lock 多协诚修改时的执行锁
-	Lock sync.Mutex
 	// preInstance 接取的构建任务但还没开始进行构建 [string]bool
 	preInstances sync.Map
 	// instances 正在执行中的构建对象 [int]*api.ThirdPartyBuildInfo
@@ -56,7 +55,7 @@ func init() {
 
 func (b *buildManager) GetInstanceCount() int {
 	var i = 0
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})
@@ -65,7 +64,7 @@ func (b *buildManager) GetInstanceCount() int {
 
 func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, value interface{}) bool {
 		result = append(result, *value.(*api.ThirdPartyBuildInfo))
 		return true
 	})
@@ -77,7 +76,7 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 	logs.Info("add build: processId: ", processId, ", buildInfo: ", string(bytes))
 	b.instances.Store(processId, buildInfo)
 	// 启动构建了就删除preInstance
-	b.preInstances.Delete(buildInfo.BuildId)
+	b.DeletePreInstance(buildInfo.BuildId)
 
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
@@ -99,7 +98,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
 		logs.Warn(errMsg)
 		b.instances.Delete(processId)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *info, Message: errMsg})
+		workerBuildFinish(info.ToFinish(false, errMsg, api.BuildProcessRunErrorEnum))
 		return
 	}
 
@@ -123,12 +122,16 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 	buildInfo := info
 	b.instances.Delete(processId)
-	workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Success: success, Message: msg})
+	if success {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.NoErrorEnum))
+	} else {
+		workerBuildFinish(buildInfo.ToFinish(success, msg, api.BuildProcessRunErrorEnum))
+	}
 }
 
 func (b *buildManager) GetPreInstancesCount() int {
 	var i = 0
-	b.preInstances.Range(func(key, value interface{}) bool {
+	b.preInstances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})
@@ -137,4 +140,8 @@ func (b *buildManager) GetPreInstancesCount() int {
 
 func (b *buildManager) AddPreInstance(buildId string) {
 	b.preInstances.Store(buildId, true)
+}
+
+func (b *buildManager) DeletePreInstance(buildId string) {
+	b.preInstances.Delete(buildId)
 }
