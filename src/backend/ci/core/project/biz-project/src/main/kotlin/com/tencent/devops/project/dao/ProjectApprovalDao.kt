@@ -96,7 +96,24 @@ class ProjectApprovalDao {
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
                 tipsStatus,
                 projectCreateInfo.projectType
-            ).execute()
+            ).onDuplicateKeyUpdate()
+                .set(PROJECT_NAME, projectCreateInfo.projectName)
+                .set(DESCRIPTION, projectCreateInfo.description)
+                .set(BG_ID, projectCreateInfo.bgId)
+                .set(BG_NAME, projectCreateInfo.bgName)
+                .set(DEPT_ID, projectCreateInfo.deptId)
+                .set(DEPT_NAME, projectCreateInfo.deptName)
+                .set(CENTER_ID, projectCreateInfo.centerId)
+                .set(CENTER_NAME, projectCreateInfo.centerName)
+                .set(LOGO_ADDR, projectCreateInfo.logoAddress)
+                .set(SUBJECT_SCOPES, projectCreateInfo.subjectScopes?.let { JsonUtil.toJson(it) })
+                .set(AUTH_SECRECY, projectCreateInfo.authSecrecy)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .set(TIPS_STATUS, tipsStatus)
+                .set(PROJECT_TYPE, projectCreateInfo.projectType)
+                .execute()
         }
     }
 
