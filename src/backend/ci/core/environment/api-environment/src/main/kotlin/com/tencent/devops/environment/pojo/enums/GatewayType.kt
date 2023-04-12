@@ -1,8 +1,5 @@
 package com.tencent.devops.environment.pojo.enums
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
-
 enum class GatewayType(val typeName: String) {
     SZ("深圳"),
     SH("上海"),
@@ -11,7 +8,7 @@ enum class GatewayType(val typeName: String) {
     XJP("新加坡");
 
     companion object {
-        fun i18n(typeName: String): String {
+       /* fun i18n(typeName: String): String {
             return when (typeName) {
                 SZ.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SZ)
                 SH.typeName -> MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_SH)
@@ -20,6 +17,6 @@ enum class GatewayType(val typeName: String) {
                 else -> {
                     MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.BK_XJP) }
             }
-        }
+        }*/
     }
 }

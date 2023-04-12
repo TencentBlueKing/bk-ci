@@ -27,13 +27,6 @@
 
 package com.tencent.devops.environment.pojo.enums
 
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_CMDB
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_DEVCLOUD
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_OTHER
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_THIRDPARTY
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.BK_UNKNOWN
-
 enum class NodeType(val typeName: String) {
     CMDB("CMDB"),
     DEVCLOUD("DevCloud虚拟机"),
@@ -62,7 +55,7 @@ enum class NodeType(val typeName: String) {
             }
         }
 
-        fun i18n(nodeType: String): String {
+        /*fun i18n(nodeType: String): String {
             return when (nodeType) {
                 CMDB.name -> MessageCodeUtil.getCodeLanMessage(BK_CMDB)
                 DEVCLOUD.name -> MessageCodeUtil.getCodeLanMessage(BK_DEVCLOUD)
@@ -70,6 +63,6 @@ enum class NodeType(val typeName: String) {
                 OTHER.name -> MessageCodeUtil.getCodeLanMessage(BK_OTHER)
                 else -> { MessageCodeUtil.getCodeLanMessage(BK_UNKNOWN) }
             }
-        }
+        }*/
     }
 }
