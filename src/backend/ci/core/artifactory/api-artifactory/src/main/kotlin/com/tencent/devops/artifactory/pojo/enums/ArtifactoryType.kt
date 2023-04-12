@@ -32,7 +32,8 @@ import java.lang.UnsupportedOperationException
 enum class ArtifactoryType {
     PIPELINE,
     CUSTOM_DIR,
-    IMAGE;
+    IMAGE,
+    REPORT;
 
     fun toFileType(): FileTypeEnum {
         return when (this) {

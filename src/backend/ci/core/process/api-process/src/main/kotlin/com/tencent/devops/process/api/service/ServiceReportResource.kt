@@ -28,8 +28,8 @@
 package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
