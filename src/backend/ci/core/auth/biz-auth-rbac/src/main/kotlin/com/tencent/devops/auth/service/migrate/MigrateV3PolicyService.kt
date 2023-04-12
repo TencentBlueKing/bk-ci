@@ -373,10 +373,12 @@ class MigrateV3PolicyService constructor(
 
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
+                logger.warn("Failed to request(${request.url}), code ${response.code}, content: $responseContent")
                 throw RemoteServiceException(operation)
             }
-            return response.body!!.string()
+            return responseContent
         }
     }
 }
