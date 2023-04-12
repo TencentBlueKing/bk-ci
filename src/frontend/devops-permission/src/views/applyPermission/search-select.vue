@@ -284,6 +284,18 @@ export default {
         this.searchSelectValue = []
       },
       deep: true
+    },
+    curProject: {
+      async handler (val) {
+        if (val && val.englishName !== this.$route.query.project_code) {
+          this.$emit('change', [])
+          return
+        }
+        if (val) {
+          await this.initApplyQuery()
+        }
+      },
+      deep: true
     }
   },
   data() {
@@ -313,7 +325,6 @@ export default {
   },
   async created() {
     await this.getResourceTypesList();
-    await this.initApplyQuery();
   },
   methods: {
     async initApplyQuery() {
@@ -340,6 +351,24 @@ export default {
             values: [resourceValue],
           };
           this.searchSelectValue.push(resourceCodeParams);
+          const actionValue = this.actionsList.find(i => i.action === action)
+          const actionParams = {
+            id: 'actionId',
+            name: this.$t('操作'),
+            values: [actionValue],
+          }
+          this.searchSelectValue.push(actionParams);
+        } else {
+          await this.getActionsList();
+          const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
+          const actionValue = this.actionsList.find(i => i.action === action)
+          actionValue.name = `${resourceTypeName}/${actionValue.actionName}`
+          const actionParams = {
+            id: 'actionId',
+            name: this.$t('操作'),
+            values: [actionValue],
+          }
+          this.searchSelectValue.push(actionParams);
         }
 
         if (groupName) {

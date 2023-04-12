@@ -263,7 +263,7 @@ export default {
             this
               .refreshList()
               .then(() => {
-                const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0]
+                const group = this.groupList.find(group => group.groupId === data?.data?.id) || this.groupList[0];
                 this.handleChooseGroup(group);
               })
             break;
@@ -275,8 +275,8 @@ export default {
             this.groupList[this.curGroupIndex].userCount += data.data.users.length
             break;
           case 'remove_user_confirm':
-            const departments = data.data.members.filters(i => i.type === department)
-            const users = data.data.members.filters(i => i.type === user)
+            const departments = data.data.members.filter(i => i.type === 'department')
+            const users = data.data.members.filter(i => i.type === 'user')
             this.groupList[this.curGroupIndex].departmentCount -= departments.length
             this.groupList[this.curGroupIndex].userCount -= users.length
             break;
@@ -298,9 +298,20 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 62px);
+  max-height: calc(100% - 130px);
   height: auto;
   overflow-y: auto;
+  &::-webkit-scrollbar-thumb {
+    background-color: #c4c6cc !important;
+    border-radius: 5px !important;
+    &:hover {
+      background-color: #979ba5 !important;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+  }
 }
 .group-title {
   display: inline-block;

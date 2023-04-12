@@ -199,5 +199,7 @@
     "userGroupManage": "用户管理",
     "extendManage": "微扩展管理",
     "enableDisableProject": "禁用/启用项目",
-    "createProject": "创建项目"
+    "createProject": "创建项目",
+    "projectCreatingTitle": "项目创建中",
+    "projectCreatingDesc": "{0}项目正在创建审批中，请耐心等待"
 }

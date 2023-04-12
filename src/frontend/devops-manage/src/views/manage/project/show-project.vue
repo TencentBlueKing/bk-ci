@@ -50,7 +50,7 @@ const fetchProjectData = async () => {
       projectData.value = res;
 
       // 审批状态下项目 -> 获取审批详情数据
-      if ([1, 4].includes(projectData.value.approvalStatus)) {
+      if ([1, 3, 4].includes(projectData.value.approvalStatus)) {
         fetchApprovalInfo();
       }
     })
@@ -315,7 +315,7 @@ onMounted(async () => {
     >
       <template #title>
         {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
-        <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
+        <a class="approval-details" v-if="[1, 3, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
         <span v-if="projectData.approvalMsg">{{ t('拒绝理由：') }}{{ projectData.approvalMsg }}</span>
       </template>
     </bk-alert>

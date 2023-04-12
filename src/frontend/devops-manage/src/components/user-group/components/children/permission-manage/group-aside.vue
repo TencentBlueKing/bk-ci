@@ -190,7 +190,7 @@ export default {
       isClosing: false,
       isRename: false,
       displayGroupName: '',
-      renameGroupId: '',
+      renameGroupId: 0,
       curGroupIndex: -1,
       keyWords: '',
     };
@@ -323,7 +323,7 @@ export default {
 
     handleRename () {
       const group = this.groupList.find(i => i.groupId === this.renameGroupId);
-      if (this.displayGroupName === group.name) {
+      if (this.displayGroupName === group.name || !group) {
         this.isRename = false;
         this.renameGroupId = 0;
         this.displayGroupName = '';
@@ -338,6 +338,12 @@ export default {
           Message({
             theme: 'success',
             message: this.$t('修改成功')
+          });
+        })
+        .catch((err) => {
+          Message({
+            theme: 'error',
+            message: err.message
           });
         })
         .finally(() => {
@@ -359,9 +365,20 @@ export default {
   border-right: 1px solid #dde0e6;
 }
 .group-list {
-  max-height: calc(100% - 62px);
+  max-height: calc(100% - 130px);
   height: auto;
   overflow-y: auto;
+  &::-webkit-scrollbar-thumb {
+    background-color: #c4c6cc !important;
+    border-radius: 5px !important;
+    &:hover {
+      background-color: #979ba5 !important;
+    }
+  }
+  &::-webkit-scrollbar {
+    width: 4px !important;
+    height: 4px !important;
+  }
 }
 .group-title {
   display: inline-block;

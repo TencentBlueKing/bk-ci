@@ -119,7 +119,8 @@ watch(() => props.groupList, () => {
 });
 
 watch(() => userGroupList.value, () => {
-  const { groupId } = route?.query;
+  const query = JSON.parse(sessionStorage.getItem('group-apply-query'));
+  const { groupId } = query;
   if (groupId && filter.value.length) {
     const group = userGroupList.value.find(group => String(group.id) === groupId);
     if (group && selections.value.findIndex(selection => String(selection.id) === groupId) === -1) {
@@ -158,11 +159,12 @@ const handleChangeSearch = (data) => {
   setTimeout(() => {
     filter.value = data;
     const query = JSON.parse(sessionStorage.getItem('group-apply-query'))
-    const resourceType = query?.resourceType
+    // const resourceType = query?.resourceType
     if (query && Object.keys(query).length > 1 && query.project_code === props.projectCode) {
       applyTips.value = t('根据筛选条件，匹配到如下用户组:');
     }
-    if (resourceType && !userGroupList.value.length && !data.length) return
+    if (!props.curProject) return
+    // if (resourceType && !userGroupList.value.length && !data.length) return
     fetchGroupList(data);
   }, 100);
 };
@@ -333,7 +335,7 @@ const columns = [
       :search-list="searchList"
       :is-disabled="isDisabled"
       :project-code="projectCode"
-      :cur-project="curProject"
+      :cur-project="props.curProject"
       @change="handleChangeSearch">
     </search-select>
     <div class="apply-tips">
