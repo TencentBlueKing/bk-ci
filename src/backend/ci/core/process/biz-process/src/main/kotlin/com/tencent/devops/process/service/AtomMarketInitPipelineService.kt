@@ -129,7 +129,7 @@ class AtomMarketInitPipelineService @Autowired constructor(
                 checkPermission = false,
                 isMobile = false,
                 startByMessage = null
-            )
+            ).id
             logger.info("atomMarketBuildManualStartup result is:$buildId")
         } catch (t: Throwable) {
             logger.error("$pipelineId buildManualStartup error:", t)

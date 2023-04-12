@@ -140,6 +140,7 @@ import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -738,7 +739,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildNumRule: String? = null,
         acquire: Boolean? = false,
         triggerReviewers: List<String>? = null
-    ): String {
+    ): BuildId {
         val now = LocalDateTime.now()
         // 2019-12-16 产品 rerun 需求
         val projectId = pipelineInfo.projectId
@@ -1219,7 +1220,12 @@ class PipelineRuntimeService @Autowired constructor(
                 tag = TAG, jobId = JOB_ID, executeCount = 1
             )
         }
-        return buildId
+        return BuildId(
+            id = buildId,
+            executeCount = context.executeCount,
+            projectId = projectId,
+            pipelineId = pipelineId
+        )
     }
 
     private fun saveBuildRuntimeRecord(

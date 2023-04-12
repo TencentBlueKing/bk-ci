@@ -88,7 +88,7 @@ class CheckImageInitPipelineService @Autowired constructor(
                 checkPermission = false,
                 isMobile = false,
                 startByMessage = null
-            )
+            ).id
             logger.info("buildManualStartup result is:$buildId")
         } catch (t: Throwable) {
             logger.error("$pipelineId buildManualStartup error:", t)

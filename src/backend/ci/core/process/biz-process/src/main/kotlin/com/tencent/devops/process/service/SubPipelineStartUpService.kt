@@ -259,7 +259,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = false
-            )
+            ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,

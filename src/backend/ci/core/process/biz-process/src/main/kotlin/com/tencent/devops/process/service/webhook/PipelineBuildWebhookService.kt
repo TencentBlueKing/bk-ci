@@ -520,7 +520,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 model = model,
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
-            )
+            ).id
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
