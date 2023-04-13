@@ -53,13 +53,13 @@ interface OPQualityRuleBuildHisResource {
     @Path("/cleanHisDetailMeta")
     @GET
     fun cleanHisDetailMeta(
-        @ApiParam("项目ID", required = true)
+        @ApiParam("清理轮数", required = true)
         @QueryParam("cleanRound")
         cleanRound: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("每轮大小", required = true)
         @QueryParam("roundSize")
         roundSize: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("缓冲时间", required = true)
         @QueryParam("roundGap")
         roundGap: Int
     ): Result<Int>
