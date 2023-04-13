@@ -36,16 +36,16 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.dao.MessageCodeDetailDao
 import com.tencent.devops.project.pojo.code.AddMessageCodeRequest
 import com.tencent.devops.project.pojo.code.MessageCodeResp
 import com.tencent.devops.project.pojo.code.UpdateMessageCodeRequest
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class MessageCodeDetailService @Autowired constructor(
@@ -135,7 +135,7 @@ class MessageCodeDetailService @Autowired constructor(
             )
             Result(data = true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode))
+            I18nUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(messageCode))
         }
     }
 
@@ -147,7 +147,7 @@ class MessageCodeDetailService @Autowired constructor(
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode
-        if (null != messageCodeDetailResult.data) return MessageCodeUtil.generateResponseDataObject(
+        if (null != messageCodeDetailResult.data) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
             params = arrayOf(messageCode),
             data = false
@@ -180,7 +180,7 @@ class MessageCodeDetailService @Autowired constructor(
         logger.info("messageCode is: $messageCode,updateMessageCodeRequest is: $updateMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(messageCode)
         // 判断code信息是否存在，存在才更新
-        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageCodeUtil.generateResponseDataObject(
+        val messageCodeDetail = messageCodeDetailResult.data ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(messageCode),
             data = false

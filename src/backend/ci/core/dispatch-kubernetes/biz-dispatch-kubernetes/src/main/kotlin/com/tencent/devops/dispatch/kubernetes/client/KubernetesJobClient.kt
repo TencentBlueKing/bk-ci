@@ -29,15 +29,14 @@ package com.tencent.devops.dispatch.kubernetes.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult

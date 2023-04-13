@@ -126,7 +126,7 @@ open class ScriptTask : ITask() {
                 LoggerService.addErrorLine(
                     MessageUtil.getMessageByLocale(
                         SCRIPT_EXECUTION_FAIL,
-                        System.getProperty(LOCALE_LANGUAGE),
+                        AgentEnv.getLocaleLanguage(),
                         arrayOf(archiveFileIfExecFail)
                     )
                 )
@@ -146,7 +146,7 @@ open class ScriptTask : ITask() {
                 )
                 if (count == 0) {
                     LoggerService.addErrorLine(
-                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, System.getProperty(LOCALE_LANGUAGE))
+                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, AgentEnv.getLocaleLanguage())
                     )
                 }
             }

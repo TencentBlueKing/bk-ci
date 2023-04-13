@@ -1334,7 +1334,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[instance.pipelineName] = "duplicate!"
             } catch (exception: ErrorCodeException) {
                 logger.warn("TemplateCreateInstanceErrorCode|$projectId|$instance|$userId|${exception.message}")
-                messages[instance.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                messages[instance.pipelineName] = I18nUtil.generateResponseDataObject(
                     messageCode = exception.errorCode,
                     params = exception.params,
                     data = null,
@@ -1413,7 +1413,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[it.pipelineName] = " exist!"
             } catch (exception: ErrorCodeException) {
                 logger.warn("updateTemplateInstancesErrorCode|$projectId|$it|$userId|${exception.message}")
-                messages[it.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                messages[it.pipelineName] = I18nUtil.generateResponseDataObject(
                     messageCode = exception.errorCode,
                     params = exception.params,
                     data = null,
@@ -1552,7 +1552,7 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelines.add(templateInstanceUpdate.pipelineName)
                 } catch (exception: ErrorCodeException) {
                     logger.info("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|${exception.message}")
-                    val message = MessageCodeUtil.generateResponseDataObject(
+                    val message = I18nUtil.generateResponseDataObject(
                         messageCode = exception.errorCode,
                         params = exception.params,
                         data = null,

@@ -51,6 +51,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.START_BUILD_
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.START_BUILD_IMAGE_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.START_BUILD_IMAGE_NAME
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.WAIT_BUILD_IMAGE_FINISH
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.AgentEnv.isDockerEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
@@ -98,7 +99,7 @@ class BuildPushDockerImageTask : ITask() {
             // docker 则需要调用母机进行docker build
             logger.info("Start docker build, $imageName:$imageTag")
             LoggerService.addNormalLine("${
-                MessageUtil.getMessageByLocale(START_BUILD_IMAGE_NAME, System.getProperty(LOCALE_LANGUAGE))
+                MessageUtil.getMessageByLocale(START_BUILD_IMAGE_NAME, AgentEnv.getLocaleLanguage())
             }$imageName:$imageTag")
             startDockerBuild(buildVariables = buildVariables,
                 imageName = imageName,
@@ -113,7 +114,7 @@ class BuildPushDockerImageTask : ITask() {
             Thread.sleep(2000)
             // 轮询状态
             LoggerService.addNormalLine("${
-                MessageUtil.getMessageByLocale(WAIT_BUILD_IMAGE_FINISH, System.getProperty(LOCALE_LANGUAGE))
+                MessageUtil.getMessageByLocale(WAIT_BUILD_IMAGE_FINISH, AgentEnv.getLocaleLanguage())
             } $imageName:$imageTag")
             var status = getDockerBuildStatus(buildVariables)
             while (status.first == Status.RUNNING.name) {
@@ -124,7 +125,7 @@ class BuildPushDockerImageTask : ITask() {
             if (status.first == Status.FAILURE.name) {
                 logger.info("Docker build failed, msg: ${status.second}")
                 LoggerService.addNormalLine("${
-                    MessageUtil.getMessageByLocale(BUILD_IMAGE_FAIL_DETAIL, System.getProperty(LOCALE_LANGUAGE))
+                    MessageUtil.getMessageByLocale(BUILD_IMAGE_FAIL_DETAIL, AgentEnv.getLocaleLanguage())
                 }${status.second}")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
@@ -133,7 +134,7 @@ class BuildPushDockerImageTask : ITask() {
                 )
             } else {
                 LoggerService.addNormalLine(
-                    MessageUtil.getMessageByLocale(BK_BUILD_IMAGE_SUCCEED, System.getProperty(LOCALE_LANGUAGE))
+                    MessageUtil.getMessageByLocale(BK_BUILD_IMAGE_SUCCEED, AgentEnv.getLocaleLanguage())
                 )
             }
         } else {
@@ -171,7 +172,7 @@ class BuildPushDockerImageTask : ITask() {
             } catch (t: RuntimeException) {
                 val message = MessageUtil.getMessageByLocale(
                     DOCKERFILE_FIRST_LINE_CHECK,
-                    System.getProperty(LOCALE_LANGUAGE),
+                    AgentEnv.getLocaleLanguage(),
                     arrayOf(repoAddr)
                 )
                 LoggerService.addErrorLine(message)
@@ -213,7 +214,7 @@ class BuildPushDockerImageTask : ITask() {
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 LoggerService.addErrorLine(
-                    MessageUtil.getMessageByLocale(START_BUILD_IMAGE_FAIL, System.getProperty(LOCALE_LANGUAGE))
+                    MessageUtil.getMessageByLocale(START_BUILD_IMAGE_FAIL, AgentEnv.getLocaleLanguage())
                 )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -227,7 +228,7 @@ class BuildPushDockerImageTask : ITask() {
                 return Pair(map["first"] as String, map["second"])
             } else {
                 LoggerService.addErrorLine(
-                    MessageUtil.getMessageByLocale(QUERY_BUILD_IMAGE_STATUS_FAIL, System.getProperty(LOCALE_LANGUAGE))
+                    MessageUtil.getMessageByLocale(QUERY_BUILD_IMAGE_STATUS_FAIL, AgentEnv.getLocaleLanguage())
                 )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
@@ -276,7 +277,7 @@ class BuildPushDockerImageTask : ITask() {
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")
                 LoggerService.addErrorLine(
-                    MessageUtil.getMessageByLocale(START_BUILD_FAIL, System.getProperty(LOCALE_LANGUAGE))
+                    MessageUtil.getMessageByLocale(START_BUILD_FAIL, AgentEnv.getLocaleLanguage())
                 )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,

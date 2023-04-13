@@ -44,12 +44,12 @@ import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
+import java.net.SocketTimeoutException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesBuilderClient @Autowired constructor(
@@ -150,7 +150,7 @@ class KubernetesBuilderClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw ErrorCodeException(
-                        errorType = errorTypeErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
+                        errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode.toString(),
                         defaultMessage = "操作构建机接口异常（Fail to $action docker, http response code: ${response.code}"
                     )
@@ -307,7 +307,7 @@ class KubernetesBuilderClient @Autowired constructor(
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
             throw ErrorCodeException(
                 errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode.toString(),
                 defaultMessage = "获取登录调试链接接口超时, url: $url, ${e.message}"
             )
         }

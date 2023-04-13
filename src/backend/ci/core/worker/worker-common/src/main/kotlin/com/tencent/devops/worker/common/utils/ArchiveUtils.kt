@@ -37,6 +37,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
 import java.io.IOException
@@ -113,7 +114,7 @@ object ArchiveUtils {
                 errorType = ErrorType.USER,
                 errorMsg = MessageUtil.getMessageByLocale(
                     WorkerMessageCode.ARCHIVE_FILE_LIMIT,
-                    System.getProperty(LOCALE_LANGUAGE)
+                    AgentEnv.getLocaleLanguage()
                 )
             )
         }

@@ -29,21 +29,19 @@ package com.tencent.devops.dispatch.bcs.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import com.tencent.devops.common.api.exception.ErrorCodeException
 
 @Component
 class BcsJobClient @Autowired constructor(
@@ -105,7 +103,7 @@ class BcsJobClient @Autowired constructor(
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
                     defaultMessage = "获取Job logs接口异常（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }

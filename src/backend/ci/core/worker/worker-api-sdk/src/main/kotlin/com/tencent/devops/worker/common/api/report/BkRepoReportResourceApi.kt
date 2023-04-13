@@ -43,6 +43,7 @@ import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.CREATE_REPORT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_ROOT_PATH_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -65,7 +66,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -100,7 +101,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         }
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -174,7 +175,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             ),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
         val responseContent = request(request, message)
         try {
             val obj = objectMapper.readTree(responseContent)

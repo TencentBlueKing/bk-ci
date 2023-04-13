@@ -40,6 +40,7 @@ import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -61,10 +62,10 @@ import com.tencent.devops.stream.trigger.pojo.ManualPreScriptBuildYaml
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @SuppressWarnings("LongParameterList", "LongMethod", "ThrowsCount")
 abstract class BaseManualTriggerService @Autowired constructor(

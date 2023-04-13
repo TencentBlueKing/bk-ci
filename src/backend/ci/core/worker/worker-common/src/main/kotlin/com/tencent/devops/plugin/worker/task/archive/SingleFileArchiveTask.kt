@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.NO_MATCHING_ARCHIVE_FILE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -87,7 +88,7 @@ class SingleFileArchiveTask : ITask() {
                     errorType = ErrorType.USER,
                     errorMsg = MessageUtil.getMessageByLocale(
                         NO_MATCHING_ARCHIVE_FILE,
-                        System.getProperty(LOCALE_LANGUAGE)
+                        AgentEnv.getLocaleLanguage()
                     )
                 )
             }

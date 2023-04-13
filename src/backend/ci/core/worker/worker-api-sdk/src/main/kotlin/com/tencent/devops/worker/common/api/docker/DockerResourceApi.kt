@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_IMAGE_MARKET_INFO_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
@@ -59,7 +60,7 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
         val request = buildPut(path, body, headMap)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(UPDATE_IMAGE_MARKET_INFO_FAILED, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(UPDATE_IMAGE_MARKET_INFO_FAILED, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

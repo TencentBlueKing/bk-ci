@@ -44,6 +44,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -113,7 +114,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_CUSTOM_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {
@@ -177,7 +178,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
         val message = MessageUtil.getMessageByLocale(
             ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {
@@ -284,7 +285,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, AgentEnv.getLocaleLanguage())
         )
         return jacksonObjectMapper().readValue(responseContent)
     }

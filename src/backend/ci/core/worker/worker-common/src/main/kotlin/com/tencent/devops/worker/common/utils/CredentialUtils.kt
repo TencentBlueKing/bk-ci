@@ -46,6 +46,7 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ticket.CredentialSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
 import org.slf4j.LoggerFactory
@@ -201,7 +202,7 @@ object CredentialUtils {
             logger.warn(
                 MessageUtil.getMessageByLocale(
                     WorkerMessageCode.CREDENTIAL_ID_NOT_EXIST,
-                    System.getProperty(LOCALE_LANGUAGE),
+                    AgentEnv.getLocaleLanguage(),
                     arrayOf(ticketId)
                 ),
                 ignore.message

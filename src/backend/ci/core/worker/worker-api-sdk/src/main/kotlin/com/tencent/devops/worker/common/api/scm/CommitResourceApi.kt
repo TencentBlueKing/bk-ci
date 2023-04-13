@@ -39,6 +39,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_CODE_BASE_COMMIT_INFO_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_SOURCE_MATERIAL_INFO_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_LAST_CODE_BASE_COMMIT_INFO_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
 
@@ -47,7 +48,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildPost(path, getJsonRequest(commits))
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(ADD_CODE_BASE_COMMIT_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(ADD_CODE_BASE_COMMIT_INFO_FAIL, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -64,7 +65,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_LAST_CODE_BASE_COMMIT_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(GET_LAST_CODE_BASE_COMMIT_INFO_FAIL, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -74,7 +75,7 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(ADD_SOURCE_MATERIAL_INFO_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(ADD_SOURCE_MATERIAL_INFO_FAILURE, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

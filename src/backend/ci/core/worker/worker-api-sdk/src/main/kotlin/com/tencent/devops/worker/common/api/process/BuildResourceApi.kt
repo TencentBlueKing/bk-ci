@@ -48,6 +48,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.HEARTBEAT_FA
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.NOTIFY_SERVER_START_BUILD_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.RECEIVE_BUILD_MACHINE_TASK_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_TASK_FINISH_FAILURE
+import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -58,7 +59,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildPut(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             NOTIFY_SERVER_START_BUILD_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -75,7 +76,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             RECEIVE_BUILD_MACHINE_TASK_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -95,7 +96,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         val request = buildPost(path, requestBody)
         val errorMessage = MessageUtil.getMessageByLocale(
-            REPORT_TASK_FINISH_FAILURE, System.getProperty(LOCALE_LANGUAGE)
+            REPORT_TASK_FINISH_FAILURE, AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -112,7 +113,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildPost(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             BUILD_FINISH_REQUEST_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -129,7 +130,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildPost(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             HEARTBEAT_FAIL,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -153,7 +154,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             GET_BUILD_TASK_DETAILS_FAILURE,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -179,7 +180,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             GET_BUILD_TASK_DETAILS_FAILURE,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -197,7 +198,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildPost(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             BUILD_TIMEOUT_END_REQUEST_FAILURE,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,
@@ -219,7 +220,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val request = buildGet(path)
         val errorMessage = MessageUtil.getMessageByLocale(
             GET_TEMPLATE_CROSS_PROJECT_INFO_FAILURE,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val responseContent = request(
             request = request,

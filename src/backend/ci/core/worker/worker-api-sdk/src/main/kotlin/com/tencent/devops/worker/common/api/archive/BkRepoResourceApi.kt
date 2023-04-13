@@ -63,6 +63,7 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -84,7 +85,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val request = buildGet(path)
             val response = request(
                 request,
-                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, AgentEnv.getLocaleLanguage())
             )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
@@ -164,7 +165,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {
@@ -276,7 +277,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {

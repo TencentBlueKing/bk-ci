@@ -48,13 +48,13 @@ import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
 import com.tencent.devops.quality.pojo.GroupUsers
 import com.tencent.devops.quality.pojo.ProjectGroupAndUsers
+import java.util.regex.Pattern
+import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
-import javax.ws.rs.core.Response
 
 @Service
 class QualityNotifyGroupService @Autowired constructor(
@@ -249,7 +249,7 @@ class QualityNotifyGroupService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 NEED_USER_GROUP_X_PERMISSION,
                 language,
-                arrayOf(authpermission.getI18n(I18nUtil.getLanguage(userId)))
+                arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
 

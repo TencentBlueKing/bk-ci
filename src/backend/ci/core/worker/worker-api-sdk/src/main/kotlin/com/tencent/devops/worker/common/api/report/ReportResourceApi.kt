@@ -42,6 +42,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.CREATE_REPORT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_ROOT_PATH_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -83,7 +84,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         val response = request(
             request,
-            MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_REPORT_FAILURE, AgentEnv.getLocaleLanguage())
         )
 
         try {
@@ -92,7 +93,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
                 throw RemoteServiceException(
                     MessageUtil.getMessageByLocale(
                         ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
-                        System.getProperty(LOCALE_LANGUAGE)
+                        AgentEnv.getLocaleLanguage()
                     )
                 )
             }
@@ -107,7 +108,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(GET_REPORT_ROOT_PATH_FAILURE, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -135,7 +136,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             buildPost(path, requestBody)
         }
         val responseContent = request(request,
-            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, System.getProperty(LOCALE_LANGUAGE)))
+            MessageUtil.getMessageByLocale(CREATE_REPORT_FAIL, AgentEnv.getLocaleLanguage()))
         return objectMapper.readValue(responseContent)
     }
 

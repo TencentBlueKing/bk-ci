@@ -53,6 +53,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.constant.StreamMessageCode.USER_NOT_AUTHORIZED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -65,11 +66,11 @@ import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
+import java.util.*
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Base64
 
 class StreamGithubTransferService @Autowired constructor(
     private val dslContext: DSLContext,

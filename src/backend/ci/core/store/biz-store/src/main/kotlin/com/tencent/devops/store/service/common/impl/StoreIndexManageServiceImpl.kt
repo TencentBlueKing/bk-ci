@@ -37,6 +37,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
 import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
 import com.tencent.devops.model.store.tables.TStoreIndexResult
@@ -339,7 +340,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         )
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(indexCode)
             )
@@ -353,7 +354,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         )
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(indexName)
             )

@@ -45,6 +45,7 @@ import com.tencent.devops.plugin.worker.task.scm.git.GitlabPullCodeSetting
 import com.tencent.devops.plugin.worker.task.scm.svn.CodeSvnPullCodeSetting
 import com.tencent.devops.process.utils.PIPELINE_BUILD_SVN_REVISION
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.CODE_REPO_PARAM_NOT_IN_PARAMS
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import java.io.File
@@ -121,7 +122,7 @@ object SCM {
             RepositoryType.ID -> taskParams[CodeSvnElement.REPO_HASH_ID] ?: throw ScmException(
                 MessageUtil.getMessageByLocale(
                     CODE_REPO_PARAM_NOT_IN_PARAMS,
-                    System.getProperty(LOCALE_LANGUAGE),
+                    AgentEnv.getLocaleLanguage(),
                     arrayOf("ID")
                 ),
                 scmType.name
@@ -129,7 +130,7 @@ object SCM {
             RepositoryType.NAME -> taskParams[CodeSvnElement.REPO_NAME] ?: throw ScmException(
                 MessageUtil.getMessageByLocale(
                     CODE_REPO_PARAM_NOT_IN_PARAMS,
-                    System.getProperty(LOCALE_LANGUAGE),
+                    AgentEnv.getLocaleLanguage(),
                     arrayOf("name")
                 ),
                 scmType.name

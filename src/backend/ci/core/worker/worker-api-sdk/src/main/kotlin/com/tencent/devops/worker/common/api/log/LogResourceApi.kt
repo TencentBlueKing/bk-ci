@@ -39,6 +39,7 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_END_STATUS_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOGS_REPORT_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.LOG_STORAGE_STATUS_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -53,7 +54,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path, requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, System.getProperty(LOCALE_LANGUAGE)),
+            errorMessage = MessageUtil.getMessageByLocale(LOGS_REPORT_FAILED, AgentEnv.getLocaleLanguage()),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L
@@ -78,7 +79,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPut(path.toString(), requestBody)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(LOGS_END_STATUS_FAILED, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -98,7 +99,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
             request = request,
             errorMessage = MessageUtil.getMessageByLocale(
                 LOG_STORAGE_STATUS_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             ),
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
