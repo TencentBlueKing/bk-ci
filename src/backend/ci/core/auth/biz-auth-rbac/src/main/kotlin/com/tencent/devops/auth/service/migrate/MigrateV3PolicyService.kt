@@ -546,17 +546,16 @@ class MigrateV3PolicyService constructor(
             resourceCode = v3ResourceCode
         )
         // 判断是否已有所有action权限
-        val hasActionPermission = permissionService.batchValidateUserResourcePermission(
+        val notActionPermissionMap = permissionService.batchValidateUserResourcePermission(
             userId = userId,
             actions = userActions,
             projectCode = projectCode,
             resourceCode = resourceCode,
             resourceType = resourceType
-        ).filterNot { it.value }.isNotEmpty()
-        logger.info("user has resource action permission|$userId|$resourceCode|$userActions")
+        ).filterNot { it.value }
 
-        // 权限没有匹配到才去匹配资源权限
-        if (!hasActionPermission) {
+        // 存在没有action的权限，匹配资源默认用户组权限
+        if (notActionPermissionMap.isNotEmpty()) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
                 if (groupConfig.actions.containsAll(userActions)) {
                     val groupId = authResourceGroupDao.get(
@@ -570,6 +569,9 @@ class MigrateV3PolicyService constructor(
                     return groupId
                 }
             }
+            logger.info("user not match resource group|$userId|$userActions")
+        } else {
+            logger.info("user has resource action permission|$userId|$resourceCode|$userActions")
         }
         return null
     }
