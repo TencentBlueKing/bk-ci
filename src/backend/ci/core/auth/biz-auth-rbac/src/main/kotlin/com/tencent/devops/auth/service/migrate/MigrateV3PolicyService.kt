@@ -280,7 +280,7 @@ class MigrateV3PolicyService constructor(
             }
 
             // 创建用户组
-            val groupName = result.subject.name.substringAfter("${result.projectId}-")
+            val groupName = result.subject.name!!.substringAfter("${result.projectId}-")
             val groupId = authResourceGroupDao.getByGroupName(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -394,7 +394,7 @@ class MigrateV3PolicyService constructor(
     private fun buildRbacActions(
         managerGroupId: Int,
         permission: AuthorizationScopes,
-        members: List<RoleGroupMemberInfo>
+        members: List<RoleGroupMemberInfo>?
     ): List<Action> {
         val rbacActions = mutableListOf<Action>()
         permission.actions.forEach action@{ action ->
@@ -462,8 +462,8 @@ class MigrateV3PolicyService constructor(
         return rbacManagerResources
     }
 
-    private fun batchAddGroupMember(groupId: Int, members: List<RoleGroupMemberInfo>) {
-        members.forEach member@{ member ->
+    private fun batchAddGroupMember(groupId: Int, members: List<RoleGroupMemberInfo>?) {
+        members?.forEach member@{ member ->
             // 过期的用户直接移除
             if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
                 return@member
