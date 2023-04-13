@@ -235,7 +235,7 @@ class BuildMonitorControl @Autowired constructor(
 
         buildLogPrinter.addDebugLine(
             buildId = buildId,
-            message = "[SystemLog]Check job timeout(${minute} minutes), " +
+            message = "[SystemLog]Check job timeout($minute minutes), " +
                 "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
             tag = VMUtils.genStartVMTaskId(containerId),
             jobId = containerHashId,
