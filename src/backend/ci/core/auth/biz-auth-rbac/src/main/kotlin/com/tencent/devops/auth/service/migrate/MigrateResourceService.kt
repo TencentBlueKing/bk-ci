@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.service.AuthResourceService
@@ -151,7 +152,7 @@ class MigrateResourceService @Autowired constructor(
         resourceType: String,
         projectCode: String,
         ids: List<String>
-    ): FetchInstanceInfo? {
+    ): FetchInstanceInfoResponseDTO? {
         val pathInfoDTO = PathInfoDTO().apply {
             type = AuthResourceType.PROJECT.value
             id = projectCode
@@ -167,7 +168,7 @@ class MigrateResourceService @Autowired constructor(
                 filter = filterDTO
             },
             token = tokenApi.getAccessToken(projectAuthServiceCode)
-        ) as FetchInstanceInfo?
+        ) as FetchInstanceInfoResponseDTO?
     }
 
     companion object {
