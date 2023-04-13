@@ -29,7 +29,7 @@ package com.tencent.devops.plugin.codecc.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
@@ -45,6 +45,9 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import java.text.SimpleDateFormat
+import java.util.*
+import javax.ws.rs.NotFoundException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -53,9 +56,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.text.SimpleDateFormat
-import java.util.Date
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -215,7 +215,7 @@ class CodeccService @Autowired constructor(
         val taskId = redisOperation.get("code_cc_${projectId}_${pipelineId}_${buildId}_done")
         return if (taskId != null && taskId != "" && taskId != "null") {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc/" +
-                "?proj_id=$taskId'>${I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)}</a>"
+                "?proj_id=$taskId'>${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}</a>"
         } else ""
     }
 

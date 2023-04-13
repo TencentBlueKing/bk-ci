@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
-import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType

@@ -153,5 +153,4 @@ const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
 const val BK_BUILD_ENV_START_FAILED = "bkBuildEnvStartFailed"// 构建环境启动失败
 const val BK_START_PULL_IMAGE = "bkStartPullImage"// 开始拉取镜像，镜像名称：
 const val BK_PULLING_IMAGE = "bkPullingImage"// 正在拉取镜像,第{0}层，进度：{1}
-const val BK_SEE_DETAILS = "bkSeeDetails"// 查看详情
 const val BK_HUMAN_SERVICE = "bkHumanService"// 人工服务
