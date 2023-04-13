@@ -422,7 +422,7 @@ class MigrateV3PolicyService constructor(
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
-                .expiredAt(member.expiredAt)
+                .expiredAt(member.expiredAt * 1000)
                 .build()
             v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
         }
