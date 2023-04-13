@@ -317,7 +317,7 @@ class RbacAuthConfiguration {
         client: Client,
         migrateResourceService: MigrateResourceService,
         migrateV3PolicyService: MigrateV3PolicyService,
-        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionResourceService: PermissionResourceService,
         authResourceService: AuthResourceService,
         dslContext: DSLContext,
         authMigrationDao: AuthMigrationDao
@@ -325,7 +325,7 @@ class RbacAuthConfiguration {
         client = client,
         migrateResourceService = migrateResourceService,
         migrateV3PolicyService = migrateV3PolicyService,
-        permissionGradeManagerService = permissionGradeManagerService,
+        permissionResourceService = permissionResourceService,
         authResourceService = authResourceService,
         dslContext = dslContext,
         authMigrationDao = authMigrationDao

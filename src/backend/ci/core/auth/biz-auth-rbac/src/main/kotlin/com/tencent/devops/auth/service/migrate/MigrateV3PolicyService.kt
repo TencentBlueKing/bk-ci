@@ -115,11 +115,11 @@ class MigrateV3PolicyService constructor(
     /**
      * 启动迁移任务
      *
-     * @param v3GradeManagerId v3分级管理员ID
+     * @param v3GradeManagerIds v3分级管理员ID
      */
-    fun startMigrateTask(projectCode: String, v3GradeManagerId: String) {
-        logger.info("start $projectCode migrate task $v3GradeManagerId")
-        val data = JsonUtil.toJson(listOf(v3GradeManagerId)).toRequestBody(mediaType)
+    fun startMigrateTask(v3GradeManagerIds: List<String>) {
+        logger.info("start migrate task $v3GradeManagerIds")
+        val data = JsonUtil.toJson(v3GradeManagerIds).toRequestBody(mediaType)
         val request = Request.Builder()
             .url("$iamBaseUrl/$IAM_MIGRATE_TASK?token=$migrateIamToken")
             .post(data)
@@ -255,6 +255,12 @@ class MigrateV3PolicyService constructor(
             rbacAuthorizationScopeList.forEach { authorizationScope ->
                 v2ManagerService.grantRoleGroupV2(groupId, authorizationScope)
             }
+            // 迁移的用户组默认都添加project_visit权限
+            val projectVisitScope = buildProjectVisitAuthorizationScope(
+                projectCode = projectCode,
+                projectName = projectName
+            )
+            v2ManagerService.grantRoleGroupV2(groupId, projectVisitScope)
             // 往用户组添加成员
             batchAddGroupMember(groupId = groupId, members = result.members)
         }
@@ -314,6 +320,32 @@ class MigrateV3PolicyService constructor(
         }
     }
 
+    /**
+     * 迁移的组都需要添加project_visit权限
+     */
+    private fun buildProjectVisitAuthorizationScope(
+        projectCode: String,
+        projectName: String
+    ): AuthorizationScopes {
+        val projectVisit = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT)
+        val projectPath = ManagerPath().apply {
+            system = iamConfiguration.systemId
+            id = projectCode
+            name = projectName
+            type = AuthResourceType.PROJECT.value
+        }
+        val projectManagerResource = ManagerResources.builder()
+            .system(iamConfiguration.systemId)
+            .type(AuthResourceType.PROJECT.value)
+            .paths(listOf(listOf(projectPath)))
+            .build()
+        return AuthorizationScopes.builder()
+            .system(iamConfiguration.systemId)
+            .actions(listOf(Action(projectVisit)))
+            .resources(listOf(projectManagerResource))
+            .build()
+    }
+
     private fun buildRbacActions(
         managerGroupId: Int,
         permission: AuthorizationScopes,
@@ -336,8 +368,6 @@ class MigrateV3PolicyService constructor(
                 }
             }
         }
-        // 所有用户组都添加project_visit权限
-        rbacActions.add(Action(RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT)))
         return rbacActions
     }
 
