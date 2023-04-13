@@ -98,7 +98,7 @@ class MigrateResourceService @Autowired constructor(
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode
-                )?.run {
+                ) ?: run {
                     rbacPermissionResourceService.resourceCreateRelation(
                         userId = it.iamApprover[0],
                         projectCode = projectCode,

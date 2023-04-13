@@ -61,7 +61,7 @@ class RbacPermissionMigrateService constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
     }
 
-    @Value("\${migrate.projectTag:#{null}}")
+    @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
