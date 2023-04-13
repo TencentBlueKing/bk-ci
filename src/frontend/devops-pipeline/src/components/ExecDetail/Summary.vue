@@ -124,14 +124,13 @@
                 return null
             },
             webhookInfo () {
-                // return this.execDetail?.webhookInfo
-                // ? {
-                //     aliasName: this.execDetail.webhookInfo.webhookAliasName,
-                //     branchName: this.execDetail.webhookInfo.webhookBranch,
-                //     newCommitId: this.execDetail.webhookInfo.webhookCommitId
-                // }
-                // : null
-                return null
+                return this.execDetail?.webhookInfo
+                ? {
+                    aliasName: this.execDetail.webhookInfo.webhookAliasName,
+                    branchName: this.execDetail.webhookInfo.webhookBranch,
+                    newCommitId: this.execDetail.webhookInfo.webhookCommitId
+                }
+                : null
             }
         },
         watch: {

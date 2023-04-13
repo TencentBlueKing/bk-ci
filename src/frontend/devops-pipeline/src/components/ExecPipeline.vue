@@ -831,8 +831,7 @@
       color: #63656e;
       text-align: left;
       font-weight: 600;
-      font-variant-numeric: tabular-nums;
-      font-family: monospace;
+      font-family: Monaco, Consolas, monospace;
     }
 
     > span:first-child {
@@ -854,8 +853,7 @@
       > span {
         color: #63656e;
         text-align: left;
-        font-variant-numeric: tabular-nums;
-        font-family: monospace;
+        font-family: Monaco, Consolas, monospace;
       }
       > span:first-child {
         color: #979ba5;
