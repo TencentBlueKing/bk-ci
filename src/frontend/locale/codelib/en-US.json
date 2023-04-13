@@ -59,5 +59,7 @@
     "TGit": "TGit",
     "authType": "Authorization method",
     "authIdentity": "Authorized identity",
-    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port"
+    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
+    "sshExampleTips": "eg: svn+ssh://svn.sample.com/test_proj",
+    "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj"
 }

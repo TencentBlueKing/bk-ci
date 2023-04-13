@@ -61,5 +61,7 @@
   "P4": "P4",
   "authType": "授权方式",
   "authIdentity": "授权身份",
-  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port"
+  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port",
+  "sshExampleTips": "eg: svn+ssh://svn.sample.com/test_proj",
+  "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj"
 }
