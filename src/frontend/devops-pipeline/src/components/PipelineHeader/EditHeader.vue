@@ -16,7 +16,7 @@
                 theme="primary"
                 :disabled="btnDisabled || !canManualStartup"
                 :loading="executeStatus"
-                :title="canManualStartup ? '' : '不支持手动启动流水线'"
+                :title="canManualStartup ? '' : this.$t('newlist.cannotManual')"
                 @click="saveAndExec"
             >
                 {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}

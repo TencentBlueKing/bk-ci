@@ -549,6 +549,7 @@
     },
     "filterNullTips": "搜索结果为空",
     "stopBuild": "终止构建",
+    "reBuild": "重新构建",
     "fileUnit": "{0}个文件",
     "completedLog": "完整日志",
     "artifactList": "构件列表",

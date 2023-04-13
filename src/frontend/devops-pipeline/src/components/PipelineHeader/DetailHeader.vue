@@ -2,7 +2,7 @@
     <div class="pipeline-detail-header">
         <pipeline-bread-crumb>
             <span class="build-num-switcher-wrapper">
-                {{ $t("执行详情：") }}
+                {{ $t("pipelinesDetail") }}
                 <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
@@ -14,7 +14,7 @@
                 :hover-theme="isRunning ? 'warning' : 'default'"
                 @click="handleClick"
             >
-                {{ isRunning ? $t("终止构建") : $t("重新构建") }}
+                {{ isRunning ? $t("history.stopBuild") : $t("history.reBuild") }}
             </bk-button>
             <span class="exec-deatils-operate-divider"></span>
             <router-link :to="editRouteName">
