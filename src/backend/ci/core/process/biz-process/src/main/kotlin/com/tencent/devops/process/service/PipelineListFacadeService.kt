@@ -1856,7 +1856,7 @@ class PipelineListFacadeService @Autowired constructor(
                 filterByLabels = filterByLabels
             )
 
-            val count = allFilterPipelines.size.toLong()
+            val count = hasPermissionList.size.toLong()
             val records = allFilterPipelines.map {
                 QualityPipeline(
                     projectId = it.projectId,
