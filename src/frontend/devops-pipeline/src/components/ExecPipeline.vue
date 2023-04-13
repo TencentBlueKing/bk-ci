@@ -124,7 +124,7 @@
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                         <template slot="label">
-                            <span @click="setShowErrorPopup" class="panel-name pointer">{{panel.name}}</span>
+                            <span @click="setShowErrorPopup" class="panel-name pointer">{{panel.label}}</span>
                         </template>
                         <bk-table
                             :data="errorList"
@@ -207,12 +207,12 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
-    import { convertTime, convertMillSec } from '@/utils/util'
     import CheckAtomDialog from '@/components/CheckAtomDialog'
     import CompleteLog from '@/components/ExecDetail/completeLog'
-    import { errorTypeMap } from '@/utils/pipelineConst'
     import Logo from '@/components/Logo'
+    import { errorTypeMap } from '@/utils/pipelineConst'
+    import { convertMillSec, convertTime } from '@/utils/util'
+    import { mapActions, mapState } from 'vuex'
     export default {
         components: {
             CheckAtomDialog,

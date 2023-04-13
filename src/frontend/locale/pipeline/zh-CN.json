@@ -688,7 +688,8 @@
     "pipelineErrorType": "错误类型",
     "pipelineErrorCode": "错误码",
     "pipelineErrorPos": "错误位置",
-    "pipelineErrorInfo": "错误信息"
+    "pipelineErrorInfo": "错误信息",
+    "Errors": "Errors"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",
