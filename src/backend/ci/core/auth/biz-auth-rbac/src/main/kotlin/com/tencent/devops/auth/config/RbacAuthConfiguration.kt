@@ -300,7 +300,9 @@ class RbacAuthConfiguration {
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
-        authResourceCodeConverter: AuthResourceCodeConverter
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        permissionService: PermissionService,
+        rbacCacheService: RbacCacheService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -308,7 +310,9 @@ class RbacAuthConfiguration {
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
-        authResourceCodeConverter = authResourceCodeConverter
+        authResourceCodeConverter = authResourceCodeConverter,
+        permissionService = permissionService,
+        rbacCacheService = rbacCacheService
     )
 
     @Bean

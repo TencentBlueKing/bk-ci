@@ -217,7 +217,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
             .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)
-            .reason("续期用户组")
+            .reason("renewal user group")
             .applicant(userId).build()
         iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
         return true

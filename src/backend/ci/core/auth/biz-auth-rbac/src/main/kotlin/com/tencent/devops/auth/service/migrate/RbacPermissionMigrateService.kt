@@ -137,8 +137,7 @@ class RbacPermissionMigrateService constructor(
             )
             // 迁移用户自定义权限
             migrateV3PolicyService.migrateUserCustomPolicy(
-                projectCode = projectCode,
-                gradeManagerId = gradeManagerId
+                projectCode = projectCode
             )
             // 对比迁移结果
             val compareResult = migrateV3PolicyService.comparePolicy(projectCode = projectCode)

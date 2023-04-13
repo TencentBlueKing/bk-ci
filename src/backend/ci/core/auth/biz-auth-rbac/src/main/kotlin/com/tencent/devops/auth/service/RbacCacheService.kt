@@ -1,15 +1,19 @@
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
+import com.tencent.devops.auth.pojo.AuthGroupConfigAction
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -23,7 +27,8 @@ class RbacCacheService constructor(
     private val authResourceTypeDao: AuthResourceTypeDao,
     private val authActionDao: AuthActionDao,
     private val authHelper: AuthHelper,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     companion object {
@@ -49,6 +54,11 @@ class RbacCacheService constructor(
         .maximumSize(5000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, List<String>>()
+
+    private val groupConfigActionsCache = Caffeine.newBuilder()
+        .maximumSize(100)
+        .expireAfterWrite(1L, TimeUnit.DAYS)
+        .build<String/*resourceType*/, List<AuthGroupConfigAction>>()
 
     fun listResourceTypes(): List<ResourceTypeInfoVo> {
         if (resourceTypeCache.asMap().values.isEmpty()) {
@@ -126,6 +136,28 @@ class RbacCacheService constructor(
             projectCode = projectCode,
             permission = AuthPermission.MANAGE
         )
+    }
+
+    fun getGroupConfigAction(resourceType: String): List<AuthGroupConfigAction> {
+        if (groupConfigActionsCache.getIfPresent(resourceType) == null) {
+            val groupConfigActions =
+                authResourceGroupConfigDao.get(dslContext = dslContext, resourceType = resourceType).map {
+                    with(it) {
+                        AuthGroupConfigAction(
+                            resourceType = resourceType,
+                            groupCode = groupCode,
+                            groupName = groupName,
+                            actions = JsonUtil.to(
+                                actions,
+                                object : TypeReference<List<String>>() {}
+                            )
+                        )
+                    }
+
+                }
+            groupConfigActionsCache.put(resourceType, groupConfigActions)
+        }
+        return groupConfigActionsCache.getIfPresent(resourceType)!!
     }
 
     private fun validateUserProjectPermission(
