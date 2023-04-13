@@ -36,5 +36,5 @@ interface PermissionMigrateService {
     /**
      * v3迁移到rbac
      */
-    fun v3ToRbacAuth(projectCode: String): Boolean
+    fun v3ToRbacAuth(projectCodes: List<String>): Boolean
 }

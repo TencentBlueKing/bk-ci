@@ -35,7 +35,6 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -46,11 +45,10 @@ import javax.ws.rs.core.MediaType
 interface OpAuthMigrateResource {
 
     @POST
-    @Path("/v3ToRbac/{projectCode}")
+    @Path("/v3ToRbac")
     @ApiOperation("v3权限升级到rbac权限")
     fun v3ToRbacAuth(
-        @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
-        projectCode: String
+        projectCodes: List<String>
     ): Result<Boolean>
 }

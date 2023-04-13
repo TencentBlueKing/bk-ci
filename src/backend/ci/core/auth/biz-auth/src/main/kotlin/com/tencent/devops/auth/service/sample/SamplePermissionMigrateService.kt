@@ -31,7 +31,7 @@ package com.tencent.devops.auth.service.sample
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 
 class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCode: String): Boolean {
+    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         return true
     }
 }
