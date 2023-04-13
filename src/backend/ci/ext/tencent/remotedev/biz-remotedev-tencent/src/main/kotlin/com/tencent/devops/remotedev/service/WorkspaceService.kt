@@ -177,7 +177,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
+    fun createWorkspace(userId: String, bkTicket: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
         val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
@@ -282,7 +282,8 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
-                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable
+                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                bkTicket = bkTicket
             )
         )
 
@@ -365,6 +366,8 @@ class WorkspaceService @Autowired constructor(
 
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
+            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+
             // websocket 通知成功
         } else {
             // 创建失败
@@ -400,7 +403,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
+    fun startWorkspace(userId: String, bkTicket: String, workspaceName: String): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceName")
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
@@ -421,6 +424,7 @@ class WorkspaceService @Autowired constructor(
                 remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
+                updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
@@ -481,7 +485,8 @@ class WorkspaceService @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspace.name,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable
+                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
+                    bkTicket = bkTicket
                 )
             )
 
@@ -557,6 +562,9 @@ class WorkspaceService @Autowired constructor(
                         "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
+        }
+        if (event.status) {
+            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
         }
 
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
@@ -1726,9 +1734,9 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Boolean {
+    fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
-        if (bkTicket.isEmpty() || hostName.isEmpty()) {
+        if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
             return false
         }
         val url = "https://$hostName/_remoting/api/token/updateBkTicket"
