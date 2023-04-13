@@ -16,6 +16,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import io.mockk.every
@@ -43,6 +44,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val remoteDevBillingDao: RemoteDevBillingDao = mockk()
     private val commonService: CommonService = mockk()
     private val profile: Profile = mockk()
+    private val redisCache: RedisCacheService = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -61,6 +63,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             redisHeartBeat = redisHeartBeat,
             remoteDevBillingDao = remoteDevBillingDao,
             commonService = commonService,
+            redisCache = redisCache,
             profile = profile
         ),
         recordPrivateCalls = true
