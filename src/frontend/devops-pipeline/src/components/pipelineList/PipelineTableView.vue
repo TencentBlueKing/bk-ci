@@ -303,7 +303,7 @@
 
         watch: {
             '$route.params.viewId': function (viewId) {
-                this.clearSort()
+                this.$refs?.pipelineTable?.clearSort?.()
                 this.requestList({
                     viewId,
                     page: 1
