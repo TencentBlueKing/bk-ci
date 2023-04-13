@@ -83,33 +83,33 @@ class PipelineBuildTaskService @Autowired constructor(
         if (buildStatus.isPassiveStop() || buildStatus.isCancel()) {
             terminateSubPipeline(buildId, buildTask)
         }
-        // 失败的任务并且不是需要前置终止的情况才允许自动重试
-        val errorCode = buildTask.errorCode ?: 0
-        if (buildStatus.isFailure() && !actionType.isTerminate() && !FastKillUtils.isTerminateCode(errorCode)) {
-            // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
-            if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
-                logger.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
-                pipelineTaskService.updateTaskStatus(
-                    task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
-                )
+        if (sendEventFlag) {
+            // 失败的任务并且不是需要前置终止的情况才允许自动重试
+            val errorCode = buildTask.errorCode ?: 0
+            if (buildStatus.isFailure() && !actionType.isTerminate() && !FastKillUtils.isTerminateCode(errorCode)) {
+                // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
+                if (pipelineTaskService.isRetryWhenFail(buildTask.projectId, taskId, buildId)) {
+                    logger.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")
+                    pipelineTaskService.updateTaskStatus(
+                        task = buildTask, userId = buildTask.starter, buildStatus = BuildStatus.RETRY
+                    )
+                } else {
+                    // 如果配置了失败继续，则继续下去的行为是在ContainerControl处理，而非在Task
+                    pipelineTaskService.createFailTaskVar(
+                        buildId = buildId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        taskId = taskId
+                    )
+                }
             } else {
-                // 如果配置了失败继续，则继续下去的行为是在ContainerControl处理，而非在Task
-                pipelineTaskService.createFailTaskVar(
-                    buildId = buildId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    taskId = taskId
+                // 清除该原子内的重试记录
+                pipelineTaskService.removeRetryCache(buildId, taskId)
+                // 清理插件错误信息（重试插件成功的情况下）
+                pipelineTaskService.removeFailTaskVar(
+                    buildId = buildId, projectId = projectId, pipelineId = pipelineId, taskId = taskId
                 )
             }
-        } else {
-            // 清除该原子内的重试记录
-            pipelineTaskService.removeRetryCache(buildId, taskId)
-            // 清理插件错误信息（重试插件成功的情况下）
-            pipelineTaskService.removeFailTaskVar(
-                buildId = buildId, projectId = projectId, pipelineId = pipelineId, taskId = taskId
-            )
-        }
-        if (sendEventFlag) {
             pipelineEventDispatcher.dispatch(
                 PipelineBuildContainerEvent(
                     source = "from_t($taskId)",
