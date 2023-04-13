@@ -75,6 +75,9 @@
                         <span class="error-tips" v-if="(urlErrMsg || errors.has('codelibUrl') && !isP4)">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
+                        <div v-else-if="isSvn" class="example-tips">
+                            {{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}
+                        </div>
                     </div>
                 </div>
                 <!-- 源代码地址 end -->
@@ -140,7 +143,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
+    import { getCodelibConfig, isGit, isGitLab, isGithub, isP4, isSvn, isTGit } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
@@ -596,5 +599,9 @@
         .tip-icon {
             margin-left: 5px;
         }
+    }
+    .example-tips {
+        color: #c4c6cd;
+        font-size: 12px;
     }
 </style>
