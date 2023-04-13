@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
@@ -141,7 +142,7 @@ class StartActionTaskContainerCmd(
         val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
         if (actionType == ActionType.END && failedEvenCancelFlag) {
             val container = commandContext.container
-            val timeout = container.controlOption.jobControlOption.timeout // 前面已经解析过
+            val timeoutSec = Timeout.transMinuteTimeoutToSec(container.controlOption.jobControlOption.timeout)
             redisOperation.set(
                 key = ContainerUtils.getContainerRunEvenCancelTaskKey(
                     pipelineId = waitToDoTask.pipelineId,
@@ -149,7 +150,7 @@ class StartActionTaskContainerCmd(
                     containerId = waitToDoTask.containerId
                 ),
                 value = waitToDoTask.taskId,
-                expiredInSecond = TimeUnit.MINUTES.toSeconds(timeout!!.toLong())
+                expiredInSecond = timeoutSec
             )
         }
     }

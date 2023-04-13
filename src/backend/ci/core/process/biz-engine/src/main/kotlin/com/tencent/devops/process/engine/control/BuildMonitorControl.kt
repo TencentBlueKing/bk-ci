@@ -230,12 +230,12 @@ class BuildMonitorControl @Autowired constructor(
             0
         }
 
-        val minute = (controlOption.jobControlOption.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN).toLong()
-        val timeoutMills = TimeUnit.MINUTES.toMillis(minute)
+        val minute = controlOption.jobControlOption.timeout
+        val timeoutMills = Timeout.transMinuteTimeoutToMills(minute)
 
         buildLogPrinter.addDebugLine(
             buildId = buildId,
-            message = "[SystemLog]Check job timeout(${controlOption.jobControlOption.timeout} minutes), " +
+            message = "[SystemLog]Check job timeout(${minute} minutes), " +
                 "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
             tag = VMUtils.genStartVMTaskId(containerId),
             jobId = containerHashId,
