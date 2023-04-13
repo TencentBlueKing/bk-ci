@@ -52,6 +52,8 @@ data class ModelRecord(
     val queueTime: Long,
     @ApiModelProperty("执行开始时间", required = true)
     val startTime: Long?,
+    @ApiModelProperty("排队耗时（进队列到开始执行）", required = true)
+    val queueTimeCost: Long?,
     @ApiModelProperty("执行结束时间", required = false)
     val endTime: Long?,
     @ApiModelProperty("Build status", required = true)
@@ -72,6 +74,7 @@ data class ModelRecord(
     val latestBuildNum: Int,
     @ApiModelProperty("最近修改人", required = false)
     val lastModifyUser: String?,
+    @Deprecated("保留是为了兼容detail，后续耗时不再以executeTime为准")
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
     @ApiModelProperty("流水线任务执行错误", required = false)
