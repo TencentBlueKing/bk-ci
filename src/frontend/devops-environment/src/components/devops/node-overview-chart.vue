@@ -27,9 +27,10 @@
                     </div>
                 </div>
                 <chart :option="cpuLine" ref="cpuLine1" autoresize :loading="cpuChartLoading" :loading-options="chartLoadingOption" v-show="!isEmptyCpu"></chart>
-                <div class="paas-ci-empty" v-show="isEmptyCpu">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
-                </div>
+                <bk-exception
+                    v-show="isEmptyCpu"
+                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                />
             </div>
             <div class="part top-right">
                 <div class="info">
@@ -57,9 +58,10 @@
                     </div>
                 </div>
                 <chart :option="memoryLine" ref="memoryLine1" :loading="memChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyMemory"></chart>
-                <div class="paas-ci-empty" v-show="isEmptyMemory">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
-                </div>
+                <bk-exception
+                    v-show="isEmptyMemory"
+                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                />
             </div>
         </div>
         <div class="node-overview-chart">
@@ -89,9 +91,10 @@
                     </div>
                 </div>
                 <chart :option="networkLine" ref="networkLine1" :loading="netChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyNetwork"></chart>
-                <div class="paas-ci-empty" v-show="isEmptyNetwork">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
-                </div>
+                <bk-exception
+                    v-show="isEmptyNetwork"
+                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                />
             </div>
             <div class="part">
                 <div class="info">
@@ -119,9 +122,10 @@
                     </div>
                 </div>
                 <chart :option="storageLine" ref="storageLine1" :loading="ioChartLoading" :loading-options="chartLoadingOption" autoresize v-show="!isEmptyDiskio"></chart>
-                <div class="paas-ci-empty" v-show="isEmptyDiskio">
-                    <img :src="calcSrc" :alt="$t('environment.noData')" class="empty-pic">
-                </div>
+                <bk-exception
+                    v-show="isEmptyDiskio"
+                    class="exception-wrap-item exception-part" type="empty" scene="part"
+                />
             </div>
         </div>
     </div>
@@ -166,7 +170,6 @@
                 memoryLine: nodeOverview.memory,
                 networkLine: nodeOverview.network,
                 storageLine: nodeOverview.storage,
-                calcSrc: require('@/images/no_data.png'),
                 cpuChartLoading: false,
                 memChartLoading: false,
                 netChartLoading: false,
@@ -472,18 +475,6 @@
             .echarts {
                 width: 100%;
                 height: 180px;
-            }
-        }
-        .paas-ci-empty {
-            position: relative;
-            width: 100%;
-            height: 180px;
-            text-align: center;
-            .empty-pic {
-                position: relative;
-                top: 36px;
-                width: 80px;
-                height: 80px;
             }
         }
     }

@@ -3,7 +3,12 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    class="import-vmbuild-btn"
+                    @click="toImportNode('construct')">
+                    {{ $t('environment.nodeInfo.importNode') }}
+                </bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -743,10 +748,6 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
-
-        .import-vmbuild-btn {
-            width: 100px;
-        }
 
         .create-node-btn {
             margin-right: 6px;

@@ -22,5 +22,7 @@
 *.tmproj
 .vscode/
 bk*.tgz
-build/
+base/
 build_chart.py
+local_chart
+kubernetes-manager部署文档.md

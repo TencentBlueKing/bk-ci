@@ -1,7 +1,7 @@
 <template>
     <div class="rule-list-wrapper">
         <div class="rule-list-header">
-            <div class="title">红线规则</div>
+            <div class="title">{{$t('quality.红线规则')}}</div>
         </div>
 
         <section class="sub-view-port"
@@ -12,10 +12,10 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <button class="bk-button bk-primary" @click="toCreateRule">
+                        <bk-button theme="primary" @click="toCreateRule">
                             <i class="devops-icon icon-plus"></i>
-                            <span style="margin-left: 0;">创建规则</span>
-                        </button>
+                            <span style="margin-left: 0;">{{$t('quality.创建规则')}}</span>
+                        </bk-button>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table
@@ -25,55 +25,55 @@
                             :pagination="pagination"
                             @page-change="handlePageChange"
                             @page-limit-change="limitChange">
-                            <bk-table-column label="名称" prop="name">
+                            <bk-table-column :label="$t('quality.名称')" prop="name">
                                 <template slot-scope="props">
-                                    <p class="rule-name" :title="props.row.name" @click="toShowSlider(props.row.ruleHashId, 'detail')">{{ props.row.name }}</p>
+                                    <p class="rule-name" :title="props.row.name" @click="toShowSlider(props.row.ruleHashId, 'detail')">{{props.row.name}}</p>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="指标" prop="indicatorList" min-width="160" class-name="indicator-item">
+                            <bk-table-column :label="$t('quality.指标')" prop="indicatorList" min-width="160" class-name="indicator-item">
                                 <template slot-scope="props">
                                     <div class="rule-detail" :title="getIndicatorDesc(props.row.indicatorList)">
                                         <span v-for="(entry, key) in props.row.indicatorList" :key="key">
-                                            <span>{{ entry.cnName }}</span>
-                                            <span>{{ indexHandlerConf[entry.operation] }}</span>
-                                            <span>{{ entry.threshold }}</span>
+                                            <span>{{entry.cnName}}</span>
+                                            <span>{{indexHandlerConf[entry.operation]}}</span>
+                                            <span>{{entry.threshold}}</span>
                                             <br>
                                         </span>
                                     </div>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="控制点" prop="controlPoint" min-width="110" class-name="controlPoint-item">
+                            <bk-table-column :label="$t('quality.控制点')" prop="controlPoint" min-width="110" class-name="controlPoint-item">
                                 <template slot-scope="props">
-                                    <span :title="props.row.controlPoint.cnName">{{ props.row.controlPoint.cnName }}</span>
+                                    <span :title="props.row.controlPoint.cnName">{{props.row.controlPoint.cnName}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="生效范围" prop="rangeSummary">
+                            <bk-table-column :label="$t('quality.生效范围')" prop="rangeSummary">
                                 <template slot-scope="props">
-                                    <span class="canShowPipeline" @click="toShowRange(props.row)">{{ props.row.rangeSummary.length }}</span>
+                                    <span class="canShowPipeline" @click="toShowRange(props.row)">{{props.row.rangeSummary.length}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="生效流水线" prop="pipelineCount">
+                            <bk-table-column :label="$t('quality.生效流水线')" prop="pipelineCount">
                                 <template slot-scope="props">
-                                    <span class="canShowPipeline" @click="toShowPipeline(props.row)">{{ props.row.pipelineCount }}</span>
+                                    <span class="canShowPipeline" @click="toShowPipeline(props.row)">{{props.row.pipelineCount}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="生效流水线执行数" prop="pipelineExecuteCount" min-width="110">
+                            <bk-table-column :label="$t('quality.生效流水线执行数')" prop="pipelineExecuteCount" min-width="110">
                                 <template slot-scope="props">
-                                    <span>{{ props.row.pipelineExecuteCount }}</span>
+                                    <span>{{props.row.pipelineExecuteCount}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="拦截次数" prop="interceptTimes">
+                            <bk-table-column :label="$t('quality.拦截次数')" prop="interceptTimes">
                                 <template slot-scope="props">
-                                    <span @click="toShowSlider(props.row.ruleHashId, 'record')">{{ props.row.interceptTimes }}</span>
+                                    <span @click="toShowSlider(props.row.ruleHashId, 'record')">{{props.row.interceptTimes}}</span>
                                 </template>
                             </bk-table-column>
-                            <bk-table-column label="操作" min-width="120">
+                            <bk-table-column :label="$t('quality.操作')" min-width="120">
                                 <template slot-scope="props">
                                     <div class="handler-btn">
-                                        <span class="copy-btn" :data-clipboard-text="props.row.rule" @click="editRule(props.row)">编辑</span>
-                                        <span class="switch-btn" v-if="props.row.enable" @click="switchRule(props.row)">停用</span>
-                                        <span class="switch-btn" v-else @click="switchRule(props.row)">启用</span>
-                                        <span class="delete-btn" @click="toDeleteRule(props.row)">删除</span>
+                                        <span class="copy-btn" :data-clipboard-text="props.row.rule" @click="editRule(props.row)">{{$t('quality.编辑')}}</span>
+                                        <span class="switch-btn" v-if="props.row.enable" @click="switchRule(props.row)">{{$t('quality.停用')}}</span>
+                                        <span class="switch-btn" v-else @click="switchRule(props.row)">{{$t('quality.启用')}}</span>
+                                        <span class="delete-btn" @click="toDeleteRule(props.row)">{{$t('quality.删除')}}</span>
                                     </div>
                                 </template>
                             </bk-table-column>
@@ -109,55 +109,55 @@
                                     <section v-if="panel.name === 'detailInfo'">
                                         <table class="detail-info">
                                             <tr>
-                                                <td class="item-label">最新状态：</td>
+                                                <td class="item-label">{{$t('quality.最新状态：')}}</td>
                                                 <td class="item-value">
-                                                    <span v-if="ruleDetail.interceptRecent">{{ ruleDetail.interceptRecent }}</span>
+                                                    <span v-if="ruleDetail.interceptRecent">{{ruleDetail.interceptRecent}}</span>
                                                     <span v-else>--</span>
                                                 </td>
                                             </tr>
-                                            <tr><td class="item-label">描述：</td><td class="item-value">{{ ruleDetail.desc }}</td></tr>
+                                            <tr><td class="item-label">{{$t('quality.描述：')}}</td><td class="item-value">{{ruleDetail.desc}}</td></tr>
                                             <tr>
-                                                <td class="item-label threshold-label">指标：</td>
+                                                <td class="item-label threshold-label">{{$t('quality.指标：')}}</td>
                                                 <td class="item-value threshold-item">
                                                     <bk-table
                                                         size="small"
                                                         class="detail-table"
                                                         :data="curThresholdList">
-                                                        <bk-table-column label="指标名称" prop="cnName" min-width="200">
+                                                        <bk-table-column :label="$t('quality.指标名称')" prop="cnName" min-width="200">
                                                             <template slot-scope="props">
-                                                                <span :title="props.row.cnName">{{ props.row.cnName }}</span>
+                                                                <span :title="props.row.cnName">{{props.row.cnName}}</span>
                                                             </template>
                                                         </bk-table-column>
-                                                        <bk-table-column label="操作" prop="operation">
+                                                        <bk-table-column :label="$t('quality.操作')" prop="operation">
                                                             <template slot-scope="props">
-                                                                <span>{{ indexHandlerConf[props.row.operation] }}</span>
+                                                                <span>{{indexHandlerConf[props.row.operation]}}</span>
                                                             </template>
                                                         </bk-table-column>
-                                                        <bk-table-column label="阈值" prop="threshold">
+                                                        <bk-table-column :label="$t('quality.阈值')" prop="threshold">
                                                             <template slot-scope="props">
-                                                                <span>{{ props.row.threshold }}</span>
+                                                                <span>{{props.row.threshold}}</span>
                                                             </template>
                                                         </bk-table-column>
                                                     </bk-table>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="item-label">控制点：</td>
+                                                <td class="item-label">{{$t('quality.控制点：')}}</td>
                                                 <td class="item-value">
-                                                    <span v-if="ruleDetail.controlPoint">{{ ruleDetail.controlPoint.cnName }}</span>
+                                                    <span v-if="ruleDetail.controlPoint">{{ruleDetail.controlPoint.cnName}}</span>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="item-label">生效流水线：</td>
+                                                <td class="item-label">{{$t('quality.生效流水线：')}}</td>
                                                 <td class="item-value">
-                                                    <span v-if="ruleDetail.range">{{ ruleDetail.pipelineCount }}条流水线</span>
+                                                    <span v-if="ruleDetail.range">{{ruleDetail.pipelineCount}}{{$t('quality.条流水线')}}</span>
                                                 </td>
                                             </tr>
                                             <tr>
-                                                <td class="item-label">操作：</td>
+                                                <td class="item-label">{{$t('quality.操作：')}}</td>
                                                 <td class="item-value">
-                                                    <span v-if="ruleDetail.operation === 'END'">终止后通知</span>
-                                                    <span v-if="ruleDetail.operation === 'AUDIT'">人工审核</span>
+                                                    <span v-if="ruleDetail.operation === 'END'">{{$t('quality.终止后通知')}}</span>
+                                                    <span v-if="ruleDetail.operation === 'AUDIT'">{{$t('quality.人工审核')}}</span>
                                                 </td>
                                             </tr>
                                         </table>
@@ -170,35 +170,35 @@
                                             :pagination="sliderPagination"
                                             @page-change="handleSliderPageChange"
                                             @page-limit-change="sliderLimitChange">
-                                            <bk-table-column label="关联流水线" prop="pipelineName">
+                                            <bk-table-column :label="$t('quality.关联流水线')" prop="pipelineName">
                                                 <template slot-scope="props">
                                                     <a :title="`${props.row.pipelineName}(#${props.row.buildNo})`" target="_blank" class="source-item"
-                                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{ props.row.pipelineName }}
-                                                        <span>(#{{ props.row.buildNo }})</span>
+                                                        :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.buildId}`">{{props.row.pipelineName}}
+                                                        <span>(#{{props.row.buildNo}})</span>
                                                     </a>
                                                 </template>
                                             </bk-table-column>
-                                            <bk-table-column label="状态" prop="interceptResult" width="80">
+                                            <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="80">
                                                 <template slot-scope="props">
-                                                    <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">已通过</span>
-                                                    <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">已拦截</span>
+                                                    <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
+                                                    <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
                                                 </template>
                                             </bk-table-column>
-                                            <bk-table-column label="内容" prop="remark" width="360">
+                                            <bk-table-column :label="$t('quality.内容')" prop="remark" width="360">
                                                 <template slot-scope="props">
-                                                    <span :title="props.row.remark">{{ props.row.remark }}</span>
+                                                    <span :title="props.row.remark">{{props.row.remark}}</span>
                                                 </template>
                                             </bk-table-column>
-                                            <bk-table-column label="拦截时间" prop="timestamp">
+                                            <bk-table-column :label="$t('quality.拦截时间')" prop="timestamp">
                                                 <template slot-scope="props">
-                                                    <span>{{ localConvertTime(props.row.timestamp) }}</span>
+                                                    <span>{{localConvertTime(props.row.timestamp)}}</span>
                                                 </template>
                                             </bk-table-column>
                                         </bk-table>
                                         <div class="intercept-record-empty" v-if="!recordList.length">
                                             <div class="no-data-right">
                                                 <img src="../images/box.png">
-                                                <p>暂时没有历史拦截记录</p>
+                                                <p>{{$t('quality.暂时没有历史拦截记录')}}</p>
                                             </div>
                                         </div>
                                     </section>
@@ -252,21 +252,21 @@
                 rangeList: [],
                 totalRangeList: [],
                 panels: [
-                    { name: 'detailInfo', label: '详细信息' },
-                    { name: 'recordDate', label: '历史记录' }
+                    { name: 'detailInfo', label: this.$t('quality.详细信息') },
+                    { name: 'recordDate', label: this.$t('quality.历史记录') }
                 ],
                 ruleDetail: {
                     name: ''
                 },
                 emptyInfo: {
-                    title: '创建第一条质量红线规则',
-                    desc: '通过设置不同的指标和阈值，质量红线规则可以控制流水线发布的质量',
+                    title: this.$t('quality.创建第一条质量红线规则'),
+                    desc: this.$t('quality.通过设置不同的指标和阈值，质量红线规则可以控制流水线发布的质量'),
                     btns: [
                         {
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toCreateRule(),
-                            text: '创建规则'
+                            text: this.$t('quality.创建规则')
                         }
                     ]
                 },
@@ -361,7 +361,7 @@
                 } = this
 
                 loading.isLoading = true
-                loading.title = '数据加载中，请稍候'
+                loading.title = this.$t('quality.数据加载中，请稍候')
 
                 try {
                     await this.requestList(pagination.current, pagination.limit)
@@ -414,7 +414,7 @@
                         ruleHashId: hashId
                     })
 
-                    message = '删除成功'
+                    message = this.$t('quality.删除成功')
                     theme = 'success'
                 } catch (err) {
                     message = err.data ? err.data.message : err
@@ -498,16 +498,10 @@
             },
             toDeleteRule (row) {
                 if (row.permissions.canDelete) {
-                    const h = this.$createElement
-                    const content = h('p', {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    }, `确定删除规则(${row.name})？`)
-
                     this.$bkInfo({
-                        title: '删除',
-                        subHeader: content,
+                        type: 'warning',
+                        theme: 'warning',
+                        subTitle: this.$t('quality.确定删除规则({0})？', [row.name]),
                         confirmFn: async () => {
                             this.deleteRule(row.ruleHashId)
                         }
@@ -515,7 +509,7 @@
                 } else {
                     const params = {
                         noPermissionList: [
-                            { resource: '质量红线', option: '删除规则' }
+                            { resource: this.$t('quality.quality'), option: this.$t('quality.删除规则') }
                         ],
                         applyPermissionUrl: PERM_URL_PREFIX
                     }
@@ -531,7 +525,7 @@
                         isEnable: row.enable
                     })
 
-                    message = row.enable ? '停用成功' : '启用成功'
+                    message = row.enable ? this.$t('quality.停用成功') : this.$t('quality.启用成功')
                     theme = 'success'
                 } catch (err) {
                     message = err.data ? err.data.message : err
@@ -646,7 +640,7 @@
                 } else {
                     const params = {
                         noPermissionList: [
-                            { resource: '质量红线', option: '编辑规则' }
+                            { resource: this.$t('quality.quality'), option: this.$t('quality.编辑规则') }
                         ],
                         applyPermissionUrl: PERM_URL_PREFIX
                     }
@@ -655,13 +649,13 @@
             },
             switchRule (row) {
                 if (row.permissions.canEnable) {
-                    const infoTitle = row.enable ? '停用' : '启用'
+                    const infoTitle = row.enable ? this.$t('quality.停用') : this.$t('quality.启用')
                     const h = this.$createElement
                     const content = h('p', {
                         style: {
                             textAlign: 'center'
                         }
-                    }, `确定${infoTitle}规则(${row.name})？`)
+                    }, this.$t('quality.确定{0}规则({1})？', [infoTitle, row.name]))
 
                     this.$bkInfo({
                         title: infoTitle,
@@ -673,7 +667,7 @@
                 } else {
                     const params = {
                         noPermissionList: [
-                            { resource: '质量红线', option: '启用和停用规则' }
+                            { resource: this.$t('quality.quality'), option: this.$t('quality.启用和停用规则') }
                         ],
                         applyPermissionUrl: PERM_URL_PREFIX
                     }
@@ -765,13 +759,6 @@
         }
         .rule-main-container {
             height: 100%;
-            .bk-button {
-                padding: 0 10px 0 8px;
-                width: 106px;
-                .devops-icon {
-                    font-size: 12px;
-                }
-            }
         }
         .rule-table-wrapper {
             margin: 20px auto;

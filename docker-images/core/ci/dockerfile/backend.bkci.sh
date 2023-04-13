@@ -13,7 +13,7 @@ ln -srfT "$ci_ms_log" logs
 ln -srfT "$ci_ms_data" data
 
 echo "create java args"
-java_env=() java_argv=() java_run="" JAVA_OPTS=${JAVA_TOOL_OPTIONS:-}
+java_env=() java_argv=() java_run=""
 java_env+=("CLASSPATH=$CLASSPATH")
 java_argv+=("-Dfatjar=/$MS_NAME/boot-$MS_NAME.jar") # 兼容fatjar文件名匹配进程.
 java_run="$MAIN_CLASS"
@@ -32,7 +32,8 @@ java_argv+=(
   "-Dspring.profiles.active=local,dev"
   "-Dspring.application.name=$MS_NAME"
   "-Dspring.main.allow-circular-references=true"
+  "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false"
 )
 
 echo "run java"
-java -server "${java_argv[@]}" $MEM_OPTS $GC_LOG $JAVA_OPTS $java_run
+java -server "${java_argv[@]}" $MEM_OPTS $GC_LOG $java_run

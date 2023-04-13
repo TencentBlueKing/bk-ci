@@ -36,7 +36,6 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
-import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -490,20 +489,6 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
-        }
-    }
-
-    fun getInitProjectCodes(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        storeCodeList: List<String>
-    ): Result<Record2<String, String>> {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-            conditions.add(STORE_CODE.`in`(storeCodeList))
-            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this).where(conditions).fetch()
         }
     }
 }

@@ -85,6 +85,8 @@ class StreamOpenApiAction(
 
     override fun isMatch(triggerOn: TriggerOn) = action.isMatch(triggerOn)
 
+    override fun checkIfModify() = action.checkIfModify()
+
     fun getStartParams(scmType: ScmType): Map<String, String> {
         return when (scmType) {
             ScmType.CODE_GIT -> {
