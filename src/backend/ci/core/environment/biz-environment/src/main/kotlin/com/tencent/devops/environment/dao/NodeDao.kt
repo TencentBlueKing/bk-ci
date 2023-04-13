@@ -71,17 +71,6 @@ class NodeDao {
         }
     }
 
-    fun getThirdPartyNodeByIp(dslContext: DSLContext, projectId: String, nodeIp: String): List<TNodeRecord> {
-        with(TNode.T_NODE) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
-                .and(NODE_IP.eq(nodeIp))
-                .orderBy(NODE_ID.desc())
-                .fetch()
-        }
-    }
-
     fun listServerNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
