@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.service.PipelineElementService
@@ -78,6 +79,7 @@ class TaskBuildRecordService(
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
     pipelineResDao: PipelineResDao,
+    pipelineBuildDao: PipelineBuildDao,
     pipelineResVersionDao: PipelineResVersionDao,
     pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
@@ -92,6 +94,7 @@ class TaskBuildRecordService(
     redisOperation = redisOperation,
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
+    pipelineBuildDao = pipelineBuildDao,
     pipelineResVersionDao = pipelineResVersionDao,
     pipelineElementService = pipelineElementService
 ) {

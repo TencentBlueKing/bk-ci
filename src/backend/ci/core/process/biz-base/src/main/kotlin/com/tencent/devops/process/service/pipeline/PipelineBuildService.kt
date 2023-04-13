@@ -44,6 +44,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
@@ -104,7 +105,7 @@ class PipelineBuildService(
         startValues: Map<String, String>? = null,
         handlePostFlag: Boolean = true,
         triggerReviewers: List<String>? = null
-    ): String {
+    ): BuildId {
 
         val pipelineId = pipeline.pipelineId
         var acquire = false

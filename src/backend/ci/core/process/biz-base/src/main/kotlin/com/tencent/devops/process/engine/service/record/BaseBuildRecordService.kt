@@ -52,6 +52,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
@@ -71,6 +72,7 @@ import org.slf4j.LoggerFactory
 open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val stageTagService: StageTagService,
@@ -93,6 +95,7 @@ open class BaseBuildRecordService(
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
         val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
+        var startUser: String? = null
         try {
             watcher.start("lock")
             lock.lock()
@@ -105,13 +108,11 @@ open class BaseBuildRecordService(
                 message = "Will not update"
                 return
             }
+            startUser = record.startUser
 
             watcher.start("refreshOperation")
             refreshOperation()
             watcher.stop()
-
-            watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
 
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
@@ -140,8 +141,10 @@ open class BaseBuildRecordService(
             logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
-            watcher.stop()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
+            watcher.start("dispatchEvent")
+            pipelineDetailChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
         return
@@ -211,15 +214,18 @@ open class BaseBuildRecordService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        startUser: String,
+        startUser: String?,
         executeCount: Int
     ) {
+        val userId = startUser
+            ?: pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)?.startUser
+            ?: return
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
                 source = "pauseTask",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = startUser,
+                userId = userId,
                 buildId = buildId,
                 executeCount = executeCount,
                 refreshTypes = RefreshType.RECORD.binary

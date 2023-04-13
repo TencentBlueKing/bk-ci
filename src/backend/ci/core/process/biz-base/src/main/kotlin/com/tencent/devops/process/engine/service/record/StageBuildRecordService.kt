@@ -81,6 +81,7 @@ class StageBuildRecordService(
     redisOperation = redisOperation,
     recordModelService = recordModelService,
     pipelineResDao = pipelineResDao,
+    pipelineBuildDao = pipelineBuildDao,
     pipelineResVersionDao = pipelineResVersionDao,
     pipelineElementService = pipelineElementService
 ) {

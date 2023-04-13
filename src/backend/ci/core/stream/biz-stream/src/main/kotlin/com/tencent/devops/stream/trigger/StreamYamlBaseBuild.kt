@@ -418,8 +418,8 @@ class StreamYamlBaseBuild @Autowired constructor(
             gitBuildId = gitBuildId,
             yamlTransferData = yamlTransferData
         )
-
-        return BuildId(buildId)
+        // #7983 全新第一次出发执行次数均为1
+        return BuildId(buildId, 1)
     }
 
     private fun errorStartBuild(
