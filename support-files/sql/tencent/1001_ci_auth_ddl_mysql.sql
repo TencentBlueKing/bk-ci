@@ -152,6 +152,10 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
 ) ENGINE = InnoDB
 DEFAULT CHARSET = utf8mb4 COMMENT '蓝盾超级管理员权限续期审核表';
 
+-- ----------------------------
+-- Table structure for T_AUTH_TEMPORARY_VERIFY_RECORD
+-- ----------------------------
+
 CREATE TABLE IF NOT EXISTS `T_AUTH_TEMPORARY_VERIFY_RECORD`
 (
     `USER_ID`          varchar(64)                        not null comment '用户ID',
