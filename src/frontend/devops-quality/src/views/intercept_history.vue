@@ -128,13 +128,13 @@
             return {
                 showContent: false,
                 statusList: [
-                    { label: this.$t('全部'), value: 'ALL' },
-                    { label: this.$t('已通过'), value: 'PASS' },
-                    { label: this.$t('拦截后直接终止'), value: 'FAIL' },
-                    { label: this.$t('拦截后审核中'), value: 'WAIT' },
-                    { label: this.$t('拦截后审核终止'), value: 'INTERCEPT' },
-                    { label: this.$t('拦截后审核继续'), value: 'INTERCEPT_PASS' },
-                    { label: this.$t('拦截后超时终止'), value: 'INTERCEPT_TIMEOUT' }
+                    { label: this.$t('quality.全部'), value: 'ALL' },
+                    { label: this.$t('quality.已通过'), value: 'PASS' },
+                    { label: this.$t('quality.拦截后直接终止'), value: 'FAIL' },
+                    { label: this.$t('quality.拦截后审核中'), value: 'WAIT' },
+                    { label: this.$t('quality.拦截后审核终止'), value: 'INTERCEPT' },
+                    { label: this.$t('quality.拦截后审核继续'), value: 'INTERCEPT_PASS' },
+                    { label: this.$t('quality.拦截后超时终止'), value: 'INTERCEPT_TIMEOUT' }
                 ],
                 pipelineList: [],
                 ruleList: [],
