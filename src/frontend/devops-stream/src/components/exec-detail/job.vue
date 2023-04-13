@@ -51,7 +51,7 @@
             },
 
             showDebugBtn () {
-                return this.job.dispatchType && this.job.dispatchType.buildType === 'GIT_CI' && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
+                return this.job.dispatchType && (this.job.dispatchType.buildType === 'GIT_CI' || this.job.dispatchType === 'PUBLIC_DEVCLOUD') && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
             },
 
             downLoadJobLink () {
@@ -76,7 +76,7 @@
                 const vmSeqId = this.job.containerId || this.getRealSeqId()
                 let url = ''
                 const tab = window.open('about:blank')
-                const dispatchType = 'GIT_CI'
+                const dispatchType = this.job.dispatchType.buildType || 'GIT_CI'
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
                 url = `/webConsole?pipelineId=${this.pipelineId}&dispatchType=${dispatchType}&vmSeqId=${vmSeqId}${buildIdStr}${this.hashId}`
                 tab.location = url
