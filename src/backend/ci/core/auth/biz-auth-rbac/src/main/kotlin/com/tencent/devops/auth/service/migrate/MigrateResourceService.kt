@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacCacheService
@@ -40,6 +41,7 @@ import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -80,14 +82,20 @@ class MigrateResourceService @Autowired constructor(
         var offset = 0L
         val limit = 100L
         do {
-            val resourceData = getInstanceByResource(
+            val resourceData = listInstance(
                 offset = offset,
                 limit = limit,
                 resourceType = resourceType,
                 projectCode = projectCode
             ) ?: return
             logger.info("MigrateResourceService|resourceData:$resourceData")
-            resourceData.data.result.forEach {
+            val ids = resourceData.data.result.map { it.id }
+            val instanceInfoList = fetchInstanceInfo(
+                resourceType = resourceType,
+                projectCode = projectCode,
+                ids = ids
+            ) ?: return
+            instanceInfoList.data.map { it as InstanceInfoDTO }.forEach {
                 val resourceCode =
                     migrateResourceCodeConverter.v3ToRbacResourceCode(
                         resourceType = resourceType,
@@ -112,7 +120,7 @@ class MigrateResourceService @Autowired constructor(
         } while (resourceData.data.count == limit)
     }
 
-    private fun getInstanceByResource(
+    private fun listInstance(
         offset: Long,
         limit: Long,
         resourceType: String,
@@ -137,6 +145,29 @@ class MigrateResourceService @Autowired constructor(
             },
             token = tokenApi.getAccessToken(projectAuthServiceCode)
         ) as ListInstanceResponseDTO?
+    }
+
+    private fun fetchInstanceInfo(
+        resourceType: String,
+        projectCode: String,
+        ids: List<String>
+    ): FetchInstanceInfo? {
+        val pathInfoDTO = PathInfoDTO().apply {
+            type = AuthResourceType.PROJECT.value
+            id = projectCode
+        }
+        val filterDTO = FilterDTO().apply {
+            parent = pathInfoDTO
+            idList = ids
+        }
+        return resourceService.getInstanceByResource(
+            callBackInfo = CallbackRequestDTO().apply {
+                type = resourceType
+                method = CallbackMethodEnum.FETCH_INSTANCE_INFO
+                filter = filterDTO
+            },
+            token = tokenApi.getAccessToken(projectAuthServiceCode)
+        ) as FetchInstanceInfo?
     }
 
     companion object {
