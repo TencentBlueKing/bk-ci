@@ -31,7 +31,7 @@ backendImage:
 # wsproxy service
 service:
   # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
-  serviceType: NodePort
+  serviceType: ClusterIP
   # 部署的service的annotations:
   serviceAnnotations:
   # 部署的service对外暴露的端口
