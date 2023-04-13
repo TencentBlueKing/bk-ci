@@ -103,6 +103,7 @@ import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.SocketTimeoutException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -1726,7 +1727,7 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Boolean {
+    fun updateBkTicket(userId: String, bkTicket: String, hostName: String, retryTime: Int = 3): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
         if (bkTicket.isEmpty() || hostName.isEmpty()) {
             return false
@@ -1741,20 +1742,39 @@ class WorkspaceService @Autowired constructor(
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
 
-        OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body!!.string()
-            logger.info("updateBkTicket|response code|${response.code}|content|$data")
-            if (!response.isSuccessful) {
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body!!.string()
+                logger.info("updateBkTicket|response code|${response.code}|content|$data")
+                if (!response.isSuccessful && retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return updateBkTicket(userId, bkTicket, hostName, retryTimeLocal)
+                }
+                if (!response.isSuccessful && retryTime <= 0) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
+                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                    )
+                }
+
+                val dataMap = JsonUtil.toMap(data)
+                val status = dataMap["status"]
+                return (status == 0)
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info("User $userId updateBkTicket. retry: $retryTime")
+                return updateBkTicket(userId, bkTicket, hostName, retryTime - 1)
+            } else {
+                logger.error("User $userId updateBkTicket failed.", e)
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
                     defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
                 )
             }
-
-            val dataMap = JsonUtil.toMap(data)
-            val status = dataMap["status"]
-            return (status == 0)
         }
     }
 

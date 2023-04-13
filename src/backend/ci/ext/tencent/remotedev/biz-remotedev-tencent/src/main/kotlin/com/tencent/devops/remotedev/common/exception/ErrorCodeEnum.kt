@@ -61,7 +61,7 @@ enum class ErrorCodeEnum(
     UPDATE_BK_TICKET_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2130011",
-        formatErrorMessage = "update BkTicket fail,please check hostName exists."
+        formatErrorMessage = "update BkTicket fail."
     ),
     DENIAL_OF_SERVICE(
         errorType = ErrorType.USER,
