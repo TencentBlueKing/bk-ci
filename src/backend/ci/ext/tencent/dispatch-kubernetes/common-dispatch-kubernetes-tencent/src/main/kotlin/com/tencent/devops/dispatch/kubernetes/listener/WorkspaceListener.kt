@@ -53,6 +53,7 @@ class WorkspaceListener @Autowired constructor(
             userId = event.userId,
             workspaceName = event.workspaceName,
             type = UpdateEventType.CREATE,
+            bkTicket = event.bkTicket,
             status = false
         )
         try {
@@ -87,6 +88,7 @@ class WorkspaceListener @Autowired constructor(
             userId = event.userId,
             workspaceName = event.workspaceName,
             type = event.type,
+            bkTicket = event.bkTicket,
             status = false,
             environmentUid = ""
         )
