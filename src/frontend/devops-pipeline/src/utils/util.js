@@ -272,16 +272,16 @@ export function convertMStoString (time) {
 
 export function convertMillSec (ms) {
     const millseconds = ms % 1000 > 0 ? `.${`${ms % 1000}`.padStart(3, '0')}` : ''
-
+    
     const seconds = Math.floor(ms / 1000) % 60
     const minutes = Math.floor(ms / 1000 / 60) % 60
     const hours = Math.floor(ms / 1000 / 60 / 60) % 24
 
     return `${[
-        seconds,
+        ...(hours > 0 ? [hours] : []),
         minutes,
-        hours
-    ].filter(item => item !== 0).map(prezero).join(' : ')}${millseconds}`
+        seconds
+    ].map(prezero).join(' : ')}${millseconds}`
 }
 
 /**
