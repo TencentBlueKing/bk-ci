@@ -29,7 +29,6 @@ package com.tencent.devops.environment.service.slave
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.SHENZHEN
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
@@ -64,7 +63,8 @@ class SlaveGatewayService @Autowired constructor(
             logger.info("it.gateway = ${it.gateway}")
             if (it.gateway == gateway) {
                 logger.info("it.showName = ${it.showName}")
-                return MessageCodeUtil.getCodeLanMessage(messageCode = SHENZHEN)
+                logger.info("it.zoneName = ${it.zoneName}")
+                return MessageCodeUtil.getCodeLanMessage(messageCode = it.zoneName)
             }
         }
         logger.info("defaultGateway","深圳")
