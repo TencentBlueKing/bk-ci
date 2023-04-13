@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -77,6 +76,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
@@ -127,13 +127,9 @@ class WorkspaceService @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val commonService: CommonService,
+    private val redisCache: RedisCacheService,
     private val profile: Profile
 ) {
-
-    private val redisCache = Caffeine.newBuilder()
-        .maximumSize(20)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String, String?> { key -> redisOperation.get(key) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
@@ -1674,10 +1670,12 @@ class WorkspaceService @Autowired constructor(
      * 如果已经销毁，直接返回false
      */
     private fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
-        return (WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
-            workspace.lastStatusUpdateTime,
-            LocalDateTime.now()
-        ).seconds < DEFAULT_WAIT_TIME) || WorkspaceStatus.values()[workspace.status].checkDeleted()
+        return (
+            WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+                workspace.lastStatusUpdateTime,
+                LocalDateTime.now()
+            ).seconds < DEFAULT_WAIT_TIME
+            ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
     }
 
     fun getWorkspaceHost(workspaceName: String): String {
