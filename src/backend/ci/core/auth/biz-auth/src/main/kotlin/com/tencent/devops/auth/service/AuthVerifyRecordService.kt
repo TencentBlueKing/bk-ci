@@ -14,7 +14,7 @@ class AuthVerifyRecordService @Autowired constructor(
     fun createOrUpdateVerifyRecord(verifyRecordDTO: VerifyRecordDTO) {
         authVerifyRecordDao.createOrUpdate(
             dslContext = dslContext,
-            VerifyRecordDTO = verifyRecordDTO
+            verifyRecordDTO = verifyRecordDTO
         )
     }
 }
