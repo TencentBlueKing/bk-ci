@@ -219,7 +219,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
                 checkPermission = false,
                 isMobile = false,
                 startByMessage = null
-            )
+            ).id
             logger.info("buildManualStartup result is:$buildId")
         } catch (e: Exception) {
             logger.info("buildManualStartup error is :$e", e)
