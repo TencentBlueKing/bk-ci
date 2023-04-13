@@ -284,8 +284,8 @@
                 }))
             },
             queueCost () {
-                return this.execDetail?.model?.timeCost?.queueCost
-                ? convertMillSec(this.execDetail.model.timeCost.queueCost)
+                return this.execDetail?.queueTimeCost
+                ? convertMillSec(this.execDetail?.queueTimeCost)
                 : '--'
             },
             totalCost () {
