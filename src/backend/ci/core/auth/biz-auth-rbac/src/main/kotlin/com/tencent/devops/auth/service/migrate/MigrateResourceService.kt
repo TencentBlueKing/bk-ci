@@ -40,6 +40,7 @@ import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -95,7 +96,9 @@ class MigrateResourceService @Autowired constructor(
                 projectCode = projectCode,
                 ids = ids
             ) ?: return
-            instanceInfoList.data.map { it as InstanceInfoDTO }.forEach {
+            instanceInfoList.data.map {
+                JsonUtil.to(JsonUtil.toJson(it), InstanceInfoDTO::class.java)
+            }.forEach {
                 val resourceCode =
                     migrateResourceCodeConverter.v3ToRbacResourceCode(
                         resourceType = resourceType,
