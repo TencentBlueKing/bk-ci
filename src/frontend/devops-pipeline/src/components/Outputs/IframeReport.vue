@@ -17,8 +17,10 @@
             }
         },
         mounted () {
-            this.$refs.reportIframe.addEventListener('load', () => {
-                this.$refs.reportIframe.style.height = `${this.$refs.reportIframe.contentDocument.body.scrollHeight}px`
+            this.$refs.reportIframe.addEventListener('load', function () {
+                if (this.$refs.reportIframe?.contentDocument?.body?.scrollHeight) {
+                    this.$refs.reportIframe.style.height = `${this.$refs.reportIframe.contentDocument.body.scrollHeight}px`
+                }
             })
         }
     }
@@ -26,6 +28,7 @@
 <style lang="scss">
 .exec-third-party-report {
   width: 100%;
+  height: 99%;
   border: 0;
 }
 </style>
