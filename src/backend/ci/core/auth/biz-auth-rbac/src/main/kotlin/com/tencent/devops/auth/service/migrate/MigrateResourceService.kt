@@ -42,7 +42,6 @@ import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
