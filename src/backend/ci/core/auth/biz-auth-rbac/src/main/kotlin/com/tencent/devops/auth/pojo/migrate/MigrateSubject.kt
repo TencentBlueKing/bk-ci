@@ -31,5 +31,5 @@ package com.tencent.devops.auth.pojo.migrate
 data class MigrateSubject(
     val type: String,
     val id: String,
-    val name: String
+    val name: String?
 )

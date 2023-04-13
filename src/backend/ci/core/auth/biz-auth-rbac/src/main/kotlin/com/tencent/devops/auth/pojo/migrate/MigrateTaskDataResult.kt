@@ -38,5 +38,5 @@ data class MigrateTaskDataResult(
     val projectId: String,
     val subject: MigrateSubject,
     val permissions: List<AuthorizationScopes>,
-    val members: List<RoleGroupMemberInfo>,
+    val members: List<RoleGroupMemberInfo>?,
 )
