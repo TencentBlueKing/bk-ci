@@ -530,8 +530,8 @@ class EnvService @Autowired constructor(
             logger.info("Node type: ${it.nodeType}")
             logger.info("Node nodeStatus: ${it.nodeStatus}")
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
-            logger.info("thirdPartyAgent.gateway = ${thirdPartyAgent.gateway}")
             val gatewayShowName = if (thirdPartyAgent != null) {
+                logger.info("thirdPartyAgent.gateway = ${thirdPartyAgent.gateway}")
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
             } else {
                 ""
