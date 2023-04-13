@@ -1250,7 +1250,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             modelVar = mutableMapOf(), status = startBuildStatus.name,
-            timestamps = mapOf(), queueTime = LocalDateTime.now().timestampmilli()
+            timestamps = mapOf(), queueTime = LocalDateTime.now()
         )
 
         if (updateExistsTask.isNotEmpty()) {

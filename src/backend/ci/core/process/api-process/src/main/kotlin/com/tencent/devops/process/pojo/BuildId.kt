@@ -35,7 +35,7 @@ data class BuildId(
     @ApiModelProperty("构建ID", required = true)
     val id: String,
     @ApiModelProperty("当前执行次数")
-    val executeCount: Int,
+    val executeCount: Int = 1,
     @ApiModelProperty("项目ID")
     val projectId: String? = null,
     @ApiModelProperty("流水线ID")

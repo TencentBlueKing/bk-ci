@@ -166,7 +166,7 @@ class BuildRecordModelDao {
                     modelVar = JsonUtil.to(
                         modelVar, object : TypeReference<Map<String, Any>>() {}
                     ).toMutableMap(),
-                    queueTime = queueTime.timestampmilli(),
+                    queueTime = queueTime,
                     startTime = startTime,
                     endTime = endTime,
                     startUser = startUser,
