@@ -62,13 +62,15 @@ class RbacServiceConfiguration {
         authResourceTypeDao: AuthResourceTypeDao,
         authActionDao: AuthActionDao,
         authHelper: AuthHelper,
-        iamConfiguration: IamConfiguration
+        iamConfiguration: IamConfiguration,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = RbacCacheService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
         authHelper = authHelper,
-        iamConfiguration = iamConfiguration
+        iamConfiguration = iamConfiguration,
+        authResourceGroupConfigDao = authResourceGroupConfigDao
     )
 
     @Bean

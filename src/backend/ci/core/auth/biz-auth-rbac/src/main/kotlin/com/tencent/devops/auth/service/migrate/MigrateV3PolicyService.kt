@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.migrate
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
@@ -49,6 +50,8 @@ import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResp
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskResp
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -57,6 +60,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -74,7 +78,7 @@ import org.springframework.beans.factory.annotation.Value
  * 2. 用户在权限中心创建的用户组权限
  * 3. 用户自定义权限
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class MigrateV3PolicyService constructor(
     private val v2ManagerService: V2ManagerServiceImpl,
     private val iamConfiguration: IamConfiguration,
@@ -82,7 +86,9 @@ class MigrateV3PolicyService constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
-    private val authResourceCodeConverter: AuthResourceCodeConverter
+    private val authResourceCodeConverter: AuthResourceCodeConverter,
+    private val permissionService: PermissionService,
+    private val rbacCacheService: RbacCacheService
 ) {
 
     companion object {
@@ -98,8 +104,13 @@ class MigrateV3PolicyService constructor(
         private const val GROUP_API_POLICY = "group_api_policy"
         // 用户在iam界面创建的用户组
         private const val GROUP_WEB_POLICY = "group_web_policy"
+        // 用户自定义权限
+        private const val USER_CUSTOM_POLICY = "user_custom_policy"
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
+        // 自定义用户组默认过期时间6个月
+        private const val DEFAULT_EXPIRED_DAY = 180L
+        private const val MILLISECOND = 1000
         private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
@@ -140,7 +151,7 @@ class MigrateV3PolicyService constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value)
         )
         // 蓝盾创建的默认用户组权限
-        val groupApiPolicyResult = getGroupPolicyData(projectCode = projectCode, type = GROUP_API_POLICY)
+        val groupApiPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_API_POLICY)
         migrateGroup(
             projectCode = projectCode,
             projectName = projectName,
@@ -149,7 +160,7 @@ class MigrateV3PolicyService constructor(
             results = groupApiPolicyResult
         )
         // 用户在权限中心创建的用户组权限
-        val groupWebPolicyResult = getGroupPolicyData(projectCode = projectCode, type = GROUP_WEB_POLICY)
+        val groupWebPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_WEB_POLICY)
         migrateGroup(
             projectCode = projectCode,
             projectName = projectName,
@@ -159,8 +170,42 @@ class MigrateV3PolicyService constructor(
         )
     }
 
-    fun migrateUserCustomPolicy(projectCode: String, gradeManagerId: Int) {
-
+    fun migrateUserCustomPolicy(projectCode: String) {
+        logger.info("migrate $projectCode user custom policy")
+        val userCustomPolicy = getPolicyData(projectCode = projectCode, type = USER_CUSTOM_POLICY)
+        val managerGroupId = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            groupCode = DefaultGroupType.MANAGER.value
+        )?.relationId?.toInt() ?: throw ErrorCodeException(
+            errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value)
+        )
+        userCustomPolicy.forEach { result ->
+            logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
+            val userId = result.subject.id
+            result.permissions.forEach permission@{ permission ->
+                val groupId = findMatchResourceGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    managerGroupId = managerGroupId,
+                    permission = permission
+                )
+                if (groupId != null) {
+                    val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
+                    val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+                        .members(listOf(managerMember))
+                        .expiredAt(
+                            System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(
+                                DEFAULT_EXPIRED_DAY
+                            )
+                        ).build()
+                    v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+                }
+            }
+        }
     }
 
     fun comparePolicy(projectCode: String): Boolean {
@@ -193,7 +238,7 @@ class MigrateV3PolicyService constructor(
     /**
      * 获取ci调用iam接口创建的用户组
      */
-    private fun getGroupPolicyData(projectCode: String, type: String): List<MigrateTaskDataResult> {
+    private fun getPolicyData(projectCode: String, type: String): List<MigrateTaskDataResult> {
         val request = Request.Builder()
             .url(
                 "$iamBaseUrl/$IAM_GET_MIGRATE_DATA?" +
@@ -419,10 +464,14 @@ class MigrateV3PolicyService constructor(
 
     private fun batchAddGroupMember(groupId: Int, members: List<RoleGroupMemberInfo>) {
         members.forEach member@{ member ->
+            // 过期的用户直接移除
+            if (member.expiredAt * MILLISECOND < System.currentTimeMillis()) {
+                return@member
+            }
             val managerMember = ManagerMember(member.type, member.id)
             val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                 .members(listOf(managerMember))
-                .expiredAt(member.expiredAt * 1000)
+                .expiredAt(member.expiredAt)
                 .build()
             v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
         }
@@ -437,5 +486,91 @@ class MigrateV3PolicyService constructor(
             }
             return responseContent
         }
+    }
+
+    private fun findMatchResourceGroup(
+        userId: String,
+        projectCode: String,
+        managerGroupId: Int,
+        permission: AuthorizationScopes
+    ): Int? {
+        // v3资源都只有一层
+        val resource = permission.resources[0]
+        val resourceType = resource.type
+        val userActions = permission.actions.map { it.id }
+        logger.info("find match resource group|$resourceType|$userActions")
+        return when {
+            // 如果有all_action,直接加入管理员组
+            userActions.contains(Constants.ALL_ACTION) -> managerGroupId
+            isProjectPolicy(resource) ->
+                findMinMatchGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    v3ResourceCode = projectCode,
+                    userActions = permission.actions.map { it.id }
+                )
+            else ->
+                findMinMatchGroup(
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    v3ResourceCode = resource.paths[0][1].id,
+                    userActions = permission.actions.map { it.id }
+                )
+
+        }
+    }
+
+    private fun isProjectPolicy(
+        resource: ManagerResources
+    ): Boolean {
+        // 资源类型是项目或者资源值是*,表示所有的资源，那么也应该迁移到项目组下
+        return resource.type == AuthResourceType.PROJECT.value ||
+            (resource.paths.size >= 2 && resource.paths[0][1].id == "*")
+    }
+
+    /**
+     * 根据action
+     */
+    private fun findMinMatchGroup(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        v3ResourceCode: String,
+        userActions: List<String>
+    ): Int? {
+        // 先将v3资源code转换成rbac资源code
+        val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(
+            resourceType = resourceType,
+            resourceCode = v3ResourceCode
+        )
+        // 判断是否已有所有action权限
+        val hasActionPermission = permissionService.batchValidateUserResourcePermission(
+            userId = userId,
+            actions = userActions,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType
+        ).filterNot { it.value }.isNotEmpty()
+        logger.info("user has resource action permission|$userId|$resourceCode|$userActions")
+
+        // 权限没有匹配到才去匹配资源权限
+        if (!hasActionPermission) {
+            rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
+                if (groupConfig.actions.containsAll(userActions)) {
+                    val groupId = authResourceGroupDao.get(
+                        dslContext = dslContext,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        groupCode = groupConfig.groupCode
+                    )?.relationId?.toInt()
+                    logger.info("user match resource ${groupConfig.groupCode} group|$userId|$userActions|$groupId")
+                    return groupId
+                }
+            }
+        }
+        return null
     }
 }
