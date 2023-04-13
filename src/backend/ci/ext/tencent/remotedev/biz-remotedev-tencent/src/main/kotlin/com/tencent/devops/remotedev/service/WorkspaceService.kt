@@ -1735,7 +1735,7 @@ class WorkspaceService @Autowired constructor(
         return true
     }
 
-    fun updateBkTicket(userId: String, bkTicket: String, hostName: String, retryTime: Int = 3): Boolean {
+    fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
             return false
