@@ -20,6 +20,8 @@ registry:
   wsproxyName: wsproxy
   # 填写后添加固定镜像，方便测试
   fixedSpec:
+  # 存活检查
+  readinessProbeAddr: 
 
 # 镜像配置
 backendImage:

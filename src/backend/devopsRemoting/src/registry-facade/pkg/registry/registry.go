@@ -8,8 +8,6 @@ import (
 	"io/ioutil"
 	"net"
 	"net/http"
-	"os"
-	"path/filepath"
 	"registry-facade/api"
 	"registry-facade/pkg/config"
 	"strings"
@@ -272,10 +270,6 @@ func (reg *Registry) Serve() error {
 		logs.WithField("addr", addr).Info("HTTPS registry server listening")
 
 		cert, key := reg.Config.TLS.Certificate, reg.Config.TLS.PrivateKey
-		if tproot := os.Getenv("TELEPRESENCE_ROOT"); tproot != "" {
-			cert = filepath.Join(tproot, cert)
-			key = filepath.Join(tproot, key)
-		}
 
 		return reg.srv.ServeTLS(l, cert, key)
 	}

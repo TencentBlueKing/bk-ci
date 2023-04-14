@@ -48,6 +48,7 @@ spec:
           - name: {{ .Values.registry.wsproxyName }}-tls-certs
             mountPath: /data/workspace/registry-facade/tls
             readOnly: true  
+        {{- if .Values.registry.readinessProbeAddr }}    
         readinessProbe:
           httpGet:
             path: /ready
@@ -65,7 +66,8 @@ spec:
           periodSeconds: 10
           timeoutSeconds: 2
           successThreshold: 1
-          failureThreshold: 3        
+          failureThreshold: 3   
+        {{- end }}       
       volumes:
       - name: {{ .Release.Name }}-cache
         emptyDir:
