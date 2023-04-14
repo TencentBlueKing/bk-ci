@@ -57,8 +57,7 @@ class StoreStatisticDao {
                 DSL.sum(COMMITS),
                 DSL.sum(SCORE),
                 STORE_CODE
-            )
-                .from(this)
+            ).from(this)
 
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_TYPE.eq(storeType))
@@ -67,6 +66,7 @@ class StoreStatisticDao {
             }
             val finalStep = baseStep.where(conditions)
                 .groupBy(STORE_CODE)
+                .orderBy(CREATE_TIME, ID)
             return if (null != offset && null != limit) {
                 finalStep.limit(limit).offset(offset).fetch()
             } else {

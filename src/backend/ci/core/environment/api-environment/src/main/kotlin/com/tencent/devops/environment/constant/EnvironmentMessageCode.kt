@@ -83,4 +83,5 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_SHARE_PROJECT_EMPTY = "2105036" // 环境管理：共享的项目列表为空
     const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
+    const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
 }

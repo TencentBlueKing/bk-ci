@@ -46,10 +46,14 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -72,6 +76,10 @@ class TaskBuildRecordService(
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -81,7 +89,11 @@ class TaskBuildRecordService(
     buildRecordModelDao = buildRecordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(
@@ -289,7 +301,10 @@ class TaskBuildRecordService(
         val pipelineId = taskBuildEndParam.pipelineId
         val buildId = taskBuildEndParam.buildId
         val taskId = taskBuildEndParam.taskId
-        val buildStatus = taskBuildEndParam.buildStatus
+        // #7983 将RETRY中间态过滤，不体现在详情页面
+        val buildStatus = taskBuildEndParam.buildStatus.let {
+            if (it == BuildStatus.RETRY) null else it
+        }
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
         val executeCount = buildTaskDao.get(
@@ -338,7 +353,9 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
-                taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
+                recordTask.generateTaskTimeCost()?.let {
+                    taskVar[Element::timeCost.name] = it
+                }
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,

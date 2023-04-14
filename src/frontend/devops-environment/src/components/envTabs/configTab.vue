@@ -105,19 +105,17 @@
                 </div>
             </div>
         </div>
-
-        <bk-empty v-else></bk-empty>
+        <bk-exception
+            v-else
+            class="exception-wrap-item exception-part" type="empty" scene="part"
+        />
     </div>
 </template>
 
 <script>
-    import empty from '@/components/common/empty'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'config-tab',
-        components: {
-            'bk-empty': empty
-        },
         props: {
             projectId: {
                 type: String,
@@ -269,7 +267,7 @@
 
                     message = this.$t('environment.successfullySaved')
                     theme = 'success'
-                    
+
                     this.$bkMessage({
                         message,
                         theme
@@ -316,7 +314,7 @@
 
                                 message = this.$t('environment.successfullyDeleted')
                                 theme = 'success'
-                                
+
                                 this.$bkMessage({
                                     message,
                                     theme

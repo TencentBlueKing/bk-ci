@@ -1,7 +1,9 @@
 {
-    "codelib": "Repo",
+    "codelib": "Code Repositories",
     "linkCodelib": "Link Repo",
     "repo": "Code Repositories",
+    "linkCodelibLabel": "Link {0} Repo",
+    "typeCodelib": "{0} Repo",
     "link": "link",
     "codelibDesc": "Code Repositories service can link your existed SVN and GIT repositories to CI，which will be a pipeline's materials",
     "laodingTitle": "loading repositories list",
@@ -56,6 +58,7 @@
     "Github": "Github",
     "Gitlab": "Gitlab",
     "TGit": "TGit",
+    "P4": "P4",
     "authType": "Authorization method",
     "authIdentity": "Authorized identity",
     "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",

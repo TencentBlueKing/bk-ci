@@ -12,7 +12,10 @@
                             action: NODE_RESOURCE_ACTION.CREATE
                         }
                     }"
-                    theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                    theme="primary"
+                    @click="toImportNode('construct')">
+                    {{ $t('environment.nodeInfo.importNode') }}
+                </bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -404,7 +407,7 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-                
+
                 this.$bkInfo({
                     theme: 'warning',
                     type: 'warning',
@@ -420,7 +423,7 @@
 
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
-                            
+
                             message && this.$bkMessage({
                                 message,
                                 theme
@@ -530,7 +533,7 @@
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
                         this.constructImportForm.location = isTarget && isTarget.zoneName
                     }
-                    
+
                     if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
@@ -760,10 +763,6 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
-
-        .import-vmbuild-btn {
-            width: 100px;
-        }
 
         .create-node-btn {
             margin-right: 6px;

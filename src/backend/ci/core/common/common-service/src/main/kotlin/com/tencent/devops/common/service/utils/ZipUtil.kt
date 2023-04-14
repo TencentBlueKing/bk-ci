@@ -75,7 +75,7 @@ object ZipUtil {
         }
     }
 
-    fun zipDir(srcDir: File, zipFile: String) {
+    fun zipDir(srcDir: File, zipFile: String): File {
         FileOutputStream(zipFile).use { fileOutputStream ->
             BufferedOutputStream(fileOutputStream).use { bufferedOutputStream ->
                 ZipOutputStream(bufferedOutputStream).use { zipOutputStream ->
@@ -83,6 +83,7 @@ object ZipUtil {
                 }
             }
         }
+        return File(zipFile)
     }
 
     private fun handleZipOutputStream(srcDir: File, zipOutputStream: ZipOutputStream) {
@@ -103,6 +104,10 @@ object ZipUtil {
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     private fun zipFiles(zipOut: ZipOutputStream, sourceFile: File, parentDirPath: String) {
         val buf = ByteArray(2048)
+        if (sourceFile.isFile) {
+            zipFile(zipOut, sourceFile, sourceFile.name, buf)
+            return
+        }
         for (file in sourceFile.listFiles()) {
             val basePath = if (parentDirPath.isBlank()) {
                 file.name

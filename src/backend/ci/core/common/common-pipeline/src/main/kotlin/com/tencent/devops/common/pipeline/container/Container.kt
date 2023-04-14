@@ -67,11 +67,21 @@ interface Container {
      */
     fun resetBuildOption(executeCount: Int) {
         this.status = null // 重置状态为空
+        this.timeCost = null
         this.startEpoch = null
         this.elementElapsed = null
         this.systemElapsed = null
         this.startVMStatus = null
         this.executeCount = executeCount
+    }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        elements.forEach {
+            it.transformCompatibility()
+        }
     }
     /**
      * 只存储Container相关的配置，elements不会存储。

@@ -81,7 +81,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(NotifyMessageTemplateServiceImpl::class.java)
-        private const val MARKDOWN_TEMPLATE_TAIL = "__markdown"
         private const val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     }
 
@@ -97,7 +96,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val email = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(dslContext, templateId)
         val wechat = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(dslContext, templateId)
         val rtx = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(dslContext, templateId)
-        val weworkGroup = notifyMessageTemplateDao.getWeworkGroupNotifyMessageTemplate(dslContext, templateId)
         val common = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(
             dslContext = dslContext,
             templateId = templateId
@@ -125,24 +123,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     notifyTypeScope = mutableListOf(NotifyType.RTX.name),
                     title = rtx.title,
                     body = rtx.body,
+                    bodyMD = rtx.bodyMd,
                     creator = rtx.creator,
                     modifier = rtx.modifior,
                     createTime = (rtx.createTime as LocalDateTime).timestampmilli(),
                     updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
-                )
-            )
-        }
-
-        if (null != weworkGroup) {
-            subTemplateList.add(
-                SubNotifyMessageTemplate(
-                    notifyTypeScope = mutableListOf(NotifyType.WEWORK_GROUP.name),
-                    title = weworkGroup.title,
-                    body = weworkGroup.body,
-                    creator = weworkGroup.creator,
-                    modifier = weworkGroup.modifior,
-                    createTime = (weworkGroup.createTime as LocalDateTime).timestampmilli(),
-                    updateTime = (weworkGroup.updateTime as LocalDateTime).timestampmilli()
                 )
             )
         }
@@ -252,9 +237,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             if (it.notifyTypeScope.contains(NotifyType.WECHAT.name)) {
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             }
-            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
-                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
-            }
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 if (it.emailType == null || it.bodyFormat == null) {
                     return MessageCodeUtil.generateResponseDataObject(
@@ -332,16 +314,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         notifyTemplateMessage = it
                     )
                 }
-
-                if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
-                    notifyMessageTemplateDao.addWeworkGroupNotifyMessageTemplate(
-                        dslContext = context,
-                        id = id,
-                        newId = UUIDUtil.generate(),
-                        userId = userId,
-                        notifyTemplateMessage = it
-                    )
-                }
             }
         }
         return Result(true)
@@ -361,7 +333,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         var hasEmail = false
         var hasRtx = false
         var hasWechat = false
-        var hasWeworkGroup = false
         val notifyTypeScopeSet = mutableSetOf<String>()
         // 判断提交的数据中是否存在同样类型的
         notifyMessageTemplateRequest.msg.forEach {
@@ -391,17 +362,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 hasWechat = true
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
             } else if (it.notifyTypeScope.contains(NotifyType.WECHAT.name) && hasWechat) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("notifyType"),
-                    data = false
-                )
-            }
-
-            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name) && !hasWeworkGroup) {
-                hasWeworkGroup = true
-                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
-            } else if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name) && hasWeworkGroup) {
                 return MessageCodeUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("notifyType"),
@@ -460,25 +420,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                         )
                     } else {
                         notifyMessageTemplateDao.addRTXNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            id = templateId,
-                            newId = uid,
-                            userId = userId,
-                            notifyTemplateMessage = it
-                        )
-                    }
-                }
-                if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
-                    val num = notifyMessageTemplateDao.countWeworkGroupMessageTemplate(dslContext, templateId)
-                    if (num > 0) {
-                        notifyMessageTemplateDao.updateWeworkGroupNotifyMessageTemplate(
-                            dslContext = dslContext,
-                            userId = userId,
-                            templateId = templateId,
-                            notifyMessageTemplate = it
-                        )
-                    } else {
-                        notifyMessageTemplateDao.addWeworkGroupNotifyMessageTemplate(
                             dslContext = dslContext,
                             id = templateId,
                             newId = uid,
@@ -557,9 +498,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 NotifyType.WECHAT.name -> {
                     notifyMessageTemplateDao.deleteWechatNotifyMessageTemplate(context, templateId)
                 }
-                NotifyType.WEWORK_GROUP.name -> {
-                    notifyMessageTemplateDao.deleteWeworkGroupNotifyMessageTemplate(context, templateId)
-                }
             }
 
             if (existsNotifyType.size == 1 && existsNotifyType[0] == notifyType) {
@@ -585,7 +523,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             notifyMessageTemplateDao.deleteEmailsNotifyMessageTemplate(dsl, templateId)
             notifyMessageTemplateDao.deleteRtxNotifyMessageTemplate(dsl, templateId)
             notifyMessageTemplateDao.deleteWechatNotifyMessageTemplate(dsl, templateId)
-            notifyMessageTemplateDao.deleteWeworkGroupNotifyMessageTemplate(dsl, templateId)
         }
         return Result(true)
     }
@@ -648,7 +585,14 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     )!!
                 val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                val body = replaceContentParams(
+                    request.bodyParams,
+                    if (request.markdownContent == true) {
+                        weworkTplRecord.bodyMd ?: weworkTplRecord.body
+                    } else {
+                        weworkTplRecord.body
+                    }
+                )
                 logger.info("send wework msg: $body ${weworkTplRecord.sender}")
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
@@ -890,21 +834,21 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             logger.info("wework group is empty, so return.")
             return
         }
-        // markdown格式取Wework Group表，否则取原表
-        val weworkTplRecord = if (request.markdownContent == true) {
-            notifyMessageTemplateDao.getWeworkGroupNotifyMessageTemplate(
-                dslContext = dslContext,
-                commonTemplateId = commonTemplateId
-            )!!.let { Pair(it.title, it.body) }
-        } else {
+        val weworkTplRecord =
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonTemplateId
-            )!!.let { Pair(it.title, it.body) }
-        }
-        val title = replaceContentParams(request.titleParams, weworkTplRecord.first)
+            )!!
+        val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
         // 替换内容里的动态参数
-        val body = replaceContentParams(request.bodyParams, weworkTplRecord.second)
+        val body = replaceContentParams(
+            request.bodyParams,
+            if (request.markdownContent == true) {
+                weworkTplRecord.bodyMd ?: weworkTplRecord.body
+            } else {
+                weworkTplRecord.body
+            }
+        )
 
         val content = title + "\n\n" + body
 

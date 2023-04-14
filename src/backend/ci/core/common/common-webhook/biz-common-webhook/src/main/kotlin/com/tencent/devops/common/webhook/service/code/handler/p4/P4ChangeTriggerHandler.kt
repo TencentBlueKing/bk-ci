@@ -69,7 +69,13 @@ class P4ChangeTriggerHandler(
     )
     override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
 
-    override fun getEventType(event: P4ChangeEvent): CodeEventType = event.eventType
+    override fun getEventType(event: P4ChangeEvent): CodeEventType = when (event.eventType) {
+        P4ChangeEvent.CHANGE_COMMIT -> CodeEventType.CHANGE_COMMIT
+        P4ChangeEvent.CHANGE_SUBMIT -> CodeEventType.CHANGE_SUBMIT
+        P4ChangeEvent.CHANGE_CONTENT -> CodeEventType.CHANGE_SUBMIT
+        else ->
+            CodeEventType.valueOf(event.eventType)
+    }
 
     override fun getMessage(event: P4ChangeEvent) = ""
 
@@ -81,6 +87,12 @@ class P4ChangeTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val p4Filter = WebhookUtils.getP4Filter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                webHookParams = webHookParams
+            )
             val urlFilter = P4PortFilter(
                 pipelineId = pipelineId,
                 triggerOnP4port = event.p4Port,
@@ -93,6 +105,9 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
+                    if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
+                        return true
+                    }
                     val changeFiles = eventCacheService.getP4ChangelistFiles(
                         repo = repository,
                         projectId = projectId,
@@ -111,7 +126,7 @@ class P4ChangeTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(urlFilter, eventTypeFilter, pathFilter)
+            return listOf(p4Filter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 
