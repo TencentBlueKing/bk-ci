@@ -11,7 +11,6 @@ import (
 type checkAuth func(ctx context.Context, host, wsid, ticket string) (bool, error)
 
 // 通过拿到的token调用后台的鉴权接口
-// TODO: 未来等后台一起联调
 func WorkspaceAuthHandler(hostname, redirUrl string, checkAuth checkAuth) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
