@@ -174,12 +174,32 @@ class TGitPushTriggerHandler(
                             to = event.before
                         )
                     } else {
-                        gitScmService.getChangeFileList(
-                            projectId = projectId,
-                            repo = repository,
-                            from = event.before,
-                            to = event.after
-                        )
+                        try {
+                            gitScmService.getChangeFileList(
+                                projectId = projectId,
+                                repo = repository,
+                                from = event.before,
+                                to = event.after
+                            )
+                        } catch (e: Exception) {
+                            // 兜底方案，若关联代码的权限
+                            logger.warn(
+                                "Failed to get the change file list," +
+                                    "use webhook information to trigger," +
+                                    "please check the repository permissions," +
+                                    "projectId[$projectId]," +
+                                    "repo[repo]," +
+                                    "form[${event.before}]," +
+                                    "to[${event.after}]"
+                            )
+                            val changeFiles = mutableSetOf<String>()
+                            commits?.forEach { commit ->
+                                changeFiles.addAll(commit.added ?: listOf())
+                                changeFiles.addAll(commit.removed ?: listOf())
+                                changeFiles.addAll(commit.modified ?: listOf())
+                            }
+                            changeFiles
+                        }
                     }
                     pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
