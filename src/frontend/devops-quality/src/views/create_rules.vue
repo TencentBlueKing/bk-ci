@@ -423,15 +423,15 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import metadataPanel from '@/components/devops/metadata-panel'
     import UserInput from '@/components/devops/UserInput/index.vue'
-    import pipelineList from '@/components/devops/pipeline-list'
-    import TemplateList from '@/components/devops/template-list'
     import createGroup from '@/components/devops/create_group'
     import emptyTips from '@/components/devops/emptyTips'
-    import { getQueryString } from '@/utils/util'
+    import metadataPanel from '@/components/devops/metadata-panel'
+    import pipelineList from '@/components/devops/pipeline-list'
+    import TemplateList from '@/components/devops/template-list'
     import i18nImages from '@/utils/i18nImages'
+    import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {

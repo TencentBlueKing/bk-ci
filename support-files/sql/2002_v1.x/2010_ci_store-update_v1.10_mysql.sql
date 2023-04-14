@@ -80,7 +80,7 @@ BEGIN
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_STATISTICS_TOTAL'
                             AND COLUMN_NAME = 'HOT_FLAG') THEN
-    ALTER TABLE T_STORE_STATISTICS_TOTAL ADD HOT_FLAG bit(1) DEFAULT b'1' NULL COMMENT '是否为受欢迎组件';
+    ALTER TABLE T_STORE_STATISTICS_TOTAL ADD HOT_FLAG bit(1) DEFAULT b'0' NULL COMMENT '是否为受欢迎组件';
     END IF;
 
     COMMIT;
