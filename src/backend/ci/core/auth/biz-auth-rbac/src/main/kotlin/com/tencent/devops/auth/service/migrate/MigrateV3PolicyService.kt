@@ -44,6 +44,7 @@ import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST
+import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResp
@@ -88,7 +89,8 @@ class MigrateV3PolicyService constructor(
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val authMigrationDao: AuthMigrationDao
 ) {
 
     companion object {
@@ -167,6 +169,19 @@ class MigrateV3PolicyService constructor(
             gradeManagerId = gradeManagerId,
             managerGroupId = managerGroupId,
             results = groupWebPolicyResult
+        )
+        val beforeGroupCount = groupApiPolicyResult.size + groupWebPolicyResult.size
+        val afterGroupCount = authResourceGroupDao.countByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        authMigrationDao.updateGroupCount(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            beforeGroupCount = beforeGroupCount,
+            afterGroupCount = afterGroupCount
         )
     }
 

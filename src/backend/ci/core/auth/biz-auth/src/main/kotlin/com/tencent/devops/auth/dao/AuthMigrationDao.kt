@@ -83,11 +83,11 @@ class AuthMigrationDao {
     fun updateResourceCount(
         dslContext: DSLContext,
         projectCode: String,
-        resourceCount: String
+        resourceCountInfo: String
     ) {
         with(TAuthMigration.T_AUTH_MIGRATION) {
             dslContext.update(this)
-                .set(RESOURCE_COUNT, resourceCount)
+                .set(RESOURCE_COUNT, resourceCountInfo)
                 .where(PROJECT_CODE.eq(projectCode))
                 .execute()
         }
