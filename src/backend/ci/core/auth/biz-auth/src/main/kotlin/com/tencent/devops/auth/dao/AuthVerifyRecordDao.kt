@@ -49,6 +49,7 @@ class AuthVerifyRecordDao {
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
+                .and(VERIFY_RESULT.eq(true))
                 .orderBy(LAST_VERIFY_TIME.desc())
                 .offset(offset)
                 .limit(limit)

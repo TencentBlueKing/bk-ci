@@ -107,16 +107,22 @@ class MigrateV3PolicyService constructor(
         // 获取iam迁移数据
         private const val IAM_GET_MIGRATE_DATA = "api/v2/open/migration/bkci/data/"
         private const val SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS = "SUCCESS"
+
         // 轮询获取iam迁移状态睡眠时间
         private const val SLEEP_LOOP_IAM_GET_MIGRATE_TASK = 30000L
+
         // ci通过iam接口创建的用户组
         private const val GROUP_API_POLICY = "group_api_policy"
+
         // 用户在iam界面创建的用户组
         private const val GROUP_WEB_POLICY = "group_web_policy"
+
         // 用户自定义权限
         private const val USER_CUSTOM_POLICY = "user_custom_policy"
+
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
+
         // 自定义用户组默认过期时间6个月
         private const val DEFAULT_EXPIRED_DAY = 180L
         private const val MILLISECOND = 1000
@@ -239,7 +245,6 @@ class MigrateV3PolicyService constructor(
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
-            var migrateVerifyResult = true
             var offset = 0
             val limit = 100
             do {
@@ -250,7 +255,7 @@ class MigrateV3PolicyService constructor(
                 )
                 verifyRecordList.forEach {
                     with(it) {
-                        val v0OrV3VerifyResult = verifyResult
+                        val v3VerifyResult = verifyResult
                         val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
                             userId = userId,
                             action = action,
@@ -259,15 +264,15 @@ class MigrateV3PolicyService constructor(
                             resourceType = resourceType,
                             relationResourceType = null
                         )
-                        if (v0OrV3VerifyResult != rbacVerifyResult) {
-                            migrateVerifyResult = false
+                        if (v3VerifyResult != rbacVerifyResult) {
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                            return false
                         }
                     }
                 }
                 offset += limit
             } while (verifyRecordList.size == limit)
-            return migrateVerifyResult
+            return true
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to compare policy|$projectCode"
