@@ -51,7 +51,7 @@
             },
 
             showDebugBtn () {
-                return this.job.dispatchType && (this.job.dispatchType.buildType === 'GIT_CI' || this.job.dispatchType === 'PUBLIC_DEVCLOUD') && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
+                return this.job.dispatchType && (this.job.dispatchType.buildType === 'GIT_CI' || this.job.dispatchType.buildType === 'PUBLIC_DEVCLOUD') && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
             },
 
             downLoadJobLink () {
