@@ -47,10 +47,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.service.trace.TraceTag
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -81,9 +83,13 @@ class MigrateResourceService @Autowired constructor(
 
         logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
         // 迁移各个资源类型下的资源
+        val traceId = MDC.get(TraceTag.BIZID)
         val resourceTypeFuture = resourceTypes.map { resourceType ->
             CompletableFuture.supplyAsync(
-                { migrateResource(projectCode = projectCode, resourceType = resourceType) },
+                {
+                    MDC.put(TraceTag.BIZID, traceId)
+                    migrateResource(projectCode = projectCode, resourceType = resourceType)
+                },
                 executorService
             )
         }
