@@ -48,7 +48,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomArchiveResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
