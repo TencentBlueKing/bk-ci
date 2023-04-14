@@ -102,7 +102,7 @@ class PipelineContextService @Autowired constructor(
                                 contextMap = contextMap,
                                 variables = variables,
                                 outputArrayMap = outputArrayMap,
-                                groupIndex = i,
+                                matrixGroupIndex = i,
                                 failTaskNameList = failTaskNameList
                             )
                         }
@@ -121,7 +121,7 @@ class PipelineContextService @Autowired constructor(
                         contextMap = contextMap,
                         variables = variables,
                         outputArrayMap = null,
-                        groupIndex = null,
+                        matrixGroupIndex = null,
                         failTaskNameList = failTaskNameList
                     )
                 }
@@ -223,7 +223,7 @@ class PipelineContextService @Autowired constructor(
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
         outputArrayMap: MutableMap<String, MutableList<String>>?,
-        groupIndex: Int?,
+        matrixGroupIndex: Int?,
         failTaskNameList: MutableList<String>
     ) {
         // current job
@@ -235,11 +235,11 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
-            groupIndex?.let { contextMap["job.index"] = it.toString() }
+            matrixGroupIndex?.let { contextMap["job.index"] = it.toString() }
         }
 
         // other job
-        val jobId = c.jobId ?: return
+        val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
         contextMap["jobs.$jobId.id"] = jobId
         contextMap["jobs.$jobId.name"] = c.name
         contextMap["jobs.$jobId.status"] = getJobStatus(c)
@@ -263,8 +263,8 @@ class PipelineContextService @Autowired constructor(
         if (c.id?.let { it == containerId } != true) return
         if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         variables.forEach { (key, value) ->
-            val prefix = StringBuilder("jobs.${c.jobId ?: containerId}.")
-            groupIndex?.let { prefix.append(".$it") }
+            val prefix = StringBuilder("jobs.$jobId.")
+            matrixGroupIndex?.let { prefix.append("$it.") }
             if (key.startsWith(prefix) && key.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
