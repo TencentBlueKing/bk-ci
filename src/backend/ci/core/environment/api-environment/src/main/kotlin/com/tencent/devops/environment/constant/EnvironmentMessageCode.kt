@@ -83,7 +83,6 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
     const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
-
     const val ERROR_PIPE_NOT_FOUND  = "2105039" // 环境管理：不存在该管道信息
     const val ERROR_NOT_THIRD_PARTY_BUILD_MACHINE = "2105040" // 环境管理：这个节点不是第三方构建机
     const val THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST = "2105041" // 第三方构建机环境不存在
