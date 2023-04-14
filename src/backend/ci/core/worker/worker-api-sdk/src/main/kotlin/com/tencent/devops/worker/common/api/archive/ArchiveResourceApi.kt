@@ -35,7 +35,6 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_PIP
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
@@ -44,10 +43,10 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
-import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import java.io.File
 import java.net.URLEncoder
+import okhttp3.MultipartBody
+import okhttp3.RequestBody
 
 @Suppress("UNUSED")
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {

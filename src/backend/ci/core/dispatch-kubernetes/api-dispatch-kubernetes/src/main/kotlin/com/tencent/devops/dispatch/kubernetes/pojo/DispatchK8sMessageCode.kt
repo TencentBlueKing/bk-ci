@@ -51,7 +51,7 @@ object DispatchK8sMessageCode {
     const val START_BCS_BUILD_CONTAINER_FAIL = "2126203"// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
     const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126204"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
     const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126205"// 获取构建机详情接口超时
-    const val MACHINE_INTERFACE_ERROR = "2126207" // 操作构建机接口异常
+    const val MACHINE_INTERFACE_ERROR = "2126206" // 操作构建机接口异常
     const val TROUBLE_SHOOTING = "2126207"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
     const val NO_EMPTY_BUILDER = "2126208"// BCS构建机启动失败，没有空闲的构建机
     const val MACHINE_INTERFACE_RETURN_FAIL = "2126209"// 操作构建机接口返回失败

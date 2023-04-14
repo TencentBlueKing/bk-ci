@@ -251,8 +251,6 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ZHIYUN_UPGRADE_FAIL = "2101131" // 织云异步升级失败,织云返回错误信息：$msg
 
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_PATH = "2101132" // 这路径 不是 init
-    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_CUSTOMIZED = "2101133"
-    const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101134"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
 

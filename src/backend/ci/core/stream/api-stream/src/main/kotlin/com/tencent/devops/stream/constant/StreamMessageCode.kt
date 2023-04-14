@@ -49,16 +49,12 @@ object StreamMessageCode {
     // 从2129101起
     const val BRANCH_INFO_ACCESS_DENIED = "2129101" // 无权限获取分支信息
     const val PIPELINE_NOT_FOUND_OR_DELETED = "2129102" // 该流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2129103" // 构建任务不存在，无法重试
-    const val USER_NOT_AUTHORIZED = "2129104" // 用户[{0}]尚未进行OAUTH授权，请先授权。
     const val STARTUP_CONFIG_MISSING = "2129105" // 启动配置缺少 {0}
     const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2129106" // ci开启人{0} 无当前项目执行权限, 请重新授权
     const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129107" // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
     const val TIMER_PARAM_TOO_LONG = "2129108" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
     const val PARAM_INCORRECT = "2129109" // 蓝盾项目ID {0} 不正确
-    const val PROJECT_NOT_OPEN_STREAM = "2129110" // 项目未开启Stream，无法查询
     const val PROJECT_ALREADY_EXISTS = "2129111" //项目已存在
-    const val PROJECT_NOT_EXIST = "2129112" //项目不存在
     const val NOT_AUTHORIZED_BY_OAUTH = "2129104" //用户[{0}]尚未进行OAUTH授权，请先授权。
     const val PROJECT_STREAM_NOT_ENABLED = "2129114" //工蜂项目{0}未开启Stream
     const val NO_RECORD_MIRROR_VERSION = "2129115" //没有此镜像版本记录
