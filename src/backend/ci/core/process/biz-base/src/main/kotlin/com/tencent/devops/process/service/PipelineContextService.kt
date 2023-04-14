@@ -228,13 +228,13 @@ class PipelineContextService @Autowired constructor(
     ) {
         // current job
         if (c.id?.let { it == containerId } == true) {
-            contextMap["job.id"] = c.jobId ?: ""
+            c.jobId?.let { contextMap["job.id"] = it }
             contextMap["job.name"] = c.name
-            contextMap["job.status"] = getJobStatus(c)
-            contextMap["job.outcome"] = c.status ?: ""
-            contextMap["job.container.network"] = getNetWork(c) ?: ""
-            contextMap["job.stage_id"] = stage.id ?: ""
-            contextMap["job.stage_name"] = stage.name ?: ""
+            getJobStatus(c)?.let { contextMap["job.status"] = it }
+            c.status?.let { contextMap["job.outcome"] = it }
+            getNetWork(c)?.let { contextMap["job.container.network"] = it }
+            stage.id?.let { contextMap["job.stage_id"] = it }
+            stage.name?.let { contextMap["job.stage_name"] = it }
             matrixGroupIndex?.let { contextMap["job.index"] = it.toString() }
         }
 
@@ -242,11 +242,11 @@ class PipelineContextService @Autowired constructor(
         val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
         contextMap["jobs.$jobId.id"] = jobId
         contextMap["jobs.$jobId.name"] = c.name
-        contextMap["jobs.$jobId.status"] = getJobStatus(c)
-        contextMap["jobs.$jobId.outcome"] = c.status ?: ""
-        contextMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
-        contextMap["jobs.$jobId.stage_id"] = stage.id ?: ""
-        contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
+        getJobStatus(c)?.let { contextMap["jobs.$jobId.status"] = it }
+        c.status?.let { contextMap["jobs.$jobId.outcome"] = it }
+        getNetWork(c)?.let { contextMap["jobs.$jobId.container.network"] = it }
+        stage.id?.let { contextMap["jobs.$jobId.stage_id"] = it }
+        stage.name?.let { contextMap["jobs.$jobId.stage_name"] = it }
 
         // all element
         buildStepContext(
@@ -262,9 +262,9 @@ class PipelineContextService @Autowired constructor(
         // #6071 如果当前job为矩阵则追加上下文
         if (c.id?.let { it == containerId } != true) return
         if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
+        val prefix = StringBuilder("jobs.$jobId.")
+        matrixGroupIndex?.let { prefix.append("$it.") }
         variables.forEach { (key, value) ->
-            val prefix = StringBuilder("jobs.$jobId.")
-            matrixGroupIndex?.let { prefix.append("$it.") }
             if (key.startsWith(prefix) && key.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
@@ -285,25 +285,25 @@ class PipelineContextService @Autowired constructor(
             // current step
             if (e.id?.let { it == taskId } == true) {
                 contextMap["step.name"] = e.name
-                contextMap["step.id"] = e.id ?: ""
-                contextMap["step.status"] = getStepStatus(e)
-                contextMap["step.outcome"] = e.status ?: ""
+                e.id?.let { contextMap["step.id"] = it }
+                getStepStatus(e)?.let { contextMap["step.status"] = it }
+                e.status?.let { contextMap["step.outcome"] = it }
                 contextMap["step.atom_version"] = e.version
                 contextMap["step.atom_code"] = e.getAtomCode()
             }
-            val stepId = e.stepId ?: return@forEach
+            val stepId = if (e.stepId.isNullOrBlank()) return@forEach else e.stepId!!
             // current job
             if (c.id?.let { it == containerId } == true) {
                 contextMap["steps.$stepId.name"] = e.name
-                contextMap["steps.$stepId.id"] = e.id ?: ""
-                contextMap["steps.$stepId.status"] = getStepStatus(e)
-                contextMap["steps.$stepId.outcome"] = e.status ?: ""
+                e.id?.let { contextMap["steps.$stepId.id"] = it }
+                getStepStatus(e)?.let { contextMap["steps.$stepId.status"] = it }
+                e.status?.let { contextMap["steps.$stepId.outcome"] = it }
             }
-            val jobId = c.jobId ?: return@forEach
+            val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
             contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
-            contextMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
-            contextMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
-            contextMap["jobs.$jobId.steps.$stepId.outcome"] = e.status ?: ""
+            e.id?.let { contextMap["jobs.$jobId.steps.$stepId.id"] = it }
+            getStepStatus(e)?.let { contextMap["jobs.$jobId.steps.$stepId.status"] = it }
+            e.status?.let { contextMap["jobs.$jobId.steps.$stepId.outcome"] = it }
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
                     jobPrefix = "jobs.$jobId.",
@@ -361,7 +361,7 @@ class PipelineContextService @Autowired constructor(
         else -> null
     }
 
-    private fun getJobStatus(c: Container): String {
+    private fun getJobStatus(c: Container): String? {
         return if (c is VMBuildContainer && c.status == BuildStatus.FAILED.name) {
             if (c.jobControlOption?.continueWhenFailed == true) {
                 BuildStatus.SUCCEED.name
@@ -375,11 +375,11 @@ class PipelineContextService @Autowired constructor(
                 BuildStatus.FAILED.name
             }
         } else {
-            c.status ?: ""
+            c.status
         }
     }
 
-    private fun getStepStatus(e: Element): String {
+    private fun getStepStatus(e: Element): String? {
         return if (e.status == BuildStatus.FAILED.name) {
             if (ControlUtils.continueWhenFailure(e.additionalOptions)) {
                 BuildStatus.SUCCEED.name
@@ -387,7 +387,7 @@ class PipelineContextService @Autowired constructor(
                 BuildStatus.FAILED.name
             }
         } else {
-            e.status ?: ""
+            e.status
         }
     }
 }
