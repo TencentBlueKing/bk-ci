@@ -57,8 +57,6 @@ class SlaveGatewayService @Autowired constructor(
         } else {
             cache
         }
-        val name = MessageCodeUtil.getCodeLanMessage("SHENZHEN")
-        logger.info("default name is $name")
         gatewayList.forEach {
             if (it.gateway == gateway) {
                 return it.showName

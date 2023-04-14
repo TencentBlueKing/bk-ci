@@ -533,9 +533,7 @@ class EnvService @Autowired constructor(
                 ""
             }
             val nodeType = MessageCodeUtil.getCodeLanMessage("ENV_NODE_TYPE_${it.nodeType}")
-            val nodeStatus = MessageCodeUtil.getCodeLanMessage("NODE_STATUS_${it.nodeStatus}")
-            logger.info("nodeType = $nodeType")
-            logger.info("nodeStatus = $nodeStatus")
+            val nodeStatus = MessageCodeUtil.getCodeLanMessage("ENV_NODE_STATUS_${it.nodeStatus}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
