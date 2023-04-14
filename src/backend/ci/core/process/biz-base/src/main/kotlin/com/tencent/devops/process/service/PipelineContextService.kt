@@ -259,12 +259,11 @@ class PipelineContextService @Autowired constructor(
             failTaskNameList = failTaskNameList
         )
 
-        // #6071 如果当前job为矩阵则追加上下文
+        // #6071 如果当前job为矩阵则追加矩阵上下文
         if (c.id?.let { it == containerId } != true) return
         if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
-        val prefix = StringBuilder("jobs.$jobId.")
-        matrixGroupIndex?.let { prefix.append("$it.") }
         variables.forEach { (key, value) ->
+            val prefix = "jobs.$jobId."
             if (key.startsWith(prefix) && key.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
