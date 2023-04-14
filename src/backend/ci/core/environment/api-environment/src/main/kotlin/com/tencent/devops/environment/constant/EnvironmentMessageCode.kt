@@ -35,7 +35,7 @@ package com.tencent.devops.environment.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  * @since: 2019-03-05
@@ -83,4 +83,9 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_SHARE_PROJECT_TYPE_ERROR = "2105037" // 环境管理：仅构建环境支持共享
     const val ERROR_NODE_NAME_INVALID_CHARACTER = "2105038" // 环境管理：环境名称包含非法字符@
     const val ERROR_NODE_NAME_OR_ID_INVALID = "2105039" // 环境管理：获取节点失败，请求节点hash id或别名有误
+    const val ERROR_PIPE_NOT_FOUND  = "2105039" // 环境管理：不存在该管道信息
+    const val ERROR_NOT_THIRD_PARTY_BUILD_MACHINE = "2105040" // 环境管理：这个节点不是第三方构建机
+    const val THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST = "2105041" // 第三方构建机环境不存在
+    const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
+    const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
 }
