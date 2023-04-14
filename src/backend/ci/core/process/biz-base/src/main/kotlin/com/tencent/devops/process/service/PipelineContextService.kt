@@ -240,20 +240,17 @@ class PipelineContextService @Autowired constructor(
 
         // other job
         val jobId = if (c.jobId.isNullOrBlank()) return else c.jobId!!
-        val jobPrefix = StringBuilder("jobs.$jobId.")
-        matrixGroupIndex?.let { jobPrefix.append("$it.") }
-        contextMap["$jobPrefix.id"] = jobId
-        contextMap["$jobPrefix.name"] = c.name
-        contextMap["$jobPrefix.status"] = getJobStatus(c)
-        contextMap["$jobPrefix.outcome"] = c.status ?: ""
-        contextMap["$jobPrefix.container.network"] = getNetWork(c) ?: ""
-        contextMap["$jobPrefix.stage_id"] = stage.id ?: ""
-        contextMap["$jobPrefix.stage_name"] = stage.name ?: ""
+        contextMap["jobs.$jobId.id"] = jobId
+        contextMap["jobs.$jobId.name"] = c.name
+        contextMap["jobs.$jobId.status"] = getJobStatus(c)
+        contextMap["jobs.$jobId.outcome"] = c.status ?: ""
+        contextMap["jobs.$jobId.container.network"] = getNetWork(c) ?: ""
+        contextMap["jobs.$jobId.stage_id"] = stage.id ?: ""
+        contextMap["jobs.$jobId.stage_name"] = stage.name ?: ""
 
         // all element
         buildStepContext(
             c = c,
-            jobPrefix = jobPrefix.toString(),
             containerId = containerId,
             taskId = taskId,
             variables = variables,
@@ -266,15 +263,16 @@ class PipelineContextService @Autowired constructor(
         if (c.id?.let { it == containerId } != true) return
         if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         variables.forEach { (key, value) ->
-            if (key.startsWith(jobPrefix) && key.contains(".outputs.")) {
-                contextMap[key.removePrefix(jobPrefix)] = value
+            val prefix = StringBuilder("jobs.$jobId.")
+            matrixGroupIndex?.let { prefix.append("$it.") }
+            if (key.startsWith(prefix) && key.contains(".outputs.")) {
+                contextMap[key.removePrefix(prefix)] = value
             }
         }
     }
 
     private fun buildStepContext(
         c: Container,
-        jobPrefix: String,
         containerId: String?,
         taskId: String?,
         variables: Map<String, String>,
@@ -295,25 +293,22 @@ class PipelineContextService @Autowired constructor(
             }
             val stepId = e.stepId ?: return@forEach
             // current job
-            var currentJob = false
             if (c.id?.let { it == containerId } == true) {
                 contextMap["steps.$stepId.name"] = e.name
                 contextMap["steps.$stepId.id"] = e.id ?: ""
                 contextMap["steps.$stepId.status"] = getStepStatus(e)
                 contextMap["steps.$stepId.outcome"] = e.status ?: ""
-                currentJob = true
             }
-            contextMap["$jobPrefix.steps.$stepId.name"] = e.name
-            contextMap["$jobPrefix.steps.$stepId.id"] = e.id ?: ""
-            contextMap["$jobPrefix.steps.$stepId.status"] = getStepStatus(e)
-            contextMap["$jobPrefix.steps.$stepId.outcome"] = e.status ?: ""
+            val jobId = c.jobId ?: return@forEach
+            contextMap["jobs.$jobId.steps.$stepId.name"] = e.name
+            contextMap["jobs.$jobId.steps.$stepId.id"] = e.id ?: ""
+            contextMap["jobs.$jobId.steps.$stepId.status"] = getStepStatus(e)
+            contextMap["jobs.$jobId.steps.$stepId.outcome"] = e.status ?: ""
             outputArrayMap?.let { self ->
                 fillStepOutputArray(
-                    jobPrefix = jobPrefix,
+                    jobPrefix = "jobs.$jobId.",
                     stepPrefix = "steps.$stepId.outputs.",
                     variables = variables,
-                    contextMap = contextMap,
-                    currentJob = currentJob,
                     outputArrayMap = self
                 )
             }
@@ -337,8 +332,6 @@ class PipelineContextService @Autowired constructor(
         jobPrefix: String,
         stepPrefix: String,
         variables: Map<String, String>,
-        contextMap: MutableMap<String, String>,
-        currentJob: Boolean,
         outputArrayMap: MutableMap<String, MutableList<String>>
     ) {
         val outputPrefix = "$jobPrefix$stepPrefix"
@@ -348,7 +341,6 @@ class PipelineContextService @Autowired constructor(
                 val outputArray = outputArrayMap[stepKey] ?: mutableListOf()
                 outputArray.add(value)
                 outputArrayMap[stepKey] = outputArray
-                if (currentJob) contextMap[stepKey] = value
             }
         }
     }
