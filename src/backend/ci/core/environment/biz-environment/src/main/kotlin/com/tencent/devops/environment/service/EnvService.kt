@@ -536,7 +536,7 @@ class EnvService @Autowired constructor(
             } else {
                 ""
             }
-            val nodeType = MessageCodeUtil.getCodeLanMessage(it.nodeType)
+            val nodeType = MessageCodeUtil.getCodeLanMessage(  it.nodeType)
 
             val nodeStatus = MessageCodeUtil.getCodeLanMessage(it.nodeStatus)
 
