@@ -44,7 +44,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
-import com.tencent.devops.notify.BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
