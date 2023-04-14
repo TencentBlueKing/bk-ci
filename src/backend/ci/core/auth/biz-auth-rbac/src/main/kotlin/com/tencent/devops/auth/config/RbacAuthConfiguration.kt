@@ -281,7 +281,10 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         tokenApi: AuthTokenApi,
-        projectAuthServiceCode: ProjectAuthServiceCode
+        projectAuthServiceCode: ProjectAuthServiceCode,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authMigrationDao: AuthMigrationDao
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
@@ -289,7 +292,10 @@ class RbacAuthConfiguration {
         authResourceService = authResourceService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         tokenApi = tokenApi,
-        projectAuthServiceCode = projectAuthServiceCode
+        projectAuthServiceCode = projectAuthServiceCode,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        authMigrationDao = authMigrationDao
     )
 
     @Bean
@@ -302,7 +308,8 @@ class RbacAuthConfiguration {
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
-        rbacCacheService: RbacCacheService
+        rbacCacheService: RbacCacheService,
+        authMigrationDao: AuthMigrationDao,
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -312,7 +319,8 @@ class RbacAuthConfiguration {
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
-        rbacCacheService = rbacCacheService
+        rbacCacheService = rbacCacheService,
+        authMigrationDao = authMigrationDao
     )
 
     @Bean

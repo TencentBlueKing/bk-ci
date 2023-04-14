@@ -37,7 +37,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 class AuthResourceDao {
 
     fun create(
@@ -256,6 +256,20 @@ class AuthResourceDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetch(0, String::class.java)
+        }
+    }
+
+    fun countResourceByType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String
+    ): Int {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

@@ -36,6 +36,9 @@ import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
@@ -44,6 +47,9 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,8 +64,13 @@ class MigrateResourceService @Autowired constructor(
     private val authResourceService: AuthResourceService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val tokenApi: AuthTokenApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val dslContext: DSLContext,
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val authMigrationDao: AuthMigrationDao
 ) {
+
+    @Suppress("SpreadOperator")
     fun migrateResource(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
@@ -70,16 +81,33 @@ class MigrateResourceService @Autowired constructor(
 
         logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
         // 迁移各个资源类型下的资源
-        resourceTypes.forEach { resourceType ->
-            resourceCreateRelation(
-                resourceType = resourceType, projectCode = projectCode
+        val resourceTypeFuture = resourceTypes.map { resourceType ->
+            CompletableFuture.supplyAsync(
+                { migrateResource(projectCode = projectCode, resourceType = resourceType) },
+                executorService
             )
         }
+        CompletableFuture.allOf(*resourceTypeFuture.toTypedArray()).join()
         logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
     }
 
+    private fun migrateResource(projectCode: String, resourceType: String) {
+        val startEpoch = System.currentTimeMillis()
+        logger.info("start to migrate resource|$projectCode|$resourceType")
+        try {
+            createRbacResource(
+                resourceType = resourceType, projectCode = projectCode
+            )
+            calculateResourceCount(projectCode, resourceType)
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource|$projectCode|$resourceType"
+            )
+        }
+    }
+
     @SuppressWarnings("MagicNumber")
-    private fun resourceCreateRelation(resourceType: String, projectCode: String) {
+    private fun createRbacResource(resourceType: String, projectCode: String) {
         var offset = 0L
         val limit = 100L
         do {
@@ -173,6 +201,30 @@ class MigrateResourceService @Autowired constructor(
         ) as FetchInstanceInfoResponseDTO?
     }
 
+    private fun calculateResourceCount(projectCode: String, resourceType: String) {
+        val count = authResourceService.countByProjectAndType(
+            projectCode = projectCode,
+            resourceType = resourceType
+        )
+        val groupCount = authResourceGroupDao.countByResourceType(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType
+        )
+        authMigrationDao.updateResourceCount(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceCountInfo = JsonUtil.toJson(
+                ResourceMigrationCountDTO(
+                    resourceType = resourceType,
+                    count = count,
+                    groupCount = groupCount
+                ),
+                false
+            )
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
         private val noNeedToMigrateResourceType = listOf(
@@ -183,5 +235,6 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.TURBO.value,
             AuthResourceType.PROJECT.value
         )
+        private val executorService = Executors.newFixedThreadPool(10)
     }
 }
