@@ -46,8 +46,16 @@ import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.StringBuilder
 
-@Suppress("ComplexMethod", "TooManyFunctions", "NestedBlockDepth", "LongParameterList", "ReturnCount")
+@Suppress(
+    "ComplexMethod",
+    "TooManyFunctions",
+    "NestedBlockDepth",
+    "LongParameterList",
+    "ReturnCount",
+    "LongMethod"
+)
 @Service
 class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
@@ -113,7 +121,7 @@ class PipelineContextService @Autowired constructor(
                         contextMap = contextMap,
                         variables = variables,
                         outputArrayMap = null,
-                        groupIndex = 0,
+                        groupIndex = null,
                         failTaskNameList = failTaskNameList
                     )
                 }
@@ -215,7 +223,7 @@ class PipelineContextService @Autowired constructor(
         contextMap: MutableMap<String, String>,
         variables: Map<String, String>,
         outputArrayMap: MutableMap<String, MutableList<String>>?,
-        groupIndex: Int,
+        groupIndex: Int?,
         failTaskNameList: MutableList<String>
     ) {
         // current job
@@ -227,7 +235,7 @@ class PipelineContextService @Autowired constructor(
             contextMap["job.container.network"] = getNetWork(c) ?: ""
             contextMap["job.stage_id"] = stage.id ?: ""
             contextMap["job.stage_name"] = stage.name ?: ""
-            contextMap["job.index"] = groupIndex.toString()
+            groupIndex?.let { contextMap["job.index"] = it.toString() }
         }
 
         // other job
@@ -251,11 +259,12 @@ class PipelineContextService @Autowired constructor(
             failTaskNameList = failTaskNameList
         )
 
-        // #6071 如果当前job为矩阵则追加矩阵上下文
+        // #6071 如果当前job为矩阵则追加上下文
         if (c.id?.let { it == containerId } != true) return
         if (outputArrayMap != null) c.fetchMatrixContext()?.let { contextMap.putAll(it) }
         variables.forEach { (key, value) ->
-            val prefix = "jobs.${c.jobId ?: containerId}."
+            val prefix = StringBuilder("jobs.${c.jobId ?: containerId}.")
+            groupIndex?.let { prefix.append(".$it") }
             if (key.startsWith(prefix) && key.contains(".outputs.")) {
                 contextMap[key.removePrefix(prefix)] = value
             }
