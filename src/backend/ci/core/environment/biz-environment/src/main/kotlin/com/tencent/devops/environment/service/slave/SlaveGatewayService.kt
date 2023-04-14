@@ -52,23 +52,17 @@ class SlaveGatewayService @Autowired constructor(
     private var lastUpdate: Long = 0
 
     fun getShowName(gateway: String): String {
-        logger.info("gateway = $gateway")
-        logger.info("cache = $cache")
         val gatewayList = if (cache.isEmpty()) {
             getGateway()
         } else {
             cache
         }
         gatewayList.forEach {
-            logger.info("it.gateway = ${it.gateway}")
             if (it.gateway == gateway) {
-                logger.info("it.showName = ${it.showName}")
-                logger.info("it.zoneName = ${it.zoneName}")
-                return MessageCodeUtil.getCodeLanMessage(messageCode = it.zoneName.toUpperCase())
+                return it.showName
             }
         }
-        logger.info("defaultGateway 深圳")
-        return "深圳"
+        return MessageCodeUtil.getCodeLanMessage("SHENZHEN")
     }
 
     fun getFileGateway(zoneName: String?): String? {

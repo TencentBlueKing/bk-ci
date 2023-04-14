@@ -525,21 +525,15 @@ class EnvService @Autowired constructor(
 
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
-        logger.info("thirdPartyAgentMap = $thirdPartyAgentMap")
         return nodeList.map {
-            logger.info("Node type: ${it.nodeType}")
-            logger.info("Node nodeStatus: ${it.nodeStatus}")
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
-                logger.info("thirdPartyAgent.gateway = ${thirdPartyAgent.gateway}")
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
             } else {
                 ""
             }
-            val nodeType = MessageCodeUtil.getCodeLanMessage(  it.nodeType)
-
-            val nodeStatus = MessageCodeUtil.getCodeLanMessage(it.nodeStatus)
-
+            val nodeType = MessageCodeUtil.getCodeLanMessage("NODE_TYPE_${it.nodeType}")
+            val nodeStatus = MessageCodeUtil.getCodeLanMessage("NODE_STATUS_${it.nodeStatus}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
