@@ -17,4 +17,17 @@ class AuthVerifyRecordService @Autowired constructor(
             verifyRecordDTO = verifyRecordDTO
         )
     }
+
+    fun listByProjectCode(
+        projectCode: String,
+        offset: Int,
+        limit: Int
+    ): List<VerifyRecordDTO> {
+        return authVerifyRecordDao.list(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            offset = offset,
+            limit = limit
+        ).map { authVerifyRecordDao.convert(it) }
+    }
 }
