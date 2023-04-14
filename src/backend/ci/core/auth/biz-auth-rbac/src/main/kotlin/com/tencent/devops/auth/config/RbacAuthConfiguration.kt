@@ -44,6 +44,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -310,6 +311,7 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
         authMigrationDao: AuthMigrationDao,
+        authVerifyRecordService: AuthVerifyRecordService
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
@@ -320,7 +322,8 @@ class RbacAuthConfiguration {
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
-        authMigrationDao = authMigrationDao
+        authMigrationDao = authMigrationDao,
+        authVerifyRecordService = authVerifyRecordService
     )
 
     @Bean
