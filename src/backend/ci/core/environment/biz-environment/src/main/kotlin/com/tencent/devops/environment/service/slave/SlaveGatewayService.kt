@@ -64,7 +64,7 @@ class SlaveGatewayService @Autowired constructor(
             if (it.gateway == gateway) {
                 logger.info("it.showName = ${it.showName}")
                 logger.info("it.zoneName = ${it.zoneName}")
-                return MessageCodeUtil.getCodeLanMessage(messageCode = it.zoneName)
+                return MessageCodeUtil.getCodeLanMessage(messageCode = it.zoneName.toUpperCase())
             }
         }
         logger.info("defaultGateway","深圳")
