@@ -58,7 +58,7 @@ import org.springframework.beans.factory.annotation.Autowired
 /**
  * 将资源迁移到权限中心
  */
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "MagicNumber")
 class MigrateResourceService @Autowired constructor(
     private val resourceService: ResourceService,
     private val rbacCacheService: RbacCacheService,
@@ -112,7 +112,6 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    @SuppressWarnings("MagicNumber")
     private fun createRbacResource(resourceType: String, projectCode: String) {
         var offset = 0L
         val limit = 100L

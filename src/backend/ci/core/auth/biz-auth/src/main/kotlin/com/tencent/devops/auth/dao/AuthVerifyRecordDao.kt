@@ -50,8 +50,8 @@ class AuthVerifyRecordDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .orderBy(LAST_VERIFY_TIME.desc())
-                .limit(limit)
                 .offset(offset)
+                .limit(limit)
                 .fetch()
         }
     }
