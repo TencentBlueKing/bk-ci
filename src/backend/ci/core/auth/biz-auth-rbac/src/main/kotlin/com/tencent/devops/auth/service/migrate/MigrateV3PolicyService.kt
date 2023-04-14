@@ -50,6 +50,7 @@ import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResp
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.pojo.migrate.MigrateTaskResp
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -88,7 +89,8 @@ class MigrateV3PolicyService constructor(
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
-    private val rbacCacheService: RbacCacheService
+    private val rbacCacheService: RbacCacheService,
+    private val authVerifyRecordService: AuthVerifyRecordService
 ) {
 
     companion object {
@@ -209,7 +211,35 @@ class MigrateV3PolicyService constructor(
     }
 
     fun comparePolicy(projectCode: String): Boolean {
-        return true
+        var migrateVerifyResult = true
+        var offset = 0
+        val limit = 100
+        do {
+            val verifyRecordList = authVerifyRecordService.listByProjectCode(
+                projectCode = projectCode,
+                offset = offset,
+                limit = limit
+            )
+            verifyRecordList.forEach {
+                with(it) {
+                    val v3VerifyResult = verifyResult
+                    val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
+                        userId = userId,
+                        action = action,
+                        projectCode = projectId,
+                        resourceCode = resourceCode,
+                        resourceType = resourceType,
+                        relationResourceType = null
+                    )
+                    if (v3VerifyResult != rbacVerifyResult) {
+                        migrateVerifyResult = false
+                        logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                    }
+                }
+            }
+            offset += limit
+        } while (verifyRecordList.size == limit)
+        return migrateVerifyResult
     }
 
     /**
