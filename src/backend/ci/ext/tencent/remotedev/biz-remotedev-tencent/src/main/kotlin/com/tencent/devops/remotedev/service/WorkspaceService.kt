@@ -1740,7 +1740,7 @@ class WorkspaceService @Autowired constructor(
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
             return false
         }
-        val url = "https://$hostName/_remoting/api/token/updateBkTicket"
+        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
         val params = mutableMapOf<String, Any?>()
         params["ticket"] = bkTicket
         params["user"] = userId
