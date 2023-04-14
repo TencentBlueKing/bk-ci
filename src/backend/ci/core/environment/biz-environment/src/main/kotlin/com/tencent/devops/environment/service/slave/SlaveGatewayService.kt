@@ -67,7 +67,7 @@ class SlaveGatewayService @Autowired constructor(
                 return MessageCodeUtil.getCodeLanMessage(messageCode = it.zoneName.toUpperCase())
             }
         }
-        logger.info("defaultGateway","深圳")
+        logger.info("defaultGateway 深圳")
         return "深圳"
     }
 

@@ -525,7 +525,7 @@ class EnvService @Autowired constructor(
 
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, nodeIds, projectId).associateBy { it.nodeId }
-        logger.info("thirdPartyAgentMap = ${thirdPartyAgentMap}")
+        logger.info("thirdPartyAgentMap = $thirdPartyAgentMap")
         return nodeList.map {
             logger.info("Node type: ${it.nodeType}")
             logger.info("Node nodeStatus: ${it.nodeStatus}")
