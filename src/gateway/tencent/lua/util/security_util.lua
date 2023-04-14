@@ -29,7 +29,7 @@ function _M:isSafe()
 
     -- external location 可以忽略
     local external_location = ngx.var.external_location
-    if external_location ~= nil then
+    if external_location == "1" then
         return true
     end
 
