@@ -1124,9 +1124,7 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(requestBody.toRequestBody(JSON_MEDIA_
-
-                                                TYPE))
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
             .build()
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
