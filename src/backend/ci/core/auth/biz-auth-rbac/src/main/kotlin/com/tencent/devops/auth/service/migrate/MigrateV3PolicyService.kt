@@ -43,6 +43,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.devops.auth.common.Constants
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -56,12 +57,16 @@ import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -144,117 +149,130 @@ class MigrateV3PolicyService constructor(
 
     fun migrateGroupPolicy(projectCode: String, projectName: String, gradeManagerId: Int) {
         loopTaskStatus(projectCode = projectCode)
-        val managerGroupId = authResourceGroupDao.get(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            groupCode = DefaultGroupType.MANAGER.value
-        )?.relationId?.toInt() ?: throw ErrorCodeException(
-            errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(DefaultGroupType.MANAGER.value)
-        )
-        // 蓝盾创建的默认用户组权限
-        val groupApiPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_API_POLICY)
-        migrateGroup(
-            projectCode = projectCode,
-            projectName = projectName,
-            gradeManagerId = gradeManagerId,
-            managerGroupId = managerGroupId,
-            results = groupApiPolicyResult
-        )
-        // 用户在权限中心创建的用户组权限
-        val groupWebPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_WEB_POLICY)
-        migrateGroup(
-            projectCode = projectCode,
-            projectName = projectName,
-            gradeManagerId = gradeManagerId,
-            managerGroupId = managerGroupId,
-            results = groupWebPolicyResult
-        )
-        val beforeGroupCount = groupApiPolicyResult.size + groupWebPolicyResult.size
-        val afterGroupCount = authResourceGroupDao.countByResourceCode(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
-        authMigrationDao.updateGroupCount(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            beforeGroupCount = beforeGroupCount,
-            afterGroupCount = afterGroupCount
-        )
+        logger.info("start to migrate group policy")
+        val watcher = Watcher("migrateGroupPolicy|$projectCode")
+        try {
+            val managerGroupId = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = DefaultGroupType.MANAGER.value
+            )?.relationId?.toInt() ?: throw ErrorCodeException(
+                errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
+                params = arrayOf(DefaultGroupType.MANAGER.value)
+            )
+            // 蓝盾创建的默认用户组权限
+            watcher.start("group_api_policy")
+            val groupApiPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_API_POLICY)
+            migrateGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                gradeManagerId = gradeManagerId,
+                managerGroupId = managerGroupId,
+                results = groupApiPolicyResult
+            )
+            // 用户在权限中心创建的用户组权限
+            watcher.start("group_web_policy")
+            val groupWebPolicyResult = getPolicyData(projectCode = projectCode, type = GROUP_WEB_POLICY)
+            migrateGroup(
+                projectCode = projectCode,
+                projectName = projectName,
+                gradeManagerId = gradeManagerId,
+                managerGroupId = managerGroupId,
+                results = groupWebPolicyResult
+            )
+            watcher.start("calculateGroupCount")
+            val beforeGroupCount = groupApiPolicyResult.size + groupWebPolicyResult.size
+            calculateGroupCount(projectCode, beforeGroupCount)
+        } finally {
+            logger.info("migrate group policy|${watcher.prettyPrint()}")
+        }
     }
 
     fun migrateUserCustomPolicy(projectCode: String) {
-        logger.info("migrate $projectCode user custom policy")
-        val userCustomPolicy = getPolicyData(projectCode = projectCode, type = USER_CUSTOM_POLICY)
-        val managerGroupId = authResourceGroupDao.get(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            groupCode = DefaultGroupType.MANAGER.value
-        )?.relationId?.toInt() ?: throw ErrorCodeException(
-            errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
-            params = arrayOf(DefaultGroupType.MANAGER.value)
-        )
-        userCustomPolicy.forEach { result ->
-            logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
-            val userId = result.subject.id
-            result.permissions.forEach permission@{ permission ->
-                val groupId = findMatchResourceGroup(
-                    userId = userId,
-                    projectCode = projectCode,
-                    managerGroupId = managerGroupId,
-                    permission = permission
-                )
-                if (groupId != null) {
-                    val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
-                    val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-                        .members(listOf(managerMember))
-                        .expiredAt(
-                            System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(
-                                DEFAULT_EXPIRED_DAY
-                            )
-                        ).build()
-                    v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+        logger.info("start to migrate $projectCode user custom policy")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val managerGroupId = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = DefaultGroupType.MANAGER.value
+            )?.relationId?.toInt() ?: throw ErrorCodeException(
+                errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
+                params = arrayOf(DefaultGroupType.MANAGER.value)
+            )
+            val userCustomPolicy = getPolicyData(projectCode = projectCode, type = USER_CUSTOM_POLICY)
+            userCustomPolicy.forEach { result ->
+                logger.info("migrate user custom policy|${result.projectId}|${result.subject.id}")
+                val userId = result.subject.id
+                result.permissions.forEach permission@{ permission ->
+                    val groupId = findMatchResourceGroup(
+                        userId = userId,
+                        projectCode = projectCode,
+                        managerGroupId = managerGroupId,
+                        permission = permission
+                    )
+                    if (groupId != null) {
+                        val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
+                        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
+                            .members(listOf(managerMember))
+                            .expiredAt(
+                                System.currentTimeMillis() / MILLISECOND + TimeUnit.DAYS.toSeconds(
+                                    DEFAULT_EXPIRED_DAY
+                                )
+                            ).build()
+                        v2ManagerService.createRoleGroupMemberV2(groupId, managerMemberGroupDTO)
+                    }
                 }
             }
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to migrate user custom policy $projectCode"
+            )
         }
     }
 
     fun comparePolicy(projectCode: String): Boolean {
-        var migrateVerifyResult = true
-        var offset = 0
-        val limit = 100
-        do {
-            val verifyRecordList = authVerifyRecordService.listByProjectCode(
-                projectCode = projectCode,
-                offset = offset,
-                limit = limit
-            )
-            verifyRecordList.forEach {
-                with(it) {
-                    val v0OrV3VerifyResult = verifyResult
-                    val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
-                        userId = userId,
-                        action = action,
-                        projectCode = projectId,
-                        resourceCode = resourceCode,
-                        resourceType = resourceType,
-                        relationResourceType = null
-                    )
-                    if (v0OrV3VerifyResult != rbacVerifyResult) {
-                        migrateVerifyResult = false
-                        logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+        logger.info("start to compare policy|$projectCode")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            var migrateVerifyResult = true
+            var offset = 0
+            val limit = 100
+            do {
+                val verifyRecordList = authVerifyRecordService.listByProjectCode(
+                    projectCode = projectCode,
+                    offset = offset,
+                    limit = limit
+                )
+                verifyRecordList.forEach {
+                    with(it) {
+                        val v0OrV3VerifyResult = verifyResult
+                        val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
+                            userId = userId,
+                            action = action,
+                            projectCode = projectId,
+                            resourceCode = resourceCode,
+                            resourceType = resourceType,
+                            relationResourceType = null
+                        )
+                        if (v0OrV3VerifyResult != rbacVerifyResult) {
+                            migrateVerifyResult = false
+                            logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                        }
                     }
                 }
-            }
-            offset += limit
-        } while (verifyRecordList.size == limit)
-        return migrateVerifyResult
+                offset += limit
+            } while (verifyRecordList.size == limit)
+            return migrateVerifyResult
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to compare policy|$projectCode"
+            )
+        }
     }
 
     /**
@@ -362,8 +380,16 @@ class MigrateV3PolicyService constructor(
         projectCode: String,
         projectName: String
     ): Int {
-        val managerRoleGroup = ManagerRoleGroup()
-        managerRoleGroup.name = groupName
+        val managerRoleGroup = ManagerRoleGroup().apply {
+            name = groupName
+            description = MessageCodeUtil.getCodeMessage(
+                messageCode = AuthMessageCode.MIGRATION_GROUP_DESCRIPTION,
+                params = arrayOf(
+                    groupName,
+                    DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
+                )
+            )
+        }
         val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
         val groupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
         val groupConfig = authResourceGroupConfigDao.getByName(
@@ -619,5 +645,20 @@ class MigrateV3PolicyService constructor(
             logger.info("user has resource action permission|$userId|$resourceCode|$userActions")
         }
         return null
+    }
+
+    private fun calculateGroupCount(projectCode: String, beforeGroupCount: Int) {
+        val afterGroupCount = authResourceGroupDao.countByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
+        authMigrationDao.updateGroupCount(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            beforeGroupCount = beforeGroupCount,
+            afterGroupCount = afterGroupCount
+        )
     }
 }

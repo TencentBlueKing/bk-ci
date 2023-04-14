@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
@@ -87,6 +88,7 @@ class RbacPermissionMigrateService constructor(
     fun v3ToRbacAuth(projectCode: String): Boolean {
         logger.info("Start migrate $projectCode from v3 to rbac")
         val startEpoch = System.currentTimeMillis()
+        val watcher = Watcher("v3ToRbacAuth|$projectCode")
         try {
             val authMigrationInfo = authMigrationDao.get(
                 dslContext = dslContext,
@@ -115,6 +117,7 @@ class RbacPermissionMigrateService constructor(
             }
 
             // 创建分级管理员
+            watcher.start("createGradeManager")
             val gradeManagerId = authResourceService.getOrNull(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -126,20 +129,24 @@ class RbacPermissionMigrateService constructor(
                 return false
             }
             // 迁移资源
+            watcher.start("migrateResource")
             migrateResourceService.migrateResource(
                 projectCode = projectCode
             )
             // 迁移v3用户组
+            watcher.start("migrateGroupPolicy")
             migrateV3PolicyService.migrateGroupPolicy(
                 projectCode = projectCode,
                 projectName = projectInfo.projectName,
                 gradeManagerId = gradeManagerId
             )
             // 迁移用户自定义权限
+            watcher.start("migrateUserCustomPolicy")
             migrateV3PolicyService.migrateUserCustomPolicy(
                 projectCode = projectCode
             )
             // 对比迁移结果
+            watcher.start("comparePolicy")
             val compareResult = migrateV3PolicyService.comparePolicy(projectCode = projectCode)
             if (!compareResult) {
                 logger.warn("Failed to compare $projectCode policy")
@@ -169,7 +176,7 @@ class RbacPermissionMigrateService constructor(
             )
             return false
         } finally {
-            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate $projectCode")
+            logger.info("watcher migrate $projectCode|${watcher.prettyPrint()}")
         }
     }
 
