@@ -222,7 +222,7 @@ class MigrateV3PolicyService constructor(
                         permission = permission
                     )
                     if (groupId != null) {
-                        val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
+                        val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
                         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
                             .members(listOf(managerMember))
                             .expiredAt(
