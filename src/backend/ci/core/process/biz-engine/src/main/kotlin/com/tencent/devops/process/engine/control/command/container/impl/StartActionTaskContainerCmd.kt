@@ -164,20 +164,6 @@ class StartActionTaskContainerCmd(
      */
     @Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod")
     private fun findTask(containerContext: ContainerContext): PipelineBuildTask? {
-        val contextMap: Map<String, String> by lazy {
-            // 传统的变量也要支持，遗漏补充
-            containerContext.variables.plus(
-                pipelineContextService.buildContext(
-                    projectId = containerContext.container.projectId,
-                    pipelineId = containerContext.container.pipelineId,
-                    buildId = containerContext.container.buildId,
-                    stageId = containerContext.container.stageId,
-                    containerId = containerContext.container.containerId,
-                    taskId = null,
-                    variables = containerContext.variables
-                )
-            )
-        }
         val fastKill = FastKillUtils.isFastKillCode(containerContext.event.errorCode)
         var toDoTask: PipelineBuildTask? = null
         var continueWhenFailure = false // 失败继续
@@ -217,7 +203,17 @@ class StartActionTaskContainerCmd(
                     hasFailedTaskInSuccessContainer = continueWhenFailure,
                     containerContext = containerContext,
                     needTerminate = needTerminate,
-                    contextMap = contextMap
+                    contextMap = containerContext.variables.plus(
+                        pipelineContextService.buildContext(
+                            projectId = containerContext.container.projectId,
+                            pipelineId = containerContext.container.pipelineId,
+                            buildId = containerContext.container.buildId,
+                            stageId = containerContext.container.stageId,
+                            containerId = containerContext.container.containerId,
+                            taskId = t.taskId,
+                            variables = containerContext.variables
+                        )
+                    )
                 )
             } else if (t.status == BuildStatus.SKIP && t.endTime == null) { // 手动跳过功能，暂时没有好的解决办法，可改进
                 buildLogPrinter.addRedLine(
