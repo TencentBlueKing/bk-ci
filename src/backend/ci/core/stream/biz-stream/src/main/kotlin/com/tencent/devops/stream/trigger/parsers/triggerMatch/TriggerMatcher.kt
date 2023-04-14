@@ -177,7 +177,7 @@ class TriggerMatcher @Autowired constructor(
         repoHooks: List<Any>? = null
     ): List<String> {
         logger.info("checkRepoHook|repoHook=$repoHooks")
-        if (repoHooks == null) {
+        if (repoHooks == null || action.data.eventCommon.branch != action.data.context.defaultBranch) {
             return emptyList()
         }
         val repositoryHookList = try {

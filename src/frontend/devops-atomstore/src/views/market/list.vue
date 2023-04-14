@@ -233,6 +233,7 @@
             position: absolute;
             top: 16px;
             right: 0;
+            z-index: 999;
             background: $white;
             border: 1px solid $borderWeightColor;
             border-radius: 2px;

@@ -49,6 +49,7 @@ data class GitCommitCheckEvent(
     val triggerType: String = "",
     val startTime: Long = 0L,
     val mergeRequestId: Long? = null,
+    val targetBranch: String?,
     override var actionType: ActionType = ActionType.REFRESH,
     override val source: String,
     override val userId: String,

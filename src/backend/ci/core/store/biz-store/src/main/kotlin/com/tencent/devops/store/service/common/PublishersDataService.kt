@@ -53,17 +53,12 @@ interface PublishersDataService {
     /**
      * 创建平台信息记录
      */
-    fun createPlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
+    fun savePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
 
     /**
      * 删除平台信息记录
      */
     fun deletePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
-
-    /**
-     * 更新平台信息记录
-     */
-    fun updatePlatformsData(userId: String, storeDockingPlatformRequests: List<StoreDockingPlatformRequest>): Int
 
     /**
      * 获取发布者信息

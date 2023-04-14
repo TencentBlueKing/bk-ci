@@ -208,14 +208,16 @@ open class GitApi {
         detailUrl: String,
         context: String,
         description: String,
-        block: Boolean
+        block: Boolean,
+        targetBranch: List<String>?
     ) {
         val params = mapOf(
             "state" to state,
             "target_url" to detailUrl,
             "description" to description,
             "context" to context,
-            "block" to block
+            "block" to block,
+            "target_branches" to targetBranch
         )
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
