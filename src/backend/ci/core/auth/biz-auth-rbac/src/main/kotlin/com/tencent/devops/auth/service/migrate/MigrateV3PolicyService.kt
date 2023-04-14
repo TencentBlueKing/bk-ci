@@ -80,7 +80,7 @@ import org.springframework.beans.factory.annotation.Value
  * 2. 用户在权限中心创建的用户组权限
  * 3. 用户自定义权限
  */
-@Suppress("LongParameterList", "TooManyFunctions")
+@Suppress("LongParameterList", "TooManyFunctions", "MagicNumber", "NestedBlockDepth")
 class MigrateV3PolicyService constructor(
     private val v2ManagerService: V2ManagerServiceImpl,
     private val iamConfiguration: IamConfiguration,
@@ -237,7 +237,7 @@ class MigrateV3PolicyService constructor(
             )
             verifyRecordList.forEach {
                 with(it) {
-                    val v3VerifyResult = verifyResult
+                    val v0OrV3VerifyResult = verifyResult
                     val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
                         userId = userId,
                         action = action,
@@ -246,7 +246,7 @@ class MigrateV3PolicyService constructor(
                         resourceType = resourceType,
                         relationResourceType = null
                     )
-                    if (v3VerifyResult != rbacVerifyResult) {
+                    if (v0OrV3VerifyResult != rbacVerifyResult) {
                         migrateVerifyResult = false
                         logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
                     }
