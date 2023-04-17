@@ -73,7 +73,7 @@ class ServiceItemService @Autowired constructor(
         try {
             getServiceList()
             logger.info("projectServiceMap: $projectServiceMap")
-        } catch (t: Throwable) {
+        } catch (t: Exception) {
             logger.warn("init ServiceList fail", t)
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.INIT_SERVICE_LIST_ERROR,
@@ -88,7 +88,7 @@ class ServiceItemService @Autowired constructor(
         val allItemMap = mutableMapOf<String, ServiceItem>()
         val itemList = mutableListOf<ExtItemDTO>()
         val parentIndexMap = mutableMapOf<String, MutableList<String>>()
-        allItemData.forEach { it ->
+        allItemData.forEach {
             allItemMap[it.id] = ServiceItem(
                 itemId = it.id,
                 itemCode = it.itemCode,
@@ -336,11 +336,6 @@ class ServiceItemService @Autowired constructor(
         if (itemRecord != null) {
             logger.warn("createItem itemCode is exist, itemCode[$itemCode]")
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
-        }
-        // 检验增加扩展点时，父服务是否存在
-        if (projectServiceMap[itemInfo.pid] == null && getProjectService(itemInfo.pid) == null) {
-            logger.warn("createItem :Parent service is not exist, service[${itemInfo.pid}]")
-            throw ErrorCodeException(errorCode = CommonMessageCode.SERVICE_NOT_EXIST, params = arrayOf(itemInfo.pid))
         }
         validArgs(itemInfo)
         val createInfo = ItemCreateInfo(
