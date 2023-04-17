@@ -83,7 +83,6 @@ class RbacPermissionMigrateService constructor(
         return true
     }
 
-
     @Suppress("LongMethod", "ReturnCount")
     fun v3ToRbacAuth(projectCode: String): Boolean {
         logger.info("Start migrate $projectCode from v3 to rbac")

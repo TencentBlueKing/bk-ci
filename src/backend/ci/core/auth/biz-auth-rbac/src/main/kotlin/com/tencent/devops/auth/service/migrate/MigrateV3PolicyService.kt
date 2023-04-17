@@ -134,7 +134,6 @@ class MigrateV3PolicyService constructor(
     // iam迁移的token
     @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
-
     @Value("\${auth.url:}")
     private val iamBaseUrl = ""
 
@@ -630,7 +629,6 @@ class MigrateV3PolicyService constructor(
             resourceCode = resourceCode,
             resourceType = resourceType
         ).filterNot { it.value }
-
         // 存在没有action的权限，匹配资源默认用户组权限
         if (notActionPermissionMap.isNotEmpty()) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->

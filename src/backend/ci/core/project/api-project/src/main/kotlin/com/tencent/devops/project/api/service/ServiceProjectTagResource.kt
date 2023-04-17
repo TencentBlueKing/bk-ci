@@ -63,7 +63,6 @@ interface ServiceProjectTagResource {
         projectId: String
     ): Result<Boolean>
 
-
     @PUT
     @Path("/{projectCode}/updateProjectRouteTag")
     @ApiOperation("更新项目tag")

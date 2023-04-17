@@ -153,7 +153,6 @@ class RbacCacheService constructor(
                             )
                         )
                     }
-
                 }
             groupConfigActionsCache.put(resourceType, groupConfigActions)
         }
