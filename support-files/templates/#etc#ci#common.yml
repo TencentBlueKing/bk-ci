@@ -277,7 +277,9 @@ esb:
 
 # codecc config
 codecc:
-  host: __BK_CODECC_PRIVATE_URL__  # 
+  host: __BK_CODECC_PRIVATE_URL__  #
+  gray:
+    projectId: __BK_CODECC_PRIVATE_PROJECT_ID__
 
 codeccGateway:
   gateway: __BK_CODECC_PRIVATE_URL__

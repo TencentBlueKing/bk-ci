@@ -13,7 +13,21 @@
             <header class="pipeline-list-main-header">
                 <div>
                     <bk-dropdown-menu trigger="click">
-                        <bk-button theme="primary" icon="plus" slot="dropdown-trigger">
+                        <bk-button
+                            v-perm="{
+                                hasPermission: hasCreatePermission,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: projectId,
+                                    action: RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary"
+                            icon="plus"
+                            slot="dropdown-trigger"
+                        >
                             {{$t('newlist.addPipeline')}}
                         </bk-button>
                         <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -23,10 +37,20 @@
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
+                        
                         <bk-button
+                            v-perm="{
+                                hasPermission: !canNotMangeProjectedGroup,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: projectId,
+                                    action: PROJECT_RESOURCE_ACTION.MANAGE
+                                }
+                            }"
                             v-if="pipelineGroupType"
                             @click="handleAddToGroup"
-                            :disabled="canNotMangeProjectedGroup"
                         >
                             {{$t('pipelineCountEdit')}}
                         </bk-button>
@@ -158,6 +182,11 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION,
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -191,7 +220,9 @@
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
-                }]
+                }],
+                RESOURCE_ACTION,
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {
@@ -200,6 +231,9 @@
                 'pipelineActionState',
                 'isManage'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
             },
@@ -398,11 +432,19 @@
             },
 
             toggleImportPipelinePopup () {
-                this.importPipelinePopupShow = !this.importPipelinePopupShow
+                if (!this.hasCreatePermission) {
+                    this.toggleCreatePermission()
+                } else {
+                    this.importPipelinePopupShow = !this.importPipelinePopupShow
+                }
             },
 
             toggleCreatePermission () {
-                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+                handlePipelineNoPermission({
+                    projectId: this.$route.params.projectId,
+                    resourceCode: this.$route.params.projectId,
+                    action: RESOURCE_ACTION.CREATE
+                })
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()
@@ -421,6 +463,11 @@
         align-items: center;
         > h5 {
             color: #313238;
+        }
+    }
+    .pipeline-list-main-header {
+        .bk-dropdown-menu {
+            top: -1px;
         }
     }
     .pipeline-sort-dropdown-menu {

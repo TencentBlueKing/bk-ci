@@ -21,7 +21,10 @@ import { mapActions, mapMutations, mapGetters } from 'vuex'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
-
+import {
+    RESOURCE_ACTION,
+    PROJECT_RESOURCE_ACTION
+} from '@/utils/permission'
 import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
@@ -42,7 +45,8 @@ export default {
     },
     computed: {
         ...mapGetters('pipelines', [
-            'groupMap'
+            'groupMap',
+            'isManage'
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
@@ -176,6 +180,18 @@ export default {
                 UNCLASSIFIED_PIPELINE_VIEW_ID,
                 RECENT_USED_VIEW_ID
             ].includes(this.$route.params.viewId)
+            const removedActionAuthMap = this.currentGroup?.projected
+                ? {
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
+                }
+                : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
@@ -184,12 +200,27 @@ export default {
                 },
                 {
                     text: this.$t('newlist.copyAs'),
-                    handler: this.copyAs
+                    handler: this.copyAs,
+                    hasPermission: pipeline.permissions.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.EDIT
+                    }
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
-                    disable: !this.hasTemplatePermission,
-                    handler: this.saveAsTempHandler
+                    handler: this.saveAsTempHandler,
+                    hasPermission: this.hasTemplatePermission,
+                    disablePermissionApi: false,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
                 },
                 ...(pipeline.isInstanceTemplate
                     ? [{
@@ -203,12 +234,21 @@ export default {
                         text: this.$t('removeFrom'),
                         disable: isDynamicGroup,
                         tooltips: isDynamicGroup ? this.$t('dynamicGroupRemoveDisableTips') : false,
-                        handler: this.removeHandler
+                        handler: this.removeHandler,
+                        ...removedActionAuthMap
                     }]
                     : []),
                 {
                     text: this.$t('delete'),
-                    handler: this.deleteHandler
+                    handler: this.deleteHandler,
+                    hasPermission: pipeline.permissions.canDelete,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.DELETE
+                    }
                 }
             ]
         },
@@ -349,15 +389,14 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.delete,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.DELETE
+                    }
+                )
             }
         },
         /**
@@ -384,22 +423,14 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }]
-                }, {
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: projectId,
+                        action: this.$permissionResourceAction.CREATE
+                    }
+                )
             }
         },
         /** *
@@ -443,17 +474,6 @@ export default {
                     })
                 }
             })
-        },
-        applyPermission ({ pipelineName, pipelineId }) {
-            this.setPermissionConfig(
-                this.$permissionResourceMap.pipeline,
-                this.$permissionActionMap.view,
-                [{
-                    id: pipelineId,
-                    name: pipelineName
-                }],
-                this.$route.params.projectId
-            )
         }
     }
 }

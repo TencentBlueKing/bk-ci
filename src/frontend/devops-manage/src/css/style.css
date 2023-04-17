@@ -1,0 +1,70 @@
+@font-face {
+	font-family: "manage";
+	src: url("fonts/iconcool.svg#iconcool") format("svg"),
+url("fonts/iconcool.ttf") format("truetype"),
+url("fonts/iconcool.woff") format("woff"),
+url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
+    font-weight: normal;
+    font-style: normal;
+}
+
+.manage-icon {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'manage' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  text-align: center;
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.manage-icon-sync-failed:before {
+	content: "\e111";
+}
+.manage-icon-sync-success:before {
+	content: "\e112";
+}
+.manage-icon-sync-default:before {
+	content: "\e113";
+}
+.manage-icon-abnormal:before {
+	content: "\e115";
+}
+.manage-icon-sync-waiting-01:before {
+	content: "\e114";
+}
+.manage-icon-warning-2:before {
+	content: "\e116";
+}
+.manage-icon-more-fill:before {
+	content: "\e101";
+}
+.manage-icon-user-shape:before {
+	content: "\e102";
+}
+.manage-icon-add-fill:before {
+	content: "\e103";
+}
+.manage-icon-lock-radius:before {
+	content: "\e104";
+}
+.manage-icon-normal:before {
+	content: "\e106";
+}
+.manage-icon-unknown:before {
+	content: "\e105";
+}
+.manage-icon-organization:before {
+	content: "\e117";
+}
+.manage-icon-warning-circle-fill:before {
+	content: "\e118";
+}
+.manage-icon-unknown-2:before {
+	content: "\e119";
+}

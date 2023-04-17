@@ -127,7 +127,7 @@ abstract class Element(
     @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
     @ApiModelProperty("各项耗时", required = true)
-    open var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost(),
+    open var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
     @ApiModelProperty("错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
@@ -160,6 +160,15 @@ abstract class Element(
         }
 
         return additionalOptions!!.enable
+    }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        if (additionalOptions != null && additionalOptions!!.timeoutVar.isNullOrBlank()) {
+            additionalOptions!!.timeoutVar = additionalOptions!!.timeout.toString()
+        }
     }
 
     /**

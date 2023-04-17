@@ -22,8 +22,29 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <bk-button
+                                v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: CERT_RESOURCE_TYPE,
+                                        resourceCode: props.row.certId,
+                                        action: CERT_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                                theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                            
+                            <bk-button
+                                v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: CERT_RESOURCE_TYPE,
+                                        resourceCode: props.row.certId,
+                                        action: CERT_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
+                                theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -38,6 +59,7 @@
 <script>
     import { convertTime } from '@/utils/util'
     import emptyTips from '@/components/devops/emptyTips'
+    import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -45,6 +67,8 @@
         },
         data () {
             return {
+                CERT_RESOURCE_TYPE,
+                CERT_RESOURCE_ACTION,
                 allowInit: false,
                 loading: {
                     isLoading: false,
@@ -172,16 +196,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.cert,
-                            instanceId: [{
-                                id: cert.certId,
-                                name: cert.certId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CERT_RESOURCE_TYPE,
+                        resourceCode: cert.certId,
+                        action: CERT_RESOURCE_ACTION.EDIT
                     })
                 }
             },
@@ -216,16 +235,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.cert,
-                            instanceId: [{
-                                id: cert.certId,
-                                name: cert.certId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CERT_RESOURCE_TYPE,
+                        resourceCode: cert.certId,
+                        action: CERT_RESOURCE_ACTION.DELETE
                     })
                 }
             },
@@ -238,13 +252,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .cert-operation-btn {
-      &.disabled {
-        color: #C4C6CC;
-        &:hover {
-          color: #C4C6CC;
-        }
-        cursor: url(../images/cursor-lock.png),auto !important;
-      }
-    }
 </style>

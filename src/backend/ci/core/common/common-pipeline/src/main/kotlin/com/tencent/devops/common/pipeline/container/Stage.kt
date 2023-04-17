@@ -76,6 +76,7 @@ data class Stage(
     fun resetBuildOption(init: Boolean? = false) {
         if (init == true) {
             status = null
+            timeCost = null
             startEpoch = null
             elapsed = null
         }
@@ -91,5 +92,14 @@ data class Stage(
             return container.getContainerById(vmSeqId) ?: return@forEach
         }
         return null
+    }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        containers.forEach { container ->
+            container.transformCompatibility()
+        }
     }
 }
