@@ -69,7 +69,6 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
@@ -1066,8 +1065,10 @@ class BkRepoClient constructor(
         projectId: String,
         repoName: String,
         path: String?,
-        name: String?
-    ): List<QueryNodeInfo> {
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): QueryData {
         if (path.isNullOrBlank() && name.isNullOrBlank()) {
             throw IllegalArgumentException()
         }
@@ -1082,7 +1083,7 @@ class BkRepoClient constructor(
             ruleList.add(Rule.QueryRule("name", name, OperationType.MATCH))
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
-        return query(userId, projectId, rule, 1, 10000).records
+        return query(userId, projectId, rule, page, pageSize)
     }
 
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
