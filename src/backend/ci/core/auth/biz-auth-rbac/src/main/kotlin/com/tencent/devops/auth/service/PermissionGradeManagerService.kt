@@ -208,59 +208,6 @@ class PermissionGradeManagerService @Autowired constructor(
         }
     }
 
-    fun migrateGradeManager(
-        userId: String,
-        projectCode: String,
-        projectName: String
-    ): Int {
-        val name = IamGroupUtils.buildGradeManagerName(
-            projectName = projectName
-        )
-        val manageGroupConfig = authResourceGroupConfigDao.get(
-            dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
-            groupCode = DefaultGroupType.MANAGER.value
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
-            params = arrayOf(DefaultGroupType.MANAGER.value),
-            defaultMessage =
-            "${AuthResourceType.PROJECT.value}_${DefaultGroupType.MANAGER.value} group config  not exist"
-        )
-        val description = manageGroupConfig.description
-        val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
-            authorizationScopesStr = manageGroupConfig.authorizationScopes,
-            projectCode = projectCode,
-            projectName = projectName,
-            iamResourceCode = projectCode,
-            resourceName = projectName
-        )
-        val subjectScopes = listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        val createManagerDTO = CreateManagerDTO.builder()
-            .system(iamConfiguration.systemId)
-            .name(name)
-            .description(description)
-            .members(listOf())
-            .authorization_scopes(authorizationScopes)
-            .subject_scopes(subjectScopes)
-            .sync_perm(true)
-            .groupName(manageGroupConfig.groupName)
-            .build()
-        logger.info("create migrate grade manager|$name")
-        val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
-        authResourceService.create(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectName,
-            iamResourceCode = projectCode,
-            enable = true,
-            relationId = gradeManagerId.toString()
-        )
-        syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode, projectName = projectName)
-        return gradeManagerId
-    }
-
     /**
      * 修改分级管理员
      */

@@ -32,6 +32,7 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel
 data class AuthGroupConfigAction(
+    val id: Long,
     val resourceType: String,
     val groupCode: String,
     val groupName: String,
