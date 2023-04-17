@@ -28,6 +28,7 @@ class UserCustomRepoResourceImpl(
         page: Int,
         pageSize: Int
     ): Result<Page<DirNode>> {
-        return Result(customRepoService.dirTreePage(userId, projectId, path, name, page, pageSize))
+        val size = if (pageSize > 100) 100 else pageSize
+        return Result(customRepoService.dirTreePage(userId, projectId, path, name, page, size))
     }
 }
