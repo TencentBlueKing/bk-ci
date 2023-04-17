@@ -74,7 +74,8 @@ class ProjectApprovalDao {
                 LOGO_ADDR,
                 SUBJECT_SCOPES,
                 AUTH_SECRECY,
-                TIPS_STATUS
+                TIPS_STATUS,
+                PROJECT_TYPE
             ).values(
                 projectCreateInfo.projectName,
                 projectCreateInfo.englishName,
@@ -93,8 +94,26 @@ class ProjectApprovalDao {
                 projectCreateInfo.logoAddress ?: "",
                 JsonUtil.toJson(subjectScopes, false),
                 projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value,
-                tipsStatus
-            ).execute()
+                tipsStatus,
+                projectCreateInfo.projectType
+            ).onDuplicateKeyUpdate()
+                .set(PROJECT_NAME, projectCreateInfo.projectName)
+                .set(DESCRIPTION, projectCreateInfo.description)
+                .set(BG_ID, projectCreateInfo.bgId)
+                .set(BG_NAME, projectCreateInfo.bgName)
+                .set(DEPT_ID, projectCreateInfo.deptId)
+                .set(DEPT_NAME, projectCreateInfo.deptName)
+                .set(CENTER_ID, projectCreateInfo.centerId)
+                .set(CENTER_NAME, projectCreateInfo.centerName)
+                .set(LOGO_ADDR, projectCreateInfo.logoAddress)
+                .set(SUBJECT_SCOPES, JsonUtil.toJson(subjectScopes, false))
+                .set(AUTH_SECRECY, projectCreateInfo.authSecrecy)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .set(TIPS_STATUS, tipsStatus)
+                .set(PROJECT_TYPE, projectCreateInfo.projectType)
+                .execute()
         }
     }
 
@@ -123,6 +142,7 @@ class ProjectApprovalDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
                 .set(TIPS_STATUS, tipsStatus)
+                .set(PROJECT_TYPE, projectUpdateInfo.projectType)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
         }
@@ -218,7 +238,8 @@ class ProjectApprovalDao {
                 authSecrecy = authSecrecy,
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
                 approver = approver,
-                tipsStatus = tipsStatus
+                tipsStatus = tipsStatus,
+                projectType = projectType
             )
         }
     }

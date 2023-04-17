@@ -46,4 +46,8 @@ class ServiceProjectTagResourceImpl @Autowired constructor(
     override fun isRbacPermission(projectId: String): Result<Boolean> {
         return Result(projectService.isRbacPermission(projectId))
     }
+
+    override fun updateProjectRouteTag(projectCode: String, tag: String): Result<Boolean> {
+        return Result(projectTagService.updateTagByProject(projectCode = projectCode, tag = tag))
+    }
 }

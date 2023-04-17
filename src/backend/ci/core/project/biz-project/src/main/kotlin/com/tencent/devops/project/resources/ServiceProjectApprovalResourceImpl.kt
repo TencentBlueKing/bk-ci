@@ -79,4 +79,9 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun createMigration(projectId: String): Result<Boolean> {
+        projectApprovalService.createMigration(projectId = projectId)
+        return Result(true)
+    }
 }

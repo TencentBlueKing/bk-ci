@@ -90,7 +90,7 @@ object AuthMessageCode {
     const val DEFAULT_GROUP_CONFIG_NOT_FOUND = "2121602" // 权限系统：默认组配置不存在
     const val RESOURCE_ACTION_EMPTY = "2121603" // 权限系统：资源未绑定动作
     const val ACTION_NOT_EXIST = "2121604" // 权限系统：操作不存在
-    const val RESOURCE_TYPE_NOT_FOUND = "2121605" // 权限系统：资源{0}不存在
+    const val RESOURCE_TYPE_NOT_FOUND = "2121605" // 权限系统：资源类型{0}不存在
 
     const val RESOURCE_TYPE_NOT_EMPTY = "2121606" // 权限系统：资源类型不能为空
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121607" // 权限系统: 申请加入用户组失败
@@ -115,4 +115,5 @@ object AuthMessageCode {
     const val ERROR_GROUP_NAME_TO_SHORT = "2121623" // 用户组名不能不少于5个字符
 
     const val ERROR_PROJECT_NOT_UPGRADE = "2121624" // 权限系统: 项目尚未升级到新版权限系统
+    const val MIGRATION_GROUP_DESCRIPTION = "2121625" // 用户组:{0},迁移于{1}
 }

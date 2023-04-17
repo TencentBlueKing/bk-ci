@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.auth
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
@@ -43,6 +46,8 @@ import com.tencent.devops.common.auth.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.RbacTicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -60,8 +65,39 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class RbacAuthAutoConfiguration {
 
+    @Value("\${auth.url:}")
+    val iamBaseUrl = ""
+
+    @Value("\${auth.iamSystem:}")
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    val appSecret = ""
+
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
+
     @Bean
-    fun authTokenApi() = RbacAuthTokenApi()
+    @Primary
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+
+    @Bean
+    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun iamTokenService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = TokenServiceImpl(iamConfiguration, apigwHttpClientServiceImpl)
+
+    @Bean
+    fun authTokenApi(
+        redisOperation: RedisOperation,
+        iamTokenService: TokenServiceImpl
+    ) = RbacAuthTokenApi(redisOperation, iamTokenService)
 
     @Bean
     fun authResourceApi(

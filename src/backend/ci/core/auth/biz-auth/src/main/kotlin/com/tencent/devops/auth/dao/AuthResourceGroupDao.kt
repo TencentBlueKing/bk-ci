@@ -36,7 +36,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class AuthResourceGroupDao {
 
     fun create(
@@ -199,6 +199,34 @@ class AuthResourceGroupDao {
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetch()
+        }
+    }
+
+    fun countByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Int {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByResourceType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String
+    ): Int {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

@@ -39,10 +39,12 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -62,11 +64,16 @@ import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.migrate.MigrateResourceCodeConverter
+import com.tencent.devops.auth.service.migrate.MigrateResourceService
+import com.tencent.devops.auth.service.migrate.MigrateV3PolicyService
+import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -77,36 +84,23 @@ import org.springframework.context.annotation.Primary
 @Suppress("TooManyFunctions", "LongParameterList")
 class RbacAuthConfiguration {
 
-    @Value("\${auth.url:}")
-    val iamBaseUrl = ""
-
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
-
-    @Value("\${auth.appCode:}")
-    val appCode = ""
-
-    @Value("\${auth.appSecret:}")
-    val appSecret = ""
-
-    @Value("\${auth.apigwUrl:#{null}}")
-    val iamApigw = ""
+    @Bean
+    fun iamV2ManagerService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2ManagerServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    @Primary
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
+    fun iamV2PolicyService(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2PolicyServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
-    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
-
-    @Bean
-    fun iamV2ManagerService() = V2ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-    @Bean
-    fun iamV2PolicyService() = V2PolicyServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
-
-    @Bean
-    fun grantV2Service() = V2GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+    fun grantV2Service(
+        iamConfiguration: IamConfiguration,
+        apigwHttpClientServiceImpl: ApigwHttpClientServiceImpl
+    ) = V2GrantServiceImpl(apigwHttpClientServiceImpl, iamConfiguration)
 
     @Bean
     fun tokenService(
@@ -271,5 +265,84 @@ class RbacAuthConfiguration {
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
         client = client
+    )
+
+    @Bean
+    fun migrateResourceCodeConverter(
+        client: Client
+    ) = MigrateResourceCodeConverter(
+        client = client
+    )
+
+    @Bean
+    fun migrateResourceService(
+        resourceService: ResourceService,
+        rbacCacheService: RbacCacheService,
+        rbacPermissionResourceService: RbacPermissionResourceService,
+        authResourceService: AuthResourceService,
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        tokenApi: AuthTokenApi,
+        projectAuthServiceCode: ProjectAuthServiceCode,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authMigrationDao: AuthMigrationDao
+    ) = MigrateResourceService(
+        resourceService = resourceService,
+        rbacCacheService = rbacCacheService,
+        rbacPermissionResourceService = rbacPermissionResourceService,
+        authResourceService = authResourceService,
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        tokenApi = tokenApi,
+        projectAuthServiceCode = projectAuthServiceCode,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        authMigrationDao = authMigrationDao
+    )
+
+    @Bean
+    fun migrateV3PolicyService(
+        v2ManagerService: V2ManagerServiceImpl,
+        iamConfiguration: IamConfiguration,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        permissionService: PermissionService,
+        rbacCacheService: RbacCacheService,
+        authMigrationDao: AuthMigrationDao,
+        authVerifyRecordService: AuthVerifyRecordService
+    ) = MigrateV3PolicyService(
+        v2ManagerService = v2ManagerService,
+        iamConfiguration = iamConfiguration,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        authResourceCodeConverter = authResourceCodeConverter,
+        permissionService = permissionService,
+        rbacCacheService = rbacCacheService,
+        authMigrationDao = authMigrationDao,
+        authVerifyRecordService = authVerifyRecordService
+    )
+
+    @Bean
+    @Primary
+    fun rbacAuthMigrateService(
+        client: Client,
+        migrateResourceService: MigrateResourceService,
+        migrateV3PolicyService: MigrateV3PolicyService,
+        permissionResourceService: PermissionResourceService,
+        authResourceService: AuthResourceService,
+        dslContext: DSLContext,
+        authMigrationDao: AuthMigrationDao
+    ) = RbacPermissionMigrateService(
+        client = client,
+        migrateResourceService = migrateResourceService,
+        migrateV3PolicyService = migrateV3PolicyService,
+        permissionResourceService = permissionResourceService,
+        authResourceService = authResourceService,
+        dslContext = dslContext,
+        authMigrationDao = authMigrationDao
     )
 }

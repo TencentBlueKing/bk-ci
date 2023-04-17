@@ -157,6 +157,18 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_INFO`  (
    UNIQUE INDEX `bk_user`(`userId`, `user_type`)
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号信息表';
 
+CREATE TABLE IF NOT EXISTS `T_AUTH_TEMPORARY_VERIFY_RECORD`
+(
+    `USER_ID`          varchar(64)                        not null comment '用户ID',
+    `PROJECT_CODE`     varchar(64)                        not null comment '项目ID',
+    `RESOURCE_TYPE`    varchar(64)                        not null comment '资源类型',
+    `RESOURCE_CODE`    varchar(255)                       not null comment '资源ID',
+    `ACTION`           varchar(64)                        not null comment '操作ID',
+    `VERIFY_RESULT`    bit                                not null comment '鉴权结果',
+    `LAST_VERIFY_TIME` datetime default CURRENT_TIMESTAMP not null comment '最后鉴权时间',
+    primary key (USER_ID, PROJECT_CODE, RESOURCE_TYPE, RESOURCE_CODE, ACTION)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '迁移-鉴权记录表';
+
 CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
 	`ACTION` varchar(64) NOT NULL COMMENT '操作ID',
 	`RESOURCE_TYPE` varchar(64) NOT NULL COMMENT '蓝盾-关联资源类型',
@@ -254,5 +266,19 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_ITSM_CALLBACK` (
 	PRIMARY KEY (`ID`),
 	UNIQUE KEY `UNIQ_SN` (`SN`)
 ) ENGINE = InnoDB CHARSET = utf8mb4 COMMENT '权限itsm回调表';
+
+CREATE TABLE IF NOT EXISTS T_AUTH_MIGRATION(
+    `PROJECT_CODE` varchar(32) not null comment '项目ID',
+    `STATUS` int(10) DEFAULT '0' COMMENT '迁移状态, 0-迁移中,1-迁移成功,2-迁移失败',
+    `BEFORE_GROUP_COUNT` int default 0 comment '迁移前用户组数',
+    `AFTER_GROUP_COUNT` int default 0 comment '迁移后用户组数',
+    `RESOURCE_COUNT` text null comment '迁移后资源数和资源用户组数',
+    `START_TIME` datetime NULL COMMENT '开始时间',
+    `END_TIME` datetime NULL COMMENT '结束时间',
+    `TOTAL_TIME` bigint null comment '总耗时',
+    `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`PROJECT_CODE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限迁移';
 
 SET FOREIGN_KEY_CHECKS = 1;

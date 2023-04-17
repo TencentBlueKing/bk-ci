@@ -100,17 +100,31 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        } else {
+            val projectResourceInstance = AuthResourceInstance(
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                parents = listOf(projectResourceInstance)
+            )
+        }
         return validateUserResourcePermissionByInstance(
             userId = userId,
             action = action,
             projectCode = projectCode,
-            resource = AuthResourceInstance(
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
+            resource = resource
         )
     }
 
+    @Suppress("ReturnCount")
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -123,7 +137,7 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            // action需要兼容repo只传AuthPermission的情况,需要组装为V3的action
+            // action需要兼容repo只传AuthPermission的情况,需要组装为Rbac的action
             val useAction = if (!action.contains("_")) {
                 RbacAuthUtils.buildAction(AuthPermission.get(action), AuthResourceType.get(resource.resourceType))
             } else {

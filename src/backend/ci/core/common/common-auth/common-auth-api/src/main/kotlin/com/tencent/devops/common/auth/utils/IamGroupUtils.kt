@@ -34,7 +34,7 @@ import java.time.LocalDateTime
 
 object IamGroupUtils {
 
-    private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+    private const val SYSTEM_DEFAULT_NAME = "BKCI"
     // 用户组默认6个月有效期
     const val DEFAULT_EXPIRED_AT = 180L
 
@@ -82,7 +82,7 @@ object IamGroupUtils {
      * 构建二级管理员用户组名称
      */
     fun buildSubsetManagerGroupName(resourceType: String, resourceName: String) =
-        "$SYSTEM_DEFAULT_NAME-$resourceType-$resourceName"
+        "$SYSTEM_DEFAULT_NAME-${resourceType.uppercase()}-$resourceName"
 
     /**
      * 获取二级管理员用户组展示名称

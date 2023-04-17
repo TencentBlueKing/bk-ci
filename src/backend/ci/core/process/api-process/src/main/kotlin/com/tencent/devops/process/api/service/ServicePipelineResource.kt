@@ -545,4 +545,13 @@ interface ServicePipelineResource {
     fun batchUpdateModelName(
         modelUpdateList: List<ModelUpdate>
     ): Result<List<ModelUpdate>>
+
+    @ApiOperation("根据自增id获取流水线信息")
+    @GET
+    @Path("/{id}/info")
+    fun getPipelineInfobyAutoId(
+        @PathParam("id")
+        @ApiParam(value = "流水线自增id", required = true)
+        id: Long
+    ): Result<SimplePipeline>
 }
