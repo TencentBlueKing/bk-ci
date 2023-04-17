@@ -9,7 +9,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 data class ThirdPartyAgentDockerInfo(
     var image: String,
     var credential: Credential?,
-    var options: DockerOptions?
+    var options: DockerOptions?,
+    var imagePullPolicy: String?
 )
 
 fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
@@ -33,6 +34,9 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
         } else {
             EnvUtils.parseEnv(options?.gpus, variables)
         }
+    }
+    if (!imagePullPolicy.isNullOrBlank()) {
+        imagePullPolicy = EnvUtils.parseEnv(imagePullPolicy, variables)
     }
 }
 

@@ -69,14 +69,23 @@ data class Job(
 data class Container(
     val image: String,
     val credentials: Credentials?,
-    val options: DockerOptions?
+    val options: DockerOptions?,
+    @JsonProperty("image-pull-policy")
+    val imagePullPolicy: String?
 )
 
 data class Container2(
     val image: String,
     val credentials: String?,
-    val options: DockerOptions?
+    val options: DockerOptions?,
+    @JsonProperty("image-pull-policy")
+    val imagePullPolicy: String?
 )
+
+enum class ImagePullPolicyEnum(val type: String) {
+    IfNotPresent("if-not-present"),
+    Always("always")
+}
 
 data class Credentials(
     val username: String,

@@ -167,8 +167,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		isLatest = true
 	}
 
-	// 本地没有镜像的获取版本号为最新的，需要拉取新的镜像
-	if !localExist || isLatest {
+	if ifPullImage(localExist, isLatest, dockerBuildInfo.ImagePullPolicy) {
 		if isLatest {
 			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
 		}
@@ -366,6 +365,32 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	dockerBuildFinish(buildInfo.ToFinish(true, "", api.NoErrorEnum))
+}
+
+// policy 为空，并且容器镜像的标签是 :latest， image-pull-policy 会自动设置为 always
+// policy 为空，并且为容器镜像指定了非 :latest 的标签， image-pull-policy 就会自动设置为 if-not-present
+func ifPullImage(localExist, islatest bool, policy string) bool {
+	// 为空和枚举写错走一套逻辑
+	switch policy {
+	case api.ImagePullPolicyAlways.String():
+		return true
+	case api.ImagePullPolicyIfNotPresent.String():
+		if !localExist {
+			return true
+		} else {
+			return false
+		}
+	default:
+		if islatest {
+			return true
+		} else {
+			if !localExist {
+				return true
+			} else {
+				return false
+			}
+		}
+	}
 }
 
 // dockerBuildFinish docker构建结束相关
