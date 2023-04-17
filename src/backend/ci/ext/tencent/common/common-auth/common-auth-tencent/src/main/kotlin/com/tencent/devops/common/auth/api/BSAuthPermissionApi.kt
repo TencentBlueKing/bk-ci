@@ -126,13 +126,20 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
+                // 若是创建动作，需要挂载在项目资源类型下
+                val (verifyRecordResourceType, verifyRecordResourceCode) =
+                    if (permission.value.contains(AuthPermission.CREATE.value)) {
+                        Pair(AuthResourceType.PROJECT, projectCode)
+                    } else {
+                        Pair(resourceType, resourceCode)
+                    }
                 client.get(ServiceVerifyRecordResource::class).createOrUpdate(
                     userId = user,
                     verifyRecordDTO = VerifyRecordDTO(
                         userId = user,
                         projectId = projectCode,
-                        resourceType = TActionUtils.extResourceType(resourceType),
-                        resourceCode = resourceCode,
+                        resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
+                        resourceCode = verifyRecordResourceCode,
                         action = TActionUtils.buildAction(permission, resourceType),
                         verifyResult = result
                     )
