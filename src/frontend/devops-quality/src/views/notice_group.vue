@@ -124,6 +124,7 @@
     import { getQueryString } from '@/utils/util'
     import { QUALITY_GROUP_RESOURCE_ACTION, QUALITY_GROUP_RESOURCE_TYPE } from '@/utils/permission.js'
     import emptyData from './empty_data'
+    import { mapGetters } from 'vuex'
 
     export default {
         components: {
