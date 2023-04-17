@@ -82,6 +82,7 @@
   "noPermission": "No permission",
   "changeProject": "Switch project",
   "applyPermission": "Apply for permission",
+  "apply": "Apply",
   "buildTrigger": "Trigger build",
   "manualTrigger": "Trigger build",
   "All": "All",

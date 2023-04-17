@@ -199,5 +199,7 @@
     "userGroupManage": "User Manage",
     "extendManage": "Extended Manage",
     "enableDisableProject": "Disable/Enable Project",
-    "createProject": "Create Project"
+    "createProject": "Create Project",
+    "projectCreatingTitle": "Project creating",
+    "projectCreatingDesc": "The {0} project is being created and approved, please wait patiently"
 }

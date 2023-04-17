@@ -82,6 +82,7 @@
   "noPermission": "没有权限",
   "changeProject": "切换项目",
   "applyPermission": "申请权限",
+  "apply": "申请权限",
   "buildTrigger": "触发构建",
   "manualTrigger": "触发构建",
   "store": "研发商店",

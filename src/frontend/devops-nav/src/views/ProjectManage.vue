@@ -330,14 +330,8 @@
                     }
                 })
             },
-            getProjectTag (routerTag) {
-                if (/v3/.test(routerTag)) {
-                    return 'v3'
-                }
-                if (/rbac/.test(routerTag)) {
-                    return 'rbac'
-                }
-                return 'v0'
+            getProjectTag () {
+                return 'rbac'
             }
         }
     })
