@@ -310,7 +310,7 @@ class PipelineBuildRecordService @Autowired constructor(
             startTime = startTime,
             queueTimeCost = startTime?.let { it - queueTime },
             endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime,
-            status = buildInfo.status.name,
+            status = buildRecordModel?.status ?: buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
