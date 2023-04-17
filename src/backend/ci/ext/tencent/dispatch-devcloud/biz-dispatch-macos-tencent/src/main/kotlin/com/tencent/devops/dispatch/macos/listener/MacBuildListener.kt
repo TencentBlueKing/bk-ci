@@ -52,106 +52,59 @@ class MacBuildListener @Autowired constructor(
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("MacOS Dispatch on start up - ($dispatchMessage)")
         val macOSEvn = dispatchMessage.dispatchMessage.split(":")
-        val pair = when (macOSEvn.size) {
+        val (systemVersion, xcodeVersion) = when (macOSEvn.size) {
             0 -> Pair(null, null)
             1 -> Pair(macOSEvn[0], null)
             else -> Pair(macOSEvn[0], macOSEvn[1])
         }
-        var systemVersion: String? = pair.first
-        val xcodeVersion: String? = pair.second
+
         val projectId = dispatchMessage.projectId
-        val creator = dispatchMessage.userId
-
         val isGitProject = projectId.startsWith("git_")
-        logger.info("MacOSBuildListener|onStartup|isGitProject|$isGitProject|" +
-            "systemVersion|$systemVersion|xcodeVersion|$xcodeVersion")
 
-        if (isGitProject) {
-            systemVersion = macVmTypeService.getSystemVersionByVersion(systemVersion)
-        }
-
-        var startSuccess: Boolean = false
-        var startIp: String = ""
-        var startVmId: Int = 0
-        val resourceType = "DEVCLOUD"
-
-        val devCloudMacosVmInfo =
-            if (isGitProject)
-                devCloudMacosService.creatVM(
-                    projectId = projectId,
-                    pipelineId = dispatchMessage.pipelineId,
-                    buildId = dispatchMessage.buildId,
-                    vmSeqId = dispatchMessage.vmSeqId,
-                    creator = creator,
-                    source = "gongfeng",
-                    macosVersion = systemVersion,
-                    xcodeVersion = xcodeVersion
-                )
+        val devCloudMacosVmInfo = devCloudMacosService.creatVM(
+            projectId = projectId,
+            pipelineId = dispatchMessage.pipelineId,
+            buildId = dispatchMessage.buildId,
+            vmSeqId = dispatchMessage.vmSeqId,
+            creator = dispatchMessage.userId,
+            source = if (isGitProject) "gongfeng" else "landun",
+            macosVersion = if (isGitProject)
+                macVmTypeService.getSystemVersionByVersion(systemVersion)
             else
-                devCloudMacosService.creatVM(
-                    projectId = projectId,
-                    pipelineId = dispatchMessage.pipelineId,
-                    buildId = dispatchMessage.buildId,
-                    vmSeqId = dispatchMessage.vmSeqId,
-                    creator = creator,
-                    source = "landun",
-                    macosVersion = systemVersion,
-                    xcodeVersion = xcodeVersion
-                )
-        if (devCloudMacosVmInfo != null) {
-            devCloudMacosService.saveVM(devCloudMacosVmInfo)
-            startSuccess = true
-            startIp = devCloudMacosVmInfo.ip
-            startVmId = devCloudMacosVmInfo.id
-            buildHistoryService.saveBuildHistory(dispatchMessage, startIp, startVmId, resourceType)
-            macosVMRedisService.saveRedisBuild(dispatchMessage, startIp)
-        }
+                systemVersion,
+            xcodeVersion = xcodeVersion
+        )
 
-        if (!startSuccess) {
-            // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行6次
-            try {
-                logRed(
-                    buildLogPrinter,
-                    dispatchMessage.buildId,
-                    dispatchMessage.containerHashId,
-                    dispatchMessage.vmSeqId,
-                    "未找到空闲的macOS构建资源，等待10秒后重试。",
-                    dispatchMessage.executeCount
-                )
-                retry(sleepTimeInMS = 10000, retryTimes = 6)
-            } catch (t: BuildFailureException) {
-                throw BuildFailureException(
-                    errorType = ErrorCodeEnum.NO_IDLE_MACOS_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.NO_IDLE_MACOS_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.NO_IDLE_MACOS_ERROR.formatErrorMessage,
-                    errorMessage = "MacOS资源紧缺，等待1分钟分配不到资源"
-                )
-            } catch (t: Throwable) {
-                throw t
-            }
+        devCloudMacosVmInfo?.let {
+            devCloudMacosService.saveVM(it)
+            buildHistoryService.saveBuildHistory(dispatchMessage, it.ip, it.id, "DEVCLOUD")
+            macosVMRedisService.saveRedisBuild(dispatchMessage, it.ip)
+
+            logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
+                            "Success to start vm(${it.ip}|${it.id})")
+
+            log(
+                buildLogPrinter = buildLogPrinter,
+                buildId = dispatchMessage.buildId,
+                containerHashId = dispatchMessage.containerHashId,
+                vmSeqId = dispatchMessage.vmSeqId,
+                message = "DevCloud MacOS IP：${it.ip}",
+                executeCount = dispatchMessage.executeCount
+            )
+        } ?: run {
+            // 如果没有找到合适的vm机器，则等待10秒后再执行, 总共执行30次（5min）
+            logRed(
+                buildLogPrinter,
+                dispatchMessage.buildId,
+                dispatchMessage.containerHashId,
+                dispatchMessage.vmSeqId,
+                "No idle macOS resources found, wait 10 seconds and try again",
+                dispatchMessage.executeCount
+            )
 
             logger.error("Can not found any idle vm for this build($dispatchMessage),wait for 10s")
-            return
+            retry(sleepTimeInMS = 10000, retryTimes = 30)
         }
-        log(
-            buildLogPrinter = buildLogPrinter,
-            buildId = dispatchMessage.buildId,
-            containerHashId = dispatchMessage.containerHashId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            message = "macOS 资源类型：$resourceType",
-            executeCount = dispatchMessage.executeCount
-        )
-        log(
-            buildLogPrinter = buildLogPrinter,
-            buildId = dispatchMessage.buildId,
-            containerHashId = dispatchMessage.containerHashId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            message = "macOS 构建机IP：$startIp",
-            executeCount = dispatchMessage.executeCount
-        )
-
-        logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}] " +
-                        "Success to start vm($startIp|$startVmId)")
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {
