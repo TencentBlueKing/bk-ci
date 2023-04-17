@@ -182,7 +182,7 @@ class TGitPushTriggerHandler(
                                 to = event.after
                             )
                         } catch (e: Exception) {
-                            // 兜底方案，若关联代码的权限
+                            // 兜底方案，若关联代码的权限失效，则使用webhook信息进行触发
                             logger.warn(
                                 "Failed to get the change file list," +
                                     "use webhook information to trigger," +

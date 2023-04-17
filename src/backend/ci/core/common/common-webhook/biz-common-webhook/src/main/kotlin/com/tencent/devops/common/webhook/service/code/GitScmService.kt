@@ -29,6 +29,7 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -221,6 +222,7 @@ class GitScmService @Autowired constructor(
             }
         } catch (ignore: Exception) {
             logger.warn("fail to get change file list", ignore)
+            throw RemoteServiceException("fail to get change file list")
         }
         return changeSet
     }
