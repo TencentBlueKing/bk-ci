@@ -267,4 +267,18 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_ITSM_CALLBACK` (
 	UNIQUE KEY `UNIQ_SN` (`SN`)
 ) ENGINE = InnoDB CHARSET = utf8mb4 COMMENT '权限itsm回调表';
 
+CREATE TABLE IF NOT EXISTS T_AUTH_MIGRATION(
+    `PROJECT_CODE` varchar(32) not null comment '项目ID',
+    `STATUS` int(10) DEFAULT '0' COMMENT '迁移状态, 0-迁移中,1-迁移成功,2-迁移失败',
+    `BEFORE_GROUP_COUNT` int default 0 comment '迁移前用户组数',
+    `AFTER_GROUP_COUNT` int default 0 comment '迁移后用户组数',
+    `RESOURCE_COUNT` text null comment '迁移后资源数和资源用户组数',
+    `START_TIME` datetime NULL COMMENT '开始时间',
+    `END_TIME` datetime NULL COMMENT '结束时间',
+    `TOTAL_TIME` bigint null comment '总耗时',
+    `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`PROJECT_CODE`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限迁移';
+
 SET FOREIGN_KEY_CHECKS = 1;
