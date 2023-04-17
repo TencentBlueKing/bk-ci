@@ -8,6 +8,7 @@ import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -19,6 +20,10 @@ class EventCacheService @Autowired constructor(
     private val gitScmService: GitScmService,
     private val client: Client
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(EventCacheService::class.java)
+    }
 
     fun getMergeRequestReviewersInfo(projectId: String, mrId: Long?, repo: Repository): GitMrReviewInfo? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
@@ -69,12 +74,17 @@ class EventCacheService @Autowired constructor(
     fun getChangeFileList(projectId: String, repo: Repository, from: String, to: String): Set<String> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.gitCompareChangeFiles ?: run {
-            val compareChangFile = gitScmService.getChangeFileList(
-                projectId = projectId,
-                repo = repo,
-                from = from,
-                to = to
-            )
+            val compareChangFile = try {
+                gitScmService.getChangeFileList(
+                    projectId = projectId,
+                    repo = repo,
+                    from = from,
+                    to = to
+                )
+            } catch (e: Exception) {
+                logger.warn("fail to get change file list", e)
+                setOf()
+            }
             eventCache?.gitCompareChangeFiles = compareChangFile
             compareChangFile
         }

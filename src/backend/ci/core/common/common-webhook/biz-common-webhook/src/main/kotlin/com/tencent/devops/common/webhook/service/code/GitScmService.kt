@@ -29,7 +29,6 @@ package com.tencent.devops.common.webhook.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -187,42 +186,37 @@ class GitScmService @Autowired constructor(
     ): Set<String> {
         val type = getType(repo) ?: return emptySet()
         val changeSet = mutableSetOf<String>()
-        try {
-            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-            val token = getToken(
-                projectId = projectId,
-                credentialId = repo.credentialId,
-                userName = repo.userName,
-                authType = tokenType
-            )
-            for (i in 1..10) {
-                // 反向进行三点比较可以比较出rebase的真实提交
-                val result = client.get(ServiceGitResource::class).getChangeFileList(
-                    token = token,
-                    tokenType = tokenType,
-                    gitProjectId = repo.projectName,
-                    from = from,
-                    to = to,
-                    straight = false,
-                    page = i,
-                    pageSize = 100
-                ).data ?: emptyList()
-                changeSet.addAll(
-                    result.map {
-                        if (it.deletedFile) {
-                            it.oldPath
-                        } else {
-                            it.newPath
-                        }
+        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+        val token = getToken(
+            projectId = projectId,
+            credentialId = repo.credentialId,
+            userName = repo.userName,
+            authType = tokenType
+        )
+        for (i in 1..10) {
+            // 反向进行三点比较可以比较出rebase的真实提交
+            val result = client.get(ServiceGitResource::class).getChangeFileList(
+                token = token,
+                tokenType = tokenType,
+                gitProjectId = repo.projectName,
+                from = from,
+                to = to,
+                straight = false,
+                page = i,
+                pageSize = 100
+            ).data ?: emptyList()
+            changeSet.addAll(
+                result.map {
+                    if (it.deletedFile) {
+                        it.oldPath
+                    } else {
+                        it.newPath
                     }
-                )
-                if (result.size < 100) {
-                    break
                 }
+            )
+            if (result.size < 100) {
+                break
             }
-        } catch (ignore: Exception) {
-            logger.warn("fail to get change file list", ignore)
-            throw RemoteServiceException("fail to get change file list")
         }
         return changeSet
     }
