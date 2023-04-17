@@ -128,7 +128,7 @@ class BSAuthPermissionApi @Autowired constructor(
                 }
                 // 若是创建动作，需要挂载在项目资源类型下
                 val (verifyRecordResourceType, verifyRecordResourceCode) =
-                    if (permission.value.contains(AuthPermission.CREATE.value)) {
+                    if (permission == AuthPermission.CREATE) {
                         Pair(AuthResourceType.PROJECT, projectCode)
                     } else {
                         Pair(resourceType, resourceCode)
