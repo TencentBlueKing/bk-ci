@@ -1,6 +1,7 @@
 {
   "pipeline": "流水线",
   "pipelineName": "流水线名称",
+  "pipelineId": "流水线ID",
   "labelManage": "标签管理",
   "label": "标签",
   "close": "关闭",
@@ -8,6 +9,7 @@
   "templateManage": "模板管理",
   "pluginManage": "插件管理",
   "operatorAudit": "操作审计",
+  "apply": "申请权限",
   "audit": {
     "operator": "操作人",
     "operateTime": "操作时间",
@@ -322,6 +324,7 @@
     "noticeGroup": "通知组",
     "emptyNoticeGroup": "通知组为空",
     "additionUser": "附加通知人",
+    "additionUserPlaceholder": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
     "noticeContent": "通知内容",
     "pipelineLink": "通知内容附加流水线链接",
     "pipelineLinkDesc": "若勾选，则会在企业微信、微信、短信通知的末尾加上相应构建详情的流水线链接",
@@ -948,7 +951,8 @@
       "templateDownload": "模板下载",
       "otherChoice": "其他选项"
     },
-    "stageOption": "流程控制选项"
+    "stageOption": "流程控制选项",
+    "pipelineVersionSaveAt": "版本{0}保存于{1}"
   },
   "storeMap": {
     "textarea": "文本框",
@@ -994,9 +998,9 @@
     "retryCount": "重试次数",
     "retryCountPlaceholder": "1-5之间的整数，默认为1",
     "atomTimeout": "插件执行超时时间(单位分钟)",
-    "timeoutDesc": "10080之间的整数，0表示系统允许的最大超时时间",
+    "timeoutDesc": "1-10080之间的正整数，支持引用流水线变量",
     "prepareTimeoutDesc": "当构建机繁忙时，排队等待的超时时间。默认10分钟，不超过Job允许的最大耗时，超时后失败退出",
-    "timeoutPlaceholder": "10080之间的整数，0表示系统允许的最大超时时间",
+    "timeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "atomRunCondition": "何时运行本插件",
     "atomPreSuc": "所有前置插件运行成功时运行（包括失败时继续）",
     "atomEvenFail": "即使前面有插件运行失败也运行，除非被取消才不运行",
@@ -1033,12 +1037,14 @@
     "mutualGroupNamePlaceholder": "字段不能为空，只支持英文、数字或填写变量",
     "queueEnable": "启用互斥组排队",
     "mutualTimeout": "最长等待时间（单位分钟）",
-    "mutualTimeoutPlaceholder": "请填写1-10080之间的整数",
+    "mutualTimeoutPlaceholder": "1-10080之间的正整数，支持引用流水线变量",
     "queueLabel": "队列最大任务数",
     "queuePlaceholder": "请填写1-10之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
-    "manualRunStage": "手动触发运行"
+    "manualRunStage": "手动触发运行",
+    "autoSkip": "自动跳过",
+    "manualSkip": "手动跳过"
   },
   "permissionRefreshtitle": "权限申请单已提交",
   "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",

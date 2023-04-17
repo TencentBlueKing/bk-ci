@@ -30,11 +30,14 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.ServiceMetricsResource
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil
@@ -42,7 +45,8 @@ import com.tencent.devops.metrics.utils.QueryParamCheckUtil
 @RestResource
 class ServiceMetricsResourceImpl constructor(
     private val thirdPartyManageService: ThirdPartyManageService,
-    private val pipelineOverviewManageService: PipelineOverviewManageService
+    private val pipelineOverviewManageService: PipelineOverviewManageService,
+    private val atomStatisticsManageService: AtomStatisticsManageService
 ) : ServiceMetricsResource {
 
     override fun queryPipelineSumInfo(
@@ -88,6 +92,20 @@ class ServiceMetricsResourceImpl constructor(
                     startTime = startDateTime,
                     endTime = endDateTime
                 )
+            )
+        )
+    }
+
+    override fun queryAtomComplianceInfo(
+        userId: String,
+        atomCode: String,
+        queryIntervalVO: QueryIntervalVO
+    ): Result<ComplianceInfoDO?> {
+        return Result(
+            atomStatisticsManageService.queryAtomComplianceInfo(
+                userId = userId,
+                atomCode = atomCode,
+                queryIntervalVO = queryIntervalVO
             )
         )
     }

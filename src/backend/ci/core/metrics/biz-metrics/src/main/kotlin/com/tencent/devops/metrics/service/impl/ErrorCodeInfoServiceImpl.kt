@@ -28,19 +28,32 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.metrics.constant.Constants
+import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
+import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
 import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
+    private val errorCodeInfoDao: ErrorCodeInfoDao,
+    private val atomFailInfoDao: AtomFailInfoDao,
+    private val metricsDataReportDao: MetricsDataReportDao,
+    private val client: Client
 ) : ErrorCodeInfoManageService {
 
     override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
@@ -50,6 +63,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             count = errorCodeInfoDao.getErrorCodeInfoCount(
                 dslContext,
                 QueryErrorCodeInfoQO(
+                    atomCode = queryErrorCodeInfoDTO.atomCode,
                     errorTypes = queryErrorCodeInfoDTO.errorTypes,
                     keyword = queryErrorCodeInfoDTO.keyword,
                     page = queryErrorCodeInfoDTO.page,
@@ -59,6 +73,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             records = errorCodeInfoDao.getErrorCodeInfo(
                 dslContext,
                 QueryErrorCodeInfoQO(
+                    atomCode = queryErrorCodeInfoDTO.atomCode,
                     errorTypes = queryErrorCodeInfoDTO.errorTypes,
                     keyword = queryErrorCodeInfoDTO.keyword,
                     page = queryErrorCodeInfoDTO.page,
@@ -66,5 +81,51 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 )
             )
         )
+    }
+
+    override fun syncAtomErrorCodeRel(userId: String): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+            logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
+            val syncsNumber = 10
+            if (projectMinId != null && projectMaxId != null) {
+                do {
+                    val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
+                    val projectIds = client.get(ServiceProjectResource::class).getProjectListById(
+                        minId = projectMinId,
+                        maxId = projectMinId + syncsNumber
+                    ).data
+                    projectIds?.map {
+                        val errorCodeInfos = atomFailInfoDao.getAtomErrorInfos(dslContext, it.englishName)
+                        errorCodeInfos.map { e ->
+                            saveErrorCodeInfoPOs.add(
+                                SaveErrorCodeInfoPO(
+                                    id = client.get(ServiceAllocIdResource::class)
+                                        .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
+                                    errorCode = e[Constants.BK_ERROR_CODE] as Int,
+                                    errorType = e[Constants.BK_ERROR_TYPE] as Int,
+                                    errorMsg = e[Constants.BK_ERROR_MSG] as String,
+                                    creator = userId,
+                                    modifier = userId,
+                                    createTime = LocalDateTime.now(),
+                                    updateTime = LocalDateTime.now(),
+                                    atomCode = e[Constants.BK_ATOM_CODE] as String
+                                )
+                            )
+                        }
+                    }
+                    metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
+                    logger.info("syncAtomErrorCodeRel.Progress:$projectMinId total:$projectMaxId")
+                    projectMinId += (syncsNumber + 1)
+                } while (projectMinId <= projectMaxId)
+                logger.info("end syncAtomErrorCodeRel.")
+            }
+        }
+        return true
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ErrorCodeInfoManageService::class.java)
     }
 }

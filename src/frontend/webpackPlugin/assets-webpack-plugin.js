@@ -43,7 +43,9 @@ class assetsPlugin {
                     // Manipulate the content
                     const assetsPos = data.html.indexOf('<!-- end devops:assets -->')
                     if (assetsPos > -1) {
-                        data.html = `${data.html.slice(0, assetsPos)} <script type='text/javascript' src='${assets.js[0]}'></script><script type='text/javascript'>window.jsAssets = ${JSON.stringify(assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
+                        data.html = `${data.html.slice(0, assetsPos)} 
+                        <script type='text/javascript' src='${assets.js[0]}'></script>
+                        <script type='text/javascript'>window.jsAssets = ${JSON.stringify(assets.js.slice(1))};</script>\n${data.html.slice(assetsPos)}`
                     }
                     // Tell webpack to move on
                     cb(null, data)

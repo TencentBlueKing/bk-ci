@@ -680,7 +680,8 @@
         .source-type-radio {
             display: flex;
             justify-content: space-between;
-            padding-left: 14px;
+            align-items: center;
+            padding: 0 20px 0 14px;
             height: 42px;
             line-height: 38px;
             border-bottom: 1px solid $borderWeightColor;
@@ -745,10 +746,7 @@
         }
 
         .preview-node-btn {
-            float: right;
-            padding-right: 20px;
-            line-height: 42px;
-            width: 82px;
+            flex-shrink: 0;
             cursor: pointer;
             color: $primaryColor;
             font-size: 14px;

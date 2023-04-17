@@ -81,19 +81,20 @@
                             <label class="bk-label"> {{ $t('store.名称') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%">
-                                    <input type="text" class="bk-form-input atom-name-input" :placeholder="$t('store.请输入中英文名称，不超过40个字符')"
+                                    <bk-input class="atom-name-input" :placeholder="$t('store.请输入中英文名称，不超过40个字符')"
                                         name="atomName"
                                         v-model="createAtomForm.name"
                                         v-validate="{
                                             required: true,
                                             regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_. ]{1,40}$'
                                         }"
-                                        :class="{ 'is-danger': errors.has('atomName') }">
+                                        :class="{ 'is-danger': errors.has('atomName') }"
+                                    />
                                     <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">
                                         {{ errors.first("atomName") && errors.first("atomName").indexOf($t('store.正则')) > 0 ? $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') : errors.first("atomName") }}
                                     </p>
                                 </div>
-                                <bk-popover placement="right">
+                                <bk-popover class="info-circle-icon" placement="right" max-width="400">
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
@@ -106,19 +107,20 @@
                             <label class="bk-label"> {{ $t('store.标识') }} </label>
                             <div class="bk-form-content atom-item-content is-tooltips">
                                 <div style="min-width: 100%;">
-                                    <input type="text" class="bk-form-input atom-id-input" :placeholder="$t('store.请输入英文名称，不超过30个字符')"
+                                    <bk-input class="atom-id-input" :placeholder="$t('store.请输入英文名称，不超过30个字符')"
                                         name="atomId"
                                         v-model="createAtomForm.atomCode"
                                         v-validate="{
                                             required: true,
                                             regex: '^[a-zA-Z][a-zA-Z0-9_-]{1,30}$'
                                         }"
-                                        :class="{ 'is-danger': errors.has('atomId') }">
+                                        :class="{ 'is-danger': errors.has('atomId') }"
+                                    />
                                     <p :class="errors.has('atomId') ? 'error-tips' : 'normal-tips'">
                                         {{ errors.first("atomId") && errors.first("atomId").indexOf($t('store.正则')) > 0 ? $t('store.由英文字母、数字、连字符(-)或下划线(_)组成，以英文字母开头，不超过30个字符') : errors.first("atomId") }}
                                     </p>
                                 </div>
-                                <bk-popover placement="right">
+                                <bk-popover class="info-circle-icon" placement="right" max-width="400">
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
@@ -156,7 +158,7 @@
                                     </bk-select>
                                     <div v-if="atomErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
-                                <bk-popover placement="right" width="400">
+                                <bk-popover class="info-circle-icon" placement="right" max-width="400">
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.debugProjectTips') }} </p>
@@ -256,7 +258,7 @@
             :auto-close="false"
         >
             <bk-form ref="deleteForm" class="delete-form" :label-width="0" :model="deleteObj.formData">
-                <p class="dialog-tip">{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
+                <p class="dialog-tip">{{$t('store.删除时将清理数据。删除后不可恢复！')}}</p>
                 <p class="dialog-tip">{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
                 <bk-form-item property="projectName">
                     <bk-input
@@ -335,8 +337,8 @@
                 itemUrl: '/console/pm',
                 itemText: this.$t('store.新建项目'),
                 offlineTips: this.$t('store.下架后：'),
-                specificationDocUrl: `${DOCS_URL_PREFIX}/Services/Store/plugins/plugin-specification.md`,
-                errorCodeDocUrl: `${DOCS_URL_PREFIX}/Services/Store/plugins/plugin-error-code.md`,
+                specificationDocUrl: this.BKCI_DOCS.PLUGIN_SPECIFICATE_DOC,
+                errorCodeDocUrl: this.BKCI_DOCS.PLUGIN_ERROR_CODE_DOC,
                 renderList: [],
                 projectList: [],
                 languageList: [],
@@ -372,7 +374,7 @@
                     show: false,
                     isLoading: false,
                     quickClose: true,
-                    width: 565,
+                    width: 720,
                     title: this.$t('store.新增插件')
                 },
                 offlinesideConfig: {
@@ -771,6 +773,11 @@
 </script>
 
 <style lang="scss" scoped>
+    .info-circle-icon {
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+    }
     ::v-deep .atom-dialog-wrapper {
         .bk-form-item{
             .bk-label {

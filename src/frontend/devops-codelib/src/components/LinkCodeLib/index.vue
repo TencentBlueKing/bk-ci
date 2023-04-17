@@ -1,12 +1,12 @@
 <template>
-    <bk-dropdown-menu :class="{ &quot;devops-button-dropdown&quot;: true, &quot;disabled&quot;: disabled }">
+    <bk-dropdown-menu :class="{ 'devops-button-dropdown': true, 'disabled': disabled }">
         <bk-button :disabled="disabled" theme="primary" slot="dropdown-trigger">
             <i class="devops-icon icon-plus"></i>
             <span>{{ $t('codelib.linkCodelib') }}</span>
         </bk-button>
         <ul class="devops-button-dropdown-menu" slot="dropdown-content">
             <li v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
-                {{ $t(`codelib.${typeLabel}`) + $t('codelib.codelib') }}
+                {{ $t('codelib.typeCodelib', [typeLabel])}}
             </li>
         </ul>
     </bk-dropdown-menu>
