@@ -113,5 +113,5 @@ data class ProjectDiffVO(
     @ApiModelProperty("项目类型")
     val projectType: Int?,
     @ApiModelProperty("审批中项目类型")
-    val afterProjectType: Int?,
+    val afterProjectType: Int?
 )
