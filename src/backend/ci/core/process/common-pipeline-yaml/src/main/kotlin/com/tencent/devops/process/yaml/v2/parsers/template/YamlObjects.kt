@@ -254,7 +254,7 @@ object YamlObjects {
                     }
                 )
             },
-            imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap),
+            imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)
         )
     }
 
