@@ -34,6 +34,7 @@ import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -49,15 +50,14 @@ class MetricsDataClearDao {
         statisticsTime: LocalDateTime
     ) {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
-            dslContext.deleteFrom(this).where(
-                ID.notIn(
-                    dslContext.select(DSL.min(ID)).from(this).where(
-                        PROJECT_ID.eq(projectId)
-                            .and(PIPELINE_ID.eq(pipelineId))
-                            .and(STATISTICS_TIME.eq(statisticsTime))
-                    )
-                )
-            ).execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
@@ -68,15 +68,14 @@ class MetricsDataClearDao {
         statisticsTime: LocalDateTime
     ) {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
-            dslContext.deleteFrom(this).where(
-                ID.notIn(
-                    dslContext.select(DSL.min(ID)).from(this).where(
-                        PROJECT_ID.eq(projectId)
-                            .and(PIPELINE_ID.eq(pipelineId))
-                            .and(STATISTICS_TIME.eq(statisticsTime))
-                    )
-                )
-            ).execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
@@ -87,15 +86,14 @@ class MetricsDataClearDao {
         statisticsTime: LocalDateTime
     ) {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
-            dslContext.deleteFrom(this).where(
-                ID.notIn(
-                    dslContext.select(DSL.min(ID)).from(this).where(
-                        PROJECT_ID.eq(projectId)
-                            .and(PIPELINE_ID.eq(pipelineId))
-                            .and(STATISTICS_TIME.eq(statisticsTime))
-                    ).groupBy(ERROR_TYPE)
-                )
-            ).execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ERROR_TYPE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
@@ -123,15 +121,14 @@ class MetricsDataClearDao {
         statisticsTime: LocalDateTime
     ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
-            dslContext.deleteFrom(this).where(
-                ID.notIn(
-                    dslContext.select(DSL.min(ID)).from(this).where(
-                        PROJECT_ID.eq(projectId)
-                            .and(PIPELINE_ID.eq(pipelineId))
-                            .and(STATISTICS_TIME.eq(statisticsTime))
-                    ).groupBy(ATOM_CODE)
-                )
-            ).execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ATOM_CODE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
@@ -142,15 +139,14 @@ class MetricsDataClearDao {
         statisticsTime: LocalDateTime
     ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
-            dslContext.deleteFrom(this).where(
-                ID.notIn(
-                    dslContext.select(DSL.min(ID)).from(this).where(
-                        PROJECT_ID.eq(projectId)
-                            .and(PIPELINE_ID.eq(pipelineId))
-                            .and(STATISTICS_TIME.eq(statisticsTime))
-                    ).groupBy(ERROR_TYPE, ATOM_CODE)
-                )
-            ).execute()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(STATISTICS_TIME.eq(statisticsTime))
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ERROR_TYPE, ATOM_CODE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
