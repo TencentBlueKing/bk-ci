@@ -88,8 +88,8 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
 
-    @Value("\${remotedev.IdePort}")
-    val IdePort: String = "23000"
+    @Value("\${remotedev.idePort}")
+    val idePort: String = ""
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -254,7 +254,7 @@ class DevCloudRemoteDevService @Autowired constructor(
 
         envVarList.addAll(
             listOf(
-                EnvVar(DEVOPS_REMOTING_IDE_PORT, IdePort),
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
                 EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
