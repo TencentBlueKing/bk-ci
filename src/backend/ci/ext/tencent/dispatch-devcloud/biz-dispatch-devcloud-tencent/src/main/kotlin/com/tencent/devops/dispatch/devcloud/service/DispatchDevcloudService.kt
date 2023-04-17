@@ -67,7 +67,7 @@ class DispatchDevcloudService @Autowired constructor(
         pipelineId: String,
         buildId: String?,
         vmSeqId: String,
-        needCheckPermission: Boolean = true
+        needCheckPermission: Boolean = false
     ): DevCloudDebugResponse {
         logger.info("$userId start debug devcloud pipelineId: $pipelineId buildId: $buildId vmSeqId: $vmSeqId")
         // 根据是否传入buildId 查找containerName
