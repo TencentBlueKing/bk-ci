@@ -176,7 +176,8 @@ class RbacPermissionMigrateService constructor(
             )
             return false
         } finally {
-            logger.info("watcher migrate $projectCode|${watcher.prettyPrint()}")
+            watcher.stop()
+            logger.info("watcher migrate $projectCode|$watcher")
         }
     }
 
