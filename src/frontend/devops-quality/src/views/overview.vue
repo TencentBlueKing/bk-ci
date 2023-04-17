@@ -187,7 +187,7 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toRouteLink('createRule'),
-                            text: this.$t('quality.创建规则')
+                            text: this.$t('quality.创建规则'),
                             permissionData: {
                                 projectId: projectId,
                                 resourceType: RULE_RESOURCE_TYPE,
