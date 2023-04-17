@@ -47,15 +47,16 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
+import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
+import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
@@ -67,7 +68,6 @@ import org.jooq.exception.TooManyRowsException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -203,22 +203,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveErrorCodeInfoPOs.isNotEmpty()) {
                     saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                        try {
-                            metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.warn("fail to update errorCodeInfo:$saveErrorCodeInfoPO", ignored)
-                            metricsDataReportDao.updateErrorCodeInfo(
-                                dslContext = dslContext,
-                                atomCode = saveErrorCodeInfoPO.atomCode!!,
-                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                    errorType = saveErrorCodeInfoPO.errorType,
-                                    errorCode = saveErrorCodeInfoPO.errorCode,
-                                    errorMsg = saveErrorCodeInfoPO.errorMsg,
-                                    modifier = saveErrorCodeInfoPO.modifier,
-                                    updateTime = LocalDateTime.now()
-                                )
-                            )
-                        }
+                        metricsDataReportDao.saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
                     }
                 }
             }
@@ -245,14 +230,33 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val pipelineName = buildEndPipelineMetricsData.pipelineName
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
-        val atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            statisticsTime = statisticsTime,
-            errorType = taskErrorType,
-            atomCode = taskMetricsData.atomCode
-        )
+        var atomFailSummaryDataRecord: TAtomFailSummaryDataRecord? = null
+        try {
+            atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                errorType = taskErrorType,
+                atomCode = taskMetricsData.atomCode
+            )
+        } catch (ignored: TooManyRowsException) {
+            logger.warn("fail to get atomFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
+            metricsDataClearService.metricsDataClear(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                buildId = buildEndPipelineMetricsData.buildId
+            )
+            atomFailSummaryDataRecord = metricsDataQueryDao.getAtomFailSummaryData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                errorType = taskErrorType,
+                atomCode = taskMetricsData.atomCode
+            )
+        }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomFailSummaryDataPO = updateAtomFailSummaryDataPOs.firstOrNull {
             it.atomCode == taskMetricsData.atomCode
@@ -717,13 +721,31 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
         errorTypes.forEach { errorType ->
             // 插入流水线失败汇总数据
-            val pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                statisticsTime = statisticsTime,
-                errorType = errorType
-            )
+            var pipelineFailSummaryDataRecord: TPipelineFailSummaryDataRecord? = null
+            try {
+                pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    errorType = errorType
+                )
+            } catch (ignored: TooManyRowsException) {
+                logger.warn("fail to get pipelineFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
+                metricsDataClearService.metricsDataClear(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    buildId = buildEndPipelineMetricsData.buildId
+                )
+                pipelineFailSummaryDataRecord = metricsDataQueryDao.getPipelineFailSummaryData(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    statisticsTime = statisticsTime,
+                    errorType = errorType
+                )
+            }
             if (pipelineFailSummaryDataRecord == null) {
                 val savePipelineFailSummaryDataPO = SavePipelineFailSummaryDataPO(
                     id = client.get(ServiceAllocIdResource::class)
