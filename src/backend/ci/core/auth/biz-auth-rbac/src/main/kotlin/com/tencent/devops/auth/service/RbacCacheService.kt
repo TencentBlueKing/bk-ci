@@ -157,7 +157,7 @@ class RbacCacheService constructor(
                 }
             groupConfigActionsCache.put(resourceType, groupConfigActions)
         }
-        return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedBy { it.id }
+        return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedByDescending { it.id }
     }
 
     private fun validateUserProjectPermission(
