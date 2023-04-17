@@ -125,7 +125,14 @@ class MigrateV3PolicyService constructor(
 
         // 自定义用户组默认过期时间6个月
         private const val DEFAULT_EXPIRED_DAY = 180L
+        // 毫秒转换
         private const val MILLISECOND = 1000
+        // 项目视图管理
+        private const val PROJECT_VIEWS_MANAGER = "project_views_manager"
+        // 项目查看权限
+        private const val PROJECT_VIEW = "project_view"
+        // 项目访问权限
+        private const val PROJECT_VISIT = "project_visit"
         private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
@@ -197,7 +204,7 @@ class MigrateV3PolicyService constructor(
     }
 
     fun migrateUserCustomPolicy(projectCode: String) {
-        logger.info("start to migrate $projectCode user custom policy")
+        logger.info("start to migrate user custom policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
             val managerGroupId = authResourceGroupDao.get(
@@ -594,7 +601,6 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = resource.paths[0][1].id,
                     userActions = permission.actions.map { it.id }
                 )
-
         }
     }
 
@@ -616,15 +622,25 @@ class MigrateV3PolicyService constructor(
         v3ResourceCode: String,
         userActions: List<String>
     ): Int? {
+        logger.info("find min match group|$userId|$projectCode|$resourceType|$v3ResourceCode|$userActions")
         // 先将v3资源code转换成rbac资源code
         val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(
             resourceType = resourceType,
             resourceCode = v3ResourceCode
         )
+        val finalUserActions = userActions.toMutableList()
+        // project_view需要替换成project_visit
+        if (finalUserActions.contains(PROJECT_VIEW)) {
+            finalUserActions.remove(PROJECT_VIEW)
+            finalUserActions.add(PROJECT_VISIT)
+        }
+        if (finalUserActions.contains(PROJECT_VIEWS_MANAGER)) {
+            finalUserActions.remove(PROJECT_VIEWS_MANAGER)
+        }
         // 判断是否已有所有action权限
         val notActionPermissionMap = permissionService.batchValidateUserResourcePermission(
             userId = userId,
-            actions = userActions,
+            actions = finalUserActions,
             projectCode = projectCode,
             resourceCode = resourceCode,
             resourceType = resourceType
@@ -633,7 +649,7 @@ class MigrateV3PolicyService constructor(
         // 存在没有action的权限，匹配资源默认用户组权限
         if (notActionPermissionMap.isNotEmpty()) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
-                if (groupConfig.actions.containsAll(userActions)) {
+                if (groupConfig.actions.containsAll(finalUserActions)) {
                     val groupId = authResourceGroupDao.get(
                         dslContext = dslContext,
                         projectCode = projectCode,
@@ -641,13 +657,13 @@ class MigrateV3PolicyService constructor(
                         resourceCode = resourceCode,
                         groupCode = groupConfig.groupCode
                     )?.relationId?.toInt()
-                    logger.info("user match resource ${groupConfig.groupCode} group|$userId|$userActions|$groupId")
+                    logger.info("user match resource ${groupConfig.groupCode} group|$userId|$finalUserActions|$groupId")
                     return groupId
                 }
             }
-            logger.info("user not match resource group|$userId|$userActions")
+            logger.info("user not match resource group|$userId|$finalUserActions")
         } else {
-            logger.info("user has resource action permission|$userId|$resourceCode|$userActions")
+            logger.info("user has resource action permission|$userId|$resourceCode|$finalUserActions")
         }
         return null
     }

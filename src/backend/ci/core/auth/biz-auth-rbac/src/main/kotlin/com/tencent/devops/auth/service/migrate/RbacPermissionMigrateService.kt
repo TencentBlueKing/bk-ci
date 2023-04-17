@@ -28,11 +28,13 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -98,23 +100,20 @@ class RbacPermissionMigrateService constructor(
                 logger.info("project $projectCode is migrating")
                 return false
             }
-            authMigrationDao.create(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                status = AuthMigrateStatus.PENDING.value
-            )
             val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data ?: run {
                 logger.warn("project $projectCode not exist")
                 return false
-            }
-            if (projectInfo.routerTag == migrateProjectTag) {
-                logger.info("project $projectCode has been migrated")
-                return true
             }
             if (projectInfo.relationId == null) {
                 logger.info("project $projectCode not v3 auth")
                 return false
             }
+
+            authMigrationDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                status = AuthMigrateStatus.PENDING.value
+            )
 
             // 创建分级管理员
             watcher.start("createGradeManager")
@@ -126,7 +125,9 @@ class RbacPermissionMigrateService constructor(
                 createGradeManager(projectCode, projectInfo)
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
-                return false
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION
+                )
             }
             // 迁移资源
             watcher.start("migrateResource")
