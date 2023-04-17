@@ -92,6 +92,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -139,6 +140,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -209,6 +211,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -318,6 +321,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -471,6 +475,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
@@ -591,6 +596,7 @@ stages:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
         options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null
