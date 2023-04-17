@@ -100,7 +100,9 @@ class AuthMigrationDao {
         totalTime: Long?
     ) {
         with(TAuthMigration.T_AUTH_MIGRATION) {
-            val update = dslContext.update(this).set(STATUS, status)
+            val update = dslContext.update(this)
+                .set(STATUS, status)
+                .set(END_TIME, LocalDateTime.now())
             if (totalTime != null) {
                 update.set(TOTAL_TIME, totalTime)
             }

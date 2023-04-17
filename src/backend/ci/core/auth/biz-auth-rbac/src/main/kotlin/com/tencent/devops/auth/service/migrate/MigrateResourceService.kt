@@ -76,25 +76,37 @@ class MigrateResourceService @Autowired constructor(
     fun migrateResource(projectCode: String) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
+        try {
+            val resourceTypes = rbacCacheService.listResourceTypes()
+                .map { it.resourceType }
+                .filterNot { noNeedToMigrateResourceType.contains(it) }
 
-        val resourceTypes = rbacCacheService.listResourceTypes()
-            .map { it.resourceType }
-            .filterNot { noNeedToMigrateResourceType.contains(it) }
+            logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
+            // 迁移各个资源类型下的资源
+            val traceId = MDC.get(TraceTag.BIZID)
+            val resourceTypeFuture = resourceTypes.map { resourceType ->
+                CompletableFuture.supplyAsync(
+                    {
+                        MDC.put(TraceTag.BIZID, traceId)
+                        migrateResource(projectCode = projectCode, resourceType = resourceType)
+                    },
+                    executorService
+                )
+            }
+            CompletableFuture.allOf(*resourceTypeFuture.toTypedArray()).join()
 
-        logger.info("MigrateResourceService|resourceTypes:$resourceTypes")
-        // 迁移各个资源类型下的资源
-        val traceId = MDC.get(TraceTag.BIZID)
-        val resourceTypeFuture = resourceTypes.map { resourceType ->
-            CompletableFuture.supplyAsync(
-                {
-                    MDC.put(TraceTag.BIZID, traceId)
-                    migrateResource(projectCode = projectCode, resourceType = resourceType)
-                },
-                executorService
+            // 统计资源数
+            val resourceCountDTOs = resourceTypes.map { resourceType ->
+                calculateResourceCount(projectCode = projectCode, resourceType = resourceType)
+            }
+            authMigrationDao.updateResourceCount(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceCountInfo = JsonUtil.toJson(resourceCountDTOs)
             )
+        } finally {
+            logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
         }
-        CompletableFuture.allOf(*resourceTypeFuture.toTypedArray()).join()
-        logger.info("It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource $projectCode")
     }
 
     private fun migrateResource(projectCode: String, resourceType: String) {
@@ -104,7 +116,6 @@ class MigrateResourceService @Autowired constructor(
             createRbacResource(
                 resourceType = resourceType, projectCode = projectCode
             )
-            calculateResourceCount(projectCode, resourceType)
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource|$projectCode|$resourceType"
@@ -206,7 +217,7 @@ class MigrateResourceService @Autowired constructor(
         ) as FetchInstanceInfoResponseDTO?
     }
 
-    private fun calculateResourceCount(projectCode: String, resourceType: String) {
+    private fun calculateResourceCount(projectCode: String, resourceType: String): ResourceMigrationCountDTO {
         val count = authResourceService.countByProjectAndType(
             projectCode = projectCode,
             resourceType = resourceType
@@ -216,17 +227,10 @@ class MigrateResourceService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType
         )
-        authMigrationDao.updateResourceCount(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceCountInfo = JsonUtil.toJson(
-                ResourceMigrationCountDTO(
-                    resourceType = resourceType,
-                    count = count,
-                    groupCount = groupCount
-                ),
-                false
-            )
+        return ResourceMigrationCountDTO(
+            resourceType = resourceType,
+            count = count,
+            groupCount = groupCount
         )
     }
 
