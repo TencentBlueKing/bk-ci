@@ -781,7 +781,12 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 statisticsTime = statisticsTime,
                 buildId = buildEndPipelineMetricsData.buildId
             )
-            pipelineOverviewDataReport(dslContext, buildEndPipelineMetricsData, currentTime)
+            pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
         }
         if (pipelineOverviewDataRecord == null) {
             // db没有记录则插入记录
