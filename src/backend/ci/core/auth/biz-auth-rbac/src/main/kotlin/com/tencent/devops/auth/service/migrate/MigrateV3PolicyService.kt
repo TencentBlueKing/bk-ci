@@ -129,7 +129,6 @@ class MigrateV3PolicyService constructor(
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
 
-
     // iam迁移的token
     @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
@@ -592,7 +591,6 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = resource.paths[0][1].id,
                     userActions = permission.actions.map { it.id }
                 )
-
         }
     }
 
