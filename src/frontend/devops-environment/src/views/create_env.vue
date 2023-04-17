@@ -54,7 +54,8 @@
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}</span>
+                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}
+                            </span>
                         </div>
                         <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
                             <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
@@ -113,7 +114,7 @@
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
-
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '../utils/permission'
     export default {
         components: {
             'empty-tips': emptyTips,
@@ -198,7 +199,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('environment.applyPermission')
                         }
                     ]
@@ -264,13 +265,13 @@
             changeProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
-            goToApplyPerm () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.environment, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
-                // window.open(url, '_blank')
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: ENV_RESOURCE_ACTION.CREATE
+                })
             },
             /**
              * 弹窗全选联动
@@ -677,7 +678,8 @@
         .source-type-radio {
             display: flex;
             justify-content: space-between;
-            padding-left: 14px;
+            align-items: center;
+            padding: 0 20px 0 14px;
             height: 42px;
             line-height: 38px;
             border-bottom: 1px solid $borderWeightColor;
@@ -742,10 +744,7 @@
         }
 
         .preview-node-btn {
-            float: right;
-            padding-right: 20px;
-            line-height: 42px;
-            width: 82px;
+            flex-shrink: 0;
             cursor: pointer;
             color: $primaryColor;
             font-size: 14px;

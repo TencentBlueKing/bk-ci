@@ -109,6 +109,31 @@ class BuildRecordTaskDao {
         }
     }
 
+    fun updateRecordStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildStatus: BuildStatus,
+        stageId: String? = null,
+        containerId: String? = null
+    ) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val update = dslContext.update(this)
+                .set(STATUS, buildStatus.name)
+            update.where(
+                BUILD_ID.eq(buildId)
+                    .and(PROJECT_ID.eq(projectId))
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(EXECUTE_COUNT.eq(executeCount))
+            )
+            stageId?.let { update.set(STAGE_ID, stageId) }
+            containerId?.let { update.set(CONTAINER_ID, containerId) }
+            update.execute()
+        }
+    }
+
     fun getRecords(
         dslContext: DSLContext,
         projectId: String,

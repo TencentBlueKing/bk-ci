@@ -3,7 +3,9 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCredential') }}</span>
+                <span class="inner-header-title">
+                    {{ pageType === 'create' ? $t('ticket.createCredential') : $t('ticket.editCredential') }}
+                </span>
             </template>
         </content-header>
 
@@ -35,10 +37,15 @@
                                 :item-selected="changeTicketType"
                             >
                             </selector>
-                            <bk-popover placement="right">
+                            <bk-popover placement="right" :max-width="250">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div>
+                                        {{ getTypeDesc(localConfig.credentialType) }}
+                                        <a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">
+                                            {{ $t('ticket.learnMore') }}
+                                        </a>
+                                    </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -84,7 +91,7 @@
                     <!-- 凭据别名 end -->
 
                     <!-- 凭据内容 start -->
-                    <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
+                    <div v-for="(obj, key) in newModel" :key="key" :class="{ 'bk-form-item': true, 'is-required': obj.rules }">
                         <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
                             <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'devops-icon icon-hide' : 'devops-icon icon-eye'"></i></a>
@@ -117,7 +124,18 @@
                     <!-- 凭据描述 end -->
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+
+                        <bk-button
+                            v-perm="{
+                                tooltips: $t('ticket.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode: pageType === 'create' ? projectId : creId,
+                                    action: pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -134,6 +152,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -145,7 +164,9 @@
         },
         data () {
             return {
-                ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
+                ticketDocsUrl: this.BKCI_DOCS.TICKET_DOC,
                 showContent: false,
                 hasPermission: true,
                 newModel: {},
@@ -182,7 +203,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('ticket.applyPermission')
                         }
                     ]
@@ -245,13 +266,13 @@
             changeProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
-            goToApplyPerm () {
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
-                // window.open(url, '_blank')
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CRED_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: CRED_RESOURCE_ACTION.CREATE
+                })
             },
             cancel () {
                 this.$router.push({
@@ -290,14 +311,26 @@
                             }
                             message = this.$t('ticket.credential.successfullysavedential')
                             theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
+
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            const resourceCode = this.pageType === 'create' ? this.projectId : this.creId
+                            const action = this.pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
+                            theme = 'error'
+
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode,
+                                    action
+                                }
+                            )
+                        } finally {
                             if (theme === 'success') {
                                 this.$router.push({
                                     name: 'credentialList'
@@ -360,13 +393,16 @@
                             credential: this.editInitCredential
                         })
                         this.newModel = this.getTicketByType(data.credentialType)
-                    } catch (err) {
-                        const message = err.message ? err.message : err
-                        const theme = 'error'
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: CRED_RESOURCE_TYPE,
+                                resourceCode: this.creId,
+                                action: CRED_RESOURCE_ACTION.VIEW
+                            }
+                        )
                     } finally {
                         this.loading.isLoading = false
                     }

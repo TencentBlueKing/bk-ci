@@ -74,8 +74,15 @@
 
             downLoadFromApi (url, name) {
                 this.isDownLoading = true
-                this.download({ url, name }).catch((err) => {
-                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                this.download({ url, name }).catch((e) => {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceCode: this.pipelineId,
+                            action: this.$permissionResourceAction.EDIT
+                        }
+                    )
                 }).finally(() => {
                     this.isDownLoading = false
                 })

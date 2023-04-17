@@ -24,7 +24,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            environment: './src/index'
+            environment: './src/entry'
         },
         publicPath: '/environment/',
         dist: '/environment',

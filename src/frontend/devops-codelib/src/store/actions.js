@@ -18,6 +18,8 @@
  */
 
 import Vue from 'vue'
+import { RESOURCE_ACTION, RESOURCE_TYPE } from '@/utils/permission'
+
 import {
     REPOSITORY_API_URL_PREFIX,
     SET_CODELIBS_MUTATION,
@@ -153,7 +155,8 @@ const actions = {
         dispatch
     }, {
         projectId,
-        repositoryHashId
+        repositoryHashId,
+        instance
     }) {
         try {
             const codelib = await vue.$ajax.get(`${REPOSITORY_API_URL_PREFIX}/user/repositories/${projectId}/${repositoryHashId}`)
@@ -162,9 +165,15 @@ const actions = {
                 repositoryHashId
             })
         } catch (e) {
-            commit(FETCH_ERROR, e, {
-                root: true
-            })
+            instance.handleError(
+                e,
+                {
+                    projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: repositoryHashId,
+                    action: RESOURCE_ACTION.VIEW
+                }
+            )
         }
     },
     async toggleCodelibDialog ({
@@ -180,7 +189,8 @@ const actions = {
         typeName,
         authType,
         svnType,
-        codelib
+        codelib,
+        instance
     }) {
         try {
             commit(TOGGLE_CODE_LIB_DIALOG, {
@@ -192,7 +202,8 @@ const actions = {
                 await Promise.all([
                     dispatch('requestDetail', {
                         projectId,
-                        repositoryHashId
+                        repositoryHashId,
+                        instance
                     }),
                     dispatch('requestTickets', {
                         projectId,

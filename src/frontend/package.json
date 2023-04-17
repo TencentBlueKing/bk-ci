@@ -6,9 +6,10 @@
     "@commitlint/config-conventional": "^16.2.4",
     "@typescript-eslint/parser": "^1.9.0",
     "chalk": "^4.0.0",
+    "del": "6.1.1",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
-    "gulp-svg-sprite": "^1.3.7",
+    "gulp-svg-sprite": "^2.0.3",
     "husky": "^7.0.2",
     "lerna": "^4.0.0",
     "lint-staged": "^10.2.11",
@@ -42,7 +43,6 @@
       "devops-codelib",
       "devops-environment",
       "devops-atomstore",
-      "devops-artifactory",
       "devops-ticket",
       "devops-pipeline",
       "devops-quality",
@@ -50,27 +50,42 @@
       "devops-turbo",
       "devops-stream",
       "devops-metrics",
-      "bk-pipeline"
+      "devops-manage",
+      "devops-permission",
+      "bk-pipeline",
+      "bk-permission"
     ],
     "nohoist": [
+      "bk-permission",
+      "bk-permission/**",
       "bkui-pipeline",
       "bkui-pipeline/**",
       "devops-stream",
       "devops-stream/**",
       "devops-metrics",
-      "devops-metrics/**"
+      "devops-metrics/**",
+      "devops-manage",
+      "devops-manage/**",
+      "devops-permission",
+      "devops-permission/**"
     ]
   },
   "dependencies": {
     "@webpack-cli/serve": "^1.7.0",
     "babel-plugin-istanbul": "6.1.1",
     "core-js": "3.26.0",
-    "css-loader": "6.0.0",
     "cross-env": "^7.0.3",
     "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
+    "gulp-hash": "^4.2.2",
+    "gulp-htmlmin": "^5.0.1",
+    "gulp-inject": "^5.0.5",
+    "gulp-replace": "^1.1.4",
+    "gulp-svgmin": "^4.1.0",
     "uuid": "^8.3.2",
-    "vue-eslint-parser": "^9.0.2"
+    "vue-eslint-parser": "^9.0.2",
+    "vue-loader": "15.9.8"
+    "copy-webpack-plugin": "9.0.1"
   }
 }

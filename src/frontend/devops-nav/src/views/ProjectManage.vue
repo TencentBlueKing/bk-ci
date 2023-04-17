@@ -3,42 +3,33 @@
         v-bkloading="{ isLoading: isDataLoading }"
         style="width: 100%"
     >
-        <div class="biz-pm biz-pm-index biz-create-pm">
+        <div class="manage-header">
+            {{ $t('projectManage') }}
+        </div>
+        <section class="biz-pm biz-pm-index biz-create-pm">
             <template v-if="projectList.length || isDataLoading">
-                <div class="biz-pm-header">
-                    <div class="title">
-                        {{ $t('projectManage') }}
-                    </div>
-                    <div class="action">
-                        <bk-checkbox
-                            v-model="isFilterByOffline"
-                            name="isFilterByOffline"
-                        >
-                            {{ $t('showDisableProject') }}
-                        </bk-checkbox>
-                        <bk-button
-                            theme="primary"
-                            icon="icon-plus"
-                            @click="hasCreatePermission ? togglePMDialog(true) : applyCreatePermission()"
-                        >
-                            {{ $t('addProject') }}
-                        </bk-button>
-                        <bk-input
-                            v-model="inputValue"
-                            class="search-input-row"
-                            name="searchInput"
-                            :placeholder="$t('searchTips')"
-                            right-icon="icon-search"
-                            @keyup="filterProjectList(isFilterByOffline)"
-                        />
-                    </div>
+                <div class="action-layout">
+                    <bk-button
+                        theme="primary"
+                        icon="plus"
+                        class="mr10"
+                        @click="handleNewProject"
+                    >
+                        {{ $t('newProject') }}
+                    </bk-button>
+                    <bk-input
+                        v-model="inputValue"
+                        class="search-input"
+                        clearable
+                        right-icon="bk-icon icon-search"
+                        :placeholder="$t('searchProject')"
+                    ></bk-input>
                 </div>
                 <bk-table
-                    v-if="curProjectList.length"
-                    class="biz-table"
+                    class="biz-table mt20"
                     size="medium"
-                    :data="formatPageData"
-                    :pagination="pageConf"
+                    :data="curProjectList"
+                    :pagination="pagination"
                     @page-change="pageChange"
                     @page-limit-change="limitChange"
                 >
@@ -47,124 +38,100 @@
                         prop="logoAddr"
                         width="300"
                     >
-                        <template slot-scope="props">
+                        <template slot-scope="{ row }">
                             <div class="project-name-cell">
                                 <span
-                                    v-if="props.row.logoAddr"
+                                    v-if="row.logoAddr"
                                     class="avatar"
-                                    @click="modifyLogo(props.row)"
                                 >
                                     <img
                                         class="avatar-addr"
-                                        :src="props.row.logoAddr"
+                                        :src="row.logoAddr"
                                     >
-                                    <span class="bg-avatar">{{ $t('editLabel') }}</span>
                                 </span>
                                 <span
                                     v-else
                                     class="avatar"
-                                    :class="['project-avatar', `match-color-${matchForCode(props.row.projectCode)}`]"
-                                    @click="modifyLogo(props.row)"
+                                    :class="['project-avatar', `match-color-${matchForCode(row.projectCode)}`]"
                                 >
-                                    {{ props.row.projectName.substr(0, 1) }}
-                                    <span class="bg-avatar">{{ $t('editLabel') }}</span>
+                                    {{ row.projectName.substr(0, 1) }}
                                 </span>
                                 <div class="info">
-                                    <p class="title">
-                                        <template v-if="props.row.approvalStatus !== 2">
-                                            <span class="is-disabled">{{ props.row.projectName }}</span>
-                                        </template>
-                                        <template v-else>
-                                            <span
-                                                :class="['title-text', { 'is-disabled': !props.row.enabled }]"
-                                            >{{ props.row.projectName }}</span>
-                                        </template>
-                                    </p>
-                                    <time class="time">{{ props.row.created_at }}</time>
+                                    <bk-button text @click="goToProjectManage(row)">{{ row.projectName }}</bk-button>
                                 </div>
                             </div>
                         </template>
                     </bk-table-column>
                     <bk-table-column
+                        :label="$t('projectId')"
+                        prop="englishName"
+                    />
+                    <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
+                        width="500"
                     />
                     <bk-table-column
                         :label="$t('projectCreator')"
                         prop="creator"
                     />
                     <bk-table-column
-                        :label="$t('projectOperation')"
-                        width="200"
+                        :label="$t('projectStatus')"
+                        prop="creator"
+                        width="180"
                     >
-                        <template slot-scope="props">
-                            <!-- 状态为待审批 -->
-                            <template v-if="props.row.approvalStatus === 1">
-                                <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
-                                    href="javascript:void(0)"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('editLabel') }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('waitforReview') }"
-                                    href="javascript:void(0)"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t('enableLabel') }}</a>
-                            </template>
-                            <!-- 状态为已驳回 -->
-                            <template v-else-if="props.row.approvalStatus === 3">
-                                <a
-                                    href="javascript:void(0)"
-                                    :class="['bk-text-button']"
-                                    @click.stop.prevent="togglePMDialog(true, props.row)"
-                                >{{ $t('editLabel') }}</a>
-                                <a
-                                    v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
-                                    href="javascript:void(0)"
-                                    class="bk-text-button is-disabled"
-                                    :title="$t('accessDeny.noOperateAccess')"
-                                >{{ $t("enableLabel") }}</a>
-                                
-                            </template>
-
-                            <!-- 否则正常显示 -->
-                            <template v-else>
-                                <a
-                                    href="javascript:void(0)"
-                                    :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
-                                    @click.stop.prevent="togglePMDialog(true, props.row)"
-                                >{{ $t('editLabel') }}</a>
-                                <a
-                                    href="javascript:void(0)"
-                                    class="bk-text-button"
-                                    @click.stop.prevent="toggleProject(props.row)"
-                                >{{ props.row.enabled ? $t('disableLabel') : $t('enableLabel') }}</a>
-                                
-                            </template>
+                        <template slot-scope="{ row }">
+                            <span class="project-status">
+                                <div class="enable-switcher" @click="handleChangeEnabled(row)"></div>
+                                <bk-switcher
+                                    :value="row.enabled"
+                                    class="mr5"
+                                    size="small"
+                                    theme="primary"
+                                    :disabled="[1, 3, 4].includes(row.approvalStatus)"
+                                />
+                                <span class="mr5">
+                                    {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
+                                </span>
+                                <div
+                                    v-bk-tooltips="{ content: $t('新建项目申请已拒绝') }"
+                                    v-if="row.approvalStatus === 3"
+                                    class="devops-icon status-icon"
+                                >
+                                    <img src="../assets/scss/logo/warning-circle-small.svg" alt="">
+                                </div>
+                                <div
+                                    v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
+                                    v-if="row.approvalStatus === 4"
+                                    class="devops-icon status-icon"
+                                >
+                                    <img src="../assets/scss/logo/wait-small.svg" alt="">
+                                </div>
+                            </span>
+                        </template>
+                    </bk-table-column>
+                    <bk-table-column
+                        :label="$t('projectOperation')"
+                    >
+                        <template slot-scope="{ row }">
+                            <bk-button
+                                class="mr5"
+                                text
+                                :disabled="row.approvalStatus === 1"
+                                @click="handleGoUserGroup(row)"
+                            >
+                                {{ $t('userGroupManage') }}
+                            </bk-button>
+                            <bk-button
+                                text
+                                :disabled="row.approvalStatus === 1"
+                                @click="handleGoExtend(row)"
+                            >
+                                {{ $t('extendManage') }}
+                            </bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
-                <template v-else>
-                    <div
-                        v-show="!isDataLoading"
-                        class="biz-guide-box"
-                    >
-                        <p
-                            v-if="!isFilterByOffline && disableProjectNum"
-                            class="title"
-                        >
-                            {{ $t('disableProjectTips', { disableProjectNum }) }}
-                        </p>
-                        <p
-                            v-else
-                            class="title"
-                        >
-                            {{ $t("emptyData") }}
-                        </p>
-                    </div>
-                </template>
             </template>
             <empty-tips
                 v-else
@@ -175,365 +142,233 @@
                 <bk-button
                     icon-left="icon-plus"
                     theme="primary"
-                    @click="togglePMDialog(true)"
+                    @click="handleNewProject()"
                 >
                     {{ $t('newProject') }}
                 </bk-button>
-                <a
-                    class="empty-btns-item"
-                    href="javascript:;"
-                    @click="toApplyPermission"
+                
+                <bk-button
+                    theme="success"
+                    @click="handleApplyProject"
                 >
-                    <bk-button theme="success">{{ $t('applyProject') }}</bk-button>
-                </a>
+                    {{ $t('applyProject') }}
+                </bk-button>
             </empty-tips>
-        </div>
-        <logo-dialog
-            :show-dialog="showlogoDialog"
-            :to-confirm-logo="toConfirmLogo"
-            :to-close-dialog="toCloseDialog"
-            :file-change="fileChange"
-            :selected-url="selectedUrl"
-            :is-uploading="isUploading"
-        />
+            <apply-project-dialog ref="applyProjectDialog"></apply-project-dialog>
+        </section>
     </div>
 </template>
 
-<script lang="ts">
-    import Vue from 'vue'
-    import { Component, Watch } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
-    import logoDialog from '../components/logoDialog/index.vue'
+<script>
+    import { mapActions } from 'vuex'
+    import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import {
+        handleProjectNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
-    @Component({
+    export default ({
+        name: 'ProjectManage',
         components: {
-            logoDialog
+            ApplyProjectDialog
+        },
+        data () {
+            return {
+                isDataLoading: false,
+                projectList: [],
+                pagination: {
+                    current: 1,
+                    count: 0,
+                    limit: 10
+                },
+                matchColorList: [
+                    'green',
+                    'yellow',
+                    'red',
+                    'blue'
+                ],
+                inputValue: '',
+                approvalStatusMap: {
+                    1: this.$t('创建中'),
+                    2: this.$t('已启用'),
+                    3: this.$t('创建中'),
+                    4: this.$t('已启用')
+                }
+            }
+        },
+        computed: {
+            curProjectList () {
+                const { limit, current } = this.pagination
+                const list = this.projectList.filter(i => i.projectName.includes(this.inputValue)) || []
+                this.pagination.count = list.length
+                return list.slice(limit * (current - 1), limit * current)
+            }
+        },
+        watch: {
+            inputValue (val) {
+                this.pagination.current = 1
+            }
+        },
+        created () {
+            this.fetchProjects()
+        },
+        methods: {
+            ...mapActions(['fetchProjectList', 'toggleProjectEnable']),
+            async fetchProjects () {
+                this.isDataLoading = true
+                await this.fetchProjectList().then(res => {
+                    this.projectList = res
+                }).catch(() => [])
+                this.isDataLoading = false
+            },
+
+            matchForCode (projectCode) {
+                const event = projectCode.substr(0, 1)
+                const key = event.charCodeAt() % 4
+                return this.matchColorList[key]
+            },
+
+            handleNewProject () {
+                const { origin } = window.location
+                window.location.href = `${origin}/console/manage/apply`
+            },
+
+            handleApplyProject () {
+                this.$refs.applyProjectDialog.isShow = true
+            },
+
+            handleGoUserGroup (row) {
+                const { projectCode, relationId, routerTag } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
+                        break
+                    case 'v3':
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
+                        break
+                    case 'rbac':
+                        window.location.href = `/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`
+                        break
+                }
+            },
+
+            handleGoExtend (row) {
+                const { englishName: projectCode, routerTag } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                    case 'v3':
+                        window.location.href = `/console/store/serviceManage/${projectCode}`
+                        break
+                    case 'rbac':
+                        window.location.href = `/console/manage/${projectCode}/expand`
+                        break
+                }
+            },
+
+            pageChange (page) {
+                this.pagination.current = page
+            },
+
+            limitChange (limit) {
+                this.pagination.current = 1
+                this.pagination.limit = limit
+            },
+
+            goToProjectManage (row) {
+                const { englishName: projectCode, relationId, routerTag } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
+                        break
+                    case 'v3':
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
+                        break
+                    case 'rbac':
+                        window.location.href = `/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`
+                        break
+                }
+            },
+            handleChangeEnabled (row) {
+                if ([1, 3, 4].includes(row.approvalStatus)) return
+                const { englishName: projectCode, enabled, projectName, routerTag } = row
+                this.toggleProjectEnable({
+                    projectCode: projectCode,
+                    enabled: !enabled
+                }).then(() => {
+                    row.enabled = !row.enabled
+                    this.$bkMessage({
+                        message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
+                        theme: 'success'
+                    })
+                }).catch((error) => {
+                    if (error.code === 403) {
+                        const projectTag = this.getProjectTag(routerTag)
+                        const url = projectTag === 'rbac'
+                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
+                            : `/console/perm/apply-perm?project_code=${projectCode}`
+                        handleProjectNoPermission(
+                            {
+                                projectId: projectCode,
+                                resourceCode: projectCode,
+                                action: RESOURCE_ACTION.ENABLE
+                            },
+                            {
+                                actionName: this.$t('enableDisableProject'),
+                                groupInfoList: [{ url }],
+                                resourceName: projectName,
+                                resourceTypeName: this.$t('project')
+                            }
+                        )
+                    } else {
+                        this.$bkMessage({
+                            message: error.message || error,
+                            theme: 'error'
+                        })
+                    }
+                })
+            },
+            getProjectTag (routerTag) {
+                if (/v3/.test(routerTag)) {
+                    return 'v3'
+                }
+                if (/rbac/.test(routerTag)) {
+                    return 'rbac'
+                }
+                return 'v0'
+            }
         }
     })
-    export default class ProjectManage extends Vue {
-        @State projectList
-        @Getter disableProjectList
-        @State newProject
-        @Action toggleProjectDialog
-        @Action ajaxUpdatePM
-        @Action getProjects
-        @Action toggleProjectEnable
-        @Action changeProjectLogo
-        @Action hasCreateProjectPermission
-
-        isFilterByOffline: boolean = false
-        showlogoDialog: boolean = false
-        isUploading: boolean = false
-        curProjectData: object
-        selectedFile: object
-        isDataLoading: boolean = false
-        selectedUrl: string | ArrayBuffer = ''
-        curSelectProject: string = ''
-        inputValue: string = ''
-        curProjectList: object[] = []
-        curPageData: object[] = []
-        pageConf: any = {
-            totalPage: 1,
-            limit: 15,
-            current: 1,
-            show: false,
-            limitList: [10, 15, 20, 25, 30],
-            count: 0
-        }
-
-        hasCreatePermission: boolean = true
-        matchColorList: string[] = [
-            'green',
-            'yellow',
-            'red',
-            'blue'
-        ]
-
-        get formatPageData (): object[] {
-            return this.curPageData.map(item => ({
-                ...item
-            }))
-        }
-
-        get disableProjectNum (): number {
-            console.log(this.disableProjectList.length)
-            return this.disableProjectList.length
-        }
-
-        @Watch('isFilterByOffline')
-        watchFilterOffline (isFilterByOffline: boolean): void {
-            this.filterProjectList(isFilterByOffline)
-        }
-
-        @Watch('projectList', { deep: true })
-        watchProjects (val): void {
-            this.initList()
-            this.reloadCurPage()
-        }
-
-        created () {
-            this.fetchAllProjects()
-            this.checkCreatePermission()
-        }
-
-        async checkCreatePermission () {
-          try {
-            const hasCreatePermission = await this.hasCreateProjectPermission()
-            this.hasCreatePermission = hasCreatePermission
-          } catch (e) {
-            this.hasCreatePermission = false
-          }
-        }
-
-        async fetchAllProjects () {
-            this.isDataLoading = true
-            await this.getProjects()
-            this.isDataLoading = false
-        }
-
-        initList () {
-            this.filterProjectList(this.isFilterByOffline)
-        }
-
-        filterProjectList (showOfflined) {
-            if (showOfflined) {
-                this.curProjectList = this.projectList.filter(project => {
-                    return project.projectName.indexOf(this.inputValue) !== -1 && project.approvalStatus !== 3
-                })
-            } else {
-                this.curProjectList = this.projectList.filter(project => {
-                    return project.enabled && project.projectName.indexOf(this.inputValue) !== -1 && project.approvalStatus !== 3
-                })
-            }
-            this.initPageConf()
-            this.pageConf.current = 1
-            this.curPageData = this.getDataByPage(this.pageConf.current)
-        }
-
-        initPageConf () {
-            const total = this.curProjectList.length
-            if (total <= this.pageConf.limit) {
-                this.pageConf.show = false
-            } else {
-                this.pageConf.show = true
-            }
-            this.pageConf.count = total
-            this.pageConf.totalPage = Math.ceil(total / this.pageConf.limit)
-        }
-
-        reloadCurPage () {
-            this.initPageConf()
-            if (this.pageConf.current > this.pageConf.totalPage) {
-                this.pageConf.current = this.pageConf.totalPage
-            }
-            this.curPageData = this.getDataByPage(this.pageConf.current)
-        }
-
-        getDataByPage (page) {
-            let startIndex = (page - 1) * this.pageConf.limit
-            let endIndex = page * this.pageConf.limit
-            if (startIndex < 0) {
-                startIndex = 0
-            }
-            if (endIndex > this.curProjectList.length) {
-                endIndex = this.curProjectList.length
-            }
-            const data = this.curProjectList.slice(startIndex, endIndex)
-            return data
-        }
-
-        pageChange (page) {
-            this.pageConf.current = page
-            const data = this.getDataByPage(page)
-            this.curPageData = JSON.parse(JSON.stringify(data))
-        }
-
-        limitChange (limit) {
-            this.pageConf.limit = limit
-            this.pageChange(1)
-        }
-
-        togglePMDialog (show: boolean, project = null): void {
-            this.toggleProjectDialog({
-                showProjectDialog: show,
-                project
-            })
-        }
-
-        // goProject ({ projectCode, enabled }): void {
-        //     if (enabled) {
-        //         window.open(`${PERM_URL_PREFIX}perm/my-project?project_code=${projectCode}`, '_blank')
-        //     }
-        // }
-
-        toApplyPermission () {
-            this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.project)
-        }
-
-        applyCreatePermission () {
-            // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.project)
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.project,
-                    instanceId: []
-                }]
-            })
-        }
-
-        toggleProject (project: any): void {
-            const { enabled, projectCode, projectName = '' } = project
-            this.curProjectData = JSON.parse(JSON.stringify(project))
-
-            const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('enableProjectConfirm')) + projectName
-
-            this.$bkInfo({
-                title: message,
-                confirmFn: async () => {
-                    let msg = ''
-                    let theme = 'error'
-                    try {
-                        const params = {
-                            projectCode,
-                            enabled: !enabled
-                        }
-                        await this.toggleProjectEnable(params)
-                        msg = (enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectSuccess')
-                        theme = 'success'
-                        await this.getProjects(true)
-                        return true
-                    } catch (error) {
-                        if (error.code === 403) {
-                          this.applyPermission(this.$permissionActionMap.edit, this.$permissionResourceMap.project, [{
-                            id: projectCode,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                          }])
-                        } else {
-                            msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
-                        }
-                        
-                        return true
-                    } finally {
-                        msg && this.$bkMessage({
-                            theme,
-                            message: msg
-                        })
-                    }
-                }
-            })
-        }
-
-        matchForCode (projectCode) {
-            const event = projectCode.substr(0, 1)
-            const key = event.charCodeAt() % 4
-            return this.matchColorList[key]
-        }
-
-        modifyLogo (project) {
-            if (project.logoAddr) {
-                this.selectedUrl = project.logoAddr
-            } else {
-                this.selectedUrl = ''
-            }
-            this.showlogoDialog = true
-            this.isUploading = false
-            this.curSelectProject = project.projectCode
-        }
-
-        async toConfirmLogo () {
-            if (this.selectedUrl && this.selectedFile) {
-                this.isUploading = true
-
-                const formData = new FormData()
-                formData.append('logo', this.selectedFile[0])
-
-                try {
-                    const res = await this.changeProjectLogo({
-                        projectCode: this.curSelectProject,
-                        formData
-                    })
-
-                    if (res) {
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: this.$t('changeLogoSuccessTips')
-                        })
-
-                        this.showlogoDialog = false
-                        this.projectList.forEach(item => {
-                            if (item.projectCode === this.curSelectProject) {
-                                item.logoAddr = res.logoAddr
-                            }
-                        })
-                    }
-                } catch (e) {
-                    this.$bkMessage({
-                        message: e.message,
-                        theme: 'error'
-                    })
-
-                    this.isUploading = false
-                } finally {
-                    this.selectedFile = undefined
-                }
-            } else if (!this.selectedUrl) {
-                this.$bkMessage({
-                    message: this.$t('noLogoTips'),
-                    theme: 'error'
-                })
-            } else {
-                this.showlogoDialog = false
-            }
-            this.resetUploadInput()
-        }
-
-        toCloseDialog () {
-            this.showlogoDialog = false
-            this.selectedFile = undefined
-            this.resetUploadInput()
-        }
-
-        fileChange (e): void {
-            const file = e.target.files[0]
-            if (file) {
-                if (!(file.type === 'image/jpeg' || file.type === 'image/png')) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('supportExtTips')
-                    })
-                } else if (file.size > (2 * 1024 * 1024)) {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: this.$t('logoSizelimit')
-                    })
-                } else {
-                    const reader = new FileReader()
-                    reader.readAsDataURL(file)
-                    reader.onload = evts => {
-                        this.selectedUrl = reader.result
-                    }
-                    this.selectedFile = e.target.files
-                }
-            }
-        }
-
-        /**
-         * 清空input file的值
-         */
-        resetUploadInput () {
-            this.$nextTick(() => {
-                const inputElement: any = document.getElementById('inputfile')
-                inputElement.value = ''
-            })
-        }
-    }
 </script>
 
 <style lang="scss" scoped>
     @import '../assets/scss/mixins/ellipsis';
+    .manage-header {
+        width: 100%;
+        height: 60px;
+        padding: 0 30px;
+        border-bottom: 1px solid #dde4eb;
+        box-shadow: 0 2px 5px rgb(0 0 0 / 3%);
+        display: flex;
+        background: #fff;
+        align-items: center;
+        font-size: 16px;
+        color: #313238;
+    }
     .biz-pm-index {
-        width: 1180px;
-        margin: 0 auto 0 auto;
+        width: 100%;
+        height: calc(100% - 60px);
+        overflow-y: scroll;
+        padding: 24px;
+    }
+    .action-layout {
+        display: flex;
+        justify-content: space-between;
+        .search-input {
+            width: 320px;
+        }
     }
     .biz-order {
         padding: 0;
@@ -543,9 +378,6 @@
     .biz-pm-page {
         text-align: center;
         margin-top: 30px;
-    }
-    .biz-pm-index {
-        padding-bottom: 75px;
     }
     .biz-pm-header {
         margin: 30px 0 25px 0;
@@ -603,24 +435,8 @@
         }
         .project-name-cell {
             display: flex;
-            .info {
-                flex: 1;
-                overflow: hidden;
-                > .title {
-                    @include ellipsis();
-                    display: block;
-                }
-                .title-text {
-                    color: #333948;
-                }
-                .is-disabled {
-                    color: #e6e6e6 !important;
-                    cursor: not-allowed;
-                }
-            }
-
-            .avatar,
-            .bg-avatar {
+            align-items: center;
+            .avatar {
                 display: inline-block;
                 position: relative;
                 margin-right: 10px;
@@ -631,26 +447,12 @@
                 text-align: center;
                 color: #fff;
                 font-size: 16px;
-                cursor: pointer;
-                &:hover {
-                    .bg-avatar {
-                        display: block;
-                    }
-                }
             }
             .avatar-addr {
                 width: 100%;
                 height: 100%;
                 border-radius: 16px;
                 object-fit: cover;
-            }
-            .bg-avatar {
-                position: absolute;
-                top: 0;
-                left: 0;
-                background: rgba(0, 0, 0, 0.4);
-                font-size: 12px;
-                display: none;
             }
             .match-color-green {
                 background-color: #30D878;
@@ -708,6 +510,21 @@
             color: #333;
         }
     }
+    .project-status {
+        display: flex;
+    }
+    .enable-switcher {
+        width: 26px;
+        height: 16px;
+        position: absolute;
+        z-index: 200;
+        opacity: 0;
+        cursor: pointer;
+    }
+    .status-icon {
+        width: 16px;
+        margin-right: 5px;
+    }
 </style>
 
 <style lang="scss">
@@ -717,7 +534,7 @@
     @media screen and (max-width: $mediaWidth) {
         .biz-create-pm .bk-dialog-body {
             max-height: 440px;
-            overflow: auto;
+            // overflow: auto;
             @include scroller(#9e9e9e);
         }
     }

@@ -1,0 +1,53 @@
+{
+  "name": "devops-permission",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "bk-cli-service-webpack dev",
+    "build": "bk-cli-service-webpack build",
+    "server": "node ./paas-server/index.js",
+    "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix",
+    "public": "bk-cli-service-webpack build",
+    "public:dev": "bk-cli-service-webpack build",
+    "public:test": "bk-cli-service-webpack build",
+    "public:master": "bk-cli-service-webpack build",
+    "public:external": "bk-cli-service-webpack build"
+  },
+  "keywords": [
+    "bk-ci",
+    "permission",
+    "vue3",
+    "webpack-5"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bkui-vue": "0.0.1-beta.366",
+    "dayjs": "^1.11.2",
+    "pinia": "^2.0.23",
+    "vue": "^3.2.41",
+    "vue-i18n": "^9.1.10",
+    "vue-router": "^4.1.6",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@blueking/babel-preset-bk": "^2.1.0-beta7",
+    "@blueking/cli-service-webpack": "0.0.0-beta.59",
+    "@blueking/eslint-config-bk": "2.1.0-beta.12",
+    "@blueking/stylelint-config-bk": "^2.1.0-beta.9",
+    "enhanced-resolve": "^5.10.0",
+    "postcss": "~8.4.16",
+    "postcss-import": "^15.0.0",
+    "postcss-mixins": "^9.0.4",
+    "postcss-nested": "^6.0.0",
+    "postcss-nested-ancestors": "^3.0.0",
+    "postcss-preset-env": "^7.8.2",
+    "postcss-simple-vars": "^7.0.0",
+    "postcss-url": "^10.1.3",
+    "typescript": "^4.8.4"
+  },
+  "engines": {
+    "node": ">= 14.16.1",
+    "npm": ">= 6.4.1 <7"
+  }
+}

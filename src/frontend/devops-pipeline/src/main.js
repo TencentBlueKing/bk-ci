@@ -34,24 +34,39 @@ import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
-import PortalVue from 'portal-vue' // eslint-disable-line
+import PortalVue from "portal-vue" // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
 import '@icon-cool/bk-icon-devops'
 
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import { pipelineDocs } from '../../common-lib/docs'
 import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
+import {
+    handlePipelineNoPermission,
+    RESOURCE_ACTION
+} from '@/utils/permission'
+// 权限指令
+import { PermissionDirective, BkPermission } from 'bk-permission'
+import 'bk-permission/dist/main.css'
+import VueCompositionAPI from '@vue/composition-api'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
 
-const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
+const { i18n, setLocale } = createLocale(
+    require.context('@locale/pipeline/', false, /\.json$/)
+)
 
 Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(PermissionDirective(handlePipelineNoPermission))
+Vue.use(BkPermission, {
+    i18n
+})
+Vue.use(VueCompositionAPI)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.
@@ -69,9 +84,8 @@ Vue.use(BkPipeline, {
 })
 
 Vue.prototype.$setLocale = setLocale
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
+Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -79,19 +93,15 @@ Vue.prototype.$bkMessage = function (config) {
 /* eslint-disable */
 // 扩展字符串，判断是否为蓝盾变量格式
 String.prototype.isBkVar = function () {
-    return /\$\{{2}([\w\_]+)\}{2}/g.test(this)
+    return /\$\{{2}([\w\_\.\s-]+)\}{2}/g.test(this) || /\$\{([\w\_\.\s-]+)\}/g.test(this)
 }
 /* eslint-disable */
 
 Vue.mixin({
     methods: {
-        // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
-        handleError (e, noPermissionList) {
+        handleError (e, data) {
             if (e.code === 403) { // 没有权限编辑
-                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
-                this.$showAskPermissionDialog({
-                    noPermissionList
-                })
+                handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
@@ -99,19 +109,6 @@ Vue.mixin({
                 })
             }
         },
-        /**
-         * 设置权限弹窗的参数
-         */
-        setPermissionConfig (resourceId, actionId, instanceId = [], projectId = this.$route.params.projectId) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId,
-                    resourceId,
-                    instanceId,
-                    projectId
-                }]
-            })
-        }
     }
 })
 

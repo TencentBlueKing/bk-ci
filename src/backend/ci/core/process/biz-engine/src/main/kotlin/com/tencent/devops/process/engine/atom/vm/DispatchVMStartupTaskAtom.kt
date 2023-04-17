@@ -293,7 +293,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,
-                    os = param.baseOS.name.toLowerCase()
+                    os = param.baseOS.name.lowercase()
                 ).data
                 if (res == null) {
                     buildLogPrinter.addRedLine(
@@ -407,7 +407,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 param.dispatchType is ThirdPartyAgentIDDispatchType
             ) {
-                thirdPartyAgentMnitorPrint(task)
+                thirdPartyAgentMonitorPrint(task)
             }
 
             AtomResponse(
@@ -419,7 +419,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun thirdPartyAgentMnitorPrint(task: PipelineBuildTask) {
+    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
         val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
         val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20

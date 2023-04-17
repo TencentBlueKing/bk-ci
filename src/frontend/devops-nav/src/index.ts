@@ -16,6 +16,7 @@ import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
@@ -24,11 +25,14 @@ import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
-import showAskPermissionDialog from './components/AskPermissionDialog'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
-import '@icon-cool/bk-icon-devops/src/index'
+import './assets/scss/icon/iconcool'
+import { PermissionDirective, handleNoPermission, BkPermission } from 'bk-permission'
+import 'bk-permission/dist/main.css'
+import { handleProjectNoPermission } from './utils/permission'
+import VueCompositionAPI from '@vue/composition-api'
 
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
@@ -39,12 +43,16 @@ declare module 'vue/types/vue' {
     interface Vue {
         $bkMessage: any
         $bkInfo: any
-        $showAskPermissionDialog: any
+        $showTips: any
         iframeUtil: any
+        handleNoPermission: any
     }
 }
 
 Vue.use(bkMagic)
+Vue.use(PermissionDirective(handleProjectNoPermission))
+// @ts-ignore
+Vue.use(VueCompositionAPI)
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
@@ -67,6 +75,10 @@ Vue.use(VeeValidate, {
     }
 })
 
+Vue.use(BkPermission, {
+    i18n
+})
+
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
 
@@ -81,12 +93,12 @@ router.beforeEach((to, from, next) => {
 window.eventBus = eventBus
 window.vuexStore = store
 Vue.prototype.iframeUtil = iframeUtil(router)
-Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -117,6 +129,23 @@ Vue.mixin({
             } catch (e) {
                 console.error(e)
             }
+        },
+        handleError (e, data) {
+            if (e.code === 403) { // 没有权限编辑
+                this.handleNoPermission(data)
+            } else {
+                this.$showTips({
+                    message: e.message || e,
+                    theme: 'error'
+                })
+            }
+        },
+        handleNoPermission (query: any) {
+            return handleNoPermission(
+                bkMagic,
+                query,
+                (window.devops as any).$createElement
+            )
         }
     }
 })
