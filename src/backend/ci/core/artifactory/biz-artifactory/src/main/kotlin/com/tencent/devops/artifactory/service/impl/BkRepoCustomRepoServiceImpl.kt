@@ -3,6 +3,7 @@ package com.tencent.devops.artifactory.service.impl
 import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.pojo.DirNode
 import com.tencent.devops.artifactory.service.CustomRepoService
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
 import org.springframework.stereotype.Service
@@ -12,8 +13,33 @@ import java.util.StringTokenizer
 class BkRepoCustomRepoServiceImpl(
     private val bkRepoClient: BkRepoClient
 ) : CustomRepoService {
-    override fun dirTree(userId: String, projectId: String, path: String?, name: String?): DirNode {
-        val dirList = bkRepoClient.listDir(userId, projectId, REPO_CUSTOM, path, name)
+    override fun dirTree(
+        userId: String,
+        projectId: String,
+        path: String?,
+        name: String?
+    ): DirNode {
+        return dirTreePage(userId, projectId, path, name, 1, 10000).records.first()
+    }
+
+    override fun dirTreePage(
+        userId: String,
+        projectId: String,
+        path: String?,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): Page<DirNode> {
+        val queryData = bkRepoClient.listDir(
+            userId = userId,
+            projectId = projectId,
+            repoName = REPO_CUSTOM,
+            path = path,
+            name = name,
+            page = page,
+            pageSize = pageSize
+        )
+        val dirList = queryData.records
         val rootDirNode = if (path.isNullOrBlank()) {
             DirNode("/", "/", mutableListOf())
         } else {
@@ -32,6 +58,6 @@ class BkRepoCustomRepoServiceImpl(
                 current = child
             }
         }
-        return rootDirNode
+        return Page(page, pageSize, queryData.totalRecords, listOf(rootDirNode))
     }
 }
