@@ -51,16 +51,19 @@ import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
+import com.tencent.devops.metrics.service.MetricsDataClearService
 import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
+import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.exception.TooManyRowsException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,11 +74,12 @@ import java.time.LocalDateTime
 import kotlin.math.roundToLong
 
 @Service
-@Suppress("ComplexMethod", "NestedBlockDepth")
+@Suppress("ComplexMethod", "NestedBlockDepth", "LongMethod", "LongParameterList")
 class MetricsDataReportServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val metricsDataQueryDao: MetricsDataQueryDao,
     private val metricsDataReportDao: MetricsDataReportDao,
+    private val metricsDataClearService: MetricsDataClearService,
     private val client: Client,
     private val redisOperation: RedisOperation
 ) : MetricsDataReportService {
@@ -94,7 +98,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val currentTime = LocalDateTime.now()
         val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-        val lock = RedisLock(redisOperation, metricsDataReportKey(pipelineId), 20)
+        val lock = RedisLock(redisOperation, metricsDataReportKey(pipelineId), 120)
         try {
             // 上锁保证数据计算安全
             lock.lock()
@@ -756,23 +760,41 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         currentTime: LocalDateTime
     ) {
         val projectId = buildEndPipelineMetricsData.projectId
+        val pipelineId = buildEndPipelineMetricsData.pipelineId
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         val buildSuccessFlag = buildEndPipelineMetricsData.successFlag // 流水线构建是否成功标识
         val pipelineBuildCostTime = buildEndPipelineMetricsData.costTime // 流水线构建所耗时间
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
-        val pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = buildEndPipelineMetricsData.pipelineId,
-            statisticsTime = statisticsTime
-        )
+        var pipelineOverviewDataRecord: TPipelineOverviewDataRecord? = null
+        try {
+            pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
+        } catch (ignored: TooManyRowsException) {
+            logger.warn("fail to get pipelineOverviewData of $projectId|$pipelineId|$statisticsTime", ignored)
+            metricsDataClearService.metricsDataClear(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime,
+                buildId = buildEndPipelineMetricsData.buildId
+            )
+            pipelineOverviewDataRecord = metricsDataQueryDao.getPipelineOverviewData(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                statisticsTime = statisticsTime
+            )
+        }
         if (pipelineOverviewDataRecord == null) {
             // db没有记录则插入记录
             val savePipelineOverviewDataPO = SavePipelineOverviewDataPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("PIPELINE_OVERVIEW_DATA").data ?: 0,
                 projectId = projectId,
-                pipelineId = buildEndPipelineMetricsData.pipelineId,
+                pipelineId = pipelineId,
                 pipelineName = buildEndPipelineMetricsData.pipelineName,
                 channelCode = buildEndPipelineMetricsData.channelCode,
                 totalAvgCostTime = pipelineBuildCostTime,
