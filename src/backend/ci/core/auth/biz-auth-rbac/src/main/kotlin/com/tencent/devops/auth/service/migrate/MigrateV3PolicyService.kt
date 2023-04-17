@@ -196,7 +196,8 @@ class MigrateV3PolicyService constructor(
             val beforeGroupCount = groupApiPolicyResult.size + groupWebPolicyResult.size
             calculateGroupCount(projectCode, beforeGroupCount)
         } finally {
-            logger.info("migrate group policy|${watcher.prettyPrint()}")
+            watcher.stop()
+            logger.info("migrate group policy|$projectCode|$watcher")
         }
     }
 
@@ -654,14 +655,18 @@ class MigrateV3PolicyService constructor(
                         groupCode = groupConfig.groupCode
                     )?.relationId?.toInt()
                     logger.info(
-                        "user match resource group|$userId|$finalUserActions|${groupConfig.groupCode}|$groupId"
+                        "user match resource group" +
+                            "|$userId|$finalUserActions|$projectCode|$resourceCode|${groupConfig.groupCode}|$groupId"
                     )
                     return groupId
                 }
             }
-            logger.info("user not match resource group|$userId|$finalUserActions")
+            logger.info("user not match resource group|$userId|$finalUserActions$projectCode|$resourceCode")
         } else {
-            logger.info("user has resource action permission|$userId|$resourceCode|$finalUserActions")
+            logger.info(
+                "user has resource action permission" +
+                    "|$userId|$resourceCode|$finalUserActions$projectCode|$resourceCode"
+            )
         }
         return null
     }
