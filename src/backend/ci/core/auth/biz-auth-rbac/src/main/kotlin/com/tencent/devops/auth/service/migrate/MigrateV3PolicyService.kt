@@ -653,7 +653,9 @@ class MigrateV3PolicyService constructor(
                         resourceCode = resourceCode,
                         groupCode = groupConfig.groupCode
                     )?.relationId?.toInt()
-                    logger.info("user match resource ${groupConfig.groupCode} group|$userId|$finalUserActions|$groupId")
+                    logger.info(
+                        "user match resource group|$userId|$finalUserActions|${groupConfig.groupCode}|$groupId"
+                    )
                     return groupId
                 }
             }

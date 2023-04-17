@@ -144,6 +144,7 @@ class RbacCacheService constructor(
                 authResourceGroupConfigDao.get(dslContext = dslContext, resourceType = resourceType).map {
                     with(it) {
                         AuthGroupConfigAction(
+                            id = id,
                             resourceType = resourceType,
                             groupCode = groupCode,
                             groupName = groupName,
@@ -156,7 +157,7 @@ class RbacCacheService constructor(
                 }
             groupConfigActionsCache.put(resourceType, groupConfigActions)
         }
-        return groupConfigActionsCache.getIfPresent(resourceType)!!
+        return groupConfigActionsCache.getIfPresent(resourceType)!!.sortedBy { it.id }
     }
 
     private fun validateUserProjectPermission(
