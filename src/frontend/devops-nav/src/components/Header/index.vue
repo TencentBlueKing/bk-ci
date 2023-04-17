@@ -106,19 +106,13 @@
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
+    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
 
     @Component({
         components: {
