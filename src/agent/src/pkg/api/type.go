@@ -68,7 +68,7 @@ type ImagePullPolicyEnum string
 
 const (
 	ImagePullPolicyAlways       ImagePullPolicyEnum = "always"
-	ImagePullPolicyIfNotPresent ImagePullPolicyEnum = "if-mot-present"
+	ImagePullPolicyIfNotPresent ImagePullPolicyEnum = "if-not-present"
 )
 
 func (i ImagePullPolicyEnum) String() string {
