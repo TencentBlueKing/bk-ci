@@ -74,7 +74,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-
 /**
  * v3权限策略迁移到rbac
  *
@@ -137,11 +136,9 @@ class MigrateV3PolicyService constructor(
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
 
-
     // iam迁移的token
     @Value("\${auth.migrateToken:#{null}}")
     private val migrateIamToken: String = ""
-
     @Value("\${auth.url:}")
     private val iamBaseUrl = ""
 
@@ -645,7 +642,6 @@ class MigrateV3PolicyService constructor(
             resourceCode = resourceCode,
             resourceType = resourceType
         ).filterNot { it.value }
-
         // 存在没有action的权限，匹配资源默认用户组权限
         if (notActionPermissionMap.isNotEmpty()) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
