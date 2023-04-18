@@ -139,7 +139,7 @@ export const mutations = {
 }
 
 export const actions = {
-    
+
     // 获取模板的所有范畴
     requestCategory: async ({ commit }) => {
         try {
@@ -242,6 +242,10 @@ export const actions = {
             return response.data
         })
     },
+    requestOutputs: async ({ commit }, { projectId, pipelineId, buildId, ...params }) => {
+        const res = await request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/pipeline/output/${projectId}/${pipelineId}/${buildId}/search`, params)
+        return res.data
+    },
     requestExternalUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/externalUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
@@ -253,8 +257,14 @@ export const actions = {
             return response.data
         })
     },
-    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildId, params }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildId}/copyToCustom`, params).then(response => {
+    requestCustomFolder: async (_, { projectId, params }) => {
+        const res = await request.get(`${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`, {
+            params
+        })
+        return res.data
+    },
+    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildNo, params }) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildNo}/copyToCustom`, params).then(response => {
             return response.data
         })
     },
@@ -293,7 +303,7 @@ export const actions = {
             return response.data
         })
     },
-    
+
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
     }

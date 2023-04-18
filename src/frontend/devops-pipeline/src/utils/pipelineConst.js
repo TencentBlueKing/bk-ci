@@ -96,6 +96,52 @@ export function pluginUrlParse (originUrl, query) {
     /* eslint-enable */
 }
 
+export const errorTypeMap = [
+    {
+        title: 'systemError',
+        icon: 'cog'
+    },
+    {
+        title: 'userError',
+        icon: 'user'
+    },
+    {
+        title: 'thirdPartyError',
+        icon: 'third-party'
+    },
+    {
+        title: 'pluginError',
+        icon: 'plugin'
+    }
+]
+
+export const repoTypeMap = {
+    CUSTOM_DIR: 'details.customRepo',
+    PIPELINE: 'details.pipelineRepo',
+    IMAGE: 'details.imageRepo'
+}
+export const repoTypeNameMap = {
+    CUSTOM_DIR: 'custom',
+    PIPELINE: 'pipeline'
+}
+export const fileExtIconMap = {
+    txt: ['.json', '.txt', '.md'],
+    zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],
+    apkfile: ['.apk'],
+    ipafile: ['.ipa']
+}
+export function extForFile (name) {
+    const defaultIcon = 'file'
+    const pos = name.lastIndexOf('.')
+    if (pos > -1) {
+        const ext = name.substring(pos)
+        return Object.keys(fileExtIconMap).find(key => {
+            const arr = fileExtIconMap[key]
+            return arr.includes(ext)
+        }) ?? defaultIcon
+    }
+    return defaultIcon
+}
 export const ORDER_ENUM = {
     ascending: 'ASC',
     descending: 'DESC'

@@ -5,8 +5,8 @@
             'devops-stage-container': true,
             'first-stage-container': stageIndex === 0,
             'last-stage-container': stageIndex === stageLength - 1,
-            'readonly': !editable || containerDisabled,
-            'editing': editable
+            'readonly': !reactiveData.editable || containerDisabled,
+            'editing': reactiveData.editable
         }"
     >
         <Logo v-if="stageIndex !== 0" size="12" name="right-shape" class="container-connect-triangle" />
@@ -22,6 +22,7 @@
             :is="jobComponentName"
             v-bind="jobComponentProps"
             v-on="$listeners"
+            ref="jobBox"
         />
     </div>
 </template>
@@ -56,47 +57,18 @@
             stageLength: Number,
             containerLength: Number,
             stageDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
             isFinallyStage: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
                 type: Boolean,
                 default: false
             },
             handleChange: {
                 type: Function,
                 required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
+        inject: [
+            'reactiveData'
+        ],
         data () {
             return {
                 cruveHeight: 0
@@ -107,10 +79,10 @@
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
             },
             isMatrix () {
-                return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
+                return this.reactiveData.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
             },
             showLastCruveLine () {
-                return (this.stageIndex !== this.stageLength - 1 || this.editable) && !this.isFinallyStage
+                return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job
@@ -139,9 +111,6 @@
         },
         mounted () {
             this.updateCruveConnectHeight()
-            if (this.containerDisabled) {
-                this.handleChange(this.container, { runContainer: false })
-            }
         },
         updated () {
             this.updateCruveConnectHeight()
@@ -163,7 +132,7 @@
     @import "./conf";
     .devops-stage-container {
         text-align: left;
-        margin: 16px 20px 0 20px;
+        margin: 16px 20px 24px 20px;
         position: relative;
 
         // 实心圆点
@@ -191,7 +160,7 @@
 
         .connect-line {
             position: absolute;
-            top: math.div($itemHeight, 2) - 4;
+            top: 1px;
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;

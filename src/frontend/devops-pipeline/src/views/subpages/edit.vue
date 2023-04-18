@@ -155,7 +155,6 @@
                 this.init()
                 this.requestQualityAtom()
             }
-            this.setEditFrom(false)
             this.addLeaveListenr()
         },
         beforeDestroy () {

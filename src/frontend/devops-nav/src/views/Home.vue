@@ -82,7 +82,7 @@
                     </div>
                 </div>
 
-                <div class="devops-news">
+                <div class="devops-news" v-if="news.length > 0">
                     <header>
                         <p class="title">
                             {{ $t("latestNews") }}
@@ -122,18 +122,7 @@
                         >{{ $t("learnMore") }}</a>
                     </p>
                 </article>
-                <article>
-                    <h2>{{ $t("bkdevopsTarget") }}</h2>
-                    <p>
-                        {{ $t("bkdevopsWay") }}
-                        <!-- <a
-                            :href="BKCI_DOCS.BKCI_DOC"
-                            target="_blank"
-                            class="more"
-                        >{{ $t("learnMore") }}</a> -->
-                    </p>
-                </article>
-                <article>
+                <article v-if="related.length > 0">
                     <h2>{{ $t("relatedLink") }}</h2>
                     <div>
                         <a

@@ -3,7 +3,7 @@
         <content-header class="env-header">
             <div slot="left" class="title">
                 <i class="devops-icon icon-arrows-left" @click="toEnvList"></i>
-                <span class="header-text">{{ `${$t('environment.new')}${$t('environment.environment')}` }}</span>
+                <span class="header-text">{{ `${$t('environment.createEnvTitle')}` }}</span>
             </div>
         </content-header>
 
@@ -41,22 +41,24 @@
                         v-model="createEnvForm.desc">
                     </bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
+                <!-- <bk-form-item :label="$t('environment.envInfo.envType')" class="env-type-item" :required="true" :property="'envType'">
                     <bk-radio-group v-model="createEnvForm.envType">
                         <bk-radio :value="'BUILD'">{{ $t('environment.envInfo.buildEnvType') }}</bk-radio>
                     </bk-radio-group>
-                </bk-form-item>
+                </bk-form-item> -->
                 <bk-form-item :label="$t('environment.nodeInfo.nodeSource')" :required="true" :property="'source'">
                     <div class="env-source-content">
-                        <div class="source-type-radio">
+                        <!-- <div class="source-type-radio">
                             <bk-radio-group v-model="createEnvForm.source">
                                 <bk-radio :value="'EXISTING'">{{ $t('environment.thirdPartyBuildMachine') }}</bk-radio>
                             </bk-radio-group>
                             <span class="preview-node-btn"
                                 v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length > 0"
-                                @click="toShowNodeList">{{ $t('environment.nodeInfo.selectNode') }}
+                                @click="toShowNodeList"
+                            >
+                                {{ $t('environment.nodeInfo.selectNode') }}
                             </span>
-                        </div>
+                        </div> -->
                         <div class="empty-node-selected" v-if="createEnvForm.source === 'EXISTING' && previewNodeList.length === 0">
                             <p class="empty-prompt">{{ $t('environment.nodeInfo.notyetNode') }}，
                                 <span class="show-node-dialog" @click="toShowNodeList">{{ $t('environment.nodeInfo.clickSelectNode') }}</span>

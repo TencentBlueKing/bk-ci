@@ -98,9 +98,7 @@
 <script>
     import { mapState, mapActions } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
-    import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
-    import outputOption from '@/components/outputOption'
     import StagePropertyPanel from '@/components/StagePropertyPanel'
     import emptyTips from '@/components/devops/emptyTips'
     import completeLog from '@/components/ExecDetail/completeLog.vue'
@@ -119,9 +117,7 @@
     export default {
         components: {
             StagePropertyPanel,
-            viewPart,
             codeRecord,
-            outputOption,
             emptyTips,
             plugin,
             completeLog,
@@ -314,7 +310,6 @@
 
         watch: {
             execDetail (val) {
-                console.log(val, 'execDetailexecDetail')
                 this.isLoading = val === null
             },
             'routerParams.buildNo': {
