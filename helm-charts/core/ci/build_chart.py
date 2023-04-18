@@ -125,9 +125,6 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
                             else:
                                 camelize_set.add(camelize_key)
                                 gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
-    # include模板
-    for key in include_dict:
-        gateway_config_file.write(key+": "+include_dict[key]+"\n")
     gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
     gateway_config_file.write('CHART_NAME: {{ include "bkci.names.fullname" . }}\n')
     gateway_config_file.write('{{ end }}')
