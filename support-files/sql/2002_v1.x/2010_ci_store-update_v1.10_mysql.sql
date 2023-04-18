@@ -71,7 +71,7 @@ BEGIN
                           FROM information_schema.statistics
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
-                            AND INDEX_NAME = 'UNI_INX_TSDP_PLATFORM_ERROR') THEN
+                            AND INDEX_NAME = 'UNI_TSECI_STORE_TYPE_ERROR') THEN
     ALTER TABLE T_STORE_ERROR_CODE_INFO ADD UNIQUE INDEX `UNI_TSECI_STORE_TYPE_ERROR` (`STORE_CODE`,`STORE_TYPE`,`ERROR_CODE`);
     END IF;
 
