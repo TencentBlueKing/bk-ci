@@ -90,14 +90,15 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
     # 网关模板
     for conf_name in os.listdir(config_parent):
         if conf_name.startswith('gateway'):
-            print("    processing gateway: "+config_name)
+            print("    processing gateway: "+conf_name)
             with open(os.path.join(config_parent, conf_name), 'r') as conf_file:
                 for line in conf_file:
                     for key in replace_pattern.findall(line):
-                        camelize_key = humps.camelize(key[2:-2].lower())
+                        env = key[2:-2]
+                        camelize_key = humps.camelize(env.lower())
                         if camelize_key not in include_dict:
                             camelize_set.add(camelize_key)
-                            gateway_config_file.write(env+": "+camelize_key+" | quote }}\n")
+                            gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
     # 前端文件
     for root, dirs, files in os.walk(frontend_path):
         for frontend_file in files:
@@ -106,10 +107,11 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
             with open(file_path, 'r') as f:
                 for line in f:
                     for key in replace_pattern.findall(line):
-                        camelize_key = humps.camelize(key[2:-2].lower())
+                        env = key[2:-2]
+                        camelize_key = humps.camelize(env.lower())
                         if camelize_key not in include_dict:
                             camelize_set.add(camelize_key)
-                            gateway_config_file.write(env+": "+camelize_key+" | quote }}\n")
+                            gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
     # include模板
     for key in include_dict:
         gateway_config_file.write(key+": "+include_dict[key]+"\n")
