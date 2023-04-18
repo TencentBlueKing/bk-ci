@@ -9,6 +9,7 @@
                     <material-item
                         class="visible-material-row"
                         :material="webhookInfo"
+                        is-webhook
                         :show-more="false"
                     >
                     </material-item>
@@ -256,17 +257,20 @@
                 margin-right: 6px;
               }
             }
-            .material-link {
-              color: $primaryColor;
+            .mr-source-target {
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-gap: 6px;
+                .icon-arrows-right {
+                    color: #C4C6CC;
+                    font-weight: 800;
+                }
+                > span {
+                    @include ellipsis();
+                }
             }
-            .material-link,
-            .material-span {
-              @include ellipsis();
-            }
-            .material-link {
-              color: $primaryColor;
-            }
-            .material-link,
+
             .material-span {
               @include ellipsis();
             }

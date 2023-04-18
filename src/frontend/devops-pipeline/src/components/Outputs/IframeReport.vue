@@ -17,7 +17,7 @@
             }
         },
         mounted () {
-            this.$refs.reportIframe.addEventListener('load', function () {
+            this.$refs.reportIframe.addEventListener('load', () => {
                 if (this.$refs.reportIframe?.contentDocument?.body?.scrollHeight) {
                     this.$refs.reportIframe.style.height = `${this.$refs.reportIframe.contentDocument.body.scrollHeight}px`
                 }
