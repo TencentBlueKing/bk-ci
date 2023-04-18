@@ -1,0 +1,50 @@
+## 每天1点自动重启 , 避免日志过多挤压
+{{ if .Values.gateway.enabled -}}
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: auto-restart-gateway
+spec:
+  schedule: "0 1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          serviceAccountName: deployment-edit
+          containers:
+          - name: auto-restart-gateway
+            image: bitnami/kubectl
+            command:
+              - /bin/sh
+              - -c
+              - kubectl rollout restart deployment/{{ include "bkci.names.fullname" . }}-gateway
+          restartPolicy: Never
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: deployment-edit
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: deployment-edit-role
+  namespace: {{ .Release.Namespace }}
+rules:
+- apiGroups: ["apps"]
+  resources: ["deployments"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: deployment-edit-role-binding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: deployment-edit-role
+subjects:
+- kind: ServiceAccount
+  name: deployment-edit
+  namespace: {{ .Release.Namespace }}
+{{ end }}
