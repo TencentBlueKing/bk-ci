@@ -41,6 +41,7 @@
                     :toolbars="toolbars"
                     :external-link="false"
                     :box-shadow="false"
+                    :language="mavenLang"
                     preview-background="#fff"
                     @imgAdd="addImage"
                 />
@@ -96,6 +97,9 @@
         computed: {
             userName () {
                 return this.$store.state.user.username
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

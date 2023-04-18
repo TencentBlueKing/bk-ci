@@ -323,6 +323,10 @@ class PipelineBuildTaskDao {
                 val key = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
                 baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(it, key))
             }
+            updateTaskInfo.additionalOptions?.let {
+                baseStep.set(ADDITIONAL_OPTIONS, JsonUtil.toJson(it, formatted = false))
+            }
+            updateTaskInfo.taskParams?.let { baseStep.set(TASK_PARAMS, JsonUtil.toJson(it, formatted = false)) }
             updateTaskInfo.platformCode?.let { baseStep.set(PLATFORM_CODE, it) }
             updateTaskInfo.platformErrorCode?.let { baseStep.set(PLATFORM_ERROR_CODE, it) }
             baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()

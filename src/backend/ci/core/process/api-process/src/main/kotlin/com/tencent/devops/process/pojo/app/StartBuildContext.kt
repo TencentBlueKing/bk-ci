@@ -72,6 +72,7 @@ data class StartBuildContext(
     val retryFailedContainer: Boolean,
     var needUpdateStage: Boolean,
     val skipFailedTask: Boolean, // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
+    val variables: Map<String, String>,
     var buildNoType: BuildNoType? = null,
     var currentBuildNo: Int? = null
 ) {
@@ -165,7 +166,7 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
-            params: Map<String, Any>
+            params: Map<String, String>
         ): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
@@ -185,24 +186,25 @@ data class StartBuildContext(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                variables = params,
                 resourceVersion = resourceVersion,
                 actionType = actionType,
                 executeCount = executeCount,
-                firstTaskId = params[PIPELINE_START_TASK_ID]?.toString() ?: "",
+                firstTaskId = params[PIPELINE_START_TASK_ID] ?: "",
                 stageRetry = isStageRetry,
                 retryStartTaskId = retryStartTaskId,
                 userId = params[PIPELINE_START_USER_ID].toString(),
                 triggerUser = params[PIPELINE_START_USER_NAME].toString(),
                 startType = StartType.valueOf(params[PIPELINE_START_TYPE] as String),
-                parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID]?.toString(),
-                parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID]?.toString(),
+                parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
+                parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID],
                 channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
                     ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString())
                 } else {
                     ChannelCode.BS
                 },
-                retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() ?: false,
-                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toString()?.toBoolean() ?: false,
+                retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
+                skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
                 needUpdateStage = false
             )
         }

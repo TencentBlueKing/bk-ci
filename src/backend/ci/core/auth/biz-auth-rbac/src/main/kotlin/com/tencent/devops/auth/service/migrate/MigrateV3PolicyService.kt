@@ -74,7 +74,6 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
-
 /**
  * v3权限策略迁移到rbac
  *
@@ -257,7 +256,6 @@ class MigrateV3PolicyService constructor(
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
         try {
-            var migrateVerifyResult = true
             var offset = 0
             val limit = 100
             do {
@@ -268,7 +266,7 @@ class MigrateV3PolicyService constructor(
                 )
                 verifyRecordList.forEach {
                     with(it) {
-                        val v0OrV3VerifyResult = verifyResult
+                        val v3VerifyResult = verifyResult
                         val rbacVerifyResult = permissionService.validateUserResourcePermissionByRelation(
                             userId = userId,
                             action = action,
@@ -277,15 +275,15 @@ class MigrateV3PolicyService constructor(
                             resourceType = resourceType,
                             relationResourceType = null
                         )
-                        if (v0OrV3VerifyResult != rbacVerifyResult) {
-                            migrateVerifyResult = false
+                        if (v3VerifyResult != rbacVerifyResult) {
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
+                            return false
                         }
                     }
                 }
                 offset += limit
             } while (verifyRecordList.size == limit)
-            return migrateVerifyResult
+            return true
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to compare policy|$projectCode"

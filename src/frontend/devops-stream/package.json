@@ -42,7 +42,7 @@
     "@babel/node": "^7.15.8",
     "@babel/runtime": "^7.15.4",
     "@blueking/babel-preset-bk": "^2.0.0",
-    "@blueking/bkui-form": "0.0.15",
+    "@blueking/bkui-form": "0.0.27",
     "@blueking/log": "2.0.10",
     "@blueking/user-selector": "^1.0.6",
     "@vue/babel-preset-jsx": "^1.2.4",

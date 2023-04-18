@@ -33,25 +33,37 @@ import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -61,7 +73,11 @@ open class BaseBuildRecordService(
     private val buildRecordModelDao: BuildRecordModelDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
-    private val stageTagService: StageTagService
+    private val stageTagService: StageTagService,
+    private val recordModelService: PipelineRecordModelService,
+    private val pipelineResDao: PipelineResDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineElementService: PipelineElementService
 ) {
 
     protected fun update(
@@ -129,6 +145,54 @@ open class BaseBuildRecordService(
             LogUtils.printCostTimeWE(watcher)
         }
         return
+    }
+
+    fun getRecordModel(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String,
+        fixedExecuteCount: Int,
+        buildRecordModel: BuildRecordModel,
+        executeCount: Int?
+    ): Model? {
+        val resourceStr = pipelineResVersionDao.getVersionModelString(
+            dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
+        ) ?: pipelineResDao.getVersionModelString(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+            params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
+        )
+        var recordMap: Map<String, Any>? = null
+        return try {
+            val fullModel = JsonUtil.to(resourceStr, Model::class.java)
+            // 为model填充element
+            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+            val baseModelMap = JsonUtil.toMutableMap(fullModel)
+            val mergeBuildRecordParam = MergeBuildRecordParam(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = fixedExecuteCount,
+                recordModelMap = buildRecordModel.modelVar,
+                pipelineBaseModelMap = baseModelMap
+            )
+            recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
+            ModelUtils.generatePipelineBuildModel(
+                baseModelMap = baseModelMap,
+                modelFieldRecordMap = recordMap
+            )
+        } catch (t: Throwable) {
+            PipelineBuildRecordService.logger.warn(
+                "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
+                    "-$executeCount with error: ", t
+            )
+            null
+        }
     }
 
     private fun takeBuildStatus(

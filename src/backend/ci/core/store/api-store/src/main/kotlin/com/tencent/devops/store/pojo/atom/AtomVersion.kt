@@ -28,8 +28,10 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModelProperty
 
@@ -111,5 +113,9 @@ data class AtomVersion(
     @ApiModelProperty("是否可编辑")
     val editFlag: Boolean? = null,
     @ApiModelProperty("每日统计信息列表")
-    val dailyStatisticList: List<StoreDailyStatistic>? = null
+    val dailyStatisticList: List<StoreDailyStatistic>? = null,
+    @ApiModelProperty("荣誉信息", required = false)
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null
 )

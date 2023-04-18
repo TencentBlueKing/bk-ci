@@ -149,6 +149,7 @@ CREATE TABLE IF NOT EXISTS `T_COMMON_NOTIFY_MESSAGE_TEMPLATE`
     `SENDER`             varchar(128) NOT NULL DEFAULT 'DevOps' COMMENT '邮件发送者',
     `TITLE`              varchar(256)         DEFAULT NULL COMMENT '邮件标题',
     `BODY`               mediumtext  NOT NULL COMMENT '邮件内容',
+	`BODY_MD` 			 mediumtext      NULL COMMENT 'markdown格式内容',
     `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY (`ID`),

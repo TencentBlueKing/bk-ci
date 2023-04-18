@@ -27,11 +27,7 @@
 
 package com.tencent.devops.process.engine.service.record
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorInfo
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
@@ -65,11 +61,8 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
-import com.tencent.devops.process.utils.KEY_PIPELINE_ID
-import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -92,10 +85,10 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineElementService: PipelineElementService,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -104,7 +97,11 @@ class PipelineBuildRecordService @Autowired constructor(
     buildRecordModelDao = recordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     @Value("\${pipeline.build.retry.limit_days:21}")
@@ -168,45 +165,15 @@ class PipelineBuildRecordService @Autowired constructor(
 
         val version = buildInfo.version
         val model = if (buildRecordModel != null && buildInfo.executeCount != null) {
-            val resourceStr = pipelineResVersionDao.getVersionModelString(
-                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
-            ) ?: pipelineResDao.getVersionModelString(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
+            val record = getRecordModel(
+                projectId = projectId, pipelineId = pipelineId,
+                version = version, buildId = buildId,
+                fixedExecuteCount = fixedExecuteCount,
+                buildRecordModel = buildRecordModel,
+                executeCount = executeCount
             )
-            var recordMap: Map<String, Any>? = null
-            try {
-                val fullModel = JsonUtil.to(resourceStr, Model::class.java)
-                // 为model填充element
-                pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
-                val baseModelMap = JsonUtil.toMutableMap(fullModel)
-                val mergeBuildRecordParam = MergeBuildRecordParam(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    executeCount = fixedExecuteCount,
-                    recordModelMap = buildRecordModel.modelVar,
-                    pipelineBaseModelMap = baseModelMap
-                )
-                recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
-                ModelUtils.generatePipelineBuildModel(
-                    baseModelMap = baseModelMap,
-                    modelFieldRecordMap = recordMap
-                )
-            } catch (t: Throwable) {
-                logger.warn(
-                    "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
-                        "-$executeCount with error: ", t
-                )
-                // 遇到解析问题直接返回最新记录，表现为前端无法切换
-                fixedExecuteCount = buildInfo.executeCount!!
-                null
-            }
+            if (record == null) fixedExecuteCount = buildInfo.executeCount!!
+            record
         } else {
             null
         } ?: run {
@@ -386,8 +353,10 @@ class PipelineBuildRecordService @Autowired constructor(
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态
                 val recordContainers = recordContainerDao.getRecords(
-                    context, projectId, pipelineId, buildId, executeCount,
-                    stage.stageId, BuildStatus.RUNNING
+                    dslContext = context, projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId,
+                    executeCount = executeCount, stageId = stage.stageId,
+                    matrixGroupId = null, buildStatus = BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     val status = BuildStatus.parse(container.status)
@@ -461,8 +430,10 @@ class PipelineBuildRecordService @Autowired constructor(
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态
                 val recordContainers = recordContainerDao.getRecords(
-                    context, projectId, pipelineId, buildId, executeCount,
-                    stage.stageId, BuildStatus.RUNNING
+                    dslContext = context, projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId,
+                    executeCount = executeCount, stageId = stage.stageId,
+                    matrixGroupId = null, buildStatus = BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     if (!BuildStatus.parse(container.status).isRunning()) {

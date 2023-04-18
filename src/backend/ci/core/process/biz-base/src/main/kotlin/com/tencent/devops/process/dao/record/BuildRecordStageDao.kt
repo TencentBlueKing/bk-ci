@@ -145,7 +145,7 @@ class BuildRecordStageDao {
             ).from(this).join(max).on(
                 STAGE_ID.eq(max.field(KEY_STAGE_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
-            ).where(conditions).orderBy(STAGE_ID.asc())
+            ).where(conditions).orderBy(SEQ.asc())
                 .fetch()
             return result.map { record ->
                 BuildRecordStage(

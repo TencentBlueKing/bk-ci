@@ -48,7 +48,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -59,7 +58,6 @@ class DependOnUtilTest {
             jobId = "job_bash2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -79,7 +77,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -90,7 +87,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -109,7 +105,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -119,7 +114,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -139,7 +133,6 @@ class DependOnUtilTest {
             jobId = "job_bash1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -149,7 +142,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job_bash1", "job_bash2")
@@ -165,7 +157,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job_bash1")
@@ -187,7 +178,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -197,7 +187,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -223,7 +212,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -233,7 +221,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1")
@@ -249,7 +236,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1"),
@@ -274,7 +260,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job2")
@@ -287,7 +272,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1")
@@ -310,7 +294,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -321,7 +304,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1", "job3")
@@ -341,7 +323,6 @@ class DependOnUtilTest {
             jobId = "job2",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.ID,
                 dependOnId = listOf("job1", "job3"),
@@ -364,7 +345,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -374,7 +354,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "job1"
@@ -393,7 +372,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "job1",
@@ -416,7 +394,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -426,7 +403,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -445,7 +421,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -467,7 +442,6 @@ class DependOnUtilTest {
             jobId = "job1",
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true
             )
         )
@@ -477,7 +451,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}"
@@ -496,7 +469,6 @@ class DependOnUtilTest {
             conditions = null,
             jobControlOption = JobControlOption(
                 runCondition = JobRunCondition.STAGE_RUNNING,
-                timeout = 900,
                 enable = true,
                 dependOnType = DependOnType.NAME,
                 dependOnName = "\${job1}",
