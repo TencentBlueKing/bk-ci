@@ -1553,12 +1553,45 @@ class PipelineListFacadeService @Autowired constructor(
         val pipelineViewNameMap =
             pipelineViewGroupService.getViewNameMap(projectId, list.map { it.pipelineId }.toMutableSet())
         list.forEach { it.viewNames = pipelineViewNameMap[it.pipelineId] }
+        fillPipelineInfoPermissions(
+            userId = userId,
+            projectId = projectId,
+            pipelineList = list
+        )
         return PipelineViewPipelinePage(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = count.toLong(),
             records = list
         )
+    }
+
+    private fun fillPipelineInfoPermissions(
+        userId: String,
+        projectId: String,
+        pipelineList: List<PipelineInfo>
+    ): List<PipelineInfo> {
+        val permissionToListMap = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.MANAGE
+            ),
+            pipelineIds = pipelineList.map { it.pipelineId }
+        )
+        return pipelineList.map { pipeline ->
+            pipeline.copy(
+                permissions = PipelinePermissions(
+                    canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(pipeline.pipelineId) ?: false,
+                    canDelete = false,
+                    canView = false,
+                    canEdit = false,
+                    canExecute = false,
+                    canDownload = false,
+                    canShare = false
+                )
+            )
+        }
     }
 
     fun getPipelinePage(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
