@@ -482,9 +482,9 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
+        if (taskSuccessFlag) return
         val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 110)
         try {
-            if (taskSuccessFlag) return
             lock.lock()
             val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
                 dslContext = dslContext,
