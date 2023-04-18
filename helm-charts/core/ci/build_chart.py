@@ -102,8 +102,8 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
     # 前端文件
     for root, dirs, files in os.walk(frontend_path):
         for frontend_file in files:
-            if frontend_file.endswith("html") or frontend_file.endswith("js"):
-                file_path = os.path.join(root, frontend_file)
+            file_path = os.path.join(root, frontend_file)
+            if (file_path.endswith("html") or file_path.endswith("js")) and "node_modules" not in file_path:
                 print("    processing frontend: "+file_path)
                 with open(file_path, 'r') as f:
                     for line in f:
