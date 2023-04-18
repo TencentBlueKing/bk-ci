@@ -174,6 +174,8 @@
     "documentTitleTicket": "BK-CI | Tencent BlueKing | Ticket",
     "documentTitleStore": "BK-CI | Tencent BlueKing | Store",
     "documentTitleMetrics": "BK-CI | Tencent BlueKing | Metrics",
+    "documentTitleManage": "BK-CI | Tencent BlueKing | Manage",
+    "documentTitlePermission": "BK-CI | Tencent BlueKing | Permission",
     "technicalSupport": "Support",
     "communityForum": "Forum",
     "ProductOfficialWebsite": "Official ",
