@@ -510,7 +510,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
                     atomCode = taskMetricsData.atomCode,
                     failExecuteCount = 1,
-                    failComplianceCount =failComplianceCount,
+                    failComplianceCount = failComplianceCount,
                     statisticsTime = DateTimeUtil.stringToLocalDateTime(
                         dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
                         formatStr = YYYY_MM_DD
