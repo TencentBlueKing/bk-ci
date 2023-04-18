@@ -205,5 +205,10 @@
     "projectCreatingTitle": "Project creating",
     "projectCreatingDesc": "The {0} project is being created and approved, please wait patiently",
     "manageProject": "Manage Project",
-    "joinProject": "Join Project"
+    "joinProject": "Join Project",
+    "已停用": "disabled",
+    "新建项目申请已拒绝": "New project application rejected",
+    "项目信息修改申请审批中": "Project information modification application approval",
+    "创建中": "creating",
+    "已启用": "enabled"
 }
