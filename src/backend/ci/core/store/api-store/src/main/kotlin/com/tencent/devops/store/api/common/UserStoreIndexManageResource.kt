@@ -50,7 +50,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
-@Path("/user/store/index/manage")
+@Path("/user/store/indexs/manage")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserStoreIndexManageResource {
