@@ -104,10 +104,10 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
         for frontend_file in files:
             file_path = os.path.join(root, frontend_file)
             if (file_path.endswith("html") or file_path.endswith("js")) and "node_modules" not in file_path:
-                print("    processing frontend: "+file_path)
                 with open(file_path, 'r') as f:
                     for line in f:
                         for key in replace_pattern.findall(line):
+                            print("    processing frontend: "+file_path + " , key: "+key)
                             env = key[2:-2]
                             camelize_key = humps.camelize(env.lower())
                             if camelize_key not in include_dict:
@@ -139,5 +139,5 @@ with open(output_value_yaml, 'w') as value_file:
         default_value = '""'
         if camelize.lower().endswith("port"):
             default_value = '80'
-        value = str(default_value_dict.get(replace_dict[key], default_value))
-        value_file.write('  '+replace_dict[key]+': '+value+'\n')
+        value = str(default_value_dict.get(camelize, default_value))
+        value_file.write('  '+camelize+': '+value+'\n')
