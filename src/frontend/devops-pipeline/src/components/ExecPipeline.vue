@@ -237,6 +237,7 @@
                 pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
+                afterAsideVisibleDone: null,
                 pipelineErrorGuideLink:
                     '//bk.tencent.com/docs/markdown/持续集成平台/产品白皮书/FAQS/FAQ.md'
             }
@@ -244,7 +245,9 @@
         computed: {
             ...mapState('common', ['ruleList', 'templateRuleList']),
             ...mapState('atom', [
-                'hideSkipExecTask'
+                'hideSkipExecTask',
+                'showPanelType',
+                'isPropertyPanelVisible'
             ]),
             curPipeline () {
                 return this.execDetail?.model
@@ -398,6 +401,14 @@
                 return this.$route.params
             }
         },
+        watch: {
+            isPropertyPanelVisible (val) {
+                if (!val && this.showPanelType !== '') {
+                    this.afterAsideVisibleDone?.()
+                    this.afterAsideVisibleDone = null
+                }
+            }
+        },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
@@ -453,7 +464,7 @@
                     }
                 })
             },
-            async qualityCheck ({ elementId, action }, done) {
+            async qualityCheck ({ elementId, action }) {
                 try {
                     const data = {
                         ...this.routerParams,
@@ -473,8 +484,6 @@
                         message: err.message || err,
                         theme: 'error'
                     })
-                } finally {
-                    done()
                 }
             },
             handleRetry ({ taskId, skip = false }) {
@@ -493,11 +502,10 @@
                     this.currentAtom = {}
                 }
             },
-            async handleContinue ({ taskId, skip = false }, done) {
+            async handleContinue ({ taskId, skip = false }) {
                 this.retryTaskId = taskId
                 this.skipTask = skip
                 await this.retryPipeline()
-                done()
             },
             async handleExec (
                 {
@@ -534,8 +542,6 @@
                             message: err.message || err,
                             theme: 'error'
                         })
-                    } finally {
-                        done()
                     }
                 } else {
                     this.togglePropertyPanel({
@@ -548,6 +554,7 @@
                             elementIndex
                         }
                     })
+                    this.afterAsideVisibleDone = done
                 }
             },
             async retryPipeline (isStageRetry) {

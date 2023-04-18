@@ -442,7 +442,7 @@
             async atomExecute (isContinue = false) {
                 if (this.isBusy || !this.hasExecPerm) return
 
-                this.isBusy = !isContinue
+                this.isBusy = true
                 const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
 
                 await this.asyncEvent(ATOM_EXEC_EVENT_NAME, {
@@ -481,7 +481,10 @@
 
             asyncEvent (...args) {
                 return new Promise((resolve, reject) => {
-                    eventBus.$emit(...args, resolve, reject)
+                    eventBus.$emit(...args, () => {
+                        this.isBusy = false
+                        resolve()
+                    }, reject)
                 })
             },
 
