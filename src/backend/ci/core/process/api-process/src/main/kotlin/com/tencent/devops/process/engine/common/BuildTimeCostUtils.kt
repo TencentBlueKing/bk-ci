@@ -91,8 +91,10 @@ object BuildTimeCostUtils {
             )
             // 执行时间取并集
             containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
+
+            val mergedWaitCost = mergeTimeLine(containerTimeLine.waitCostMoments, containerTimeLine.queueCostMoments)
             // 等待时间取交集
-            containerWaitCost = intersectionTimeLine(containerWaitCost, containerTimeLine.waitCostMoments)
+            containerWaitCost = intersectionTimeLine(containerWaitCost, mergedWaitCost)
             // 排队时间取交集
             containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
         }
@@ -105,7 +107,7 @@ object BuildTimeCostUtils {
             )
             return@sumOf time.between()
         } + containerWaitCost.sumOf { it.endTime - it.startTime }
-        val systemCost = totalCost - executeCost - queueCost - waitCost
+        val systemCost = totalCost - executeCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
             executeCost = executeCost,
