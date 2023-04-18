@@ -385,24 +385,8 @@ class MetricsDataReportDao {
         dslContext: DSLContext,
         saveErrorCodeInfoPOs: Set<SaveErrorCodeInfoPO>
     ) {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                dslContext.insertInto(this)
-                    .set(ID, saveErrorCodeInfoPO.id)
-                    .set(ERROR_TYPE, saveErrorCodeInfoPO.errorType)
-                    .set(ERROR_CODE, saveErrorCodeInfoPO.errorCode)
-                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                    .set(CREATOR, saveErrorCodeInfoPO.creator)
-                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                    .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
-                    .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                    .onDuplicateKeyUpdate()
-                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                    .execute()
-            }
+        saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
+            saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
         }
     }
 

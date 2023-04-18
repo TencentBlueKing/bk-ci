@@ -183,12 +183,12 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 if (saveAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
                 }
-/*                if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
+                if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
                     metricsDataReportDao.batchSaveAtomIndexStatisticsDailyData(
                         context,
                         saveAtomIndexStatisticsDailyPOs
                     )
-                }*/
+                }
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)
                 }
@@ -243,6 +243,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         } catch (ignored: TooManyRowsException) {
             logger.warn("fail to get atomFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
             metricsDataClearService.metricsDataClear(
+                dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 statisticsTime = statisticsTime,
@@ -498,7 +499,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 )
             )
         }
-/*        val atomIndexStatisticsDailyPO = saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode }
+        val atomIndexStatisticsDailyPO = saveAtomIndexStatisticsDailyPOs.firstOrNull { it.atomCode == atomCode }
         val atomIndexStatisticsDailyRecord = atomIndexStatisticsDailyRecords?.firstOrNull { it.atomCode == atomCode }
         val saveAtomIndexStatisticsDailyPO = atomIndexStatisticsDailyPO ?: atomIndexStatisticsDailyRecord?.let {
             SaveAtomIndexStatisticsDailyPO(
@@ -532,7 +533,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             if ((!taskSuccessFlag) && isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
         if (atomIndexStatisticsDailyPO == null && (!taskSuccessFlag)) {
             saveAtomIndexStatisticsDailyPOs.add(saveAtomIndexStatisticsDailyPO)
-        }*/
+        }
     }
 
     private fun pipelineStageOverviewDataReport(
@@ -733,6 +734,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             } catch (ignored: TooManyRowsException) {
                 logger.warn("fail to get pipelineFailSummaryData of $projectId|$pipelineId|$statisticsTime", ignored)
                 metricsDataClearService.metricsDataClear(
+                    dslContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     statisticsTime = statisticsTime,
@@ -798,6 +800,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         } catch (ignored: TooManyRowsException) {
             logger.warn("fail to get pipelineOverviewData of $projectId|$pipelineId|$statisticsTime", ignored)
             metricsDataClearService.metricsDataClear(
+                dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 statisticsTime = statisticsTime,
