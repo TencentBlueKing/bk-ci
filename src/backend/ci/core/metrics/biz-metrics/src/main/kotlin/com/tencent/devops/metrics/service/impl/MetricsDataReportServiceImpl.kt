@@ -46,6 +46,7 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
@@ -62,15 +63,16 @@ import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.exception.TooManyRowsException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
 import kotlin.math.roundToLong
 
 @Service
@@ -184,10 +186,30 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     metricsDataReportDao.batchSaveAtomOverviewData(context, saveAtomOverviewDataPOs)
                 }
                 if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
-                    metricsDataReportDao.batchSaveAtomIndexStatisticsDailyData(
-                        context,
-                        saveAtomIndexStatisticsDailyPOs
-                    )
+                    saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
+                        try {
+                            metricsDataReportDao.saveAtomIndexStatisticsDailyData(
+                                context,
+                                saveAtomIndexStatisticsDailyPO
+                            )
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.warn(
+                                "fail to update atomIndexStatisticsDailyInfo:$saveAtomIndexStatisticsDailyPO",
+                                ignored
+                            )
+                            metricsDataReportDao.updateAtomIndexStatisticsDailyData(
+                                dslContext = dslContext,
+                                updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
+                                    atomCode = saveAtomIndexStatisticsDailyPO.atomCode,
+                                    failComplianceCount = saveAtomIndexStatisticsDailyPO.failComplianceCount,
+                                    failExecuteCount = saveAtomIndexStatisticsDailyPO.failExecuteCount,
+                                    statisticsTime = saveAtomIndexStatisticsDailyPO.statisticsTime,
+                                    modifier = saveAtomIndexStatisticsDailyPO.modifier,
+                                    updateTime = LocalDateTime.now()
+                                )
+                            )
+                        }
+                    }
                 }
                 if (updateAtomOverviewDataPOs.isNotEmpty()) {
                     metricsDataReportDao.batchUpdateAtomOverviewData(context, updateAtomOverviewDataPOs)

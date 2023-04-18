@@ -37,6 +37,7 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
@@ -249,30 +250,38 @@ class MetricsDataReportDao {
         }
     }
 
-    fun batchSaveAtomIndexStatisticsDailyData(
+    fun saveAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
-        saveAtomIndexStatisticsDailyPOs: List<SaveAtomIndexStatisticsDailyPO>
+        saveAtomIndexStatisticsDailyPO: SaveAtomIndexStatisticsDailyPO
     ) {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
-                dslContext.insertInto(this)
-                    .set(ID, saveAtomIndexStatisticsDailyPO.id)
-                    .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
-                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
-                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                    .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
-                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                    .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
-                    .onDuplicateKeyUpdate()
-                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
-                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                    .execute()
-            }
+            dslContext.insertInto(this)
+                .set(ID, saveAtomIndexStatisticsDailyPO.id)
+                .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
+                .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
+                .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
+                .execute()
+        }
+    }
+
+    fun updateAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        updateAtomIndexStatisticsDailyPO: UpdateAtomIndexStatisticsDailyPO
+    ) {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            dslContext.update(this)
+                .set(FAIL_EXECUTE_COUNT, updateAtomIndexStatisticsDailyPO.failExecuteCount)
+                .set(FAIL_COMPLIANCE_COUNT, updateAtomIndexStatisticsDailyPO.failComplianceCount)
+                .set(MODIFIER, updateAtomIndexStatisticsDailyPO.modifier)
+                .set(UPDATE_TIME, updateAtomIndexStatisticsDailyPO.updateTime)
+                .where(ATOM_CODE.eq(updateAtomIndexStatisticsDailyPO.atomCode))
+                .and(STATISTICS_TIME.eq(updateAtomIndexStatisticsDailyPO.statisticsTime))
+                .execute()
         }
     }
 
