@@ -199,5 +199,5 @@ interface BaseAction {
     /*
     * 格式化 StreamTriggerContext
     */
-    fun parseStreamTriggerContext() = Unit
+    fun parseStreamTriggerContext(cred: StreamGitCred? = null) = Unit
 }
