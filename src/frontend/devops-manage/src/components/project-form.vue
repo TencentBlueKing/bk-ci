@@ -42,8 +42,8 @@ const rules = {
   englishName: [
     {
       validator: (value) => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
-      message: t('英文缩写必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
-      trigger: 'change',
+      message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
+      trigger: 'blur',
     }
   ],
   bgId: [
@@ -317,6 +317,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
+        :maxlength="64"
         @change="handleChangeForm"
       ></bk-input>
       <div class="error-tips" v-if="validateProjectNameTips">
@@ -327,6 +328,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.englishName"
         :disabled="type === 'edit'"
+        :maxlength="32"
         :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
       ></bk-input>
       <div class="error-tips" v-if="validateEnglishNameTips">
