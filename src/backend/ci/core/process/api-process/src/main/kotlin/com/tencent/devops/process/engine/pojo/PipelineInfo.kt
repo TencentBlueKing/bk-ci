@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.pojo
 
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.PipelinePermissions
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -67,7 +66,5 @@ data class PipelineInfo(
     @ApiModelProperty("ID")
     val id: Long?,
     @ApiModelProperty("流水线组名称列表", required = false)
-    var viewNames: List<String>? = null,
-    @ApiModelProperty("流水线权限", required = false)
-    var permissions: PipelinePermissions? = null
+    var viewNames: List<String>? = null
 )
