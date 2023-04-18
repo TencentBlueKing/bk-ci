@@ -263,6 +263,13 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             )
         }
         iamV2ManagerService.deleteRoleGroupV2(groupId)
+        // 迁移的用户组,非默认的也会保存,删除时也应该删除
+        if (authResourceGroup != null) {
+            authResourceGroupDao.deleteByIds(
+                dslContext = dslContext,
+                ids = listOf(authResourceGroup.id)
+            )
+        }
         return true
     }
 
