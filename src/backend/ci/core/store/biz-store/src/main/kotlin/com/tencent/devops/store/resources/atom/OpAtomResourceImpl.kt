@@ -65,8 +65,9 @@ class OpAtomResourceImpl @Autowired constructor(
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun listAllPipelineAtoms(
         atomName: String?,
@@ -99,8 +100,9 @@ class OpAtomResourceImpl @Autowired constructor(
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getPipelineAtomById(id: String): Result<Atom?> {
         return opAtomService.getPipelineAtom(id)

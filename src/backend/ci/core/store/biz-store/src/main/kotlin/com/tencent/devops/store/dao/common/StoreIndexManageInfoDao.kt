@@ -37,7 +37,6 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record7
@@ -114,7 +113,7 @@ class StoreIndexManageInfoDao {
         }
     }
 
-    fun list(dslContext: DSLContext, keyWords: String?, page: Int, pageSize: Int): List<StoreIndexBaseInfo> {
+    fun list(dslContext: DSLContext, keyWords: String?, page: Int, pageSize: Int): List<TStoreIndexBaseInfoRecord> {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
             val condition = mutableListOf<Condition>()
             keyWords?.let {
@@ -141,7 +140,7 @@ class StoreIndexManageInfoDao {
                 .from(this)
                 .where(condition)
                 .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(StoreIndexBaseInfo::class.java)
+                .fetchInto(TStoreIndexBaseInfoRecord::class.java)
         }
     }
 

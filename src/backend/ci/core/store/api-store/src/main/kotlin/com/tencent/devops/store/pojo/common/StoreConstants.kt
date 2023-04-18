@@ -137,6 +137,8 @@ const val KEY_PROJECT_CODE = "projectCode"
 const val KEY_CODE_SRC = "codeSrc"
 const val KEY_FINISH_KILL_FLAG = "finishKillFlag"
 const val KEY_INDEX_CODE = "indexCode"
+const val KEY_RELEASE_INFO = "releaseInfo"
+const val KEY_VERSION_CONTENT = "versionContent"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"

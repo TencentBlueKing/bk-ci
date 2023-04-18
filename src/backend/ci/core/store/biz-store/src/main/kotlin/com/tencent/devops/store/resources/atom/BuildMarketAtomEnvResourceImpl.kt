@@ -41,8 +41,9 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
     BuildMarketAtomEnvResource {
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getAtomEnv(
         projectCode: String,

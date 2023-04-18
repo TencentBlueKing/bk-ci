@@ -47,8 +47,9 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
     UserAtomResource {
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getPipelineAtom(
         projectCode: String,
@@ -65,8 +66,9 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun listAllPipelineAtoms(
         accessToken: String,
@@ -109,8 +111,9 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getInstalledAtoms(
         userId: String,

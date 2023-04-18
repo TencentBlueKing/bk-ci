@@ -70,6 +70,7 @@ import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -128,6 +129,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -716,6 +718,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
+
+        task?.let {
+            pipelineBuildTaskService.finishTask(
+                buildTask = task,
+                buildStatus = buildStatus,
+                actionType = ActionType.REFRESH,
+                source = "completeClaimBuildTask",
+                sendEventFlag = false
+            )
+        }
 
         if (buildStatus.isFailure()) {
             // #1613 可能为空，需要先对预置
