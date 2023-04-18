@@ -25,7 +25,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
-                    :popover-width="340"
+                    :popover-width="345"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
