@@ -30,8 +30,9 @@
     "skiped": "已跳过",
     "retry": "重试",
     "dependOn": "依赖于",
-    "open": "展示",
-    "fold": "收起"
+    "open": "展开",
+    "openPOST": "展开后置操作",
+    "foldPOST": "收起后置操作"
   },
   "en-US": {
     "insertStage": "Add Stage",
@@ -65,6 +66,7 @@
     "retry": "Retry",
     "dependOn": "Depend on",
     "open": "Open",
-    "fold": "Fold"
+    "openPOST": "Expand post-actions",
+    "foldPOST": "Fold post-actions"
   }
 }

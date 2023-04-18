@@ -18,7 +18,7 @@
             </div>
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{
-                    $t("editPage.material")
+                    $t("details.material")
                 }}</span>
                 <div v-if="visibleMaterial" class="exec-detail-summary-info-material-list">
                     <material-item

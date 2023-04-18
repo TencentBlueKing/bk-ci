@@ -23,30 +23,30 @@
 
 import Vue from 'vue'
 import App from './App'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
-import focus from './directives/focus/index.js'
 
-import VeeValidate from 'vee-validate'
-import validationENMessages from 'vee-validate/dist/locale/en'
-import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
-import ExtendsCustomRules from './utils/customRules'
-import validDictionary from './utils/validDictionary'
+import '@icon-cool/bk-icon-devops'
+import '@icon-cool/bk-icon-devops/src/index'
 import mavonEditor from 'mavon-editor'
 import 'mavon-editor/dist/css/index.css'
 import PortalVue from "portal-vue"; // eslint-disable-line
+import VeeValidate from 'vee-validate'
+import validationENMessages from 'vee-validate/dist/locale/en'
+import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import createLocale from '../../locale'
-import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
+import ExtendsCustomRules from './utils/customRules'
+import validDictionary from './utils/validDictionary'
 
+import bkMagic from 'bk-magic-vue'
+import BkPipeline from 'bkui-pipeline'
+import { pipelineDocs } from '../../common-lib/docs'
 import {
     actionMap,
     resourceMap,
     resourceTypeMap
 } from '../../common-lib/permission-conf'
-import { pipelineDocs } from '../../common-lib/docs'
-import bkMagic from 'bk-magic-vue'
-import BkPipeline from 'bkui-pipeline'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -71,6 +71,7 @@ Vue.use(VeeValidate, {
 })
 VeeValidate.Validator.localize(validDictionary)
 ExtendsCustomRules(VeeValidate.Validator.extend)
+console.log(i18n.locale)
 Vue.use(BkPipeline, {
     i18n
 })

@@ -26,7 +26,7 @@
                             {{ statusLabel }}
                             <span
                                 v-if="execDetail.status === 'CANCELED'"
-                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId || '--'}`"
                                 class="devops-icon icon-info-circle"
                             >
                             </span>

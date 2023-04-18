@@ -150,7 +150,7 @@
                     },
                     {
                         key: 'report',
-                        label: this.$t('execDetail.report')
+                        label: this.$t('details.report')
                     }
                 ]
             },

@@ -103,7 +103,7 @@
             </div>
             <section class="atom-form-footer" v-if="showPanelType === 'PAUSE'">
                 <bk-button @click="changePluginPause(true, 'isExeContinue')" theme="primary" :loading="isExeContinue" :disabled="isExeStop">{{ $t('resume') }}</bk-button>
-                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('pause') }}</bk-button>
+                <bk-button @click="changePluginPause(false, 'isExeStop')" :loading="isExeStop" :disabled="isExeContinue">{{ $t('stop') }}</bk-button>
             </section>
         </div>
     </section>
@@ -475,9 +475,11 @@
                     })
                 }).finally(() => {
                     this[loadingKey] = false
-                    this.togglePropertyPanel({
-                        isShow: false,
-                        showPanelType: ''
+                    this.$nextTick(() => {
+                        this.togglePropertyPanel({
+                            isShow: false,
+                            showPanelType: ''
+                        })
                     })
                 })
             },
@@ -675,7 +677,7 @@
     .atom-form-box.readonly {
         pointer-events: none;
     }
-    
+
     .atom-main-content {
         font-size: 12px;
         .atom-link {

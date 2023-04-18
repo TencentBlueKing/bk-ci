@@ -182,13 +182,13 @@
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{ $t("details.queueCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : queueCost }}</span>
+                <span>{{ isRunning ? `${$t("details.running")}...` : queueCost }}</span>
             </div>
         </div>
         <div class="time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{ $t("details.totalCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : totalCost }}</span>
+                <span>{{ isRunning ? `${$t("details.running")}...` : totalCost }}</span>
             </div>
             <ul class="pipeline-time-detail-sum-list">
                 <li v-for="cost in timeDetailRows" :key="cost.field">
@@ -243,7 +243,9 @@
         },
         computed: {
             ...mapState('common', ['ruleList', 'templateRuleList']),
-            ...mapState('atom', ['hideSkipExecTask']),
+            ...mapState('atom', [
+                'hideSkipExecTask'
+            ]),
             curPipeline () {
                 return this.execDetail?.model
             },
@@ -526,7 +528,7 @@
 
                     try {
                         await this.pausePlugin(postData)
-                        this.requestPipelineExecDetail(this.routerParams)
+                        await this.requestPipelineExecDetail(this.routerParams)
                     } catch (err) {
                         this.$showTips({
                             message: err.message || err,

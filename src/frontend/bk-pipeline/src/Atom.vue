@@ -383,6 +383,9 @@
                         behavior: 'smooth'
                     })
                 }
+            },
+            atomStatus () {
+                this.isBusy = false
             }
         },
         mounted () {
@@ -439,7 +442,7 @@
             async atomExecute (isContinue = false) {
                 if (this.isBusy || !this.hasExecPerm) return
 
-                this.isBusy = true
+                this.isBusy = !isContinue
                 const { stageIndex, containerIndex, containerGroupIndex, atomIndex } = this
 
                 await this.asyncEvent(ATOM_EXEC_EVENT_NAME, {
@@ -454,9 +457,6 @@
                     taskId: this.atom.id,
                     atom: this.atom
                 })
-                setTimeout(() => {
-                    this.isBusy = false
-                }, 1000)
             },
 
             async qualityApprove (action) {
@@ -475,10 +475,6 @@
                         await this.asyncEvent(ATOM_QUALITY_CHECK_EVENT_NAME, data)
                     } catch (error) {
                         console.error(error)
-                    } finally {
-                        setTimeout(() => {
-                            this.isBusy = false
-                        }, 1000)
                     }
                 }
             },
@@ -500,10 +496,6 @@
                     })
                 } catch (error) {
                     console.error(error)
-                } finally {
-                    setTimeout(() => {
-                        this.isBusy = false
-                    }, 1000)
                 }
             }
         }
