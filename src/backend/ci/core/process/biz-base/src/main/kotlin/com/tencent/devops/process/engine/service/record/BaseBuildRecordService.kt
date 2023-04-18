@@ -291,7 +291,7 @@ open class BaseBuildRecordService(
                 result[type] = if (old != null) {
                     // 如果时间戳已存在，开始时间不变，则结束时间将新值覆盖旧值
                     BuildRecordTimeStamp(
-                        startTime = old.startTime,
+                        startTime = old.startTime ?: new.startTime,
                         endTime = new.endTime ?: old.endTime
                     )
                 } else {
