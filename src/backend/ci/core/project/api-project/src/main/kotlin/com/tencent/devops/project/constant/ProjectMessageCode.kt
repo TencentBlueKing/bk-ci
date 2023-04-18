@@ -73,7 +73,7 @@ object ProjectMessageCode {
     const val LABLE_NAME_EXSIT = "2119026" // {0}已经存在，请换一个再试
     const val CALL_PEM_FAIL = "2119027" // 调用权限中心创建项目失败
     const val CALL_PEM_FAIL_PARM = "2119028" // 调用权限中心创建项目失败:{0}
-    const val NOT_MANAGER = "2119029" // 操作用户非项目管理员
+    const val NOT_MANAGER = "2119029" // 项目管理：操作用户{0}非项目{1}管理员
     const val ORG_TYPE_ERROR = "2119030" // 组织类型有误
     const val ORG_NOT_PROJECT = "2119031" // {0}该组织下无项目
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员

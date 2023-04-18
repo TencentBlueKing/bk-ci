@@ -163,7 +163,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
     const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个
     const val FAIL_TEMPLATE_UPDATE_NUM_TOO_BIG = "2101079" // 模板实例更新数量[{0}]超过系统规定的最大值{1}，请调整参数或咨询助手
-    const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
+    const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 项目[{0}]已禁用，不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
     const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
