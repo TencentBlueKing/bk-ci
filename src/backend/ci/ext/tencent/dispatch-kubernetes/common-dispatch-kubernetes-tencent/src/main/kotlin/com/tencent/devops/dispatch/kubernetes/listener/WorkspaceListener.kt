@@ -48,10 +48,14 @@ class WorkspaceListener @Autowired constructor(
 
     @BkTimed
     fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
-        var status = false
-        var devcloudEnvironmentUid = ""
-        var devcloudEnvironmentHost = ""
-        var errorMsg: String? = null
+        val backEvent = RemoteDevUpdateEvent(
+            traceId = event.traceId,
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            type = UpdateEventType.CREATE,
+            bkTicket = event.bkTicket,
+            status = false
+        )
         try {
             logger.info("Start to handle workspace create ($event)")
             val workspaceResponse = remoteDevService.createWorkspace(
@@ -59,46 +63,42 @@ class WorkspaceListener @Autowired constructor(
                 event = event
             )
 
-            devcloudEnvironmentUid = workspaceResponse.enviromentUid
-            devcloudEnvironmentHost = workspaceResponse.environmentHost
-
-            status = true
+            backEvent.environmentUid = workspaceResponse.environmentUid
+            backEvent.environmentHost = workspaceResponse.environmentHost
+            backEvent.environmentIp = workspaceResponse.environmentIp
+            backEvent.status = true
         } catch (e: BuildFailureException) {
-            status = false
-            errorMsg = e.formatErrorMessage + e.message
+            backEvent.errorMsg = e.formatErrorMessage + e.message
             logger.error("Handle workspace create error.", e)
         } catch (t: Throwable) {
-            status = false
-            errorMsg = t.message
+            backEvent.errorMsg = t.message
             logger.error("Handle workspace create error.", t)
         } finally {
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(
-                RemoteDevUpdateEvent(
-                    traceId = event.traceId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    type = UpdateEventType.CREATE,
-                    status = status,
-                    environmentUid = devcloudEnvironmentUid,
-                    environmentHost = devcloudEnvironmentHost,
-                    errorMsg = errorMsg
-                )
+                backEvent
             )
         }
     }
 
     @BkTimed
     fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
-        var environmentHost = ""
-        var status = true
-        var errorMsg: String? = null
+        val backEvent = RemoteDevUpdateEvent(
+            traceId = event.traceId,
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            type = event.type,
+            bkTicket = event.bkTicket,
+            status = false,
+            environmentUid = ""
+        )
         try {
             logger.info("Start to handle workspace operate ($event)")
+            backEvent.environmentIp = remoteDevService.getWorkspaceInfo(event.userId, event.workspaceName).environmentIP
             when (event.type) {
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event.userId, event.workspaceName)
-                    environmentHost = workspaceResponse.environmentHost
+                    backEvent.environmentHost = workspaceResponse.environmentHost
                 }
                 UpdateEventType.STOP -> {
                     remoteDevService.stopWorkspace(event.userId, event.workspaceName)
@@ -109,27 +109,17 @@ class WorkspaceListener @Autowired constructor(
                 else -> {
                 }
             }
+            backEvent.status = true
         } catch (e: BuildFailureException) {
-            status = false
-            errorMsg = e.formatErrorMessage + e.message
+            backEvent.errorMsg = e.formatErrorMessage + e.message
             logger.error("Handle workspace update error.", e)
         } catch (t: Throwable) {
-            errorMsg = t.message
+            backEvent.errorMsg = t.message
             logger.warn("Fail to handle workspace operate ($event)", t)
-            status = false
         } finally {
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(
-                RemoteDevUpdateEvent(
-                    traceId = event.traceId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    type = event.type,
-                    status = status,
-                    environmentHost = environmentHost,
-                    environmentUid = "",
-                    errorMsg = errorMsg
-                )
+                backEvent
             )
         }
     }

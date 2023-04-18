@@ -78,7 +78,8 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            version = version
+            version = version,
+            versionName = null
         )
     }
 

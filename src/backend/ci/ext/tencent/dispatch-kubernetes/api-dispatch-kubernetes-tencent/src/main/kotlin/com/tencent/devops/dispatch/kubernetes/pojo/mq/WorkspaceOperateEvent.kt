@@ -42,6 +42,7 @@ data class WorkspaceOperateEvent(
     val settingEnvs: Map<String, String> = emptyMap(),
     @ApiModelProperty("包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
+    val bkTicket: String? = null,
     override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

@@ -50,6 +50,8 @@ data class WorkspaceCreateEvent(
     val devFile: Devfile,
     @ApiModelProperty("用户设置里云开发的环境变量")
     val settingEnvs: Map<String, String>,
+    @ApiModelProperty("bkTicket")
+    val bkTicket: String? = null,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

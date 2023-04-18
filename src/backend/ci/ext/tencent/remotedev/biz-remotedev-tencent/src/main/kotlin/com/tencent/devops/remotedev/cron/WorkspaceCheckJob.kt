@@ -52,6 +52,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         workspaceService.heartBeatStopWS(workspaceName)
                     }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
                 }
+                workspaceService.fixUnexpectedWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Stop inactive workspace failed", e)

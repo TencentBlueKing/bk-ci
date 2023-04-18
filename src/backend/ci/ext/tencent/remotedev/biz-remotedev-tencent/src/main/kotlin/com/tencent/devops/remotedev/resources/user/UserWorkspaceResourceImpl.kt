@@ -57,12 +57,20 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val permissionService: PermissionService
 ) : UserWorkspaceResource {
 
-    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<WorkspaceResponse> {
-        return Result(workspaceService.createWorkspace(userId, workspace))
+    override fun createWorkspace(
+        userId: String,
+        bkTicket: String,
+        workspace: WorkspaceCreate
+    ): Result<WorkspaceResponse> {
+        return Result(workspaceService.createWorkspace(userId, bkTicket, workspace))
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Result<WorkspaceResponse> {
-        return Result(workspaceService.startWorkspace(userId, workspaceName))
+    override fun startWorkspace(
+        userId: String,
+        bkTicket: String,
+        workspaceName: String
+    ): Result<WorkspaceResponse> {
+        return Result(workspaceService.startWorkspace(userId, bkTicket, workspaceName))
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {

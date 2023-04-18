@@ -30,16 +30,21 @@ package com.tencent.devops.remotedev.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.BKGPT
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.server.ChunkedOutput
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.Context
+import javax.ws.rs.core.HttpHeaders
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_WORKSPACE"], description = "用户-工作空间")
@@ -66,5 +71,35 @@ interface UserRemoteDevResource {
         userId: String,
         @ApiParam("工作空间描述", required = false)
         remoteDevSettings: RemoteDevSettings
+    ): Result<Boolean>
+
+    @ApiOperation("BK-GPT")
+    @POST
+    @Path("/bkGPT")
+    fun bkGPT(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam("X-DEVOPS-BK-TICKET")
+        bkTicket: String,
+        @Context
+        headers: HttpHeaders,
+        data: BKGPT
+    ): ChunkedOutput<String>
+
+    @ApiOperation("上报preci agent id")
+    @POST
+    @Path("/preci_agent")
+    fun preCiAgent(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "agentId", required = true)
+        @QueryParam("agentId")
+        agentId: String
     ): Result<Boolean>
 }
