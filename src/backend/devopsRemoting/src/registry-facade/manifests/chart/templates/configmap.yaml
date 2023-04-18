@@ -12,14 +12,14 @@ data:
   run.json: |-
     {
       "dockerAuth": "/data/workspace/registry-facade/pull-secret/pull-secret.json",
-      {{- if .Values.registry.fixedSpec }}
-      "fixedSpecFN": "/data/workspace/registry-facade/config/fixed.json",
-      {{- end }}
       {{- if .Values.registry.readinessProbeAddr }}
       "readinessProbeAddr": "{{.Values.registry.readinessProbeAddr }}",
       {{- end }}
       "registry": {
         "port": 9000,
+        {{- if .Values.registry.fixedSpec }}
+        "fixedSpecFN": "/data/workspace/registry-facade/config/fixed.json",
+        {{- end }}
         {{- if .Values.registry.staticLayers }}
         "staticLayer": {{ toJson .Values.registry.staticLayers }},
         {{- end }}
