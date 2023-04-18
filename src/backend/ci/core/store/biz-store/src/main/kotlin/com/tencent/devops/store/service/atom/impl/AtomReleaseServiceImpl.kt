@@ -91,6 +91,8 @@ import com.tencent.devops.store.pojo.common.KEY_EXECUTION
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
+import com.tencent.devops.store.pojo.common.KEY_VERSION_CONTENT
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
@@ -308,12 +310,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        val jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest)
+        jsonMap["$KEY_RELEASE_INFO.$KEY_VERSION_CONTENT"] = marketAtomUpdateRequest.versionContent
         val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
             projectCode = projectCode,
             jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest),
             fileDir = "$atomCode/$version",
-            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version),
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version, KEY_RELEASE_INFO),
             repositoryHashId = atomRecord.repositoryHashId
         )
         val convertUpdateRequest = JsonUtil.mapTo(updateRequestDataMap, MarketAtomUpdateRequest::class.java)

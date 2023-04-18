@@ -56,6 +56,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.RegexUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TAtomFeature
@@ -751,8 +752,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyCode = record[tClassify.CLASSIFY_CODE]
             val classifyName = record[tClassify.CLASSIFY_NAME]
             val classifyLanName = if (classifyCode != null) {
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                I18nUtil.getCodeLanMessage(
+                    messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
                     defaultMessage = classifyName
                 )
             } else classifyName

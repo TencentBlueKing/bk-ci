@@ -47,7 +47,7 @@ class BkWriterInterceptor : WriterInterceptor {
             context.proceed()
             return
         }
-        val fixKeyPrefixName = bkInterfaceI18nAnnotation.fixKeyPrefixName
+        val fixKeyHeadPrefixName = bkInterfaceI18nAnnotation.fixKeyHeadPrefixName
         val keyPrefixNames = bkInterfaceI18nAnnotation.keyPrefixNames
         // 2、获取实体对象里需要进行国际化翻译的字段集合
         val entity = context.entity
@@ -62,10 +62,10 @@ class BkWriterInterceptor : WriterInterceptor {
         val dbI18nKeyMap = mutableMapOf<String, String>()
         // 4、获取需要进行国际化翻译的字段的国际化key值
         bkI18nFieldMap.forEach nextBkI18nField@{ fieldPath, i18nFieldInfo ->
-            val i18nKeySb = if (fixKeyPrefixName.isBlank()) {
+            val i18nKeySb = if (fixKeyHeadPrefixName.isBlank()) {
                 StringBuilder()
             } else {
-                StringBuilder("$fixKeyPrefixName.")
+                StringBuilder("$fixKeyHeadPrefixName.")
             }
             // 获取字段的key值
             val fieldKey = getFieldKey(fieldPath, i18nFieldInfo)
@@ -79,7 +79,12 @@ class BkWriterInterceptor : WriterInterceptor {
                     keyPrefixMap = keyPrefixMap
                 )
             }
-            val i18nKey = i18nKeySb.append(fieldKey).toString()
+            i18nKeySb.append(fieldKey)
+            val fixKeyTailPrefixName = bkInterfaceI18nAnnotation.fixKeyTailPrefixName
+            if (fixKeyTailPrefixName.isNotBlank()) {
+                i18nKeySb.append(".$fixKeyTailPrefixName")
+            }
+            val i18nKey = i18nKeySb.toString()
             // 根据国际化信息来源把字段信息分别放入不同的集合以便进行后续处理
             if (i18nFieldInfo.source == I18nSourceEnum.PROPERTIES) {
                 propertyI18nKeyMap[fieldPath] = i18nKey

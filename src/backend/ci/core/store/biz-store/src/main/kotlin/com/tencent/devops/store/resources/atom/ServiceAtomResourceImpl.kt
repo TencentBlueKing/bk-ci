@@ -47,8 +47,9 @@ class ServiceAtomResourceImpl @Autowired constructor(
 ) : ServiceAtomResource {
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].atomCode", "data[*].version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data[*].atomCode", "data[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getInstalledAtoms(
         projectCode: String
@@ -57,8 +58,9 @@ class ServiceAtomResourceImpl @Autowired constructor(
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
@@ -73,8 +75,9 @@ class ServiceAtomResourceImpl @Autowired constructor(
     }
 
     @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
     )
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
