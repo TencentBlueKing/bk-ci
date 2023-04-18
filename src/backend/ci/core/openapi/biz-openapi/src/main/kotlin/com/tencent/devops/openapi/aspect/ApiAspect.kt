@@ -129,7 +129,13 @@ class ApiAspect(
 
         if (projectId != null) {
 
-            permissionService.validProjectPermission(appCode, apigwType, userId, projectId)
+            permissionService.validProjectPermission(
+                appCode = appCode,
+                apigwType = apigwType,
+                userId = userId,
+                projectId = projectId,
+                method = jp.signature as MethodSignature
+            )
 
             if (appCodeService.validProjectInfo(projectId) == null) {
                 appCodeService.invalidProjectInfo(projectId)
