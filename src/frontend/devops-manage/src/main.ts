@@ -22,7 +22,7 @@ import { createI18n } from 'vue-i18n';
 import ZhCN from '../../locale/manage/zh-CN.json';
 import EnUS from '../../locale/manage/en-US.json';
 
-const cookiesObj = getCookies('blueking_language') || '';
+const cookiesObj = getCookies() || {};
 const i18n = createI18n({
   legacy: false,
   locale: ['en', 'en-us', 'en_us'].includes((cookiesObj.blueking_language || '').toLowerCase()) ? 'en-US' : 'zh-CN',
