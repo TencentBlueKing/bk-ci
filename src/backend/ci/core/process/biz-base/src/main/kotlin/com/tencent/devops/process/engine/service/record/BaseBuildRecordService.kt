@@ -116,7 +116,7 @@ open class BaseBuildRecordService(
 
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
-            if (!change) {
+            if (!change && cancelUser.isNullOrBlank()) {
                 message = "Will not update"
                 return
             }
