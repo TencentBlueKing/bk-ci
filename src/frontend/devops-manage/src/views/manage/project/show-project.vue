@@ -330,12 +330,8 @@ onMounted(async () => {
                     <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
                     <span class="item-value">{{ projectData.projectName }}</span>
                     <span class="enable-status">
-                      <svg v-if="projectData.enabled" aria-hidden="true" class="enable-status-icon">
-                        <use xlink:href="#manage-icon-normal"></use>
-                      </svg>
-                      <svg v-else aria-hidden="true" class="enable-status-icon">
-                        <use xlink:href="#manage-icon-unknown"></use>
-                      </svg>
+                      <img class="enable-status-icon" v-if="projectData.enabled" src="../../../css/svg/normal.svg" alt="">
+                      <img class="enable-status-icon" v-else src="../../../css/svg/unknown.svg" alt="">
                       {{ projectData.enabled ? t('已启用') : t('已停用') }}
                     </span>
                   </div>
