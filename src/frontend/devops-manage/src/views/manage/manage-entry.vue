@@ -23,10 +23,10 @@ const manageTabs = ref([
     title: t('用户管理'),
     name: 'group',
   },
-  {
-    title: t('微扩展管理'),
-    name: 'expand',
-  },
+  // {
+  //   title: t('微扩展管理'),
+  //   name: 'expand',
+  // },
 ]);
 
 const routeName = route.name;
