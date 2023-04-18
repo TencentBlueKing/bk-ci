@@ -102,16 +102,17 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
     # 前端文件
     for root, dirs, files in os.walk(frontend_path):
         for frontend_file in files:
-            file_path = os.path.join(root, frontend_file)
-            print("    processing frontend: "+file_path)
-            with open(file_path, 'r') as f:
-                for line in f:
-                    for key in replace_pattern.findall(line):
-                        env = key[2:-2]
-                        camelize_key = humps.camelize(env.lower())
-                        if camelize_key not in include_dict:
-                            camelize_set.add(camelize_key)
-                            gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
+            if frontend_file.endswith("html") or frontend_file.endswith("js"):
+                file_path = os.path.join(root, frontend_file)
+                print("    processing frontend: "+file_path)
+                with open(file_path, 'r') as f:
+                    for line in f:
+                        for key in replace_pattern.findall(line):
+                            env = key[2:-2]
+                            camelize_key = humps.camelize(env.lower())
+                            if camelize_key not in include_dict:
+                                camelize_set.add(camelize_key)
+                                gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
     # include模板
     for key in include_dict:
         gateway_config_file.write(key+": "+include_dict[key]+"\n")
