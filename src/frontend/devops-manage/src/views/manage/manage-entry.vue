@@ -79,7 +79,7 @@ onMounted(() => {
 .manage-tab {
   display: inline-block;
   position: relative;
-  width: 116px;
+  width: 130px;
   height: 60px;
   line-height: 60px;
   text-align: center;
@@ -92,7 +92,7 @@ onMounted(() => {
       top: 0;
       left: 0;
       content: '';
-      width: 116px;
+      width: 130px;
       height: 4px;
       background-color: #3A84FF;
     }

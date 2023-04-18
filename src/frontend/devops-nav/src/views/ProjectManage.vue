@@ -122,13 +122,13 @@
                             >
                                 {{ $t('userGroupManage') }}
                             </bk-button>
-                            <bk-button
+                            <!-- <bk-button
                                 text
                                 :disabled="row.approvalStatus === 1"
                                 @click="handleGoExtend(row)"
                             >
                                 {{ $t('extendManage') }}
-                            </bk-button>
+                            </bk-button> -->
                         </template>
                     </bk-table-column>
                 </bk-table>
