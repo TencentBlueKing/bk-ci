@@ -315,7 +315,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record)
+        val projectVO = ProjectUtils.packagingBean(record)
+        val englishNames = getProjectFromAuth(userId, accessToken)
+        if (englishNames.isEmpty()) {
+            return null
+        }
+        if (!englishNames.contains(projectVO.englishName)) {
+            logger.warn("The user don't have the permission to get the project $englishName")
+            return null
+        }
+        return projectVO
     }
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {

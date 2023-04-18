@@ -30,6 +30,15 @@ BEGIN
         ADD COLUMN `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围';
     END IF;
 
+     IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PROJECT_APPROVAL'
+                    AND COLUMN_NAME = 'PROJECT_TYPE') THEN
+    ALTER TABLE `T_PROJECT_APPROVAL`
+        ADD COLUMN `PROJECT_TYPE` int(10) comment '项目类型';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

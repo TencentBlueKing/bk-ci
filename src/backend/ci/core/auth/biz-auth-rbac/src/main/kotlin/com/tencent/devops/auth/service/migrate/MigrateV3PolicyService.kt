@@ -400,7 +400,10 @@ class MigrateV3PolicyService constructor(
                 )
             )
         }
-        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+        val managerRoleGroupDTO = ManagerRoleGroupDTO.builder()
+            .groups(listOf(managerRoleGroup))
+            .createAttributes(false)
+            .build()
         val groupId = v2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
         val groupConfig = authResourceGroupConfigDao.getByName(
             dslContext = dslContext,
