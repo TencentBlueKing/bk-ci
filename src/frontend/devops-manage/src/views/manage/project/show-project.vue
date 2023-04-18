@@ -474,7 +474,7 @@ onMounted(async () => {
                         action: RESOURCE_ACTION.ENABLE
                       }
                     }"
-                    class="btn"
+                    class="enable-btn"
                     theme="default"
                     @click="handleEnabledProject"
                   >
@@ -596,6 +596,9 @@ onMounted(async () => {
     }
     .btn {
       width: 88px;
+    }
+    .enable-btn {
+      width: 120px;
     }
     .diff-content {
       max-width: 800px;
