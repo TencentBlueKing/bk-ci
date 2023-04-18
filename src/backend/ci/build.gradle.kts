@@ -98,9 +98,6 @@ allprojects {
                 entry("poi")
                 entry("poi-ooxml")
             }
-            dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
-                entry("pinyin-plus")
-            }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("io.mockk:mockk:${Versions.mockk}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
@@ -122,6 +119,7 @@ allprojects {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 

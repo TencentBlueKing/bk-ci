@@ -35,6 +35,7 @@ dependencies {
     api(project(":core:common:common-db"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-archive"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 
     api(project(":core:plugin:codecc-plugin:common-codecc"))
     api(project(":core:plugin:codecc-plugin:api-codecc"))

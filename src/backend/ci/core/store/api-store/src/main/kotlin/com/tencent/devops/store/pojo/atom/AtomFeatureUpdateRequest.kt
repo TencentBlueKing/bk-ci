@@ -33,5 +33,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("插件插件市场-插件插件特性信息更新报文体")
 data class AtomFeatureUpdateRequest(
     @ApiModelProperty("插件插件代码库地址", required = false)
-    val repositoryUrl: String?
+    val repositoryUrl: String? = null,
+    @ApiModelProperty("默认插件", required = false)
+    val defaultFlag: Boolean? = null
 )

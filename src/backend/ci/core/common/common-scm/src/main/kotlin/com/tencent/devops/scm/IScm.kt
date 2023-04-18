@@ -32,6 +32,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
@@ -65,7 +66,8 @@ interface IScm {
         targetUrl: String,
         context: String,
         description: String,
-        block: Boolean
+        block: Boolean,
+        targetBranch: List<String>?
     )
 
     fun addMRComment(mrId: Long, comment: String)
@@ -83,4 +85,6 @@ interface IScm {
     fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? = null
 
     fun getMrCommitList(mrId: Long, page: Int, size: Int) = emptyList<GitCommit>()
+
+    fun getProjectInfo(projectName: String): GitProjectInfo? = null
 }

@@ -99,9 +99,13 @@
                         </div>
                     </div>
                 </div>
-                <div class="no-data-row" v-if="selectHandlercConf.searchEmpty || !rowList.length">
-                    <span>{{ $t('environment.noData') }}</span>
-                </div>
+                <bk-exception
+                    v-if="selectHandlercConf.searchEmpty || !rowList.length"
+                    class="exception-wrap-item exception-part"
+                    search-empty
+                    :type="selectHandlercConf.searchEmpty ? 'search-empty' : 'empty'"
+                    scene="part"
+                />
             </div>
         </div>
         <div slot="footer">
@@ -439,12 +443,9 @@
             height: 294px;
             margin: 0;
             border: none;
-        }
-
-        .no-data-row {
-            padding-top: 40px;
-            text-align: center;
-            border-top: 1px solid $borderWeightColor;
+            .table-node-item {
+                flex-shrink: 0;
+            }
         }
 
         .table-node-body {
@@ -468,11 +469,9 @@
             cursor: pointer;
         }
 
-        .node-item-name {
-            flex: 5;
-        }
+        .node-item-name,
         .node-item-displayname {
-            flex: 4;
+            flex: 5;
         }
 
         .node-item-ip,

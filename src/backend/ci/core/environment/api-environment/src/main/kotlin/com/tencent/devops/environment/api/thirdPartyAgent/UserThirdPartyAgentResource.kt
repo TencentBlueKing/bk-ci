@@ -104,7 +104,10 @@ interface UserThirdPartyAgentResource {
         projectId: String,
         @ApiParam("操作系统", required = true)
         @PathParam("os")
-        os: OS
+        os: OS,
+        @ApiParam("可见性", required = false)
+        @QueryParam("visibility")
+        visibility: Boolean?
     ): Result<List<SlaveGateway>>
 
     @ApiOperation("查看Agent安装链接")
@@ -248,6 +251,24 @@ interface UserThirdPartyAgentResource {
         @ApiParam("parallelTaskCount", required = true)
         @QueryParam("parallelTaskCount")
         parallelTaskCount: Int
+    ): Result<Boolean>
+
+    @ApiOperation("设置agent Docker构建并发数")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/dockerParallelTaskCount")
+    fun setAgentDockerParallelTaskCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("count", required = true)
+        @QueryParam("count")
+        count: Int
     ): Result<Boolean>
 
     @ApiOperation("获取构建机详情")

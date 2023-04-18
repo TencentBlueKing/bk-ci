@@ -109,6 +109,10 @@ class AuthConfiguration {
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
+    @ConditionalOnMissingBean(GrantServiceImpl::class)
+    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
     @Primary
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
@@ -255,8 +259,4 @@ class AuthConfiguration {
         iamConfiguration: IamConfiguration?,
         bkPermissionProjectService: BkPermissionProjectService
     ) = BkPermissionUrlService(iamEsbService, iamConfiguration, bkPermissionProjectService)
-
-    @Bean
-    @ConditionalOnMissingBean(GrantServiceImpl::class)
-    fun grantService() = GrantServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }

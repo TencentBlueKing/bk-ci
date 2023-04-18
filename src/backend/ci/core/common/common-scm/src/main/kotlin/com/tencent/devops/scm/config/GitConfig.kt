@@ -83,8 +83,14 @@ class GitConfig {
     @Value("\${scm.external.github.clientId:}")
     val githubClientId: String = ""
 
+    @Value("\${scm.external.github.oauthAppClientId:}")
+    val oauthAppClientId: String = ""
+
     @Value("\${scm.external.github.clientSecret:}")
     val githubClientSecret: String = ""
+
+    @Value("\${scm.external.github.oauthAppClientSecret:}")
+    val oauthAppClientSecret: String = ""
 
     @Value("\${scm.external.github.webhookUrl:}")
     val githubWebhookUrl: String = ""

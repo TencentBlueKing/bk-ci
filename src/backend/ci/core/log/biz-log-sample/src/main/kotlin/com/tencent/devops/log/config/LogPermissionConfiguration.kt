@@ -34,6 +34,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.impl.BluekingLogPermissionService
+import com.tencent.devops.log.service.impl.RbacLogPermissionService
 import com.tencent.devops.log.service.impl.SimpleLogPermissionService
 import com.tencent.devops.log.service.impl.StreamLogPermissionService
 import com.tencent.devops.log.service.impl.V3LogPermissionService
@@ -76,6 +77,16 @@ class LogPermissionConfiguration {
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         redisOperation = redisOperation,
         client = client
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacLogPermissionService(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ): LogPermissionService = RbacLogPermissionService(
+        client = client,
+        tokenCheckService = tokenCheckService
     )
 
     @Bean

@@ -69,7 +69,7 @@
                     >{{ item.label }}</span>
                     <div class="bkdevops-button">
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             target="_blank"
                         >
                             <bk-button
@@ -116,7 +116,7 @@
                     <p>
                         {{ $t("bkdevopsDesc") }}
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             class="more"
                             target="_blank"
                         >{{ $t("learnMore") }}</a>
@@ -127,7 +127,7 @@
                     <p>
                         {{ $t("bkdevopsWay") }}
                         <!-- <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             target="_blank"
                             class="more"
                         >{{ $t("learnMore") }}</a> -->
@@ -184,7 +184,6 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        DOCS_URL_PREFIX: string = `${DOCS_URL_PREFIX}/产品简介/README.md`
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
 

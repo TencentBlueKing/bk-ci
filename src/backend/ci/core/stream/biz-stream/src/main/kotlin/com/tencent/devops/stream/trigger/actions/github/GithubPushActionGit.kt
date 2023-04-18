@@ -331,7 +331,7 @@ class GithubPushActionGit(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             checkCreateAndUpdate = event().checkCreateAndUpdate()
         )
         return TriggerResult(
@@ -358,6 +358,8 @@ class GithubPushActionGit(
             TGitPushActionGit.logger.info("updateLastBranch fail,pipelineId:$pipelineId,branch:$branch,")
         }
     }
+
+    override fun checkIfModify() = true
 
     // 判断是否注册定时任务来看是修改还是删除
     private fun isSchedulesMatch(

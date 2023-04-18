@@ -957,7 +957,14 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
-    override fun getIos(projectId: String, certId: String): CertIOSInfo {
+    override fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo {
+        certPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = certId,
+            authPermission = AuthPermission.VIEW,
+            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
+        )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
             certId = certId,
@@ -977,7 +984,14 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getAndroid(projectId: String, certId: String): CertAndroidInfo {
+    override fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo {
+        certPermissionService.validatePermission(
+            userId = userId,
+            projectId = projectId,
+            resourceCode = certId,
+            authPermission = AuthPermission.VIEW,
+            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
+        )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
             certId = certId,

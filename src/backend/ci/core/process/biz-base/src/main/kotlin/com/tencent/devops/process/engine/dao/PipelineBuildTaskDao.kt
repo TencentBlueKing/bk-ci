@@ -234,7 +234,15 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun listByStatus(
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
+        return with(T_PIPELINE_BUILD_TASK) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    fun getTasksInCondition(
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
@@ -244,25 +252,11 @@ class PipelineBuildTaskDao {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (!containerId.isNullOrBlank()) {
-                where.and(CONTAINER_ID.eq(containerId))
-            }
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                where.and(STATUS.`in`(statusIntSet))
+            containerId?.let { where.and(CONTAINER_ID.eq(containerId)) }
+            if (!statusSet.isNullOrEmpty()) {
+                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
             where.orderBy(TASK_SEQ.asc()).fetch(mapper)
-        }
-    }
-
-    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
-        return with(T_PIPELINE_BUILD_TASK) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
@@ -329,6 +323,10 @@ class PipelineBuildTaskDao {
                 val key = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
                 baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(it, key))
             }
+            updateTaskInfo.additionalOptions?.let {
+                baseStep.set(ADDITIONAL_OPTIONS, JsonUtil.toJson(it, formatted = false))
+            }
+            updateTaskInfo.taskParams?.let { baseStep.set(TASK_PARAMS, JsonUtil.toJson(it, formatted = false)) }
             updateTaskInfo.platformCode?.let { baseStep.set(PLATFORM_CODE, it) }
             updateTaskInfo.platformErrorCode?.let { baseStep.set(PLATFORM_ERROR_CODE, it) }
             baseStep.where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId)).execute()

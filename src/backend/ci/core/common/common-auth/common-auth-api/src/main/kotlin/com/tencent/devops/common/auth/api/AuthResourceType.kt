@@ -34,6 +34,7 @@ enum class AuthResourceType(val value: String) {
     CODE_REPERTORY("repertory"), // code代码仓库
 
     PIPELINE_DEFAULT("pipeline"), // 流水线默认类型
+    PIPELINE_GROUP("pipeline_group"), // 流水线默认类型
 
     ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
 
@@ -60,7 +61,9 @@ enum class AuthResourceType(val value: String) {
     PROJECT("project"), // 项目管理
 
     TURBO("turbo"), // 编译加速
-    CODECC_TASK("codecc_task"); // codecc任务
+    CODECC_TASK("codecc_task"), // CodeCC任务
+    CODECC_IGNORE_TYPE("codecc_ignore_type"), // CodeCC忽略类型
+    CODECC_RULE_SET("codecc_rule_set"); // CodeCC规则集
 
     companion object {
         fun get(value: String): AuthResourceType {

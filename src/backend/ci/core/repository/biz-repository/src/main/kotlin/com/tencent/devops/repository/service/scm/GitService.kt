@@ -52,9 +52,9 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
@@ -77,6 +77,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -438,6 +439,10 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
         }
+    }
+
+    override fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum): GitUserInfo {
+        return getGitUserInfo(userId, token, tokenType).data!!
     }
 
     @BkTimed(extraTags = ["operation", "RedirectUrl"], value = "bk_tgit_api_time")
@@ -1636,7 +1641,7 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "git_file_tree"], value = "bk_tgit_api_time")
     override fun getGitFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
@@ -1793,7 +1798,7 @@ class GitService @Autowired constructor(
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
         val url = StringBuilder("$gitCIUrl/api/v3/projects/$gitProjectId/repository/files")
@@ -1803,7 +1808,7 @@ class GitService @Autowired constructor(
             .post(
                 RequestBody.create(
                     "application/json;charset=utf-8".toMediaTypeOrNull(),
-                    JsonUtil.toJson(gitCreateFile)
+                    JsonUtil.toJson(gitOperationFile)
                 )
             )
             .build()
@@ -1815,6 +1820,14 @@ class GitService @Autowired constructor(
             return Result(true)
         }
     }
+
+    override fun tGitUpdateFile(
+        repoUrl: String?,
+        repoName: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> = Result(false)
 
     override fun getGitCodeProjectList(
         accessToken: String,
@@ -1883,6 +1896,29 @@ class GitService @Autowired constructor(
                 id = gitProjectId,
                 type = type,
                 iid = iid
+            )
+        )
+    }
+
+    override fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        val gitApi = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi()
+        } else {
+            GitApi()
+        }
+        return Result(
+            gitApi.getCommitDiff(
+                host = gitConfig.gitApiUrl,
+                sha = sha,
+                token = accessToken,
+                projectName = gitProjectId
             )
         )
     }

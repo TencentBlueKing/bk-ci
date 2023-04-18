@@ -161,8 +161,8 @@ class YamlTemplateService @Autowired constructor(
                     client = client,
                     projectId = extraParameters.getProjectCode(),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN
-                )["v1"]!!
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN)
+                ).v1
             } catch (ignore: Exception) {
                 if (nowRepoId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
@@ -186,9 +186,9 @@ class YamlTemplateService @Autowired constructor(
                         streamGitConfig.getScmType()
                     ),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN,
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN),
                     acrossProject = true
-                )["v1"]!!
+                ).v1
             } catch (ignore: Exception) {
                 throw YamlFormatException("across" + GET_TICKET_ERROR.format(ignore.message))
             }

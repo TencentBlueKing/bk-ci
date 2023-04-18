@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.artifactory.api.service.ServiceReplicaResource
 import com.tencent.devops.common.api.constant.BEGIN
 import com.tencent.devops.common.api.constant.COMMIT
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -50,13 +51,18 @@ import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.SampleAtomReleaseService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServiceImpl() {
+
+    @Autowired
+    private lateinit var marketAtomEnvService: MarketAtomEnvService
 
     private val logger = LoggerFactory.getLogger(SampleAtomReleaseServiceImpl::class.java)
 
@@ -132,7 +138,17 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return AtomStatusEnum.RELEASED.status.toByte()
     }
 
-    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) = Unit
+    override fun doAtomReleaseBus(userId: String, atomReleaseRequest: AtomReleaseRequest) {
+        with(atomReleaseRequest) {
+            val atomEnvInfo = marketAtomEnvInfoDao.getAtomEnvInfo(dslContext, atomId)!!
+            client.get(ServiceReplicaResource::class).createReplicaTask(
+                userId = userId,
+                projectId = "bk-store",
+                repoName = "plugin",
+                fullPath = atomEnvInfo.pkgPath!!
+            )
+        }
+    }
 
     /**
      * 初始化插件版本进度

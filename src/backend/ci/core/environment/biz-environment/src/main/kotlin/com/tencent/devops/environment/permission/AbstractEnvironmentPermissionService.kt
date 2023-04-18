@@ -33,6 +33,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
 /**
  * 权限校验接口
@@ -61,6 +63,13 @@ abstract class AbstractEnvironmentPermissionService constructor(
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
+    override fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
     override fun listEnvByPermissions(
         userId: String,
         projectId: String,
@@ -74,6 +83,10 @@ abstract class AbstractEnvironmentPermissionService constructor(
             permissions = permissions,
             supplier = supplierForEnvFakePermission(projectId)
         )
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
     }
 
     override fun checkEnvPermission(
@@ -159,12 +172,23 @@ abstract class AbstractEnvironmentPermissionService constructor(
         )
     }
 
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
+        return nodeRecordList
+    }
+
     override fun checkNodePermission(
         userId: String,
         projectId: String,
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
