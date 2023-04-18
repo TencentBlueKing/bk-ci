@@ -98,9 +98,13 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
                     for key in replace_pattern.findall(line):
                         env = key[2:-2]
                         camelize_key = humps.camelize(env.lower())
-                        if camelize_key not in include_dict and camelize_key not in gateway_done_set:
+                        if camelize_key in gateway_done_set:
+                            continue
+                        gateway_done_set.add(camelize_key)
+                        if camelize_key in include_dict:
+                            gateway_config_file.write(env+": "+include_dict[camelize_key]+"\n")
+                        else:
                             camelize_set.add(camelize_key)
-                            gateway_done_set.add(camelize_key)
                             gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
     # 前端文件
     for root, dirs, files in os.walk(frontend_path):
@@ -113,9 +117,13 @@ with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
                             print("    processing frontend: "+file_path + " , key: "+key)
                             env = key[2:-2]
                             camelize_key = humps.camelize(env.lower())
-                            if camelize_key not in include_dict and camelize_key not in gateway_done_set:
+                            if camelize_key in gateway_done_set:
+                                continue
+                            gateway_done_set.add(camelize_key)
+                            if camelize_key in include_dict:
+                                gateway_config_file.write(env+": "+include_dict[camelize_key]+"\n")
+                            else:
                                 camelize_set.add(camelize_key)
-                                gateway_done_set.add(camelize_key)
                                 gateway_config_file.write(env+": "+'{{ .Values.config.'+camelize_key+" | quote }}\n")
     # include模板
     for key in include_dict:
