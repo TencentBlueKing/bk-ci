@@ -533,7 +533,12 @@ class PipelineBuildRecordService @Autowired constructor(
         )
     }
 
-    fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
+    fun updateBuildCancelUser(
+        projectId: String,
+        buildId: String,
+        executeCount: Int?,
+        cancelUserId: String
+    ) {
         pipelineBuildDetailService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
@@ -543,6 +548,7 @@ class PipelineBuildRecordService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
+            executeCount = executeCount,
             cancelUser = cancelUserId
         )
     }

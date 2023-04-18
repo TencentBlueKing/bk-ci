@@ -38,6 +38,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.jooq.impl.DSL.max
+import org.jooq.impl.DSL.select
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -187,14 +189,27 @@ class BuildRecordModelDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
+        executeCount: Int?,
         cancelUser: String
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
-            dslContext.update(this)
+            val conditions = BUILD_ID.eq(buildId)
+                .and(PROJECT_ID.eq(projectId))
+            val update = dslContext.update(this)
                 .set(CANCEL_USER, cancelUser)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
+                .where(conditions)
+            if (executeCount != null) {
+                update.and(EXECUTE_COUNT.eq(executeCount))
+            } else {
+                update.and(
+                    EXECUTE_COUNT.gt(
+                        select(max(EXECUTE_COUNT))
+                            .from(this)
+                            .where(conditions)
+                    )
+                )
+            }
+            update.execute()
         }
     }
 

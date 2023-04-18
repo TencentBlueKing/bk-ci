@@ -880,7 +880,7 @@ class PipelineBuildFacadeService(
             }
         )
         if (params.status == ManualReviewAction.ABORT) {
-            buildRecordService.updateBuildCancelUser(projectId, buildId, userId)
+            buildRecordService.updateBuildCancelUser(projectId, buildId, buildInfo.executeCount, userId)
         }
     }
 

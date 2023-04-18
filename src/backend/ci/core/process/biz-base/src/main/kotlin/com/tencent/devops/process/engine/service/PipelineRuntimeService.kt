@@ -673,6 +673,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
+            executeCount = null,
             cancelUserId = userId
         )
         // 发送取消事件
@@ -1250,7 +1251,10 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             modelVar = mutableMapOf(), status = startBuildStatus.name,
-            timestamps = mapOf(), queueTime = LocalDateTime.now()
+            timestamps = timestamps = mapOf(
+                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            ), queueTime = LocalDateTime.now()
         )
 
         if (updateExistsTask.isNotEmpty()) {
