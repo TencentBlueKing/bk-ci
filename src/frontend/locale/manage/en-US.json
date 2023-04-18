@@ -16,14 +16,14 @@
     "申请新建项目": "New Project",
     "提交": "Submit",
     "取消": "Cancel",
-    "项目信息": "Project information",
+    "项目信息": "Project Overview",
     "提交更新": "Submit",
     "编辑": "Edit",
     "取消创建": "Cancel",
     "新建用户组": "New Group",
     "删除【】，将产生以下影响：": "Deleting [{0}] will have the following impact:",
     "微扩展管理": "Micro extension manage",
-    "用户管理": "User manage",
+    "用户管理": "Project Mermbers",
     "删除": "Delete",
     "用户组": "User group",
     "添加时间": "Add time",
@@ -134,5 +134,7 @@
     "页游": "Web game",
     "平台产品": "Platform product",
     "支撑产品": "Support product",
-    "选择项目类型": "Select project type"
+    "选择项目类型": "Select project type",
+    "重命名": "Rename",
+    "项目类型": "Project Type"
 }
