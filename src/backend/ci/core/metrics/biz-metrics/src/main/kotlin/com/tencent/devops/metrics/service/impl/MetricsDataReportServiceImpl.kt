@@ -482,15 +482,15 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             )
         }
 
-        val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
-            dslContext = dslContext,
-            statisticsTime = statisticsTime,
-            atomCode = atomCode
-        )
         val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 120)
         try {
             if (!taskSuccessFlag) {
                 lock.lock()
+                val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
+                    dslContext = dslContext,
+                    statisticsTime = statisticsTime,
+                    atomCode = atomCode
+                )
                 val failComplianceCount =
                     if (isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
                 if (atomIndexStatisticsDailyRecord != null) {
