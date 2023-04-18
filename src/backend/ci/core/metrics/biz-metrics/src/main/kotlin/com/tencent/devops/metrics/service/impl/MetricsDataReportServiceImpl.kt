@@ -71,7 +71,6 @@ import org.jooq.exception.TooManyRowsException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import kotlin.math.roundToLong
 
@@ -187,23 +186,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 }
                 if (saveAtomIndexStatisticsDailyPOs.isNotEmpty()) {
                     saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
-                        try {
+                        val id = metricsDataReportDao.getAtomIndexStatisticsDailyData(
+                            dslContext = dslContext,
+                            atomCode = saveAtomIndexStatisticsDailyPO.atomCode,
+                            statisticsTime = saveAtomIndexStatisticsDailyPO.statisticsTime
+                        )
+                        if (id == null) {
                             metricsDataReportDao.saveAtomIndexStatisticsDailyData(
                                 context,
                                 saveAtomIndexStatisticsDailyPO
                             )
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.warn(
-                                "fail to update atomIndexStatisticsDailyInfo:$saveAtomIndexStatisticsDailyPO",
-                                ignored
-                            )
+                        } else {
                             metricsDataReportDao.updateAtomIndexStatisticsDailyData(
                                 dslContext = dslContext,
                                 updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
-                                    atomCode = saveAtomIndexStatisticsDailyPO.atomCode,
+                                    id = id,
                                     failComplianceCount = saveAtomIndexStatisticsDailyPO.failComplianceCount,
                                     failExecuteCount = saveAtomIndexStatisticsDailyPO.failExecuteCount,
-                                    statisticsTime = saveAtomIndexStatisticsDailyPO.statisticsTime,
                                     modifier = saveAtomIndexStatisticsDailyPO.modifier,
                                     updateTime = LocalDateTime.now()
                                 )

@@ -51,6 +51,7 @@ import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -269,6 +270,19 @@ class MetricsDataReportDao {
         }
     }
 
+    fun getAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        atomCode: String,
+        statisticsTime: LocalDateTime
+    ): Long? {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            return dslContext.select(ID).from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(STATISTICS_TIME.eq(statisticsTime))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun updateAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
         updateAtomIndexStatisticsDailyPO: UpdateAtomIndexStatisticsDailyPO
@@ -279,8 +293,7 @@ class MetricsDataReportDao {
                 .set(FAIL_COMPLIANCE_COUNT, updateAtomIndexStatisticsDailyPO.failComplianceCount)
                 .set(MODIFIER, updateAtomIndexStatisticsDailyPO.modifier)
                 .set(UPDATE_TIME, updateAtomIndexStatisticsDailyPO.updateTime)
-                .where(ATOM_CODE.eq(updateAtomIndexStatisticsDailyPO.atomCode))
-                .and(STATISTICS_TIME.eq(updateAtomIndexStatisticsDailyPO.statisticsTime))
+                .where(ID.eq(updateAtomIndexStatisticsDailyPO.id))
                 .execute()
         }
     }

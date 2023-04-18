@@ -33,14 +33,12 @@ import java.time.LocalDateTime
 
 @ApiModel("更新插件指标每日统计数据")
 data class UpdateAtomIndexStatisticsDailyPO(
-    @ApiModelProperty("插件代码")
-    val atomCode: String,
+    @ApiModelProperty("主键ID")
+    val id: Long,
     @ApiModelProperty("失败执行次数")
     var failExecuteCount: Int,
     @ApiModelProperty("失败合规次数")
     var failComplianceCount: Int,
-    @ApiModelProperty("统计时间")
-    val statisticsTime: LocalDateTime,
     @ApiModelProperty("修改人")
     val modifier: String,
     @ApiModelProperty("更新时间")
