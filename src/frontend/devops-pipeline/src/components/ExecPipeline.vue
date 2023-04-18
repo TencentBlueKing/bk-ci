@@ -182,7 +182,7 @@
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{ $t("details.queueCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.running")}...` : queueCost }}</span>
+                <span>{{ queueCost }}</span>
             </div>
         </div>
         <div class="time-detail-popup">
