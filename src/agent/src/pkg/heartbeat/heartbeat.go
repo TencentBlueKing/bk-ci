@@ -144,7 +144,7 @@ func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce *sync.Once) error {
 		configChanged = true
 	}
 
-	if config.GAgentConfig.Language != "" &&
+	if heartbeatResponse.Language != "" &&
 		config.GAgentConfig.Language != heartbeatResponse.Language {
 		config.GAgentConfig.Language = heartbeatResponse.Language
 		configChanged = true
