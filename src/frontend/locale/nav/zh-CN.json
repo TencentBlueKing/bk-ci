@@ -203,5 +203,7 @@
     "enableDisableProject": "禁用/启用项目",
     "createProject": "创建项目",
     "projectCreatingTitle": "项目创建中",
-    "projectCreatingDesc": "{0}项目正在创建审批中，请耐心等待"
+    "projectCreatingDesc": "{0}项目正在创建审批中，请耐心等待",
+    "manageProject": "项目管理",
+    "joinProject": "申请加入项目"
 }
