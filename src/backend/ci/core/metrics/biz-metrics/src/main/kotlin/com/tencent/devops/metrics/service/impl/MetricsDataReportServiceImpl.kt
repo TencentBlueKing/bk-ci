@@ -369,7 +369,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val startUser = buildEndPipelineMetricsData.startUser // 启动用户
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
-        val errorCode = taskMetricsData.errorCode
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         val statisticsTime = DateTimeUtil.stringToLocalDateTime(buildEndPipelineMetricsData.statisticsTime, YYYY_MM_DD)
         // 获取该插件在更新集合中的记录
@@ -492,7 +491,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 atomCode = atomCode
             )
             val failComplianceCount =
-                if (isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
+                if (isComplianceErrorCode(atomCode, "${taskMetricsData.errorCode}")) 1 else 0
             if (atomIndexStatisticsDailyRecord != null) {
                 val updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
                     id = atomIndexStatisticsDailyRecord.id,
@@ -527,9 +526,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 )
             }
         } finally {
-            if (!taskSuccessFlag) {
-                lock.unlock()
-            }
+            lock.unlock()
         }
     }
 
