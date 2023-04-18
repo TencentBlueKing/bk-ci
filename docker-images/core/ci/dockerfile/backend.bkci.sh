@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "source env files..."
 source service.env
-MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MetaspaceSize=300m -XX:MaxMetaspaceSize=300m -XX:-UseAdaptiveSizePolicy"
+MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MetaspaceSize=500m -XX:MaxMetaspaceSize=500m -XX:-UseAdaptiveSizePolicy"
 GC_LOG="-Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 API_PORT=80
 
