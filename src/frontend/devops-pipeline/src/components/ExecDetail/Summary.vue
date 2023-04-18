@@ -267,6 +267,9 @@
 
             .material-span {
               @include ellipsis();
+              .bk-link-text {
+                font-size: 12px;
+              }
             }
           }
         }
