@@ -84,8 +84,7 @@ class NodeService @Autowired constructor(
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-    fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
-        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
@@ -115,6 +114,11 @@ class NodeService @Autowired constructor(
                 nodeWebsocketService.buildDetailMessage(projectId, userId)
             )
         }
+    }
+
+    fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
+        val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
+        deleteNodes(userId, projectId, listOf(node))
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
