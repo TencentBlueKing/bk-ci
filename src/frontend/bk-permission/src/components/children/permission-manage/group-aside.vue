@@ -88,9 +88,11 @@
         </p>
       </div>
       <div class="confirm-close">
-        <i18n path="提交后，再次开启权限管理时对应组内用户将不能恢复，请谨慎操作!" style="color: #737987;font-size: 14px;" tag="div">
-          <span style="color: red;">{{t('不能恢复')}}</span>
-        </i18n>
+        <span style="color: #737987; font-size: 14px;">
+          {{ t('提交后，再次开启权限管理时对应组内用户将') }}
+        </span>
+        <span style="color: red;">{{t('不能恢复')}}</span>
+        <span stlee>{{ t(',请谨慎操作!') }} </span>
       </div>
       <div class="option-btns">
         <bk-button
