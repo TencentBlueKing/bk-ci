@@ -1251,7 +1251,7 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             modelVar = mutableMapOf(), status = startBuildStatus.name,
-            timestamps = timestamps = mapOf(
+            timestamps = mapOf(
                 BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             ), queueTime = LocalDateTime.now()
