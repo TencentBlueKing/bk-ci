@@ -289,9 +289,9 @@ open class BaseBuildRecordService(
             newTimestamps.forEach { (type, new) ->
                 val old = oldTimestamps[type]
                 result[type] = if (old != null) {
-                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    // 如果时间戳已存在，开始时间不变，则结束时间将新值覆盖旧值
                     BuildRecordTimeStamp(
-                        startTime = new.startTime ?: old.startTime,
+                        startTime = old.startTime,
                         endTime = new.endTime ?: old.endTime
                     )
                 } else {

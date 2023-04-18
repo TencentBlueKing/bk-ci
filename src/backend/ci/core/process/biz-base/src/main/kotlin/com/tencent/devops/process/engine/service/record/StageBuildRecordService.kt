@@ -182,7 +182,11 @@ class StageBuildRecordService(
             updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
+                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                )
             )
         }
         return stageBuildDetailService.stagePause(
@@ -223,7 +227,11 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null
+                buildStatus = null,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
         stageBuildDetailService.stageCancel(
@@ -354,7 +362,11 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = BuildStatus.QUEUE
+                buildStatus = BuildStatus.QUEUE,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
         return stageBuildDetailService.stageStart(
