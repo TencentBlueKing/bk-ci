@@ -484,48 +484,47 @@ class MetricsDataReportServiceImpl @Autowired constructor(
 
         val lock = RedisLock(redisOperation, metricsDataReportKey(atomCode), 110)
         try {
-            if (!taskSuccessFlag) {
-                lock.lock()
-                val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
-                    dslContext = dslContext,
-                    statisticsTime = statisticsTime,
-                    atomCode = atomCode
+            if (taskSuccessFlag) return
+            lock.lock()
+            val atomIndexStatisticsDailyRecord = metricsDataQueryDao.getAtomIndexStatisticsDailyData(
+                dslContext = dslContext,
+                statisticsTime = statisticsTime,
+                atomCode = atomCode
+            )
+            val failComplianceCount =
+                if (isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
+            if (atomIndexStatisticsDailyRecord != null) {
+                val updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
+                    id = atomIndexStatisticsDailyRecord.id,
+                    failComplianceCount = atomIndexStatisticsDailyRecord.failComplianceCount + failComplianceCount,
+                    failExecuteCount = atomIndexStatisticsDailyRecord.failExecuteCount + 1,
+                    modifier = startUser,
+                    updateTime = currentTime
                 )
-                val failComplianceCount =
-                    if (isComplianceErrorCode(atomCode, "$errorCode")) 1 else 0
-                if (atomIndexStatisticsDailyRecord != null) {
-                    val updateAtomIndexStatisticsDailyPO = UpdateAtomIndexStatisticsDailyPO(
-                        id = atomIndexStatisticsDailyRecord.id,
-                        failComplianceCount = atomIndexStatisticsDailyRecord.failComplianceCount + failComplianceCount,
-                        failExecuteCount = atomIndexStatisticsDailyRecord.failExecuteCount + 1,
-                        modifier = startUser,
-                        updateTime = currentTime
-                    )
-                    metricsDataReportDao.updateAtomIndexStatisticsDailyData(
-                        dslContext = dslContext,
-                        updateAtomIndexStatisticsDailyPO = updateAtomIndexStatisticsDailyPO
-                    )
-                } else {
-                    val saveAtomIndexStatisticsDailyPO = SaveAtomIndexStatisticsDailyPO(
-                        id = client.get(ServiceAllocIdResource::class)
-                            .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
-                        atomCode = taskMetricsData.atomCode,
-                        failExecuteCount = 1,
-                        failComplianceCount =failComplianceCount,
-                        statisticsTime = DateTimeUtil.stringToLocalDateTime(
-                            dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
-                            formatStr = YYYY_MM_DD
-                        ),
-                        creator = startUser,
-                        modifier = startUser,
-                        createTime = currentTime,
-                        updateTime = currentTime
-                    )
-                    metricsDataReportDao.saveAtomIndexStatisticsDailyData(
-                        dslContext,
-                        saveAtomIndexStatisticsDailyPO
-                    )
-                }
+                metricsDataReportDao.updateAtomIndexStatisticsDailyData(
+                    dslContext = dslContext,
+                    updateAtomIndexStatisticsDailyPO = updateAtomIndexStatisticsDailyPO
+                )
+            } else {
+                val saveAtomIndexStatisticsDailyPO = SaveAtomIndexStatisticsDailyPO(
+                    id = client.get(ServiceAllocIdResource::class)
+                        .generateSegmentId("T_ATOM_INDEX_STATISTICS_DAILY").data ?: 0,
+                    atomCode = taskMetricsData.atomCode,
+                    failExecuteCount = 1,
+                    failComplianceCount =failComplianceCount,
+                    statisticsTime = DateTimeUtil.stringToLocalDateTime(
+                        dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
+                        formatStr = YYYY_MM_DD
+                    ),
+                    creator = startUser,
+                    modifier = startUser,
+                    createTime = currentTime,
+                    updateTime = currentTime
+                )
+                metricsDataReportDao.saveAtomIndexStatisticsDailyData(
+                    dslContext,
+                    saveAtomIndexStatisticsDailyPO
+                )
             }
         } finally {
             if (!taskSuccessFlag) {
