@@ -62,7 +62,7 @@
                 class="debug-btn"
                 theme="warning"
                 @click.stop="debugDocker"
-            >{{ $t("editPage.docker.debugConsole") }}</bk-button
+            >{{ t("editPage.docker.debugConsole") }}</bk-button
             >
         </h3>
         <atom-list

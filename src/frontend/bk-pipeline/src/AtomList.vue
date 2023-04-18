@@ -124,7 +124,7 @@
                 return this.container.elements.some(this.isHookAtom)
             },
             hookToggleTips () {
-                return this.$t(`${this.showPostAction ? 'fold' : 'open'}POST`)
+                return this.t(`${this.showPostAction ? 'fold' : 'open'}POST`)
             },
             hookToggleTop () {
                 const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
