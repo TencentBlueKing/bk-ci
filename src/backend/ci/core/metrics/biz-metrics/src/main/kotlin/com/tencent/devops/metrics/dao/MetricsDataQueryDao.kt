@@ -39,11 +39,11 @@ import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineStageOverviewDataRecord
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
 class MetricsDataQueryDao {
@@ -146,13 +146,13 @@ class MetricsDataQueryDao {
     fun getAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
         statisticsTime: LocalDateTime,
-        atomCodes: List<String>
-    ): Result<TAtomIndexStatisticsDailyRecord> {
+        atomCode: String
+    ): TAtomIndexStatisticsDailyRecord? {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
             return dslContext.selectFrom(this)
                 .where(STATISTICS_TIME.eq(statisticsTime))
-                .and(ATOM_CODE.`in`(atomCodes))
-                .fetch()
+                .and(ATOM_CODE.eq(atomCode))
+                .fetchOne()
         }
     }
 }
