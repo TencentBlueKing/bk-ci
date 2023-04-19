@@ -542,6 +542,7 @@
                             message: err.message || err,
                             theme: 'error'
                         })
+                        done()
                     }
                 } else {
                     this.togglePropertyPanel({

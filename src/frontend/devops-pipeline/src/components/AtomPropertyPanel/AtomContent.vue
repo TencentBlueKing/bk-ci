@@ -218,19 +218,9 @@
                 'fetchingAtmoModal',
                 'atomVersionList',
                 'isPropertyPanelVisible',
-                'showPanelType'
+                'showPanelType',
+                'editingElementPos'
             ]),
-            visible: {
-                get () {
-                    return this.isPropertyPanelVisible
-                },
-                set (value) {
-                    this.toggleAtomSelectorPopup(value)
-                    this.togglePropertyPanel({
-                        isShow: value
-                    })
-                }
-            },
             projectId () {
                 return this.$route.params.projectId
             },
@@ -465,7 +455,14 @@
                     containerId: this.container.id,
                     element: this.element
                 }
+                const editingElementPos = {
+                    ...this.editingElementPos
+                }
                 this[loadingKey] = true
+                this.togglePropertyPanel({
+                    isShow: false,
+                    showPanelType: ''
+                })
                 this.pausePlugin(postData).then(() => {
                     return this.requestPipelineExecDetail(this.$route.params)
                 }).catch((err) => {
@@ -473,14 +470,13 @@
                         message: err.message || err,
                         theme: 'error'
                     })
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos,
+                        showPanelType: 'PAUSE'
+                    })
                 }).finally(() => {
                     this[loadingKey] = false
-                    this.$nextTick(() => {
-                        this.togglePropertyPanel({
-                            isShow: false,
-                            showPanelType: ''
-                        })
-                    })
                 })
             },
 
