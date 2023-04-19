@@ -30,7 +30,6 @@ package com.tencent.devops.remotedev.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.remotedev.tables.TRemoteDevImageSpecConfig
 import com.tencent.devops.model.remotedev.tables.records.TRemoteDevImageSpecConfigRecord
-import com.tencent.devops.model.remotedev.tables.records.TSshPublicKeysRecord
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import org.jooq.DSLContext
 import org.jooq.JSON
