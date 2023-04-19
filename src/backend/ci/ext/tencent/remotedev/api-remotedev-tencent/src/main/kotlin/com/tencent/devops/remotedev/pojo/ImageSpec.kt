@@ -40,7 +40,7 @@ data class ImageSpec(
     val ideRef: String,
     val remotingRef: String,
     val ideLayerRef: List<String>?,
-    val contentLayer: List<ContentLayer>?,
+    val contentLayer: List<ContentLayer>?
 )
 
 /**
@@ -50,7 +50,7 @@ data class ImageSpec(
  */
 data class ContentLayer(
     val remote: RemoteContentLayer?,
-    val direct: DirectContentLayer?,
+    val direct: DirectContentLayer?
 )
 
 /**

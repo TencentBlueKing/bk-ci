@@ -32,7 +32,6 @@ import com.tencent.devops.remotedev.dao.ImageSpecConfigDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.utils.DevfileUtil
-import java.awt.Image
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

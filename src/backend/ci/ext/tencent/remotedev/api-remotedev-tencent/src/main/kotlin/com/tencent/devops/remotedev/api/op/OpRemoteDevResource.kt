@@ -142,7 +142,6 @@ interface OpRemoteDevResource {
         whiteListUser: String
     ): Result<Boolean>
 
-
     @ApiOperation("新增镜像配置")
     @POST
     @Path("/image/spec")

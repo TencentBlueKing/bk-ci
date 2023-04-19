@@ -41,7 +41,7 @@ import org.springframework.stereotype.Repository
 class ImageSpecConfigDao {
 
     fun fetchImageSpec(
-        dslContext: DSLContext,
+        dslContext: DSLContext
     ): TRemoteDevImageSpecConfigRecord? {
         return with(TRemoteDevImageSpecConfig.T_REMOTE_DEV_IMAGE_SPEC_CONFIG) {
             dslContext.selectFrom(this).fetchAny()
@@ -101,7 +101,7 @@ class ImageSpecConfigDao {
 
     fun deleteImageSpec(
         dslContext: DSLContext,
-        id: Int,
+        id: Int
     ): Boolean {
         return with(TRemoteDevImageSpecConfig.T_REMOTE_DEV_IMAGE_SPEC_CONFIG) {
             dslContext.deleteFrom(this).where(ID.eq(id)).execute() > 0
