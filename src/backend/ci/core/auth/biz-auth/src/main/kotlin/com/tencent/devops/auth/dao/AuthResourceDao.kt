@@ -259,6 +259,17 @@ class AuthResourceDao {
         }
     }
 
+    fun getAllResourceCode(
+        dslContext: DSLContext,
+        resourceType: String
+    ): List<String> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.select(RESOURCE_CODE).from(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun countResourceByType(
         dslContext: DSLContext,
         projectCode: String,

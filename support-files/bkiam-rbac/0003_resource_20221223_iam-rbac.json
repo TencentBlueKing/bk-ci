@@ -6,7 +6,7 @@
       "data": {
         "id": "bk_ci_rbac",
         "name": "蓝盾",
-        "name_en": "bkci-rbac",
+        "name_en": "bk-ci",
         "clients": "bkci,bk_ci",
         "provider_config": {
           "host": "http://ci-auth.service.consul:21936",

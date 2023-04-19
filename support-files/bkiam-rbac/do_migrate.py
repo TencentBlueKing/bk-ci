@@ -653,7 +653,7 @@ if __name__ == "__main__":
             ", please make sure '-t %s' is a valid bk_apigateway_url" % args.bk_iam_host,
             )
 
-    if not BK_IAM_HOST.startswith("http://"):
+    if not BK_IAM_HOST.startswith("http") :
         BK_IAM_HOST = "http://%s" % BK_IAM_HOST
 
     data_file = args.json_data_file
