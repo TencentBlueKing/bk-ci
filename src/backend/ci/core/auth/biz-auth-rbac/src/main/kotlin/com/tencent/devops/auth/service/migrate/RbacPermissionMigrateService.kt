@@ -103,10 +103,6 @@ class RbacPermissionMigrateService constructor(
                 logger.warn("project $projectCode not exist")
                 return false
             }
-            if (projectInfo.relationId == null) {
-                logger.info("project $projectCode not v3 auth")
-                return false
-            }
 
             authMigrationDao.create(
                 dslContext = dslContext,

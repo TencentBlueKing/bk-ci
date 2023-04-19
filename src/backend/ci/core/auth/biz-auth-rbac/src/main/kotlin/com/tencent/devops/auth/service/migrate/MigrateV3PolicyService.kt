@@ -500,7 +500,7 @@ class MigrateV3PolicyService constructor(
         return rbacActions
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("NestedBlockDepth", "ReturnCount")
     private fun buildRbacManagerResources(
         projectCode: String,
         permission: AuthorizationScopes
@@ -518,7 +518,7 @@ class MigrateV3PolicyService constructor(
                     val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(
                         resourceType = managerPath.type,
                         resourceCode = managerPath.id
-                    )
+                    ) ?: return@resource
                     // 获取rbac资源code对应的iam资源code
                     val iamResourceCode = authResourceCodeConverter.code2IamCode(
                         projectCode = projectCode,
@@ -564,6 +564,7 @@ class MigrateV3PolicyService constructor(
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
+            logger.info("request ${request.url} response|$responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Failed to request(${request.url}), code ${response.code}, content: $responseContent")
                 throw RemoteServiceException(operation)
@@ -628,7 +629,7 @@ class MigrateV3PolicyService constructor(
         val resourceCode = migrateResourceCodeConverter.v3ToRbacResourceCode(
             resourceType = resourceType,
             resourceCode = v3ResourceCode
-        )
+        ) ?: return null
         val finalUserActions = userActions.toMutableList()
         // project_view需要替换成project_visit
         if (finalUserActions.contains(PROJECT_VIEW)) {
