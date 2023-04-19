@@ -120,7 +120,7 @@
                                 :disabled="row.approvalStatus === 1"
                                 @click="handleGoUserGroup(row)"
                             >
-                                {{ $t('userGroupManage') }}
+                                {{ $t('projectMembers') }}
                             </bk-button>
                             <!-- <bk-button
                                 text
@@ -142,11 +142,11 @@
                 <bk-button
                     icon-left="icon-plus"
                     theme="primary"
-                    @click="handleNewProject()"
+                    @click="handleNewProject"
                 >
                     {{ $t('newProject') }}
                 </bk-button>
-                
+
                 <bk-button
                     theme="success"
                     @click="handleApplyProject"
@@ -234,7 +234,8 @@
             },
 
             handleApplyProject () {
-                this.$refs.applyProjectDialog.isShow = true
+                const { origin } = window.location
+                window.location.href = `${origin}/console/permission/apply`
             },
 
             handleGoUserGroup (row) {

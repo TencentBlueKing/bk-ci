@@ -3,7 +3,7 @@
     "项目名称": "Project name",
     "项目ID": "Project ID",
     "项目描述": "Project description",
-    "项目LOGO": "Project Logo",
+    "项目LOGO": "Project logo",
     "项目所属组织": "Project organization",
     "项目性质": "Visibility level",
     "私有项目": "Private",
@@ -11,7 +11,7 @@
     "只允许上传png、jpg，大小不超过 2M": "Only png and jpg are allowed to be uploaded, and the size does not exceed 2M",
     "请输入项目描述": "Please enter a project description",
     "请输入1-32字符的项目名称": "Please enter a project name with 1-32 characters",
-    "项目最大可授权人员范围": "The maximum scope of authorized personnel for the project",
+    "项目最大可授权人员范围": "Maximum authorized personnel boundary",
     "请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。": "Please enter a project ID of 2-32 characters, consisting of lowercase letters, numbers, dashes, and starting with a lowercase letter. It cannot be modified after submission.",
     "申请新建项目": "New Project",
     "提交": "Submit",
@@ -23,7 +23,7 @@
     "新建用户组": "New Group",
     "删除【】，将产生以下影响：": "Deleting [{0}] will have the following impact:",
     "微扩展管理": "Micro extension manage",
-    "用户管理": "Project Mermbers",
+    "用户管理": "Project Members",
     "删除": "Delete",
     "用户组": "User group",
     "添加时间": "Add time",
@@ -136,5 +136,5 @@
     "支撑产品": "Support product",
     "选择项目类型": "Select project type",
     "重命名": "Rename",
-    "项目类型": "Project Type"
+    "项目类型": "Project type"
 }

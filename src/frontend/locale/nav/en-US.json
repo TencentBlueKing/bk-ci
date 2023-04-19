@@ -198,7 +198,7 @@
     "projectId": "Project ID",
     "administrator": "Administrator",
     "projectStatus": "Project Status",
-    "userGroupManage": "User Manage",
+    "projectMembers": "Project Members",
     "extendManage": "Extended Manage",
     "enableDisableProject": "Disable/Enable Project",
     "createProject": "Create Project",
