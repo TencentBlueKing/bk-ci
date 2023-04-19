@@ -927,7 +927,9 @@ class BkRepoClient constructor(
         pathNamePairs: List<Pair<String, String>>, // (path eq and name match) or
         metadata: Map<String, String>, // eq and
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
     ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
@@ -1059,11 +1061,23 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
+    private fun query(
+        userId: String,
+        projectId: String,
+        rule: Rule,
+        page: Int,
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
+    ): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
-            sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
+            sort = if (!sortBy.isNullOrBlank() && direction != null) {
+                Sort(listOf(sortBy), direction)
+            } else {
+                Sort(listOf("fullPath"), Sort.Direction.ASC)
+            },
             select = mutableListOf(),
             rule = rule
         )
