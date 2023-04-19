@@ -880,7 +880,12 @@ class PipelineBuildFacadeService(
             }
         )
         if (params.status == ManualReviewAction.ABORT) {
-            buildRecordService.updateBuildCancelUser(projectId, buildId, buildInfo.executeCount, userId)
+            buildRecordService.updateBuildCancelUser(
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = buildInfo.executeCount ?: 1,
+                cancelUserId = userId
+            )
         }
     }
 
@@ -1226,6 +1231,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = buildInfo.startUser,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.FAILED
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
@@ -2040,6 +2046,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED,
                     terminateFlag = terminateFlag
                 )
@@ -2243,6 +2250,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED
                 )
                 return buildRestartPipeline(

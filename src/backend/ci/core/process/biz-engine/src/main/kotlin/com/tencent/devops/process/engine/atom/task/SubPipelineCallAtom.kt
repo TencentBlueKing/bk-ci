@@ -112,6 +112,7 @@ class SubPipelineCallAtom constructor(
                         pipelineId = subBuildInfo.pipelineId,
                         buildId = subBuildId,
                         userId = subBuildInfo.startUser,
+                        executeCount = subBuildInfo.executeCount ?: 1,
                         buildStatus = BuildStatus.CANCELED
                     )
                     status = BuildStatus.CANCELED

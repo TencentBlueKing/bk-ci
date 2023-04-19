@@ -665,6 +665,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
+        executeCount: Int,
         buildStatus: BuildStatus,
         terminateFlag: Boolean = false
     ): Boolean {
@@ -673,7 +674,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
-            executeCount = null,
+            executeCount = executeCount,
             cancelUserId = userId
         )
         // 发送取消事件
