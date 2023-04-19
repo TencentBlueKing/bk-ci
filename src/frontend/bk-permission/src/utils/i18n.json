@@ -54,7 +54,9 @@
         "请在权限管理页填写权限申请单，提交完成后再刷新该页面": "请在权限管理页填写权限申请单，提交完成后再刷新该页面",
         "刷新页面": "刷新页面",
         "关闭": "关闭",
-        "权限申请单已提交": "权限申请单已提交"
+        "权限申请单已提交": "权限申请单已提交",
+        "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限": "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限",
+        "尚未开启此流水线权限管理功能": "尚未开启此流水线权限管理功能"
     },
     "en-US": {
         "开启权限管理": "Turn on permission management",
@@ -110,6 +112,8 @@
         "请在权限管理页填写权限申请单，提交完成后再刷新该页面": "Please fill in the permission application form on the permission management page, and refresh the page after submission",
         "刷新页面": "Refresh page",
         "关闭": "Close",
-        "权限申请单已提交": "Permission application has been submitted"
+        "权限申请单已提交": "Permission application has been submitted",
+        "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限": "Pipeline group permission management is not yet enabled. Once enabled, it will be possible to add editors, executors, or viewers permissions in bulk to pipelines within the group.",
+        "尚未开启此流水线权限管理功能": "The permission management function of this pipeline has not been enabled"
     }
   }

@@ -198,7 +198,7 @@
     "projectId": "项目ID",
     "administrator": "管理员",
     "projectStatus": "项目状态",
-    "userGroupManage": "用户管理",
+    "projectMembers": "用户管理",
     "extendManage": "微扩展管理",
     "enableDisableProject": "禁用/启用项目",
     "createProject": "创建项目",
