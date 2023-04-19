@@ -27,5 +27,30 @@
 
 package com.tencent.devops.remotedev.resources.op
 
-class OpImageSpecConfigImpl {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.remotedev.api.op.OpImageSpecConfig
+import com.tencent.devops.remotedev.pojo.ImageSpec
+import com.tencent.devops.remotedev.service.WorkspaceImageService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpImageSpecConfigImpl @Autowired constructor(
+    private val workspaceImageService: WorkspaceImageService
+) : OpImageSpecConfig {
+    override fun addImageSpec(spec: ImageSpec): Result<Boolean> {
+        return Result(workspaceImageService.addImageSpecConfig(spec))
+    }
+
+    override fun deleteImageSpec(id: Int): Result<Boolean> {
+        return Result(workspaceImageService.deleteImageSpecConfig(id))
+    }
+
+    override fun updateImageSpec(id: Int, spec: ImageSpec): Result<Boolean> {
+        return Result(workspaceImageService.updateImageSpecConfig(id, spec))
+    }
+
+    override fun listImageSpec(): Result<List<ImageSpec>?> {
+        return Result(workspaceImageService.listImageSpecConfig())
+    }
 }

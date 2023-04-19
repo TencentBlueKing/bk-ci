@@ -31,10 +31,14 @@ import com.tencent.devops.remotedev.pojo.ImageSpec
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.api.pojo.Result
 
 @Api(tags = ["OP_REMOTE_DEV"], description = "OP-REMOTE-DEV")
 @Path("/op")
@@ -42,11 +46,30 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpImageSpecConfig {
 
-    @ApiOperation("新增工作空间模板")
+    @ApiOperation("新增镜像配置")
     @POST
-    @Path("/wstemplate/add")
-    fun addWorkspaceTemplate(
+    @Path("/image/spec")
     fun addImageSpec(
         spec: ImageSpec
-    ):Result<Boolean>
+    ): Result<Boolean>
+
+    @ApiOperation("删除镜像配置")
+    @DELETE
+    @Path("/image/spec")
+    fun deleteImageSpec(
+        id: Int
+    ): Result<Boolean>
+
+    @ApiOperation("修改镜像配置")
+    @PUT
+    @Path("/image/spec")
+    fun updateImageSpec(
+        id: Int,
+        spec: ImageSpec
+    ): Result<Boolean>
+
+    @ApiOperation("镜像配置列表")
+    @GET
+    @Path("/image/spec")
+    fun listImageSpec(): Result<List<ImageSpec>?>
 }
