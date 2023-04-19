@@ -56,7 +56,7 @@ data class RunsOn(
 )
 
 data class Container(
-    val image: String,
+    var image: String,
     val host: String? = null,
     val credentials: Credentials? = null
 )

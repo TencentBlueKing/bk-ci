@@ -55,6 +55,7 @@ import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.CommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -129,7 +130,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val commonService: CommonService,
     private val redisCache: RedisCacheService,
-    private val profile: Profile
+    private val profile: Profile,
+    private val commonConfig: CommonConfig
 ) {
 
     companion object {
@@ -212,7 +214,7 @@ class WorkspaceService @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -271,6 +273,10 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             userInfo = userInfo
         )
+
+        // 替换部分devfile内容
+        devfile.runsOn?.container?.image =
+            "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
 
         // 发送给k8s
         dispatcher.dispatch(
@@ -538,6 +544,7 @@ class WorkspaceService @Autowired constructor(
                         defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR.formatErrorMessage
                     )
                 }
+
                 else -> {
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
@@ -560,7 +567,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.running -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -794,7 +801,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -913,7 +920,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -1036,17 +1043,20 @@ class WorkspaceService @Autowired constructor(
                 doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
             }
+
             EnvStatusEnum.deleted -> {
                 doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
+
             EnvStatusEnum.running -> {
                 doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
             }
+
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -1096,7 +1106,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1160,7 +1170,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1451,7 +1461,7 @@ class WorkspaceService @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
             // 清心跳
@@ -1680,11 +1690,11 @@ class WorkspaceService @Autowired constructor(
      */
     private fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
         return (
-            WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
-                workspace.lastStatusUpdateTime,
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
+                WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+                    workspace.lastStatusUpdateTime,
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
     }
 
     fun getWorkspaceHost(workspaceName: String): String {
