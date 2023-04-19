@@ -5,7 +5,7 @@
         current-tab="log"
     >
         <template v-slot:content>
-            <plugin-log :build-id="execDetail.id" :execute-count="executeCount" />
+            <plugin-log :build-id="execDetail.id" :execute-count="executeCount" :exec-detail="execDetail" />
         </template>
     </detail-container>
 </template>

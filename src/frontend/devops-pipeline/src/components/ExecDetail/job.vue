@@ -14,9 +14,10 @@
             @click="handleDebug"
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            
+
             <plugin-log :id="currentJob.containerHashId"
                 :build-id="execDetail.id"
+                :exec-detail="execDetail"
                 :current-tab="currentTab"
                 :execute-count="currentJob.executeCount"
                 type="containerLog"
@@ -93,7 +94,7 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                
+
                 try {
                     if (editingElementPos.containerGroupIndex === undefined) {
                         return currentStage.containers[editingElementPos.containerIndex]

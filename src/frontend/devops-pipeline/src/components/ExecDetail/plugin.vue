@@ -19,6 +19,7 @@
             <plugin-log :id="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
+                :exec-detail="execDetail"
                 :execute-count="currentElement.executeCount"
                 ref="log"
                 v-show="currentTab === 'log'"
