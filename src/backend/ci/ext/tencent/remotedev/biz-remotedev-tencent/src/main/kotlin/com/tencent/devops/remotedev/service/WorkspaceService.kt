@@ -556,8 +556,8 @@ class WorkspaceService @Autowired constructor(
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                 .getWorkspaceInfo(event.userId, event.workspaceName).data!!
-            when (workspaceInfo.status) {
-                EnvStatusEnum.running -> event.status = true
+            when {
+                workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
                         "${event.workspaceName}|${workspaceInfo.status}"
@@ -1031,16 +1031,16 @@ class WorkspaceService @Autowired constructor(
             return WorkspaceStatus.EXCEPTION
         }
         logger.info("fixUnexpectedStatus|$workspaceName|$status|$workspaceInfo")
-        when (workspaceInfo.status) {
-            EnvStatusEnum.stopped -> {
+        when {
+            workspaceInfo.status == EnvStatusEnum.stopped -> {
                 doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
             }
-            EnvStatusEnum.deleted -> {
+            workspaceInfo.status == EnvStatusEnum.deleted -> {
                 doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
-            EnvStatusEnum.running -> {
+            workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
             }
