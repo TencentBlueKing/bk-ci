@@ -38,10 +38,10 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import org.jooq.Result
 
+@Suppress("LongParameterList", "TooManyFunctions")
 @Repository
 class SignHistoryDao {
 
-    @Suppress("LongParameterList")
     fun initHistory(
         dslContext: DSLContext,
         resignId: String,
@@ -57,11 +57,12 @@ class SignHistoryDao {
         with(TSignHistory.T_SIGN_HISTORY) {
             var executeCount = 1
             val record = dslContext.selectFrom(this)
-                .where(TASK_ID.eq(taskId)).and(BUILD_ID.eq(buildId))
+                .where(TASK_ID.eq(taskId))
+                .and(BUILD_ID.eq(buildId))
                 .orderBy(TASK_EXECUTE_COUNT.desc())
-                .fetch()
-            if (record.isNotEmpty && record.first().taskExecuteCount != null) {
-                executeCount = record.first().taskExecuteCount + 1
+                .fetchOne()
+            if (record != null) {
+                executeCount = record.taskExecuteCount + 1
             }
 
             dslContext.insertInto(this,
