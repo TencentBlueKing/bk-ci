@@ -171,10 +171,6 @@ export default {
     event: 'change',
   },
   props: {
-    placeholder: {
-      type: String,
-      default: '资源实例/用户组/描述/操作/ID',
-    },
     searchList: {
       type: Array,
       default: () => [],
@@ -321,6 +317,7 @@ export default {
       hasActionId: false,
       hasLoadEnd: false,
       titleType: '',
+      placeholder: this.$t('资源实例/用户组/描述/操作/ID'),
     }
   },
   async created() {
