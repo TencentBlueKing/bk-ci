@@ -120,7 +120,7 @@
                                 :disabled="row.approvalStatus === 1"
                                 @click="handleGoUserGroup(row)"
                             >
-                                {{ $t('userGroupManage') }}
+                                {{ $t('projectMembers') }}
                             </bk-button>
                             <!-- <bk-button
                                 text

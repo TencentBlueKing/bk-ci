@@ -23,7 +23,7 @@
     "新建用户组": "New Group",
     "删除【】，将产生以下影响：": "Deleting [{0}] will have the following impact:",
     "微扩展管理": "Micro extension manage",
-    "用户管理": "Project Mermbers",
+    "用户管理": "Project Members",
     "删除": "Delete",
     "用户组": "User group",
     "添加时间": "Add time",
@@ -136,5 +136,5 @@
     "支撑产品": "Support product",
     "选择项目类型": "Select project type",
     "重命名": "Rename",
-    "项目类型": "Project Type"
+    "项目类型": "Project type"
 }
