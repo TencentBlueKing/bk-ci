@@ -958,7 +958,7 @@ class BkRepoClient constructor(
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, projectId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize, sortBy, direction)
     }
 
     fun queryByPattern(
