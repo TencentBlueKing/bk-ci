@@ -34,7 +34,7 @@ import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 
@@ -142,7 +142,7 @@ class JobQuotaService constructor(
     }
 
     fun checkAndAddRunningJob(
-        agentLessStartupEvent: PipelineBuildLessStartupDispatchEvent,
+        agentLessStartupEvent: PipelineBuildLessStartupEvent,
         vmType: JobQuotaVmType?
     ): Boolean {
         if (null == vmType || !jobQuotaEnable) {

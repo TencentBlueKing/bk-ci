@@ -37,9 +37,17 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.service.BuildVariableService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -208,19 +216,59 @@ interface IAtomTask<T> {
         }
         return EnvUtils.parseEnv(value!!, runVariables)
     }
-}
 
-/**
- * 原子执行结果
- * @version 1.0
- */
-data class AtomResponse(
-    val buildStatus: BuildStatus,
-    val outputVars: Map<String, Any>? = null, // 输出的变量，需要持久化的
-    var errorType: ErrorType? = null,
-    var errorCode: Int? = null,
-    var errorMsg: String? = null
-)
+    fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
+        val dispatchType: DispatchType
+        /**
+         * 新版的构建环境直接传入指定的构建机方式
+         */
+        if (param.dispatchType != null) {
+            dispatchType = param.dispatchType!!
+        } else {
+            // 第三方构建机ID
+            val agentId = param.thirdPartyAgentId ?: ""
+            // 构建环境ID
+            val envId = param.thirdPartyAgentEnvId ?: ""
+            val workspace = param.thirdPartyWorkspace ?: ""
+            dispatchType = if (agentId.isNotBlank()) {
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentId,
+                    workspace = workspace,
+                    agentType = AgentType.ID,
+                    dockerInfo = null
+                )
+            } else if (envId.isNotBlank()) {
+                ThirdPartyAgentEnvDispatchType(
+                    envName = envId,
+                    envProjectId = null,
+                    workspace = workspace,
+                    agentType = AgentType.ID,
+                    dockerInfo = null
+                )
+            } // docker建机指定版本(旧)
+            else if (!param.dockerBuildVersion.isNullOrBlank()) {
+                DockerDispatchType(param.dockerBuildVersion!!)
+            } else {
+                ESXiDispatchType()
+            }
+        }
+
+        // 处理dispatchType中的BKSTORE镜像信息
+        SpringContextUtil.getBean(DispatchTypeParser::class.java).parse(
+            userId = task.starter, projectId = task.projectId,
+            pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
+        )
+
+        dispatchType.replaceVariable(
+            SpringContextUtil.getBean(BuildVariableService::class.java).getAllVariable(
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                buildId = task.buildId
+            )
+        )
+        return dispatchType
+    }
+}
 
 val defaultSuccessAtomResponse = AtomResponse(BuildStatus.SUCCEED)
 

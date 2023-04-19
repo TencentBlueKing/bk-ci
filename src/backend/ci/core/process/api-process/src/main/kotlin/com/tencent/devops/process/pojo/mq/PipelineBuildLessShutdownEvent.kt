@@ -25,29 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq.dispatcher
+package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.pojo.IEvent
-import com.tencent.devops.process.pojo.mq.IDispatchEvent
-import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-class DispatchEventDispatcher constructor(
-    private val streamBridge: StreamBridge
-) : EventDispatcher<IDispatchEvent> {
-
-    override fun dispatch(vararg events: IDispatchEvent) {
-        events.forEach { event ->
-            try {
-                event.sendTo(streamBridge)
-            } catch (ignored: Exception) {
-                logger.error("[MQ] Fail to dispatch the event($events)", ignored)
-            }
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(DispatchEventDispatcher::class.java)
-    }
-}
+@Event(StreamBinding.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
+data class PipelineBuildLessShutdownEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    val vmSeqId: String?,
+    val buildResult: Boolean,
+    val executeCount: Int?,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

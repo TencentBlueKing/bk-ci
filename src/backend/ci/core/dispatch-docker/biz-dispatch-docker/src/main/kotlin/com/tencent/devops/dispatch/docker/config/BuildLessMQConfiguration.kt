@@ -25,24 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
+package com.tencent.devops.dispatch.docker.config
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.dispatch.docker.listener.AgentLessListener
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
-@Event(StreamBinding.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
-data class PipelineBuildLessShutdownDispatchEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val vmSeqId: String?,
-    val buildResult: Boolean,
-    val executeCount: Int?,
-    override val dispatchType: DispatchType? = null,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
-) : IDispatchEvent(actionType, source, projectId, pipelineId, userId, dispatchType, delayMills)
+@Configuration
+class BuildLessMQConfiguration @Autowired constructor() {
+
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "dispatch-buildless-service"
+    }
+
+    @EventConsumer(StreamBinding.QUEUE_AGENT_STARTUP, STREAM_CONSUMER_GROUP)
+    fun startListener(
+        @Autowired agentLessListener: AgentLessListener
+    ): Consumer<Message<PipelineBuildLessStartupEvent>> {
+        return Consumer { event: Message<PipelineBuildLessStartupEvent> ->
+            agentLessListener.listenAgentStartUpEvent(event.payload)
+        }
+    }
+
+    @EventConsumer(StreamBinding.QUEUE_AGENT_SHUTDOWN, STREAM_CONSUMER_GROUP)
+    fun shutdownListener(
+        @Autowired agentLessListener: AgentLessListener
+    ): Consumer<Message<PipelineBuildLessShutdownEvent>> {
+        return Consumer { event: Message<PipelineBuildLessShutdownEvent> ->
+            agentLessListener.listenAgentShutdownEvent(event.payload)
+        }
+    }
+}

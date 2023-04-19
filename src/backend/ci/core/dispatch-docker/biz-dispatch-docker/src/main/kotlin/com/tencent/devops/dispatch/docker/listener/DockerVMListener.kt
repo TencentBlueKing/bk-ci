@@ -34,6 +34,7 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
@@ -78,7 +79,7 @@ class DockerVMListener @Autowired constructor(
     private val pipelineDockerHostDao: PipelineDockerHostDao,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val dockerRoutingSdkService: DockerRoutingSdkService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher
+    private val pipelineEventDispatcher: SampleEventDispatcher
 ) : BuildListener {
 
     companion object {
@@ -112,6 +113,11 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
+        // 广播消息中非DockerDispatchType的消息直接返回
+        if (event.dispatchType !is DockerDispatchType) {
+            return
+        }
+
         logger.info("On shutdown - ($event)")
 
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
@@ -126,6 +132,11 @@ class DockerVMListener @Autowired constructor(
     }
 
     private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
+        // 广播消息中非DockerDispatchType的消息直接返回
+        if (dispatchMessage.dispatchType !is DockerDispatchType) {
+            return
+        }
+
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
@@ -202,22 +213,18 @@ class DockerVMListener @Autowired constructor(
                     taskName = "",
                     os = "",
                     vmNames = vmNames,
-                    startTime = System.currentTimeMillis(),
                     channelCode = channelCode,
                     dispatchType = KubernetesDispatchType(
                         kubernetesBuildVersion = JsonUtil.toJson(containerPool),
                         imageType = ImageType.THIRD,
                         performanceConfigId = 0
                     ),
-                    zone = zone,
                     atoms = atoms,
                     executeCount = executeCount,
                     routeKeySuffix = if (!demoteFlag) DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix
                     else DispatchRouteKeySuffix.KUBERNETES_DEMOTE.routeKeySuffix,
-                    stageId = stageId,
                     containerId = containerId,
                     containerHashId = containerHashId,
-                    containerType = containerType,
                     customBuildEnv = customBuildEnv,
                     dockerRoutingType = dockerRoutingType.name
                 )

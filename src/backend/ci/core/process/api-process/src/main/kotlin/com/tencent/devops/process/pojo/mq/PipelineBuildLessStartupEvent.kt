@@ -25,38 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq.dispatcher
+package com.tencent.devops.process.pojo.mq
 
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.process.pojo.mq.IDispatchEvent
-import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
+import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.stream.constants.StreamBinding
 
-class ContainerEventDispatcher constructor(
-    private val streamBridge: StreamBridge
-) : EventDispatcher<IDispatchEvent> {
-
-    override fun dispatch(vararg events: IDispatchEvent) {
-        events.forEach { event ->
-            try {
-                // TODO 转为特定的dispatch队列事件
-                val dispatchEvent = when (event.dispatchType) {
-                    is DockerDispatchType -> {
-                        null
-                    }
-                    else -> {
-                        event
-                    }
-                }
-                dispatchEvent?.sendTo(streamBridge)
-            } catch (ignored: Exception) {
-                logger.error("[MQ] Fail to dispatch the event($events)", ignored)
-            }
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ContainerEventDispatcher::class.java)
-    }
-}
+@Event(StreamBinding.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
+data class PipelineBuildLessStartupEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    val vmSeqId: String,
+    val containerId: String,
+    val containerHashId: String?,
+    val os: String,
+    val startTime: Long,
+    val channelCode: String,
+    val zone: Zone?,
+    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
+    val executeCount: Int?,
+    val customBuildEnv: Map<String, String>?,
+    override var actionType: ActionType = ActionType.REFRESH,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

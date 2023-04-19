@@ -25,32 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.mq
+package com.tencent.devops.process.engine.atom
 
-import com.tencent.devops.common.api.pojo.Zone
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
-@Event(StreamBinding.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
-data class PipelineBuildLessStartupDispatchEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val vmSeqId: String,
-    val containerId: String,
-    val containerHashId: String?,
-    val os: String,
-    val startTime: Long,
-    val channelCode: String,
-    override val dispatchType: DispatchType? = null,
-    val zone: Zone?,
-    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
-    val executeCount: Int?,
-    val customBuildEnv: Map<String, String>?,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 0
-) : IDispatchEvent(actionType, source, projectId, pipelineId, userId, dispatchType, delayMills)
+/**
+ * 原子执行结果
+ * @version 1.0
+ */
+data class AtomResponse(
+    val buildStatus: BuildStatus,
+    val outputVars: Map<String, Any>? = null, // 输出的变量，需要持久化的
+    var errorType: ErrorType? = null,
+    var errorCode: Int? = null,
+    var errorMsg: String? = null
+)

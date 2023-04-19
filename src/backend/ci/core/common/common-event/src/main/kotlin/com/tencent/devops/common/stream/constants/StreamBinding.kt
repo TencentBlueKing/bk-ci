@@ -105,8 +105,10 @@ object StreamBinding {
     const val EXCHANGE_AGENT_LISTENER_DIRECT = "e.engine.pipeline.agent.listener"
     const val ROUTE_AGENT_STARTUP = "r.engine.pipeline.agent.startup"
     const val QUEUE_AGENT_STARTUP = "q.engine.pipeline.agent.startup"
+    const val QUEUE_AGENT_DEMOTE_STARTUP = "q.engine.pipeline.agent.startup.demote"
     const val ROUTE_AGENT_SHUTDOWN = "r.engine.pipeline.agent.shutdown"
     const val QUEUE_AGENT_SHUTDOWN = "q.engine.pipeline.agent.shutdown"
+    const val QUEUE_AGENT_DEMOTE_SHUTDOWN = "q.engine.pipeline.agent.shutdown.demote"
 
     // 无构建环境的Docker构建机启停消息队列 ====================================
     const val EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT = "e.engine.pipeline.bl.agent"

@@ -43,8 +43,8 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,7 +62,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildLessWhitelistService: BuildLessWhitelistService
 ) {
-    fun startUpBuildLess(event: PipelineBuildLessStartupDispatchEvent) {
+    fun startUpBuildLess(event: PipelineBuildLessStartupEvent) {
         val pipelineId = event.pipelineId
         val buildId = event.buildId
         val vmSeqId = event.vmSeqId
@@ -103,7 +103,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         }
     }
 
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
+    fun shutdown(event: PipelineBuildLessShutdownEvent) {
         try {
             LOG.info("${event.buildId}|${event.vmSeqId} Start to finish the pipeline build($event)")
             val executeCount = event.executeCount
@@ -127,7 +127,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         }
     }
 
-    private fun checkPipelineRunning(event: PipelineBuildLessStartupDispatchEvent) {
+    private fun checkPipelineRunning(event: PipelineBuildLessStartupEvent) {
         // 判断流水线当前container是否在运行中
         val statusResult = client.get(ServicePipelineTaskResource::class).getTaskStatus(
             projectId = event.projectId,

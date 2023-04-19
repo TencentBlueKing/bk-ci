@@ -39,7 +39,7 @@ import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
-import com.tencent.devops.process.pojo.mq.dispatcher.ContainerEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
@@ -50,7 +50,7 @@ class SDKConfiguration {
     @Bean
     fun dispatchService(
         @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: ContainerEventDispatcher,
+        @Autowired pipelineEventDispatcher: SampleEventDispatcher,
         @Autowired objectMapper: ObjectMapper,
         @Autowired client: Client,
         @Autowired channelUtils: ChannelUtils,
@@ -72,7 +72,7 @@ class SDKConfiguration {
     ) = DockerRoutingSdkService(redisOperation)
 
     @Bean
-    fun pipelineEventDispatcher(@Autowired streamBridge: StreamBridge): ContainerEventDispatcher {
-        return ContainerEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(@Autowired streamBridge: StreamBridge): SampleEventDispatcher {
+        return SampleEventDispatcher(streamBridge)
     }
 }

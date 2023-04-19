@@ -49,7 +49,7 @@ import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -78,7 +78,7 @@ class BuildLessClient @Autowired constructor(
     fun startBuildLess(
         agentLessDockerIp: String,
         agentLessDockerPort: Int,
-        event: PipelineBuildLessStartupDispatchEvent
+        event: PipelineBuildLessStartupEvent
     ) {
         with(event) {
             val secretKey = ApiUtil.randomSecretKey()

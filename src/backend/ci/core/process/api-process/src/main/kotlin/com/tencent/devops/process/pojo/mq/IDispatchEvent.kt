@@ -10,7 +10,7 @@ abstract class IDispatchEvent(
     open val projectId: String,
     open val pipelineId: String,
     open val userId: String,
-    open val dispatchType: DispatchType?,
+    open val routeKeySuffix: String? = null,
     override var delayMills: Int,
     override var retryTime: Int = 1
 ) : IEvent(delayMills, retryTime)

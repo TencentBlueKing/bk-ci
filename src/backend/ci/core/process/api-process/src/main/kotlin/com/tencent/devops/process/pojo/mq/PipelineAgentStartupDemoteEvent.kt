@@ -32,8 +32,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(StreamBinding.QUEUE_AGENT_STARTUP)
-data class PipelineAgentStartupEvent(
+@Event(StreamBinding.QUEUE_AGENT_DEMOTE_STARTUP)
+data class PipelineAgentStartupDemoteEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,

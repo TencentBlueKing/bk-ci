@@ -60,7 +60,7 @@ import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -161,7 +161,7 @@ class DockerHostClient @Autowired constructor(
     fun startAgentLessBuild(
         agentLessDockerIp: String,
         agentLessDockerPort: Int,
-        event: PipelineBuildLessStartupDispatchEvent
+        event: PipelineBuildLessStartupEvent
     ) {
         val secretKey = ApiUtil.randomSecretKey()
 
@@ -195,18 +195,7 @@ class DockerHostClient @Autowired constructor(
 
         LOG.info("[${event.buildId}]|BUILD_LESS| secretKey: $secretKey")
         LOG.info("[${event.buildId}]|BUILD_LESS| agentId: $agentId")
-        val dispatchType = event.dispatchType as DockerDispatchType
-        val dockerImage = when (dispatchType.dockerBuildVersion) {
-            DockerVersion.CUSTOMIZE.value -> {
-                defaultImageConfig.getAgentLessCompleteUri()
-            }
-            DockerVersion.TLINUX2_2.value -> {
-                defaultImageConfig.getAgentLessCompleteUri()
-            }
-            else -> {
-                defaultImageConfig.getAgentLessCompleteUriByImageName(dispatchType.dockerBuildVersion)
-            }
-        }
+        val dockerImage = defaultImageConfig.getAgentLessCompleteUri()
         LOG.info("[${event.buildId}]|BUILD_LESS| Docker images is: $dockerImage")
 
         val requestBody = DockerHostBuildInfo(
@@ -223,12 +212,8 @@ class DockerHostClient @Autowired constructor(
             registryUser = defaultImageConfig.agentLessRegistryUserName ?: "",
             registryPwd = defaultImageConfig.agentLessRegistryPassword ?: "",
             imageType = ImageType.THIRD.type,
-            imagePublicFlag = dispatchType.imagePublicFlag,
-            imageRDType = if (dispatchType.imageRDType == null) {
-                null
-            } else {
-                ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
-            },
+            imagePublicFlag = false,
+            imageRDType = "",
             containerHashId = event.containerHashId,
             buildType = BuildType.AGENT_LESS,
             customBuildEnv = event.customBuildEnv

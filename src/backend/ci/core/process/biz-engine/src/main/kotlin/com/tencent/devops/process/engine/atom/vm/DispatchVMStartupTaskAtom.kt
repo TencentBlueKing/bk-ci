@@ -305,58 +305,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         return true
     }
 
-    private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
 
-        val dispatchType: DispatchType
-        /**
-         * 新版的构建环境直接传入指定的构建机方式
-         */
-        if (param.dispatchType != null) {
-            dispatchType = param.dispatchType!!
-        } else {
-            // 第三方构建机ID
-            val agentId = param.thirdPartyAgentId ?: ""
-            // 构建环境ID
-            val envId = param.thirdPartyAgentEnvId ?: ""
-            val workspace = param.thirdPartyWorkspace ?: ""
-            dispatchType = if (agentId.isNotBlank()) {
-                ThirdPartyAgentIDDispatchType(
-                    displayName = agentId,
-                    workspace = workspace,
-                    agentType = AgentType.ID,
-                    dockerInfo = null
-                )
-            } else if (envId.isNotBlank()) {
-                ThirdPartyAgentEnvDispatchType(
-                    envName = envId,
-                    envProjectId = null,
-                    workspace = workspace,
-                    agentType = AgentType.ID,
-                    dockerInfo = null
-                )
-            } // docker建机指定版本(旧)
-            else if (!param.dockerBuildVersion.isNullOrBlank()) {
-                DockerDispatchType(param.dockerBuildVersion!!)
-            } else {
-                ESXiDispatchType()
-            }
-        }
-
-        // 处理dispatchType中的BKSTORE镜像信息
-        dispatchTypeParser.parse(
-            userId = task.starter, projectId = task.projectId,
-            pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
-        )
-
-        dispatchType.replaceVariable(
-            buildVariableService.getAllVariable(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                buildId = task.buildId
-            )
-        )
-        return dispatchType
-    }
 
     private fun getBuildZone(container: Container): Zone? {
         return when {
@@ -391,7 +340,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
-                        dispatchType = param.dispatchType,
+                        dispatchType = getDispatchType(task, param),
                         executeCount = task.executeCount
                     )
                 )

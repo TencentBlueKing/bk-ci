@@ -43,7 +43,8 @@ data class PipelineAgentShutdownEvent(
     val buildResult: Boolean,
     val executeCount: Int?,
     val dockerRoutingType: String? = "VM",
-    override val dispatchType: DispatchType?,
+    val dispatchType: DispatchType,
+    override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0
-) : IDispatchEvent(actionType, source, projectId, pipelineId, userId, dispatchType, delayMills)
+) : IDispatchEvent(actionType, source, projectId, pipelineId, userId, routeKeySuffix, delayMills)

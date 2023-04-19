@@ -1,6 +1,7 @@
 package com.tencent.devops.dispatch.service.dispatcher.agent
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -45,7 +46,7 @@ class DispatchService @Autowired constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )

@@ -32,28 +32,18 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.stream.constants.StreamBinding
 
-@Event(StreamBinding.QUEUE_AGENT_STARTUP)
-data class PipelineAgentStartupEvent(
+@Event(StreamBinding.QUEUE_AGENT_DEMOTE_SHUTDOWN)
+data class PipelineAgentShutdownDemoteEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
-    val pipelineName: String,
     override val userId: String,
     val buildId: String,
-    val buildNo: Int,
-    val vmSeqId: String,
-    val taskName: String,
-    val os: String,
-    val vmNames: String,
-    val channelCode: String,
-    val dispatchType: DispatchType,
-    val containerId: String,
-    val containerHashId: String?,
-    val queueTimeoutMinutes: Int? = null,
-    val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
+    val vmSeqId: String?,
+    val buildResult: Boolean,
     val executeCount: Int?,
-    val customBuildEnv: Map<String, String>? = null,
     val dockerRoutingType: String? = "VM",
+    val dispatchType: DispatchType,
     override var routeKeySuffix: String? = null,
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0

@@ -30,6 +30,7 @@ package com.tencent.devops.common.dispatch.sdk.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -44,6 +45,7 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KE
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
@@ -61,7 +63,7 @@ import java.util.concurrent.TimeUnit
 class DispatchService constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
@@ -111,12 +113,9 @@ class DispatchService constructor(
             channelCode = event.channelCode,
             vmNames = event.vmNames,
             atoms = event.atoms,
-            zone = event.zone,
             containerHashId = event.containerHashId,
             executeCount = event.executeCount,
             containerId = event.containerId,
-            containerType = event.containerType,
-            stageId = event.stageId,
             dispatchType = event.dispatchType,
             customBuildEnv = customBuildEnv,
             dockerRoutingType = event.dockerRoutingType
@@ -254,7 +253,7 @@ class DispatchService constructor(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId,
                     channelCode = event.channelCode,
-                    zone = event.zone,
+                    zone = Zone.SHENZHEN,
                     atoms = event.atoms,
                     executeCount = event.executeCount ?: 1
                 )
