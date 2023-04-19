@@ -40,7 +40,7 @@ include_dict = {
     'bkCiInfluxdbPort': '{{ include "bkci.influxdbPort" . | quote }}',
     'bkCiInfluxdbUser': '{{ include "bkci.influxdbUsername" . }}',
     'bkCiInfluxdbPassword': '{{ include "bkci.influxdbPassword" . }}',
-    'bkCiInfluxdbAddr': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . | quote }}',
+    'bkCiInfluxdbAddr': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     'bkCiVersion': '{{ .Chart.AppVersion }}',
     'bkCiDispatchKubernetesNs': '{{ .Release.Namespace }}',
     'bkCiConsulDiscoveryTag': '{{ .Release.Namespace }}',
