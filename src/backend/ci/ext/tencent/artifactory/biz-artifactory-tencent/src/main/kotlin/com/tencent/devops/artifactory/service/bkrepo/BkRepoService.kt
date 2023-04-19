@@ -629,7 +629,7 @@ class BkRepoService @Autowired constructor(
             pathNamePairs = pathNamePairs,
             metadata = condition.properties,
             page = 0,
-            pageSize = 10,
+            pageSize = 10000,
             sortBy = "lastModifiedDate",
             direction = Sort.Direction.DESC
         ).records
