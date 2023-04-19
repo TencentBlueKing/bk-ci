@@ -33,5 +33,5 @@
     "请选择用户组": "Please select a user group",
     "提交成功": "Submitted successfully",
     "资源实例/用户组/描述/操作/ID": "Resource instance/User group/Description/Action/Group ID",
-    "尚未加入项目。项目成员才可以根据资源实例查询": "Not yet added to the project. Only project members can query based on resource instances"
+    "尚未加入项目。项目成员才可以根据资源实例查询": "Not joined the project yet. Only project members can search for resource instances"
 }
