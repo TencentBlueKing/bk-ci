@@ -17,6 +17,7 @@
                         :desc="$t('accessDeny.desc')"
                     >
                         <bk-button
+                            v-if="curProjectCode"
                             theme="primary"
                             @click="handleApplyJoin"
                         >
