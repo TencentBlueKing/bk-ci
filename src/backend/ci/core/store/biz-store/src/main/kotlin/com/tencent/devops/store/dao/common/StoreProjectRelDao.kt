@@ -447,7 +447,7 @@ class StoreProjectRelDao {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_CODE.eq(projectCode))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            return dslContext.select(STORE_CODE, TYPE).from(this).where(conditions).groupBy(STORE_CODE).fetch()
+            return dslContext.select(STORE_CODE, TYPE).from(this).where(conditions).fetch()
         }
     }
 

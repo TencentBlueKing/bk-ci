@@ -479,7 +479,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 storeType = StoreTypeEnum.ATOM
             )
             projectAtomCodeRecords?.map {
-                atomNameMap[it.value1()] = StoreProjectTypeEnum.getProjectType(it.value2().toInt())
+                if (atomNameMap[it.value1()] == null
+                    || it.value2().toInt() == StoreProjectTypeEnum.INIT.type
+                    || it.value2().toInt() == StoreProjectTypeEnum.TEST.type) {
+                    atomNameMap[it.value1()] = StoreProjectTypeEnum.getProjectType(it.value2().toInt())
+                }
             }
             // 把插件的名称信息放入缓存
             atomNameCache.put(cacheKey, atomNameMap)
