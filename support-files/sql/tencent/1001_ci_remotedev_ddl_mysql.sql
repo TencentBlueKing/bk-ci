@@ -173,4 +173,15 @@ CREATE TABLE IF NOT EXISTS `T_SSH_PUBLIC_KEYS` (
     KEY `idx_user` (`USER`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户SSH公钥存储';
 
+-- ----------------------------
+-- Table structure for T_REMOTE_DEV_IMAGE_SPEC_CONFIG 镜像配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `IDE_REF` varchar(255) NOT NULL COMMENT '包含ide进程的镜像层',
+  `REMOTING_REF` varchar(255) NOT NULL COMMENT '包含remoting进程的镜像层',
+  `IDE_LAYER_REF` json NULL COMMENT '包含除去ide进程和remoting进程的其他相关进程层',
+  PRIMARY KEY (`ID`)
+);
+
 SET FOREIGN_KEY_CHECKS = 1;
