@@ -153,6 +153,7 @@ interface OpRemoteDevResource {
     @DELETE
     @Path("/image/spec")
     fun deleteImageSpec(
+        @QueryParam("id")
         id: Int
     ): Result<Boolean>
 
@@ -160,6 +161,7 @@ interface OpRemoteDevResource {
     @PUT
     @Path("/image/spec")
     fun updateImageSpec(
+        @QueryParam("id")
         id: Int,
         spec: ImageSpec
     ): Result<Boolean>
