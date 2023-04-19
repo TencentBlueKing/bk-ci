@@ -89,9 +89,14 @@ object BuildTimeCostUtils {
                 record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}
             )
+            // 计算等到耗时需要将率先执行完毕的container追加无状态区间
+            record.endTime?.let {
+                val fixedMoment = BuildRecordTimeLine.Moment(it.timestampmilli(), endTime.timestampmilli())
+                containerTimeLine.waitCostMoments.add(fixedMoment)
+                containerTimeLine.queueCostMoments.add(fixedMoment)
+            }
             // 执行时间取并集
             containerExecuteCost = mergeTimeLine(containerExecuteCost, containerTimeLine.executeCostMoments)
-
             val mergedWaitCost = mergeTimeLine(containerTimeLine.waitCostMoments, containerTimeLine.queueCostMoments)
             // 等待时间取交集
             containerWaitCost = intersectionTimeLine(containerWaitCost, mergedWaitCost)

@@ -403,7 +403,6 @@ class StageBuildRecordService(
                 return@transaction
             }
             // 结束时进行启动状态校准，并计算所有耗时
-            var timeCost: BuildRecordTimeCost? = null
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()

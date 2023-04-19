@@ -67,7 +67,8 @@ import java.time.LocalDateTime
     "ReturnCount",
     "TooManyFunctions",
     "ComplexCondition",
-    "ComplexMethod"
+    "ComplexMethod",
+    "LongMethod"
 )
 @Service
 class TaskBuildRecordService(
