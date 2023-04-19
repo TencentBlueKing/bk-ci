@@ -145,8 +145,15 @@ class RbacPermissionProjectService(
             val action = RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT)
             val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
             val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
-            logger.info("get user projects:$projectList")
-            return projectList
+            return if (projectList.contains("*")) {
+                logger.info("super manager has all project|$userId")
+                authResourceService.getAllResourceCode(
+                    resourceType = AuthResourceType.PROJECT.value
+                )
+            } else {
+                logger.info("get user projects:$projectList")
+                projectList
+            }
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user projects"

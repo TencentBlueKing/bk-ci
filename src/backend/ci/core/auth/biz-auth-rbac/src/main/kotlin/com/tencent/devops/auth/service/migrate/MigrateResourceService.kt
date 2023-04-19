@@ -147,7 +147,7 @@ class MigrateResourceService @Autowired constructor(
                     migrateResourceCodeConverter.v3ToRbacResourceCode(
                         resourceType = resourceType,
                         resourceCode = it.id
-                    )
+                    ) ?: return@forEach
                 logger.info("MigrateResourceService|resourceCode:$resourceCode")
                 authResourceService.getOrNull(
                     projectCode = projectCode,

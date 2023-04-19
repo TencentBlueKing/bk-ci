@@ -28,8 +28,6 @@
 
 package com.tencent.devops.auth.service.migrate
 
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
@@ -42,24 +40,27 @@ class MigrateResourceCodeConverter constructor(
     private val client: Client
 ) {
 
-    fun v3ToRbacResourceCode(resourceType: String, resourceCode: String): String {
+    fun v3ToRbacResourceCode(resourceType: String, resourceCode: String): String? {
         return when (resourceType) {
             // v3流水线使用的是流水线自增Id，rbac需获取具体的pipelineId
             AuthResourceType.PIPELINE_DEFAULT.value -> {
-                val pipelineInfo = client.get(ServicePipelineResource::class)
-                    .getPipelineInfobyAutoId(resourceCode.toLong()).data
-                    ?: throw ErrorCodeException(
-                        errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-                        params = arrayOf(resourceCode),
-                        defaultMessage = "the resourceCode $resourceCode not exists"
-                    )
-                pipelineInfo.pipelineId
+                getPipelineId(resourceCode = resourceCode)
             }
             // v3代码库使用的是代码库自增ID，rbac使用的是hashId
             AuthResourceType.CODE_REPERTORY.value -> {
                 HashUtil.encodeOtherLongId(resourceCode.toLong())
             }
             else -> resourceCode
+        }
+    }
+
+    private fun getPipelineId(resourceCode: String): String? {
+        return try {
+            val pipelineInfo = client.get(ServicePipelineResource::class)
+                .getPipelineInfobyAutoId(resourceCode.toLong()).data
+            pipelineInfo?.pipelineId
+        } catch (ignore: Exception) {
+            resourceCode
         }
     }
 }
