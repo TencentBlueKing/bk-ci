@@ -136,15 +136,15 @@
             },
             downLoadFile (row) {
                 Promise.all([
-                    // pipelines.requestDevnetGateway(),
+                    pipelines.requestDevnetGateway(),
                     pipelines.requestDownloadUrl({
                         projectId: this.projectId,
                         artifactoryType: row.artifactoryType,
                         path: row.path
                     })
-                ]).then(([res]) => {
-                    // const url = isDevnet ? res.url : res.url2
-                    window.open(res.url, '_blank')
+                ]).then(([isDevnet, res]) => {
+                    const url = isDevnet ? res.url : res.url2
+                    window.open(url, '_blank')
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 })

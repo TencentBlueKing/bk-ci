@@ -1,0 +1,24 @@
+#environment debug
+{{ if .Values.environment.enabled -}}
+{{ if .Values.remoteDebug.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: debug-environment
+  labels: 
+    app.kubernetes.io/name: environment
+    app.kubernetes.io/component: microservice
+  annotations:
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-2mgq2ka8
+spec:
+  type: LoadBalancer
+  selector: 
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: environment
+  ports:
+    - name: debug
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+{{- end -}}
+{{- end -}}

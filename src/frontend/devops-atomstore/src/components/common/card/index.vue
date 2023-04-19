@@ -2,7 +2,7 @@
     <router-link :to="{ name: 'details', params: { code: atom.code, type: storeType } }" class="card-home">
         <atom v-if="storeType === 'atom'" :atom="atom" :has-summary="hasSummary" />
         <template v-else>
-            <img class="card-pic atom-logo" :src="atom.logoUrl">
+            <img class="card-pic atom-logo" :src="atom.logoUrl || defaultUrl">
             <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
             <h5 class="card-detail">
                 <span class="text-overflow">{{ atom.publisher }}</span>
@@ -22,6 +22,7 @@
 
 <script>
     import commentRate from '../comment-rate'
+    import { DEFAULT_LOGO_URL } from '@/utils/'
     import atom from './atom.vue'
 
     export default {
@@ -33,6 +34,12 @@
         props: {
             atom: Object,
             hasSummary: Boolean
+        },
+
+        data () {
+            return {
+                defaultUrl: DEFAULT_LOGO_URL
+            }
         },
 
         computed: {

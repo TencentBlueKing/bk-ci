@@ -22,9 +22,9 @@
                                     :title="permissionMsg"
                                     v-if="(entry.code === 'check' && entry.status === 'fail') || (entry.code === 'check' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')"
                                     @click.stop="reCheck"
-                                > {{ $t('store.重新验证') }} <i class="col-line"></i>
+                                > {{ $t('store.重新验证') }} <i class="col-line" v-if="!isEnterprise"></i>
                                 </span>
-                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo'" @click.stop="readLog"> {{ $t('store.日志') }} </span>
+                                <span class="log-btn" v-if="entry.code === 'check' && entry.status !== 'undo' && !isEnterprise" @click.stop="readLog"> {{ $t('store.日志') }} </span>
                                 <span class="test-btn" v-if="entry.code === 'test' && entry.status === 'doing'">
                                     <a target="_blank" :href="`/console/pipeline/${imageDetail.projectCode}/list`"> {{ $t('store.测试') }} </a>
                                 </span>
@@ -80,10 +80,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import BuildLog from '@/components/Log'
-    import detailInfo from '../components/detailInfo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import BuildLog from '@/components/Log'
+    import { mapActions } from 'vuex'
+    import detailInfo from '../components/detailInfo'
 
     export default {
         components: {
@@ -101,7 +101,7 @@
                 imageDetail: {},
                 storeBuildInfo: {},
                 permission: true,
-                currentProjectId: '',
+                currentProjectCode: '',
                 currentBuildNo: '',
                 currentPipelineId: '',
                 sideSliderConfig: {
@@ -130,6 +130,9 @@
                 return lastProgress.status === 'success'
             },
 
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            },
             navList () {
                 return [
                     { name: this.$t('store.工作台') },
@@ -310,7 +313,7 @@
             font-size: 14px;
             padding-bottom: 10px;
             margin-bottom: 19px;
-            border-bottom: 1px solid $fontLigtherColor;
+            border-bottom: 1px solid $fontLighterColor;
             .cancel-release {
                 float: right;
                 color: $primaryColor;

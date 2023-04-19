@@ -75,10 +75,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import emptyData from './empty_data'
     import createGroup from '@/components/devops/create_group'
     import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {
@@ -126,7 +126,10 @@
             },
             ...mapGetters('quality', [
                 'getUserGroup'
-            ])
+            ]),
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            }
         },
         watch: {
             projectId () {
@@ -300,14 +303,18 @@
                         this.dialogLoading.isLoading = false
                     }
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: this.$t('quality.通知组'), option: this.$t('quality.编辑') }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.notifyGroup,
+                            instanceId: [{
+                                id: row.groupHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                    })
                 }
             },
             toDeleteGruop (row) {
@@ -341,14 +348,18 @@
                         }
                     })
                 } else {
-                    const params = {
-                        noPermissionList: [
-                            { resource: this.$t('quality.通知组'), option: this.$t('quality.删除') }
-                        ],
-                        applyPermissionUrl: PERM_URL_PREFIX
-                    }
-
-                    this.$showAskPermissionDialog(params)
+                    this.$showAskPermissionDialog({
+                        noPermissionList: [{
+                            actionId: this.$permissionActionMap.delete,
+                            resourceId: this.$permissionResourceMap.notifyGroup,
+                            instanceId: [{
+                                id: row.groupHashId,
+                                name: row.name
+                            }],
+                            projectId: this.projectId
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=quality_gate&role_manager=group:${row.groupHashId}`
+                    })
                 }
             }
         }

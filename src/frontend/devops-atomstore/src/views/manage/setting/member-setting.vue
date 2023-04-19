@@ -40,9 +40,23 @@
             </bk-table>
 
             <bk-sideslider :is-show.sync="addMemberObj.isShow" :quick-close="true" :title="$t('store.新增成员')" :width="640" @hidden="closeAddMember">
-                <bk-form :label-width="100" :model="addMemberObj.form" slot="content" class="add-member" ref="addForm">
-                    <bk-form-item :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
+                <bk-form :label-width="100" :model="addMemberObj.form" slot="content" class="add-member" ref="addForm" v-bkloading="{ isLoading: isLoadingMember }">
+                    <bk-form-item v-if="isEnterprise" :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="memberName" error-display-type="normal">
                         <bk-input v-model="addMemberObj.form.memberName"></bk-input>
+                    </bk-form-item>
+                    <bk-form-item v-else :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="list" error-display-type="normal">
+                        <bk-select searchable
+                            multiple
+                            show-select-all
+                            v-model="addMemberObj.form.list"
+                            @selected="selectMember"
+                        >
+                            <bk-option v-for="(option, index) in projectMemberList"
+                                :key="index"
+                                :id="option.id"
+                                :name="option.name">
+                            </bk-option>
+                        </bk-select>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.角色')" property="type">
                         <bk-radio-group v-model="addMemberObj.form.type" class="radio-group">
@@ -85,6 +99,7 @@
             return {
                 memberCount: 0,
                 memberList: [],
+                projectMemberList: [],
                 memberType: {
                     ADMIN: 'Owner',
                     DEVELOPER: 'Developer'
@@ -94,6 +109,7 @@
                         { name: this.$t('store.插件开发'), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.版本发布'), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.私有配置'), active: false, type: 'DEVELOPER' },
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN', hidden: this.isEnterprise },
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' }
                     ],
@@ -101,18 +117,26 @@
                         { name: this.$t(this.$t('store.镜像发布')), active: false, type: 'DEVELOPER' },
                         { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
                         { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' },
-                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN' }
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN', hidden: this.isEnterprise }
+                    ],
+                    service: [
+                        { name: this.$t(this.$t('store.微扩展发布')), active: false, type: 'DEVELOPER' },
+                        { name: this.$t('store.审批'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.成员管理'), active: false, type: 'ADMIN' },
+                        { name: this.$t('store.可见范围'), active: false, type: 'ADMIN', hidden: this.isEnterprise }
                     ]
                 },
                 addMemberObj: {
                     isShow: false,
                     form: {
+                        list: [],
                         memberName: '',
                         type: 'ADMIN'
                     }
                 },
                 isLoading: true,
                 isSaving: false,
+                isLoadingMember: false,
                 deleteObj: {
                     show: false,
                     loading: false,
@@ -129,10 +153,15 @@
                 userInfo: 'getUserInfo'
             }),
 
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            },
+
             storeType () {
                 const typeMap = {
                     atom: 'ATOM',
-                    image: 'IMAGE'
+                    image: 'IMAGE',
+                    service: 'SERVICE'
                 }
                 const type = this.$route.params.type
                 return typeMap[type]
@@ -141,7 +170,8 @@
             storeCode () {
                 const keyMap = {
                     atom: 'atomCode',
-                    image: 'imageCode'
+                    image: 'imageCode',
+                    service: 'serviceCode'
                 }
                 const type = this.$route.params.type
                 const key = keyMap[type]
@@ -189,13 +219,23 @@
 
             getPermissionList (userType) {
                 const type = this.$route.params.type
-                const currentPermission = this.permissionMap[type] || []
+                const currentPermission = (this.permissionMap[type] || []).filter(x => !x.hidden)
                 const filterPermission = currentPermission.filter(x => userType === 'ADMIN' || x.type === userType)
                 return filterPermission.map(x => x.name)
             },
 
             openAddMember () {
                 this.addMemberObj.isShow = true
+                if (!this.isEnterprise) {
+                    this.isLoadingMember = true
+                    this.$store.dispatch('store/requestProjectMember', {
+                        projectCode: this.detail.projectCode
+                    }).then((res) => {
+                        this.projectMemberList = (res || []).map(x => ({ id: x, name: x }))
+                    }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
+                        this.isLoadingMember = false
+                    })
+                }
             },
 
             saveMember () {
@@ -203,10 +243,11 @@
                     this.isSaving = true
                     const postData = {
                         type: this.addMemberObj.form.type,
-                        member: [this.addMemberObj.form.memberName],
+                        member: this.addMemberObj.form.list,
                         storeCode: this.storeCode,
                         storeType: this.storeType
                     }
+                    if (this.isEnterprise) postData.member.push(this.addMemberObj.form.memberName)
                     api.requestAddMember(postData).then(() => {
                         this.closeAddMember()
                         this.initData()
@@ -293,7 +334,15 @@
                 margin-right: 14px;
             }
         }
+        .disable {
+            cursor: not-allowed;
+            color: #bcbcbc;
+        }
+        ::v-deep .bk-sideslider-content {
+            height: calc(100% - 60px);
+        }
         .add-member {
+            height: 100%;
             padding: 32px;
             ::v-deep .bk-form-radio:not(:last-child) {
                 margin-right: 32px;

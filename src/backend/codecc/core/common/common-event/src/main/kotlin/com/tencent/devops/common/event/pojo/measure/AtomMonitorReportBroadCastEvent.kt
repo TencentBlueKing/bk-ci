@@ -24,7 +24,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+<<<<<<< HEAD:src/backend/ci/ext/tencent/common/common-archive-tencent/src/main/kotlin/com/tencent/devops/common/archive/api/pojo/JFrogFileInfo.kt
+package com.tencent.devops.common.archive.api.pojo
+=======
 package com.tencent.devops.common.event.pojo.measure
+>>>>>>> carl/issue_2625_jfrog:src/backend/codecc/core/common/common-event/src/main/kotlin/com/tencent/devops/common/event/pojo/measure/AtomMonitorReportBroadCastEvent.kt
 
 import com.tencent.devops.common.api.pojo.AtomMonitorData
 

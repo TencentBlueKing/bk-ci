@@ -36,6 +36,9 @@ const nodeList = () => import(/* webpackChunkName: 'nodeList' */ '../views/node_
 // 节点详情
 const nodeDetail = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/node_detail')
 
+// 节点详情
+const extPageContainer = () => import(/* webpackChunkName: 'nodeDetail' */ '../views/extPageContainer')
+
 const routes = [
     {
         path: 'environment/:projectId?',
@@ -92,6 +95,17 @@ const routes = [
                 component: nodeDetail,
                 meta: {
                     title: 'nodeDetail',
+                    logo: 'environment',
+                    header: 'environmentManage',
+                    to: 'envList'
+                }
+            },
+            {
+                path: 'extPage/:serviceCode',
+                name: 'extPage',
+                component: extPageContainer,
+                meta: {
+                    title: 'extPage',
                     logo: 'environment',
                     header: 'environmentManage',
                     to: 'envList'

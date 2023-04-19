@@ -14,7 +14,7 @@
             @click="handleDebug"
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            
+
             <plugin-log :id="currentJob.containerHashId"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
@@ -78,9 +78,11 @@
         },
 
         computed: {
+
             ...mapGetters('atom', [
                 'checkShowDebugDockerBtn'
             ]),
+
             downLoadJobLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
@@ -93,7 +95,7 @@
                 const model = execDetail.model || {}
                 const stages = model.stages || []
                 const currentStage = stages[editingElementPos.stageIndex] || []
-                
+
                 try {
                     if (editingElementPos.containerGroupIndex === undefined) {
                         return currentStage.containers[editingElementPos.containerIndex]
@@ -109,7 +111,6 @@
                 const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}`, executeCount: this.currentJob.executeCount || 1 }
                 return [startUp, ...this.currentJob.elements]
             },
-
             showDebugDockerBtn () {
                 return this.checkShowDebugDockerBtn(this.currentJob, this.$route.name, this.execDetail)
             },

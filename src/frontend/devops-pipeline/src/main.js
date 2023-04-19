@@ -23,33 +23,29 @@
 
 import Vue from 'vue'
 import App from './App'
+import focus from './directives/focus/index.js'
 import createRouter from './router'
 import store from './store'
-import focus from './directives/focus/index.js'
 
+import '@icon-cool/bk-icon-devops'
+import '@icon-cool/bk-icon-devops/src/index'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
+import PortalVue from 'portal-vue'; // eslint-disable-line
 import VeeValidate from 'vee-validate'
 import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
+import createLocale from '../../locale'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
-import mavonEditor from 'mavon-editor'
-import 'mavon-editor/dist/css/index.css'
-import PortalVue from "portal-vue"; // eslint-disable-line
-import createLocale from '../../locale'
-import '@icon-cool/bk-icon-devops/src/index'
-import '@icon-cool/bk-icon-devops'
 
-import {
-    actionMap,
-    resourceMap,
-    resourceTypeMap
-} from '../../common-lib/permission-conf'
-import { pipelineDocs } from '../../common-lib/docs'
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
+import { pipelineDocs } from '../../common-lib/docs'
+import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
 
 const { i18n, setLocale } = createLocale(
     require.context('@locale/pipeline/', false, /\.json$/)
@@ -79,6 +75,7 @@ Vue.prototype.$setLocale = setLocale
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$pipelineDocs = pipelineDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
@@ -93,15 +90,28 @@ String.prototype.isBkVar = function () {
 /* eslint-disable */
 
 Vue.mixin({
+    computed: {
+        roleMap () {
+            return {
+                executor: 'role_executor',
+                manager: 'role_manager',
+                viewer: 'role_viewer',
+                creator: 'role_creator'
+            }
+        },
+    },
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
-        handleError(e, noPermissionList) {
-            if (e.code === 403) {
-                // 没有权限编辑
-                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
+        handleError (e, noPermissionList, applyPermissionUrl) {
+            if (e.code === 403) { // 没有权限编辑
                 this.$showAskPermissionDialog({
                     noPermissionList,
-                });
+                    applyPermissionUrl
+                })
             } else {
                 this.$showTips({
                     message: e.message || e,
@@ -112,25 +122,24 @@ Vue.mixin({
         /**
          * 设置权限弹窗的参数
          */
-        setPermissionConfig(
-            resourceId,
-            actionId,
-            instanceId = [],
-            projectId = this.$route.params.projectId
-        ) {
+        setPermissionConfig (resourceId, actionId, instanceId = [], projectId = this.$route.params.projectId, applyPermissionUrl) {
             this.$showAskPermissionDialog({
-                noPermissionList: [
-                    {
-                        actionId,
-                        resourceId,
-                        instanceId,
-                        projectId,
-                    },
-                ],
-            });
+                noPermissionList: [{
+                    actionId,
+                    resourceId,
+                    instanceId,
+                    projectId
+                }],
+                applyPermissionUrl
+            })
         },
-    },
-});
+
+        getPermUrlByRole (projectId, pipelineId, role = this.roleMap.viewer) {
+            return `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${projectId}&service_code=pipeline&${role}=pipeline${pipelineId ? `:${pipelineId}` : ''}`
+        }
+
+    }
+})
 
 if (window.top === window.self) {
     // 只能以iframe形式嵌入

@@ -18,7 +18,6 @@
  */
 
 const prefix = 'store/api'
-const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const artifactoryPrefix = 'artifactory/api'
 const Vue = window.Vue
@@ -178,13 +177,6 @@ export const actions = {
     },
 
     /**
-     * git OAuth授权
-     */
-    checkIsOAuth ({ commit }, { type, atomCode }) {
-        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
-    },
-
-    /**
      * 新增流水线插件
      */
     createNewAtom ({ commit }, { params }) {
@@ -271,8 +263,8 @@ export const actions = {
     /**
      * 重新构建
      */
-    rebuild ({ commit }, { atomId, projectId }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
+    rebuild ({ commit }, { atomId, projectId, initProject, fieldCheckConfirmFlag }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`, { fieldCheckConfirmFlag }, { headers: { 'X-DEVOPS-PROJECT-ID': initProject } })
     },
 
     /**

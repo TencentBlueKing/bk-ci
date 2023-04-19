@@ -32,9 +32,9 @@ import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
 
 // 全量引入 bk-magic-vue
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 declare module 'vue/types/vue' {
     interface Vue {
@@ -42,6 +42,12 @@ declare module 'vue/types/vue' {
         $bkInfo: any
         $showAskPermissionDialog: any
         iframeUtil: any
+        isExtendTx: boolean
+        $permissionActionMap: any
+        $permissionResourceMap: any
+        $permissionResourceTypeMap: any
+        tencentPermission: any
+        applyPermission: any
     }
 }
 
@@ -85,6 +91,7 @@ Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
+Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
@@ -99,6 +106,10 @@ judgementLsVersion()
 
 Vue.mixin({
     methods: {
+        tencentPermission (url) {
+            const permUrl = this.isExtendTx ? url : PERM_URL_PREFIX
+            window.open(permUrl, '_blank')
+        },
         async applyPermission (actionId, resourceId, instanceId = []) {
             try {
                 const redirectUrl = await this.$store.dispatch('getPermRedirectUrl', [{
@@ -106,6 +117,7 @@ Vue.mixin({
                     resourceId,
                     instanceId
                 }])
+                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

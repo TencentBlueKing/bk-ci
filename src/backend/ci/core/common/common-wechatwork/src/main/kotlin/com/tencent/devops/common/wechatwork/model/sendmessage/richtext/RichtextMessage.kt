@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 

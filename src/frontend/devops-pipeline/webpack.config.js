@@ -22,10 +22,14 @@ const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
 const webpackBaseConfig = require('../webpack.base')
+const getConfig = require('./constConfig.js')
+
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
+    const constConfig = getConfig(version)
     const config = webpackBaseConfig({
         env,
         argv,
@@ -40,6 +44,7 @@ module.exports = (env, argv) => {
     config.plugins = [
         ...config.plugins,
         new MonacoWebpackPlugin(),
+        new webpack.DefinePlugin(constConfig),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',

@@ -1,4 +1,4 @@
-
+import eventBus from './eventBus'
 export function firstUpperCase (str: string): string {
     try {
         return str[0].toUpperCase() + str.slice(1)
@@ -151,6 +151,67 @@ export function getServiceAliasByPath (path: string): string {
     return execRes[2] || path
 }
 
+// const componentMap = {
+//     'dialog': bkDialog,
+//     'asidePanel': bkSideslider
+// }
+// export function createComponent (name) {
+//     const component = componentMap[name]
+//     return options => {
+//         let instance = null
+//         if (!isObject(options)) {
+//             console.warn('options is not a object', options)
+//             return
+//         }
+//         if (component) {
+//             const ComponentCreator = Vue.extend(bkDialog)
+//             instance = new ComponentCreator(options)
+//             instance.viewmodel = instance.$mount()
+//             document.body.appendChild(instance.viewmodel.$el)
+    
+//         } else {
+//             console.warn('error component name', name)
+//         }
+//     }
+// }
+
+export function createDialog (options) {
+    console.log(options)
+    // const fn = createComponent('dialog')
+    // fn({
+    //     propsData: {
+    //         quickClose: false
+    //     },
+    //     data: {
+
+    //     },
+    //     methods: {
+
+    //     }
+    // })
+}
+export function toggleAsidePanel (options) {
+    if (!isObject(options)) {
+        console.warn('需要传入一个对象')
+        return
+    }
+    eventBus.$emit('update-extension-aside-panel', options)
+}
+
+export function toggleDialog (options) {
+    if (!isObject(options)) {
+        console.warn('需要传入一个对象')
+        return
+    }
+    eventBus.$emit('update-extension-dialog', options)
+}
+export function goToPage (options) {
+    if (!isObject(options)) {
+        console.warn('需要传入一个对象')
+        return
+    }
+    eventBus.$emit('change-extension-route', options)
+}
 export function isAbsoluteUrl (url) {
     return /^(http(s)?:)?\/\//.test(url)
 }

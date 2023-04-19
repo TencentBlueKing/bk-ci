@@ -9,13 +9,12 @@
         />
         <div
             v-bkloading="{ isLoading }"
-            :style="{ height: &quot;100%&quot; }"
+            :style="{ height: '100%' }"
         >
             <iframe
                 v-if="src"
                 id="iframe-box"
                 ref="iframeEle"
-                allowfullscreen
                 :src="src"
                 @load="onLoad"
             />
@@ -54,7 +53,8 @@
         @State user
         @State headerConfig
         @Getter showAnnounce
-
+        @Getter getServiceHooks
+        
         created () {
             this.init()
             eventBus.$on('goHome', this.backHome) // 触发返回首页事件
@@ -94,6 +94,27 @@
 
         get needLoading (): boolean {
             return this.$route.name === 'job'
+        }
+
+        get underlineProjectList () {
+            return this.projectList.map(item => ({
+                ...item,
+                project_code: item.projectCode,
+                project_id: item.projectId,
+                project_name: item.projectName,
+                cc_app_id: item.ccAppId,
+                cc_app_name: item.ccAppName,
+                is_offlined: item.offlined,
+                bg_id: item.bgId,
+                approval_status: item.approvalStatus
+            }))
+        }
+
+        get serviceHooks (): any[] {
+            if (this.currentPage && this.currentPage.id) {
+                return this.getServiceHooks(this.currentPage.id)
+            }
+            return []
         }
 
         backHome () {
@@ -140,11 +161,12 @@
         onLoad () {
             this.isLoading = false
             if (this.$refs.iframeEle) {
+                console.log(this.serviceHooks, 'this.serviceHooks')
                 const childWin = this.$refs.iframeEle.contentWindow
-                this.iframeUtil.syncProjectList(childWin, this.projectList)
+                this.iframeUtil.syncProjectList(childWin, this.underlineProjectList)
                 this.iframeUtil.syncUserInfo(childWin, this.user)
                 this.iframeUtil.syncLocale(childWin, this.$i18n.locale)
-                
+                this.iframeUtil.syncServiceHooks(childWin, this.serviceHooks)
                 if (this.$route.params.projectId) {
                     this.iframeUtil.syncProjectId(childWin, this.$route.params.projectId)
                 }
@@ -169,8 +191,8 @@
             }
         }
 
-        @Watch('projectList')
-        handleProjectListChange (projectList, oldList) {
+        @Watch('underlineProjectList')
+        handleProjectListChange (projectList) {
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
                 this.iframeUtil.syncProjectList(childWin, projectList)
@@ -190,6 +212,14 @@
             if (this.$refs.iframeEle) {
                 const childWin = this.$refs.iframeEle.contentWindow
                 this.iframeUtil.syncLocale(childWin, locale)
+            }
+        }
+
+        @Watch('serviceHooks')
+        handleServiceHookChange (hooks) {
+            if (this.$refs.iframeEle) {
+                const childWin = this.$refs.iframeEle.contentWindow
+                this.iframeUtil.syncServiceHooks(childWin, hooks)
             }
         }
     }

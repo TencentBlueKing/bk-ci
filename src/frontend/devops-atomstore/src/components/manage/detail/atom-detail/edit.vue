@@ -29,10 +29,20 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
+            <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
+                <bk-form-item :label="$t('store.是否开源')" property="visibilityLevel">
+                    <bk-radio-group v-model="formData.visibilityLevel" class="radio-group">
+                        <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formData.privateReason = ''">{{entry.label}}</bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+                <bk-form-item v-if="formData.visibilityLevel === 'PRIVATE'" :label="$t('store.不开源原因')" :rules="[requireRule($t('store.不开源原因'))]" :required="true" property="privateReason" error-display-type="normal">
+                    <bk-input type="textarea" v-model="formData.privateReason"></bk-input>
+                </bk-form-item>
+            </template>
             <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.简介')), numMax(256)]" :required="true" property="summary" :desc="$t('store.展示在插件市场以及流水线选择插件页面。')" error-display-type="normal">
                 <bk-input v-model="formData.summary" :placeholder="$t('store.插件一句话简介，不超过256个字符')"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.描述')"
+            <bk-form-item :label="$t('store.详细描述')"
                 property="description"
                 :desc="`${$t('store.atomRemark')}<br>${$t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。')}`">
                 <mavon-editor class="remark-input"
@@ -72,6 +82,7 @@
         },
 
         props: {
+            userInfo: Object,
             detail: Object
         },
         
@@ -90,6 +101,11 @@
                     message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符'),
                     trigger: 'blur'
                 },
+                isOpenSource: [
+                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
+                ],
+                hasChange: false,
                 publishersList: []
             }
         },
@@ -144,11 +160,11 @@
             save () {
                 this.$refs.atomEdit.validate().then(() => {
                     this.isSaving = true
-                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason } = this.formData
+                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason, visibilityLevel } = this.formData
                     this.formData.labelList = this.labelList.filter((label) => (this.formData.labelIdList.includes(label.id)))
                     const putData = {
                         atomCode: this.detail.atomCode,
-                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason }
+                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason, visibilityLevel }
                     }
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
                         this.$store.dispatch('store/clearDetail')

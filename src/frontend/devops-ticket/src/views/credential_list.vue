@@ -163,7 +163,7 @@
                         width: 500,
                         theme: 'warning',
                         type: 'warning',
-                        title: `${this.$t('ticket.credential.deleteCredentialTips', [credential.credentialId])}`,
+                        subTitle: this.$t('ticket.credential.deleteCredentialTips', [credential.credentialId]),
                         confirmFn: async () => {
                             let message, theme
 
@@ -174,16 +174,16 @@
                                 })
                                 message = this.$t('ticket.credential.successfullyDeletedCredential')
                                 theme = 'success'
+                                this.requestList()
                             } catch (err) {
                                 message = err.message ? err.message : err
                                 theme = 'error'
                             } finally {
-                                this.$bkMessage({
+                                message && this.$bkMessage({
                                     message,
                                     theme
                                 })
                             }
-                            this.requestList()
                         }
                     })
                 } else {
@@ -196,7 +196,8 @@
                                 name: credential.credentialId
                             }],
                             projectId: this.projectId
-                        }]
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
                     })
                 }
             },

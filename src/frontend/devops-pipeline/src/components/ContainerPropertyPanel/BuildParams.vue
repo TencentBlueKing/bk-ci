@@ -6,7 +6,7 @@
                     <span>
                         {{ title }}
                         <bk-popover placement="right">
-                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
+                            <i style="display:block;" class="devops-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.paramsTips') }} </div>
                             </div>
@@ -23,7 +23,7 @@
                                 <header class="param-header" slot="header">
                                     <span>
                                         <bk-popover style="vertical-align: middle" v-if="errors.all(`param-${param.id}`).length" placement="top">
-                                            <i class="bk-icon icon-info-circle-shape"></i>
+                                            <i class="devops-icon icon-info-circle-shape"></i>
                                             <div slot="content">
                                                 <p v-for="error in errors.all(`param-${param.id}`)" :key="error">{{ error }}</p>
                                             </div>
@@ -81,7 +81,7 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :hover-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`" :replace-key="param.replaceKey" :search-url="param.searchUrl"></request-selector>
@@ -119,6 +119,14 @@
                                         </bk-form-item>
                                     </template>
 
+                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('editPage.filterRule')" :is-error="errors.has(`param-${param.id}.glob`)" :error-msg="errors.first(`param-${param.id}.glob`)">
+                                        <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="glob" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.filterRuleTips')" :value="param.glob"></vuex-input>
+                                    </bk-form-item>
+
+                                    <bk-form-item label-width="auto" v-if="isArtifactoryParam(param.type)" :label="$t('metaData')" :is-error="errors.has(`param-${param.id}.properties`)" :error-msg="errors.first(`param-${param.id}.properties`)">
+                                        <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
+                                    </bk-form-item>
+
                                     <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
                                         <file-param-input
                                             :file-path="param.defaultValue"
@@ -152,6 +160,7 @@
     import EnumInput from '@/components/atomFormField/EnumInput'
     import Selector from '@/components/atomFormField/Selector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
     import FileParamInput from '@/components/FileParamInput'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
@@ -167,6 +176,7 @@
         isCodelibParam,
         isSvnParam,
         isGitParam,
+        isArtifactoryParam,
         isSubPipelineParam,
         isFileParam,
         getRepoOption,
@@ -202,6 +212,7 @@
             draggable,
             VuexTextarea,
             RequestSelector,
+            KeyValueNormal,
             FileParamInput
         },
         mixins: [validMixins],
@@ -330,6 +341,7 @@
             isSvnParam,
             isGitParam,
             isCodelibParam,
+            isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
             isFileParam,

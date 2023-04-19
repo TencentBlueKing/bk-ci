@@ -232,7 +232,7 @@ mongodb:
   useStatefulSet: true
   auth:
     enabled: true
-    username: admin
+    username: turbo
     password: blueking
     rootPassword: blueking
     database: blueking
@@ -243,16 +243,16 @@ mongodb:
     create_admin_user.sh: |
       $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
       use db_turbo
-      db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
+      db.createUser({ user: "$MONGODB_EXTRA_USERNAMES" , pwd: "$MONGODB_EXTRA_PASSWORDS" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
       use db_quartz
-      db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
+      db.createUser({ user: "$MONGODB_EXTRA_USERNAMES" , pwd: "$MONGODB_EXTRA_PASSWORDS" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
       EOF
   # 如果想在ipv6环境中运行, 则不用上面的脚本 , 注释掉上面的脚本并使用下面
   #     $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
   #     use db_turbo
-  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
+  #     db.createUser({ user: "$MONGODB_EXTRA_USERNAMES" , pwd: "$MONGODB_EXTRA_PASSWORDS" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
   #     use db_quartz
-  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
+  #     db.createUser({ user: "$MONGODB_EXTRA_USERNAMES" , pwd: "$MONGODB_EXTRA_PASSWORDS" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
   #     EOF
   # extraEnvVars:
   # - name: MONGODB_CLIENT_EXTRA_FLAGS
@@ -1006,10 +1006,7 @@ notify:
 
 # openapi Deployment
 openapi:
-  enabled: false
-  secret:
-    enabled: false
-    content: ""
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:

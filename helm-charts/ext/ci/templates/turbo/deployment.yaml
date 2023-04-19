@@ -1,0 +1,94 @@
+#turbo Deployment
+{{if .Values.turbo.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-turbo-new
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: turbo-new
+    app.kubernetes.io/component: microservice-turbo-new
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/name: turbo-new
+      app.kubernetes.io/component: microservice-turbo-new
+  {{- if not .Values.turbo.autoscaling.enabled }}
+  replicas: {{ default 1 .Values.turbo.replicaCount }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/name: turbo-new
+        app.kubernetes.io/component: microservice-turbo-new
+        {{- if .Values.turbo.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.turbo.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.turbo.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.turbo.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.turbo.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.turbo.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAffinityPreset "component" "microservice-turbo" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.turbo.podAntiAffinityPreset "component" "microservice-turbo" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.turbo.nodeAffinityPreset.type "key" .Values.turbo.nodeAffinityPreset.key "values" .Values.turbo.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.turbo.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.turbo.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.turbo.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.turbo.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.turbo.priorityClassName }}
+      priorityClassName: {{ .Values.turbo.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.turbo.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.turbo.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: turbo-new
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.turbo.image "global" .Values.global) }}
+          imagePullPolicy: {{ .Values.turbo.image.pullPolicy }}
+          {{- if .Values.turbo.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.turbo.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.turbo.resources }}
+          resources: {{- toYaml .Values.turbo.resources | nindent 12 }}
+          {{- end }}
+          env:
+            - name: TURBO_JVM_OPTION
+              value: {{ .Values.common.jvmOption }}
+            - name: TURBO_SERVICE_PREFIX
+              value: {{ include "bkci.names.fullname" . }}-
+          ports:
+            - name: http
+              containerPort: 21955
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /api/management/health/liveness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /api/management/health/readiness
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 5
+            successThreshold: 1
+{{- end }}

@@ -114,22 +114,20 @@
 
 <script>
     
+    import { BarChart, LineChart, PieChart } from 'echarts/charts'
+    import {
+        GridComponent, LegendComponent, TitleComponent,
+        TooltipComponent
+    } from 'echarts/components'
     import { use } from 'echarts/core'
     import { CanvasRenderer } from 'echarts/renderers'
-    import { LineChart, BarChart, PieChart } from 'echarts/charts'
-    import {
-        GridComponent,
-        TitleComponent,
-        TooltipComponent,
-        LegendComponent
-    } from 'echarts/components'
     import VChart from 'vue-echarts'
     
+    import imageEmpty from '@/components/common/imageEmpty'
     import {
         rankOptions,
         trendOptions
     } from '@/utils/chart-option'
-    import imageEmpty from '@/components/common/imageEmpty'
     import { convertTime } from '@/utils/util'
 
     use([

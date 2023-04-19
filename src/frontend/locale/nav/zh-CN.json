@@ -1,4 +1,5 @@
 {   
+    "serviceManage": "扩展管理",
     "okLabel": "确定",
     "cancelLabel": "取消",
     "logout": "退出",
@@ -136,7 +137,7 @@
     "selectProjectTypePlaceholder": "选择项目类型",
     "questionTips": "如有疑问请联系",
     "hotline": "客服电话：",
-    "contactUs": "联系蓝盾人工客服",
+    "contactUs": "联系DevOps-helper",
     "feedback": "问题反馈",
     "mobileGame": "手游",
     "pcGame": "端游",
@@ -174,5 +175,8 @@
     "documentTitleMetrics": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | Metrics",
     "technicalSupport": "技术支持",
     "communityForum": "社区论坛",
-    "ProductOfficialWebsite": "产品官网"
+    "ProductOfficialWebsite": "产品官网",
+    "project": "项目",
+    "enableDisableProject": "禁用/启用项目",
+    "createProject": "创建项目"
 }

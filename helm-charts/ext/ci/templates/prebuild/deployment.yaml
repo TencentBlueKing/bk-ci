@@ -1,0 +1,114 @@
+#prebuild Deployment
+{{ if .Values.prebuild.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-prebuild
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: prebuild
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: prebuild
+  {{- if not .Values.prebuild.autoscaling.enabled }}
+  replicas: {{ .Values.prebuild.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.prebuild.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.prebuild.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: prebuild
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.prebuild.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.prebuild.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.prebuild.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.prebuild.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.prebuild.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.prebuild.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.prebuild.nodeAffinityPreset.type "key" .Values.prebuild.nodeAffinityPreset.key "values" .Values.prebuild.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.prebuild.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.prebuild.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.prebuild.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.prebuild.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.prebuild.priorityClassName }}
+      priorityClassName: {{ .Values.prebuild.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.prebuild.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.prebuild.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: prebuild
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.prebuild.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.prebuild.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.prebuild.resources }}
+          resources: {{- toYaml .Values.prebuild.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: prebuild
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/prebuild
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/prebuild/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

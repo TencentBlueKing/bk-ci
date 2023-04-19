@@ -1,0 +1,121 @@
+#gateway Deployment
+{{ if .Values.gateway.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-gateway
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/component: gateway
+    app.kubernetes.io/name: gateway
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gateway
+      app.kubernetes.io/name: gateway
+  {{- if not .Values.gateway.autoscaling.enabled }}
+  replicas: {{ .Values.gateway.replicas }}
+  {{- end }}
+  strategy:
+    rollingUpdate: # 一台台更新
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        app.kubernetes.io/component: gateway
+        app.kubernetes.io/name: gateway
+        {{- if .Values.gateway.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.gateway.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- if .Values.gateway.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.gateway.podAntiAffinityPreset "component" "gateway" "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.gateway.nodeAffinityPreset.type "key" .Values.gateway.nodeAffinityPreset.key "values" .Values.gateway.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.gateway.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.gateway.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.gateway.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.gateway.priorityClassName }}
+      priorityClassName: {{ .Values.gateway.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.gateway.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: gateway
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
+          imagePullPolicy: {{ .Values.gatewayImage.pullPolicy }}
+          {{- if .Values.gateway.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.gateway.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.gateway.resources }}
+          resources: {{- toYaml .Values.gateway.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.config.bkCiHttpPort }}
+          env:
+            - name: MS_NAME
+              value: gateway
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /usr/local/openresty/nginx/
+          command:
+            - bash
+            - -c
+            - sbin/nginx -g 'daemon off;'
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - bash
+                  - -c
+                  - sleep 10s && /usr/local/openresty/nginx/sbin/nginx -s quit
+          livenessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "[ -f /usr/local/openresty/nginx/run/nginx.pid ] && ps -A | grep nginx"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /nginx_status
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+      terminationGracePeriodSeconds: 40
+{{- end -}}

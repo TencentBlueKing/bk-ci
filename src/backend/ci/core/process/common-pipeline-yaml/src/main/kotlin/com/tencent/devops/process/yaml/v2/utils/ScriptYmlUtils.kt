@@ -29,14 +29,9 @@ package com.tencent.devops.process.yaml.v2.utils
 
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.github.fge.jackson.JsonLoader
-import com.github.fge.jsonschema.core.report.LogLevel
-import com.github.fge.jsonschema.core.report.ProcessingMessage
-import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
@@ -916,33 +911,6 @@ object ScriptYmlUtils {
         }
         return null
     }
-
-    fun validate(schema: String, yamlJson: String): Pair<Boolean, String> {
-        val schemaNode = jsonNodeFromString(schema)
-        val jsonNode = jsonNodeFromString(yamlJson)
-        val report = JsonSchemaFactory.byDefault().validator.validate(schemaNode, jsonNode)
-        val itr = report.iterator()
-        val sb = java.lang.StringBuilder()
-        while (itr.hasNext()) {
-            val message = itr.next() as ProcessingMessage
-            if (message.logLevel == LogLevel.ERROR || message.logLevel == LogLevel.FATAL) {
-                sb.append(message).append("\r\n")
-            }
-        }
-        return Pair(report.isSuccess, sb.toString())
-    }
-
-    fun jsonNodeFromString(json: String): JsonNode = JsonLoader.fromString(json)
-
-    fun validateJson(json: String): Boolean {
-        try {
-            jsonNodeFromString(json)
-        } catch (e: Exception) {
-            return false
-        }
-        return true
-    }
-
     fun convertYamlToJson(yaml: String): String {
         val yamlReader = ObjectMapper(YAMLFactory())
         val obj = yamlReader.readValue(yaml, Any::class.java)

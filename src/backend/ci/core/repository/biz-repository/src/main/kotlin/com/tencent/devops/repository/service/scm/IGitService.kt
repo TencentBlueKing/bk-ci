@@ -170,7 +170,7 @@ interface IGitService {
         repoName: String,
         mrId: Long,
         tokenType:
-            TokenTypeEnum,
+        TokenTypeEnum,
         token: String,
         repoUrl: String? = null
     ): GitMrInfo

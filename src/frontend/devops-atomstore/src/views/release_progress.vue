@@ -24,13 +24,26 @@
                                     <i class="devops-icon icon-check-1" v-if="entry.status === 'success'"></i>
                                     <p class="step-label">{{ entry.name }}</p>
                                 </div>
-                                <div class="retry-bth">
+                                <div class="retry-bth" v-if="isEnterprise">
                                     <span class="test-btn"
                                         v-if="entry.code === 'commit' && ['doing','success'].includes(entry.status) && !isOver">
                                         <span @click="$refs.upload[0].click()">{{ $t('store.重新传包') }}</span>
                                         <span class="retry-pkgName">{{ versionDetail.pkgName }}</span>
                                         <input ref="upload" type="file" title="" class="upload-input" @change="selectFile" accept="application/zip">
                                     </span>
+                                </div>
+                                <div class="retry-bth" v-else>
+                                    <span :class="[{ disable: !permission }, 'rebuild-btn']"
+                                        :title="permissionMsg"
+                                        v-if="(entry.code === 'build' && entry.status === 'fail') ||
+                                            (entry.code === 'build' && entry.status === 'success' && progressStatus[index + 1].status === 'doing')
+                                            || (entry.code === 'build' && curStep.status === 'fail' && curStep.code === 'codecc')"
+                                        @click.stop="rebuild(false)"
+                                    > {{ $t('store.重新构建') }} <i class="col-line" v-if="!isEnterprise"></i></span>
+                                    <span class="log-btn"
+                                        v-if="entry.code === 'build' && entry.status !== 'undo' && !isEnterprise"
+                                        @click.stop="readLog"
+                                    > {{ $t('store.日志') }} </span>
                                 </div>
                                 <div class="retry-bth">
                                     <span class="test-btn"
@@ -46,144 +59,202 @@
                                     @click.stop="passTest"
                                     :title="permissionMsg"
                                 > {{ $t('store.继续') }} </bk-button>
+                                <div class="audit-tips" v-if="entry.code === 'approve' && entry.status === 'doing' && !isEnterprise">
+                                    <i class="devops-icon icon-info-circle"></i> {{ $t('store.由蓝盾管理员审核') }}
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="detail-title version-detail-title" v-if="!isOver">
-                    <p class="form-title"> {{ $t('store.版本详情') }} </p>
-                    <hr class="cut-line">
-                    <div class="atom-version-detail">
-                        <div class="detail-form-item multi-item">
-                            <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.名称：') }} </div>
-                                <div class="info-value">{{ versionDetail.name }}</div>
+                    <code-check v-if="curStep.code === 'codecc' && versionDetail.atomCode"
+                        class="detail-code-check"
+                        :id="versionDetail.atomId"
+                        :code="versionDetail.atomCode"
+                        type="ATOM"
+                        ref="codecheck"
+                        @startCodeCC="handleRelease"
+                    ></code-check>
+                    <template v-else>
+                        <p class="form-title"> {{ $t('store.版本详情') }} </p>
+                        <hr class="cut-line">
+                        <div class="atom-version-detail">
+                            <div class="detail-form-item multi-item">
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.名称：') }} </div>
+                                    <div class="info-value">{{ versionDetail.name }}</div>
+                                </div>
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.标识：') }} </div>
+                                    <div class="info-value">{{ versionDetail.atomCode }}</div>
+                                </div>
+                            </div>
+                            <div class="detail-form-item multi-item">
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.范畴：') }} </div>
+                                    <div class="info-value">{{ categoryMap[versionDetail.category] }}</div>
+                                </div>
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.分类：') }} </div>
+                                    <div class="info-value">{{ versionDetail.classifyName }}</div>
+                                </div>
+                            </div>
+                            <div class="detail-form-item multi-item" v-if="isEnterprise">
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.操作系统：') }} </div>
+                                    <div class="info-value" v-if="versionDetail.os">
+                                        <span v-if="versionDetail.jobType === 'AGENT'">
+                                            <i class="devops-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
+                                            <i class="devops-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
+                                            <i class="devops-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="detail-form-item multi-item" v-else>
+                                <div class="detail-form-item">
+                                    <div class="info-label"> {{ $t('store.适用Job类型：') }} </div>
+                                    <div class="info-value" v-if="versionDetail.os">{{ jobTypeMap[versionDetail.jobType] }}
+                                        <span v-if="versionDetail.jobType === 'AGENT'">（
+                                            <i class="devops-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
+                                            <i class="devops-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
+                                            <i class="devops-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>）
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="detail-form-item is-open">
+                                    <label class="info-label"> {{ $t('store.是否开源') }} </label>
+                                    <div class="info-value">{{ versionDetail.visibilityLevel | levelFilter }}</div>
+                                </div>
                             </div>
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.标识：') }} </div>
-                                <div class="info-value">{{ versionDetail.atomCode }}</div>
-                            </div>
-                        </div>
-                        <div class="detail-form-item multi-item">
-                            <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.范畴：') }} </div>
-                                <div class="info-value">{{ categoryMap[versionDetail.category] }}</div>
+                                <div class="info-label"> {{ $t('store.功能标签：') }} </div>
+                                <div class="info-value feature-label">
+                                    <div class="label-card" v-for="(label, index) in versionDetail.labels" :key="index">{{ label }}</div>
+                                </div>
                             </div>
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.分类：') }} </div>
-                                <div class="info-value">{{ versionDetail.classifyName }}</div>
+                                <div class="info-label"> {{ $t('store.简介：') }} </div>
+                                <div class="info-value">{{ versionDetail.summary }}</div>
                             </div>
-                        </div>
-                        <div class="detail-form-item multi-item">
                             <div class="detail-form-item">
-                                <div class="info-label"> {{ $t('store.操作系统：') }} </div>
-                                <div class="info-value" v-if="versionDetail.os">
-                                    <span v-if="versionDetail.jobType === 'AGENT'">
-                                        <i class="devops-icon icon-linux-view" v-if="versionDetail.os.indexOf('LINUX') !== -1"></i>
-                                        <i class="devops-icon icon-windows" v-if="versionDetail.os.indexOf('WINDOWS') !== -1"></i>
-                                        <i class="devops-icon icon-macos" v-if="versionDetail.os.indexOf('MACOS') !== -1"></i>
-                                    </span>
+                                <div class="info-label"> {{ $t('store.详细描述：') }} </div>
+                                <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
+                                    <mavon-editor
+                                        :editable="false"
+                                        default-open="preview"
+                                        :subfield="false"
+                                        :toolbars-flag="false"
+                                        :external-link="false"
+                                        :box-shadow="false"
+                                        preview-background="#fafbfd"
+                                        v-model="versionDetail.description"
+                                    >
+                                    </mavon-editor>
+                                </div>
+                            </div>
+                            <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
+                                <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.发布者：') }} </div>
+                                <div class="info-value">{{ versionDetail.publisher }}</div>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.发布类型：') }} </div>
+                                <div class="info-value">{{ releaseMap[versionDetail.releaseType] }}</div>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.版本：') }} </div>
+                                <div class="info-value">{{ versionDetail.version }}</div>
+                            </div>
+                            <div class="detail-form-item" v-if="isEnterprise">
+                                <div class="info-label"> {{ $t('store.发布包：') }} </div>
+                                <div class="info-value">{{ versionDetail.pkgName }}</div>
+                            </div>
+                            <div class="detail-form-item">
+                                <div class="info-label"> {{ $t('store.发布描述：') }} </div>
+                                <div class="info-value">
+                                    <mavon-editor
+                                        :editable="false"
+                                        default-open="preview"
+                                        :subfield="false"
+                                        :toolbars-flag="false"
+                                        :external-link="false"
+                                        :box-shadow="false"
+                                        preview-background="#fafbfd"
+                                        v-model="versionDetail.versionContent"
+                                    >
+                                    </mavon-editor>
                                 </div>
                             </div>
                         </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.功能标签：') }} </div>
-                            <div class="info-value feature-label">
-                                <div class="label-card" v-for="(label, index) in versionDetail.labels" :key="index">{{ label }}</div>
-                            </div>
+                        <div class="atom-logo-box">
+                            <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
+                            <i class="devops-icon icon-placeholder atom-logo" v-else></i>
                         </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.简介：') }} </div>
-                            <div class="info-value">{{ versionDetail.summary }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.详细描述：') }} </div>
-                            <div class="info-value markdown-editor-show" ref="editor" :class="{ 'overflow': !isDropdownShow }">
-                                <mavon-editor
-                                    :editable="false"
-                                    default-open="preview"
-                                    :subfield="false"
-                                    :toolbars-flag="false"
-                                    :external-link="false"
-                                    :box-shadow="false"
-                                    :language="mavenLang"
-                                    preview-background="#fafbfd"
-                                    v-model="versionDetail.description"
-                                >
-                                </mavon-editor>
-                            </div>
-                        </div>
-                        <div class="toggle-btn" v-if="isOverflow" @click="toggleShow()">{{ isDropdownShow ? $t('store.收起') : $t('store.展开') }}
-                            <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.发布者：') }} </div>
-                            <div class="info-value">{{ versionDetail.publisher }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.发布类型：') }} </div>
-                            <div class="info-value">{{ releaseMap[versionDetail.releaseType] }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.版本：') }} </div>
-                            <div class="info-value">{{ versionDetail.version }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.发布包：') }} </div>
-                            <div class="info-value">{{ versionDetail.pkgName }}</div>
-                        </div>
-                        <div class="detail-form-item">
-                            <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                            <div class="info-value">
-                                <mavon-editor
-                                    :editable="false"
-                                    default-open="preview"
-                                    :subfield="false"
-                                    :toolbars-flag="false"
-                                    :external-link="false"
-                                    :box-shadow="false"
-                                    :language="mavenLang"
-                                    preview-background="#fafbfd"
-                                    v-model="versionDetail.versionContent"
-                                >
-                                </mavon-editor>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="atom-logo-box">
-                        <img :src="versionDetail.logoUrl" v-if="versionDetail.logoUrl">
-                        <i class="devops-icon icon-placeholder atom-logo" v-else></i>
-                    </div>
+                    </template>
                 </div>
-            </div>
-            <div class="released-tips" v-if="isOver">
-                <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
-                <div class="handle-btn">
-                    <bk-button class="bk-button bk-primary" size="small" @click="toAtomList"> {{ $t('store.工作台') }} </bk-button>
-                    <bk-button class="bk-button bk-default" size="small" @click="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
+                <div class="released-tips" v-if="isOver">
+                    <h3> {{ $t('store.恭喜，成功发布到商店!') }} </h3>
+                    <div class="handle-btn">
+                        <bk-button class="bk-button bk-primary" size="small" @click="toAtomList"> {{ $t('store.工作台') }} </bk-button>
+                        <bk-button class="bk-button bk-default" size="small" @click="toAtomStore"> {{ $t('store.研发商店') }} </bk-button>
+                    </div>
                 </div>
             </div>
         </div>
+        <bk-sideslider
+            class="build-side-slider"
+            :is-show.sync="sideSliderConfig.show"
+            :title="sideSliderConfig.title"
+            :quick-close="sideSliderConfig.quickClose"
+            :width="sideSliderConfig.width">
+            <template slot="content">
+                <div style="width: 100%; height: 100%"
+                    v-bkloading="{
+                        isLoading: sideSliderConfig.loading.isLoading,
+                        title: sideSliderConfig.loading.title
+                    }">
+                    <build-log v-if="currentBuildNo"
+                        :build-no="currentBuildNo"
+                        :log-url="`store/api/user/store/logs/types/ATOM/projects/${currentProjectCode}/pipelines/${currentPipelineId}/builds`"
+                    />
+                </div>
+            </template>
+        </bk-sideslider>
     </div>
 </template>
 
 <script>
-    import cookie from 'js-cookie'
-    import webSocketMessage from '@/utils/webSocketMessage'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import codeCheck from '@/components/code-check'
+    import BuildLog from '@/components/Log'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import cookie from 'js-cookie'
 
-    const CSRFToken = cookie.get('backend_csrftoken')
+    const CSRFToken = cookie.get('paas_perm_csrftoken')
 
     export default {
         components: {
-            breadCrumbs
+            BuildLog,
+            breadCrumbs,
+            codeCheck
+        },
+
+        filters: {
+            levelFilter (val) {
+                const local = window.devops || {}
+                if (val === 'LOGIN_PUBLIC') return local.$t('store.是')
+                else return local.$t('store.否')
+            }
         },
 
         data () {
             return {
                 permission: true,
                 atomlogoUrl: '',
-                currentProjectId: '',
+                currentProjectCode: '',
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
@@ -222,6 +293,17 @@
                     atomCode: '',
                     description: '',
                     visibilityLevel: ''
+                },
+                sideSliderConfig: {
+                    show: false,
+                    title: this.$t('store.查看日志'),
+                    quickClose: true,
+                    width: 820,
+                    value: '',
+                    loading: {
+                        isLoading: false,
+                        title: ''
+                    }
                 }
             }
         },
@@ -240,6 +322,9 @@
                 if (!this.permission) str = this.$t('store.只有插件管理员或当前流程创建者可以操作')
                 return str
             },
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
+            },
             postUrl () {
                 return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             },
@@ -251,8 +336,21 @@
                     { name: this.curTitle }
                 ]
             },
+            curStep () {
+                return this.progressStatus.find((step) => (['fail', 'doing'].includes(step.status))) || (this.progressStatus.length && this.progressStatus[this.progressStatus.length - 1]) || {}
+            },
             mavenLang () {
                 return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
+            }
+        },
+
+        watch: {
+            'sideSliderConfig.show' (val) {
+                if (!val) {
+                    this.currentProjectCode = ''
+                    this.currentBuildNo = ''
+                    this.currentPipelineId = ''
+                }
             }
         },
 
@@ -310,11 +408,17 @@
                 }
             },
             handleRelease (res) {
-                this.progressStatus = res.processInfos
-                this.permission = res.opPermission
-                if (res.storeBuildInfo) {
-                    this.storeBuildInfo = res.storeBuildInfo
-                }
+                const curStatus = this.progressStatus.find(step => step.status === 'doing') || {}
+                const nextStatus = res.processInfos.find(step => step.status === 'doing') || {}
+                const time = curStatus.code === 'codecc' && ['end', 'approve', undefined].includes(nextStatus.code) ? 3000 : 0
+                if (curStatus.code === 'codecc' && nextStatus.code === 'codecc') this.$refs.codecheck && this.$refs.codecheck.getCodeScore()
+                setTimeout(() => {
+                    this.progressStatus = res.processInfos
+                    this.permission = res.opPermission
+                    if (res.storeBuildInfo) {
+                        this.storeBuildInfo = res.storeBuildInfo
+                    }
+                }, time)
             },
             async requestRelease (atomId) {
                 try {
@@ -357,6 +461,43 @@
                         theme
                     })
                 }
+            },
+
+            async rebuild (fieldCheckConfirmFlag) {
+                if (!this.permission) return
+
+                let message, theme
+
+                try {
+                    await this.$store.dispatch('store/rebuild', {
+                        atomId: this.routerParams.atomId,
+                        projectId: this.versionDetail.projectCode,
+                        initProject: this.versionDetail.initProjectCode,
+                        fieldCheckConfirmFlag
+                    })
+
+                    message = this.$t('store.操作成功')
+                    theme = 'success'
+                    // this.requestRelease(this.routerParams.atomId)
+                } catch (err) {
+                    if ([2120030, 2120031].includes(err.code)) {
+                        this.confirmSubmit(err.message, () => this.rebuild(true))
+                        return
+                    }
+
+                    message = err.message ? err.message : err
+                    theme = 'error'
+                } finally {
+                    if (message) {
+                        this.$bkMessage({ message, theme })
+                    }
+                }
+            },
+            readLog () {
+                this.sideSliderConfig.show = true
+                this.currentProjectCode = this.storeBuildInfo.projectCode
+                this.currentBuildNo = this.storeBuildInfo.buildId
+                this.currentPipelineId = this.storeBuildInfo.pipelineId
             },
             handlerCancel () {
                 if (!this.permission) return
@@ -518,6 +659,12 @@
     @import '@/assets/scss/conf.scss';
     @import '@/assets/scss/markdown-body.scss';
 
+    .detail-code-check {
+        height: calc(94.4vh - 232px);
+        background: #fff;
+        box-shadow: 1px 2px 3px 0 rgba(0, 0, 0, 0.05);
+    }
+
     .disable {
         cursor: not-allowed !important;
         &:not(.pass-btn) {
@@ -559,13 +706,12 @@
             .step-line-box {
                 display: flex;
                 justify-content: space-between;
-                margin: 32px 12%;
-                width: 76%;
+                margin: 32px 20px;
                 &:after {
                     content: '';
                     position: absolute;
                     top: 30px;
-                    width: 76%;
+                    width: calc(100% - 40px);
                     height: 1px;
                     border-top: 1px dashed #C3CDD7;
                     z-index: 1;
@@ -678,7 +824,7 @@
             .pass-btn {
                 position: absolute;
                 top: 17px;
-                left: 100px;
+                left: 90px;
                 padding: 0 10px;
                 font-weight: normal;
                 &.small-left {

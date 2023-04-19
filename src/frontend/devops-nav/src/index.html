@@ -31,6 +31,7 @@
     <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js" />
     <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js" />
     <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js" />
+    <link rel="preload" as="script" href="//pingjs.qq.com/h5/stats.js?v2.0.4" />
 
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -80,7 +81,9 @@
       var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
       var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
       var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
+      var IWIKI_DOCS_URL = '__IWIKI_DOCS_URL__'
       var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
+      var WOA_LOGIN_SERVICE_URL = '__WOA_LOGIN_SERVICE_URL__' // woa login url
       var INIT_LOCALE = '__BK_CI_INIT_LOCALE__' // 国际化配置占位符
       var DEVOPS_LS_VERSION =
         '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
@@ -153,30 +156,31 @@
 
       function setCookie(cname, cvalue, domain) {
         document.cookie =
-          cname + '=' + cvalue + '; ' + 'domain=' + domain + '; path=/'
-      }
-
-      function deleteCookie(cname, domain) {
-        var date = new Date()
-        date.setTime(date.getTime() - 10000)
-        document.cookie =
           cname +
-          '=0;' +
+          '=' +
+          cvalue +
+          '; ' +
           'domain=' +
           domain +
-          '; expires=' +
-          date.toGMTString() +
-          '; path=/'
+          '; path=/;expires=Fri, 31 Dec 2030 23:59:59 GMT"'
+      }
+
+      function removeCookie(cname, domain) {
+        document.cookie =
+          cname +
+          '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;' +
+          'domain=' +
+          domain +
+          ';'
       }
 
       window.setProjectIdCookie = function (projectId) {
         try {
-          var domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
-          var topDomain =
-            domainMatch.length > 2 ? domainMatch[2] : location.hostname
+          var topDomain = document.domain.split('.').slice(-2).join('.')
           if (projectId) {
-            deleteCookie(X_DEVOPS_PROJECT_ID, topDomain)
-            setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
+            removeCookie(X_DEVOPS_PROJECT_ID, 'woa.com')
+            removeCookie(X_DEVOPS_PROJECT_ID, location.hostname)
+            setCookie(X_DEVOPS_PROJECT_ID, projectId, 'devops.woa.com')
             window.GLOBAL_PID = projectId
           }
         } catch (e) {
@@ -203,7 +207,7 @@
             return ''
           } else {
             var res = location.pathname.match(reg)
-            return res ? res[1] : ''
+            return res && res[1] !== '0' ? res[1] : ''
           }
         } catch (e) {
           console.warn(e)
@@ -216,22 +220,27 @@
     </script>
     <script>
       window.getLoginUrl = function () {
+        var loginUrlPlaceholder =
+          location.hostname.indexOf('.woa.com') > -1
+            ? WOA_LOGIN_SERVICE_URL
+            : LOGIN_SERVICE_URL
+
         var cUrl =
           location.origin +
           location.pathname +
           encodeURIComponent(location.search)
-        if (/=%s/.test(LOGIN_SERVICE_URL)) {
-          return LOGIN_SERVICE_URL.replace(/%s/, cUrl)
+        if (/=%s/.test(loginUrlPlaceholder)) {
+          return loginUrlPlaceholder.replace(/%s/, cUrl)
         } else {
-          const loginUrl = new URL(LOGIN_SERVICE_URL)
+          const loginUrl = new URL(loginUrlPlaceholder)
           if (/=$/.test(loginUrl.search)) {
-            return LOGIN_SERVICE_URL + cUrl
+            return loginUrlPlaceholder + cUrl
           } else {
             loginUrl.searchParams.append('c_url', cUrl)
             return loginUrl.href
           }
         }
-        return LOGIN_SERVICE_URL
+        return loginUrlPlaceholder
       }
 
       function asyncGet(url, pid, includeCredentials) {
@@ -289,7 +298,7 @@
 
       function joinUrl(urlArr) {
         const link = urlArr[urlArr.length - 1]
-        if (/^(http(s)?:)?\/\//.test(link)) {
+        if (/^(http(s)?:)?\/\//i.test(link)) {
           return link
         }
         if (Array.isArray(urlArr)) {
@@ -316,8 +325,14 @@
                 : children[j].css_url
               children[j].js_url = jsUrl
               children[j].css_url = cssUrl
+            } else if (children[j].inject_type === 'iframe') {
+              children[j].iframe_url = joinUrl([
+                location.origin,
+                children[j].iframe_url,
+              ])
             }
             serviceMap[mod] = children[j]
+
             if (children[j].inject_type === 'iframe') {
               iframeRoutes.push({
                 path:
@@ -352,7 +367,7 @@
               : undefined
           for (var i = 0; i < projectList.length; i++) {
             var proj = projectList[i]
-            if (proj && !proj.gray) {
+            if (proj && !proj.routerTag) {
               return proj.projectCode
             }
           }
@@ -517,6 +532,34 @@
             importScript(js, document.body)
           }
         }
+      }
+
+      // 接入mta统计
+      var _mtac = {}
+      ;(function () {
+        var mta = document.createElement('script')
+        mta.src = '//pingjs.qq.com/h5/stats.js?v2.0.4'
+        mta.setAttribute('name', 'MTAH5')
+        mta.setAttribute('sid', '500630653')
+
+        var s = document.getElementsByTagName('script')[0]
+        s.parentNode.insertBefore(mta, s)
+      })()
+
+      function JSONP(url, callback) {
+        console.log(url)
+        const cbId = 'jsonp_callback_' + Math.round(100000 * Math.random())
+
+        window[cbId] = function (data) {
+          delete window[cbId]
+          document.body.removeChild(scriptNode)
+          callback(data)
+        }
+
+        var scriptNode = document.createElement('script')
+        scriptNode.src =
+          url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + cbId
+        document.body.appendChild(scriptNode)
       }
 
       function handleVisibilityChange() {

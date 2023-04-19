@@ -8,7 +8,11 @@ export const resourceMap = {
     envNode: 'ENVIRONMENT_ENV_NODE',
     project: 'PROJECT',
     rule: 'QUALITY_RULE',
-    ruleGroup: 'QUALITY_GROUP'
+    ruleGroup: 'QUALITY_GROUP',
+    experience: 'EXPERIENCE',
+    experienceGroup: 'EXPERIENCE_GROUP',
+    notifyGroup: 'NOTIFY_GROUP',
+    artifactory: 'ARTIFACTORY'
 }
 
 export const resourceTypeMap = {
@@ -20,7 +24,11 @@ export const resourceTypeMap = {
     ENVIRONMENT_ENV_NODE: 'env_node',
     PROJECT: 'project',
     QUALITY_RULE: 'rule',
-    QUALITY_GROUP: 'group'
+    QUALITY_GROUP: 'group',
+    EXPERIENCE: 'experience',
+    EXPERIENCE_GROUP: 'experienceGroup',
+    NOTIFY_GROUP: 'notifyGroup',
+    ARTIFACTORY: 'artifactory'
 }
 
 export const resourceAliasMap = {
@@ -32,7 +40,11 @@ export const resourceAliasMap = {
     ENVIRONMENT_ENV_NODE: '节点',
     PROJECT: '项目',
     QUALITY_RULE: '质量规则',
-    QUALITY_GROUP: '规则集'
+    QUALITY_GROUP: '规则集',
+    EXPERIENCE: '版本体验',
+    EXPERIENCE_GROUP: '体验组',
+    NOTIFY_GROUP: '通知组',
+    ARTIFACTORY: '版本仓库'
 }
 
 export function isProjectResource (resourceId) {

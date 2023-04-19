@@ -18,6 +18,7 @@
  */
 
 export const FETCH_ERROR = 'FETCH_ERROR'
+export const SET_SERVICE_HOOKS = 'SET_SERVICE_HOOKS'
 
 export const PROJECT_API_URL_PREFIX = 'project/api'
 export const BACKEND_API_URL_PREFIX = 'backend'
@@ -29,7 +30,7 @@ export const QUALITY_API_URL_PREFIX = 'quality/api'
 export const STORE_API_URL_PREFIX = 'store/api'
 export const PLUGIN_API_URL_PREFIX = 'plugin/api'
 export const LOG_API_URL_PREFIX = 'log/api'
-export const MACOS_API_URL_PREFIX = 'dispatch-macos/api'
+export const DEVCLOUD_API_URL_PREFIX = 'dispatch-devcloud/api'
 export const AUTH_URL_PREFIX = 'auth/api'
 
 export const ALL_PIPELINE_VIEW_ID = 'allPipeline'

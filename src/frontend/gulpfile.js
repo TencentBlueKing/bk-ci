@@ -1,4 +1,6 @@
 const { src, dest, parallel, series, task } = require('gulp')
+const fetch = require('node-fetch')
+const chalk = require('chalk')
 const fs = require('fs')
 const path = require('path')
 const htmlmin = require('gulp-htmlmin')
@@ -15,20 +17,44 @@ const argv = yargs.alias({
     dist: 'd',
     env: 'e',
     lsVersion: 'l',
+    type: 't',
     scope: 's'
 }).default({
     dist: 'frontend',
     env: 'master',
-    lsVersion: 'dev'
+    lsVersion: 'v2',
+    type: 'tencent'
 }).describe({
     dist: 'build output dist directory',
     env: 'environment [dev, test, master, external]',
-    lsVersion: 'localStorage version'
+    lsVersion: 'localStorage version',
+    type: 'bkdevops version 【ee | tencent】'
 }).argv
-const { dist, env, lsVersion, scope } = argv
+const { dist, env, lsVersion, type, scope } = argv
+
 const svgSpriteConfig = {
     mode: {
         symbol: true
+    }
+}
+const isGray = env === 'gray'
+const envPrefix = isGray || env === 'master' ? '' : `${env}.`
+const BUNDLE_NAME = 'assets_bundle.json'
+const ASSETS_JSON_URL = `http://${envPrefix}devnet.devops.oa.com/${BUNDLE_NAME}`
+
+async function getAssetsJSON (jsonUrl) {
+    try {
+        const res = await fetch(jsonUrl, {
+            headers: isGray ? { 'X-DEVOPS-PROJECT-ID': 'grayproject' } : {}
+        })
+        const assets = await res.json()
+
+        console.log(chalk.blue.bold(`Successfully get assets json from ${jsonUrl}!`))
+        console.table(assets)
+        return assets
+    } catch (error) {
+        console.log(chalk.yellow.bgRed.bold(`Failed get assets json from ${jsonUrl}!`))
+        process.exit(1)
     }
 }
 
@@ -78,16 +104,21 @@ function getScopeStr (scope) {
     }
 }
 
+task('clean', () => {
+    return del(dist)
+})
+
 task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSvgJs('devops')]))
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
-task('build', series([cb => {
-    const spinner = new Ora('building bk-ci frontend project').start()
+task('build', async () => {
+    const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
+    fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
     const scopeStr = getScopeStr(scope)
     const envConfMap = {
         dist,
-        // version: type,
+        version: type,
         lsVersion
     }
     const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
@@ -95,55 +126,58 @@ task('build', series([cb => {
         return acc
     }, '')
     console.log(envQueryStr)
-    require('child_process').exec(`lerna run public:${env} ${scopeStr} `, {
-        maxBuffer: 5000 * 1024,
-        env: {
-            ...process.env,
-            dist,
-            lsVersion
-        }
-    }, (err, res) => {
-        if (err) {
-            console.log(err)
-            process.exit(1)
-        }
-        spinner.succeed('Finished building bk-ci frontend project')
-        cb()
-    })
-}], () => {
-    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
-    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
-    return src(`${dist}/assetsBundles.js`)
-        .pipe(hash())
-        .pipe(dest(`${dist}/`))
-}, (cb) => {
-    ['console', 'pipeline'].map(prefix => {
-        const dir = path.join(dist, prefix)
-        const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
-        const fileName = `frontend#${prefix}#index.html`
-        return src(path.join(dir, fileName))
-            .pipe(inject(src([
-                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
-                `${dist}/svg-sprites/${spriteNameGlob}`
-            ], {
-                read: false
-            }), {
-                ignorePath: dist,
-                addRootSlash: false,
-                addPrefix: '__BK_CI_PUBLIC_PATH__'
-            }))
-            .pipe(htmlmin({
-                collapseWhitespace: true,
-                removeComments: true,
-                minifyJS: true
-            }))
-            .pipe(dest(dir))
-    })
-    cb()
-}))
-
-task('clean', () => {
-    return del(dist)
+    await execAsync(`lerna run public:master ${scopeStr}`)
 })
+
+task('generate-assets-json', () => {
+    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(path.join(__dirname, dist, BUNDLE_NAME), 'utf8')}`
+    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
+    return src(`${dist}/assetsBundles.js`).pipe(hash()).pipe(dest(`${dist}/`))
+})
+
+task('inject-asset', parallel(['console', 'pipeline'].map(prefix => {
+    const dir = path.join(dist, prefix)
+    const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
+    const fileName = `frontend#${prefix}#index.html`
+    return () => src(path.join(dir, fileName), { allowEmpty: true })
+        .pipe(inject(src([
+            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+            `${dist}/svg-sprites/${spriteNameGlob}`
+        ], {
+            read: false
+        }), {
+            ignorePath: dist,
+            addRootSlash: false,
+            addPrefix: '__BK_CI_PUBLIC_PATH__'
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true
+        }))
+        .pipe(dest(dir))
+}
+)))
+
+async function execAsync (cmd) {
+    const spinner = new Ora('building bk-ci frontend project').start()
+    return new Promise((resolve, reject) => {
+        require('child_process').exec(cmd, {
+            maxBuffer: 5000 * 1024,
+            env: {
+                ...process.env,
+                dist,
+                lsVersion
+            }
+        }, (err, res) => {
+            if (err) {
+                reject(err)
+                process.exit(1)
+            }
+            spinner.succeed('Finished building bk-ci frontend project')
+            resolve()
+        })
+    })
+}
   
-exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'))
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'), 'generate-assets-json', 'inject-asset')

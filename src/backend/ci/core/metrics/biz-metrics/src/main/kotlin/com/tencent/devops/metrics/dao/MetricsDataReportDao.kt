@@ -38,7 +38,6 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
@@ -422,25 +421,10 @@ class MetricsDataReportDao {
                 .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
                 .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                .execute()
-        }
-    }
-
-    fun updateErrorCodeInfo(
-        dslContext: DSLContext,
-        atomCode: String,
-        updateErrorCodeInfoPO: UpdateErrorCodeInfoPO
-    ) {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            dslContext.update(this)
-                .set(ERROR_MSG, updateErrorCodeInfoPO.errorMsg)
-                .set(MODIFIER, updateErrorCodeInfoPO.modifier)
-                .set(UPDATE_TIME, updateErrorCodeInfoPO.updateTime)
-                .where(
-                    ERROR_CODE.eq(updateErrorCodeInfoPO.errorCode)
-                        .and(ATOM_CODE.eq(atomCode))
-                        .and(ERROR_TYPE.eq(updateErrorCodeInfoPO.errorType))
-                )
+                .onDuplicateKeyUpdate()
+                .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
+                .set(MODIFIER, saveErrorCodeInfoPO.modifier)
+                .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .execute()
         }
     }

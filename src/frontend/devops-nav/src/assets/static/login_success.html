@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+	<head>
+    <meta charset="UTF-8" />
+		<title>登录成功</title>
+		<script src="https://o.bkclouds.cc/static_api/jquery/jquery-1.7.2.min.js"></script>
+    <script src="https://o.bkclouds.cc/static_api/jquery/jquery.json-2.3.min.js"></script>
+    <link href="https://o.bkclouds.cc/static_api/bk/bk.css" rel="stylesheet" type="text/css"/>
+	</head>
+	<body style="font-family:Microsoft Yahei;">
+    <div class="errors-login-failure-wrap box">
+      <div class="errors-login-fialure-con clearfix" style="border: none;">
+	      <img src="https://o.bkclouds.cc/static_api/bk/style_custom/images/expre_login.jpg" width="183" height="112" />
+				<h1>登录成功</h1>
+				<input  type="hidden" id="is_ajax_id" value='1'>
+				<textarea id="refer_url_id" style="display:none"></textarea>
+			</div>
+		</div>
+	</body>
+
+	<script src="http://devops.oa.com/console/static/devops-utils.js"></script>
+	<script type="text/javascript">
+		// 关闭登录弹出框
+		$(document).ready(function () {
+	      	var is_ajax = window.location.href.match(/is\_ajax\=(\d+)/);
+	      	if(is_ajax && is_ajax[1]){
+		        window.$toggleLoginDialog(false)
+	      	} else {
+		        console.warn("#TODO  实现页面跳转");
+		        // window.top.location.href = refer_url;
+	     	}
+		});
+	</script>
+</html>
