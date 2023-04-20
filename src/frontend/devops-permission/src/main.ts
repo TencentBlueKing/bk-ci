@@ -1,21 +1,21 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import router from './router';
+import { createApp } from 'vue';
 import App from './app.vue';
 import './css/index.css';
+import router from './router';
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
+import ellipsis from '@/directives/ellipsis';
 import 'bkui-vue/dist/style.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
-import ellipsis from '@/directives/ellipsis'
 
 // i18n
-import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
-import ZhCN from '../../locale/permission/zh-CN.json';
 import EnUS from '../../locale/permission/en-US.json';
+import ZhCN from '../../locale/permission/zh-CN.json';
+import { getCookies } from './common/util';
 
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
@@ -28,7 +28,7 @@ const i18n = createI18n({
   },
 });
 
-const app = createApp(App)
+const app = createApp(App);
 app
   .use(router)
   .use(createPinia())

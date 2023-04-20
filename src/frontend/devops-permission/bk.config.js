@@ -14,6 +14,7 @@ module.exports = {
       entry: './src/main',
       html: {
         filename: process.env.BK_HTML_NAME,
+        publicPath: process.env.BK_PUBLIC_PATH,
         template: './index.html',
       },
     },
