@@ -242,7 +242,9 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.CODECC_RULE_SET.value,
             AuthResourceType.PIPELINE_GROUP.value,
             AuthResourceType.TURBO.value,
-            AuthResourceType.PROJECT.value
+            AuthResourceType.PROJECT.value,
+            AuthResourceType.EXPERIENCE_TASK_NEW.value,
+            AuthResourceType.EXPERIENCE_GROUP_NEW.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
     }
