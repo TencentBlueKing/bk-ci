@@ -281,7 +281,7 @@
             }
         }
         .template-content {
-            height: 546px;
+            min-height: 546px;
             padding: 0 24px;
             overflow: hidden;
         }
