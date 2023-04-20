@@ -22,7 +22,7 @@ import java.io.File
 
 class MainActivity : FlutterActivity(), ITLoginAuthListener, ITLoginListener {
 
-    private val CHANNEL = "flutter.itlogin"
+    private val channel = "flutter.itlogin"
     private var initUniLink: String? = null
     lateinit var methodChannel: MethodChannel
     lateinit var channelResult: MethodChannel.Result
@@ -56,7 +56,7 @@ class MainActivity : FlutterActivity(), ITLoginAuthListener, ITLoginListener {
 
         super.configureFlutterEngine(flutterEngine)
         println("configureFlutterEngine main flutter")
-        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel)
         methodChannel.setMethodCallHandler {
             // Note: this method is invoked on the main thread.
             call, result ->
