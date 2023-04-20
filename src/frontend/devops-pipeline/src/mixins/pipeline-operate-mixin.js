@@ -20,7 +20,8 @@
 import { mapActions, mapGetters, mapState } from 'vuex'
 import cookie from 'js-cookie'
 import {
-    HttpError
+    HttpError,
+    convertTime
 } from '@/utils/util'
 import { PROCESS_API_URL_PREFIX } from '../store/constants'
 
@@ -412,6 +413,7 @@ export default {
                 if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
                     ++this.pipeline.latestVersion
                     this.updateCurPipelineByKeyValue('pipelineVersion', this.pipeline.latestVersion)
+                    this.updateCurPipelineByKeyValue('deploymentTime', convertTime(new Date()))
                 }
 
                 if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {

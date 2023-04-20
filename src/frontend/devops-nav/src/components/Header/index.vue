@@ -5,11 +5,13 @@
                 class="header-logo"
                 to="/console/"
             >
-                <Logo
-                    name="devops-logo"
-                    width="100"
-                    height="28"
-                />
+                <span>
+                    <Logo
+                        :name="headerLogoName"
+                        width="auto"
+                        height="28"
+                    />
+                </span>
             </router-link>
             <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
@@ -91,16 +93,16 @@
 <script lang="ts">
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Action, Getter } from 'vuex-class'
+    import { Action, Getter, State } from 'vuex-class'
+    import eventBus from '../../utils/eventBus'
+    import { isAbsoluteUrl, urlJoin } from '../../utils/util'
+    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
+    import Logo from '../Logo/index.vue'
+    import ProjectDialog from '../ProjectDialog/index.vue'
+    import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
     import Qrcode from './Qrcode.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin, isAbsoluteUrl } from '../../utils/util'
 
     @Component({
         components: {
@@ -128,6 +130,15 @@
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
         isAbsoluteUrl = isAbsoluteUrl
+
+        get headerLogoName (): string {
+            const logoArr = ['devops-logo']
+            const localeConst = this.$i18n.locale === 'zh-CN' ? '' : 'en'
+            if (localeConst) {
+                logoArr.push(localeConst)
+            }
+            return logoArr.join('-')
+        }
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList
@@ -255,7 +266,7 @@
         }
 
         goToDocs (): void {
-            this.to(`${IWIKI_DOCS_URL}/display/DevOps`)
+            this.to(this.BKCI_DOCS.BKCI_DOC)
         }
 
         goToPm (): void {
@@ -304,6 +315,11 @@
                 margin-left: 15px;
                 margin-right: 15px;
                 width: 230px;
+                display: flex;
+                > span {
+                    display: inline-flex;
+
+                }
             }
             $dropdownBorder: #2a2a42;
             .bkdevops-project-selector {

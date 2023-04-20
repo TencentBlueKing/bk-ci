@@ -25,22 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.store.pojo.common.index
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
-@ApiModel("保存错误码信息")
-data class UpdateErrorCodeInfoPO(
-    @ApiModelProperty("错误类型")
-    val errorType: Int,
-    @ApiModelProperty("错误码")
-    val errorCode: Int,
-    @ApiModelProperty("错误描述")
-    val errorMsg: String? = null,
-    @ApiModelProperty("修改人")
-    val modifier: String,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+@ApiModel("组件指标要素信息")
+data class StoreIndexElementInfo(
+    @ApiModelProperty("指标要素名称", required = true)
+    val elementName: String,
+    @ApiModelProperty("指标要素值", required = true)
+    val elementValue: String,
+    @ApiModelProperty("备注", required = false)
+    val remark: String? = null
 )

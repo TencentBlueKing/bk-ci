@@ -202,7 +202,7 @@ class WebIDEService @Autowired constructor(
 
     fun getAgentInstallLink(userId: String, projectId: String, operationSystem: String, zoneName: String?, initIp: String?): ThirdPartyAgentStaticInfo {
         val agent = client.get(ServicePreBuildAgentResource::class)
-                .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp)
+                .createPrebuildAgent(userId, projectId, OS.valueOf(operationSystem), zoneName, initIp, null)
 
         // client.get(UserThirdPartyAgentResource::class).generateLink(userId, projectId, OS.valueOf(operationSystem), zoneName)
 

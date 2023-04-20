@@ -318,7 +318,19 @@ interface ApigwBuildResourceV3 {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("变量名列表", required = true)
+        @ApiParam(
+            "变量名列表", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
+                        value = """
+                            ["variable1"]
+                                """
+                    )
+                ]
+            )
+        )
         variableNames: List<String>
     ): Result<Map<String, String>>
 

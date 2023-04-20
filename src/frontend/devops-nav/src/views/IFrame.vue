@@ -111,7 +111,10 @@
         }
 
         get serviceHooks (): any[] {
-            return this.getServiceHooks(this.currentPage.id)
+            if (this.currentPage && this.currentPage.id) {
+                return this.getServiceHooks(this.currentPage.id)
+            }
+            return []
         }
 
         backHome () {

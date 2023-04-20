@@ -197,7 +197,7 @@ interface ApigwArtifactoryResourceV4 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
         pageSize: Int?,
         @ApiParam("是否按modifiedTime倒序排列", required = false, defaultValue = "false")

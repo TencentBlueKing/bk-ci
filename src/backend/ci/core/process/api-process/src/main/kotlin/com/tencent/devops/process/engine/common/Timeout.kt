@@ -67,7 +67,7 @@ object Timeout {
         return TimeoutObj(
             beforeChangeStr = timeoutStr,
             minutes = minute,
-            millis = TimeUnit.MINUTES.toMillis(minute.toLong()),
+            millis = transMinuteTimeoutToMills(minute),
             change = change
         )
     }

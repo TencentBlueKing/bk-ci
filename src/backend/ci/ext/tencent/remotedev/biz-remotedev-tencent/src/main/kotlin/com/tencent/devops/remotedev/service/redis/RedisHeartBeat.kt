@@ -1,6 +1,7 @@
 package com.tencent.devops.remotedev.service.redis
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_INACTIVE_TIME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
@@ -8,12 +9,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class RedisHeartBeat @Autowired constructor(
+    private val redisCache: RedisCacheService,
     @Qualifier("redisStringHashOperation")
     private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RedisHeartBeat::class.java)
-        private const val INACTIVETIME = 1800000
+        private const val INACTIVETIME = 1800000L
     }
 
     fun refreshHeartbeat(
@@ -41,7 +43,7 @@ class RedisHeartBeat @Autowired constructor(
 
         val sleepValues = entries?.filter {
             val elapse = System.currentTimeMillis() - it.value.toLong()
-            elapse > INACTIVETIME
+            elapse > (redisCache.get(REDIS_REMOTEDEV_INACTIVE_TIME)?.toLong() ?: INACTIVETIME)
         }?.toList() ?: emptyList()
 
         return sleepValues

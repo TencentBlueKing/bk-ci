@@ -65,9 +65,9 @@
 </template>
 
 <script>
-    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
-    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
+    import GroupIdSelector from '@/components/atomFormField/groupIdSelector'
+    import StaffInput from '@/components/atomFormField/StaffInput/index.vue'
     import { mapActions } from 'vuex'
     export default {
         name: 'notify-setting',

@@ -1,21 +1,13 @@
---[[
-Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
-
-Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
-
-BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
-
-A copy of the MIT License is included in this file.
-
-
-Terms of the MIT License:
----------------------------------------------------
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]] config = {
+-- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+-- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+-- A copy of the MIT License is included in this file.
+-- Terms of the MIT License:
+-- ---------------------------------------------------
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+config = {
     env = "__BKCI_ENV__",
     internal_file_dir = "__BK_CI_DATA_DIR__/gateway/files/",
     static_dir = "__INSTALL_PATH__/__MODULE__/frontend",
@@ -93,7 +85,10 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
         password = "__BKREPO_PASSWORD__",
         static_domain = "__BKREPO_STATIC_HOST__"
     },
-    prebuild = {domain = "__BKCI_PREBUILD_FQDN__", port = "__BKCI_PREBUILD_PORT__"},
+    prebuild = {
+        domain = "__BKCI_PREBUILD_FQDN__",
+        port = "__BKCI_PREBUILD_PORT__"
+    },
     dayuHost = "__BKCI_DAYU_URL__",
     externalHost = "__BKCI_EXTERNAL_HOST__",
     logoHost = "__BKCI_LOGO_HOST__",
@@ -107,7 +102,16 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     apigwHost = "__BKCI_APIGW_HOST__",
     jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----",
     bkci = {host = "__BK_CI_FQDN__", port = 80},
-    kubernetes = {domain = "__BK_CI_KUBERNETES_DOMAIN__", codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"}},
+    kubernetes = {
+        domain = "__BK_CI_KUBERNETES_DOMAIN__",
+        switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
+        codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
+        api = {
+            host = "__BK_CI_KUBERNETES_API_HOST__",
+            port = __BK_CI_KUBERNETES_API_PORT__ ,
+            token = "__BK_CI_KUBERNETES_API_TOKEN__"
+        }
+    },
     openHttps = "__BKCI_OPEN_HTTPS__"
 }
 

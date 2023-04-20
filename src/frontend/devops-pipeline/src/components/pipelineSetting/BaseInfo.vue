@@ -2,7 +2,7 @@
     <div v-if="pipelineSetting" class="bkdevops-base-info-setting-tab">
         <bk-form>
             <bk-form-item :label="$t('pipelineName')" :required="true">
-                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
+                <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="'required|max:40'" max-length="40" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
             <bk-form-item :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
@@ -20,10 +20,10 @@
                     </div>
                 </div>
             </bk-form-item>
-            <bk-form-item :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
-                <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
+            <bk-form-item :label="$t('desc')" :is-error="errors.has('desc')" :error-msg="errors.first('desc')">
+                <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="'max:100'" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
-            <bk-form-item :label="$t('settings.buildNumberFormat')" :is-error="errors.has(&quot;buildNumRule&quot;)" :error-msg="errors.first(&quot;buildNumRule&quot;)">
+            <bk-form-item :label="$t('settings.buildNumberFormat')" :is-error="errors.has('buildNumRule')" :error-msg="errors.first('buildNumRule')">
                 <vuex-input style="max-width: 350px;" name="buildNumRule" :value="pipelineSetting.buildNumRule" :placeholder="$t('buildDescInputTips')" v-validate.initial="{ buildNumRule: true }" max-length="256" :handle-change="handleBaseInfoChange" />
                 <span @click="handleGoDocumentInfo">
                     <logo size="16" class="build-num-rule-warn" name="feedback" v-bk-tooltips="$t('buildNumRuleWarn')" />
@@ -48,11 +48,11 @@
 </template>
 
 <script>
-    import Logo from '@/components/Logo'
-    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
-    import { mapGetters } from 'vuex'
+    import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
+    import Logo from '@/components/Logo'
     import Clipboard from 'clipboard'
+    import { mapGetters } from 'vuex'
 
     export default {
         name: 'bkdevops-base-info-setting-tab',
@@ -143,7 +143,7 @@
                 this.handleBaseInfoChange('labels', labels)
             },
             handleGoDocumentInfo () {
-                window.open('https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno')
+                window.open(this.$pipelineDocs.ALIAS_BUILD_NO_DOC)
             }
         }
     }

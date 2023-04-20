@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailDetailDataPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.SaveAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.SaveAtomOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineFailDetailDataPO
@@ -37,12 +38,12 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
 import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
@@ -248,6 +249,33 @@ class MetricsDataReportDao {
         }
     }
 
+    fun batchSaveAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        saveAtomIndexStatisticsDailyPOs: List<SaveAtomIndexStatisticsDailyPO>
+    ) {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
+                dslContext.insertInto(this)
+                    .set(ID, saveAtomIndexStatisticsDailyPO.id)
+                    .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                    .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
+                    .onDuplicateKeyUpdate()
+                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                    .execute()
+            }
+        }
+    }
+
     fun batchUpdateAtomOverviewData(
         dslContext: DSLContext,
         updateAtomOverviewDataPOs: List<UpdateAtomOverviewDataPO>
@@ -393,25 +421,10 @@ class MetricsDataReportDao {
                 .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
                 .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                .execute()
-        }
-    }
-
-    fun updateErrorCodeInfo(
-        dslContext: DSLContext,
-        atomCode: String,
-        updateErrorCodeInfoPO: UpdateErrorCodeInfoPO
-    ) {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            dslContext.update(this)
-                .set(ERROR_MSG, updateErrorCodeInfoPO.errorMsg)
-                .set(MODIFIER, updateErrorCodeInfoPO.modifier)
-                .set(UPDATE_TIME, updateErrorCodeInfoPO.updateTime)
-                .where(
-                    ERROR_CODE.eq(updateErrorCodeInfoPO.errorCode)
-                        .and(ATOM_CODE.eq(atomCode))
-                        .and(ERROR_TYPE.eq(updateErrorCodeInfoPO.errorType))
-                )
+                .onDuplicateKeyUpdate()
+                .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
+                .set(MODIFIER, saveErrorCodeInfoPO.modifier)
+                .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .execute()
         }
     }

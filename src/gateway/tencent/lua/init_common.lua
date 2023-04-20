@@ -46,7 +46,7 @@ resolvUtil = require("util.resolv_util")
 
 local ok_table = {status = 0, data = true}
 
-no_container_svr = {"scm" , "sign"}
+no_container_svr = {"scm", "sign", "config"}
 
 response_ok = json.encode(ok_table)
 

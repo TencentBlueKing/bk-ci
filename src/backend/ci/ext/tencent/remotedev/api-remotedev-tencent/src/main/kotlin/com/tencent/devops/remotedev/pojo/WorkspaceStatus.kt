@@ -47,6 +47,8 @@ enum class WorkspaceStatus {
 
     fun checkSleeping() = this == SLEEP || this == STOPPED
 
+    fun checkException() = this == EXCEPTION
+
     /**
      * 当正在做某事时，不能新建任务去执行
      */

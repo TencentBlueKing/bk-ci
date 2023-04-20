@@ -227,11 +227,11 @@
 </template>
 
 <script>
-    import cookie from 'js-cookie'
-    import BuildLog from '@/components/Log'
-    import webSocketMessage from '@/utils/webSocketMessage'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import codeCheck from '@/components/code-check'
+    import BuildLog from '@/components/Log'
+    import webSocketMessage from '@/utils/webSocketMessage'
+    import cookie from 'js-cookie'
 
     const CSRFToken = cookie.get('paas_perm_csrftoken')
 
@@ -258,7 +258,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/store/plugins/create-plugin`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -338,6 +338,9 @@
             },
             curStep () {
                 return this.progressStatus.find((step) => (['fail', 'doing'].includes(step.status))) || (this.progressStatus.length && this.progressStatus[this.progressStatus.length - 1]) || {}
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 
