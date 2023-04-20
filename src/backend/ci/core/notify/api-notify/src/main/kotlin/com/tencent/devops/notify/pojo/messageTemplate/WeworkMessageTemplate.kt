@@ -24,37 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo.messageTemplate
 
-package com.tencent.devops.common.api.util
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-import org.yaml.snakeyaml.Yaml
-
-/**
- *
- * Powered By Tencent
- */
-object YamlUtil {
-    private val objectMapper = ObjectMapper(
-        YAMLFactory().disable(YAMLGenerator.Feature.SPLIT_LINES)
-    ).registerKotlinModule()
-
-    fun getObjectMapper() = objectMapper
-
-    fun toYaml(bean: Any): String {
-        if (ReflectUtil.isNativeType(bean) || bean is String) {
-            return bean.toString()
-        }
-        return getObjectMapper().writeValueAsString(bean)!!
-    }
-
-    fun <T> to(yamlStr: String, valueTypeRef: TypeReference<T>? = null): T {
-        val yaml = Yaml()
-        val obj = toYaml(yaml.load(yamlStr) as Any)
-        return getObjectMapper().readValue(obj, valueTypeRef ?: object : TypeReference<T>() {})
-    }
-}
+@ApiModel("模板配置信息")
+data class WeworkMessageTemplate(
+    @ApiModelProperty("模板ID", required = true)
+    val id: String,
+    @ApiModelProperty("标题", required = false)
+    var title: String?,
+    @ApiModelProperty("内容", required = true)
+    var body: String,
+    @ApiModelProperty("发送者", required = true)
+    val sender: String
+)
