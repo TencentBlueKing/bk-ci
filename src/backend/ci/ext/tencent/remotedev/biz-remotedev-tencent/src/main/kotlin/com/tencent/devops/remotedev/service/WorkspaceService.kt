@@ -55,7 +55,7 @@ import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.config.CommonConfig
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -131,7 +131,7 @@ class WorkspaceService @Autowired constructor(
     private val commonService: CommonService,
     private val redisCache: RedisCacheService,
     private val profile: Profile,
-    private val commonConfig: CommonConfig
+    private val commonConfig: RemoteDevCommonConfig
 ) {
 
     companion object {

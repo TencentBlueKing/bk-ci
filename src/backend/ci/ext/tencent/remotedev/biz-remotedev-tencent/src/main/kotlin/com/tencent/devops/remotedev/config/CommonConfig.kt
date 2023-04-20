@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
-class CommonConfig {
+class RemoteDevCommonConfig {
 
     // 用户工作空间镜像registry地址
     @Value("\${workspace.image.registryHost:#{null}}")
