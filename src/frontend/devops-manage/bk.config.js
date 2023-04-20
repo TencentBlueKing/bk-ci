@@ -12,15 +12,15 @@ module.exports = {
   parseNodeModules: false,
   resource: {
     main: {
-      entry: './src/main',
+      entry: './src/entry',
       html: {
         filename: process.env.BK_HTML_NAME,
+        publicPath: process.env.BK_PUBLIC_PATH,
         template: './index.html',
       },
     },
   },
   chainWebpack (config) {
-
     config.resolve
       .alias
       .clear()
