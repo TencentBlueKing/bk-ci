@@ -134,7 +134,7 @@ class MigrateResourceService @Autowired constructor(
                 projectCode = projectCode
             )
             logger.info("MigrateResourceService|resourceData:$resourceData")
-            if (resourceData == null || resourceData.data.result.isEmpty()) {
+            if (resourceData == null || resourceData.data.result.isNullOrEmpty()) {
                 return
             }
             val ids = resourceData.data.result.map { it.id }
