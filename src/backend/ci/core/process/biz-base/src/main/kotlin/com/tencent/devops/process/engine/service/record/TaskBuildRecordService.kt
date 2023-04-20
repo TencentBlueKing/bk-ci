@@ -294,7 +294,11 @@ class TaskBuildRecordService(
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.CANCELED,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                timestamps = mapOf(
+                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
     }

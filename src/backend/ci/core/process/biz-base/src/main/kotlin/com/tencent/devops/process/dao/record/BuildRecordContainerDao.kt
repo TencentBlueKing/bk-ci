@@ -136,7 +136,7 @@ class BuildRecordContainerDao {
         executeCount: Int,
         stageId: String? = null,
         matrixGroupId: String? = null,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -146,7 +146,7 @@ class BuildRecordContainerDao {
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
             matrixGroupId?.let { conditions.add(MATRIX_GROUP_ID.eq(matrixGroupId)) }
-            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
