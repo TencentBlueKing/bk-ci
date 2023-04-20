@@ -657,16 +657,25 @@ class MigrateV3PolicyService constructor(
             finalUserActions.remove(PROJECT_DELETE)
             finalUserActions.add(PROJECT_ENABLE)
         }
-        // 判断是否已有所有action权限
-        val notActionPermissionMap = permissionService.batchValidateUserResourcePermission(
-            userId = userId,
-            actions = finalUserActions,
-            projectCode = projectCode,
-            resourceCode = resourceCode,
-            resourceType = resourceType
-        ).filterNot { it.value }
-        // 存在没有action的权限，匹配资源默认用户组权限
-        if (notActionPermissionMap.isNotEmpty()) {
+        /* 项目下资源无限制,resourceType传入的是project，但是action并不是在项目下,
+         调用batchValidateUserResourcePermission鉴权会报resources not match action
+         */
+        val canValidatePermission = resourceType == AuthResourceType.PROJECT.value &&
+            !rbacCacheService.listResourceType2Action(resourceType).map { it.action }.containsAll(userActions)
+        val hasAllActionPermission = if (canValidatePermission) {
+            false
+        } else {
+            permissionService.batchValidateUserResourcePermission(
+                userId = userId,
+                actions = finalUserActions,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType
+            ).all { it.value }
+        }
+
+        // 没有action的权限，匹配资源默认用户组权限
+        if (!hasAllActionPermission) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
                 if (groupConfig.actions.containsAll(finalUserActions)) {
                     val groupId = authResourceGroupDao.get(
