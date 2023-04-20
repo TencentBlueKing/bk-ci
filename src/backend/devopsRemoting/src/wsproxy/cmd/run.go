@@ -1,12 +1,12 @@
 package main
 
 import (
+	"common/devops"
 	"common/logs"
 	"errors"
 	"net"
 	"os"
 	"path/filepath"
-	"wsproxy/pkg/clients"
 	"wsproxy/pkg/config"
 	"wsproxy/pkg/constant"
 	"wsproxy/pkg/proxy"
@@ -49,10 +49,7 @@ func newCommandRun() *cobra.Command {
 			var heartbeat sshproxy.Heartbeat
 			backendCfg := cfg.DevRemotingBackend
 			if backendCfg.HostName != "" && backendCfg.SHA1Key != "" {
-				backendClient, err := clients.NewBackendClient(backendCfg.HostName, backendCfg.SHA1Key)
-				if err != nil {
-					logs.WithError(err).Fatal("create backendclient error")
-				}
+				backendClient := devops.NewRemoteDevClient(backendCfg.HostName, backendCfg.SHA1Key)
 				heartbeat = &sshproxy.BackendHeartbeat{
 					Client: backendClient,
 				}

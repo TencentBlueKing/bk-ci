@@ -14,6 +14,7 @@ registry:
       ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"     
   remoteSpecProvider:
     addr: 
+    sha1key: 
   # cat ~/.docker/config.json | base64 -w0   
   dockerAuth:
   # 用来挂载wsproxy配置的参数，不同环境wsproxy名字可能不同

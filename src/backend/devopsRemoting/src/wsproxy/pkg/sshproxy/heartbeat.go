@@ -1,10 +1,10 @@
 package sshproxy
 
 import (
+	"common/devops"
 	"common/logs"
 	"context"
 	"time"
-	"wsproxy/pkg/clients"
 )
 
 type Heartbeat interface {
@@ -18,7 +18,7 @@ func (noHeartbeat) SendHeartbeat(workspaceId string, isClosed, ignoreIfActive bo
 }
 
 type BackendHeartbeat struct {
-	Client *clients.BackendClient
+	Client *devops.RemoteDevClient
 }
 
 func (b *BackendHeartbeat) SendHeartbeat(workspaceId string, _, _ bool) {

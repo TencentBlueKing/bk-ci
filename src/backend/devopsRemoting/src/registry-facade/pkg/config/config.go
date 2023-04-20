@@ -33,8 +33,9 @@ type StaticLayerCfg struct {
 }
 
 type RSProvider struct {
-	Addr string `json:"addr"`
-	TLS  *TLS   `json:"tls,omitempty"`
+	Addr    string `json:"addr"`
+	Sha1key string `json:"sha1key"`
+	TLS     *TLS   `json:"tls,omitempty"`
 }
 type TLS struct {
 	Authority   string `json:"ca"`

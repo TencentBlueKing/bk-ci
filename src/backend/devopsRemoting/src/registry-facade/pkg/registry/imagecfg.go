@@ -1,8 +1,8 @@
 package registry
 
 import (
+	"common/devops"
 	"context"
-	"net/http"
 	"registry-facade/api"
 
 	"github.com/containerd/containerd/errdefs"
@@ -58,29 +58,56 @@ func (csp *CompositeSpecProvider) GetSpec(ctx context.Context, ref string) (spec
 
 // RemoteSpecProvider queries a remote spec provider using gRPC
 type RemoteSpecProvider struct {
-	addr string
-	conn *http.Client
+	conn *devops.RemoteDevClient
 }
 
 // NewRemoteSpecProvider produces a new remote spec provider
-func NewRemoteSpecProvider(addr string) *RemoteSpecProvider {
+func NewRemoteSpecProvider(addr string, sha1key string) *RemoteSpecProvider {
+	client := devops.NewRemoteDevClient(addr, sha1key)
 	return &RemoteSpecProvider{
-		addr: addr,
+		conn: client,
 	}
 }
 
 // GetSpec returns the spec for the image or a wrapped ErrRefInvalid
 func (p *RemoteSpecProvider) GetSpec(ctx context.Context, ref string) (*api.ImageSpec, error) {
-	// client, err := p.getClient(ctx)
-	// if err != nil {
-	// 	return nil, xerrors.Errorf("%w: %s", ErrRefInvalid, err.Error())
-	// }
 
-	// resp, err := client.GetImageSpec(ctx, &api.GetImageSpecRequest{Id: ref})
-	// if err != nil {
-	// 	return nil, xerrors.Errorf("%w: %s", ErrRefInvalid, err.Error())
-	// }
-	return nil, nil
+	resp, err := p.conn.GetImageSpecConfig(ctx, ref)
+	if err != nil {
+		return nil, xerrors.Errorf("%w: %s", ErrRefInvalid, err.Error())
+	}
+
+	content := []*api.ContentLayer{}
+	for _, c := range resp.ContentLayer {
+		var remote *api.RemoteContentLayer
+		if c.Remote != nil {
+			remote = &api.RemoteContentLayer{
+				Url:       c.Remote.Url,
+				Digest:    c.Remote.Digest,
+				DiffId:    c.Remote.DiffId,
+				MediaType: c.Remote.MediaType,
+				Size:      c.Remote.Size,
+			}
+		}
+		var digest *api.DirectContentLayer
+		if c.Direct != nil {
+			digest = &api.DirectContentLayer{
+				Content: c.Direct.Content,
+			}
+		}
+		content = append(content, &api.ContentLayer{
+			Remote: remote,
+			Direct: digest,
+		})
+	}
+
+	return &api.ImageSpec{
+		BaseRef:      resp.BaseRef,
+		IdeRef:       resp.IdeRef,
+		ContentLayer: content,
+		RemotingRef:  resp.RemotingRef,
+		IdeLayerRef:  resp.IdeLayerRef,
+	}, nil
 }
 
 // NewCachingSpecProvider creates a new LRU caching spec provider with a max number of specs it can cache.

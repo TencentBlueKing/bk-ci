@@ -2,11 +2,11 @@ package proxy
 
 import (
 	"bytes"
+	"common/devops"
 	"common/logs"
 	"crypto/tls"
 	stdlog "log"
 	"net/http"
-	"wsproxy/pkg/clients"
 	"wsproxy/pkg/config"
 
 	"github.com/ci-plugins/crypto-go/ssh"
@@ -88,7 +88,7 @@ func (p *WorkspaceProxy) Handler(newCheckAuth checkAuth) (http.Handler, error) {
 	r := mux.NewRouter()
 
 	// install routes
-	authOpt := WithDefaultAuth(clients.CheckAuthBackend)
+	authOpt := WithDefaultAuth(devops.CheckAuthBackend)
 	if newCheckAuth != nil {
 		authOpt = WithDefaultAuth(newCheckAuth)
 	}

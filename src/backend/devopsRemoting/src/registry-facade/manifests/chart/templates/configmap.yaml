@@ -28,6 +28,7 @@ data:
         "remoteSpecProvider": [
           {
             "addr": "{{.Values.registry.remoteSpecProvider.addr}}"
+            "sha1key": "{{ .Values.registry.remoteSpecProvider.sha1key }}",
           }
         ],
         "tls": {

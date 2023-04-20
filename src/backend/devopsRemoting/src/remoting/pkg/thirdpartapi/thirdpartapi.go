@@ -1,9 +1,12 @@
 package thirdpartapi
 
-import "remoting/pkg/config"
+import (
+	"common/devops"
+	"remoting/pkg/config"
+)
 
 type ThirdPartApi struct {
-	Server *ServerApi
+	Server *devops.RemoteDevClient
 }
 
 func InitThirdpartApi(config *config.Config) *ThirdPartApi {

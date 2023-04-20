@@ -1,6 +1,7 @@
 package clients
 
 import (
+	"common/devops"
 	"context"
 	"fmt"
 	"io/ioutil"
@@ -39,7 +40,7 @@ func (c *RemotingClient) CreateSSHKeyPair(ctx context.Context, ip string) (*apit
 	defer resp.Body.Close()
 	body, err := ioutil.ReadAll(resp.Body)
 
-	result, err := IntoDevopsResult[apitypes.CreateSSHKeyPairResp](body)
+	result, err := devops.IntoDevopsResult[apitypes.CreateSSHKeyPairResp](body)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse remoting CreateSSHKeyPair result error")
 	}

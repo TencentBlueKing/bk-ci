@@ -2,7 +2,10 @@ package devops
 
 import (
 	"common/logs"
+	"encoding/json"
 	"strings"
+
+	"github.com/pkg/errors"
 )
 
 type DevopsHttpResult struct {
@@ -24,4 +27,30 @@ func ParseWsId2UserProjectId(workspaceId string) string {
 		userId = userId + "_" + workspaceSub[1]
 	}
 	return userId
+}
+
+// IntoDevopsResult 解析devops后台数据类型
+func IntoDevopsResult[T any](body []byte) (*T, error) {
+	res := &DevopsHttpResult{}
+	err := json.Unmarshal(body, res)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse devops result error")
+	}
+
+	if res.Status != 0 {
+		return nil, errors.Errorf("devops result status error %s", res.Message)
+	}
+
+	data, err := json.Marshal(res.Data)
+	if err != nil {
+		return nil, errors.Wrap(err, "marshal davops result data error")
+	}
+
+	result := new(T)
+	err = json.Unmarshal(data, result)
+	if err != nil {
+		return nil, errors.Wrap(err, "parse devops result data error")
+	}
+
+	return result, err
 }

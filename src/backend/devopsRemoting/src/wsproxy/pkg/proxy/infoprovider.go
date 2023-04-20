@@ -1,11 +1,11 @@
 package proxy
 
 import (
+	"common/devops"
 	"common/logs"
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"wsproxy/pkg/clients"
 	"wsproxy/pkg/config"
 	"wsproxy/pkg/constant"
 
@@ -158,21 +158,18 @@ func extractUserSSHPublicKeys(base64SSHKey string) []string {
 
 // BackendWorkspaceInfoProvider 后台接口
 type BackendWorkspaceInfoProvider struct {
-	client *clients.BackendClient
+	client *devops.RemoteDevClient
 
 	cache *bigcache.BigCache
 }
 
 func NewBackendWorkspaceInfoProvider(cfg *config.WsPorxyConfig) (*BackendWorkspaceInfoProvider, error) {
-	client, err := clients.NewBackendClient(cfg.DevRemotingBackend.HostName, cfg.DevRemotingBackend.SHA1Key)
-	if err != nil {
-		return nil, errors.Wrap(err, "NewBackendWorkspaceInfoProvider create backend client")
-	}
+	client := devops.NewRemoteDevClient(cfg.DevRemotingBackend.HostName, cfg.DevRemotingBackend.SHA1Key)
 
 	// cache, err := bigcache.New(context.Background(), bigcache.DefaultConfig(30*time.Minute))
-	if err != nil {
-		return nil, errors.Wrap(err, "create big cache error")
-	}
+	// if err != nil {
+	// 	return nil, errors.Wrap(err, "create big cache error")
+	// }
 
 	return &BackendWorkspaceInfoProvider{
 		client: client,

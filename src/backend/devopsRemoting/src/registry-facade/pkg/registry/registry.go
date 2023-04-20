@@ -200,24 +200,7 @@ func NewRegistry(cfg config.Config, newResolver ResolverProvider, reg prometheus
 }
 
 func createRemoteSpecProvider(cfg *config.RSProvider) (ImageSpecProvider, error) {
-	// grpcOpts := common_grpc.DefaultClientOptions()
-	// if cfg.TLS != nil {
-	// 	tlsConfig, err := common_grpc.ClientAuthTLSConfig(
-	// 		cfg.TLS.Authority, cfg.TLS.Certificate, cfg.TLS.PrivateKey,
-	// 		common_grpc.WithSetRootCAs(true),
-	// 		common_grpc.WithServerName("ws-manager"),
-	// 	)
-	// 	if err != nil {
-	// 		logs.WithField("config", cfg.TLS).Error("Cannot load ws-manager certs - this is a configuration issue.")
-	// 		return nil, xerrors.Errorf("cannot load ws-manager certs: %w", err)
-	// 	}
-
-	// 	grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(credentials.NewTLS(tlsConfig)))
-	// } else {
-	// 	grpcOpts = append(grpcOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
-	// }
-
-	specprov, err := NewCachingSpecProvider(128, NewRemoteSpecProvider(cfg.Addr))
+	specprov, err := NewCachingSpecProvider(128, NewRemoteSpecProvider(cfg.Addr, cfg.Sha1key))
 	if err != nil {
 		return nil, xerrors.Errorf("cannot create caching spec provider: %w", err)
 	}
