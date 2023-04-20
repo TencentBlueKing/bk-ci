@@ -222,13 +222,16 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName)
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            ready = podInfo?.ready,
+            started = podInfo?.started
         )
     }
 
