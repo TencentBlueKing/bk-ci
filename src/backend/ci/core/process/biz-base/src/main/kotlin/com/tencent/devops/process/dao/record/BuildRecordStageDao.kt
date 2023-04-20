@@ -109,7 +109,7 @@ class BuildRecordStageDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordStage> {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val conditions = mutableListOf<Condition>()
@@ -117,7 +117,7 @@ class BuildRecordStageDao {
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
-            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
         }

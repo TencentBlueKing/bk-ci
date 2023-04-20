@@ -68,7 +68,8 @@ import java.time.LocalDateTime
     "TooManyFunctions",
     "ComplexCondition",
     "ComplexMethod",
-    "LongMethod"
+    "LongMethod",
+    "NestedBlockDepth"
 )
 @Service
 class TaskBuildRecordService(
@@ -265,8 +266,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
-    fun taskCancel(
+    fun taskPauseCancel(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -301,6 +301,52 @@ class TaskBuildRecordService(
                 )
             )
         }
+    }
+
+    fun taskPauseContinue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String,
+        executeCount: Int,
+        element: Element?
+    ) {
+        taskBuildDetailService.taskContinue(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            element = element
+        )
+        // #7983 此处需要保持Container状态独立刷新，不能放进更新task的并发锁
+        containerBuildRecordService.updateContainerStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.QUEUE,
+            operation = "updateElementWhenPauseContinue#$taskId"
+        )
+        // TODO #7983 重写同container下的插件input
+        updateTaskStatus(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            executeCount = executeCount,
+            buildStatus = BuildStatus.QUEUE,
+            operation = "updateElementWhenPauseContinue#$taskId",
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+            )
+        )
     }
 
     fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
@@ -356,6 +402,16 @@ class TaskBuildRecordService(
                         }
                     }
                 }
+                var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null
+                if (recordTask.status == BuildStatus.PAUSE.name) {
+                    timestamps = mergeTimestamps(
+                        recordTask.timestamps,
+                        mapOf(
+                            BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                        )
+                    )
+                }
                 if (errorType != null) {
                     taskVar[Element::errorType.name] = errorType.name
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
@@ -375,59 +431,12 @@ class TaskBuildRecordService(
                     buildStatus = buildStatus,
                     startTime = null,
                     endTime = LocalDateTime.now(),
-                    timestamps = null
+                    timestamps = timestamps
                 )
             }
         }
 
         return taskBuildDetailService.taskEnd(taskBuildEndParam)
-    }
-
-    @Suppress("NestedBlockDepth")
-    fun taskContinue(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        stageId: String,
-        containerId: String,
-        taskId: String,
-        executeCount: Int,
-        element: Element?
-    ) {
-        taskBuildDetailService.taskContinue(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            element = element
-        )
-        // #7983 此处需要保持Container状态独立刷新，不能放进更新task的并发锁
-        containerBuildRecordService.updateContainerStatus(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            containerId = containerId,
-            executeCount = executeCount,
-            buildStatus = BuildStatus.QUEUE,
-            operation = "updateElementWhenPauseContinue#$taskId"
-        )
-        // TODO #7983 重写同container下的插件input
-        updateTaskStatus(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            taskId = taskId,
-            executeCount = executeCount,
-            buildStatus = BuildStatus.QUEUE,
-            operation = "updateElementWhenPauseContinue#$taskId",
-            timestamps = mapOf(
-                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
-            )
-        )
     }
 
     fun updateTaskRecord(

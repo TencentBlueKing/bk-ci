@@ -90,7 +90,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(taskRecord, event.userId)
             } else if (event.actionType == ActionType.END) {
-                taskCancel(task = taskRecord, userId = event.userId)
+                taskPauseCancel(task = taskRecord, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
@@ -123,7 +123,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         // 修改详情model
-        taskBuildRecordService.taskContinue(
+        taskBuildRecordService.taskPauseContinue(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
@@ -167,13 +167,13 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
     }
 
-    private fun taskCancel(task: PipelineBuildTask, userId: String) {
+    private fun taskPauseCancel(task: PipelineBuildTask, userId: String) {
         logger.info("${task.buildId}|task cancel|${task.taskId}|CANCELED")
         // 修改插件状态位运行
         pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        taskBuildRecordService.taskCancel(
+        taskBuildRecordService.taskPauseCancel(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
