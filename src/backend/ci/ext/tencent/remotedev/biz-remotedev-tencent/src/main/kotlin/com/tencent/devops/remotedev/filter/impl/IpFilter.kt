@@ -58,7 +58,7 @@ class IpFilter constructor(
             )
             return true
         }
-        if (!isIpInWhitelist(ip, redisCache.get(REDIS_IP_LIST_KEY) ?: return true)) {
+        if (!isIpInWhitelist(ip, redisCache.get(REDIS_IP_LIST_KEY) ?: emptySet())) {
             logger.info("ip($ip)wants to access the resource(${apiType.path}), but is blocked.")
             return false
         }
