@@ -28,6 +28,7 @@
 package com.tencent.devops.quality.config
 
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
@@ -35,6 +36,8 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCas
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.quality.listener.PipelineBuildQualityListener
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
@@ -45,6 +48,9 @@ class QualityMQConfig {
     companion object {
         const val STREAM_CONSUMER_GROUP = "quality-service"
     }
+
+    @Bean
+    fun eventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineCancelQualityListener(
