@@ -125,6 +125,7 @@
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                         <template slot="label">
                             <span @click="setShowErrorPopup" class="panel-name pointer">{{panel.label}}</span>
+                            <bk-tag theme="info" radius="4px" v-if="errorList.length">{{errorList.length}}</bk-tag>
                         </template>
                         <bk-table
                             :data="errorList"
@@ -146,7 +147,7 @@
                                     <logo
                                         v-if="props.row.errorTypeConf"
                                         :name="props.row.errorTypeConf.icon"
-                                        size="12"
+                                        size="18"
                                     />
                                 </div>
                             </bk-table-column>
@@ -155,6 +156,31 @@
                                 v-bind="column"
                                 :key="i"
                             />
+                            <bk-table-column
+                                :label="$t('details.pipelineErrorInfo')"
+                            >
+                                <template v-slot="props">
+                                    <div class="build-error-cell">
+                                        <span
+                                            :ref="`error-${props.$index}`"
+                                            :class="{
+                                                'build-error-info': true,
+                                                'is-overflow': checkOverflow(props)
+                                            }">
+                                            {{props.row.errorMsg}}
+                                        </span>
+                                        <bk-button
+                                            v-if="checkOverflow(props)"
+                                            class="build-error-see-more"
+                                            theme="primary"
+                                            text
+                                            @click="showErrorMsgDetail(props.row)"
+                                        >
+                                            {{$t('editPage.seeMore')}}
+                                        </bk-button>
+                                    </div>
+                                </template>
+                            </bk-table-column>
                         </bk-table>
                     </bk-tab-panel>
                 </bk-tab>
@@ -203,6 +229,24 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
+        <bk-dialog
+            v-model="seeMoreErrorInfo"
+            render-directive="if"
+            :width="960"
+            :title="$t('错误信息')"
+            @confirm="hideErrorMsgDetail"
+        >
+            <div class="error-row-detail" v-if="errorRow">
+                <h3>
+                    <bk-tag>{{ $t(errorRow.errorTypeConf.title) }}</bk-tag>
+                    <span>{{ errorRow.errorCode }}</span>
+                    <span>{{ errorRow.taskName }}</span>
+                </h3>
+                <pre>
+                    {{ errorRow.errorMsg }}
+                </pre>
+            </div>
+        </bk-dialog>
     </div>
 </template>
 
@@ -232,12 +276,14 @@
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
-                activeTab: '-1',
+                activeTab: 'errors',
                 currentAtom: {},
                 pipelineMode: 'uiMode',
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
+                seeMoreErrorInfo: false,
+                errorRow: null,
                 pipelineErrorGuideLink:
                     '//bk.tencent.com/docs/markdown/持续集成平台/产品白皮书/FAQS/FAQ.md'
             }
@@ -314,10 +360,6 @@
                         label: this.$t('details.pipelineErrorPos'),
                         prop: 'taskName',
                         width: 200
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorInfo'),
-                        prop: 'errorMsg'
                     }
                 ]
             },
@@ -434,6 +476,18 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             isSkip (status) {
                 return ['SKIP'].includes(status)
+            },
+            checkOverflow (props) {
+                const ele = this.$refs?.[`error-${props.$index}`]?.[0]
+                return ele?.scrollWidth - 100 > ele?.offsetWidth
+            },
+            showErrorMsgDetail (row) {
+                this.seeMoreErrorInfo = true
+                this.errorRow = row
+            },
+            hideErrorMsgDetail () {
+                this.seeMoreErrorInfo = false
+                this.errorRow = null
             },
             toggleCompleteLog () {
                 this.showLog = !this.showLog
@@ -662,6 +716,7 @@
 
 <style lang="scss">
 @import "@/scss/conf";
+@import "@/scss/mixins/ellipsis";
 .exec-pipeline-wrapper {
   height: 100%;
   display: flex;
@@ -831,6 +886,19 @@
         display: flex;
       }
     }
+    .build-error-cell {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        .build-error-see-more {
+            flex-shrink: 0;
+            margin-left: 10px;
+        }
+        .build-error-info {
+            @include ellipsis();
+            flex: 1;
+        }
+    }
   }
 }
 .time-detail-popup,
@@ -843,7 +911,7 @@
       color: #63656e;
       text-align: left;
       font-weight: 600;
-      font-family: Monaco, Consolas, monospace;
+      font-family: "Microsoft Yahei";
     }
 
     > span:first-child {
@@ -865,7 +933,7 @@
       > span {
         color: #63656e;
         text-align: left;
-        font-family: Monaco, Consolas, monospace;
+        font-family: "Microsoft Yahei";
       }
       > span:first-child {
         color: #979ba5;
@@ -885,5 +953,35 @@
   .exec-count-select-option-user {
     color: #979ba5;
   }
+}
+.error-row-detail {
+    max-height: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    > h3 {
+        margin: 0 0 16px 0;
+        display: inline-grid;
+        flex-direction: row;
+        align-items: center;
+        grid-auto-flow: column;
+        grid-gap: 12px;
+        font-size: 12px;
+        font-weight: normal;
+        flex-shrink: 0;
+    }
+    > pre {
+        flex: 1;
+        width: 100%;
+        margin: 6px 0;
+        padding: 6px 10px;
+        background: #fafbfd;
+        border: 1px solid #dcdee5;
+        border-radius: 2px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        text-align: left;
+    }
 }
 </style>

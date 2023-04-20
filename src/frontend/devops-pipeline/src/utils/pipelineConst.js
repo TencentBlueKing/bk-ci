@@ -99,11 +99,11 @@ export function pluginUrlParse (originUrl, query) {
 export const errorTypeMap = [
     {
         title: 'systemError',
-        icon: 'cog'
+        icon: 'error-system'
     },
     {
         title: 'userError',
-        icon: 'user'
+        icon: 'error-user'
     },
     {
         title: 'thirdPartyError',
@@ -111,7 +111,7 @@ export const errorTypeMap = [
     },
     {
         title: 'pluginError',
-        icon: 'plugin'
+        icon: 'error-plugin'
     }
 ]
 

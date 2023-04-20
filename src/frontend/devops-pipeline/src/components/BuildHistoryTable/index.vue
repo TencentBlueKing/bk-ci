@@ -187,9 +187,7 @@
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template
-                        v-if="
-                            Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0
-                        "
+                        v-if="props.row.errorInfoList.length > 0"
                     >
                         <div
                             @click.stop=""
@@ -200,13 +198,14 @@
                         >
                             <logo
                                 class="svg-error-icon"
-                                v-if="item.errorTypeConf"
-                                :title="$t(item.errorTypeConf.title)"
-                                size="12"
-                                :name="item.errorTypeConf.icon"
+                                size="16"
+                                :name="item.icon"
                             />
-                            <span v-bk-tooltips="{ content: item.errorMsg }" v-if="item.errorMsg"
-                            >{{ item.errorMsg }}
+                            <span
+                                v-bk-tooltips="{ content: item.title }"
+                                v-if="item.title"
+                            >
+                                {{ item.title }}
                             </span>
                         </div>
                     </template>
@@ -414,11 +413,16 @@
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
                         visible: this.visibleIndex === index,
                         stageStatus,
-                        errorTypeConf: errorTypeMap[item.errorType] ?? null,
                         errorInfoList:
-                            !active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
+                            (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
                                 ? item.errorInfoList.slice(0, 1)
-                                : item.errorInfoList
+                                : item.errorInfoList)?.map(err => {
+                                    console.log(err)
+                                    return {
+                                    title: err?.errorMsg ?? '--',
+                                    icon: errorTypeMap[err.errorType]?.icon
+                                }
+                                }) ?? []
                     }
                 })
             },
@@ -895,6 +899,7 @@
     .svg-error-icon {
       min-width: 12px;
       min-height: 12px;
+      flex-shrink: 0;
     }
   }
   .version-tips {

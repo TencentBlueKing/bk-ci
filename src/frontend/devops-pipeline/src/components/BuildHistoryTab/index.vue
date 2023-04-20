@@ -165,7 +165,11 @@
             queryStr (newStr) {
                 let hashParam = ''
                 if (this.$route.hash && /^#b-+/.test(this.$route.hash)) hashParam = this.$route.hash
-                this.$router.push(`${this.$route.path}?${newStr}${hashParam}`)
+                const url = `${this.$route.path}${newStr ? `?${newStr}` : ''}${hashParam}`
+                console.log(url, this.$route.fullPath)
+                if (url !== this.$route.fullPath) {
+                    this.$router.push(url)
+                }
             }
         },
 

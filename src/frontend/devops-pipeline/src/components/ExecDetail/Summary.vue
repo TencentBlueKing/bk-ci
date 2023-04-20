@@ -57,7 +57,7 @@
                     <i
                         v-if="!remarkEditable"
                         @click="showRemarkEdit"
-                        class="devops-icon icon-edit exec-remark-edit-icon"
+                        class="devops-icon icon-edit exec-remark-edit-icon pointer"
                     />
                     <span v-else class="pipeline-exec-remark-actions">
                         <bk-button text theme="primary" @click="handleRemarkChange">{{

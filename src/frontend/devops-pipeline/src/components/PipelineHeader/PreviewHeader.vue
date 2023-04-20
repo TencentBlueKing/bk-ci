@@ -6,6 +6,9 @@
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">
+            <bk-button :disabled="executeStatus" @click="goEdit">
+                {{ $t("cancel") }}
+            </bk-button>
             <bk-button
                 theme="primary"
                 :disabled="executeStatus"
@@ -13,9 +16,6 @@
                 @click="handleClick"
             >
                 {{ $t("exec") }}
-            </bk-button>
-            <bk-button :disabled="executeStatus" @click="goEdit">
-                {{ $t("cancel") }}
             </bk-button>
         </aside>
     </div>
@@ -37,9 +37,7 @@
                 bus.$emit('start-execute')
             },
             goEdit () {
-                this.$router.push({
-                    name: 'pipelinesEdit'
-                })
+                this.$router.back()
             }
         }
     }

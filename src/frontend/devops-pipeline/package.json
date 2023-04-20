@@ -32,7 +32,7 @@
         "vee-validate": "^2.0.3",
         "vue": "2.6.12",
         "vue-json-viewer": "^2.2.5",
-        "vue-router": "^2.8.1",
+        "vue-router": "3.6.5",
         "vuedraggable": "^2.16.0",
         "vuex": "^2.4.0",
         "xterm": "^4.15.0",

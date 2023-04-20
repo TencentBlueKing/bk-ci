@@ -579,7 +579,7 @@
     "outputs": "Outputs",
     "codeRecords": "Commits",
     "startupParams": "Parameters",
-    "canceller": "Canceller",
+    "canceller": "Canceler",
     "executor": "Executor",
     "trigger": "Trigger",
     "executionTime": "Duration",
