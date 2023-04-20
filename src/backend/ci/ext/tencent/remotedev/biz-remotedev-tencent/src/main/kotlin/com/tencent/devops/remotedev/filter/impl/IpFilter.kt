@@ -89,22 +89,22 @@ class IpFilter constructor(
     fun isIpInWhitelist(ip: String, whitelist: Set<String>): Boolean {
         val ips = ip.split(".").toTypedArray()
         val ipAddr = (
-            ips[0].toInt() shl 24
-                or (ips[1].toInt() shl 16)
-                or (ips[2].toInt() shl 8) or ips[3].toInt()
+            ips[0].toLong() shl 24
+                or (ips[1].toLong() shl 16)
+                or (ips[2].toLong() shl 8) or ips[3].toLong()
             )
 
         whitelist.forEach { cidr ->
             val splits = cidr.split("/")
             val type = if (splits.size == 2) splits[1].toInt() else 32
-            val mask = -0x1 shl 32 - type
+            val mask = ((1L shl 32 - type) - 1L).inv()
             val cidrIp = splits[0]
             val cidrIps = cidrIp.split(".").toTypedArray()
             val cidrIpAddr = (
-                cidrIps[0].toInt() shl 24
-                    or (cidrIps[1].toInt() shl 16)
-                    or (cidrIps[2].toInt() shl 8)
-                    or cidrIps[3].toInt()
+                cidrIps[0].toLong() shl 24
+                    or (cidrIps[1].toLong() shl 16)
+                    or (cidrIps[2].toLong() shl 8)
+                    or cidrIps[3].toLong()
                 )
             if (ipAddr and mask == cidrIpAddr and mask) return true
         }
