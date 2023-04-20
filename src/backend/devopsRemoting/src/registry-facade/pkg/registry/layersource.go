@@ -101,7 +101,7 @@ func (s FileLayerSource) GetBlob(ctx context.Context, spec *api.ImageSpec, dgst 
 }
 
 // NewFileLayerSource 生成一个静态层源，其中每个文件都应该是一个 gzip 层
-func NewFileLayerSource(ctx context.Context, file ...string) (FileLayerSource, error) {
+func NewFileLayerSource(_ context.Context, file ...string) (FileLayerSource, error) {
 	var res FileLayerSource
 	for _, fn := range file {
 		fr, err := os.OpenFile(fn, os.O_RDONLY, 0)

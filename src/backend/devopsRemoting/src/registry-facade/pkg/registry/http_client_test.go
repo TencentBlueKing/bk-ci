@@ -50,7 +50,7 @@ func TestRetryableFetcher(t *testing.T) {
 							Transport: &failFirstErrorRoundTrip{rt: http.DefaultTransport},
 						},
 					),
-					WithRequestLogHook(func(logger retryablehttp.Logger, req *http.Request, attempt int) {
+					WithRequestLogHook(func(_ retryablehttp.Logger, _ *http.Request, attempt int) {
 						retries = attempt
 					}),
 				)
