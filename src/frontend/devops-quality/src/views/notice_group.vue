@@ -75,10 +75,10 @@
 </template>
 
 <script>
-    import { mapGetters } from 'vuex'
-    import emptyData from './empty_data'
     import createGroup from '@/components/devops/create_group'
     import { getQueryString } from '@/utils/util'
+    import { mapGetters } from 'vuex'
+    import emptyData from './empty_data'
 
     export default {
         components: {

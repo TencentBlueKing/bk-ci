@@ -30,6 +30,8 @@ import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import io.swagger.annotations.ApiOperation
+import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.Duration
@@ -54,11 +56,15 @@ class OpenapiPermissionService(
         appCode: String?,
         apigwType: String?,
         userId: String?,
-        projectId: String
+        projectId: String,
+        method: MethodSignature
     ) {
         if (userId == null) {
-            val stack = Throwable().stackTrace.getOrNull(1).toString()
-            logger.warn("validProjectPermission|user_is_null|$apigwType|$appCode|$projectId|$stack")
+            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
+            logger.warn(
+                "validProjectPermission|user_is_null|" +
+                    "$apigwType|$appCode|$projectId|${tags ?: method}"
+            )
             return
 //            throw ErrorCodeException(
 //                statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -79,10 +85,10 @@ class OpenapiPermissionService(
         }.getOrNull() ?: false
 
         if (!hasViewPermission) {
-            val stack = Throwable().stackTrace.getOrNull(1).toString()
+            val tags = method.method.getAnnotation(ApiOperation::class.java)?.tags?.joinToString(separator = "|")
             logger.warn(
                 "validProjectManagerPermission|permission_is_false|" +
-                    "$apigwType|$appCode|$userId|$projectId|$stack"
+                    "$apigwType|$appCode|$userId|$projectId|${tags ?: method}"
             )
             return
 //            val defaultMessage =

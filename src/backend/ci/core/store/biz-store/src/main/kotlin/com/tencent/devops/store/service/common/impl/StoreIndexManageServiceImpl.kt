@@ -27,16 +27,15 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_INVALID_PARAM_
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
 import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
@@ -50,6 +49,7 @@ import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.STORE_CODE
+import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -74,8 +74,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     private val storePipelineRelDao: StorePipelineRelDao,
     private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val storeProjectRelDao: StoreProjectRelDao,
-    private val client: Client,
-    private val redisOperation: RedisOperation
+    private val client: Client
 ) : StoreIndexManageService {
 
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
@@ -190,7 +189,26 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             count = count,
             page = page,
             pageSize = pageSize,
-            records = records
+            records = records.map {
+                StoreIndexBaseInfo(
+                    id = it.id,
+                    indexCode = it.indexCode,
+                    indexName = it.indexName,
+                    description = it.description,
+                    operationType = IndexOperationTypeEnum.valueOf(it.operationType),
+                    atomCode = it.atomCode,
+                    atomVersion = it.atomVersion,
+                    finishTaskNum = it.finishTaskNum,
+                    totalTaskNum = it.totalTaskNum,
+                    executeTimeType = IndexExecuteTimeTypeEnum.valueOf(it.executeTimeType),
+                    storeType = StoreTypeEnum.getStoreTypeObj(it.storeType.toInt())!!,
+                    weight = it.weight,
+                    creator = it.creator,
+                    createTime = it.createTime,
+                    modifier = it.modifier,
+                    updateTime = it.updateTime
+                )
+            }
         )
     }
 

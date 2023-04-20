@@ -164,26 +164,7 @@ class StreamManualAction(
     }
 
     override fun getChangeSet(): Set<String>? {
-        val sha = event().commitId ?: return null
-        // 使用null和empty的区别来判断是否调用过获取函数
-        if (this.data.context.changeSet != null) {
-            return this.data.context.changeSet
-        }
-
-        // 获取mr请求的变更文件列表，用来给后面判断
-        val changeSet = mutableSetOf<String>()
-        api.getCommitDiff(
-            cred = (this.data.context.repoTrigger?.repoTriggerCred ?: getGitCred()),
-            // 获取mr信息的project Id和事件强关联，不一定是流水线所处库
-            gitProjectId = data.eventCommon.gitProjectId,
-            sha = sha
-        ).forEach {
-            changeSet.add(it.newPath)
-            changeSet.add(it.oldPath)
-        }
-        this.data.context.changeSet = changeSet
-
-        return this.data.context.changeSet
+        return null
     }
 
     override fun checkIfModify() = event().commitId != null

@@ -63,8 +63,13 @@ class ApigwRepositoryCommitResourceV4Impl @Autowired constructor(
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

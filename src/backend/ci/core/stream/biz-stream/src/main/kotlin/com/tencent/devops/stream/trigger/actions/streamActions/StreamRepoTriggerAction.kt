@@ -321,7 +321,7 @@ class StreamRepoTriggerAction(
 
         repoHook.reposIgnoreCondition.let {
             if (it.isEmpty()) return@let
-            baseAction.parseStreamTriggerContext()
+            baseAction.parseStreamTriggerContext(this.data.context.repoTrigger?.repoTriggerCred)
             val supportVar = PipelineVarUtil.fillContextVarMap(
                 mapOf(
                     PIPELINE_GIT_REPO_CREATE_TIME to (data.context.repoCreatedTime ?: ""),
