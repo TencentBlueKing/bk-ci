@@ -1,9 +1,9 @@
-import { createApp } from 'vue';
 import { createPinia } from 'pinia';
-import router from './router';
+import { createApp } from 'vue';
 import App from './app.vue';
+import './css/iconcool.js';
 import './css/index.css';
-import './css/iconcool.js'
+import router from './router';
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
@@ -12,15 +12,15 @@ import 'bkui-vue/dist/style.css';
 import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // 引入权限指令相关资源
-import { handleProjectManageNoPermission } from './utils/permission';
 import { AuthorityDirectiveV3 } from 'bk-permission';
 import 'bk-permission/dist/main.css';
+import { handleProjectManageNoPermission } from './utils/permission';
 
 // i18n
-import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
-import ZhCN from '../../locale/manage/zh-CN.json';
 import EnUS from '../../locale/manage/en-US.json';
+import ZhCN from '../../locale/manage/zh-CN.json';
+import { getCookies } from './common/util';
 
 const cookiesObj = getCookies() || {};
 const i18n = createI18n({
@@ -32,8 +32,7 @@ const i18n = createI18n({
     'en-US': EnUS,
   },
 });
-
-const app = createApp(App)
+const app = createApp(App);
 app
   .use(router)
   .use(createPinia())
@@ -41,4 +40,4 @@ app
   .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission))
   .mount('.app');
-app.directive('bk-tooltips', bkTooltips)
+app.directive('bk-tooltips', bkTooltips);
