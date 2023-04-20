@@ -584,6 +584,10 @@ class MigrateV3PolicyService constructor(
         val resourceType = resource.type
         val userActions = permission.actions.map { it.id }
         logger.info("find match resource group|$resourceType|$userActions")
+        // 如果path为空,则直接跳过
+        if (resource.paths.isEmpty()) {
+            return null
+        }
         return when {
             // 如果有all_action,直接加入管理员组
             userActions.contains(Constants.ALL_ACTION) -> managerGroupId
@@ -595,7 +599,7 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = projectCode,
                     userActions = permission.actions.map { it.id }
                 )
-            else ->
+            resource.paths[0].size >= 2 -> {
                 findMinMatchGroup(
                     userId = userId,
                     projectCode = projectCode,
@@ -603,6 +607,8 @@ class MigrateV3PolicyService constructor(
                     v3ResourceCode = resource.paths[0][1].id,
                     userActions = permission.actions.map { it.id }
                 )
+            }
+            else -> null
         }
     }
 
@@ -611,12 +617,15 @@ class MigrateV3PolicyService constructor(
     ): Boolean {
         // 资源类型是项目或者资源值是*,表示所有的资源，那么也应该迁移到项目组下
         return resource.type == AuthResourceType.PROJECT.value ||
-            (resource.paths.size >= 2 && resource.paths[0][1].id == "*")
+            // 项目下所有资源
+            (resource.paths[0].size == 1 && resource.paths[0][0].type == AuthResourceType.PROJECT.value) ||
+            (resource.paths[0].size >= 2 && resource.paths[0][1].id == "*")
     }
 
     /**
      * 根据action
      */
+    @Suppress("ReturnCount")
     private fun findMinMatchGroup(
         userId: String,
         projectCode: String,
