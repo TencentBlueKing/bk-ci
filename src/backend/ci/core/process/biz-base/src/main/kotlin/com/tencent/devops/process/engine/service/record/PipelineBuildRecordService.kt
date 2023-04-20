@@ -405,7 +405,7 @@ class PipelineBuildRecordService @Autowired constructor(
                     return@nextStage
                 }
                 stage.status = buildStatus.name
-                // 第2层循环：刷新stage下运行中的container状态
+                // 第2层循环：刷新stage下运行中的container状态（包括矩阵）
                 val recordContainers = recordContainerDao.getRecords(
                     dslContext = context, projectId = projectId,
                     pipelineId = pipelineId, buildId = buildId,
@@ -414,6 +414,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     val status = BuildStatus.parse(container.status)
+                    if (!status.isRunning()) {
+                        return@nextContainer
+                    }
                     val recordTasks = recordTaskDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, container.containerId
                     )
@@ -426,7 +429,6 @@ class PipelineBuildRecordService @Autowired constructor(
                             container.containerVar[Container::name.name] =
                                 ContainerUtils.getClearedQueueContainerName(containerName)
                         }
-                        container.status = buildStatus.name
                     }
                     container.status = buildStatus.name
                     // 第3层循环：刷新container下运行中的task状态
@@ -456,7 +458,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
-                null, null, null
+                null, cancelUser, null
             )
         }
     }
