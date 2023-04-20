@@ -132,8 +132,11 @@ class MigrateResourceService @Autowired constructor(
                 limit = limit,
                 resourceType = resourceType,
                 projectCode = projectCode
-            ) ?: return
+            )
             logger.info("MigrateResourceService|resourceData:$resourceData")
+            if (resourceData == null || resourceData.data.result.isEmpty()) {
+                return
+            }
             val ids = resourceData.data.result.map { it.id }
             val instanceInfoList = fetchInstanceInfo(
                 resourceType = resourceType,
@@ -164,7 +167,7 @@ class MigrateResourceService @Autowired constructor(
                 }
             }
             offset += limit
-        } while (resourceData.data.count == limit)
+        } while (resourceData!!.data.count == limit)
     }
 
     private fun listInstance(

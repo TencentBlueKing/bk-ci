@@ -132,6 +132,10 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_VIEW = "project_view"
         // 项目访问权限
         private const val PROJECT_VISIT = "project_visit"
+        // v3项目禁用启用
+        private const val PROJECT_DELETE = "project_delete"
+        // rbac项目禁用启用
+        private const val PROJECT_ENABLE = "project_enable"
         private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
@@ -647,6 +651,11 @@ class MigrateV3PolicyService constructor(
         }
         if (finalUserActions.contains(PROJECT_VIEWS_MANAGER)) {
             finalUserActions.remove(PROJECT_VIEWS_MANAGER)
+        }
+        // project_delete需替换成project_delete
+        if (finalUserActions.contains(PROJECT_DELETE)) {
+            finalUserActions.remove(PROJECT_DELETE)
+            finalUserActions.add(PROJECT_ENABLE)
         }
         // 判断是否已有所有action权限
         val notActionPermissionMap = permissionService.batchValidateUserResourcePermission(
