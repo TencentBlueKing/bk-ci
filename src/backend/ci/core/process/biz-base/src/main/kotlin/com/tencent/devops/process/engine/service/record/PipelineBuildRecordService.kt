@@ -401,7 +401,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
-                if (BuildStatus.parse(stage.status).isRunning()) {
+                if (!BuildStatus.parse(stage.status).isRunning()) {
                     return@nextStage
                 }
                 stage.status = buildStatus.name
@@ -429,10 +429,19 @@ class PipelineBuildRecordService @Autowired constructor(
                         container.status = buildStatus.name
                     }
                     container.status = buildStatus.name
-                    // 第3层循环：刷新stage下运行中的container状态
+                    // 第3层循环：刷新container下运行中的task状态
                     recordTasks.forEach nextTask@{ task ->
-                        if (BuildStatus.parse(task.status).isRunning()) {
+                        if (!BuildStatus.parse(task.status).isRunning()) {
                             return@nextTask
+                        }
+                        if (task.status == BuildStatus.PAUSE.name) {
+                            task.timestamps = mergeTimestamps(
+                                task.timestamps,
+                                mapOf(
+                                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                                )
+                            )
                         }
                         task.status = buildStatus.name
                     }
