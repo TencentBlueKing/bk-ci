@@ -2,7 +2,6 @@ package com.tencent.devops.process.pojo.mq
 
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.IEvent
-import com.tencent.devops.common.pipeline.type.DispatchType
 
 abstract class IDispatchEvent(
     open var actionType: ActionType,

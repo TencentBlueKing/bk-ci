@@ -138,7 +138,6 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 logger.warn("Unknown agent type - ${event.dispatchType}")
             }
         }
-
     }
 
     private fun buildByAgentId(
