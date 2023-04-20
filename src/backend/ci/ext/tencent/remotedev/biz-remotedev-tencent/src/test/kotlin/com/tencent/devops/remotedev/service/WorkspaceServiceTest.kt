@@ -9,7 +9,7 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.remotedev.config.CommonConfig
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -46,7 +46,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val commonService: CommonService = mockk()
     private val profile: Profile = mockk()
     private val redisCache: RedisCacheService = mockk()
-    private val commonConfig: CommonConfig = mockk()
+    private val commonConfig: RemoteDevCommonConfig = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
