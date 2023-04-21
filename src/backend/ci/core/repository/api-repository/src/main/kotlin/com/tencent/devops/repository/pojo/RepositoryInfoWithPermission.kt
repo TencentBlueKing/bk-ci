@@ -47,6 +47,8 @@ data class RepositoryInfoWithPermission(
     val canEdit: Boolean,
     @ApiModelProperty("能否被删除", required = true)
     val canDelete: Boolean,
+    @ApiModelProperty("能否被使用", required = true)
+    val canUse: Boolean? = null,
     @ApiModelProperty("认证类型", required = false)
     val authType: String = "",
     @ApiModelProperty("svn的protocal类型（http|ssh）", required = false)
