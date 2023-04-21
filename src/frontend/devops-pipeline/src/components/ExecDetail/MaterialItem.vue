@@ -128,6 +128,11 @@
                             'webhookAliasName',
                             'webhookCommitId'
                         ]
+                    case 'CHANGE_COMMIT':
+                        return [
+                            'webhookAliasName',
+                            'webhookCommitId'
+                        ]
                     default:
                         return [
                             'webhookAliasName',

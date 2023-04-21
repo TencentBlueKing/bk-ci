@@ -11,7 +11,7 @@
                 :disabled="loading || !canManualStartup"
                 :icon="loading ? 'loading' : ''"
                 outline
-                :hover-theme="isRunning ? 'warning' : 'default'"
+                :theme="isRunning ? 'warning' : 'default'"
                 @click="handleClick"
             >
                 {{ isRunning ? $t("history.stopBuild") : $t("history.reBuild") }}

@@ -236,10 +236,12 @@
             grid-gap: 20px;
             grid-auto-flow: column;
             height: 38px;
+            grid-auto-columns: minmax(auto, min-content);
             &.visible-material-row {
               border: 1px solid transparent;
               padding-bottom: 0px;
               align-items: center;
+
             }
             > span {
               @include ellipsis();
