@@ -126,28 +126,51 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
-                // 若是创建动作，需要挂载在项目资源类型下
-                val (verifyRecordResourceType, verifyRecordResourceCode) =
-                    if (permission == AuthPermission.CREATE) {
-                        Pair(AuthResourceType.PROJECT, projectCode)
-                    } else {
-                        Pair(resourceType, resourceCode)
-                    }
-                client.get(ServiceVerifyRecordResource::class).createOrUpdate(
-                    userId = user,
-                    verifyRecordDTO = VerifyRecordDTO(
-                        userId = user,
-                        projectId = projectCode,
-                        resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
-                        resourceCode = verifyRecordResourceCode,
-                        action = TActionUtils.buildAction(permission, resourceType),
-                        verifyResult = result
-                    )
+                createVerifyRecord(
+                    user = user,
+                    permission = permission,
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    verifyResult = result
                 )
                 return result
             }
         } finally {
             jmxAuthApi.execute(VALIDATE_USER_RESOURCE, System.currentTimeMillis() - epoch, success)
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun createVerifyRecord(
+        user: String,
+        permission: AuthPermission,
+        projectCode: String,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        verifyResult: Boolean
+    ) {
+        // 若是创建动作，需要挂载在项目资源类型下
+        val (verifyRecordResourceType, verifyRecordResourceCode) =
+            if (permission == AuthPermission.CREATE) {
+                Pair(AuthResourceType.PROJECT, projectCode)
+            } else {
+                Pair(resourceType, resourceCode)
+            }
+        try {
+            client.get(ServiceVerifyRecordResource::class).createOrUpdate(
+                userId = user,
+                verifyRecordDTO = VerifyRecordDTO(
+                    userId = user,
+                    projectId = projectCode,
+                    resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
+                    resourceCode = verifyRecordResourceCode,
+                    action = TActionUtils.buildAction(permission, resourceType),
+                    verifyResult = verifyResult
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("create v0 verify record failed!|$projectCode|$user|$permission|$resourceType|$resourceCode")
         }
     }
 
