@@ -878,12 +878,12 @@ class CertServiceImpl @Autowired constructor(
         val permissionToListMap = certPermissionService.filterCerts(
             userId = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT)
+            authPermissions = setOf(AuthPermission.LIST, AuthPermission.DELETE, AuthPermission.EDIT, AuthPermission.USE)
         )
         val hasListPermissionCertIdList = permissionToListMap[AuthPermission.LIST]!!
         val hasDeletePermissionCertIdList = permissionToListMap[AuthPermission.DELETE]!!
         val hasEditPermissionCertIdList = permissionToListMap[AuthPermission.EDIT]!!
-
+        val hasUsePermissionCertIdList = permissionToListMap[AuthPermission.USE]!!
         logger.info("$permissionToListMap $hasListPermissionCertIdList $hasDeletePermissionCertIdList")
 
         val count = certDao.countByProject(dslContext, projectId, certType, hasListPermissionCertIdList.toSet())
@@ -892,6 +892,7 @@ class CertServiceImpl @Autowired constructor(
         val certList = certRecordList.map {
             val hasDeletePermission = hasDeletePermissionCertIdList.contains(it.certId)
             val hasEditPermission = hasEditPermissionCertIdList.contains(it.certId)
+            val hasUsePermission = hasUsePermissionCertIdList.contains(it.certId)
             CertWithPermission(
                 certId = it.certId,
                 certType = it.certType,
@@ -902,7 +903,11 @@ class CertServiceImpl @Autowired constructor(
                 credentialId = it.credentialId ?: "",
                 alias = it.certJksAlias ?: "",
                 aliasCredentialId = it.certJksAliasCredentialId ?: "",
-                permissions = CertPermissions(hasDeletePermission, hasEditPermission)
+                permissions = CertPermissions(
+                    delete = hasDeletePermission,
+                    edit = hasEditPermission,
+                    use = hasUsePermission
+                )
             )
         }
         return SQLPage(count, certList)
@@ -913,7 +918,8 @@ class CertServiceImpl @Autowired constructor(
         val certList = mutableListOf<Cert>()
         val certInfos = certDao.listByProject(dslContext, projectId, offset, limit)
         certInfos.map {
-            certList.add(Cert(
+            certList.add(
+                Cert(
                     certId = it.certId,
                     certType = it.certType,
                     creator = it.certUserId,
@@ -921,12 +927,13 @@ class CertServiceImpl @Autowired constructor(
                     createTime = it.certCreateTime.timestamp(),
                     certRemark = it.certRemark,
                     expireTime = it.certExpireDate.timestamp()
-            ))
+                )
+            )
         }
 
         return SQLPage(
-                count = count,
-                records = certList
+            count = count,
+            records = certList
         )
     }
 
@@ -1242,11 +1249,12 @@ class CertServiceImpl @Autowired constructor(
     override fun getCertByIds(certIds: Set<String>): List<Cert>? {
         val certList = mutableListOf<Cert>()
         val records = certDao.listByIds(
-                dslContext = dslContext,
-                certIds = certIds
+            dslContext = dslContext,
+            certIds = certIds
         )
         records.map {
-            certList.add(Cert(
+            certList.add(
+                Cert(
                     certId = it.certId,
                     certType = it.certType,
                     creator = it.certUserId,
@@ -1254,37 +1262,40 @@ class CertServiceImpl @Autowired constructor(
                     createTime = it.certCreateTime.timestamp(),
                     certRemark = it.certRemark,
                     expireTime = it.certExpireDate.timestamp()
-            ))
+                )
+            )
         }
         return certList
     }
 
     override fun searchByCertId(projectId: String, offset: Int, limit: Int, certId: String): SQLPage<Cert> {
-            val count = certDao.countByIdLike(dslContext, projectId, certId)
-            val certList = mutableListOf<Cert>()
-            val certInfos = certDao.searchByIdLike(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    offset = offset,
-                    limit = limit,
-                    certId = certId
+        val count = certDao.countByIdLike(dslContext, projectId, certId)
+        val certList = mutableListOf<Cert>()
+        val certInfos = certDao.searchByIdLike(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            certId = certId
+        )
+        certInfos.map {
+            certList.add(
+                Cert(
+                    certId = it.certId,
+                    certType = it.certType,
+                    creator = it.certUserId,
+                    credentialId = it.credentialId,
+                    createTime = it.certCreateTime.timestamp(),
+                    certRemark = it.certRemark,
+                    expireTime = it.certExpireDate.timestamp()
+                )
             )
-            certInfos.map {
-                certList.add(Cert(
-                        certId = it.certId,
-                        certType = it.certType,
-                        creator = it.certUserId,
-                        credentialId = it.credentialId,
-                        createTime = it.certCreateTime.timestamp(),
-                        certRemark = it.certRemark,
-                        expireTime = it.certExpireDate.timestamp()
-                ))
-            }
+        }
 
-            return SQLPage(
-                    count = count,
-                    records = certList
-            )
+        return SQLPage(
+            count = count,
+            records = certList
+        )
     }
 
     private fun encryptCert(
