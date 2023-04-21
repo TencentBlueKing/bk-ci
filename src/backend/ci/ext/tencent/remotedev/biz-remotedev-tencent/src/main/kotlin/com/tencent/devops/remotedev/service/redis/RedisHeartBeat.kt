@@ -59,8 +59,7 @@ class RedisHeartBeat @Autowired constructor(
             logger.info("start refresh all heart beat")
             val entries = redisOperation.hentries(heartbeatKey())?.ifEmpty { null } ?: return false
             val now = System.currentTimeMillis().toString()
-            entries.mapValues { now }
-            redisOperation.hmset(heartbeatKey(), entries)
+            redisOperation.hmset(heartbeatKey(), entries.mapValues { now })
             return true
         }
         return false
