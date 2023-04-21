@@ -11,6 +11,7 @@ object RedisKeys {
     const val REDIS_REMOTEDEV_GRAY_VERSION = "remotedev:gray:version"
     const val REDIS_REMOTEDEV_PROD_VERSION = "remotedev:prod:version"
     const val REDIS_REMOTEDEV_INACTIVE_TIME = "remotedev:inactiveTime"
+    const val REDIS_WHITELIST_PERIOD = "remotedev:whitelistPeriod"
 
     // redis必填项
     const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"

@@ -39,6 +39,7 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
+                if (redisHeartBeat.autoHeartbeat()) return
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
