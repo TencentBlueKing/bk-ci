@@ -73,7 +73,7 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .set(USER_SETTING, setting.userSetting.let { JsonUtil.toJson(it, false) })
+                .set(USER_SETTING, JsonUtil.toJson(setting.userSetting, false))
                 .execute()
         }
     }
