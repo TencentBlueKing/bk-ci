@@ -283,7 +283,7 @@ class TGitPushTriggerHandler(
     ): Set<String> {
         val changeFileList = mutableSetOf<String>()
         changeFileList.addAll(
-            gitScmService.getChangeFileList(
+            eventCacheService.getChangeFileList(
                 projectId = projectId,
                 repo = repository,
                 from = event.before,
@@ -295,11 +295,8 @@ class TGitPushTriggerHandler(
             logger.warn(
                 "Failed to get the change file list," +
                     "use webhook information to trigger," +
-                    "please check the repository permissions," +
-                    "projectId[$projectId]," +
-                    "repo[$repository]," +
-                    "form[${event.before}]," +
-                    "to[${event.after}]"
+                    "repo[${repository.projectName}]|" +
+                    "commitId[${event.checkout_sha}]"
             )
             event.commits?.forEach { commit ->
                 changeFileList.addAll(commit.added ?: listOf())
