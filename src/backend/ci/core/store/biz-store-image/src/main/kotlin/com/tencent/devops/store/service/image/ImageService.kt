@@ -112,9 +112,9 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.ImageUtil
 import java.time.LocalDateTime
+import java.util.*
 import org.jooq.DSLContext
 import org.jooq.Record
-import java.util.Date
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -533,7 +533,7 @@ abstract class ImageService @Autowired constructor() {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
                 val classifyLanName = I18nUtil.getCodeLanMessage(
-                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                    messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
                     defaultMessage = it.classifyName,
                     language = I18nUtil.getLanguage(userId)
                 )

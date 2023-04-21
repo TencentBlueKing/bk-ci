@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -47,8 +46,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
@@ -99,17 +98,17 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import java.time.LocalDateTime
-import java.util.Optional
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTemplateService {
@@ -396,7 +395,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         classifyList.forEach {
             val classifyCode = it.classifyCode
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                messageCode = "${StoreTypeEnum.TEMPLATE.name}.classify.$classifyCode",
                 defaultMessage = it.classifyName,
                 language = I18nUtil.getLanguage(userId)
             )
