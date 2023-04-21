@@ -183,7 +183,7 @@ class TGitPushTriggerHandler(
                                 to = event.after
                             )
                         )
-                        if(changeFileList.isEmpty()){
+                        if (changeFileList.isEmpty()) {
                             // 兜底方案，若关联代码的权限失效，则集合为空，使用webhook信息进行触发
                             logger.warn(
                                 "Failed to get the change file list," +
@@ -199,7 +199,6 @@ class TGitPushTriggerHandler(
                                 changeFileList.addAll(commit.removed ?: listOf())
                                 changeFileList.addAll(commit.modified ?: listOf())
                             }
-
                         }
                         changeFileList
                     }
