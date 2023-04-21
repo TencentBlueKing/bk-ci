@@ -69,8 +69,7 @@ class RbacPermissionMigrateService constructor(
 
     override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
         logger.info("migrate $projectCodes auth from v3 to rbac")
-        // TODO 后续需要放开
-        /*val projectVos =
+        val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(projectCodes = projectCodes.toSet()).data
                 ?: run {
                     logger.info("migrate project info is empty")
@@ -79,7 +78,7 @@ class RbacPermissionMigrateService constructor(
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
-        )*/
+        )
         return projectCodes.map { projectCode ->
             v3ToRbacAuth(projectCode)
         }.all { it }

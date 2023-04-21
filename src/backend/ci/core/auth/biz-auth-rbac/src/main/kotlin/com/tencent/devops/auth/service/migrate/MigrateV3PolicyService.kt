@@ -136,6 +136,8 @@ class MigrateV3PolicyService constructor(
         private const val PROJECT_DELETE = "project_delete"
         // rbac项目禁用启用
         private const val PROJECT_ENABLE = "project_enable"
+        // v3质量红线启用,rbac没有
+        private const val QUALITY_GROUP_ENABLE = "quality_group_enable"
         private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         private val logger = LoggerFactory.getLogger(MigrateV3PolicyService::class.java)
     }
@@ -493,8 +495,8 @@ class MigrateV3PolicyService constructor(
                     batchAddGroupMember(groupId = managerGroupId, members = members)
                     return emptyList()
                 }
-                "project_views_manager" -> {
-                    logger.info("skip project_views_manager action")
+                PROJECT_VIEWS_MANAGER, PROJECT_DELETE, QUALITY_GROUP_ENABLE -> {
+                    logger.info("skip ${action.id} action")
                 }
                 else -> {
                     rbacActions.add(action)
@@ -643,25 +645,13 @@ class MigrateV3PolicyService constructor(
             resourceType = resourceType,
             resourceCode = v3ResourceCode
         ) ?: return null
-        val finalUserActions = userActions.toMutableList()
-        // project_view需要替换成project_visit
-        if (finalUserActions.contains(PROJECT_VIEW)) {
-            finalUserActions.remove(PROJECT_VIEW)
-            finalUserActions.add(PROJECT_VISIT)
-        }
-        if (finalUserActions.contains(PROJECT_VIEWS_MANAGER)) {
-            finalUserActions.remove(PROJECT_VIEWS_MANAGER)
-        }
-        // project_delete需替换成project_delete
-        if (finalUserActions.contains(PROJECT_DELETE)) {
-            finalUserActions.remove(PROJECT_DELETE)
-            finalUserActions.add(PROJECT_ENABLE)
-        }
+        val finalUserActions = replaceOrRemoveAction(userActions)
+
         /* 项目下资源无限制,resourceType传入的是project，但是action并不是在项目下,
          调用batchValidateUserResourcePermission鉴权会报resources not match action
          */
         val canValidatePermission = resourceType == AuthResourceType.PROJECT.value &&
-            !rbacCacheService.listResourceType2Action(resourceType).map { it.action }.containsAll(userActions)
+            !rbacCacheService.listResourceType2Action(resourceType).map { it.action }.containsAll(finalUserActions)
         val hasAllActionPermission = if (canValidatePermission) {
             false
         } else {
@@ -715,5 +705,30 @@ class MigrateV3PolicyService constructor(
             beforeGroupCount = beforeGroupCount,
             afterGroupCount = afterGroupCount
         )
+    }
+
+    /**
+     * action替换或移除
+     *
+     */
+    private fun replaceOrRemoveAction(actions: List<String>): List<String> {
+        val finalUserActions = actions.toMutableList()
+        // project_view需要替换成project_visit
+        if (finalUserActions.contains(PROJECT_VIEW)) {
+            finalUserActions.remove(PROJECT_VIEW)
+            finalUserActions.add(PROJECT_VISIT)
+        }
+        if (finalUserActions.contains(PROJECT_VIEWS_MANAGER)) {
+            finalUserActions.remove(PROJECT_VIEWS_MANAGER)
+        }
+        // project_delete需替换成project_delete
+        if (finalUserActions.contains(PROJECT_DELETE)) {
+            finalUserActions.remove(PROJECT_DELETE)
+            finalUserActions.add(PROJECT_ENABLE)
+        }
+        if (finalUserActions.contains(QUALITY_GROUP_ENABLE)) {
+            finalUserActions.remove(QUALITY_GROUP_ENABLE)
+        }
+        return finalUserActions
     }
 }
