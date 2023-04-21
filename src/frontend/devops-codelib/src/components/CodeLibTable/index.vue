@@ -24,36 +24,54 @@
         </bk-table-column>
         <bk-table-column :label="$t('codelib.operation')" width="150">
             <template slot-scope="props">
-                <bk-button
-                    theme="primary"
-                    v-perm="{
-                        hasPermission: props.row.canEdit,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: RESOURCE_TYPE,
-                            resourceCode: props.row.repositoryHashId,
-                            action: RESOURCE_ACTION.EDIT
-                        }
-                    }"
-                    text
-                    @click="editCodeLib(props.row)"
-                >{{ $t('codelib.edit') }}</bk-button>
-                <bk-button
-                    theme="primary"
-                    v-perm="{
-                        hasPermission: props.row.canDelete,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: projectId,
-                            resourceType: RESOURCE_TYPE,
-                            resourceCode: props.row.repositoryHashId,
-                            action: RESOURCE_ACTION.DELETE
-                        }
-                    }"
-                    text
-                    @click="deleteCodeLib(props.row)"
-                >{{ $t('codelib.delete') }}</bk-button>
+                <template v-if="props.row.canUse">
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: props.row.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        text
+                        @click="editCodeLib(props.row)"
+                    >{{ $t('codelib.edit') }}</bk-button>
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: props.row.canDelete,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
+                        }"
+                        text
+                        @click="deleteCodeLib(props.row)"
+                    >{{ $t('codelib.delete') }}</bk-button>
+                </template>
+                <template v-else>
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: props.row.canUse,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.USE
+                            }
+                        }"
+                        text
+                    >{{ $t('codelib.applyPermission') }}</bk-button>
+                </template>
             </template>
         </bk-table-column>
     </bk-table>

@@ -22,29 +22,47 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button
-                                v-perm="{
-                                    tooltips: $t('ticket.noPermission'),
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: CERT_RESOURCE_TYPE,
-                                        resourceCode: props.row.certId,
-                                        action: CERT_RESOURCE_ACTION.EDIT
-                                    }
-                                }"
-                                theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            
-                            <bk-button
-                                v-perm="{
-                                    tooltips: $t('ticket.noPermission'),
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: CERT_RESOURCE_TYPE,
-                                        resourceCode: props.row.certId,
-                                        action: CERT_RESOURCE_ACTION.DELETE
-                                    }
-                                }"
-                                theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <template v-if="props.row.permissions.use">
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.edit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                                
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.delete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            </template>
+                            <template v-else>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.use,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.USE
+                                        }
+                                    }"
+                                    theme="primary" text>{{ $t('ticket.applyPermission') }}</bk-button>
+                            </template>
                         </template>
                     </bk-table-column>
                 </bk-table>

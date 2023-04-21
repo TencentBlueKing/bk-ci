@@ -46,25 +46,41 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span
-                            v-perm="{
-                                hasPermission: props.row.canDelete,
-                                disablePermissionApi: true,
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: ENV_RESOURCE_TYPE,
-                                    resourceCode: props.row.envHashId,
-                                    action: ENV_RESOURCE_ACTION.DELETE
-                                }
-                            }"
-                        >
+                        <template v-if="props.row.canUse">
                             <span
+                                v-perm="{
+                                    hasPermission: props.row.canDelete,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: props.row.envHashId,
+                                        action: ENV_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
                                 :class="{ 'handler-text': props.row.canDelete }"
                                 @click.stop="confirmDelete(props.row)"
                             >
                                 {{ $t('environment.delete') }}
                             </span>
-                        </span>
+                        </template>
+                        <template v-else>
+                             <span
+                                v-perm="{
+                                    hasPermission: props.row.canUse,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: props.row.envHashId,
+                                        action: ENV_RESOURCE_ACTION.USE
+                                    }
+                                }"
+                                :class="{ 'handler-text': props.row.canUse }"
+                            >
+                                {{ $t('environment.applyPermission') }}
+                            </span> 
+                        </template>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -81,10 +97,12 @@
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
+import Template from '../../../devops-atomstore/src/components/common/detail-info/template.vue'
 
     export default {
         components: {
             emptyNode
+                Template
         },
         data () {
             return {
