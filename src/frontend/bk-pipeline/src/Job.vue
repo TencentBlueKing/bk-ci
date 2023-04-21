@@ -3,7 +3,7 @@
         :class="{
             'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
         }"
-        :id="container.containerId"
+        :id="container.id"
     >
         <h3 :class="jobTitleCls" @click.stop="showContainerPanel">
             <status-icon
