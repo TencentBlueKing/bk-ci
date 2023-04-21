@@ -30,4 +30,26 @@ class AuthVerifyRecordService @Autowired constructor(
             limit = limit
         ).map { authVerifyRecordDao.convert(it) }
     }
+
+    fun bathCreateOrUpdateVerifyRecord(
+        permissionsResourcesMap: Map<AuthPermission, List<String>>,
+        userId: String,
+        projectCode: String,
+        resourceType: String
+    ) {
+        permissionsResourcesMap.forEach { (permission, resourceCodeList) ->
+            resourceCodeList.forEach { resourceCode ->
+                createOrUpdateVerifyRecord(
+                    VerifyRecordDTO(
+                        userId = userId,
+                        projectId = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        action = permission.value,
+                        verifyResult = true
+                    )
+                )
+            }
+        }
+    }
 }
