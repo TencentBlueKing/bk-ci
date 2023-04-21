@@ -123,7 +123,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         updateLastModifyUser: Boolean?
     ): Result<Boolean> {
         checkParams(userId, projectId)
-        pipelineInfoFacadeService.editPipeline(
+        val deployPipelineResult = pipelineInfoFacadeService.editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -131,6 +131,17 @@ class ServicePipelineResourceImpl @Autowired constructor(
             channelCode = channelCode,
             checkPermission = ChannelCode.isNeedAuth(channelCode),
             updateLastModifyUser = updateLastModifyUser
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = pipeline.name,
+                userId = userId,
+                action = "copy",
+                actionContent = "API: Edit Ver.${deployPipelineResult.version}",
+                projectId = projectId
+            )
         )
         return Result(true)
     }
@@ -147,8 +158,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                name = pipeline.name,
-                desc = pipeline.desc,
+                pipelineCopy = pipeline,
                 channelCode = ChannelCode.BS
             )
         )
@@ -159,7 +169,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 resourceName = pipeline.name,
                 userId = userId,
                 action = "copy",
-                actionContent = "复制流水线/Copy Pipeline from($pipelineId)",
+                actionContent = "API: Copy from($pipelineId)",
                 projectId = projectId
             )
         )
@@ -173,6 +183,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         useTemplateSettings: Boolean?
     ): Result<PipelineId> {
+        modelAndSetting.setting.checkParam()
         val pipelineId = PipelineId(
             id = pipelineInfoFacadeService.uploadPipeline(
                 userId = userId,
@@ -187,7 +198,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
                 action = "create",
-                actionContent = "调用创建流水线API/Create Pipeline API",
+                actionContent = "API: Import Create",
                 projectId = projectId
             )
         )
@@ -222,7 +233,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 resourceName = modelAndSetting.model.name,
                 userId = userId,
                 action = "edit",
-                actionContent = "调用保存流水线API/API Save Ver.${pipelineResult.version}",
+                actionContent = "API: Save Ver.${pipelineResult.version}",
                 projectId = projectId
             )
         )
@@ -313,11 +324,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
+        setting.checkParam()
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
-            setting = setting,
+            setting = setting.copy(projectId, pipelineId),
             checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
+        )
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = setting.pipelineName,
+                userId = userId,
+                action = "edit",
+                actionContent = "Update Setting",
+                projectId = projectId
+            )
         )
         return Result(true)
     }
@@ -427,11 +450,23 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun restore(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         checkParams(userId, projectId)
-        pipelineInfoFacadeService.restorePipeline(
+        val restorePipeline = pipelineInfoFacadeService.restorePipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
+        )
+
+        auditService.createAudit(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId,
+                resourceName = restorePipeline.pipelineName,
+                userId = userId,
+                action = "Restore",
+                actionContent = "Restore Ver.${restorePipeline.version}",
+                projectId = projectId
+            )
         )
         return Result(true)
     }
@@ -450,11 +485,6 @@ class ServicePipelineResourceImpl @Autowired constructor(
             return Result(pipelineInfos[0])
         }
         return null
-    }
-
-    override fun batchUpdatePipelineNamePinYin(userId: String): Result<Boolean> {
-        pipelineInfoFacadeService.batchUpdatePipelineNamePinYin(userId)
-        return Result(true)
     }
 
     override fun getPipelineLabelInfos(

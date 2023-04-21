@@ -29,9 +29,12 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.KEY_BRANCH
 import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
 import com.tencent.devops.common.api.constant.KEY_OS_ARCH
 import com.tencent.devops.common.api.constant.KEY_OS_NAME
 import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -99,9 +102,19 @@ class AtomMarketInitPipelineService @Autowired constructor(
         if (!osArch.isNullOrBlank()) {
             startParams[KEY_OS_ARCH] = osArch
         }
+        val invalidOsInfo = atomBaseInfo.invalidOsInfo
+        if (!invalidOsInfo.isNullOrBlank()) {
+            startParams[KEY_INVALID_OS_INFO] = invalidOsInfo
+        }
         val runtimeVersion = atomBaseInfo.runtimeVersion
         if (!runtimeVersion.isNullOrBlank()) {
             startParams[KEY_RUNTIME_VERSION] = runtimeVersion
+        }
+        atomMarketInitPipelineReq.validOsNameFlag?.let {
+            startParams[KEY_VALID_OS_NAME_FLAG] = it.toString()
+        }
+        atomMarketInitPipelineReq.validOsArchFlag?.let {
+            startParams[KEY_VALID_OS_ARCH_FLAG] = it.toString()
         }
         var atomBuildStatus = AtomStatusEnum.BUILDING
         var buildId: String? = null
@@ -118,8 +131,8 @@ class AtomMarketInitPipelineService @Autowired constructor(
                 startByMessage = null
             )
             logger.info("atomMarketBuildManualStartup result is:$buildId")
-        } catch (e: Exception) {
-            logger.error("buildManualStartup error is :${e.message}", e)
+        } catch (t: Throwable) {
+            logger.error("$pipelineId buildManualStartup error:", t)
             atomBuildStatus = AtomStatusEnum.BUILD_FAIL
         }
         return Result(AtomMarketInitPipelineResp(pipelineId, buildId, atomBuildStatus))

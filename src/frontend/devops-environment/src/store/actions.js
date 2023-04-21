@@ -267,8 +267,10 @@ const actions = {
         })
     },
 
-    requestShareEnvProjectList (_, { projectId, envHashId, offset, limit }) {
-        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list?offset=${offset}&limit=${limit}`)
+    requestShareEnvProjectList (_, { projectId, envHashId, ...query }) {
+        return vue.$ajax.get(`${prefix}/user/environment/${projectId}/${envHashId}/list`, {
+            params: query
+        })
     },
 
     requestProjects (_, { projectId, envHashId, page, pageSize, search }) {

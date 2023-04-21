@@ -33,6 +33,7 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.exception.YamlBlankException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
@@ -50,7 +51,8 @@ import org.springframework.stereotype.Service
 class YamlTemplateService @Autowired constructor(
     private val client: Client,
     private val yamlSchemaCheck: YamlSchemaCheck,
-    private val streamTriggerCache: StreamTriggerCache
+    private val streamTriggerCache: StreamTriggerCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
 
     companion object {
@@ -92,11 +94,20 @@ class YamlTemplateService @Autowired constructor(
                 val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                     gitProjectKey = targetRepo!!.repository,
                     action = extraParameters,
-                    getProjectInfo = extraParameters.api::getGitProjectInfo
-                )!!.defaultBranch!!
+                    getProjectInfo = extraParameters.api::getGitProjectInfo,
+                    cred = extraParameters.getGitCred()
+                ).let {
+                    if (it == null) {
+                        throw YamlFormatException(
+                            "${extraParameters.data.setting.enableUser} access ${targetRepo!!.repository} error, " +
+                                "Check projectName or ci enable user permission"
+                        )
+                    }
+                    it
+                }.defaultBranch!!
                 val content = extraParameters.api.getFileContent(
                     cred = extraParameters.getGitCred(),
-                    gitProjectId = targetRepo!!.repository,
+                    gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                     fileName = templateDirectory + path,
                     ref = ref,
                     retry = ApiRequestRetryInfo(true)
@@ -117,12 +128,8 @@ class YamlTemplateService @Autowired constructor(
         param: GetTemplateParam<BaseAction>
     ): String {
         with(param) {
-            val (isTicket, key) = getKey(targetRepo?.credentials?.personalAccessToken!!)
-            val personToken = if (isTicket) {
-                getTicket(param, key)
-            } else {
-                key
-            }
+            val key = targetRepo?.credentials?.personalAccessToken!!
+            val personToken = kotlin.runCatching { getTicket(param, key) }.getOrDefault(key)
             val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = targetRepo?.repository!!,
                 action = extraParameters,
@@ -131,7 +138,7 @@ class YamlTemplateService @Autowired constructor(
             )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
-                gitProjectId = targetRepo?.repository!!,
+                gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                 fileName = templateDirectory + path,
                 ref = ref,
                 retry = ApiRequestRetryInfo(true)
@@ -150,8 +157,8 @@ class YamlTemplateService @Autowired constructor(
                     client = client,
                     projectId = extraParameters.getProjectCode(),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN
-                )["v1"]!!
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN)
+                ).v1
             } catch (ignore: Exception) {
                 if (nowRepoId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
@@ -163,17 +170,21 @@ class YamlTemplateService @Autowired constructor(
             val acrossGitProjectId = streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = nowRepoId!!,
                 action = extraParameters,
-                getProjectInfo = extraParameters.api::getGitProjectInfo
+                getProjectInfo = extraParameters.api::getGitProjectInfo,
+                cred = extraParameters.getGitCred()
             )!!.gitProjectId
             logger.info("YamlTemplateService|getTemplate|getTicket|acrossGitProjectId|$acrossGitProjectId")
             try {
                 return CommonCredentialUtils.getCredential(
                     client = client,
-                    projectId = GitCommonUtils.getCiProjectId(acrossGitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(
+                        acrossGitProjectId.toLong(),
+                        streamGitConfig.getScmType()
+                    ),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN,
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN),
                     acrossProject = true
-                )["v1"]!!
+                ).v1
             } catch (ignore: Exception) {
                 throw YamlFormatException("across" + GET_TICKET_ERROR.format(ignore.message))
             }
@@ -205,18 +216,18 @@ class YamlTemplateService @Autowired constructor(
     private fun getCredentialKey(key: String): String {
         // 参考CredentialType
         return if (key.startsWith("settings.") && (
-            key.endsWith(".password") ||
-                key.endsWith(".access_token") ||
-                key.endsWith(".username") ||
-                key.endsWith(".secretKey") ||
-                key.endsWith(".appId") ||
-                key.endsWith(".privateKey") ||
-                key.endsWith(".passphrase") ||
-                key.endsWith(".token") ||
-                key.endsWith(".cosappId") ||
-                key.endsWith(".secretId") ||
-                key.endsWith(".region")
-            )
+                key.endsWith(".password") ||
+                    key.endsWith(".access_token") ||
+                    key.endsWith(".username") ||
+                    key.endsWith(".secretKey") ||
+                    key.endsWith(".appId") ||
+                    key.endsWith(".privateKey") ||
+                    key.endsWith(".passphrase") ||
+                    key.endsWith(".token") ||
+                    key.endsWith(".cosappId") ||
+                    key.endsWith(".secretId") ||
+                    key.endsWith(".region")
+                )
         ) {
             key.substringAfter("settings.").substringBeforeLast(".")
         } else {

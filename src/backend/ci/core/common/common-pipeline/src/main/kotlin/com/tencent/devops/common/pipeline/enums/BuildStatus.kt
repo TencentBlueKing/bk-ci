@@ -53,16 +53,17 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
     QUEUE_TIMEOUT("排队超时", true), // 17 排队超时（最终态）
     EXEC_TIMEOUT("执行超时", true), // 18 执行超时（最终态）
     QUEUE_CACHE("队列待处理", true), // 19 队列待处理，瞬态。只在启动和取消过程中存在（中间状态）
-    RETRY("重试", true), // 20 重试（中间状态）
+    RETRY("重试", true), // 20 重试（中间状态，仅用于build运行时，不展示至前端）
     PAUSE("暂停执行", true), // 21 暂停执行，等待事件 （Stage/Job/Task中间态）
     STAGE_SUCCESS("阶段性完成", true), // 22 当Stage人工审核取消运行时，成功（Stage/Pipeline最终态）
     QUOTA_FAILED("配额不够失败", true), // 23 失败 (未使用）
     DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待 等待依赖的job完成才会进入准备环境（Job中间态）
-    QUALITY_CHECK_PASS("质量红线检查通过", true), // 25 质量红线检查通过
-    QUALITY_CHECK_WAIT("质量红线等待把关", true), // 26 质量红线等待把关
+    QUALITY_CHECK_PASS("质量红线检查通过", true), // 25 质量红线检查通过（准入准出中间态）
+    QUALITY_CHECK_WAIT("质量红线等待把关", true), // 26 质量红线等待把关（准入准出中间态）
+    TRIGGER_REVIEWING("构建触发待审核", true), // 27 构建触发待审核（入队列前中间态）
     UNKNOWN("未知状态", false); // 99
 
-    fun isNeverRun(): Boolean = this == UNEXEC
+    fun isNeverRun(): Boolean = this == UNEXEC || this == TRIGGER_REVIEWING
 
     fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel()
 
@@ -71,6 +72,10 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
     fun isSuccess(): Boolean = this == SUCCEED || this == SKIP || this == REVIEW_PROCESSED || this == QUALITY_CHECK_PASS
 
     fun isCancel(): Boolean = this == CANCELED
+
+    fun isSkip(): Boolean = this == SKIP
+
+    fun isTerminate(): Boolean = this == TERMINATE
 
     fun isRunning(): Boolean =
         this == RUNNING ||
@@ -82,7 +87,7 @@ enum class BuildStatus(val statusName: String, val visible: Boolean) {
 
     fun isReview(): Boolean = this == REVIEW_ABORT || this == REVIEW_PROCESSED
 
-    fun isReadyToRun(): Boolean = this == QUEUE || this == QUEUE_CACHE || this == RETRY
+    fun isReadyToRun(): Boolean = this == QUEUE || this == QUEUE_CACHE || this == RETRY || this == DEPENDENT_WAITING
 
     fun isPassiveStop(): Boolean = this == TERMINATE || this == REVIEW_ABORT || this == QUALITY_CHECK_FAIL
 

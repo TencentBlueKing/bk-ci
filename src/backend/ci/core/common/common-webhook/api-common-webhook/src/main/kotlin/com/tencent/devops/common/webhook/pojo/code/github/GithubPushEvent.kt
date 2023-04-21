@@ -28,20 +28,48 @@
 package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubPushEvent(
-    val before: String,
-    val after: String,
-    val ref: String,
-    val repository: GithubRepository,
+    @JsonProperty("after")
+    val after: String, // 5f76b8875980ba0fc13fce4fe0866ba7dae9c9f9
+    @JsonProperty("base_ref")
+    val baseRef: String?, // null
+    @JsonProperty("before")
+    val before: String, // 04c82898ae5093e0b9b7b1aa7a520bc390063c97
+    @JsonProperty("commits")
     val commits: List<GithubCommit>,
-    val head_commit: GithubCommit,
+    @JsonProperty("compare")
+    val compare: String, // https://github.com/yongyiduan/webhook-test/compare/04c82898ae50...5f76b8875980
+    @JsonProperty("created")
+    val created: Boolean, // false
+    @JsonProperty("deleted")
+    val deleted: Boolean, // false
+    @JsonProperty("forced")
+    val forced: Boolean, // false
+    @JsonProperty("head_commit")
+    val headCommit: GithubHeadCommit?,
+    @JsonProperty("pusher")
     val pusher: GithubPusher,
-    override val sender: GithubSender
+    @JsonProperty("ref")
+    val ref: String, // refs/heads/main
+    @JsonProperty("repository")
+    val repository: GithubRepository,
+    @JsonProperty("sender")
+    override val sender: GithubUser
 ) : GithubEvent(sender) {
     companion object {
         const val classType = "push"
     }
+}
+
+/*
+* 兼容 tGit
+*/
+fun GithubPushEvent.checkCreateAndUpdate(): Boolean? = when {
+    this.created && this.commits.isEmpty() -> false
+    this.created && this.commits.isNotEmpty() -> true
+    else -> null
 }

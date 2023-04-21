@@ -53,6 +53,7 @@ import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -206,9 +207,14 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{"重复率的缺陷实体"}, null);
         }
 
+        //获取任务信息
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
+
         // 1. 根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
-            dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+        String content = getFileContent(taskId, taskDetailVO == null ? null : taskDetailVO.getProjectId(), userId,
+                dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+                dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
 
         // 2. 根据告警的开始行和结束行截取文件片段
         CommonDefectDetailQueryRspVO dupcDefectQueryRspVO = new CommonDefectDetailQueryRspVO();
@@ -286,13 +292,16 @@ public class DUPCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
 
         // 校验传入的路径是否合法（路径是否是告警对应的文件）
         verifyFilePathIsValid(defectQueryReqVO.getFilePath(), dupcDefectEntity.getFilePath());
-
+        //获取任务信息
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
         //根据文件路径从分析集群获取文件内容
         String content = "";
         if (StringUtils.isNotBlank(dupcDefectEntity.getRelPath()))
         {
-            content = getFileContent(taskId, null, userId, dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
-                dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
+            content = getFileContent(taskId, taskDetailVO == null ? null : taskDetailVO.getProjectId(), userId,
+                    dupcDefectEntity.getUrl(), dupcDefectEntity.getRepoId(), dupcDefectEntity.getRelPath(),
+                    dupcDefectEntity.getRevision(), dupcDefectEntity.getBranch(), dupcDefectEntity.getSubModule());
         }
 
         List<CodeBlockEntity> blockEntityList = dupcDefectEntity.getBlockList();

@@ -91,8 +91,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -136,8 +138,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -204,8 +208,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -311,8 +317,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -462,8 +470,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -507,6 +517,7 @@ stages:
       container: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []
@@ -579,8 +590,10 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux_ci:3.5.1"
         credentials: null
+        options: null
       agent-selector: null
       workspace: null
+      xcode: null
       queue-timeout-minutes: null
       needs: null
     services: []

@@ -1,0 +1,37 @@
+# kubernetesManager hpa
+{{ if .Values.kubernetesManager.enabled -}}
+{{ if .Values.kubernetesManager.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: kubernetes-manager
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "common.names.fullname" . }}-kubernetesManager
+  minReplicas: {{ .Values.kubernetesManager.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.kubernetesManager.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.kubernetesManager.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.kubernetesManager.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.kubernetesManager.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.kubernetesManager.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

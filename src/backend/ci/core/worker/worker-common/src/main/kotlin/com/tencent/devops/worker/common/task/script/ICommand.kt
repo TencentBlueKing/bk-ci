@@ -35,6 +35,7 @@ import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.JOB_OS_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
 import java.io.File
@@ -88,14 +89,20 @@ interface ICommand {
                     extendNamedValueMap = listOf(
                         CredentialUtils.CredentialRuntimeNamedValue(targetProjectId = acrossTargetProjectId)
                     )
-                )
+                ),
+                functions = SpecialFunctions.functions,
+                output = SpecialFunctions.output
             )
         } else {
             ReplacementUtils.replace(
                 command,
                 object : KeyReplacement {
                     override fun getReplacement(key: String): String? = contextMap[key] ?: try {
-                        CredentialUtils.getCredential(buildId, key, false, acrossTargetProjectId)[0]
+                        CredentialUtils.getCredential(
+                            credentialId = key,
+                            showErrorLog = false,
+                            acrossProjectId = acrossTargetProjectId
+                        )[0]
                     } catch (ignore: Exception) {
                         CredentialUtils.getCredentialContextValue(key, acrossTargetProjectId)
                     }

@@ -28,7 +28,9 @@
 package com.tencent.devops.stream.trigger.git.service
 
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitDiffInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
@@ -77,6 +79,17 @@ interface StreamGitApiService {
         sha: String,
         retry: ApiRequestRetryInfo
     ): StreamGitCommitInfo?
+
+    /**
+     * 获取gitProjectId项目的成员信息，携带了成员权限
+     */
+    fun getProjectMember(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        page: Int? = null,
+        pageSize: Int? = null,
+        search: String? = null
+    ): List<StreamGitProjectUserInfo>
 
     /**
      * 根据token获取用户信息
@@ -179,4 +192,21 @@ interface StreamGitApiService {
         enableUserId: String,
         retry: ApiRequestRetryInfo
     ): StreamRevisionInfo?
+
+    /**
+     *  发送commit check
+     */
+    fun addCommitCheck(
+        request: CommitCheckRequest,
+        retry: ApiRequestRetryInfo
+    )
+
+    /*
+    * 获取某次commit 提交的文件diff信息
+    */
+    fun getCommitDiff(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        sha: String
+    ): List<StreamGitCommitDiffInfo>
 }

@@ -43,6 +43,9 @@ object StreamTriggerMessageUtils {
             StreamObjectKind.MERGE_REQUEST.value -> {
                 "Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
             }
+            StreamObjectKind.PULL_REQUEST.value -> {
+                "Pull requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+            }
             StreamObjectKind.MANUAL.value -> {
                 "Manually run by ${event.userId}"
             }

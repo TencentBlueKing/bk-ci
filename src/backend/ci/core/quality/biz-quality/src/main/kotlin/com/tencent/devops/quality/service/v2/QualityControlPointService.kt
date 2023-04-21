@@ -199,6 +199,8 @@ class QualityControlPointService @Autowired constructor(
     }
 
     fun addHashId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("QualityControlPointService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -209,12 +211,14 @@ class QualityControlPointService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
+            logger.info("QualityControlPointService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
             val limit = 1000
             try {
                 do {
                     val controlPointRecords = controlPointDao.getAllControlPoint(dslContext, limit, offset)
                     val controlPointSize = controlPointRecords?.size
+                    logger.info("controlPointSize:$controlPointSize")
                     controlPointRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -226,6 +230,7 @@ class QualityControlPointService @Autowired constructor(
                 do {
                     val ruleRecords = qualityRuleDao.getAllRule(dslContext, limit, offset)
                     val ruleSize = ruleRecords?.size
+                    logger.info("ruleSize:$ruleSize")
                     ruleRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -237,6 +242,7 @@ class QualityControlPointService @Autowired constructor(
                 do {
                     val ruleBuildHisRecords = qualityRuleBuildHisDao.getAllRuleBuildHis(dslContext, limit, offset)
                     val ruleBuildHisSize = ruleBuildHisRecords?.size
+                    logger.info("ruleBuildHisSize:$ruleBuildHisSize")
                     ruleBuildHisRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -250,6 +256,8 @@ class QualityControlPointService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("QualityControlPointService:finish addHashId-----------")
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {

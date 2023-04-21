@@ -27,29 +27,48 @@
 
 package com.tencent.devops.repository.service.github
 
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.AESUtil
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.code.RepoAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GithubTokenService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val githubTokenDao: GithubTokenDao
+    private val githubTokenDao: GithubTokenDao,
+    private val client: Client,
+    private val authProjectApi: AuthProjectApi,
+    private val repoAuthServiceCode: RepoAuthServiceCode
 ) {
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
-    fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
+    fun createAccessToken(
+        userId: String,
+        accessToken: String,
+        tokenType: String,
+        scope: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ) {
         val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
-        if (getAccessToken(userId) == null) {
-            githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope)
+        if (githubTokenDao.getOrNull(dslContext, userId, githubTokenType) == null) {
+            githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
-            githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope)
+            githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         }
     }
 
@@ -57,14 +76,45 @@ class GithubTokenService @Autowired constructor(
         githubTokenDao.delete(dslContext, userId)
     }
 
-    fun getAccessToken(userId: String): GithubToken? {
-        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId) ?: return null
+    fun getAccessToken(
+        userId: String,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken? {
+        val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId, tokenType) ?: return null
         logger.info("github aesKey:$aesKey")
         return GithubToken(
             AESUtil.decrypt(aesKey, githubTokenRecord.accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
+    }
+
+    fun checkAndGetAccessToken(projectId: String, buildId: String, userId: String): GithubToken? {
+        logger.info("buildId: $buildId, userId: $userId")
+        val buildBasicInfoResult = client.get(ServiceBuildResource::class).serviceBasic(projectId, buildId)
+        if (buildBasicInfoResult.isNotOk()) {
+            throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        }
+        val buildBasicInfo = buildBasicInfoResult.data
+            ?: throw RemoteServiceException("Failed to get the basic information based on the buildId: $buildId")
+        val projectUserCheck = authProjectApi.checkProjectUser(
+            user = userId,
+            serviceCode = repoAuthServiceCode,
+            projectCode = buildBasicInfo.projectId
+        )
+        if (!projectUserCheck) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, buildBasicInfo.projectId)
+            )
+        }
+        return getAccessToken(userId)
+    }
+
+    @Throws(CustomException::class)
+    fun getAccessTokenMustExist(userId: String): GithubToken {
+        return getAccessToken(userId)
+            ?: throw CustomException(status = Response.Status.NOT_FOUND, message = "$userId githubToken not exist")
     }
 
     companion object {

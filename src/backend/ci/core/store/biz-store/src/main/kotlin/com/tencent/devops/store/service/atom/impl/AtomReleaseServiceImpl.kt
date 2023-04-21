@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEPLOY
 import com.tencent.devops.common.api.constant.DEVELOP
@@ -57,6 +58,8 @@ import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE
+import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
@@ -64,6 +67,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -81,6 +85,8 @@ import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_UPLOAD_ID_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
+import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
 import com.tencent.devops.store.pojo.common.KEY_CONFIG
 import com.tencent.devops.store.pojo.common.KEY_EXECUTION
@@ -89,6 +95,7 @@ import com.tencent.devops.store.pojo.common.KEY_INPUT_GROUPS
 import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.QUALITY_JSON_NAME
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -98,6 +105,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.AtomIndexTriggerCalService
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
@@ -111,6 +119,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -137,6 +146,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var storeReleaseDao: StoreReleaseDao
     @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+    @Autowired
     lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
@@ -147,6 +158,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var atomQualityService: AtomQualityService
     @Autowired
+    lateinit var atomIndexTriggerCalService: AtomIndexTriggerCalService
+    @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -155,13 +168,19 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     @Autowired
     lateinit var storeWebsocketService: StoreWebsocketService
 
+    @Value("\${store.defaultAtomErrorCodeLength:6}")
+    private var defaultAtomErrorCodeLength: Int = 6
+
+    @Value("\${store.defaultAtomErrorCodePrefix:8}")
+    private lateinit var defaultAtomErrorCodePrefix: String
+
     companion object {
         private val logger = LoggerFactory.getLogger(AtomReleaseServiceImpl::class.java)
     }
 
     private fun validateAddMarketAtomReq(
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String>? {
         val atomCode = marketAtomCreateRequest.atomCode
         // 判断插件代码是否存在
         val codeCount = atomDao.countByCode(dslContext, atomCode)
@@ -169,8 +188,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomCode),
-                false
+                arrayOf(atomCode)
             )
         }
         val atomName = marketAtomCreateRequest.name
@@ -180,23 +198,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomName),
-                false
+                arrayOf(atomName)
             )
         }
-        return Result(true)
+        return null
     }
 
     @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("addMarketAtom userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
         val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest)
-        logger.info("the validateResult is :$validateResult")
-        if (validateResult.isNotOk()) {
+        if (validateResult != null) {
+            logger.info("the validateResult is :$validateResult")
             return validateResult
         }
         val handleAtomPackageResult = handleAtomPackage(marketAtomCreateRequest, userId, atomCode)
@@ -205,9 +222,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
         }
         val handleAtomPackageMap = handleAtomPackageResult.data
+        val id = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val id = UUIDUtil.generate()
             // 添加插件基本信息
             marketAtomDao.addMarketAtom(
                 dslContext = context,
@@ -261,7 +278,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         }
-        return Result(true)
+        return Result(id)
     }
 
     abstract fun handleAtomPackage(
@@ -451,8 +468,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 userId = userId,
                 atomFeatureRequest = AtomFeatureRequest(atomCode = atomCode, qualityFlag = qualityFlag)
             )
-
-            asyncHandleUpdateAtom(context = context, atomId = atomId, userId = userId, branch = branch)
+            asyncHandleUpdateAtom(
+                context = context,
+                atomId = atomId,
+                userId = userId,
+                branch = branch,
+                validOsNameFlag = marketAtomCommonService.getValidOsNameFlag(atomEnvRequests),
+                validOsArchFlag = marketAtomCommonService.getValidOsArchFlag(atomEnvRequests)
+            )
         }
         return Result(atomId)
     }
@@ -473,7 +496,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         context: DSLContext,
         atomId: String,
         userId: String,
-        branch: String? = null
+        branch: String? = null,
+        validOsNameFlag: Boolean? = null,
+        validOsArchFlag: Boolean? = null
     )
 
     private fun updateMarketAtom(
@@ -505,10 +530,83 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         val atomPackageSourceType = getAtomPackageSourceType()
         if (atomPackageSourceType != AtomPackageSourceTypeEnum.UPLOAD) {
+            if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE.releaseType.toByte()) {
+                marketAtomEnvInfoDao.deleteAtomEnvInfoById(context, atomId)
+            }
             marketAtomEnvInfoDao.addMarketAtomEnvInfo(context, atomId, atomEnvRequests)
         }
         // 通过websocket推送状态变更消息
         storeWebsocketService.sendWebsocketMessage(userId, atomId)
+    }
+
+    override fun syncAtomErrorCodeConfig(
+        atomCode: String,
+        atomVersion: String,
+        userId: String,
+        repositoryHashId: String?,
+        branch: String?
+    ) {
+        val projectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext,
+            atomCode,
+            StoreTypeEnum.ATOM.type.toByte()
+        )
+        try {
+            // 获取插件error.json文件内容
+            val errorJsonStr = getFileStr(
+                projectCode = projectCode!!,
+                atomCode = atomCode,
+                atomVersion = atomVersion,
+                fileName = ERROR_JSON_NAME,
+                repositoryHashId = repositoryHashId,
+                branch = if (branch.isNullOrBlank()) MASTER else branch
+            )
+            if (!errorJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(errorJsonStr)) {
+                val storeErrorCodeInfo = StoreErrorCodeInfo(
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM,
+                    errorCodeInfos = JsonUtil.to(errorJsonStr, object : TypeReference<List<ErrorCodeInfo>>() {})
+                )
+                val errorCodeInfos = storeErrorCodeInfo.errorCodeInfos
+                if (errorCodeInfos.isNotEmpty()) {
+                    val errorCodes = errorCodeInfos.map { "${it.errorCode}" }
+                    val duplicateData = getDuplicateData(errorCodes)
+                    // 存在重复code码则报错提示哪些code码重复
+                    if (duplicateData.isNotEmpty()) {
+                        throw ErrorCodeException(
+                            errorCode = USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                            params = arrayOf(duplicateData.joinToString(","))
+                        )
+                    }
+                    // 校验code码是否符合插件自定义错误码规范
+                    errorCodes.forEach {
+                        if (it.length != defaultAtomErrorCodeLength || (!it.startsWith(defaultAtomErrorCodePrefix))) {
+                            throw ErrorCodeException(
+                                errorCode = USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+                            )
+                        }
+                    }
+                    storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
+                }
+                // 无意义的抛出异常
+//            } else {
+//                throw ErrorCodeException(
+//                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
+//                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
+//                )
+            }
+        } catch (ignored: Exception) {
+            logger.warn("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
+        }
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = mutableSetOf<String>()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach {
+            if (set.contains(it)) duplicateData.add(it) else set.add(it)
+        }
+        return duplicateData
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -993,6 +1091,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     version = atomReleaseRequest.version,
                     releaseFlag = true
+                )
+                // 计算插件指标数据
+                atomIndexTriggerCalService.upgradeTriggerCalculate(
+                    userId = userId,
+                    atomCode = atomCode,
+                    version = atomReleaseRequest.version,
+                    releaseType = releaseType
                 )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)

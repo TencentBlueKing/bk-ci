@@ -10,7 +10,12 @@ server:
   port: __BK_CI_NOTIFY_API_PORT__
 
 notify:
-  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  #发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+  weworkChannel: __BK_CI_NOTIFY_WEWORK_SEND_CHANNEL__  # 发送企业微信的通道: weworkAgent 企业微信应用,blueking 蓝鲸消息通道, weworkRobot 企业微信机器人(待开放)
+  emailChannel: __BK_CI_NOTIFY_EMAIL_SEND_CHANNEL__ # 发送邮件的通道：blueking 蓝鲸消息通道，tencentCloud 腾讯云邮件服务
+  tencentCloud:
+    secretId: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_ID__ # 腾讯云SECRET_ID
+    secretKey: __BK_CI_NOTIFY_TENCENT_CLOUD_SECRET_KEY__ # 腾讯云SECRET_KEY
+    emailRegion: __BK_CI_NOTIFY_TENCENT_CLOUD_EMAIL_REGION__ # 腾讯云邮件服务Region地区
 
 wework:
   corpId:

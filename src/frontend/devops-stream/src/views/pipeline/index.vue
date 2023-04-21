@@ -156,7 +156,7 @@
                 isSaving: false,
                 nameRule: {
                     validator (val) {
-                        return /^[a-zA-Z0-9_\-\.]+$/.test(val)
+                        return /^[a-zA-Z0-9_\-\.]+(\/)?[a-zA-Z0-9_\-\.]+$/.test(val)
                     },
                     message: this.$t('pipeline.nameRule'),
                     trigger: 'blur'

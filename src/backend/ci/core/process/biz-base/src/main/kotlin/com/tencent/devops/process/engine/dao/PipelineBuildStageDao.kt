@@ -148,6 +148,14 @@ class PipelineBuildStageDao {
         }
     }
 
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildStage> {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .fetch(mapper)
+        }
+    }
+
     /**
      * 取相邻的，大于或小于[currentStageSeq]序号的Stage：
      * 当[sortAsc] = true 时，取[currentStageSeq]之后相邻的第一个Stage

@@ -264,7 +264,7 @@ class QualityControlPointDao {
             dslContext.update(this)
                 .set(CONTROL_POINT_HASH_ID, hashId)
                 .where(ID.eq(id))
-                .and(CONTROL_POINT_HASH_ID.ne(hashId))
+                .and(CONTROL_POINT_HASH_ID.isNull)
                 .execute()
         }
     }

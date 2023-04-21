@@ -878,4 +878,25 @@ os:
         }
         Assertions.assertEquals(0, contextCase.size)
     }
+
+    @Test
+    fun calculateValueMatrixJson3() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+var1: ['OFF', 'ON']
+var2: [ { a: '1', b: '2' }, { a: '3', b: '4' } ]
+                """,
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assertions.assertEquals(4, contextCase.size)
+    }
 }

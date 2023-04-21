@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
+import com.tencent.devops.common.sdk.github.pojo.GithubRepo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -58,6 +59,17 @@ data class StreamProjectGitInfo(
         httpsUrlToRepo = p.httpsUrlToRepo,
         webUrl = p.webUrl,
         avatarUrl = p.avatarUrl,
+        description = p.description
+    )
+
+    constructor(p: GithubRepo) : this(
+        id = p.id,
+        public = !p.private,
+        name = p.name,
+        pathWithNamespace = p.fullName,
+        httpsUrlToRepo = p.cloneUrl,
+        webUrl = p.htmlUrl,
+        avatarUrl = p.owner.avatarUrl,
         description = p.description
     )
 

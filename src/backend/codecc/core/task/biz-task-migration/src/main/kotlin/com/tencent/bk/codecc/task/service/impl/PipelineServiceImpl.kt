@@ -1195,7 +1195,13 @@ open class PipelineServiceImpl @Autowired constructor(
             logger.error("get repo list fail!")
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
-        return repoResult.data!!.map { (repositoryHashId, aliasName, url, type, _, _, _, authType) ->
+        val supportRepoType = listOf<String>(ScmType.CODE_GIT.name,
+            ScmType.CODE_GITLAB.name,
+            ScmType.CODE_SVN.name,
+            ScmType.GITHUB.name)
+        return repoResult.data!!.filter { repo ->
+            supportRepoType.contains(repo.type.name)
+        }.map { (repositoryHashId, aliasName, url, type, _, _, _, authType) ->
             val repoInfoVO = RepoInfoVO()
             repoInfoVO.repoHashId = repositoryHashId
             repoInfoVO.url = url

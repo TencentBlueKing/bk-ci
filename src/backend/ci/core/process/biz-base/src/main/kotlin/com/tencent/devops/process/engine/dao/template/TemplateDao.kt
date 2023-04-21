@@ -306,22 +306,18 @@ class TemplateDao {
 
     fun getTemplate(
         dslContext: DSLContext,
-        projectId: String? = null,
         templateId: String,
         versionName: String?,
         version: Long? = null
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-                conditions.add(ID.eq(templateId))
+            conditions.add(ID.eq(templateId))
             if (version != null) {
                 conditions.add(VERSION.eq(version))
             }
             if (!versionName.isNullOrBlank()) {
                 conditions.add(VERSION_NAME.eq(versionName))
-            }
-            if (!projectId.isNullOrBlank()) {
-                conditions.add(PROJECT_ID.eq(projectId))
             }
             return dslContext.selectFrom(this)
                 .where(conditions)
@@ -389,12 +385,14 @@ class TemplateDao {
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
-            normalConditions.add(PROJECT_ID.eq(projectId))
+            if (!projectId.isNullOrBlank()) {
+                normalConditions.add(PROJECT_ID.eq(projectId))
+            }
             var count = dslContext.select(DSL.countDistinct(ID))
                 .from(this)
                 .where(normalConditions)
                 .fetchOne(0, Int::class.java)!!
-            if (includePublicFlag != null && includePublicFlag) {
+            if (true == includePublicFlag) {
                 val publicConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
                 publicConditions.add((TYPE.eq(TemplateType.PUBLIC.name)))
                 count += dslContext.select(DSL.countDistinct(ID))

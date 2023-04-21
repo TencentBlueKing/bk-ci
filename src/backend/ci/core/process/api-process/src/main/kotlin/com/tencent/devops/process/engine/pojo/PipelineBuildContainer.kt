@@ -46,5 +46,5 @@ data class PipelineBuildContainer(
     var endTime: LocalDateTime? = null,
     val cost: Int = 0,
     var executeCount: Int = 1,
-    val controlOption: PipelineBuildContainerControlOption?
+    val controlOption: PipelineBuildContainerControlOption
 )

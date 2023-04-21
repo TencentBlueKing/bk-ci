@@ -28,7 +28,6 @@
 package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.service.utils.KubernetesUtils
 
 enum class BuildType(
     val value: String,
@@ -39,29 +38,16 @@ enum class BuildType(
 ) {
     ESXi("蓝盾公共构建资源", listOf(OS.MACOS), false, false, false),
     MACOS("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, false, false),
-    KUBERNETES(
-        "Kubernetes构建资源",
-        listOf(OS.LINUX),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer(),
-        KubernetesUtils.inContainer()
-    ),
-    IDC("公共：Docker on IDC CVM", listOf(OS.LINUX), true, false, false),
+    WINDOWS("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, false, false),
+    KUBERNETES("Kubernetes构建资源", listOf(OS.LINUX), false, false, false),
     PUBLIC_DEVCLOUD("公共：Docker on DevCloud", listOf(OS.LINUX), true, false, false),
     PUBLIC_BCS("公共：Docker on Bcs", listOf(OS.LINUX), false, false, false),
-    TSTACK("Windows构建", listOf(OS.WINDOWS), false, false, false), // tstack is deleted
     THIRD_PARTY_AGENT_ID("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
     THIRD_PARTY_AGENT_ENV("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true),
     THIRD_PARTY_PCG("PCG公共构建资源", listOf(OS.LINUX), false, false, false),
     THIRD_PARTY_DEVCLOUD("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, false, false),
     GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false),
-    DOCKER(
-        "Docker公共构建机",
-        listOf(OS.LINUX),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer(),
-        KubernetesUtils.notInContainer()
-    ),
+    DOCKER("Docker公共构建机", listOf(OS.LINUX), true, true, true),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
     AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
 }

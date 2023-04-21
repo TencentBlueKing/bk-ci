@@ -62,7 +62,17 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             // 抛出错误提示
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(platformCode)
+                params = arrayOf(platformName)
+            )
+        }
+        val errorCodePrefix = storeDockingPlatformRequest.errorCodePrefix
+        // 判断平台所属错误码前缀是否存在
+        val errorCodePrefixCount = storeDockingPlatformDao.countByErrorCodePrefix(dslContext, errorCodePrefix)
+        if (errorCodePrefixCount > 0) {
+            // 抛出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf("errorCodePrefix:$errorCodePrefix")
             )
         }
         storeDockingPlatformDao.add(dslContext, userId, storeDockingPlatformRequest)
@@ -79,11 +89,11 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         id: String,
         storeDockingPlatformRequest: StoreDockingPlatformRequest
     ): Boolean {
+        val storeDockingPlatform = storeDockingPlatformDao.getStoreDockingPlatform(dslContext, id)
         val platformCode = storeDockingPlatformRequest.platformCode
         // 判断平台代码是否存在
         val codeCount = storeDockingPlatformDao.countByCode(dslContext, platformCode)
         if (codeCount > 0) {
-            val storeDockingPlatform = storeDockingPlatformDao.getStoreDockingPlatform(dslContext, id)
             if (null != storeDockingPlatform && platformCode != storeDockingPlatform.platformCode) {
                 // 抛出错误提示
                 throw ErrorCodeException(
@@ -96,12 +106,24 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
         // 判断平台名称是否存在
         val nameCount = storeDockingPlatformDao.countByName(dslContext, platformName)
         if (nameCount > 0) {
-            val storeDockingPlatform = storeDockingPlatformDao.getStoreDockingPlatform(dslContext, id)
             if (null != storeDockingPlatform && platformName != storeDockingPlatform.platformName) {
                 // 抛出错误提示
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf(platformName)
+                )
+            }
+        }
+
+        val errorCodePrefix = storeDockingPlatformRequest.errorCodePrefix
+        // 判断平台所属错误码前缀是否存在
+        val errorCodePrefixCount = storeDockingPlatformDao.countByErrorCodePrefix(dslContext, errorCodePrefix)
+        if (errorCodePrefixCount > 0) {
+            if (null != storeDockingPlatform && errorCodePrefix != storeDockingPlatform.errorCodePrefix) {
+                // 抛出错误提示
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf("errorCodePrefix:$errorCodePrefix")
                 )
             }
         }
@@ -141,5 +163,9 @@ class StoreDockingPlatformServiceImpl @Autowired constructor(
             totalPages = totalPages,
             records = storeDockingPlatformInfos ?: emptyList()
         )
+    }
+
+    override fun isPlatformCodeRegistered(platformCode: String): Boolean {
+        return storeDockingPlatformDao.isPlatformCodeRegistered(dslContext, platformCode)
     }
 }

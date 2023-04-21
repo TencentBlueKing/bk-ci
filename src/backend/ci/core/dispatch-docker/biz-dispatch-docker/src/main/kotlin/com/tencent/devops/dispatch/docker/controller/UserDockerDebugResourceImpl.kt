@@ -29,14 +29,14 @@ package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
-import com.tencent.devops.dispatch.docker.service.DockerRoutingService
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
 import org.slf4j.LoggerFactory
@@ -45,7 +45,7 @@ import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
-    private val dockerRoutingService: DockerRoutingService,
+    private val dockerRoutingSdkService: DockerRoutingSdkService,
     private val extDebugService: ExtDebugService
 ) : UserDockerDebugResource {
     @BkTimed
@@ -77,19 +77,22 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(debugStartParam.projectId)
-        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.name).instance().startDebug(
+        val debugUrl = DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().startDebug(
             userId = userId,
             projectId = debugStartParam.projectId,
             pipelineId = debugStartParam.pipelineId,
             vmSeqId = debugStartParam.vmSeqId,
-            buildId = debugStartParam.buildId
+            buildId = debugStartParam.buildId,
+            dockerRoutingType = formatDispatchType.second
         )
+
         return Result(
             DebugResponse(
-            websocketUrl = debugUrl,
-            containerName = null,
-            dispatchType = formatDispatchType.name
-        )
+                websocketUrl = debugUrl,
+                containerName = null,
+                dispatchType = formatDispatchType.first.name,
+                dockerRoutingType = formatDispatchType.second.name
+            )
         )
     }
 
@@ -116,23 +119,25 @@ class UserDockerDebugResourceImpl @Autowired constructor(
         }
 
         val formatDispatchType = formatDispatchType(projectId)
-        return Result(DebugServiceEnum.valueOf(formatDispatchType.name!!).instance().stopDebug(
+        return Result(DebugServiceEnum.valueOf(formatDispatchType.first.name).instance().stopDebug(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             vmSeqId = vmSeqId,
-            containerName = containerName ?: ""
+            containerName = containerName ?: "",
+            dockerRoutingType = formatDispatchType.second
         ))
     }
 
     /**
      * BCS和VM构建类型在前端统一表现为VM类型，通过白名单控制BCS构建类型路由
      */
-    private fun formatDispatchType(projectId: String): BuildType {
-        return when (dockerRoutingService.getDockerRoutingType(projectId)) {
-            DockerRoutingType.VM -> BuildType.DOCKER
-            DockerRoutingType.BCS -> BuildType.PUBLIC_BCS
-            else -> BuildType.DOCKER
+    private fun formatDispatchType(projectId: String): Pair<BuildType, DockerRoutingType> {
+        return when (dockerRoutingSdkService.getDockerRoutingType(projectId)) {
+            DockerRoutingType.VM -> Pair(BuildType.DOCKER, DockerRoutingType.VM)
+            DockerRoutingType.BCS -> Pair(BuildType.KUBERNETES, DockerRoutingType.BCS)
+            DockerRoutingType.KUBERNETES -> Pair(BuildType.KUBERNETES, DockerRoutingType.KUBERNETES)
+            else -> Pair(BuildType.DOCKER, DockerRoutingType.VM)
         }
     }
 

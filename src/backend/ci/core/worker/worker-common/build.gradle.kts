@@ -36,6 +36,7 @@ dependencies {
     api(project(":core:dockerhost:api-dockerhost"))
     api(project(":core:common:common-archive"))
     api(project(":core:common:common-pipeline"))
+    api(project(":core:common:common-test"))
     api("org.apache.commons:commons-exec")
     api("org.apache.commons:commons-compress")
     api("com.github.oshi:oshi-core")
@@ -45,7 +46,7 @@ dependencies {
     api("ch.qos.logback:logback-core")
     api("ch.qos.logback:logback-classic")
     api("com.github.ben-manes.caffeine:caffeine")
-    api(fileTree(mapOf("dir" to "lib/KillProcessTree.jar", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }
 
 configurations.forEach {

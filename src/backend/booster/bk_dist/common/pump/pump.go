@@ -13,7 +13,11 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"runtime"
 	"strconv"
+
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
+	dcEnv "github.com/Tencent/bk-ci/src/booster/bk_dist/common/env"
 )
 
 const (
@@ -139,4 +143,49 @@ func (c *Client) read() ([]string, error) {
 	}
 
 	return files, nil
+}
+
+func IsPump(env *env.Sandbox) bool {
+	return env.GetEnv(dcEnv.KeyExecutorPump) != ""
+}
+
+func SupportPump(env *env.Sandbox) bool {
+	// return IsPump(env) && (runtime.GOOS == "windows" || runtime.GOOS == "darwin")
+	return IsPump(env) && runtime.GOOS == "windows"
+}
+
+func IsPumpCache(env *env.Sandbox) bool {
+	return env.GetEnv(dcEnv.KeyExecutorPumpCache) != ""
+}
+
+func PumpCacheDir(env *env.Sandbox) string {
+	return env.GetEnv(dcEnv.KeyExecutorPumpCacheDir)
+}
+
+func PumpCacheSizeMaxMB(env *env.Sandbox) int32 {
+	strsize := env.GetEnv(dcEnv.KeyExecutorPumpCacheSizeMaxMB)
+	if strsize != "" {
+		size, err := strconv.Atoi(strsize)
+		if err != nil {
+			return -1
+		} else {
+			return int32(size)
+		}
+	}
+
+	return -1
+}
+
+func PumpMinActionNum(env *env.Sandbox) int32 {
+	strsize := env.GetEnv(dcEnv.KeyExecutorPumpMinActionNum)
+	if strsize != "" {
+		size, err := strconv.Atoi(strsize)
+		if err != nil {
+			return 0
+		} else {
+			return int32(size)
+		}
+	}
+
+	return 0
 }

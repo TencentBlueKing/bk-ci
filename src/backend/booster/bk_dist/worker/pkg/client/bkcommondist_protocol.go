@@ -291,12 +291,18 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 	// encode body and file to message
 	pbbody := protocol.PBBodyDispatchTaskReq{}
 	for _, v := range req.Commands {
+		envs := [][]byte{}
+		for _, v := range v.Env {
+			envs = append(envs, []byte(v))
+		}
+
 		pbcommand := protocol.PBCommand{
 			Workdir:     &v.WorkDir,
 			Exepath:     &v.ExePath,
 			Exename:     &v.ExeName,
 			Params:      v.Params,
 			Resultfiles: v.ResultFiles,
+			Env:         envs,
 		}
 		if len(v.Inputfiles) > 0 {
 			for _, f := range v.Inputfiles {
@@ -313,6 +319,7 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 				targetrelativepath := f.Targetrelativepath
 				filemode := f.Filemode
 				linkTarget := f.LinkTarget
+				modifytime := f.Lastmodifytime
 
 				if size < 0 {
 					pbcommand.Inputfiles = append(pbcommand.Inputfiles, &protocol.PBFileDesc{
@@ -324,6 +331,7 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 						Targetrelativepath: &targetrelativepath,
 						Filemode:           &filemode,
 						Linktarget:         []byte(linkTarget),
+						Modifytime:         &modifytime,
 					})
 					continue
 				}
@@ -347,6 +355,7 @@ func encodeCommonDispatchReq(req *dcSDK.BKDistCommand) ([]protocol.Message, erro
 					Targetrelativepath: &targetrelativepath,
 					Filemode:           &filemode,
 					Linktarget:         []byte(linkTarget),
+					Modifytime:         &modifytime,
 				})
 
 				filemessages = append(filemessages, m)
@@ -816,6 +825,7 @@ func encodeSendFileReq(req *dcSDK.BKDistFileSender, sandbox *syscall.Sandbox) ([
 		targetrelativepath := f.Targetrelativepath
 		filemode := f.Filemode
 		linkTarget := f.LinkTarget
+		modifytime := f.Lastmodifytime
 
 		if size <= 0 {
 			pbbody.Inputfiles = append(pbbody.Inputfiles, &protocol.PBFileDesc{
@@ -827,6 +837,7 @@ func encodeSendFileReq(req *dcSDK.BKDistFileSender, sandbox *syscall.Sandbox) ([
 				Targetrelativepath: &targetrelativepath,
 				Filemode:           &filemode,
 				Linktarget:         []byte(linkTarget),
+				Modifytime:         &modifytime,
 			})
 			continue
 		}
@@ -850,7 +861,10 @@ func encodeSendFileReq(req *dcSDK.BKDistFileSender, sandbox *syscall.Sandbox) ([
 			Targetrelativepath: &targetrelativepath,
 			Filemode:           &filemode,
 			Linktarget:         []byte(linkTarget),
+			Modifytime:         &modifytime,
 		})
+
+		// blog.Infof("encode send files add file(%s) modify time(%d)", fullpath, modifytime)
 
 		filemessages = append(filemessages, m)
 		filebuflen += compressedsize
@@ -990,9 +1004,12 @@ func encodeCheckCacheReq(req *dcSDK.BKDistFileSender, sandbox *syscall.Sandbox) 
 		}
 
 		pbbody.Params = append(pbbody.Params, &protocol.PBCacheParam{
-			Name:   []byte(filepath.Base(f.FilePath)),
-			Md5:    []byte(md5),
-			Target: []byte(fullpath),
+			Name:       []byte(filepath.Base(f.FilePath)),
+			Md5:        []byte(md5),
+			Target:     []byte(fullpath),
+			Filemode:   &f.Filemode,
+			Linktarget: []byte(f.LinkTarget),
+			Modifytime: &f.Lastmodifytime,
 		})
 	}
 

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.trigger.actions.tgit
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
 import com.tencent.devops.common.webhook.pojo.code.git.isDeleteEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
@@ -35,8 +36,8 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -44,6 +45,7 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.CheckType
@@ -56,7 +58,7 @@ import org.slf4j.LoggerFactory
 class TGitIssueActionGit(
     private val dslContext: DSLContext,
     private val apiService: TGitApiService,
-    private val gitCheckService: GitCheckService,
+    gitCheckService: GitCheckService,
     private val basicSettingDao: StreamBasicSettingDao
 ) : TGitActionGit(apiService, gitCheckService), GitBaseAction {
 
@@ -68,8 +70,7 @@ class TGitIssueActionGit(
         streamObjectKind = StreamObjectKind.ISSUE
     )
 
-    override lateinit var data: ActionData
-    fun event() = data.event as GitIssueEvent
+    override fun event() = data.event as GitIssueEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -106,16 +107,18 @@ class TGitIssueActionGit(
         )
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.objectAttributes.projectId.toString(),
+            scmType = ScmType.CODE_GIT,
             branch = defaultBranch,
             commit = EventCommonDataCommit(
                 commitId = latestCommit?.commitId ?: "0",
                 commitMsg = event.objectAttributes.title,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(latestCommit?.commitDate),
                 commitAuthorName = latestCommit?.commitAuthor
             ),
             userId = event.user.username,
             gitProjectName = GitUtils.getProjectName(event.repository.homepage)
         )
+        this.data.context.gitDefaultBranchLatestCommitInfo = defaultBranch to latestCommit?.toGitCommit()
         return this
     }
 
@@ -134,18 +137,18 @@ class TGitIssueActionGit(
         return false
     }
 
-    override fun checkProjectConfig() {}
+    override fun checkProjectConfig() = Unit
 
     override fun checkMrConflict(path2PipelineExists: Map<String, StreamTriggerPipeline>): Boolean {
         return true
     }
 
-    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
+    override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) = Unit
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { (name, blobId) ->
             YamlPathListEntry(name, CheckType.NO_NEED_CHECK, this.data.eventCommon.branch, blobId)
@@ -157,7 +160,7 @@ class TGitIssueActionGit(
             ref = data.eventCommon.branch,
             content = api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
@@ -166,16 +169,20 @@ class TGitIssueActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val (isTrigger, startParams) = TGitActionCommon.matchAndStartParams(this, triggerOn)
+        val (isTrigger, _) = GitActionCommon.matchAndStartParams(
+            action = this,
+            triggerOn = triggerOn,
+            onlyMatch = true
+        )
         return TriggerResult(
-            trigger = isTrigger,
-            startParams = startParams,
+            trigger = TriggerBody(isTrigger),
+            triggerOn = triggerOn,
             timeTrigger = false,
             deleteTrigger = false
         )
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.matchAndStartParams(this, triggerOn).second
+        return GitActionCommon.matchAndStartParams(this, triggerOn).second
     }
 }

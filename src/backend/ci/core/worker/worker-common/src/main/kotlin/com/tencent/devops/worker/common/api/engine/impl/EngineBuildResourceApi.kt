@@ -37,7 +37,7 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 @Suppress("UNUSED", "TooManyFunctions")
@@ -83,7 +83,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/complete", retryCount = retryCount)
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)
@@ -98,7 +98,11 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
+        if (envBuildId.isNotBlank()) {
+            buildId = envBuildId
+        }
+
         val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
         val request = buildPost(path)
         val errorMessage = "构建完成请求失败"
@@ -143,7 +147,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun submitError(errorInfo: ErrorInfo): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/submit_error")
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(errorInfo)
         )
         val request = buildPost(path, requestBody)

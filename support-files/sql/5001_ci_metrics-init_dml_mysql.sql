@@ -1,5 +1,0 @@
-use devops_ci_metrics;
-set names utf8mb4;
-
--- 初始化标签数据
-REPLACE INTO devops_ci_metrics.T_PROJECT_PIPELINE_LABEL_INFO(PROJECT_ID,PIPELINE_ID,LABEL_ID,LABEL_NAME) SELECT t1.PROJECT_ID,t1.PIPELINE_ID,t1.LABEL_ID,t2.`NAME` FROM devops_ci_process.T_PIPELINE_LABEL_PIPELINE t1 JOIN devops_ci_process.T_PIPELINE_LABEL t2 ON t1.LABEL_ID=t2.ID;

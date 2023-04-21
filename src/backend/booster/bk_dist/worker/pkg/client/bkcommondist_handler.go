@@ -367,7 +367,7 @@ func (r *CommonRemoteHandler) ExecuteSendFile(
 	}
 	d := time.Now().Sub(t)
 	if d > 200*time.Millisecond {
-		blog.Infof("TCP Connect to long to server(%s): %s", server.Server, d.String())
+		blog.Debugf("TCP Connect to long to server(%s): %s", server.Server, d.String())
 	}
 	defer func() {
 		_ = client.Close()
@@ -386,6 +386,8 @@ func (r *CommonRemoteHandler) ExecuteSendFile(
 		}
 	}
 
+	debug.FreeOSMemory() // free memory anyway
+
 	blog.Debugf("success pack-up to server %s", server)
 	// send request
 	dcSDK.StatsTimeNow(&r.recordStats.RemoteWorkSendCommonStartTime)
@@ -396,6 +398,8 @@ func (r *CommonRemoteHandler) ExecuteSendFile(
 		blog.Warnf("error: %v", err)
 		return nil, err
 	}
+
+	debug.FreeOSMemory() // free memory anyway
 
 	blog.Debugf("success sent to server %s", server)
 	// receive result
@@ -434,7 +438,7 @@ func (r *CommonRemoteHandler) ExecuteCheckCache(
 	}
 	d := time.Now().Sub(t)
 	if d > 200*time.Millisecond {
-		blog.Infof("TCP Connect to long to server(%s): %s", server.Server, d.String())
+		blog.Debugf("TCP Connect to long to server(%s): %s", server.Server, d.String())
 	}
 	defer func() {
 		_ = client.Close()

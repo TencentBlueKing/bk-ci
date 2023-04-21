@@ -265,7 +265,8 @@ open class GitUpdateTask constructor(
                 branchName = modeValue,
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
-                commitTimes = commitMaterial.commitTimes
+                commitTimes = commitMaterial.commitTimes,
+                scmType = gitType.name
             )
         ))
         return env
@@ -576,7 +577,7 @@ open class GitUpdateTask constructor(
         if (matchRef.size == 1) {
             return matchRef[0]
         }
-        return matchRef.minWith(Comparator { o1, o2 ->
+        return matchRef.minWithOrNull(Comparator { o1, o2 ->
             o1.split("/").size - o2.split("/").size
         })
     }

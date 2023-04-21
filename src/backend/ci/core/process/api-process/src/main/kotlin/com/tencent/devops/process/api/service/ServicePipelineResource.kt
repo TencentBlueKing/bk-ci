@@ -398,7 +398,7 @@ interface ServicePipelineResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
+        @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
     ): Result<Boolean>
@@ -512,15 +512,6 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<SimplePipeline?>?
-
-    @ApiOperation("刷新所有流水线名拼音")
-    @PUT
-    @Path("/batch/pipeline/pinyin")
-    fun batchUpdatePipelineNamePinYin(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
 
     @ApiOperation("根据项目ID获取流水线标签关系列表")
     @POST

@@ -44,7 +44,9 @@ data class JobControlOption(
     @ApiModelProperty("Job准备环境的超时时间 分钟Minutes", required = false)
     val prepareTimeout: Int? = null, // Job准备环境的超时时间 分钟Minutes
     @ApiModelProperty("ob执行的超时时间 分钟Minutes", required = false)
-    val timeout: Int? = 900, // Job执行的超时时间 分钟Minutes
+    var timeout: Int? = 900, // Job执行的超时时间 分钟Minutes
+    @ApiModelProperty("新的Job执行的超时时间，支持变量 分钟Minutes，出错则取timeout的值", required = false)
+    var timeoutVar: String? = null, // Job执行的超时时间 分钟Minutes
     @ApiModelProperty("运行条件", required = false)
     val runCondition: JobRunCondition = JobRunCondition.STAGE_RUNNING, // 运行条件
     @ApiModelProperty("自定义变量", required = false)

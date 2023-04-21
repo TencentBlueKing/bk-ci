@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelCreate
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.option.JobControlOption
@@ -51,8 +53,10 @@ import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired(required = false) constructor(
@@ -73,6 +77,7 @@ class ModelContainer @Autowired(required = false) constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
+        doSomeCheck(job, StreamDispatchUtils.getBaseOs(job))
         val defaultImage = inner!!.defaultImage
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
@@ -98,12 +103,8 @@ class ModelContainer @Autowired(required = false) constructor(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
             dispatchType = StreamDispatchUtils.getDispatchType(
-                client = client,
-                objectMapper = objectMapper,
                 job = job,
-                projectCode = projectCode,
                 defaultImage = defaultImage,
-                resources = resources,
                 containsMatrix = dispatchInfo != null,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
@@ -113,10 +114,27 @@ class ModelContainer @Autowired(required = false) constructor(
         containerList.add(vmContainer)
     }
 
-    protected fun getMatrixControlOption(
-        job: Job,
-        dispatchInfo: DispatchInfo?
-    ): MatrixControlOption? {
+    fun doSomeCheck(job: Job, os: VMBaseOS) {
+        if (os == VMBaseOS.ALL) {
+            // all 不检查
+            return
+        }
+        // 检查挂载版本是否支持(此处只检查未使用上下文的方式, 使用了上下文就将在引擎执行时检查)
+        job.runsOn.needs?.forEach { env ->
+            if (env.value.startsWith("$")) return@forEach
+            client.get(ServiceContainerAppResource::class).getBuildEnv(
+                name = env.key,
+                version = env.value,
+                os = os.name.lowercase()
+            ).data ?: throw CustomException(
+                // 说明用户填写的name或version不对，直接抛错
+                Response.Status.BAD_REQUEST, "尚未支持 ${env.key} ${env.value}，请联系 DevOps-helper 添加对应版本"
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    fun getMatrixControlOption(job: Job, dispatchInfo: DispatchInfo?): MatrixControlOption? {
 
         val strategy = job.strategy ?: return null
 
@@ -189,15 +207,17 @@ class ModelContainer @Autowired(required = false) constructor(
         )
     }
 
-    protected fun getJobControlOption(
+    fun getJobControlOption(
         job: Job,
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
+        val timeout = setUpTimeout(job)
         return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
@@ -212,7 +232,8 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 JobControlOption(
                     enable = jobEnable,
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = ModelCreateUtil.removeIfBrackets(job.ifField),
                     dependOnType = DependOnType.ID,
@@ -224,7 +245,8 @@ class ModelContainer @Autowired(required = false) constructor(
         } else {
             JobControlOption(
                 enable = jobEnable,
-                timeout = job.timeoutMinutes ?: 480,
+                timeout = timeout,
+                timeoutVar = timeout.toString(),
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,
@@ -233,7 +255,9 @@ class ModelContainer @Autowired(required = false) constructor(
         }
     }
 
-    protected fun getMutexGroup(resource: Mutex?): MutexGroup? {
+    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: 480)
+
+    fun getMutexGroup(resource: Mutex?): MutexGroup? {
         if (resource == null) {
             return null
         }

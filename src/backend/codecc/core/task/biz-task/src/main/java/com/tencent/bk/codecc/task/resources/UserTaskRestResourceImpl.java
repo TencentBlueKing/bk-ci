@@ -57,7 +57,6 @@ import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
 import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
-import com.tencent.devops.common.api.enums.RepositoryType;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
@@ -67,8 +66,6 @@ import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
 import java.util.List;
 
-import com.tencent.devops.repository.api.ServiceRepositoryResource;
-import com.tencent.devops.repository.pojo.Repository;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

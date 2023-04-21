@@ -84,7 +84,7 @@ func fillOneFile(filefullpath string, compresstype protocol.PBCompressType) (pro
 	}
 	data, err := ioutil.ReadFile(filefullpath)
 	if err != nil {
-		blog.Warnf("failed to read file[%s]", filefullpath)
+		blog.Warnf("failed to read file[%s] with err:%v", filefullpath, err)
 		return message, 0, err
 	}
 
@@ -141,7 +141,7 @@ func EncodeBKCommonDispatchRsp(results []*protocol.PBResult) ([]protocol.Message
 			}
 			m, compressedsize, err := fillOneFile(realfile, f.GetCompresstype())
 			if err != nil {
-				blog.Warnf("failed to encode message for file %s", f.GetFullpath())
+				blog.Warnf("failed to encode message for file %s with err:%v", f.GetFullpath(), err)
 				// for this condition, we will set data to 0
 				// continue
 				compressedsize = 0
@@ -179,14 +179,14 @@ func EncodeBKCommonDispatchRsp(results []*protocol.PBResult) ([]protocol.Message
 	}
 	headdata, err := proto.Marshal(&pbhead)
 	if err != nil {
-		blog.Warnf("failed to proto.Marshal pbhead")
+		blog.Warnf("failed to proto.Marshal pbhead with err:%v", err)
 		return nil, err
 	}
 	blog.Infof("encode head to size %d", pbhead.XXX_Size())
 
 	headtokendata, err := formatTokenInt(protocol.TOEKNHEADFLAG, pbhead.XXX_Size())
 	if err != nil {
-		blog.Warnf("failed to format head token")
+		blog.Warnf("failed to format head token with err:%v", err)
 		return nil, err
 	}
 	headtokenmessage := protocol.Message{
@@ -222,7 +222,7 @@ func ReceiveBKCommonHead(client *TCPClient) (*protocol.PBHead, error) {
 	// receive head token
 	data, datalen, err := client.ReadData(protocol.TOKENBUFLEN)
 	if err != nil {
-		blog.Warnf("failed to receive head token")
+		blog.Warnf("failed to receive head token with err:%v", err)
 		return nil, err
 	}
 	blog.Debugf("succeed to recieve head token %s", string(data))
@@ -287,7 +287,7 @@ func ReceiveBKCommonDispatchReq(client *TCPClient,
 	// receive body
 	data, datalen, err := client.ReadData(int(bodylen))
 	if err != nil {
-		blog.Warnf("failed to receive pbbody")
+		blog.Warnf("failed to receive pbbody with err:%v", err)
 		return nil, err
 	}
 
@@ -323,7 +323,7 @@ func receiveBKCommonDispatchReqBuf(client *TCPClient,
 	if buflen >= 0 {
 		data, datalen, err := client.ReadData(int(buflen))
 		if err != nil {
-			blog.Warnf("failed to receive pb buf")
+			blog.Warnf("failed to receive pb buf with err:%v", err)
 			return err
 		}
 
@@ -399,7 +399,7 @@ func saveFile(
 
 	// compressed size < 0 means do not save, or may will overwrite existing files.
 	if size := rf.GetCompressedsize(); size < 0 {
-		blog.Warnf("get compressed size for [%s] < 0: %d", inputfile, size)
+		blog.Debugf("get compressed size for [%s] < 0: %d", inputfile, size)
 		return inputfile, nil
 	}
 
@@ -484,6 +484,26 @@ func saveFile(
 
 			inputfile = targetname
 		}
+
+		// !! set file attribute after rename
+		// TODO : change filemode and modifytime if new file created here
+		if newfilesaved {
+			filemode := rf.GetFilemode()
+			if filemode > 0 {
+				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+				if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
+					blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
+				}
+			}
+
+			modifytime := rf.GetModifytime()
+			if modifytime > 0 {
+				blog.Infof("get file[%s] modify time [%d]", inputfile, modifytime)
+				if err = os.Chtimes(inputfile, time.Now(), time.Unix(0, modifytime)); err != nil {
+					blog.Warnf("Chtimes file %s to time %s failed: %v", inputfile, time.Unix(0, modifytime), err)
+				}
+			}
+		}
 	}()
 
 	if rf.GetCompressedsize() > 0 {
@@ -495,11 +515,11 @@ func saveFile(
 				return "", err
 			}
 
-			filemode := rf.GetFilemode()
-			if filemode > 0 {
-				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
-				_ = os.Chmod(inputfile, os.FileMode(filemode))
-			}
+			// filemode := rf.GetFilemode()
+			// if filemode > 0 {
+			// 	blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+			// 	_ = os.Chmod(inputfile, os.FileMode(filemode))
+			// }
 			break
 		// case protocol.PBCompressType_LZO:
 		// 	// decompress with lzox1 firstly
@@ -559,13 +579,13 @@ func saveFile(
 				return "", err
 			}
 
-			filemode := rf.GetFilemode()
-			if filemode > 0 {
-				blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
-				if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
-					blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
-				}
-			}
+			// filemode := rf.GetFilemode()
+			// if filemode > 0 {
+			// 	blog.Infof("get file[%s] filemode[%d]", inputfile, filemode)
+			// 	if err = os.Chmod(inputfile, os.FileMode(filemode)); err != nil {
+			// 		blog.Warnf("chmod file %s to file-mode %s failed: %v", inputfile, os.FileMode(filemode), err)
+			// 	}
+			// }
 			break
 		default:
 			return "", fmt.Errorf("unknown compress type [%s]", rf.GetCompresstype())
@@ -614,14 +634,14 @@ func EncodeBKSyncTimeRsp(receivedtime time.Time) ([]protocol.Message, error) {
 	}
 	headdata, err := proto.Marshal(&pbhead)
 	if err != nil {
-		blog.Warnf("failed to proto.Marshal pbhead")
+		blog.Warnf("failed to proto.Marshal pbhead with err:%v", err)
 		return nil, err
 	}
 	blog.Infof("encode head to size %d", pbhead.XXX_Size())
 
 	headtokendata, err := formatTokenInt(protocol.TOEKNHEADFLAG, pbhead.XXX_Size())
 	if err != nil {
-		blog.Warnf("failed to format head token")
+		blog.Warnf("failed to format head token with err:%v", err)
 		return nil, err
 	}
 	headtokenmessage := protocol.Message{
@@ -680,14 +700,14 @@ func EncodeBKCheckCacheRsp(result []*protocol.PBCacheResult) ([]protocol.Message
 	}
 	headdata, err := proto.Marshal(&pbhead)
 	if err != nil {
-		blog.Warnf("failed to proto.Marshal pbhead")
+		blog.Warnf("failed to proto.Marshal pbhead with err:%v", err)
 		return nil, err
 	}
 	blog.Infof("encode head to size %d", pbhead.XXX_Size())
 
 	headtokendata, err := formatTokenInt(protocol.TOEKNHEADFLAG, pbhead.XXX_Size())
 	if err != nil {
-		blog.Warnf("failed to format head token")
+		blog.Warnf("failed to format head token with err:%v", err)
 		return nil, err
 	}
 	headtokenmessage := protocol.Message{
@@ -729,14 +749,14 @@ func EncodeBKUnknownRsp(_ time.Time) ([]protocol.Message, error) {
 	}
 	headdata, err := proto.Marshal(&pbhead)
 	if err != nil {
-		blog.Warnf("failed to proto.Marshal pbhead")
+		blog.Warnf("failed to proto.Marshal pbhead with err:%v", err)
 		return nil, err
 	}
 	blog.Infof("encode head to size %d", pbhead.XXX_Size())
 
 	headtokendata, err := formatTokenInt(protocol.TOEKNHEADFLAG, pbhead.XXX_Size())
 	if err != nil {
-		blog.Warnf("failed to format head token")
+		blog.Warnf("failed to format head token with err:%v", err)
 		return nil, err
 	}
 	headtokenmessage := protocol.Message{
@@ -811,7 +831,7 @@ func ReceiveBKSendFile(client *TCPClient,
 	// receive body
 	data, datalen, err := client.ReadData(int(bodylen))
 	if err != nil {
-		blog.Warnf("failed to receive pbbody")
+		blog.Warnf("failed to receive pbbody with err:%v", err)
 		return nil, err
 	}
 
@@ -848,7 +868,7 @@ func receiveBKSendFileBuf(client *TCPClient,
 	if buflen > 0 {
 		data, datalen, err := client.ReadData(int(buflen))
 		if err != nil {
-			blog.Warnf("failed to receive pb buf")
+			blog.Warnf("failed to receive pb buf with err:%v", err)
 			return err
 		}
 
@@ -970,14 +990,14 @@ func EncodeBKSendFileRsp(req *protocol.PBBodySendFileReq) ([]protocol.Message, e
 	}
 	headdata, err := proto.Marshal(&pbhead)
 	if err != nil {
-		blog.Warnf("failed to proto.Marshal pbhead")
+		blog.Warnf("failed to proto.Marshal pbhead with err:%v", err)
 		return nil, err
 	}
 	blog.Infof("encode head to size %d", pbhead.XXX_Size())
 
 	headtokendata, err := formatTokenInt(protocol.TOEKNHEADFLAG, pbhead.XXX_Size())
 	if err != nil {
-		blog.Warnf("failed to format head token")
+		blog.Warnf("failed to format head token with err:%v", err)
 		return nil, err
 	}
 	headtokenmessage := protocol.Message{
@@ -1021,7 +1041,7 @@ func ReceiveBKCheckCache(client *TCPClient,
 	// receive body
 	data, datalen, err := client.ReadData(int(bodylen))
 	if err != nil {
-		blog.Warnf("failed to receive pbbody")
+		blog.Warnf("failed to receive pbbody with err:%v", err)
 		return nil, err
 	}
 

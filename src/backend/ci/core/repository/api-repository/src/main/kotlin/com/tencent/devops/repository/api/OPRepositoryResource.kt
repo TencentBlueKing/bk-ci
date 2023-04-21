@@ -27,11 +27,14 @@
 
 package com.tencent.devops.repository.api
 
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Path("/op/repo/")
@@ -42,4 +45,30 @@ interface OPRepositoryResource {
     @POST
     @Path("/addhashid")
     fun addHashId()
+
+    @ApiOperation("修改工蜂老域名")
+    @POST
+    @Path("/updateGitDomain")
+    fun updateGitDomain(
+        @ApiParam(value = "git老域名", required = true)
+        @QueryParam("oldGitDomain")
+        oldGitDomain: String,
+        @ApiParam(value = "git新域名", required = true)
+        @QueryParam("newGitDomain")
+        newGitDomain: String,
+        @ApiParam(value = "灰度项目列表,多个用,分割", required = true)
+        @QueryParam("grayProject")
+        grayProject: String?,
+        @ApiParam(value = "灰度权重", required = true)
+        @QueryParam("grayWeight")
+        grayWeight: Int?,
+        @ApiParam(value = "灰度白名单,多个用,分割", required = true)
+        @QueryParam("grayWhiteProject")
+        grayWhiteProject: String?
+    ): Result<Boolean>
+
+    @ApiOperation("更新git项目ID")
+    @POST
+    @Path("/updateGitProjectId")
+    fun updateGitProjectId()
 }

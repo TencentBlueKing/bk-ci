@@ -38,8 +38,6 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 @Suppress("LongParameterList", "ReturnCount")
 object StreamPipelineUtils {
 
-    fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
-
     fun genStreamV2BuildUrl(
         homePage: String,
         gitProjectId: String,
@@ -58,7 +56,11 @@ object StreamPipelineUtils {
         return "$url/#$gitProjectId"
     }
 
-    fun genStreamV2NotificationsUrl(streamUrl: String, gitProjectId: String) = "$streamUrl/notifications#$gitProjectId"
+    fun genStreamV2NotificationsUrl(
+        streamUrl: String,
+        gitProjectId: String,
+        messageId: String
+    ) = "$streamUrl/notifications?id=$messageId#$gitProjectId"
 
     fun createEmptyPipelineAndSetting(displayName: String) = PipelineModelAndSetting(
         model = Model(

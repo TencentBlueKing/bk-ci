@@ -84,8 +84,7 @@ class NodeService @Autowired constructor(
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-    fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
-        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
@@ -115,6 +114,11 @@ class NodeService @Autowired constructor(
                 nodeWebsocketService.buildDetailMessage(projectId, userId)
             )
         }
+    }
+
+    fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
+        val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
+        deleteNodes(userId, projectId, listOf(node))
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
@@ -163,7 +167,8 @@ class NodeService @Autowired constructor(
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
                 if (it.nodeType == NodeType.THIRDPARTY.name ||
-                    it.nodeType == NodeType.DEVCLOUD.name) {
+                    it.nodeType == NodeType.DEVCLOUD.name
+                ) {
                     it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
@@ -201,7 +206,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
-                lastModifyUser = it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: "",
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
     }
@@ -273,7 +279,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
-                lastModifyUser = it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: "",
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
     }
@@ -398,8 +405,13 @@ class NodeService @Autowired constructor(
         }
     }
 
-    fun getByDisplayName(userId: String, projectId: String, displayName: String): List<NodeBaseInfo> {
-        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, null)
+    fun getByDisplayName(
+        userId: String,
+        projectId: String,
+        displayName: String,
+        nodeType: List<String>? = null
+    ): List<NodeBaseInfo> {
+        val nodes = nodeDao.getByDisplayName(dslContext, projectId, displayName, nodeType)
         if (nodes.isEmpty()) {
             return emptyList()
         }
@@ -422,22 +434,22 @@ class NodeService @Autowired constructor(
 
     fun searchByDisplayName(projectId: String, offset: Int?, limit: Int?, displayName: String): Page<NodeBaseInfo> {
         val nodeInfos = nodeDao.searchByDisplayName(
-                dslContext = dslContext,
-                offset = offset!!,
-                limit = limit!!,
-                projectId = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            offset = offset!!,
+            limit = limit!!,
+            projectId = projectId,
+            displayName = displayName
         )
         val count = nodeDao.countByDisplayName(
-                dslContext = dslContext,
-                project = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            project = projectId,
+            displayName = displayName
         )
         return Page(
-                count = count.toLong(),
-                page = offset!!,
-                pageSize = limit!!,
-                records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+            count = count.toLong(),
+            page = offset!!,
+            pageSize = limit!!,
+            records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
 
@@ -499,6 +511,8 @@ class NodeService @Autowired constructor(
     }
 
     fun addHashId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("OPRepositoryService:begin addHashId-----------")
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -509,12 +523,14 @@ class NodeService @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
+            logger.info("NodeService:begin addHashId threadPoolExecutor-----------")
             var offset = 0
             val limit = 1000
             try {
                 do {
                     val envRecords = envDao.getAllEnv(dslContext, limit, offset)
                     val envSize = envRecords?.size
+                    logger.info("envSize:$envSize")
                     envRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -526,6 +542,7 @@ class NodeService @Autowired constructor(
                 do {
                     val nodeRecords = nodeDao.getAllNode(dslContext, limit, offset)
                     val nodeSize = nodeRecords?.size
+                    logger.info("nodeSize:$nodeSize")
                     nodeRecords?.map {
                         val id = it.value1()
                         val hashId = HashUtil.encodeLongId(it.value1())
@@ -539,5 +556,7 @@ class NodeService @Autowired constructor(
                 threadPoolExecutor.shutdown()
             }
         }
+        logger.info("NodeService:finish addHashId-----------")
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 }

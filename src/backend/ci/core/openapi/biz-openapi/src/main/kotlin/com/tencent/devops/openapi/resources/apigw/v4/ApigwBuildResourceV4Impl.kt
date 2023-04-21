@@ -166,7 +166,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>,
+        values: Map<String, String>?,
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo")
@@ -174,7 +174,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
+            values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
             startType = StartType.SERVICE
@@ -205,7 +205,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String?,
-        buildId: String,
+        buildId: String?,
+        buildNumber: Int?,
         taskId: String?,
         failedContainer: Boolean?,
         skipFailedTask: Boolean?
@@ -214,11 +215,22 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             "OPENAPI_BUILD_V4|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
                 "|$skipFailedTask"
         )
+
+        val checkPipelineId = if (buildId.isNullOrBlank()) {
+            pipelineId ?: throw ParamBlankException("pipelineId and buildId cannot be empty at the same time")
+        } else checkPipelineId(projectId, pipelineId, buildId)
+
+        val checkBuildId = if (buildId.isNullOrBlank()) {
+            val buildNum = buildNumber
+                ?: throw ParamBlankException("buildId and buildNumber cannot be empty at the same time")
+            checkBuildId(projectId, checkPipelineId, buildNum)
+        } else buildId
+
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
-            buildId = buildId,
+            pipelineId = checkPipelineId,
+            buildId = checkBuildId,
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
@@ -377,15 +389,41 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun tryFinishStuckBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Boolean> {
+        logger.info("OPENAPI_BUILD_V4|$userId|tryFinishStuckBuilds|$projectId|$pipelineId|$buildIds")
+        return client.get(ServiceBuildResource::class).tryFinishStuckBuilds(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIds = buildIds
+        )
+    }
+
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
         }
         return pipelineIdFormDB
+    }
+
+    private fun checkBuildId(projectId: String, pipelineId: String, buildNumber: Int): String {
+        return client.get(ServiceBuildResource::class)
+            .getBuildIdFromBuildNumber(projectId, pipelineId, buildNumber).data
+            ?: throw ParamBlankException("Invalid buildNumber")
     }
 
     companion object {

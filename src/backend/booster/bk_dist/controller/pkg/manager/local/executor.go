@@ -127,7 +127,7 @@ func (e *executor) skipLocalRetry() bool {
 }
 
 func (e *executor) executePreTask() (*dcSDK.BKDistCommand, error) {
-	blog.Infof("executor: try to execute pre-task from pid(%d)", e.req.Pid)
+	// blog.Infof("executor: try to execute pre-task from pid(%d)", e.req.Pid)
 	defer e.mgr.work.Basic().UpdateJobStats(e.stats)
 
 	dcSDK.StatsTimeNow(&e.stats.PreWorkEnterTime)
@@ -155,8 +155,8 @@ func (e *executor) executePreTask() (*dcSDK.BKDistCommand, error) {
 	}
 
 	e.stats.PreWorkSuccess = true
-	delta := e.req.Stats.PreWorkEndTime.Time().Sub(e.req.Stats.PreWorkStartTime.Time())
-	blog.Infof("executor: success to execute pre-task from pid(%d) within %s", e.req.Pid, delta.String())
+	// delta := e.req.Stats.PreWorkEndTime.Time().Sub(e.req.Stats.PreWorkStartTime.Time())
+	// blog.Infof("executor: success to execute pre-task from pid(%d) within %s", e.req.Pid, delta.String())
 	blog.Debugf("executor: success to execute pre-task from pid(%d) and got data: %v", e.req.Pid, r)
 	return r, nil
 }
@@ -235,6 +235,7 @@ func (e *executor) executeLocalTask() *types.LocalTaskExecuteResult {
 		locallockweight = e.handler.LocalLockWeight(e.req.Commands)
 	}
 	if !e.lock(dcSDK.JobUsageLocalExe, locallockweight) {
+		blog.Infof("executor:failed to lock with local job usage(%s) weight %d", dcSDK.JobUsageLocalExe, locallockweight)
 		return &types.LocalTaskExecuteResult{
 			Result: &dcSDK.LocalTaskResult{
 				ExitCode: -1,

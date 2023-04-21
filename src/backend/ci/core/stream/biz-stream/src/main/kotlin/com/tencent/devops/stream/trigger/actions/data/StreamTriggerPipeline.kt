@@ -46,7 +46,8 @@ data class StreamTriggerPipeline(
     var displayName: String,
     val enabled: Boolean,
     val creator: String?,
-    val lastUpdateBranch: String? = ""
+    val lastUpdateBranch: String? = "",
+    var lastModifier: String? = ""
 ) {
     constructor(pipeline: StreamGitProjectPipeline) : this(
         gitProjectId = pipeline.gitProjectId.toString(),

@@ -30,7 +30,7 @@ package com.tencent.devops.environment.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("节点信息(权限)")
+@ApiModel("NodeWithPermission-节点信息(权限)")
 data class NodeWithPermission(
     @ApiModelProperty("环境 HashId", required = true)
     val nodeHashId: String,
@@ -75,5 +75,7 @@ data class NodeWithPermission(
     @ApiModelProperty("流水线Job引用数")
     val pipelineRefCount: Int? = 0,
     @ApiModelProperty("流水线Job引用数")
-    val lastBuildTime: String? = ""
+    val lastBuildTime: String? = "",
+    @ApiModelProperty("agent hash id")
+    val agentHashId: String? = ""
 )

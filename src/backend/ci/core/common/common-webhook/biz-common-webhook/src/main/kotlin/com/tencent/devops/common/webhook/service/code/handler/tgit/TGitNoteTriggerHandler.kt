@@ -70,7 +70,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_COMMENT
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_NOTE_ID
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.RegexContainFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
@@ -82,7 +82,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
 class TGitNoteTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : GitHookTriggerHandler<GitNoteEvent> {
 
     override fun eventClass(): Class<GitNoteEvent> {
@@ -134,7 +134,7 @@ class TGitNoteTriggerHandler(
         }
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
-                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+                eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
 
@@ -161,16 +161,22 @@ class TGitNoteTriggerHandler(
             } else {
                 id
             }
+            startParams[PIPELINE_GIT_MR_ACTION] = action ?: ""
+            if (projectId == null || repository == null) {
+                return@apply
+            }
+            // MR提交人
+            val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
+            val reviewInfo =
+                eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)
             startParams.putAll(
                 WebhookUtils.mrStartParam(
-                    gitScmService = gitScmService,
+                    mrInfo = mrInfo,
+                    reviewInfo = reviewInfo,
                     mrRequestId = mrRequestId,
-                    projectId = projectId,
-                    repository = repository,
                     homepage = event.repository.homepage
                 )
             )
-            startParams[PIPELINE_GIT_MR_ACTION] = action ?: ""
         }
         event.issue?.apply {
             startParams[BK_REPO_GIT_WEBHOOK_ISSUE_TITLE] = title

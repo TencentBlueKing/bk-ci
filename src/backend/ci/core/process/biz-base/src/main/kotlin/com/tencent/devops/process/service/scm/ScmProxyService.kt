@@ -38,8 +38,6 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.RetryUtils
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.Credential
@@ -97,10 +95,6 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
-                AlertUtils.doAlert(
-                    module = "SCM", level = AlertLevel.MEDIUM, title = "拉取最新版本号出现异常,重试${retry}次失败",
-                    message = "拉取最新版本号出现异常, projectId: $projectId, pipelineId: $pipelineId $e"
-                )
                 return Result(ERROR_RETRY_3_FAILED.toInt())
             }
         }, retry, 2000)
@@ -377,7 +371,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                 return client.get(ServiceScmResource::class).listTags(
                     projectName = repo.projectName,
                     url = repo.url,
-                    type = ScmType.CODE_GIT,
+                    type = ScmType.CODE_TGIT,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
                     search = search

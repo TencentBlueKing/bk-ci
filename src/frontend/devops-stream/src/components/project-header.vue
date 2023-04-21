@@ -18,6 +18,7 @@
                 <router-link
                     class="stream-link"
                     :to="{ name: 'metric' }"
+                    @click="setTitle($t('header.metrics'))"
                 >
                     <icon
                         name="metric-link"
@@ -27,10 +28,14 @@
                     {{$t('header.metrics')}}
                 </router-link>
                 <router-link
-                    class="stream-link"
                     v-bk-tooltips="{ content: $t('exception.permissionDeny'), disabled: permission }"
+                    :class="{
+                        'stream-link': true,
+                        disabled: !permission
+                    }"
                     :is="permission ? 'router-link' : 'span'"
                     :to="{ name: 'basicSetting' }"
+                    @click="setTitle($t('header.settings'))"
                 >
                     <icon
                         name="setting-link"
@@ -134,6 +139,10 @@
         methods: {
             ...mapActions(['setUser', 'setExceptionInfo']),
 
+            setTitle (title) {
+                document.title = title
+            },
+
             getProjectList () {
                 if (this.pageInfo.loadEnd) {
                     return
@@ -214,6 +223,9 @@
                 .link-icon {
                     margin-right: 4px;
                 }
+                &.disabled {
+                    cursor: not-allowed;
+                }
             }
         }
     }
@@ -261,7 +273,8 @@
         border-radius: 50%;
         background-color: red;
         position: relative;
-        left: 4px;
+        left: -6px;
+        top: -5px;
     }
     .choose-project {
         width: 250px;

@@ -50,7 +50,7 @@ interface IPullCodeSetting {
     fun getRepository() = RepositoryUtils.getRepository(repositoryConfig)
 
     fun getCredential(id: String) =
-        CredentialUtils.getCredential(buildId, id)
+        CredentialUtils.getCredential(credentialId = id)
 
     fun getCredentialWithType(id: String) =
         CredentialUtils.getCredentialWithType(id)

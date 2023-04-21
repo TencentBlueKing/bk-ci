@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.apiquery.filter
 
+import com.tencent.bk.codecc.apiquery.config.ApiGatewayAuthProperties
 import com.tencent.bk.codecc.apiquery.utils.ApiGatewayPubFile
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -18,12 +19,19 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.bouncycastle.util.io.pem.PemReader
+import org.springframework.util.StringUtils
 
 @Provider
 @PreMatching
 @RequestFilter
 class ApiFilter : ContainerRequestFilter {
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
+
+        val enabled = ApiGatewayAuthProperties.properties?.enabled ?: ""
+        if(!StringUtils.hasLength(enabled) || enabled == "false"){
+            return true
+        }
+
         val uriPath = requestContext.uriInfo.requestUri.path
         // op开头的接口不鉴权
         if (uriPath.startsWith("/api/op")) {

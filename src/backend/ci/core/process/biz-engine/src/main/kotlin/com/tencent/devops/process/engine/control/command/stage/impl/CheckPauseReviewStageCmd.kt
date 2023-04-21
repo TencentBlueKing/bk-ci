@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -91,6 +92,7 @@ class CheckPauseReviewStageCmd(
                 stage.checkIn?.parseReviewVariables(commandContext.variables, commandContext.pipelineAsCodeEnabled)
                 pipelineStageService.pauseStageNotify(
                     userId = event.userId,
+                    triggerUserId = commandContext.variables[PIPELINE_START_USER_NAME] ?: event.userId,
                     stage = stage,
                     pipelineName = commandContext.variables[PIPELINE_NAME] ?: stage.pipelineId,
                     buildNum = commandContext.variables[PIPELINE_BUILD_NUM] ?: "1"
@@ -169,7 +171,8 @@ class CheckPauseReviewStageCmd(
         commandContext.cmdFlowState = CmdFlowState.FINALLY
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 
@@ -183,7 +186,8 @@ class CheckPauseReviewStageCmd(
         commandContext.cmdFlowState = CmdFlowState.BREAK
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 
@@ -196,7 +200,8 @@ class CheckPauseReviewStageCmd(
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) passed with QUALITY_CHECK_IN"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 

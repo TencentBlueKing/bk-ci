@@ -29,8 +29,9 @@ package com.tencent.devops.common.pipeline.type
 
 enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     DOCKER_VM(".docker.vm"),
-    KUBERNETES(".kubernetes"),
     DOCKER_VM_DEMOTE(".docker.vm.demote"),
+    KUBERNETES(".kubernetes"),
+    KUBERNETES_DEMOTE(".kubernetes.demote"),
     PCG(".pcg.sumeru"),
     DEVCLOUD(".devcloud.public"),
     BCS(".bcs.public"),
@@ -39,5 +40,6 @@ enum class DispatchRouteKeySuffix(val routeKeySuffix: String) {
     STREAM(".stream.docker"),
     STREAM_DEMOTE(".stream.docker.demote"),
     CODECC(".codecc.scan"),
-    MACOS(".macos")
+    MACOS(".macos"),
+    WINDOWS(".windows")
 }

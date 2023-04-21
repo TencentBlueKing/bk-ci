@@ -64,10 +64,10 @@ class BkAuthProjectApi constructor(
         }
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("Fail to get project users. $responseContent")
-                throw RemoteServiceException("Fail to get project users", response.code(), responseContent)
+                throw RemoteServiceException("Fail to get project users", response.code, responseContent)
             }
 
             val responseObject = objectMapper.readValue<BkAuthResponse<List<String>>>(responseContent)

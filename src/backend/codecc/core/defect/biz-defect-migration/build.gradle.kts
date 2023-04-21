@@ -4,22 +4,22 @@ plugins {
 
 dependencies {
     api(project(":core:defect:biz-defect"))
-    api(group = "com.tencent.bk.devops.ci.log", name = "api-log", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.log", name = "api-log"){
         isChanging = true
     }
-    api(group = "com.tencent.bk.devops.ci.quality", name = "api-quality", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.quality", name = "api-quality"){
         isChanging = true
     }
-    api(group = "com.tencent.bk.devops.ci.process", name = "api-process", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.process", name = "api-process"){
         isChanging = true
     }
-    api(group= "com.tencent.bk.devops.ci.repository", name = "api-repository", version = Versions.devopsVersion){
+    api(group= "com.tencent.bk.devops.ci.repository", name = "api-repository"){
         isChanging = true
     }
-    api(group = "com.tencent.bk.devops.ci.plugin", name="api-plugin", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.plugin", name="api-plugin"){
         isChanging = true
     }
-    api(group = "com.tencent.bk.devops.ci.plugin", name="api-codecc", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.plugin", name="api-codecc"){
         isChanging = true
     }
 }

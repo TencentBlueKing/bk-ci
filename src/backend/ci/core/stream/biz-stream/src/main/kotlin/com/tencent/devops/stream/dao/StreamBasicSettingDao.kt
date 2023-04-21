@@ -34,6 +34,7 @@ import com.tencent.devops.model.stream.tables.TGitBasicSetting
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamCIInfo
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -81,7 +82,8 @@ class StreamBasicSettingDao {
                         GIT_PROJECT_AVATAR,
                         LAST_CI_INFO,
                         NAME_WITH_NAME_SPACE,
-                        PATH_WITH_NAME_SPACE
+                        PATH_WITH_NAME_SPACE,
+                        TRIGGER_REVIEW_SETTING
                     ).values(
                         conf.gitProjectId,
                         conf.name,
@@ -105,10 +107,11 @@ class StreamBasicSettingDao {
                         if (conf.lastCiInfo == null) {
                             null
                         } else {
-                            JsonUtil.toJson(conf.lastCiInfo!!)
+                            JsonUtil.toJson(conf.lastCiInfo!!, formatted = false)
                         },
                         conf.nameWithNamespace,
-                        conf.pathWithNamespace
+                        conf.pathWithNamespace,
+                        JsonUtil.toJson(conf.triggerReviewSetting, formatted = false)
                     ).execute()
                 } else {
                     context.update(this)
@@ -174,7 +177,21 @@ class StreamBasicSettingDao {
     ) {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             dslContext.update(this)
-                .set(LAST_CI_INFO, JsonUtil.toJson(streamCiInfo))
+                .set(LAST_CI_INFO, JsonUtil.toJson(streamCiInfo, formatted = false))
+                .where(ID.eq(gitProjectId))
+                .execute()
+        }
+    }
+
+    fun updateProjectReviewSetting(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        triggerReviewSetting: TriggerReviewSetting
+    ) {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            dslContext.update(this)
+                .set(TRIGGER_REVIEW_SETTING, JsonUtil.toJson(triggerReviewSetting, formatted = false))
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .where(ID.eq(gitProjectId))
                 .execute()
         }
@@ -282,7 +299,11 @@ class StreamBasicSettingDao {
                     enableCommitCheck = conf.enableCommitCheck,
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
                     pathWithNamespace = conf.pathWithNameSpace,
-                    enableMrComment = conf.enableMrComment
+                    enableMrComment = conf.enableMrComment,
+                    triggerReviewSetting = JsonUtil.toOrNull(
+                        conf.triggerReviewSetting,
+                        object : TypeReference<TriggerReviewSetting>() {}
+                    ) ?: TriggerReviewSetting()
                 )
             }
         }
@@ -326,7 +347,11 @@ class StreamBasicSettingDao {
                         null
                     },
                     nameWithNamespace = conf.nameWithNameSpace ?: "",
-                    pathWithNamespace = conf.pathWithNameSpace
+                    pathWithNamespace = conf.pathWithNameSpace,
+                    triggerReviewSetting = JsonUtil.toOrNull(
+                        conf.triggerReviewSetting,
+                        object : TypeReference<TriggerReviewSetting>() {}
+                    ) ?: TriggerReviewSetting()
                 )
             }
         }
@@ -473,6 +498,34 @@ class StreamBasicSettingDao {
         with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
             return dslContext.update(this)
                 .set(ENABLE_USER_ID, newUserId)
+                .where(ID.`in`(idList)).execute()
+        }
+    }
+    fun getProjectByGitDomain(
+        dslContext: DSLContext,
+        gitDomain: String,
+        limit: Int
+    ): Result<Record1<Long>> {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.select(ID).from(this)
+                .where(HOME_PAGE.like("%$gitDomain%"))
+                .limit(limit)
+                .fetch()
+        }
+    }
+
+    fun updateGitDomainByIds(
+        dslContext: DSLContext,
+        oldGitDomain: String,
+        newGitDomain: String,
+        idList: List<Long>
+    ): Int {
+        with(TGitBasicSetting.T_GIT_BASIC_SETTING) {
+            return dslContext.update(this)
+                .set(URL, URL.replace(oldGitDomain, newGitDomain))
+                .set(HOME_PAGE, HOME_PAGE.replace(oldGitDomain, newGitDomain))
+                .set(GIT_HTTP_URL, GIT_HTTP_URL.replace(oldGitDomain, newGitDomain))
+                .set(GIT_SSH_URL, GIT_SSH_URL.replace(oldGitDomain, newGitDomain))
                 .where(ID.`in`(idList)).execute()
         }
     }

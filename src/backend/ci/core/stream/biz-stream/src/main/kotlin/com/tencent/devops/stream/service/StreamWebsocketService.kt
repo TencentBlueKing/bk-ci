@@ -4,6 +4,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.ws.StreamNotifyWebsocketPush
 import com.tencent.devops.stream.ws.StreamPipelineWebsocketPush
 import org.slf4j.LoggerFactory
@@ -13,19 +14,15 @@ import org.springframework.stereotype.Service
 @Service
 class StreamWebsocketService @Autowired constructor(
     val webSocketDispatcher: WebSocketDispatcher,
-    val redisOperation: RedisOperation
+    val redisOperation: RedisOperation,
+    val streamGitConfig: StreamGitConfig
 ) {
     fun pushNotifyWebsocket(userId: String, gitProjectId: String?) {
-        val projectCode = if (gitProjectId == null) {
-            null
-        } else {
-            "git_$gitProjectId"
-        }
         try {
             webSocketDispatcher.dispatch(
                 StreamNotifyWebsocketPush(
                     buildId = null,
-                    projectId = projectCode,
+                    projectId = gitProjectId,
                     userId = userId,
                     pushType = WebSocketType.NOTIFY,
                     redisOperation = redisOperation,
@@ -47,11 +44,10 @@ class StreamWebsocketService @Autowired constructor(
     }
 
     fun pushPipelineWebSocket(projectId: String, pipelineId: String, userId: String) {
-        val projectCode = "git_$projectId"
         try {
             webSocketDispatcher.dispatch(
                 StreamPipelineWebsocketPush(
-                    projectId = projectCode,
+                    projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
                     pushType = WebSocketType.STATUS,
@@ -69,7 +65,7 @@ class StreamWebsocketService @Autowired constructor(
                 )
             )
         } catch (e: Exception) {
-            logger.warn("Stream V2WebsocketService pushPipelineWebSocket fail $userId $projectCode $e")
+            logger.warn("Stream V2WebsocketService pushPipelineWebSocket fail $userId $projectId $e")
         }
     }
 

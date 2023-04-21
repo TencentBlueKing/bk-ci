@@ -17,7 +17,7 @@
                                     v-for="service in recentVisitService"
                                     :key="service.key"
                                     :to="addConsole(service.link_new)"
-                                    @click.native="getDocumentTitle(service.link_new)"
+                                    @click.native="updateDocumnetTitle(service.link_new)"
                                 >
                                     <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
                                     <Logo
@@ -53,6 +53,7 @@
                             slot="content"
                             class="all-service-list"
                             column-width="190px"
+                            :get-document-title="getDocumentTitle"
                             :with-hover="false"
                             :services="services"
                         />
@@ -68,7 +69,7 @@
                     >{{ item.label }}</span>
                     <div class="bkdevops-button">
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             target="_blank"
                         >
                             <bk-button
@@ -115,7 +116,7 @@
                     <p>
                         {{ $t("bkdevopsDesc") }}
                         <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             class="more"
                             target="_blank"
                         >{{ $t("learnMore") }}</a>
@@ -126,7 +127,7 @@
                     <p>
                         {{ $t("bkdevopsWay") }}
                         <!-- <a
-                            :href="DOCS_URL_PREFIX"
+                            :href="BKCI_DOCS.BKCI_DOC"
                             target="_blank"
                             class="more"
                         >{{ $t("learnMore") }}</a> -->
@@ -166,7 +167,8 @@
     import Logo from '../components/Logo/index.vue'
     import { Accordion, AccordionItem } from '../components/Accordion/index'
     
-    import { urlJoin, isAbsoluteUrl } from '../utils/util'
+    import { urlJoin, isAbsoluteUrl } from '@/utils/util'
+    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         components: {
@@ -182,7 +184,6 @@
         @State related
         @Action fetchLinks
         isAllServiceListShow: boolean = false
-        DOCS_URL_PREFIX: string = `${DOCS_URL_PREFIX}/产品简介/README.md`
         isAbsoluteUrl = isAbsoluteUrl
         BK_CI_VERSION: string = window.BK_CI_VERSION
 
@@ -223,31 +224,11 @@
         
         getDocumentTitle (linkNew) {
             const title = linkNew.split('/')[1]
-            const titlesMap = {
-                pipeline: this.$t('documentTitlePipeline'),
-                codelib: this.$t('documentTitleCodelib'),
-                artifactory: this.$t('documentTitleArtifactory'),
-                codecc: this.$t('documentTitleCodecc'),
-                experience: this.$t('documentTitleExperience'),
-                turbo: this.$t('documentTitleTurbo'),
-                repo: this.$t('documentTitleRepo'),
-                preci: this.$t('documentTitlePreci'),
-                stream: this.$t('documentTitleStream'),
-                wetest: this.$t('documentTitleWetest'),
-                quality: this.$t('documentTitleQuality'),
-                xinghai: this.$t('documentTitleXinghai'),
-                bcs: this.$t('documentTitleBcs'),
-                job: this.$t('documentTitleJob'),
-                environment: this.$t('documentTitleEnvironment'),
-                vs: this.$t('documentTitleVs'),
-                apk: this.$t('documentTitleApk'),
-                monitor: this.$t('documentTitleMonitor'),
-                perm: this.$t('documentTitlePerm'),
-                ticket: this.$t('documentTitleTicket'),
-                store: this.$t('documentTitleStore'),
-                metrics: this.$t('documentTitleMetrics')
-            }
-            document.title = titlesMap[title]
+            return this.$t(mapDocumnetTitle(title)) as string
+        }
+
+        updateDocumnetTitle (linkNew) {
+            document.title = this.getDocumentTitle(linkNew)
         }
 
         serviceName (name = ''): string {

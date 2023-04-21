@@ -40,11 +40,13 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.common.exception.StreamNoEnableException
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
 import com.tencent.devops.stream.pojo.StreamGitProjectInfoWithProject
+import com.tencent.devops.stream.pojo.TriggerReviewSetting
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -57,7 +59,8 @@ class StreamBasicSettingService @Autowired constructor(
     private val client: Client,
     private val streamBasicSettingDao: StreamBasicSettingDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val streamGitTransferService: StreamGitTransferService
+    private val streamGitTransferService: StreamGitTransferService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamBasicSettingService::class.java)
@@ -133,6 +136,24 @@ class StreamBasicSettingService @Autowired constructor(
         return true
     }
 
+    fun updateProjectReviewSetting(
+        gitProjectId: Long,
+        userId: String? = null,
+        triggerReviewSetting: TriggerReviewSetting
+    ): Boolean {
+        val setting = streamBasicSettingDao.getSetting(dslContext, gitProjectId)
+        if (setting == null) {
+            logger.info("git repo not exists.")
+            return false
+        }
+        streamBasicSettingDao.updateProjectReviewSetting(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            triggerReviewSetting = triggerReviewSetting
+        )
+        return true
+    }
+
     fun getStreamConf(gitProjectId: Long): StreamBasicSetting? {
         return streamBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
@@ -148,7 +169,7 @@ class StreamBasicSettingService @Autowired constructor(
         gitProjectId: Long,
         enabled: Boolean
     ): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId)
+        val projectInfo = requestGitProjectInfo(gitProjectId, userId)
 
         run back@{
             return saveStreamConf(
@@ -203,7 +224,10 @@ class StreamBasicSettingService @Autowired constructor(
             // 增加判断可能存在stream 侧项目名称删除后，新建同名项目，这时候开启CI就会出现插入project表同名冲突失败的情况,
             checkSameGitProjectName(userId, gitProjectName)
 
-            val projectCode = GitCommonUtils.getCiProjectId(setting.gitProjectId)
+            val projectCode = GitCommonUtils.getCiProjectId(
+                setting.gitProjectId,
+                streamGitConfig.getScmType()
+            )
             val projectResult = client.get(ServiceProjectResource::class).createExtSystem(
                 userId = userId,
                 projectInfo = ProjectCreateInfo(
@@ -241,7 +265,7 @@ class StreamBasicSettingService @Autowired constructor(
 
     // 更新时同步更新蓝盾项目名称
     fun refreshSetting(userId: String, gitProjectId: Long): Boolean {
-        val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
+        val projectInfo = requestGitProjectInfo(gitProjectId, userId) ?: return false
         return updateProjectInfo(userId, projectInfo)
     }
 
@@ -285,7 +309,10 @@ class StreamBasicSettingService @Autowired constructor(
             try {
                 client.get(ServiceProjectResource::class).updateProjectName(
                     userId = userId,
-                    projectCode = GitCommonUtils.getCiProjectId(projectInfo.gitProjectId),
+                    projectCode = GitCommonUtils.getCiProjectId(
+                        projectInfo.gitProjectId,
+                        streamGitConfig.getScmType()
+                    ),
                     projectName = newProjectName
                 )
             } catch (e: Throwable) {
@@ -336,9 +363,9 @@ class StreamBasicSettingService @Autowired constructor(
         )
     }
 
-    protected fun requestGitProjectInfo(gitProjectId: Long): StreamGitProjectInfoWithProject? {
+    protected fun requestGitProjectInfo(gitProjectId: Long, userId: String): StreamGitProjectInfoWithProject? {
         return try {
-            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), null)
+            streamGitTransferService.getGitProjectInfo(gitProjectId.toString(), userId)
         } catch (e: Throwable) {
             logger.warn("StreamBasicSettingService|requestGitProjectInfo|error", e)
             return null
@@ -361,7 +388,7 @@ class StreamBasicSettingService @Autowired constructor(
 
         // sp2:如果已有同名项目，则根据project_id 调用scm接口获取git上的项目信息
         val projectId = GitCommonUtils.getGitProjectId(bkProjectResult.projectId)
-        val gitProjectResult = requestGitProjectInfo(projectId)
+        val gitProjectResult = requestGitProjectInfo(projectId, userId)
         logger.info("StreamBasicSettingService|checkSameGitProjectName|$gitProjectResult|$projectName")
         // 如果stream 存在该项目信息
         if (null != gitProjectResult) {
@@ -392,7 +419,10 @@ class StreamBasicSettingService @Autowired constructor(
 
             client.get(ServiceProjectResource::class).updateProjectName(
                 userId = userId,
-                projectCode = GitCommonUtils.getCiProjectId(projectId.toLong()),
+                projectCode = GitCommonUtils.getCiProjectId(
+                    projectId.toLong(),
+                    streamGitConfig.getScmType()
+                ),
                 projectName = deletedProjectName
             )
         } catch (e: Throwable) {

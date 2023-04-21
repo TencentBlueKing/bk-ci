@@ -30,6 +30,7 @@ function _M:get_tag(ns_config)
 
     -- 根据header强制路由tag
     if ngx.var.http_x_gateway_tag ~= nil then
+        self:set_header(ngx.var.http_x_gateway_tag)
         return ngx.var.http_x_gateway_tag
     end
 
@@ -83,6 +84,23 @@ function _M:get_tag(ns_config)
         if tag == nil then
             tag = default_tag
         end
+        -- 是否使用kubernetes
+        if not string.find(tag, '^kubernetes-') then
+            if config.kubernetes.switchAll == true then
+                tag = "kubernetes-" .. tag
+            else
+                local k8s_redis_key = nil
+                if devops_project == 'codecc' then
+                    k8s_redis_key = 'project:setting:k8s:codecc'
+                else
+                    k8s_redis_key = "project:setting:k8s"
+                end
+                local k8s_redRes = red:sismember(k8s_redis_key, devops_project_id)
+                if k8s_redRes == 1 then
+                    tag = "kubernetes-" .. tag
+                end
+            end
+        end
         --- 将redis连接放回pool中
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
@@ -98,12 +116,17 @@ end
 
 -- 设置tag到http请求头
 function _M:set_header(tag)
-    ngx.header["X-GATEWAY-TAG"] = tag
+    if ngx.var.http_x_gateway_tag == nil then
+        ngx.header["X-GATEWAY-TAG"] = tag
+    end
     ngx.var.route_tag = tag
 end
 
 -- 获取前端目录
 function _M:get_frontend_path(tag, project)
+    if string.find(tag, '^kubernetes-') then
+        tag = string.sub(tag, 12) -- 去掉 "kubernetes-" 头部
+    end
     local frontend_path_cache = ngx.shared.tag_frontend_path_store
     local local_cache_key = "ci_" .. tag
     if project == "codecc" then

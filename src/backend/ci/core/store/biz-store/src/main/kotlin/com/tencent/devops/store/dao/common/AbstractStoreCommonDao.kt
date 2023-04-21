@@ -40,6 +40,11 @@ abstract class AbstractStoreCommonDao {
         storeId: String
     ): String?
 
+    abstract fun getStoreNameByCode(
+        dslContext: DSLContext,
+        storeCode: String
+    ): String?
+
     abstract fun getNewestStoreNameByCode(
         dslContext: DSLContext,
         storeCode: String

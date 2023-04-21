@@ -24,8 +24,8 @@
                         <i v-else :title="$t('history.stopBuild')" class="devops-icon icon-stop-shape" @click.stop="stopExecute(execDetail.id)"></i>
                     </div>
                     <div class="info-item">
-                        <span class="item-label">{{ $t('details.executor') }}：</span>
-                        <span class="trigger-mode">{{ execDetail.userId || '--' }}</span>
+                        <span class="item-label">{{ $t('details.trigger') }}：</span>
+                        <span class="trigger-mode">{{ execDetail.triggerUser || '--' }}</span>
                     </div>
                     <div class="info-item">
                         <span class="item-label">{{ $t('details.executionTime') }}：</span>
@@ -305,7 +305,7 @@
                 return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
             },
             isInstanceEditable () {
-                return this.pipeline && this.pipeline.instanceFromTemplate
+                return this.execDetail?.model?.instanceFromTemplate
             },
             curMatchRules () {
                 return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
@@ -314,6 +314,7 @@
 
         watch: {
             execDetail (val) {
+                console.log(val, 'execDetailexecDetail')
                 this.isLoading = val === null
             },
             'routerParams.buildNo': {
@@ -459,7 +460,7 @@
                         isContinue,
                         element: atom
                     }
-                    
+
                     try {
                         await this.pausePlugin(postData)
                         this.requestPipelineExecDetail(this.routerParams)

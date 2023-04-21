@@ -38,17 +38,15 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
+import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
@@ -56,9 +54,12 @@ import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.process.utils.PIPELINE_ID
+import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -99,33 +100,26 @@ open class DefaultModelCheckPlugin constructor(
                 params = arrayOf("", KEY_STAGE, pipelineCommonSettingConfig.maxStageNum.toString())
             )
         }
-        val stage = stages.getOrNull(0)
+
+        val trigger = stages.getOrNull(0)
             ?: throw ErrorCodeException(
                 defaultMessage = "流水线Stage为空",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
             )
-        if (stage.containers.size != 1) {
-            logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
-            throw ErrorCodeException(
-                defaultMessage = "流水线只能有一个触发Stage",
-                errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
-            )
-        }
-
         // 检查触发容器
-        checkTriggerContainer(stage)
-
+        val paramsMap = checkTriggerContainer(trigger)
+        val contextMap = paramsMap.mapValues { it.value.defaultValue.toString() }
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val lastPosition = model.stages.size - 1
-        model.stages.forEachIndexed { nowPosition, s ->
-            val containers = s.containers
+        model.stages.forEachIndexed { nowPosition, stage ->
+            val containers = stage.containers
             // 判断stage下container数量是否超过系统限制
             if (containers.size > stageCommonSettingConfig.maxJobNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
                     params = arrayOf(
-                        s.name ?: "stage_$nowPosition",
+                        stage.name ?: "stage_$nowPosition",
                         KEY_JOB,
                         stageCommonSettingConfig.maxJobNum.toString()
                     )
@@ -138,7 +132,7 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
 
-            if (s.finally) { // finallyStage只能存在于最后一个
+            if (stage.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
                     throw ErrorCodeException(
                         defaultMessage = "流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置",
@@ -148,17 +142,16 @@ open class DefaultModelCheckPlugin constructor(
             }
 
             // #4531 检查stage审核组配置是否符合要求
-            if (s.stageControlOption?.manualTrigger == true || s.checkIn?.manualTrigger == true) {
-                checkStageReviewers(s)
-            }
+            stage.checkStageReviewers()
 
             val atomVersions = mutableSetOf<StoreVersion>()
             val atomInputParamList = mutableListOf<StoreParam>()
-            metaSize += checkElements(
-                stage = s,
+
+            metaSize += stage.checkJob(
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
+                contextMap = contextMap,
                 atomInputParamList = atomInputParamList
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
@@ -176,64 +169,106 @@ open class DefaultModelCheckPlugin constructor(
         return metaSize
     }
 
-    private fun checkStageReviewers(stage: Stage) {
-        stage.resetBuildOption()
-        if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
+    private fun Stage.checkStageReviewers() {
+        if (stageControlOption?.manualTrigger != true && checkIn?.manualTrigger != true) {
+            return
+        }
+        resetBuildOption()
+        if (checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "Stage(${stage.name})准入配置不正确",
+                defaultMessage = "Stage($name)准入配置不正确",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP,
-                params = arrayOf(stage.name ?: stage.id ?: "")
+                params = arrayOf(name ?: id ?: "")
             )
         }
-        stage.checkIn?.reviewGroups?.forEach { group ->
+        checkIn?.reviewGroups?.forEach { group ->
             if (group.reviewers.isEmpty()) throw ErrorCodeException(
-                defaultMessage = "Stage(${stage.name})中审核组(${group.name})未配置审核人",
+                defaultMessage = "Stage($name)中审核组(${group.name})未配置审核人",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
-                params = arrayOf(stage.name!!, group.name)
+                params = arrayOf(name!!, group.name)
             )
         }
-        stage.checkIn?.timeout = if (stage.checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
-            stage.checkIn?.timeout
+        PipelineUtils.checkStageReviewParam(checkIn?.reviewParams)
+
+        checkIn?.timeout = if (checkIn?.timeout in 1..(Timeout.DEFAULT_STAGE_TIMEOUT_HOURS * 30)) {
+            checkIn?.timeout
         } else {
             Timeout.DEFAULT_STAGE_TIMEOUT_HOURS
         }
     }
 
-    private fun checkElements(
-        stage: Stage,
+    private fun Stage.checkJob(
         containerCnt: MutableMap<String, Int>,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
+        contextMap: Map<String, String>,
         atomInputParamList: MutableList<StoreParam>
     ): Int /* MetaSize*/ {
         var metaSize = 0
-        stage.containers.forEach { c ->
+        containers.forEach { container ->
+
+            checkMutexGroup(container = container, contextMap = contextMap)
+
+            checkJobCondition(container = container, finallyStage = finally, contextMap = contextMap)
+
             // 判断job下task数量是否超过系统限制
-            metaSize += c.elements.size
-            if (c.elements.size > jobCommonSettingConfig.maxTaskNum) {
+            metaSize += container.elements.size
+            if (container.elements.size > jobCommonSettingConfig.maxTaskNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
-                    params = arrayOf(c.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
+                    params = arrayOf(container.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
                 )
             }
-            val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
-                ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
-            ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
+            val cCnt = containerCnt.computeIfPresent(container.getClassType()) { _, oldValue -> oldValue + 1 }
+                ?: containerCnt.computeIfAbsent(container.getClassType()) { 1 } // 第一次时出现1次
+            ContainerBizRegistrar.getPlugin(container)?.check(container, cCnt)
             Preconditions.checkTrue(
-                condition = c.elements.isNotEmpty(),
+                condition = container.elements.isNotEmpty(),
                 exception = ErrorCodeException(
                     defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
-                    errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
+                    errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(name!!, container.name)
                 )
             )
-            c.elements.forEach { e ->
-                val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
-                    ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
-                ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                addAtomInputDataInfo(e, atomVersions, atomInputParamList)
+            container.elements.forEach { e ->
+                container.checkElement(e, elementCnt, atomVersions, atomInputParamList, contextMap)
             }
         }
-        return metaSize + stage.containers.size
+        return metaSize + containers.size
+    }
+
+    private fun Container.checkElement(
+        element: Element,
+        elementCnt: MutableMap<String, Int>,
+        atomVersions: MutableSet<StoreVersion>,
+        atomInputParamList: MutableList<StoreParam>,
+        contextMap: Map<String, String>
+    ) {
+        val eCnt = elementCnt.computeIfPresent(element.getAtomCode()) { _, oldValue -> oldValue + 1 }
+            ?: elementCnt.computeIfAbsent(element.getAtomCode()) { 1 } // 第一次时出现1次
+        ElementBizRegistrar.getPlugin(element)?.check(element, eCnt)
+        addAtomInputDataInfo(element, atomVersions, atomInputParamList)
+
+        checkElementTimeoutVar(container = this, element = element, contextMap = contextMap)
+    }
+
+    override fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>) {
+        if (!element.additionalOptions?.timeoutVar.isNullOrBlank()) {
+            val obj = Timeout.decTimeout(timeoutVar = element.additionalOptions?.timeoutVar, contextMap = contextMap)
+            if (obj.change && obj.replaceByVar) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR,
+                    defaultMessage = "流水线: Job[{0}]的插件[{1}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
+                    params = arrayOf(
+                        container.name, // Job名称
+                        element.name, // 插件名称
+                        element.additionalOptions!!.timeoutVar!!, // 互斥组超时配置项的变量字符串
+                        obj.beforeChangeStr!!, // 变量替换后的值
+                        Timeout.MAX_MINUTES.toString() // 合理的最大值
+                    )
+                )
+            }
+            element.additionalOptions?.timeout = obj.minutes.toLong()
+        }
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -260,9 +295,11 @@ open class DefaultModelCheckPlugin constructor(
             is MarketBuildAtomElement -> {
                 e.data[KEY_INPUT]
             }
+
             is MarketBuildLessAtomElement -> {
                 e.data[KEY_INPUT]
             }
+
             else -> {
                 // 获取老插件的输入参数
                 val baseFields = Element::class.java.declaredFields.filter { it.name != "Companion" }
@@ -291,31 +328,23 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    open fun checkTriggerContainer(stage: Stage) {
-        val triggerContainer = (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+    open fun checkTriggerContainer(trigger: Stage): Map<String /* 流水线变量名 */, BuildFormProperty> {
+        if (trigger.containers.size != 1) {
+            logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
+            throw ErrorCodeException(
+                defaultMessage = "流水线只能有一个触发Stage",
+                errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
+            )
+        }
+        val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
             defaultMessage = "流水线Stage为空",
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
-        PipelineUtils.checkPipelineParams(triggerContainer.params)
+        return PipelineUtils.checkPipelineParams(triggerContainer.params)
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
-
-        private fun isThirdPartyAgentEmpty(vmBuildContainer: VMBuildContainer): Boolean {
-            // Old logic
-            if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() &&
-                vmBuildContainer.thirdPartyAgentEnvId.isNullOrBlank()) {
-                // New logic
-                val dispatchType = vmBuildContainer.dispatchType ?: return true
-                return when (dispatchType.buildType()) {
-                    BuildType.THIRD_PARTY_AGENT_ID, BuildType.THIRD_PARTY_AGENT_ENV -> dispatchType.value.isBlank()
-                    else -> true
-                }
-            }
-
-            return false
-        }
     }
 
     /**
@@ -374,30 +403,38 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    override fun checkJob(
-        jobContainer: Container,
-        projectId: String,
-        pipelineId: String,
-        userId: String,
-        finallyStage: Boolean
-    ) {
-        if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
-            if (isThirdPartyAgentEmpty(jobContainer)) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_PUBLIC_WINDOWS_BUILDER,
-                    defaultMessage = "请设置Windows构建机"
-                )
-            }
+    override fun checkMutexGroup(container: Container, contextMap: Map<String, String>) {
+
+        val mutexGroup = when (container) {
+            is VMBuildContainer -> container.mutexGroup
+            is NormalContainer -> container.mutexGroup
+            else -> return
         }
 
-        checkJobCondition(finallyStage = finallyStage, jobContainer = jobContainer)
+        if (mutexGroup != null) {
+            val obj = Timeout.decTimeout(timeoutVar = mutexGroup.timeoutVar, contextMap = contextMap)
+            if (obj.change && obj.replaceByVar) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR,
+                    defaultMessage = "流水线: Job互斥组[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
+                    params = arrayOf(
+                        container.name, // job名称
+                        mutexGroup.mutexGroupName!!, // 互斥组名称
+                        mutexGroup.timeoutVar!!, // 互斥组超时配置项的变量字符串
+                        obj.beforeChangeStr!!, // 变量替换后的值
+                        Timeout.MAX_MINUTES.toString() // 合理的最大值
+                    )
+                )
+            }
+            mutexGroup.timeout = obj.minutes
+        }
     }
 
-    private fun checkJobCondition(finallyStage: Boolean, jobContainer: Container) {
+    override fun checkJobCondition(container: Container, finallyStage: Boolean, contextMap: Map<String, String>) {
 
-        val jobControlOption = when (jobContainer) {
-            is VMBuildContainer -> jobContainer.jobControlOption
-            is NormalContainer -> jobContainer.jobControlOption
+        val jobControlOption = when (container) {
+            is VMBuildContainer -> container.jobControlOption
+            is NormalContainer -> container.jobControlOption
             else -> null
         }
 
@@ -410,30 +447,42 @@ open class DefaultModelCheckPlugin constructor(
             if (!finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE_JOB_CONDITION,
-                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
-                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                    params = arrayOf(container.name, jobControlOption.runCondition.name)
                 )
             }
-            return
-        } else {
-            if (!normalStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NORMAL_STAGE_JOB_CONDITION,
-                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
-                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
-                )
+        } else if (!normalStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_NORMAL_STAGE_JOB_CONDITION,
+                params = arrayOf(container.name, jobControlOption.runCondition.name)
+            )
+        } else if (customVarJobRunConditionSet.contains(jobControlOption.runCondition)) {
+            if (jobControlOption.customVariables.isNullOrEmpty()) {
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION)
             }
         }
 
-        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
-            jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
-        ) {
-            if (jobControlOption.customVariables == null ||
-                jobControlOption.customVariables!!.isEmpty()
-            ) {
+        if (!jobControlOption.timeoutVar.isNullOrBlank()) {
+            val obj = Timeout.decTimeout(timeoutVar = jobControlOption.timeoutVar, contextMap = contextMap)
+            if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_NO_PARAM_IN_JOB_CONDITION,
-                    defaultMessage = "请设置Job运行条件时的自定义变量"
+                    errorCode = ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR,
+                    defaultMessage = "流水线: Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
+                    params = arrayOf(
+                        container.name, // Job名称
+                        jobControlOption.timeoutVar!!, // 超时配置项的变量字符串
+                        obj.beforeChangeStr!!, // 变量替换后的值
+                        Timeout.MAX_MINUTES.toString() // 合理的最大值
+                    )
+                )
+            }
+            jobControlOption.timeout = obj.minutes
+        } else { // 历史0值兼容
+            val obj = Timeout.decTimeout(jobControlOption.timeout.toString(), contextMap)
+            if (obj.change) {
+                jobControlOption.timeout = obj.minutes
+                logger.info(
+                    "BKSystemMonitor|[${contextMap[PROJECT_NAME]}]|[${contextMap[PIPELINE_ID]}]" +
+                        "|bad timeout: ${obj.beforeChangeStr}"
                 )
             }
         }
@@ -451,5 +500,10 @@ open class DefaultModelCheckPlugin constructor(
         JobRunCondition.CUSTOM_VARIABLE_MATCH,
         JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
         JobRunCondition.STAGE_RUNNING
+    )
+
+    private val customVarJobRunConditionSet = setOf(
+        JobRunCondition.CUSTOM_VARIABLE_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
     )
 }

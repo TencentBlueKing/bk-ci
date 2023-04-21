@@ -63,13 +63,13 @@
                                 @click="toProjectDetail('buildList', repo.nameWithNamespace, repo.ciInfo && repo.ciInfo.enableCI)"
                             >
                         </div>
-                        <div class="repo-data">
+                        <div class="repo-data max-width">
                             <section v-if="repo.ciInfo && repo.ciInfo.enableCI">
                                 <div class="repo-name">
                                     <span class="to-page-link" @click="toProjectDetail('buildList', repo.nameWithNamespace)">{{ repo.nameWithNamespace }}</span>
                                 </div>
                                 <div class="repo-desc">
-                                    <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info">
+                                    <div v-if="repo.ciInfo && repo.ciInfo.enableCI" class="repo-ci-info" v-bk-overflow-tips>
                                         <i :class="getIconClass(repo.ciInfo.lastBuildStatus)"></i>
                                         <span class="to-page-link" @click="toLastBuildDetail(repo)">{{ repo.ciInfo.lastBuildMessage || $t('dashboard.emptyCommit') }}</span>
                                     </div>
@@ -79,8 +79,8 @@
                                 <div class="repo-name">
                                     {{ repo.nameWithNamespace }}
                                 </div>
-                                <div class="repo-desc">
-                                    <div>{{ repo.description || $t('dashboard.emptyDesc') }}</div>
+                                <div class="repo-desc" v-bk-overflow-tips>
+                                    {{ repo.description || $t('dashboard.emptyDesc') }}
                                 </div>
                             </section>
                         </div>
@@ -123,7 +123,6 @@
         },
         data () {
             return {
-                hasNext: true,
                 type: 'MY_PROJECT',
                 limit: 30,
                 searchStr: '',
@@ -171,11 +170,13 @@
                 })
             },
             async getRepoList (page = 1, pageSize = this.limit) {
+                let hasNext = false
                 await common.getStreamProjects(this.type, page, pageSize, this.searchStr).then((res = {}) => {
                     this.repoList = (res.records || []).map(item => ({
                         ...item,
                         avatarUrl: (item.avatarUrl.endsWith('.jpg') || item.avatarUrl.endsWith('.jpeg') || item.avatarUrl.endsWith('.png')) ? (item.avatarUrl.replace('http:', '').replace('https:', '')) : gitcode
                     }))
+                    hasNext = res.hasNext
                 }).catch((err) => {
                     this.$bkMessage({
                         theme: 'error',
@@ -183,7 +184,7 @@
                     })
                 })
                 return {
-                    hasNext: this.hasNext || false,
+                    hasNext,
                     records: this.repoList || []
                 }
             },
@@ -229,10 +230,6 @@
                 }).then(res => {
                     this.updateList()
                     this.getRecentProjects()
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: 'EnableCI successfully'
-                    })
                 }).catch((err) => {
                     this.$bkMessage({
                         theme: 'primary',
@@ -356,6 +353,9 @@
                     height: 56px;
                     border-radius: 28px;
                 }
+            }
+            .max-width {
+                max-width: calc(100% - 210px);
             }
             .repo-data {
                 flex: 1;

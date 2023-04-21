@@ -95,7 +95,13 @@ class WeworkServiceImpl(
                 val mediaId = uploadMedia(mediaType, mediaInputStream, mediaName)
                 val requestBodies =
                     (toUser.map { getSendMessageRequest(mediaType = mediaType, mediaId = mediaId, toUser = it) } +
-                        toParty.map { getSendMessageRequest(mediaType = mediaType, mediaId = mediaId, toParty = it) })
+                            toParty.map {
+                                getSendMessageRequest(
+                                    mediaType = mediaType,
+                                    mediaId = mediaId,
+                                    toParty = it
+                                )
+                            })
                         .filter { it.isPresent }
                 doSendRequest(requestBodies)
             }.fold({
@@ -108,7 +114,7 @@ class WeworkServiceImpl(
         }
     }
 
-    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage) {
+    override fun sendTextMessage(weworkNotifyTextMessage: WeworkNotifyTextMessage): Boolean {
         with(weworkNotifyTextMessage) {
             kotlin.runCatching {
                 val (toUser, toParty) =
@@ -120,13 +126,13 @@ class WeworkServiceImpl(
                         textType = WeworkTextType.text
                     )
                 } +
-                    toParty.map {
-                        getSendMessageRequest(
-                            content = message,
-                            toUser = it,
-                            textType = WeworkTextType.text
-                        )
-                    }).filter { it.isPresent }
+                        toParty.map {
+                            getSendMessageRequest(
+                                content = message,
+                                toUser = it,
+                                textType = WeworkTextType.text
+                            )
+                        }).filter { it.isPresent }
                 doSendRequest(requestBodies)
             }.fold({
                 LOG.info("send message success, $weworkNotifyTextMessage")
@@ -136,6 +142,7 @@ class WeworkServiceImpl(
                 saveResult(receivers, "type:$textType\n$message", false, it.message)
             })
         }
+        return true
     }
 
     private fun doSendRequest(requestBodies: List<Optional<AbstractSendMessageRequest>>) {
@@ -163,19 +170,19 @@ class WeworkServiceImpl(
         val url = buildUrl("${weWorkConfiguration.apiUrl}/cgi-bin/message/send?access_token=${getAccessToken()}")
         val requestBody = JsonUtil.toJson(abstractSendMessageRequest)
         return OkhttpUtils.doPost(url, requestBody).use {
-            val responseBody = it.body()?.string() ?: ""
+            val responseBody = it.body?.string() ?: ""
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<SendMessageResp>())
                 if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "send wework message failed",
                         errorCode = sendMessageResp.errCode
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
-                LOG.warn("${it.request()}|send wework message failed, $responseBody")
+                LOG.warn("${it.request}|send wework message failed, $responseBody")
                 Optional.of(e)
             })
         }
@@ -185,6 +192,7 @@ class WeworkServiceImpl(
      *  非文本消息时，默认 mediaId 不为空
      *  文本消息时，默认 content 不为空
      */
+    @SuppressWarnings("ComplexMethod")
     private fun getSendMessageRequest(
         mediaType: WeworkMediaType? = null,
         mediaId: String? = null,
@@ -211,6 +219,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.image -> {
                     Optional.of<AbstractSendMessageRequest>(
                         ImageSendMessageRequest(
@@ -225,6 +234,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.video -> {
                     Optional.of<AbstractSendMessageRequest>(
                         VideoSendMessageRequest(
@@ -239,6 +249,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.voice -> {
                     Optional.of<AbstractSendMessageRequest>(
                         VoiceSendMessageRequest(
@@ -269,6 +280,7 @@ class WeworkServiceImpl(
                         text = TextMessageContent(content)
                     )
                 )
+
                 WeworkTextType.markdown -> Optional.of<AbstractSendMessageRequest>(
                     MarkdownSendMessageRequest(
                         agentId = agentId,
@@ -302,6 +314,7 @@ class WeworkServiceImpl(
                     .map { it.joinToString(separator = "|") }
                 Pair(toUser, emptyList())
             }
+
             WeworkReceiverType.group -> {
                 val toParty = HashSet(this).chunked(maxGroupNum).map { it.joinToString(separator = "|") }
                 Pair(emptyList(), toParty)
@@ -323,14 +336,14 @@ class WeworkServiceImpl(
                 fileFieldName = "media",
                 fileName = mediaName
             ).use {
-                val responseBody = it.body()?.string() ?: "{}"
+                val responseBody = it.body?.string() ?: "{}"
                 return kotlin.runCatching {
                     val uploadMediaResp = JsonUtil.to(responseBody, jacksonTypeRef<UploadMediaResp>())
                     val mediaId = uploadMediaResp.mediaId
                     if (!it.isSuccessful || mediaId.isNullOrBlank()) {
-                        LOG.warn("${it.request()}|upload media($mediaName) to wework failed, $responseBody")
+                        LOG.warn("${it.request}|upload media($mediaName) to wework failed, $responseBody")
                         throw RemoteServiceException(
-                            httpStatus = it.code(),
+                            httpStatus = it.code,
                             responseContent = responseBody,
                             errorMessage = "upload media($mediaName) to wework failed",
                             errorCode = uploadMediaResp.errCode
@@ -338,7 +351,7 @@ class WeworkServiceImpl(
                     }
                     mediaId
                 }.onFailure { _ ->
-                    LOG.warn("${it.request()}|upload media($mediaName) to wework failed, $responseBody")
+                    LOG.warn("${it.request}|upload media($mediaName) to wework failed, $responseBody")
                 }.getOrThrow()
             }
         } finally {
@@ -363,16 +376,16 @@ class WeworkServiceImpl(
         OkhttpUtils.doGet(
             buildUrl(
                 "${weWorkConfiguration.apiUrl}/cgi-bin" +
-                    "/gettoken?corpId=${weWorkConfiguration.corpId}&corpSecret=${weWorkConfiguration.corpSecret}"
+                        "/gettoken?corpId=${weWorkConfiguration.corpId}&corpSecret=${weWorkConfiguration.corpSecret}"
             )
         ).use {
-            val responseBody = it.body()?.string() ?: "{}"
+            val responseBody = it.body?.string() ?: "{}"
             return kotlin.runCatching {
                 val accessTokenResp = JsonUtil.to(responseBody, jacksonTypeRef<AccessTokenResp>())
                 if (!it.isSuccessful && accessTokenResp.isOk()) {
-                    LOG.warn("${it.request()}|failed to get wework access token: $responseBody")
+                    LOG.warn("${it.request}|failed to get wework access token: $responseBody")
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "failed to get wework access token: $responseBody",
                         errorCode = accessTokenResp.errCode
@@ -390,7 +403,7 @@ class WeworkServiceImpl(
                 }
                 accessToken
             }.onFailure { _ ->
-                LOG.warn("${it.request()}|failed to get wework access token: $responseBody")
+                LOG.warn("${it.request}|failed to get wework access token: $responseBody")
             }.getOrThrow()
         }
     }

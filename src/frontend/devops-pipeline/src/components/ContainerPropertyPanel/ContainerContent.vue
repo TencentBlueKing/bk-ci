@@ -64,7 +64,7 @@
             </form-field>
             <form-field
                 :label="$t('editPage.assignResource')"
-                v-if="buildResourceType !== 'MACOS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
+                v-if="buildResourceType !== 'MACOS' && buildResourceType !== 'WINDOWS' && !isPublicResourceType && containerModalId && !showImagePublicTypeList.includes(buildResourceType)"
                 :is-error="errors.has('buildResource')"
                 :error-msg="errors.first('buildResource')"
                 :desc="buildResourceType === 'THIRD_PARTY_AGENT_ENV' ? this.$t('editPage.thirdSlaveTips') : ''"
@@ -88,6 +88,20 @@
                 />
             </form-field>
 
+            <!-- windows公共构建机类型 -->
+            <template v-if="buildResourceType === 'WINDOWS'">
+                <form-field :label="$t('editPage.winSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
+                    <bk-select @change="changeWindowSystem" :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingWin" name="systemVersion" v-validate.initial="'required'">
+                        <bk-option v-for="item in windowsVersionList"
+                            :key="item.name"
+                            :id="item.name"
+                            :name="item.systemVersion"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </form-field>
+            </template>
+
             <template v-if="buildResourceType === 'MACOS'">
                 <form-field :label="$t('editPage.macSystemVersion')" :required="true" :is-error="errors.has('systemVersion')" :error-msg="errors.first(`systemVersion`)">
                     <bk-select :disabled="!editable" :value="systemVersion" searchable :loading="isLoadingMac" name="systemVersion" v-validate.initial="'required'">
@@ -100,7 +114,7 @@
                     </bk-select>
                 </form-field>
                 <form-field :label="$t('editPage.xcodeVersion')" :required="true" :is-error="errors.has('xcodeVersion')" :error-msg="errors.first(`xcodeVersion`)">
-                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'">
+                    <bk-select :disabled="!editable" :value="xcodeVersion" searchable :loading="isLoadingMac" name="xcodeVersion" v-validate.initial="'required'" @toggle="toggleXcode">
                         <bk-option v-for="item in xcodeVersionList"
                             :key="item"
                             :id="item"
@@ -282,6 +296,8 @@
                 isLoadingMac: false,
                 xcodeVersionList: [],
                 systemVersionList: [],
+                isLoadingWin: false,
+                windowsVersionList: [],
                 isShowPerformance: false
             }
         },
@@ -302,7 +318,9 @@
                 'getContainerModalId',
                 'isThirdPartyContainer',
                 'isPublicResource',
-                'isDockerBuildResource'
+                'isDockerBuildResource',
+                'isPublicDevCloudContainer',
+                'getRealSeqId'
             ]),
             imageTypeList () {
                 return [
@@ -315,6 +333,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            isDetailPage () {
+                return this.$route.name === 'pipelinesDetail'
             },
             projectId () {
                 return this.$route.params.projectId
@@ -359,6 +380,9 @@
                 } catch (e) {
                     return ''
                 }
+            },
+            isPublicDevCloud () {
+                return this.isPublicDevCloudContainer(this.container)
             },
             xcodeVersion () {
                 return this.container.dispatchType.xcodeVersion
@@ -478,12 +502,14 @@
                 this.getVersionList(this.container.dispatchType.imageCode)
             }
             if (this.buildResourceType === 'MACOS') this.getMacOsData()
+            if (this.buildResourceType === 'WINDOWS') this.getWinData()
         },
         methods: {
             ...mapActions('atom', [
                 'updateContainer',
                 'getMacSysVersion',
-                'getMacXcodeVersion'
+                'getMacXcodeVersion',
+                'getWinVersion'
             ]),
             ...mapActions('pipelines', [
                 'requestImageVersionlist'
@@ -505,6 +531,7 @@
                     [name]: val
                 }))
                 if (val === 'MACOS') this.getMacOsData()
+                if (val === 'WINDOWS') this.getWinData()
                 if (this.container.dispatchType && this.container.dispatchType.imageCode) this.getVersionList(this.container.dispatchType.imageCode)
             },
 
@@ -561,7 +588,7 @@
 
             getMacOsData () {
                 this.isLoadingMac = true
-                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion()]).then(([sysVersion, xcodeVersion]) => {
+                Promise.all([this.getMacSysVersion(), this.getMacXcodeVersion(this.systemVersion)]).then(([sysVersion, xcodeVersion]) => {
                     this.xcodeVersionList = xcodeVersion.data?.versionList || []
                     this.systemVersionList = sysVersion.data?.versionList || []
                     if (this.container.dispatchType?.systemVersion === undefined && this.container.dispatchType?.xcodeVersion === undefined) {
@@ -572,12 +599,21 @@
                     this.$bkMessage({ message: (err.message || err), theme: 'error' })
                 }).finally(() => (this.isLoadingMac = false))
             },
+            async toggleXcode (show) {
+                if (show) {
+                    const res = await this.getMacXcodeVersion(this.systemVersion)
+                    this.xcodeVersionList = res.data?.versionList || []
+                }
+            },
             chooseMacSystem (item) {
-                this.handleContainerChange('dispatchType', Object.assign({
-                    ...this.container.dispatchType,
-                    systemVersion: item,
-                    value: `${item}:${this.xcodeVersion}`
-                }))
+                if (item !== this.systemVersion) {
+                    this.handleContainerChange('dispatchType', Object.assign({
+                        ...this.container.dispatchType,
+                        systemVersion: item,
+                        xcodeVersion: '',
+                        value: `${item}:''`
+                    }))
+                }
             },
             chooseXcode (item) {
                 this.handleContainerChange('dispatchType', Object.assign({
@@ -624,6 +660,18 @@
                     [name]: value
                 }))
             },
+            changeWindowSystem (value) {
+                this.handleContainerChange('dispatchType', Object.assign({
+                    ...this.container.dispatchType,
+                    systemVersion: value,
+                    value
+                }))
+            },
+            async getWinData () {
+                this.isLoadingWin = true
+                this.windowsVersionList = await this.getWinVersion()
+                this.isLoadingWin = false
+            },
             handleContainerChange (name, value) {
                 this.updateContainer({
                     container: this.container,
@@ -657,6 +705,14 @@
                 this.handleContainerChange('buildEnv', {
                     ...buildEnv
                 })
+            },
+            async startDebug () {
+                const realSeqId = this.getRealSeqId(this.stages, this.stageIndex, this.containerIndex)
+                const vmSeqId = this.isDetailPage ? (this.container.containerId || realSeqId) : realSeqId
+                const tab = window.open('about:blank')
+                const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
             },
             handleNfsSwitchChange (name, value) {
                 if (!value) {
@@ -746,6 +802,11 @@
             }
         }
         .control-bar {
+            position: absolute;
+            right: 34px;
+            top: 12px;
+        }
+        .debug-btn {
             position: absolute;
             right: 34px;
             top: 12px;

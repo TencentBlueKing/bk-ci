@@ -43,9 +43,9 @@
             settingList () {
                 return [
                     { label: this.$t('setting.baseSetting'), name: 'basicSetting', icon: 'edit', enable: true },
-                    { label: this.$t('setting.credentialSetting'), name: 'credentialList', icon: 'lock', enable: this.enableCi },
+                    { label: this.$t('setting.credentialSetting'), name: 'credentialList', icon: 'lock', enable: this.enableCi }
                     // { label: this.$t('setting.agentPool'), name: 'agentPools', icon: 'cc-cabinet', enable: this.enableCi },
-                    { label: this.$t('setting.experienceGroups'), name: 'expGroups', icon: 'user', enable: this.enableCi }
+                    // { label: this.$t('setting.experienceGroups'), name: 'expGroups', icon: 'user', enable: this.enableCi }
                 ]
             }
         },

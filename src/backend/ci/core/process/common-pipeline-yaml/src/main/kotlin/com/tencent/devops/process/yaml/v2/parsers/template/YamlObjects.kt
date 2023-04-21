@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -233,6 +234,25 @@ object YamlObjects {
                     username = credentialsMap["username"]!!,
                     password = credentialsMap["password"]!!
                 )
+            },
+            options = if (containerMap["options"] == null) {
+                null
+            } else {
+                val optionsMap =
+                    transValue<Map<String, Any?>>(fromPath, "options", containerMap["options"])
+                DockerOptions(
+                    gpus = getNullValue("gpus", optionsMap),
+                    volumes = if (optionsMap["volumes"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "volumes", optionsMap["volumes"])
+                    },
+                    mounts = if (optionsMap["mounts"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
+                    }
+                )
             }
         )
     }
@@ -272,7 +292,7 @@ object YamlObjects {
     }
 
     fun getYamlMetaData(fromPath: String, yamlMetaData: Any): MetaData {
-        val metaData = transValue<Map<String, String>>(fromPath, "yamlMetaData", yamlMetaData)
+        val metaData = transValue<Map<String, Any>>(fromPath, "yamlMetaData", yamlMetaData)
         if (metaData["templateInfo"] == null) {
             return MetaData(templateInfo = null)
         }

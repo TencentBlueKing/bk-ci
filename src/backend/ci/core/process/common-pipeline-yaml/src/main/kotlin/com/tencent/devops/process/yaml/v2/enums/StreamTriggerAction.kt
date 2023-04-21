@@ -33,6 +33,7 @@ enum class StreamObjectKind(val value: String) {
     PUSH("push"),
     TAG_PUSH("tag_push"),
     MERGE_REQUEST("merge_request"),
+    PULL_REQUEST("pull_request"),
     MANUAL("manual"),
     SCHEDULE("schedule"),
     DELETE("delete"),

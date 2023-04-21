@@ -174,7 +174,8 @@ export function getbuildTypeIcon (objectKind, operationKind) {
         openApi: 'open-api',
         issue: 'issue',
         review: 'code-review',
-        note: 'comment'
+        note: 'comment',
+        pull_request: 'merge'
     }
     return operationKindMap[operationKind] || objectKindIconMap[objectKind] || 'well'
 }
@@ -183,9 +184,9 @@ export function modifyHtmlTitle (title) {
     document.title = title
 }
 
-export function debounce (callBack) {
+export function debounce (callBack, time = 200) {
     window.clearTimeout(debounce.timeId)
-    debounce.timeId = window.setTimeout(callBack, 200)
+    debounce.timeId = window.setTimeout(callBack, time)
 }
 
 export function getWSpath (path = '') {

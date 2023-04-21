@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -49,6 +50,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
@@ -58,6 +61,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_YAML_PATH
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -65,6 +70,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MIL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
@@ -86,9 +92,27 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import java.util.regex.Pattern
 
 @Suppress("TooManyFunctions")
 object PipelineVarUtil {
+
+    private val tPattern = Pattern.compile("\\$[{]{2}(?<double>[^$^{}]+)[}]{2}")
+
+    /**
+     * 检查[keyword]字符串是不是一个变量语法， ${{ varName }}， 如果不是则返回false
+     * 注意：已不再支持 ${ var } 旧的语法定义变量，只支持全新 ${{ var }} 的语法
+     */
+    fun isVar(keyword: String?): Boolean {
+        return !keyword.isNullOrBlank() && tPattern.matcher(keyword).matches()
+    }
+
+    /**
+     * 检查[keyword]串中有没有变量，比如  "abc_${{ varName }} is true" 将识别出存在 varName变量，会返回true
+     */
+    fun haveVar(keyword: String): Boolean {
+        return tPattern.matcher(keyword).find()
+    }
 
     /**
      * 前置拼接
@@ -171,7 +195,7 @@ object PipelineVarUtil {
         "ci.workspace" to WORKSPACE,
         "ci.pipeline_id" to PIPELINE_ID,
         "ci.pipeline_name" to PIPELINE_NAME,
-        "ci.actor" to PIPELINE_START_USER_ID,
+        "ci.actor" to PIPELINE_START_USER_NAME,
         "ci.build_id" to PIPELINE_BUILD_ID,
         "ci.build_num" to PIPELINE_BUILD_NUM,
         "ci.pipeline_start_time" to PIPELINE_TIME_START,
@@ -220,7 +244,11 @@ object PipelineVarUtil {
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
         "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
         "ci.action" to PIPELINE_GIT_ACTION,
-        "ci.build_url" to PIPELINE_BUILD_URL
+        "ci.build_url" to PIPELINE_BUILD_URL,
+        "ci.mr_reviewers" to BK_REPO_GIT_WEBHOOK_MR_REVIEWERS,
+        "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH,
+        "ci.repo_create_time" to PIPELINE_GIT_REPO_CREATE_TIME,
+        "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR
     )
 
     /**
@@ -316,7 +344,7 @@ object PipelineVarUtil {
                     allVars[newVarName] = it.value
                 }
                 // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
-                if (!allVars.containsKey(it.key)) {
+                if (!allVars.containsKey(it.key) || it.key == "BuildNo") {
                     allVars[it.key] = it.value
                 }
             }
@@ -345,7 +373,7 @@ object PipelineVarUtil {
             // 如果新旧key同时存在，则保留原value
             if (varMaps[it.key] != null && varMaps[it.value] == null) {
                 varMaps[it.value] = varMaps[it.key]!!
-                if (replace) {
+                if (replace && it.key != "BuildNo") {
                     varMaps.remove(it.key)
                 }
             }
@@ -415,4 +443,39 @@ object PipelineVarUtil {
     fun oldVarToNewVar(oldVarName: String): String? = oldVarMappingNewVar[oldVarName]
 
     fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]
+
+    const val MAX_VERSION_LEN = 64
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出推荐版本号,由[MAJORVERSION].[MINORVERSION].[FIXVERSION].[BUILD_NO]组成
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion}.{BuildNo} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
+        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
+
+        val buildNo = buildParameters.firstOrNull { it.key == BUILD_NO || it.key == "BuildNo" }?.value?.toString()
+            ?: return null
+
+        return CommonUtils.interceptStringInLength("$recommendVersionPrefix.$buildNo", MAX_VERSION_LEN)
+    }
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出版本号前缀，由[MAJORVERSION].[MINORVERSION].[FIXVERSION] 组成，
+     * 如果[buildParameters]中不存在上述3类参数，则返回空
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
+        val majorVersion = buildParameters.firstOrNull { it.key == MAJORVERSION || it.key == "MajorVersion" }
+            ?.value?.toString() ?: return null
+
+        val minorVersion = buildParameters.firstOrNull { it.key == MINORVERSION || it.key == "MinorVersion" }
+            ?.value?.toString() ?: return null
+
+        val fixVersion = buildParameters.firstOrNull { it.key == FIXVERSION || it.key == "FixVersion" }
+            ?.value?.toString() ?: return null
+
+        return "$majorVersion.$minorVersion.$fixVersion"
+    }
 }

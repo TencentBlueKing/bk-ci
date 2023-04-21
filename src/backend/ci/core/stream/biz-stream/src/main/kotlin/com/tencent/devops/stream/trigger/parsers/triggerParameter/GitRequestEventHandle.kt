@@ -337,23 +337,23 @@ object GitRequestEventHandle {
             else -> ref
         }
     }
-}
 
-private fun getLatestCommit(
-    commitId: String?,
-    commits: List<GitCommit>?
-): GitCommit? {
-    if (commitId == null) {
-        return if (commits.isNullOrEmpty()) {
-            null
-        } else {
-            commits.last()
+    private fun getLatestCommit(
+        commitId: String?,
+        commits: List<GitCommit>?
+    ): GitCommit? {
+        if (commitId == null) {
+            return if (commits.isNullOrEmpty()) {
+                null
+            } else {
+                commits.last()
+            }
         }
-    }
-    commits?.forEach {
-        if (it.id == commitId) {
-            return it
+        commits?.forEach {
+            if (it.id == commitId) {
+                return it
+            }
         }
+        return null
     }
-    return null
 }

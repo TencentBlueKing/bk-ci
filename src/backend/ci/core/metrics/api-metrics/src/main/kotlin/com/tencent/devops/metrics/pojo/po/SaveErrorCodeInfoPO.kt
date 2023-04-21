@@ -37,7 +37,7 @@ data class SaveErrorCodeInfoPO(
     val id: Long,
     @ApiModelProperty("错误类型")
     val errorType: Int,
-    @ApiModelProperty("错误次数")
+    @ApiModelProperty("错误码")
     val errorCode: Int,
     @ApiModelProperty("错误描述")
     val errorMsg: String? = null,
@@ -48,5 +48,7 @@ data class SaveErrorCodeInfoPO(
     @ApiModelProperty("创建时间")
     val createTime: LocalDateTime,
     @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("归属插件")
+    val atomCode: String? = null
 )

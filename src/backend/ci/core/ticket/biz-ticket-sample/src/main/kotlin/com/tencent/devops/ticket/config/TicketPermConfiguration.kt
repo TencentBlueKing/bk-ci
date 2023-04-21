@@ -125,7 +125,7 @@ class TicketPermConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
-    fun githubStreamCertPermissionService(
+    fun mockStreamCertPermissionService(
         dslContext: DSLContext,
         certDao: CertDao,
         authResourceApi: AuthResourceApi,

@@ -96,10 +96,12 @@ class ModelStage @Autowired(required = false) constructor(
         elementNames: MutableList<QualityElementInfo>?
     ): Stage {
         val containerList = mutableListOf<Container>()
-        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, event.changeSet)
+        val stageEnable = PathMatchUtils.isIncludePathMatch(stage.ifModify, event.changeSet, event.checkIfModify)
 
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(job.ifModify, event.changeSet)
+            val jobEnable = stageEnable && PathMatchUtils.isIncludePathMatch(
+                job.ifModify, event.changeSet, event.checkIfModify
+            )
             val elementList = modelElement.makeElementList(
                 job = job,
                 changeSet = event.changeSet,

@@ -35,15 +35,15 @@ import io.swagger.annotations.ApiModelProperty
 /**
  * github获取tag列表接口: /repos/{owner}/{repo}/tags
  * {
-        "name": "v1.7.22-RC.2",
-        "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
-        "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
-        "commit": {
-        "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
-        "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
-        },
-        "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
-    }
+ "name": "v1.7.22-RC.2",
+ "zipball_url": "https://api.github.com/repos/Tencent/bk-ci/zipball/refs/tags/v1.7.22-RC.2",
+ "tarball_url": "https://api.github.com/repos/Tencent/bk-ci/tarball/refs/tags/v1.7.22-RC.2",
+ "commit": {
+ "sha": "c4a9464c710eae94c1538ede27e538c61643fe65",
+ "url": "https://api.github.com/repos/Tencent/bk-ci/commits/c4a9464c710eae94c1538ede27e538c61643fe65"
+ },
+ "node_id": "MDM6UmVmMTg5MTUzNDkxOnJlZnMvdGFncy92MS43LjIyLVJDLjI="
+ }
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 @ApiModel("仓库tag信息")

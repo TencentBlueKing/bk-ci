@@ -80,7 +80,7 @@ MySQL addr
 {{- if eq .Values.mysql.enabled true -}}
 {{- include "bkci.mysql.fullname" . -}}:3306
 {{- else -}}
-{{- .Value.externalMysql.host -}}:{{- .Value.externalMysql.port -}}
+{{- .Values.externalMysql.host -}}:{{- .Values.externalMysql.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -113,7 +113,7 @@ Elasticsearch host
 {{- if eq .Values.elasticsearch.enabled true -}}
 {{- include "bkci.elasticsearch.fullname" . -}}
 {{- else -}}
-{{- .Value.externalElasticsearch.host -}}
+{{- .Values.externalElasticsearch.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -124,7 +124,7 @@ Elasticsearch port
 {{- if eq .Values.elasticsearch.enabled true -}}
 9200
 {{- else -}}
-{{- .Value.externalElasticsearch.port -}}
+{{- .Values.externalElasticsearch.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -133,8 +133,9 @@ Elasticsearch username
 */}}
 {{- define "bkci.elasticsearchUsername" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
+""
 {{- else -}}
-{{- .Value.externalElasticsearch.username -}}
+{{- .Values.externalElasticsearch.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -143,8 +144,9 @@ Elasticsearch password
 */}}
 {{- define "bkci.elasticsearchPassword" -}}
 {{- if eq .Values.elasticsearch.enabled true -}}
+""
 {{- else -}}
-{{- .Value.externalElasticsearch.password -}}
+{{- .Values.externalElasticsearch.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -155,7 +157,7 @@ Redis host
 {{- if eq .Values.redis.enabled true -}}
 {{- include "bkci.redis.fullname" . -}}
 {{- else -}}
-{{- .Value.externalRedis.host -}}
+{{- .Values.externalRedis.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -166,7 +168,7 @@ Redis port
 {{- if eq .Values.redis.enabled true -}}
 6379
 {{- else -}}
-{{- .Value.externalRedis.port -}}
+{{- .Values.externalRedis.port -}}
 {{- end -}}
 {{- end -}}
 
@@ -177,7 +179,7 @@ Redis password
 {{- if eq .Values.redis.enabled true -}}
 {{- .Values.redis.auth.password -}}
 {{- else -}}
-{{- .Value.externalRedis.password -}}
+{{- .Values.externalRedis.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -188,7 +190,7 @@ Rabbitmq addr
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- include "bkci.rabbitmq.fullname" . -}}
 {{- else -}}
-{{- .Value.externalRabbitmq.host -}}
+{{- .Values.externalRabbitmq.host -}}
 {{- end -}}
 {{- end -}}
 
@@ -199,7 +201,7 @@ Rabbitmq user
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- .Values.rabbitmq.auth.username -}}
 {{- else -}}
-{{- .Value.externalRabbitmq.username -}}
+{{- .Values.externalRabbitmq.username -}}
 {{- end -}}
 {{- end -}}
 
@@ -210,7 +212,7 @@ Rabbitmq password
 {{- if eq .Values.rabbitmq.enabled true -}}
 {{- .Values.rabbitmq.auth.password -}}
 {{- else -}}
-{{- .Value.externalRabbitmq.password -}}
+{{- .Values.externalRabbitmq.password -}}
 {{- end -}}
 {{- end -}}
 
@@ -221,7 +223,7 @@ Rabbitmq vhost
 {{- if eq .Values.rabbitmq.enabled true -}}
 default-vhost
 {{- else -}}
-{{- .Value.externalRabbitmq.vhost -}}
+{{- .Values.externalRabbitmq.vhost -}}
 {{- end -}}
 {{- end -}}
 
@@ -232,7 +234,7 @@ Influxdb host
 {{- if eq .Values.influxdb.enabled true -}}
 {{- include "bkci.influxdb.fullname" . -}}
 {{- else -}}
-{{- .Value.externalInfluxdb.host -}}
+{{- .Values.externalInfluxdb.host -}}
 {{- end -}}
 {{- end -}}
 

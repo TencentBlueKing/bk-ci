@@ -34,6 +34,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -111,5 +112,13 @@ interface ServiceNotifyResource {
         textType: WeworkTextType,
         @ApiParam("文件内容", required = true)
         message: String
+    ): Result<Boolean>
+
+    @ApiOperation("发送企微机器人信息")
+    @POST
+    @Path("/wework/robot")
+    fun sendWeworkRobotNotify(
+        @ApiParam(value = "企微机器人信息内容", required = true)
+        weworkRobotNotifyMessage: WeworkRobotNotifyMessage
     ): Result<Boolean>
 }

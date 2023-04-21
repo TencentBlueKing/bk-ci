@@ -62,12 +62,12 @@ class GolangAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     override fun handleAtomPreCmd(
         preCmd: String,
-        osType: OSType,
+        osName: String,
         pkgName: String,
         runtimeVersion: String?
     ): String {
         val preCmds = CommonUtils.strToList(preCmd).toMutableList()
-        if (osType == OSType.MAC_OS || osType == OSType.LINUX) {
+        if (osName != OSType.WINDOWS.name.toLowerCase()) {
             preCmds.add(0, "chmod +x $pkgName")
         }
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")

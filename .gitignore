@@ -1,6 +1,7 @@
 .DS_Store
 .idea
 .vscode
+.fleet
 .gradle
 .settings
 bin/
@@ -40,10 +41,10 @@ bkci-slim.tar.gz
 
 # 容器化忽略文件
 helm-charts/core/ci/bk-ci*.tgz
-helm-charts/core/ci/build/values.json
 helm-charts/core/ci/values.yaml
 helm-charts/core/ci/templates/configmap/tpl/
 docker-images/core/ci/ci
+docker-images/core/ci/ci-docker
 docker-images/core/ci/*.gz
 
 #turbo 忽略文件

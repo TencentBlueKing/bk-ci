@@ -30,11 +30,13 @@ package collector
 import (
 	"context"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/influxdata/telegraf/logger"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+
+	"github.com/influxdata/telegraf/logger"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 
 	"github.com/influxdata/telegraf/agent"
 	telegrafConfig "github.com/influxdata/telegraf/config"
@@ -42,8 +44,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 const (
@@ -120,6 +122,8 @@ const configTemplateWindows = `[global_tags]
   skip_database_creation = true
   ###{tls_ca}###
 [[inputs.mem]]
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
     ObjectName = "Processor"
@@ -212,6 +216,12 @@ const configTemplateWindows = `[global_tags]
 `
 
 func DoAgentCollect() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent collect panic: ", err)
+		}
+	}()
+
 	if config.GAgentConfig.CollectorOn == false {
 		logs.Info("agent collector off")
 		return

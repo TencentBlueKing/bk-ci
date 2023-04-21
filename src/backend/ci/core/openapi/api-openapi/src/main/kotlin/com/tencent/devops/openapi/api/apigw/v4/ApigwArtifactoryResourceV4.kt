@@ -55,10 +55,40 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwArtifactoryResourceV4 {
 
-    @ApiOperation("获取用户下载链接", tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"])
+    @ApiOperation(
+        "获取用户下载链接",
+        tags = ["v4_app_artifactory_userDownloadUrl", "v4_user_artifactory_userDownloadUrl"]
+    )
     @Path("/user_download_url")
     @GET
     fun getUserDownloadUrl(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("版本仓库类型", required = true)
+        @QueryParam("artifactoryType")
+        artifactoryType: ArtifactoryType,
+        @ApiParam("路径", required = true)
+        @QueryParam("path")
+        path: String
+    ): Result<Url>
+
+    @ApiOperation(
+        "获取APP跳转链接",
+        tags = ["v4_app_artifactory_appDownloadUrl", "v4_user_artifactory_appDownloadUrl"]
+    )
+    @Path("/app_download_url")
+    @GET
+    fun getAppDownloadUrl(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -79,7 +109,10 @@ interface ApigwArtifactoryResourceV4 {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据元数据获取文件", tags = ["v4_app_artifactory_list", "v4_user_artifactory_list"])
+    @ApiOperation(
+        "根据元数据获取文件(注意: 如果需要构建产物的下载url，请单独调用下载接口，如 v4_app_artifactory_userDownloadUrl)",
+        tags = ["v4_app_artifactory_list", "v4_user_artifactory_list"]
+    )
     @Path("/file_info")
     @GET
     fun search(
@@ -92,7 +125,7 @@ interface ApigwArtifactoryResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = false)
@@ -149,7 +182,7 @@ interface ApigwArtifactoryResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("文件路径", required = true)
@@ -164,8 +197,11 @@ interface ApigwArtifactoryResourceV4 {
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
-        @ApiParam("每页多少条(不传默认全部返回)", required = false, defaultValue = "20")
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam("是否按modifiedTime倒序排列", required = false, defaultValue = "false")
+        @QueryParam("modifiedTimeDesc")
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>>
 }

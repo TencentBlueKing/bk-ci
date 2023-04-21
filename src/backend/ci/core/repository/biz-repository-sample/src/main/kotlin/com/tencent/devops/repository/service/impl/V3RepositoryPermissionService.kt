@@ -90,12 +90,12 @@ class V3RepositoryPermissionService constructor(
             arrayListOf("*")
         } else {
             authPermissionApi.getUserResourceByPermission(
-                    user = userId,
-                    serviceCode = codeAuthServiceCode,
-                    resourceType = AuthResourceType.CODE_REPERTORY,
-                    projectCode = projectId,
-                    permission = authPermission,
-                    supplier = supplierForFakePermission(projectId)
+                user = userId,
+                serviceCode = codeAuthServiceCode,
+                resourceType = AuthResourceType.CODE_REPERTORY,
+                projectCode = projectId,
+                permission = authPermission,
+                supplier = supplierForFakePermission(projectId)
             )
         }
 

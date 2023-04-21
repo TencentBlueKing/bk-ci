@@ -77,6 +77,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
@@ -99,12 +100,14 @@ import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ERROR_JSON_NAME
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_CODE
 import com.tencent.devops.store.pojo.common.KEY_CLASSIFY_NAME
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -116,6 +119,8 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
+import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -125,6 +130,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
 import java.util.Calendar
 import java.util.concurrent.Callable
@@ -171,6 +177,15 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var atomLabelRelDao: AtomLabelRelDao
 
     @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
+
+    @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
 
     @Autowired
@@ -211,6 +226,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var client: Client
+
+    @Value("\${store.defaultAtomErrorCodeLength:6}")
+    private var defaultAtomErrorCodeLength: Int = 6
+
+    @Value("\${store.defaultAtomErrorCodePrefix:8}")
+    private lateinit var defaultAtomErrorCodePrefix: String
 
     companion object {
         private val logger = LoggerFactory.getLogger(MarketAtomServiceImpl::class.java)
@@ -278,6 +299,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -292,6 +315,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
+                val atomHonorInfos = atomHonorInfoMap[atomCode]
+                val atomIndexInfos = atomIndexInfosMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
@@ -338,7 +363,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                        indexInfos = atomIndexInfos,
+                        honorInfos = atomHonorInfos,
+                        hotFlag = statistic?.hotFlag
                     )
                 )
             }
@@ -621,6 +649,89 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         return Result(showVersionInfo)
     }
 
+    override fun updateAtomErrorCodeInfo(
+        userId: String,
+        projectCode: String,
+        storeErrorCodeInfo: StoreErrorCodeInfo
+    ): Result<Boolean> {
+        val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf("atomCode")
+        )
+        val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
+        val isStoreMember = storeMemberDao.isStoreMember(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = atomCode,
+            storeType = storeErrorCodeInfo.storeType!!.type.toByte()
+        )
+        if (!isStoreMember) {
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+        }
+        if (errorCodeInfoList.isNotEmpty()) {
+            val errorCodes = errorCodeInfoList.map { "${it.errorCode}" }
+            val duplicateData = getDuplicateData(errorCodes)
+            // 存在重复code码则报错提示哪些code码重复
+            if (duplicateData.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE,
+                    params = arrayOf(duplicateData.joinToString(","))
+                )
+            }
+            // 校验code码是否符合插件自定义错误码规范
+            errorCodes.forEach {
+                if ((it.length != defaultAtomErrorCodeLength) || (!it.startsWith(defaultAtomErrorCodePrefix))) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
+                    )
+                }
+            }
+        }
+        val errorJsonStr = JsonUtil.toJson(storeErrorCodeInfo.errorCodeInfos)
+        // 修改插件error.json文件内容
+        val updateAtomFileContentResult = updateAtomFileContent(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            content = errorJsonStr,
+            filePath = ERROR_JSON_NAME
+        )
+        if (updateAtomFileContentResult.isNotOk()) {
+            return updateAtomFileContentResult
+        }
+        // 文件内容修改成功，同步到数据库
+        storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+            dslContext = dslContext,
+            userId = userId,
+            storeErrorCodeInfo = storeErrorCodeInfo
+        )
+        val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
+            dslContext = dslContext,
+            storeCode = storeErrorCodeInfo.storeCode,
+            storeType = storeErrorCodeInfo.storeType
+        ).toMutableList()
+        val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
+        errorCodeInfos.removeAll(newErrorCodeInfos)
+        if (errorCodeInfos.isNotEmpty()) {
+            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
+                dslContext = dslContext,
+                storeCode = storeErrorCodeInfo.storeCode!!,
+                storeType = storeErrorCodeInfo.storeType!!,
+                errorCodes = errorCodeInfos.map { it.errorCode }
+            )
+        }
+        return Result(true)
+    }
+
+    private fun getDuplicateData(strList: List<String>): List<String> {
+        val set = mutableSetOf<String>()
+        val duplicateData = mutableListOf<String>()
+        strList.forEach {
+            if (set.contains(it)) duplicateData.add(it) else set.add(it)
+        }
+        return duplicateData
+    }
+
     @Suppress("UNCHECKED_CAST")
     @BkTimed(extraTags = ["web_operation", "getAtomVersion"], value = "store_web_operation")
     private fun getAtomVersion(atomId: String, userId: String): Result<AtomVersion?> {
@@ -716,8 +827,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     // 开启插件yml显示
                     yamlFlag = true,
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }
@@ -1017,14 +1130,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val propMap = JsonUtil.toMap(atom.props)
         val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
         return outputDataMap?.keys?.map { outputKey ->
-            val outputDataObj = outputDataMap[outputKey] as Map<String, Any>
+            val outputDataObj = outputDataMap[outputKey]
             AtomOutput(
                 name = outputKey,
-                desc = if (outputDataObj[OUTPUT_DESC] == null) {
-                    null
-                } else {
-                    outputDataObj[OUTPUT_DESC].toString()
-                }
+                desc = if (outputDataObj is Map<*, *>) outputDataObj[OUTPUT_DESC]?.toString() else null
             )
         } ?: emptyList()
     }
@@ -1294,6 +1403,14 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         projectCode: String?,
         repositoryHashId: String,
         tokenType: TokenTypeEnum
+    ): Result<Boolean>
+
+    abstract fun updateAtomFileContent(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        content: String,
+        filePath: String
     ): Result<Boolean>
 
     @Suppress("UNCHECKED_CAST")

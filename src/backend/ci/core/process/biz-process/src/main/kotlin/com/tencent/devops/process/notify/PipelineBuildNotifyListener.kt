@@ -48,10 +48,12 @@ class PipelineBuildNotifyListener @Autowired constructor(
 ) : BaseListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildNotifyEvent) {
-        val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)
-        when (notifyTemplateEnumType) {
+        when (val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)) {
             PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE,
-            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE,
+            PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE
             -> {
                 if (event.notifyCompleteCheck) {
                     event.completeReviewNotify()
@@ -97,6 +99,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
                 titleParams = titleParams,
                 bodyParams = bodyParams,
                 notifyType = notifyType,
+                markdownContent = markdownContent,
                 callbackData = callbackData
             )
             client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)

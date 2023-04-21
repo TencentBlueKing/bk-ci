@@ -75,4 +75,11 @@ object AuthMessageCode {
     const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
     const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
+    const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
+    const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
+
+    const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
+    const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
+    const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
 }

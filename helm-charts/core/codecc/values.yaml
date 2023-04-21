@@ -88,10 +88,14 @@ mongodb:
       EOF
 ## 如果mongodb.enabled为false，bkrepo将使用下面的参数连接外部mongodb
 externalMongodb:
-  ## mongodb 标准连接字符串
-  defectUrl: mongodb://codecc:codecc@localhost:27017/db_defect
-  taskUrl: mongodb://codecc:codecc@localhost:27017/db_task
-  quartzUrl: mongodb://codecc:codecc@localhost:27017/db_task
+  ## mongodb 帐号密码与
+  host: localhost
+  username: codecc
+  password: codecc
+  port: 27017
+  extraUrlParams: ""
+  authDB: admin
+    
 
 redis:
   enabled: true

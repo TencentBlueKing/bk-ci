@@ -46,9 +46,9 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("")
 data class PipelineSetting(
-    @ApiModelProperty("项目id", required = false)
+    @ApiModelProperty("项目id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var projectId: String = "",
-    @ApiModelProperty("流水线id", required = false)
+    @ApiModelProperty("流水线id", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var pipelineId: String = "",
     @ApiModelProperty("流水线名称", required = false)
     var pipelineName: String = "",
@@ -93,7 +93,7 @@ data class PipelineSetting(
             throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
         }
         if (runLockType == PipelineRunLockType.SINGLE ||
-            runLockType == PipelineRunLockType.SINGLE_LOCK
+            runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
         ) {
             if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX

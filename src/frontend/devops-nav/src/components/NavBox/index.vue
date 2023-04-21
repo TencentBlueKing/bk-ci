@@ -94,7 +94,7 @@
 
         isAbsoluteUrl = isAbsoluteUrl
         
-       gotoPage ({ link_new: linkNew }) {
+       gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
            const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
            const nAlias = getServiceAliasByPath(linkNew)
            const destUrl = this.addConsole(linkNew)
@@ -103,7 +103,7 @@
                eventBus.$emit('goHome')
                return
            }
-           this.$router.push(destUrl)
+           (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
            document.title = this.getDocumentTitle(linkNew)
        }
 

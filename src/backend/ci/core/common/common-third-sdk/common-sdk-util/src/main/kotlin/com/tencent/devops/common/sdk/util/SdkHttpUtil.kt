@@ -1,11 +1,40 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.sdk.util
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.sdk.SdkRequest
 import com.tencent.devops.common.sdk.enums.HttpMethod
+import com.tencent.devops.common.sdk.enums.HttpStatus
 import com.tencent.devops.common.sdk.exception.SdkException
-import okhttp3.Headers
-import okhttp3.MediaType
+import com.tencent.devops.common.sdk.exception.SdkNotFoundException
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -29,12 +58,16 @@ object SdkHttpUtil {
         return build(url, headers).get().build()
     }
 
-    fun buildGet(url: String, headers: Map<String, String>? = null, params: Map<String, String>? = null): Request {
-        val urlParams = params?.map { entry -> "${entry.key}=${entry.value}" }?.joinToString("&")
-        val targetUrl = if (url.contains("?")) {
-            "$url&$urlParams"
+    fun buildGet(url: String, headers: Map<String, String>? = null, params: Map<String, Any>? = null): Request {
+        val targetUrl = if (!params.isNullOrEmpty()) {
+            val urlParams = params.map { entry -> "${entry.key}=${entry.value}" }.joinToString("&")
+            if (url.contains("?")) {
+                "$url&$urlParams"
+            } else {
+                "$url?$urlParams"
+            }
         } else {
-            "$url?$urlParams"
+            url
         }
         return build(targetUrl, headers).get().build()
     }
@@ -47,6 +80,10 @@ object SdkHttpUtil {
         return build(url, headers).patch(requestBody).build()
     }
 
+    fun buildPut(url: String, requestBody: RequestBody, headers: Map<String, String>? = null): Request {
+        return build(url, headers).put(requestBody).build()
+    }
+
     fun buildDelete(url: String, requestBody: RequestBody, headers: Map<String, String>? = null): Request {
         return build(url, headers).delete(requestBody).build()
     }
@@ -54,7 +91,7 @@ object SdkHttpUtil {
     fun build(url: String, headers: Map<String, String>? = null): Request.Builder {
         val builder = Request.Builder().url(url)
         if (headers != null) {
-            builder.headers(Headers.of(headers))
+            builder.headers(headers.toHeaders())
         }
         return builder
     }
@@ -62,13 +99,16 @@ object SdkHttpUtil {
     fun request(request: Request): String {
         val response = okHttpClient.newCall(request).execute()
         return response.use { resp ->
-            val responseContent = resp.body()?.string() ?: ""
+            val responseContent = resp.body?.string() ?: ""
             if (!resp.isSuccessful) {
                 logger.error(
-                    "Fail to request(${request.url()})" +
-                        " with code ${resp.code()} message ${resp.message()} and response $responseContent"
+                    "Fail to request(${request.url})" +
+                        " with code ${resp.code} message ${resp.message} and response $responseContent"
                 )
-                throw SdkException(errCode = resp.code(), errMsg = responseContent)
+                if (resp.code == HttpStatus.NOT_FOUND.statusCode) {
+                    throw SdkNotFoundException(errMsg = responseContent)
+                }
+                throw SdkException(errCode = resp.code, errMsg = responseContent)
             }
             responseContent
         }
@@ -78,7 +118,7 @@ object SdkHttpUtil {
      * 生成post请求体对象
      */
     fun generaRequestBody(jsonStr: String, mediaType: String = "application/json"): RequestBody {
-        return RequestBody.create(MediaType.parse(mediaType), jsonStr)
+        return RequestBody.create(mediaType.toMediaTypeOrNull(), jsonStr)
     }
 
     /**
@@ -99,9 +139,9 @@ object SdkHttpUtil {
         headers.putAll(systemHeaders)
         headers.putAll(request.getHeaderMap())
 
-        val params = mutableMapOf<String, String>()
+        val params = mutableMapOf<String, Any>()
         val requestParams =
-            SdkJsonUtil.fromJson(SdkJsonUtil.toJson(request), object : TypeReference<Map<String, String>>() {})
+            SdkJsonUtil.fromJson(SdkJsonUtil.toJson(request), object : TypeReference<Map<String, Any>>() {})
         params.putAll(systemParams)
         params.putAll(requestParams)
         params.putAll(request.getUdfParams())
@@ -116,7 +156,7 @@ object SdkHttpUtil {
             }
             HttpMethod.PUT -> {
                 val requestBody = generaRequestBody(jsonStr = SdkJsonUtil.toJson(params))
-                buildPatch(url = finalUrl, requestBody = requestBody, headers = headers)
+                buildPut(url = finalUrl, requestBody = requestBody, headers = headers)
             }
             HttpMethod.DELETE -> {
                 val requestBody = generaRequestBody(jsonStr = SdkJsonUtil.toJson(params))

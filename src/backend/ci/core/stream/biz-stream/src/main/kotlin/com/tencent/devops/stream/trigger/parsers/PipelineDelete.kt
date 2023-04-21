@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamPipelineTriggerDao
 import com.tencent.devops.stream.service.StreamPipelineBranchService
@@ -55,7 +56,8 @@ class PipelineDelete @Autowired constructor(
     private val streamPipelineTriggerDao: StreamPipelineTriggerDao,
     private val streamPipelineBranchService: StreamPipelineBranchService,
     private val streamEventService: StreamEventService,
-    private val repoTriggerEventService: RepoTriggerEventService
+    private val repoTriggerEventService: RepoTriggerEventService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineDelete::class.java)
@@ -113,22 +115,23 @@ class PipelineDelete @Autowired constructor(
             // 删除分支流水线记录时同步删除掉触发器缓存
             streamPipelineTriggerDao.deleteTrigger(
                 dslContext = dslContext,
-                projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
                 pipelineId = pipelineId,
                 branch = action.data.eventCommon.branch
             )
 
             repoTriggerEventService.deleteRepoTriggerEvent(pipelineId)
 
-            val isFileEmpty = if (null != filePath) {
-                checkFileEmpty(
-                    action,
-                    gitProjectId = gitProjectId,
-                    filePath = filePath
-                )
-            } else {
-                true
-            }
+            val isFileEmpty =
+                if (null != filePath && action.data.eventCommon.branch != action.data.context.defaultBranch) {
+                    checkFileEmpty(
+                        action,
+                        gitProjectId = gitProjectId,
+                        filePath = filePath
+                    )
+                } else {
+                    true
+                }
             if (isFileEmpty &&
                 !streamPipelineBranchService.hasBranchExist(gitProjectId.toLong(), pipelineId)
             ) {
@@ -138,14 +141,17 @@ class PipelineDelete @Autowired constructor(
                 )
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipelineId)
                 val pipelineInfoResult = processClient.getPipelineInfo(
-                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
+                    projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong(), streamGitConfig.getScmType()),
                     pipelineId = pipelineId,
                     channelCode = channelCode
                 )
                 if (pipelineInfoResult.data != null) {
                     processClient.delete(
                         userId = action.data.getUserId(),
-                        projectId = GitCommonUtils.getCiProjectId(gitProjectId.toLong()),
+                        projectId = GitCommonUtils.getCiProjectId(
+                            gitProjectId.toLong(),
+                            streamGitConfig.getScmType()
+                        ),
                         pipelineId = pipelineId,
                         channelCode = channelCode
                     )
@@ -163,18 +169,23 @@ class PipelineDelete @Autowired constructor(
         gitProjectId: String,
         filePath: String
     ): Boolean {
-        val fileList = action.api.getFileTree(
-            cred = action.getGitCred(),
-            gitProjectId = gitProjectId,
-            path = if (filePath.contains("/")) {
-                filePath.substring(0, filePath.lastIndexOf("/"))
-            } else {
-                filePath
-            },
-            ref = "",
-            recursive = true,
-            retry = ApiRequestRetryInfo(true)
-        )
+        val fileList = try {
+            action.api.getFileTree(
+                cred = action.getGitCred(),
+                gitProjectId = action.getGitProjectIdOrName(gitProjectId),
+                path = if (filePath.contains("/")) {
+                    filePath.substring(0, filePath.lastIndexOf("/"))
+                } else {
+                    filePath
+                },
+                ref = action.data.context.defaultBranch,
+                recursive = true,
+                retry = ApiRequestRetryInfo(true)
+            )
+        } catch (ignored: Throwable) {
+            logger.info("checkFileEmpty get file error , .ci/ may be delete ${ignored.message}")
+            listOf()
+        }
 
         fileList.forEach {
             if (it.name == filePath.substring(filePath.lastIndexOf("/") + 1)) {

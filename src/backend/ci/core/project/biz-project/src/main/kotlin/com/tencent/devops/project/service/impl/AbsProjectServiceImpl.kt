@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -56,6 +57,7 @@ import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -248,7 +250,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         needValidate: Boolean,
         channel: ProjectChannelCode
     ): ProjectVO? {
-        if (getByEnglishName(projectCode) == null) {
+        if (getByEnglishName(projectCode) != null) {
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
@@ -269,6 +271,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultProjectId = projectCode,
             createExtInfo = projectCreateExtInfo
         )
+        updateProjectProperties(userId, projectCode, ProjectProperties(PipelineAsCodeSettings(true)))
         return getByEnglishName(projectCode)
     }
 
@@ -699,6 +702,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
+    }
+
+    override fun updateProjectProperties(
+        userId: String,
+        projectCode: String,
+        properties: ProjectProperties
+    ): Boolean {
+        logger.info("[$projectCode]|updateProjectProperties|userId=$userId|properties=$properties")
+        return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

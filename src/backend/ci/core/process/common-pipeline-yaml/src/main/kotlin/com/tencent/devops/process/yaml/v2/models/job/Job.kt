@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.v2.models.job
 
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import io.swagger.annotations.ApiModelProperty
 
@@ -67,12 +68,14 @@ data class Job(
 
 data class Container(
     val image: String,
-    val credentials: Credentials?
+    val credentials: Credentials?,
+    val options: DockerOptions?
 )
 
 data class Container2(
     val image: String,
-    val credentials: String?
+    val credentials: String?,
+    val options: DockerOptions?
 )
 
 data class Credentials(
@@ -112,6 +115,7 @@ data class RunsOn(
     @JsonProperty("agent-selector")
     val agentSelector: List<String>? = null,
     val workspace: String? = null,
+    val xcode: String? = null,
     @ApiModelProperty(name = "queue-timeout-minutes")
     @JsonProperty("queue-timeout-minutes")
     val queueTimeoutMinutes: Int? = null,
@@ -122,6 +126,7 @@ enum class JobRunsOnType(val type: String) {
     DOCKER("docker"),
     AGENT_LESS("agentless"),
     DEV_CLOUD("docker-on-devcloud"),
+    BCS("docker-on-bcs"),
     LOCAL("local")
 }
 

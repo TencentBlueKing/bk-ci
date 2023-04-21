@@ -37,17 +37,19 @@ import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManualEvent
-import com.tencent.devops.stream.trigger.actions.tgit.TGitActionCommon
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
+import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GitRequestEventHandle
 import com.tencent.devops.stream.trigger.pojo.YamlContent
@@ -91,16 +93,22 @@ class StreamManualAction(
             commit = EventCommonDataCommit(
                 commitId = event.commitId ?: (latestCommit?.commitId ?: ""),
                 commitMsg = event.customCommitMsg,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(null),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(null),
                 commitAuthorName = event.userId
             ),
-            gitProjectName = null
+            gitProjectName = null,
+            scmType = null
         )
         return this
     }
 
+    override fun getGitProjectIdOrName(gitProjectId: String?) = gitProjectId ?: data.eventCommon.gitProjectId
+
     override fun getProjectCode(gitProjectId: String?) = if (gitProjectId != null) {
-        GitCommonUtils.getCiProjectId(gitProjectId.toLong())
+        GitCommonUtils.getCiProjectId(
+            gitProjectId.toLong(),
+            streamGitConfig.getScmType()
+        )
     } else {
         event().projectCode
     }
@@ -108,6 +116,11 @@ class StreamManualAction(
     override fun getGitCred(personToken: String?): StreamGitCred {
         return when (streamGitConfig.getScmType()) {
             ScmType.CODE_GIT -> TGitCred(
+                userId = event().userId,
+                accessToken = personToken,
+                useAccessToken = personToken == null
+            )
+            ScmType.GITHUB -> GithubCred(
                 userId = event().userId,
                 accessToken = personToken,
                 useAccessToken = personToken == null
@@ -142,7 +155,7 @@ class StreamManualAction(
             ref = data.eventCommon.branch,
             content = api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
@@ -154,10 +167,12 @@ class StreamManualAction(
         return null
     }
 
+    override fun checkIfModify() = event().commitId != null
+
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         return TriggerResult(
-            trigger = true,
-            startParams = emptyMap(),
+            trigger = TriggerBody(true),
+            triggerOn = null,
             timeTrigger = false,
             deleteTrigger = false
         )
@@ -170,6 +185,8 @@ class StreamManualAction(
     override fun needSaveOrUpdateBranch() = false
 
     override fun needSendCommitCheck() = false
+
+    override fun needUpdateLastModifyUser(filePath: String) = false
 
     override fun sendCommitCheck(
         buildId: String,

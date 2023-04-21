@@ -1,5 +1,5 @@
 import api from './ajax'
-import { PROJECT_PERFIX, STREAM_PERFIX, REPOSITORY_PREFIX } from './perfix'
+import { PROJECT_PERFIX, STREAM_PERFIX, REPOSITORY_PREFIX, AUTH_PERFIX } from './perfix'
 
 export default {
     getUserInfo () {
@@ -37,5 +37,9 @@ export default {
 
     getLoginUrl (type) {
         return api.get(`${STREAM_PERFIX}/external/stream/login/url?type=${type}`)
+    },
+
+    logout () {
+        return api.delete(`${AUTH_PERFIX}/user/third/login/out`)
     }
 }

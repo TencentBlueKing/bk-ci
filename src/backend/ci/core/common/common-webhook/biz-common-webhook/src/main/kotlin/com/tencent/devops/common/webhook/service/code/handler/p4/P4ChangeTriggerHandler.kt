@@ -27,13 +27,14 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.p4
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.PathFilterType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.p4.P4ChangeEvent
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.P4PortFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
@@ -41,14 +42,12 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
-import com.tencent.devops.repository.api.ServiceP4Resource
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_P4_WEBHOOK_CHANGE
 
 @CodeWebhookHandler
 @SuppressWarnings("TooManyFunctions")
 class P4ChangeTriggerHandler(
-    private val client: Client
+    private val eventCacheService: EventCacheService
 ) : CodeWebhookTriggerHandler<P4ChangeEvent> {
     override fun eventClass(): Class<P4ChangeEvent> {
         return P4ChangeEvent::class.java
@@ -70,7 +69,13 @@ class P4ChangeTriggerHandler(
     )
     override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
 
-    override fun getEventType(event: P4ChangeEvent): CodeEventType = event.eventType
+    override fun getEventType(event: P4ChangeEvent): CodeEventType = when (event.eventType) {
+        P4ChangeEvent.CHANGE_COMMIT -> CodeEventType.CHANGE_COMMIT
+        P4ChangeEvent.CHANGE_SUBMIT -> CodeEventType.CHANGE_SUBMIT
+        P4ChangeEvent.CHANGE_CONTENT -> CodeEventType.CHANGE_SUBMIT
+        else ->
+            CodeEventType.valueOf(event.eventType)
+    }
 
     override fun getMessage(event: P4ChangeEvent) = ""
 
@@ -82,6 +87,12 @@ class P4ChangeTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val p4Filter = WebhookUtils.getP4Filter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                webHookParams = webHookParams
+            )
             val urlFilter = P4PortFilter(
                 pipelineId = pipelineId,
                 triggerOnP4port = event.p4Port,
@@ -94,12 +105,16 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val changeFiles = client.get(ServiceP4Resource::class).getChangelistFiles(
+                    if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
+                        return true
+                    }
+                    val changeFiles = eventCacheService.getP4ChangelistFiles(
+                        repo = repository,
                         projectId = projectId,
                         repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
                         repositoryType = repositoryConfig.repositoryType,
                         change = event.change
-                    ).data?.map { it.depotPathString } ?: emptyList()
+                    )
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,
@@ -111,7 +126,7 @@ class P4ChangeTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(urlFilter, eventTypeFilter, pathFilter)
+            return listOf(p4Filter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 

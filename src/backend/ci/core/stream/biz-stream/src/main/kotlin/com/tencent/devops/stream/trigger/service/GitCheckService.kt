@@ -39,11 +39,11 @@ import com.tencent.devops.plugin.api.pojo.GitWebhookUnlockEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.repository.api.ServiceRepositoryGitCheckResource
-import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.pojo.ExecuteSource
 import com.tencent.devops.repository.pojo.RepositoryGitCheck
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,7 +83,11 @@ class GitCheckService @Autowired constructor(
         description: String,
         mrId: Long?,
         manualUnlock: Boolean? = false,
-        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        addCommitCheck: (
+            request: CommitCheckRequest,
+            retry: ApiRequestRetryInfo
+        ) -> Unit
     ) {
         logger.info(
             "GitCheckService|pushCommitCheck|Code web hook add commit check" +
@@ -136,7 +140,8 @@ class GitCheckService @Autowired constructor(
             mrId = mrId,
             manualUnlock = manualUnlock,
             buildNum = buildNum,
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = addCommitCheck
         )
     }
 
@@ -157,7 +162,11 @@ class GitCheckService @Autowired constructor(
         mrId: Long?,
         manualUnlock: Boolean?,
         buildNum: String,
-        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+        addCommitCheck: (
+            request: CommitCheckRequest,
+            retry: ApiRequestRetryInfo
+        ) -> Unit
     ) {
         val gitCheckClient = client.get(ServiceRepositoryGitCheckResource::class)
 
@@ -196,7 +205,8 @@ class GitCheckService @Autowired constructor(
                         targetUrl = targetUrl,
                         context = context,
                         description = description,
-                        mrId = mrId
+                        mrId = mrId,
+                        addCommitCheck = addCommitCheck
                     )
                     gitCheckClient.createGitCheck(
                         gitCheck = RepositoryGitCheck(
@@ -224,7 +234,8 @@ class GitCheckService @Autowired constructor(
                             context = record.context,
                             description = description,
                             mrId = mrId,
-                            reportData = reportData
+                            reportData = reportData,
+                            addCommitCheck = addCommitCheck
                         )
                         gitCheckClient.updateGitCheck(
                             gitCheckId = record.gitCheckId,
@@ -274,7 +285,11 @@ class GitCheckService @Autowired constructor(
         context: String,
         description: String,
         mrId: Long?,
-        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf())
+        reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>> = Pair(listOf(), mutableMapOf()),
+        addCommitCheck: (
+            request: CommitCheckRequest,
+            retry: ApiRequestRetryInfo
+        ) -> Unit
     ) {
         logger.info("Project($$gitProjectId) add git commit($commitId) commit check.")
 
@@ -295,7 +310,7 @@ class GitCheckService @Autowired constructor(
             mrRequestId = mrId,
             reportData = reportData
         )
-        client.get(ServiceScmOauthResource::class).addCommitCheck(request)
+        addCommitCheck(request, ApiRequestRetryInfo(true))
     }
 
     private fun getProjectName(gitHttpUrl: String, name: String): String {

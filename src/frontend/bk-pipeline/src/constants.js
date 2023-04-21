@@ -23,6 +23,7 @@ export const DEBUG_CONTAINER = 'debug-container'
 
 export const DOCKER_BUILD_TYPE = 'DOCKER'
 export const PUBLIC_DEVCLOUD_BUILD_TYPE = 'PUBLIC_DEVCLOUD'
+export const PUBLIC_BCS_BUILD_TYPE = 'PUBLIC_BCS'
 
 export const STATUS_MAP = {
     WAITING: 'WAITING',

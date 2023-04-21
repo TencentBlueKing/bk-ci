@@ -40,7 +40,7 @@ import com.tencent.devops.process.engine.control.command.container.ContainerCont
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -50,7 +50,7 @@ class UpdateStateContainerCmdFinally(
     private val mutexControl: MutexControl,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchQueueControl: DispatchQueueControl
@@ -102,15 +102,18 @@ class UpdateStateContainerCmdFinally(
      * 释放[commandContext]中指定的互斥组
      */
     private fun mutexRelease(commandContext: ContainerContext) {
+        commandContext.container.controlOption.mutexGroup?.let { mutexGroup ->
+            mutexControl.releaseContainerMutex(
+                projectId = commandContext.event.projectId,
+                pipelineId = commandContext.event.pipelineId,
+                buildId = commandContext.event.buildId,
+                stageId = commandContext.event.stageId,
+                containerId = commandContext.event.containerId,
+                mutexGroup = mutexGroup,
+                executeCount = commandContext.container.executeCount
+            )
+        }
         // 返回stage的时候，需要解锁
-        mutexControl.releaseContainerMutex(
-            projectId = commandContext.event.projectId,
-            buildId = commandContext.event.buildId,
-            stageId = commandContext.event.stageId,
-            containerId = commandContext.event.containerId,
-            mutexGroup = commandContext.mutexGroup,
-            executeCount = commandContext.container.executeCount
-        )
     }
 
     /**
@@ -138,34 +141,41 @@ class UpdateStateContainerCmdFinally(
             endTime = LocalDateTime.now()
         }
 
+        if (buildStatus == BuildStatus.SKIP) {
+            commandContext.containerTasks.forEach { task ->
+                pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
+            }
+            // 刷新Model状态为SKIP，包含containerId下的所有插件任务
+            containerBuildRecordService.containerSkip(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                executeCount = commandContext.executeCount
+            )
+        } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
+            // 刷新Model状态-仅更新container状态
+            containerBuildRecordService.updateContainerStatus(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                buildStatus = buildStatus,
+                executeCount = commandContext.executeCount,
+                operation = "updateContainerCmdFinally#${event.containerId}"
+            )
+        }
+
         pipelineContainerService.updateContainerStatus(
             projectId = event.projectId,
             buildId = event.buildId,
             stageId = event.stageId,
             containerId = event.containerId,
             buildStatus = buildStatus,
+            controlOption = commandContext.needUpdateControlOption,
             startTime = startTime,
             endTime = endTime
         )
-
-        if (buildStatus == BuildStatus.SKIP) {
-            commandContext.containerTasks.forEach { task ->
-                pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
-            }
-            // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            containerBuildDetailService.containerSkip(
-                projectId = event.projectId, buildId = event.buildId, containerId = event.containerId
-            )
-        } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
-            // 刷新Model状态-仅更新container状态
-            containerBuildDetailService.updateContainerStatus(
-                projectId = event.projectId,
-                buildId = event.buildId,
-                containerId = event.containerId,
-                buildStatus = buildStatus,
-                executeCount = commandContext.executeCount
-            )
-        }
     }
 
     /**

@@ -45,7 +45,10 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
+import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
@@ -54,8 +57,10 @@ import javax.ws.rs.core.Response
 @RestResource
 @Suppress("ALL")
 class UserBuildResourceImpl @Autowired constructor(
+    private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
-    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) : UserBuildResource {
 
     override fun manualStartupInfo(
@@ -85,22 +90,22 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?
+        buildNo: Int?,
+        triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.MANUAL,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = ChannelCode.BS,
-                    buildNo = buildNo
-                )
-            )
+        val manualStartup = pipelineBuildFacadeService.buildManualStartup(
+            userId = userId,
+            startType = StartType.MANUAL,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            values = values,
+            channelCode = ChannelCode.BS,
+            buildNo = buildNo,
+            triggerReviewers = triggerReviewers
         )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(BuildId(manualStartup))
     }
 
     override fun retry(
@@ -173,6 +178,28 @@ class UserBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve
+            )
+        )
+    }
+
     override fun manualStartStage(
         userId: String,
         projectId: String,
@@ -231,12 +258,35 @@ class UserBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
+        val buildDetail = pipelineBuildFacadeService.getBuildDetail(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            channelCode = ChannelCode.BS
+        )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(buildDetail)
+    }
+
+    override fun getBuildRecordByExecuteCount(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): Result<ModelRecord> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
         return Result(
-            pipelineBuildFacadeService.getBuildDetail(
+            pipelineBuildFacadeService.getBuildRecord(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                executeCount = executeCount,
                 channelCode = ChannelCode.BS
             )
         )
@@ -350,6 +400,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg
         )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(result)
     }
 
@@ -434,6 +485,22 @@ class UserBuildResourceImpl @Autowired constructor(
                 element = element,
                 stageId = stageId,
                 containerId = containerId
+            )
+        )
+    }
+
+    override fun tryFinishStuckBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Boolean> {
+        return Result(
+            data = pipelineBuildMaintainFacadeService.tryFinishStuckBuilds(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildIds = buildIds
             )
         )
     }

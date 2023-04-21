@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.enums.code.tgit.TGitPushOperationKind
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
@@ -47,8 +46,8 @@ import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.BaseAction
+import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -77,7 +76,6 @@ import java.util.Date
 @Suppress("ALL")
 class TGitPushActionGit(
     private val dslContext: DSLContext,
-    private val client: Client,
     private val apiService: TGitApiService,
     private val streamEventService: StreamEventService,
     private val streamTimerService: StreamTimerService,
@@ -96,8 +94,7 @@ class TGitPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.PUSH)
 
-    override lateinit var data: ActionData
-    fun event() = data.event as GitPushEvent
+    override fun event() = data.event as GitPushEvent
 
     override val api: TGitApiService
         get() = apiService
@@ -111,11 +108,12 @@ class TGitPushActionGit(
         val lastCommit = getLatestCommit(event)
         this.data.eventCommon = EventCommonData(
             gitProjectId = event.project_id.toString(),
+            scmType = ScmType.CODE_GIT,
             branch = event.ref.removePrefix("refs/heads/"),
             commit = EventCommonDataCommit(
                 commitId = event.after,
                 commitMsg = lastCommit?.message,
-                commitTimeStamp = TGitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
+                commitTimeStamp = GitActionCommon.getCommitTimeStamp(lastCommit?.timestamp),
                 commitAuthorName = lastCommit?.author?.name
             ),
             userId = event.user_name,
@@ -218,9 +216,9 @@ class TGitPushActionGit(
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
         val changeSet = getChangeSet()
-        return TGitActionCommon.getYamlPathList(
+        return GitActionCommon.getYamlPathList(
             action = this,
-            gitProjectId = this.data.getGitProjectId(),
+            gitProjectId = this.getGitProjectIdOrName(),
             ref = this.data.eventCommon.branch
         ).map { (name, blobId) ->
             YamlPathListEntry(
@@ -240,13 +238,15 @@ class TGitPushActionGit(
             ref = data.eventCommon.branch,
             content = api.getFileContent(
                 cred = this.getGitCred(),
-                gitProjectId = data.getGitProjectId(),
+                gitProjectId = getGitProjectIdOrName(),
                 fileName = fileName,
                 ref = data.eventCommon.branch,
                 retry = ApiRequestRetryInfo(true)
             )
         )
     }
+
+    override fun checkIfModify() = true
 
     override fun getChangeSet(): Set<String>? {
         // 使用null和empty的区别来判断是否调用过获取函数
@@ -318,7 +318,7 @@ class TGitPushActionGit(
     }
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
-        val branch = TGitActionCommon.getTriggerBranch(data.eventCommon.branch)
+        val branch = GitActionCommon.getTriggerBranch(data.eventCommon.branch)
 
         val isDefaultBranch = branch == data.context.defaultBranch
 
@@ -348,16 +348,12 @@ class TGitPushActionGit(
             triggerOn = triggerOn,
             eventBranch = data.eventCommon.branch,
             changeSet = changeSet,
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             checkCreateAndUpdate = event().create_and_update
-        )
-        val params = TGitActionCommon.getStartParams(
-            action = this,
-            triggerOn = triggerOn
         )
         return TriggerResult(
             trigger = isMatch,
-            startParams = params,
+            triggerOn = triggerOn,
             timeTrigger = isTime,
             deleteTrigger = isDelete
         )
@@ -458,7 +454,7 @@ class TGitPushActionGit(
     }
 
     override fun getWebHookStartParam(triggerOn: TriggerOn): Map<String, String> {
-        return TGitActionCommon.getStartParams(
+        return GitActionCommon.getStartParams(
             action = this,
             triggerOn = triggerOn
         )

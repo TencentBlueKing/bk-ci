@@ -62,7 +62,7 @@ class PythonAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
 
     override fun handleAtomPreCmd(
         preCmd: String,
-        osType: OSType,
+        osName: String,
         pkgName: String,
         runtimeVersion: String?
     ): String {

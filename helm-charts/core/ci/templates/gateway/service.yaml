@@ -13,7 +13,7 @@ metadata:
   annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
   {{- end }}
 spec:
-  type: ClusterIP
+  type: {{ .Values.gateway.type }}
   selector: {{- include "bkci.labels.matchLabels" . | nindent 4 }}
     app.kubernetes.io/component: gateway
     app.kubernetes.io/name: gateway

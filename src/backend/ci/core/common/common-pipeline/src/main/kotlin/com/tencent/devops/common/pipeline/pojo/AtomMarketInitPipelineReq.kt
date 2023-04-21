@@ -37,5 +37,9 @@ data class AtomMarketInitPipelineReq(
     @ApiModelProperty("脚本任务插件Shell执行脚本", required = true)
     val script: String,
     @ApiModelProperty("插件基本信息", required = true)
-    val atomBaseInfo: AtomBaseInfo
+    val atomBaseInfo: AtomBaseInfo,
+    @ApiModelProperty("是否有可用的操作系统名称配置", required = false)
+    val validOsNameFlag: Boolean? = null,
+    @ApiModelProperty("是否有可用的操作系统cpu架构配置", required = false)
+    val validOsArchFlag: Boolean? = null
 )

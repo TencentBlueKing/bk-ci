@@ -38,7 +38,7 @@ interface ApigwPermissionMoveResourceV3 {
         projectId: String
     ): Result<List<PipelineIdInfo>>
 
-    @ApiOperation("关联iam项目", tags = ["v3_app_relation_iam", "v3_user_relation_iam"])
+    @ApiOperation("关联iam项目", tags = ["v3_app_relation_iam"])
     @PUT
     @Path("/projects/{projectId}/relationProject")
     fun relationProject(

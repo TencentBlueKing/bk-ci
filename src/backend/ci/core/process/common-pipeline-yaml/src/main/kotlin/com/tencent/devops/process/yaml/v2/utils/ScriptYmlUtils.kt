@@ -473,7 +473,7 @@ object ScriptYmlUtils {
                     ifField = it.ifField,
                     ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>, transferData),
+                    jobs = preJobs2Jobs(it.jobs, transferData),
                     checkIn = formatStageCheck(it.checkIn),
                     checkOut = formatStageCheck(it.checkOut)
                 )
@@ -676,23 +676,31 @@ object ScriptYmlUtils {
             when {
                 credentials is String -> return RepositoryHook(
                     name = name,
-                    credentialsForTicketId = credentials
+                    credentialsForTicketId = credentials,
+                    reposIgnore = reposIgnore,
+                    reposIgnoreCondition = reposIgnoreCondition
                 )
                 credentials is Map<*, *> && credentials["username"] != null && credentials["password"] != null -> {
                     return RepositoryHook(
                         name = name,
                         credentialsForUserName = credentials["username"].toString(),
-                        credentialsForPassword = credentials["password"].toString()
+                        credentialsForPassword = credentials["password"].toString(),
+                        reposIgnore = reposIgnore,
+                        reposIgnoreCondition = reposIgnoreCondition
                     )
                 }
                 credentials is Map<*, *> && credentials["token"] != null -> {
                     return RepositoryHook(
                         name = name,
-                        credentialsForToken = credentials["token"].toString()
+                        credentialsForToken = credentials["token"].toString(),
+                        reposIgnore = reposIgnore,
+                        reposIgnoreCondition = reposIgnoreCondition
                     )
                 }
                 else -> return RepositoryHook(
-                    name = name
+                    name = name,
+                    reposIgnore = reposIgnore,
+                    reposIgnoreCondition = reposIgnoreCondition
                 )
             }
         }
@@ -719,7 +727,7 @@ object ScriptYmlUtils {
             return null
         }
 
-        if (preTriggerOn.openapi != EnableType.TRUE.value || preTriggerOn.openapi != EnableType.FALSE.value) {
+        if (preTriggerOn.openapi != EnableType.TRUE.value && preTriggerOn.openapi != EnableType.FALSE.value) {
             throw YamlFormatException("not allow openapi type ${preTriggerOn.openapi}")
         }
 

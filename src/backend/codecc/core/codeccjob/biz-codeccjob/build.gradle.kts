@@ -12,13 +12,13 @@ dependencies {
     api(project(":core:codeccjob:api-codeccjob"))
     api(project(":core:defect:api-defect"))
     api(project(":core:defect:model-defect"))
-    api(project(":core:common:common-auth-api"))
+    api(project(":core:common:common-auth:common-auth-api"))
     api("org.springframework.boot:spring-boot-starter-websocket")
     api(group="javax.websocket", name="javax.websocket-api", version= "1.1")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("org.redisson:redisson")
-    api(group= "com.tencent.bk.devops.ci.project", name= "api-project", version= Versions.devopsVersion) {
+    api(group= "com.tencent.bk.devops.ci.project", name= "api-project") {
         isChanging = true
         exclude(group = "com.tencent.bk.devops.ci.project", module = "model-project")
         exclude(group = "com.tencent.bk.devops.ci.project", module = "common-api")

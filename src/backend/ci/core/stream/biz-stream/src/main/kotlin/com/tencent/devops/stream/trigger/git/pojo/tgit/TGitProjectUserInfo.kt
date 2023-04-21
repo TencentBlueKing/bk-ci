@@ -31,5 +31,6 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectUserInfo
 
 data class TGitProjectUserInfo(
     // tgit的权限等级 GUEST = 10 FOLLOWER = 15 REPORTER = 20 DEVELOPER = 30 MASTER = 40 OWNER = 50
-    override val accessLevel: Int
+    override val accessLevel: Int,
+    override val userId: String
 ) : StreamGitProjectUserInfo

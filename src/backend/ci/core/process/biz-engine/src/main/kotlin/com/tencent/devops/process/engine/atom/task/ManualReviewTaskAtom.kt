@@ -31,13 +31,16 @@ import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -46,6 +49,8 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -54,6 +59,7 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 import java.util.Date
 
 /**
@@ -64,11 +70,13 @@ import java.util.Date
 class ManualReviewTaskAtom(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val taskBuildRecordService: TaskBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
-    @Value("\${esb.appSecret}")
-    private val appSecret = ""
+    @Value("\${esb.appSecret:#{null}}")
+    private val appSecret: String? = null
     override fun getParamElement(task: PipelineBuildTask): ManualReviewUserTaskElement {
         return JsonUtil.mapTo((task.taskParams), ManualReviewUserTaskElement::class.java)
     }
@@ -92,6 +100,23 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
+        val reviewUsersList = reviewUsers.split(",")
+
+        taskBuildRecordService.updateTaskRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
+        )
+        // #7983 兜底只有一个审核插件的job未刷新执行状态
+        containerBuildRecordService.updateContainerRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            containerId = task.containerId, executeCount = task.executeCount ?: 1,
+            buildStatus = BuildStatus.RUNNING, containerVar = mapOf(), timestamps = mapOf()
+        )
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
@@ -126,8 +151,8 @@ class ManualReviewTaskAtom(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
-                receivers = reviewUsers.split(","),
-                notifyType = checkNotifyType(param.notifyType),
+                receivers = reviewUsersList,
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
                     "content" to notifyTitle
                 ),
@@ -138,7 +163,9 @@ class ManualReviewTaskAtom(
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc,
                     "manualReviewParam" to JsonUtil.toJson(param.params),
-                    "checkParams" to param.params.isNotEmpty().toString()
+                    "checkParams" to param.params.isNotEmpty().toString(),
+                    // 企业微信组
+                    NotifyUtils.WEWORK_GROUP_KEY to (param.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
                 position = null,
                 stageId = null,
@@ -149,7 +176,8 @@ class ManualReviewTaskAtom(
                     "elementId" to (param.id ?: ""),
                     "reviewUsers" to reviewUsers,
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
-                )
+                ),
+                markdownContent = param.markdownContent
             )
         )
 
@@ -226,7 +254,7 @@ class ManualReviewTaskAtom(
                 source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
                 userId = task.starter, buildId = buildId,
                 receivers = reviewUsers.split(","),
-                notifyType = checkNotifyType(param.notifyType),
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(),
                 bodyParams = mutableMapOf(),
                 position = null,
@@ -310,15 +338,6 @@ class ManualReviewTaskAtom(
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent
-    }
-
-    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
-        if (notifyType != null) {
-            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
-            allTypeSet.remove(NotifyType.SMS.name)
-            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
-        }
-        return notifyType
     }
 
     companion object {

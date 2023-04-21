@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
@@ -44,9 +45,14 @@ class BuildAgentBuildResourceImpl constructor(
     private val thirdPartyAgentBuildService: ThirdPartyAgentService
 ) : BuildAgentBuildResource {
 
-    override fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
+    override fun startBuild(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildType: String?
+    ): AgentResult<ThirdPartyBuildInfo?> {
         checkParam(projectId, agentId, secretKey)
-        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.startBuild(projectId, agentId, secretKey, BuildJobType.toEnum(buildType))
     }
 
     override fun upgrade(
@@ -74,10 +80,10 @@ class BuildAgentBuildResourceImpl constructor(
     ): AgentResult<UpgradeItem> {
         checkParam(projectId, agentId, secretKey)
         return thirdPartyAgentBuildService.checkIfCanUpgradeByVersionNew(
-            projectId,
-            agentId,
-            secretKey,
-            info
+            projectId = projectId,
+            agentId = agentId,
+            secretKey = secretKey,
+            info = info
         )
     }
 

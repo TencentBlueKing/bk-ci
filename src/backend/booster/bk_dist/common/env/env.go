@@ -43,12 +43,18 @@ const (
 	KeyExecutorPumpDisableMacro        = "PUMP_DISABLE_MACRO"
 	KeyExecutorPumpIncludeSysHeader    = "PUMP_INCLUDE_SYS_HEADER"
 	KeyExecutorPumpCheck               = "PUMP_CHECK"
+	KeyExecutorPumpCache               = "PUMP_CACHE"             // cache pump inlude files
+	KeyExecutorPumpCacheDir            = "PUMP_CACHE_DIR"         // cache pump inlude files
+	KeyExecutorPumpCacheSizeMaxMB      = "PUMP_CACHE_SIZE_MAX_MB" // cache pump inlude files
+	KeyExecutorPumpBlackKeys           = "PUMP_BLACK_KEYS"
+	KeyExecutorPumpMinActionNum        = "PUMP_MIN_ACTION_NUM"
 	KeyExecutorForceLocalKeys          = "FORCE_LOCAL_KEYS"
 	KeyExecutorEnvProfile              = "ENV_PROFILE"
 	KeyExecutorWorkerSideCache         = "WORKER_SIDE_CACHE"
 	KeyExecutorLocalRecord             = "LOCAL_RECORD"
 	KeyExecutorWriteMemory             = "WRITE_MEMORY"
 	KeyExecutorIdleKeepSecs            = "IDLE_KEEP_SECS"
+	KeyExecutorTotalActionNum          = "TOTAL_ACTION_NUM"
 
 	KeyUserDefinedLogLevel         = "USER_DEFINED_LOG_LEVEL"
 	KeyUserDefinedExecutorLogLevel = "USER_DEFINED_EXECUTOR_LOG_LEVEL"
@@ -74,10 +80,14 @@ const (
 	KeyWorkerCacheDir      = "CACHE_DIR"
 	KeyWorkerCachePoolSize = "CACHE_POOL_SIZE"
 	KeyWorkerCacheMinSize  = "CACHE_MIN_SIZE"
+	KeyWorkerMemPerJob     = "MEM_PER_JOB_4_WORKER" // memory per job
 
 	KeyCustomSetting = "CUSTOM_SETTINGS"
 
 	CommonBKEnvSepKey = "!!|!!"
+
+	KeyRemoteEnvAppend    = "REMOTE_ENV_APPEND"
+	KeyRemoteEnvOverwrite = "REMOTE_ENV_OVERWRITE"
 )
 
 // GetEnvKey return env value by specified key

@@ -37,10 +37,6 @@ class ObjectReplaceEnvVarUtilTest {
 
     private val envMap: MutableMap<String, String> = HashMap()
 
-    private val replacement = object : KeyReplacement {
-        override fun getReplacement(key: String) = null
-    }
-
     @BeforeEach
     fun setup() {
         envMap["normalStrEnvVar"] = "123"

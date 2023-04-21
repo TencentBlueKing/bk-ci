@@ -1,3 +1,6 @@
+//go:build !out
+// +build !out
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -29,21 +32,28 @@ package pipeline
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/pkg/errors"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func Start() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent pipeline panic: ", err)
+		}
+	}()
+
 	time.Sleep(10 * time.Second)
 	for {
 		runPipeline()
@@ -51,26 +61,76 @@ func Start() {
 	}
 }
 
-func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
-	pipeline := new(CommandPipeline)
-	err = util.ParseJsonToData(pipelineData, pipeline)
+func runPipeline() {
+	logs.Info("start run pipeline")
+
+	result, err := api.GetAgentPipeline()
 	if err != nil {
-		return errors.New("parse command pipeline failed")
+		logs.Error("get pipeline failed: ", err.Error())
+		return
+	}
+	if result.IsNotOk() {
+		logs.Error("get pipeline failed, message: ", result.Message)
+		return
+	}
+	if result.Data == nil {
+		logs.Info("no pipeline to run, skip")
+		return
 	}
 
-	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusExecuting, "Executing"))
+	pipelineData, ok := result.Data.(map[string]interface{})
+	if !ok {
+		logs.Error("parse pipeline failed, invalid pipeline")
+		return
+	}
+
+	if pipelineData["type"] != COMMAND {
+		logs.Warn("not support pipeline: type: ", pipelineData["type"])
+		return
+	}
+
+	pipeline, lines, err := parsePipelineData(pipelineData)
+	if err != nil {
+		logs.Error("run pipeline parsePipelineData error: ", err)
+	}
+
+	if systemutil.IsWindows() {
+		err = runCommandPipelineWindows(pipeline, lines)
+	} else {
+		err = runCommandPipeline(pipeline, lines)
+	}
+
+	if err != nil {
+		logs.Error("run pipeline failed: ", err)
+	} else {
+		logs.Info("run pipeline done")
+	}
+}
+
+func parsePipelineData(pipelineData interface{}) (*CommandPipeline, []string, error) {
+	pipeline := new(CommandPipeline)
+	err := util.ParseJsonToData(pipelineData, pipeline)
+	if err != nil {
+		return nil, nil, errors.New("parse command pipeline failed")
+	}
+
+	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusExecuting, "Executing"))
 
 	if strings.TrimSpace(pipeline.Command) == "" {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, ""))
-		return nil
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, ""))
+		return nil, nil, nil
 	}
 
 	lines := strings.Split(pipeline.Command, "\n")
 	if len(lines) == 0 {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, ""))
-		return nil
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, ""))
+		return nil, nil, nil
 	}
 
+	return pipeline, lines, nil
+}
+
+func runCommandPipeline(pipeline *CommandPipeline, lines []string) (err error) {
 	buffer := bytes.Buffer{}
 	if strings.HasPrefix(strings.TrimSpace(lines[0]), "#!") {
 		buffer.WriteString(lines[0] + "\n")
@@ -92,54 +152,47 @@ func parseAndRunCommandPipeline(pipelineData interface{}) (err error) {
 	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.sh", systemutil.GetWorkDir(), pipeline.SeqId, pipeline.Type)
 	err = ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
-		return errors.New("write pipeline script file failed: " + err.Error())
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
+		return errors.Wrap(err, "write pipeline script file failed")
 	}
 	defer os.Remove(scriptFile)
 
 	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
-		api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
-		return errors.New("run pipeline failed: " + err.Error())
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
+		return errors.Wrap(err, "run pipeline failed")
 	}
-	api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
+	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
 	return nil
 }
 
-func runPipeline() {
-	logs.Info("start run pipeline")
-	result, err := api.GetAgentPipeline()
+func runCommandPipelineWindows(pipeline *CommandPipeline, lines []string) error {
+	buffer := bytes.Buffer{}
+
+	buffer.WriteString("@echo off\n")  // 关闭打印命令名称
+	buffer.WriteString("chcp 65001\n") // UTF-8中文
+	buffer.WriteString("cd " + systemutil.GetWorkDir() + "\n")
+
+	for i := 0; i < len(lines); i++ {
+		buffer.WriteString(lines[i] + "\n")
+	}
+	scriptContent := buffer.String()
+	logs.Info("scriptContent:", scriptContent)
+
+	scriptFile := fmt.Sprintf("%s/devops_pipeline_%s_%s.bat", systemutil.GetWorkDir(), pipeline.SeqId, pipeline.Type)
+	err := ioutil.WriteFile(scriptFile, []byte(scriptContent), 0777)
 	if err != nil {
-		logs.Error("get pipeline failed: ", err.Error())
-		return
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "write pipeline script file failed: "+err.Error()))
+		return errors.Wrap(err, "write pipeline script file failed")
 	}
+	defer os.Remove(scriptFile)
 
-	if result.IsNotOk() {
-		logs.Error("get pipeline failed, message: ", result.Message)
-		return
-	}
-
-	if result.Data == nil {
-		logs.Info("no pipeline to run, skip")
-		return
-	}
-
-	pipelineData, ok := result.Data.(map[string]interface{})
-	if !ok {
-		logs.Error("parse pipeline failed, invalid pipeline")
-		return
-	}
-
-	if pipelineData["type"] == COMMAND {
-		err = parseAndRunCommandPipeline(pipelineData)
-	} else {
-		logs.Warn("not support pipeline: type: ", pipelineData["type"])
-		return
-	}
-
+	output, err := command.RunCommand(scriptFile, []string{} /*args*/, systemutil.GetWorkDir(), nil)
 	if err != nil {
-		logs.Error("run pipeline failed: ", err.Error())
-	} else {
-		logs.Info("run pipeline done")
+		_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusFailure, "run pipeline failed: "+err.Error()+"\noutput: "+string(output)))
+		return errors.Wrap(err, "run pipeline failed")
 	}
+	_, _ = api.UpdatePipelineStatus(api.NewPipelineResponse(pipeline.SeqId, StatusSuccess, string(output)))
+
+	return nil
 }

@@ -90,6 +90,10 @@ object StoreMessageCode {
     const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
     // 研发商店：插件配置文件[task.json]{0}操作系统默认环境配置数量为{1}个，默认环境配置数量有且只能为1个
     const val USER_REPOSITORY_TASK_JSON_OS_DEFAULT_ENV_IS_INVALID = "2120034"
+    const val USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL = "2120035"
+    // 研发商店：从[{0}]分支拉取插件配置文件[error.json]失败,请确认是否OAUTH授权、文件是否正确上传代码库等
+    const val USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE = "2120036" // 研发商店：插件配置文件[error.json]errorCode字段数据重复，请检查{0}
+    const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
@@ -101,6 +105,7 @@ object StoreMessageCode {
     const val USER_TEMPLATE_ATOM_IS_INVALID = "2120207" // 研发商店：模版下的插件{0}不可用，请联系模板发布者
     const val USER_TEMPLATE_IMAGE_VISIBLE_DEPT_IS_INVALID = "2120208" // 研发商店：模板的可见范围不在镜像[{0}]的可见范围之内，如有需要请联系镜像的发布者
     const val USER_TEMPLATE_IMAGE_IS_INVALID = "2120209" // 研发商店：模版下的镜像{0}不可用，请联系模板发布者
+    const val USER_INSTALL_TEMPLATE_CODE_IS_INVALID = "2120210" // 研发商店： 商店模板{0}安装到项目[{1}]失败，模板已安装或项目下存在与模板{0}同名的自定义模板，若有同名的自定义模板请修改模板名称后再安装商店模版。
 
     const val USER_IMAGE_VERSION_IS_NOT_FINISH = "2120301" // 研发商店：镜像{0}的{1}版本发布未结束，请稍后再试
     const val USER_IMAGE_VERSION_IS_INVALID = "2120302" // 研发商店：镜像升级的版本号{0}错误，应为{1}
@@ -140,4 +145,6 @@ object StoreMessageCode {
     const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120911" // 研发商店：敏感API已经取消不能审批
     const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
     const val USER_HIS_VERSION_UPGRADE_INVALID = "2120913" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
+    const val USER_UPLOAD_FILE_PATH_ERROR = "2120914" // 研发商店：文件路径[{0}]错误
+    const val USER_ERROR_CODE_INVALID = "2120915" // 研发商店：错误码{0}格式错误
 }

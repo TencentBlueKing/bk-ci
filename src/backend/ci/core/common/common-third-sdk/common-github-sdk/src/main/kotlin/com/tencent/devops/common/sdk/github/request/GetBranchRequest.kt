@@ -27,20 +27,24 @@
 
 package com.tencent.devops.common.sdk.github.request
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.github.GithubRequest
 import com.tencent.devops.common.sdk.github.response.BranchResponse
+import com.tencent.devops.common.sdk.json.JsonIgnorePath
+import org.apache.commons.lang3.StringUtils
 
 data class GetBranchRequest(
-    @JsonIgnore
-    val owner: String,
-    @JsonIgnore
-    val repo: String,
-    @JsonIgnore
+    // id或owner/repo
+    @JsonIgnorePath
+    val repoName: String,
+    @JsonIgnorePath
     val branch: String
 ) : GithubRequest<BranchResponse>() {
     override fun getHttpMethod() = HttpMethod.GET
 
-    override fun getApiPath() = "/repos/$owner/$repo/branches/$branch"
+    override fun getApiPath() = if (StringUtils.isNumeric(repoName)) {
+        "repositories/$repoName/branches/$branch"
+    } else {
+        "repos/$repoName/branches/$branch"
+    }
 }

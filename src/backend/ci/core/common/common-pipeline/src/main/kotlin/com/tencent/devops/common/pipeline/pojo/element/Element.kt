@@ -55,7 +55,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @JsonTypeInfo(
@@ -94,6 +96,7 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
+@ApiModel("Element 基类")
 abstract class Element(
     @ApiModelProperty("任务名称", required = false)
     open val name: String,
@@ -108,8 +111,10 @@ abstract class Element(
     @ApiModelProperty("是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canSkip: Boolean? = null,
     @ApiModelProperty("执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Deprecated("即将被timeCost代替")
     open var elapsed: Long? = null,
     @ApiModelProperty("启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    @Deprecated("即将被timeCost代替")
     open var startEpoch: Long? = null,
     @ApiModelProperty("插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var originVersion: String? = null,
@@ -121,6 +126,8 @@ abstract class Element(
     open var additionalOptions: ElementAdditionalOptions? = null,
     @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
+    @ApiModelProperty("各项耗时", required = true)
+    open var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
     @ApiModelProperty("错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
@@ -153,6 +160,15 @@ abstract class Element(
         }
 
         return additionalOptions!!.enable
+    }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        if (additionalOptions != null && additionalOptions!!.timeoutVar.isNullOrBlank()) {
+            additionalOptions!!.timeoutVar = additionalOptions!!.timeout.toString()
+        }
     }
 
     /**

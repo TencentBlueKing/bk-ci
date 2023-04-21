@@ -27,11 +27,14 @@
 
 package com.tencent.devops.worker.common.logger
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -45,14 +48,12 @@ import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
 import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
-import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -75,7 +76,6 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -245,7 +245,7 @@ object LoggerService {
         }
 
         // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
-        realMessage = fixSensitiveContent(realMessage)
+        realMessage = SensitiveValueService.fixSensitiveContent(realMessage)
 
         val logMessage = LogMessage(
             message = realMessage,
@@ -284,16 +284,6 @@ object LoggerService {
         } catch (ignored: InterruptedException) {
             logger.error("写入 $logType 日志行失败：", ignored)
         }
-    }
-
-    private fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        SensitiveValueService.sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
     }
 
     fun addWarnLine(message: String) {
@@ -356,15 +346,6 @@ object LoggerService {
                 // 如果不是LOCAL状态直接跳过
                 if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
 
-                // 如果日志文件过大，则取消归档
-                if (property.logFile.length() > LOG_FILE_LENGTH_LIMIT) {
-                    logger.warn(
-                        "Cancel archiving task[$elementId] build log " +
-                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
-                    )
-                    return@forEach
-                }
-
                 if (!property.logFile.exists()) {
                     logger.warn(
                         "Cancel archiving task[$elementId] build log " +
@@ -373,6 +354,15 @@ object LoggerService {
                     return@forEach
                 }
 
+                val zipLog = ZipUtil.zipDir(property.logFile, property.logFile.absolutePath + ".zip")
+                // 如果日志文件过大，则取消归档
+                if (zipLog.length() > LOG_FILE_LENGTH_LIMIT) {
+                    logger.warn(
+                        "Cancel archiving task[$elementId] build log " +
+                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
+                    )
+                    return@forEach
+                }
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 try {
@@ -381,8 +371,8 @@ object LoggerService {
                         retryPeriodMills = 1000
                     ) {
                         ArchiveUtils.archiveLogFile(
-                            file = property.logFile,
-                            destFullPath = property.childPath,
+                            file = zipLog,
+                            destFullPath = property.childZipPath!!,
                             buildVariables = buildVariables!!,
                             token = token
                         )

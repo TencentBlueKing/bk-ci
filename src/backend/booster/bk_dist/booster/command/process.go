@@ -155,6 +155,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 	usr, err := user.Current()
 	if err != nil {
 		blog.Warnf("booster-command: get current user failed: %v", err)
+		return nil, err
 	}
 
 	// decide which server to connect to.
@@ -215,6 +216,16 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		resIdleSecsForFree = c.Int(FlagResIdleSecsForFree)
 	}
 
+	pumpCacheSizeMaxMB := int32(c.Int(FlagPumpCacheSizeMaxMB))
+	if pumpCacheSizeMaxMB <= 0 {
+		pumpCacheSizeMaxMB = 1024
+	}
+
+	pumpMinActionNum := 50
+	if c.IsSet(FlagPumpMinActionNum) {
+		pumpMinActionNum = c.Int(FlagPumpMinActionNum)
+	}
+
 	// generate a new booster.
 	cmdConfig := dcType.BoosterConfig{
 		Type:      dcType.GetBoosterType(bt),
@@ -264,6 +275,12 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			PumpDisableMacro:     c.Bool(FlagPumpDisableMacro),
 			PumpIncludeSysHeader: c.Bool(FlagPumpIncludeSysHeader),
 			PumpCheck:            c.Bool(FlagPumpCheck),
+			PumpCache:            c.Bool(FlagPumpCache),
+			PumpCacheDir:         c.String(FlagPumpCacheDir),
+			PumpCacheSizeMaxMB:   pumpCacheSizeMaxMB,
+			PumpCacheRemoveAll:   c.Bool(FlagPumpCacheRemoveAll),
+			PumpBlackList:        c.StringSlice(FlagPumpBlackList),
+			PumpMinActionNum:     int32(pumpMinActionNum),
 			ForceLocalList:       c.StringSlice(FlagForceLocalList),
 			NoWork:               c.Bool(FlagNoWork),
 			WriteMemroy:          c.Bool(FlagWriteMemroMemroy),
@@ -306,6 +323,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			DisableFileLock:    c.Bool(FlagDisableFileLock),
 			AutoResourceMgr:    c.Bool(FlagAutoResourceMgr),
 			ResIdleSecsForFree: resIdleSecsForFree,
+			SendCork:           c.Bool(FlagSendCork),
 		},
 	}
 

@@ -59,14 +59,14 @@ interface AtomRunConditionHandleService {
     /**
      * 处理preCmd前置命令逻辑
      * @param preCmd 前置命令
-     * @param osType 操作系统类型
+     * @param osName 操作系统名称
      * @param pkgName 包名
      * @param runtimeVersion 运行时版本
      * @return 处理后的前置命令
      */
     fun handleAtomPreCmd(
         preCmd: String,
-        osType: OSType,
+        osName: String,
         pkgName: String,
         runtimeVersion: String? = null
     ): String

@@ -1,11 +1,13 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.TGitApiService
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
@@ -29,6 +31,14 @@ abstract class TGitActionGit(
             "git_${data.getGitProjectId()}"
         }
     }
+
+    /**
+     * 提供拿取gitProjectId的公共方法
+     * 因为会存在跨库触发导致的event的gitProjectId和触发的不一致的问题
+     * 所以会优先拿取pipeline的gitProjectId
+     */
+    override fun getGitProjectIdOrName(gitProjectId: String?) =
+        gitProjectId ?: data.context.pipeline?.gitProjectId ?: data.eventCommon.gitProjectId
 
     override fun getGitCred(personToken: String?): TGitCred {
         if (personToken != null) {
@@ -87,12 +97,31 @@ abstract class TGitActionGit(
             } else {
                 false
             },
-            reportData = reportData
+            reportData = reportData,
+            addCommitCheck = api::addCommitCheck
         )
     }
+
     override fun updatePipelineLastBranchAndDisplayName(
         pipelineId: String,
         branch: String?,
         displayName: String?
     ) = Unit
+
+    override fun parseStreamTriggerContext(cred: StreamGitCred?) {
+        // 格式化repoCreatedTime
+        this.data.context.repoCreatedTime = DateTimeUtil.formatDate(
+            DateTimeUtil.zoneDateToDate(this.data.context.repoCreatedTime)!!
+        )
+
+        // 将repoCreatorId -> user name
+        this.data.context.repoCreatorId = this.data.context.repoCreatorId?.let {
+            kotlin.runCatching {
+                api.getUserInfoById(
+                    (cred as TGitCred?) ?: getGitCred(),
+                    it
+                ).username
+            }.getOrNull() ?: ""
+        }
+    }
 }

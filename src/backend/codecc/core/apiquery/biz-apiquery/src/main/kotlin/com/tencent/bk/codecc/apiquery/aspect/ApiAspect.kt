@@ -1,5 +1,6 @@
 package com.tencent.bk.codecc.apiquery.aspect
 
+import com.tencent.bk.codecc.apiquery.config.ApiGatewayAuthProperties
 import com.tencent.bk.codecc.apiquery.exception.PermissionForbiddenException
 import com.tencent.bk.codecc.apiquery.service.AppCodeService
 import com.tencent.bk.codecc.apiquery.task.TaskQueryReq
@@ -9,6 +10,7 @@ import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import org.springframework.util.StringUtils
 
 @Aspect
 @Component
@@ -29,6 +31,11 @@ class ApiAspect(
         "execution(* com.tencent.bk.codecc.apiquery.resources.Apigw*.*(..))"
     ) // 所有controller包下面的所有方法的所有参数
     fun beforeMethod(jp: JoinPoint) {
+
+        val enabled = ApiGatewayAuthProperties.properties?.enabled ?: ""
+        if(!StringUtils.hasLength(enabled) || enabled == "false"){
+            return
+        }
 
         val methodName: String = jp.signature.name
         logger.info("【前置增强】the method 【$methodName】")

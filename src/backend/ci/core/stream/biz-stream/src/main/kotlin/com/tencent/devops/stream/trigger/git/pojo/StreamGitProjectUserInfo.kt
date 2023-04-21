@@ -33,4 +33,5 @@ package com.tencent.devops.stream.trigger.git.pojo
 interface StreamGitProjectUserInfo {
     // 权限等级
     val accessLevel: Int
+    val userId: String
 }

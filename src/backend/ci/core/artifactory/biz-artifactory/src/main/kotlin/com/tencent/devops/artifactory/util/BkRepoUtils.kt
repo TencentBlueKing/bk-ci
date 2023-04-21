@@ -47,10 +47,12 @@ object BkRepoUtils {
     const val BKREPO_DEFAULT_USER = "admin"
     const val BKREPO_DEVOPS_PROJECT_ID = "devops"
     const val BKREPO_STORE_PROJECT_ID = "bk-store"
+    const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
     const val BKREPO_COMMOM_REPO = "common"
 
     const val REPO_NAME_PIPELINE = "pipeline"
     const val REPO_NAME_CUSTOM = "custom"
+    const val REPO_NAME_IMAGE = "image"
     const val REPO_NAME_REPORT = "report"
     const val REPO_NAME_PLUGIN = "plugin"
     const val REPO_NAME_STATIC = "static"
@@ -82,6 +84,8 @@ object BkRepoUtils {
     fun parseArtifactoryType(repoName: String): ArtifactoryType {
         return if (repoName == REPO_NAME_CUSTOM) {
             ArtifactoryType.CUSTOM_DIR
+        } else if (repoName == REPO_NAME_IMAGE) {
+            ArtifactoryType.IMAGE
         } else {
             ArtifactoryType.PIPELINE
         }
@@ -100,6 +104,7 @@ object BkRepoUtils {
             FileTypeEnum.BK_ARCHIVE -> REPO_NAME_PIPELINE
             FileTypeEnum.BK_CUSTOM -> REPO_NAME_CUSTOM
             FileTypeEnum.BK_REPORT -> REPO_NAME_REPORT
+            FileTypeEnum.BK_STATIC -> REPO_NAME_STATIC
             else -> BKREPO_COMMOM_REPO
         }
     }

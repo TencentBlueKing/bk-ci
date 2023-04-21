@@ -71,14 +71,16 @@ class ApigwTemplateResourceV4Impl @Autowired constructor(private val client: Cli
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long?
+        version: Long?,
+        versionName: String?
     ): Result<TemplateModelDetail> {
-        logger.info("OPENAPI_TEMPLATE_V4|$userId|get template|$projectId|$templateId|$version")
+        logger.info("OPENAPI_TEMPLATE_V4|$userId|get template|$projectId|$templateId|$version|$versionName")
         return client.get(ServicePTemplateResource::class).getTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
-            version = version
+            version = version,
+            versionName = versionName
         )
     }
 

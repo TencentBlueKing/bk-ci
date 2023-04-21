@@ -57,7 +57,8 @@ config = {
         database = __BK_CI_REDIS_DB__, -- 默认选择db0
         max_idle_time = 600000, -- 保留在连接池的时间
         pool_size = 10, -- 连接池的大小
-        backlog = 10 -- 池外连接最大值
+        backlog = 10, -- 池外连接最大值
+        ssl = __BK_CI_REDIS_SSL__
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__BK_SSM_HOST__",
@@ -84,8 +85,21 @@ config = {
         user = "__BK_CI_INFLUXDB_USER__",
         password = "__BK_CI_INFLUXDB_PASSWORD__"
     },
-    bkrepo = {domain = "__BK_REPO_HOST__", authorization = "__BK_CI_BKREPO_AUTHORIZATION__"},
-    kubernetes = {domain = "kubernetes.demo.com"}
+    bkrepo = {
+        domain = "__BK_REPO_FQDN__",
+        authorization = "__BK_CI_BKREPO_AUTHORIZATION__"
+    },
+    bkci = {host = "__BK_CI_FQDN__", port = 80},
+    kubernetes = {
+        domain = "kubernetes.demo.com",
+        switchAll = false,
+        codecc = {domain = "kubernetes.demo.com"},
+        api = {
+            host = "kubernetes.demo.com",
+            port = 6443 ,
+            token = ""
+        }
+    }
 }
 
 require("init_common")

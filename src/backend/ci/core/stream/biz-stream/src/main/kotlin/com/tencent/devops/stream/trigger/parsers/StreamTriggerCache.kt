@@ -29,6 +29,7 @@ package com.tencent.devops.stream.trigger.parsers
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.stream.trigger.actions.BaseAction
@@ -75,11 +76,21 @@ class StreamTriggerCache @Autowired constructor(
         if (cache != null) {
             return cache
         }
-        val gitProjectInfo = getProjectInfo(
-            action.getGitCred(),
-            gitProjectKey,
-            ApiRequestRetryInfo(true)
-        ) ?: return null
+        val gitProjectInfo = try {
+            getProjectInfo(
+                // 优先级： 传入凭据 -> 远程触发凭据 -> ci开启人
+                cred ?: action.data.context.repoTrigger?.repoTriggerCred ?: action.getGitCred(),
+                action.getGitProjectIdOrName(gitProjectKey),
+                ApiRequestRetryInfo(true)
+            ) ?: return null
+        } catch (e: ErrorCodeException) {
+            logger.warn(
+                "Get project info error|$gitProjectKey|${cred != null}|" +
+                    "${action.data.context.repoTrigger?.buildUserID}|${action.data.setting.enableUser}",
+                e
+            )
+            return null
+        }
         val cacheData = StreamGitProjectCache(
             gitProjectId = gitProjectInfo.gitProjectId,
             defaultBranch = gitProjectInfo.defaultBranch,
@@ -91,7 +102,9 @@ class StreamTriggerCache @Autowired constructor(
             description = gitProjectInfo.description,
             avatarUrl = gitProjectInfo.avatarUrl,
             pathWithNamespace = gitProjectInfo.pathWithNamespace,
-            nameWithNamespace = gitProjectInfo.nameWithNamespace
+            nameWithNamespace = gitProjectInfo.nameWithNamespace,
+            repoCreatedTime = gitProjectInfo.repoCreatedTime,
+            repoCreatorId = gitProjectInfo.repoCreatorId
         )
 
         saveRequestGitProjectInfo(

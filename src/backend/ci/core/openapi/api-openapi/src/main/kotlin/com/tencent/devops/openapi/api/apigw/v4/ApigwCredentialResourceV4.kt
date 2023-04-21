@@ -39,6 +39,8 @@ import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import io.swagger.annotations.Example
+import io.swagger.annotations.ExampleProperty
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -71,7 +73,7 @@ interface ApigwCredentialResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("凭证类型列表，用逗号分隔", required = true)
@@ -101,10 +103,103 @@ interface ApigwCredentialResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("凭据", required = true)
+        @ApiParam(
+            "凭据", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "PASSWORD、ACCESSTOKEN、OAUTHTOKEN、SECRETKEY、MULTI_LINE_PASSWORD 五种类型仅需要填写v1",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "PASSWORD",
+                                "credentialName": "hello",
+                                "v1": "testpassword"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 USERNAME_PASSWORD",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "USERNAME_PASSWORD",
+                                "credentialName": "hello",
+                                "v1": "username",
+                                "v2": "password"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 APPID_SECRETKEY",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "APPID_SECRETKEY",
+                                "credentialName": "hello",
+                                "v1": "appId",
+                                "v2": "secretKey"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 SSH_PRIVATEKEY",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "SSH_PRIVATEKEY",
+                                "credentialName": "hello",
+                                "v1": "privateKey",
+                                "v2": "passphrase"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 TOKEN_SSH_PRIVATEKEY",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "TOKEN_SSH_PRIVATEKEY",
+                                "credentialName": "hello",
+                                "v1": "token",
+                                "v2": "privateKey",
+                                "v3": "passphrase"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 TOKEN_USERNAME_PASSWORD",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "TOKEN_USERNAME_PASSWORD",
+                                "credentialName": "hello",
+                                "v1": "token",
+                                "v2": "username",
+                                "v3": "password"
+                            }"""
+                    ),
+                    ExampleProperty(
+                        mediaType = "新增 COS_APPID_SECRETID_SECRETKEY_REGION",
+                        value = """
+                            {
+                                "credentialId": "test",
+                                "credentialRemark": "null",
+                                "credentialType": "COS_APPID_SECRETID_SECRETKEY_REGION",
+                                "credentialName": "hello",
+                                "v1": "cosappId",
+                                "v2": "secretId",
+                                "v3": "secretKey",
+                                "v4": "region"
+                            }"""
+                    )
+                ]
+            )
+        )
         credential: CredentialCreate
     ): Result<Boolean>
 
@@ -121,7 +216,7 @@ interface ApigwCredentialResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("凭据ID", required = true)
@@ -142,7 +237,7 @@ interface ApigwCredentialResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("凭据ID", required = true)
@@ -165,7 +260,7 @@ interface ApigwCredentialResourceV4 {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("凭据ID", required = true)

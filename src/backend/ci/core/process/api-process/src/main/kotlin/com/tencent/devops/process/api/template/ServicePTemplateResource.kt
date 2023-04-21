@@ -90,6 +90,18 @@ interface ServicePTemplateResource {
         templateCode: String
     ): Result<TemplateDetailInfo?>
 
+    @ApiOperation("判断模板镜像是否发布")
+    @GET
+    @Path("/store/templates/{templateCode}/images/releaseStatus/check")
+    fun checkImageReleaseStatus(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("模板代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String
+    ): Result<String?>
+
     @ApiOperation("查询项目下所有源模板的ID")
     @GET
     @Path("/store/projects/{projectId}/srcTemplates")
@@ -162,7 +174,10 @@ interface ServicePTemplateResource {
         templateId: String,
         @ApiParam("模板版本", required = false)
         @QueryParam("version")
-        version: Long?
+        version: Long?,
+        @ApiParam("模板版本名称", required = false)
+        @QueryParam("versionName")
+        versionName: String?
     ): Result<TemplateModelDetail>
 
     @ApiOperation("模版管理-获取模版列表")

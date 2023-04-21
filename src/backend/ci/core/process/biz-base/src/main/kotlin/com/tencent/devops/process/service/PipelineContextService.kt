@@ -69,11 +69,17 @@ class PipelineContextService @Autowired constructor(
         val failTaskNameList = mutableListOf<String>()
         try {
             modelDetail.model.stages.forEach { stage ->
+                if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
+                    previousStageStatus = BuildStatus.FAILED
+                }
                 if (stage.finally && stage.id?.let { it == stageId } == true) {
                     contextMap["ci.build_status"] = previousStageStatus.name
                     contextMap["ci.build_fail_tasknames"] = failTaskNameList.joinToString(",")
                 } else if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
+                }
+                if (stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name) {
+                    previousStageStatus = BuildStatus.FAILED
                 }
                 stage.containers.forEach nextContainer@{ container ->
                     // 如果有分裂Job则只处理分裂Job的上下文
@@ -135,8 +141,14 @@ class PipelineContextService @Autowired constructor(
                 if (stage.finally) {
                     return@forEach
                 }
+                if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
+                    previousStageStatus = BuildStatus.FAILED
+                }
                 if (checkBuildStatus(stage.status)) {
                     previousStageStatus = BuildStatus.parse(stage.status)
+                }
+                if (stage.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name) {
+                    previousStageStatus = BuildStatus.FAILED
                 }
                 stage.containers.forEach nextContainer@{ container ->
                     // 如果有分裂Job则只处理分裂Job的上下文

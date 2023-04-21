@@ -62,6 +62,7 @@ class StreamRequestListener @Autowired constructor(
         try {
             steamRequestService.externalCodeGitBuild(
                 eventType = streamRequestEvent.eventType,
+                webHookType = streamRequestEvent.webHookType,
                 event = streamRequestEvent.event
             )
         } catch (ignore: Throwable) {

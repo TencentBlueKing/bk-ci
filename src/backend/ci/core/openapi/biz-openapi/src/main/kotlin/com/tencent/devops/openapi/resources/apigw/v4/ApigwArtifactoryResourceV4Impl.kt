@@ -68,6 +68,23 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun getAppDownloadUrl(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
+        logger.info(("OPENAPI_ARTIFACTORY_V4|$userId|get app download url|$projectId|$artifactoryType|$path"))
+        return client.get(ServiceArtifactoryResource::class).appDownloadUrl(
+            projectId = projectId,
+            userId = userId,
+            artifactoryType = artifactoryType,
+            path = path
+        )
+    }
+
     override fun search(
         appCode: String?,
         apigwType: String?,
@@ -126,7 +143,8 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Result<Page<FileInfo>> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|list custom files|$projectId|$fullPath|$includeFolder|$deep" +
@@ -139,14 +157,20 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
             includeFolder = includeFolder,
             deep = deep,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            modifiedTimeDesc = modifiedTimeDesc
         )
     }
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")
