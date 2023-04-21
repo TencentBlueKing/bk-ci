@@ -152,7 +152,7 @@ class BSAuthPermissionApi @Autowired constructor(
         projectCode: String,
         resourceType: AuthResourceType,
         resourceCode: String,
-        verifyResult: Boolean? = true
+        verifyResult: Boolean
     ) {
         // 若是创建动作，需要挂载在项目资源类型下
         val (verifyRecordResourceType, verifyRecordResourceCode) =
@@ -170,7 +170,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
                     resourceCode = verifyRecordResourceCode,
                     action = TActionUtils.buildAction(permission, resourceType),
-                    verifyResult = verifyResult!!
+                    verifyResult = verifyResult
                 )
             )
         } catch (e: Exception) {
