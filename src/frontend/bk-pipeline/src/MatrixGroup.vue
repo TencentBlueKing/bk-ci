@@ -114,17 +114,19 @@
             },
             computedJobs () {
                 return this.matrix.groupContainers.map(container => {
-                    container.elements = container.elements.map((element, index) => {
-                        const eleItem = this.matrix.elements[index] || {}
-                        return Object.assign(element, {
-                            ...eleItem,
-                            ...element,
-                            '@type': eleItem['@type'],
-                            classType: eleItem.classType,
-                            atomCode: eleItem.atomCode
+                    return {
+                        ...container,
+                        elements: container.elements.map((element, index) => {
+                            const eleItem = this.matrix.elements[index] || {}
+                            return Object.assign(element, {
+                                ...eleItem,
+                                ...element,
+                                '@type': eleItem['@type'],
+                                classType: eleItem.classType,
+                                atomCode: eleItem.atomCode
+                            })
                         })
-                    })
-                    return container
+                    }
                 })
             },
             hasMatrixJob () {

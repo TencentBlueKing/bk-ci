@@ -663,24 +663,28 @@
                 try {
                     const { stageId, containerId, taskId, matrixFlag } = row
                     const stage = this.curPipeline.stages.find((stage) => stage.id === stageId)
-                    const numContainerId = parseInt(containerId, 10)
-                    const matrixId = Math.floor(numContainerId / 1000)
                     let container
                     if (matrixFlag) {
+                        const numContainerId = parseInt(containerId, 10)
+                        const matrixId = Math.floor(numContainerId / 1000)
                         container = stage.containers
                             .filter((item) => Array.isArray(item.groupContainers))
                             .map((item) => item.groupContainers)
                             .flat()
                             .find((item) => item.id === containerId)
-                        console.log(container)
+                        await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
                     } else {
                         container = stage.containers.find((item) => item.id === containerId)
                     }
-                    await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
-                    const element = container.elements.find((element) => element.id === taskId)
-                    this.$set(element, 'locateActive', isLocate)
 
-                    console.log(element, taskId, this.$store.state.atom.execDetail.model.stages[1])
+                    const element = container.elements.find((element) => element.id === taskId)
+                    if (element) {
+                        this.$set(element, 'locateActive', isLocate)
+                    } else {
+                        this.$set(container, 'locateActive', isLocate)
+                    }
+
+                    console.log(container, element, taskId)
                 } catch (e) {
                     console.log(e)
                 }

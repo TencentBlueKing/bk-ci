@@ -348,17 +348,15 @@ export default {
                             const subElements = groupContainer.elements.filter(
                                 (element, index) => !isSkip(element.status ?? elements[index]?.status)
                             )
-                            return {
-                                ...groupContainer,
+                            return Object.assign(groupContainer, {
                                 elements: subElements
-                            }
+                            })
                         })
                     }
                 }
-                return {
-                    ...container,
+                return Object.assign(container, {
                     elements
-                }
+                })
             })
             return {
                 ...stage,

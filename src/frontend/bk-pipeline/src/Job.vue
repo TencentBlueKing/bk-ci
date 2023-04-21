@@ -3,6 +3,7 @@
         :class="{
             'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
         }"
+        :id="container.containerId"
     >
         <h3 :class="jobTitleCls" @click.stop="showContainerPanel">
             <status-icon
@@ -62,8 +63,15 @@
                 class="debug-btn"
                 theme="warning"
                 @click.stop="debugDocker"
-            >{{ t("editPage.docker.debugConsole") }}</bk-button
             >
+                {{ t("editPage.docker.debugConsole") }}
+            </bk-button>
+            <Logo
+                v-if="container.locateActive"
+                name="location-right"
+                class="container-locate-icon"
+                size="18"
+            />
         </h3>
         <atom-list
             v-if="showAtomList || !showMatrixFold"
@@ -248,6 +256,16 @@
                         item.canElementSkip = newVal
                     })
                 this.handleChange(this.container, { elements })
+            },
+            'container.locateActive' (val) {
+                if (val) {
+                    const ele = document.getElementById(this.container.id)
+                    ele?.scrollIntoView?.({
+                        block: 'center',
+                        inline: 'center',
+                        behavior: 'smooth'
+                    })
+                }
             }
         },
         methods: {
@@ -393,6 +411,13 @@
       position: absolute;
       height: 100%;
       right: 0;
+    }
+
+    .container-locate-icon {
+        position: absolute;
+        left: -30px;
+        top: 13px;
+        color: $primaryColor;
     }
 
     &:hover {
