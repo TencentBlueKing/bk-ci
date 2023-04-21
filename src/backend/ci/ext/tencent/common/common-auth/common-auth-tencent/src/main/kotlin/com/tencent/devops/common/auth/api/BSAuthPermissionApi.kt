@@ -178,27 +178,6 @@ class BSAuthPermissionApi @Autowired constructor(
         }
     }
 
-    fun bathCreateVerifyRecord(
-        permissionsResourcesMap: Map<AuthPermission, List<String>>,
-        user: String,
-        projectCode: String,
-        resourceType: AuthResourceType
-    ) {
-        executor.submit {
-            permissionsResourcesMap.forEach { (permission, resourceCodeList) ->
-                resourceCodeList.forEach { resourceCode ->
-                    createVerifyRecord(
-                        user = user,
-                        permission = permission,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                    )
-                }
-            }
-        }
-    }
-
     override fun getUserResourceByPermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -309,12 +288,21 @@ class BSAuthPermissionApi @Autowired constructor(
                     permissionsResourcesMap[bkAuthPermission] = resourceList
                 }
                 // 异步批量记录鉴权结果
-                bathCreateVerifyRecord(
-                    permissionsResourcesMap = permissionsResourcesMap,
-                    user = user,
-                    projectCode = projectCode,
-                    resourceType = resourceType
-                )
+                executor.submit {
+                    try {
+                        client.get(ServiceVerifyRecordResource::class).bathCreateOrUpdate(
+                            userId = user,
+                            projectCode = projectCode,
+                            resourceType = resourceType.value,
+                            permissionsResourcesMap = permissionsResourcesMap
+                        )
+                    } catch (e: Exception) {
+                        logger.warn(
+                            "batch create v0 verify record failed!|" +
+                                "$projectCode|$user|$resourceType|$permissionsResourcesMap"
+                        )
+                    }
+                }
                 return permissionsResourcesMap
             }
         } finally {

@@ -150,12 +150,14 @@ class TxPermissionServiceImpl @Autowired constructor(
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         val permissionResourcesMap = super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
-        bathCreateVerifyRecord(
-            permissionsResourcesMap = permissionResourcesMap,
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType
-        )
+        executor.submit {
+            authVerifyRecordService.bathCreateOrUpdateVerifyRecord(
+                permissionsResourcesMap = permissionResourcesMap,
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType
+            )
+        }
         return permissionResourcesMap
     }
 
@@ -174,30 +176,6 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = TActionUtils.getResourceTypeByStr(resourceTypeStr),
             authPermission = TActionUtils.getAuthPermissionByAction(action)
         )
-    }
-
-    private fun bathCreateVerifyRecord(
-        permissionsResourcesMap: Map<AuthPermission, List<String>>,
-        userId: String,
-        projectCode: String,
-        resourceType: String
-    ) {
-        executor.submit {
-            permissionsResourcesMap.forEach { (permission, resourceCodeList) ->
-                resourceCodeList.forEach { resourceCode ->
-                    authVerifyRecordService.createOrUpdateVerifyRecord(
-                        VerifyRecordDTO(
-                            userId = userId,
-                            projectId = projectCode,
-                            resourceType = resourceType,
-                            resourceCode = resourceCode,
-                            action = permission.value,
-                            verifyResult = true
-                        )
-                    )
-                }
-            }
-        }
     }
 
     companion object {
