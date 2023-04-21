@@ -71,7 +71,7 @@ class RedisHeartBeat @Autowired constructor(
         val hours = now.get(Calendar.HOUR_OF_DAY)
         val minutes = now.get(Calendar.MINUTE)
         whitelistPeriod.forEach {
-            val (start, end) = it.split(" ")
+            val (start, end) = it.split("-")
             val (startHour, startMin) = start.split(":")
             val (endHour, endMin) = end.split(":")
             if (hours * 60 + minutes in
