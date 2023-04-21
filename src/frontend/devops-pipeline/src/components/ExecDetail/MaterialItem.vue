@@ -76,7 +76,7 @@
                 if (!this.isWebhook) {
                     return [
                         'aliasName',
-                        'branchName',
+                        ...(this.material.scmType === 'CODE_SVN' ? [] : ['branchName']),
                         'newCommitId'
                     ]
                 }
@@ -120,6 +120,11 @@
                             'webhookAliasName',
                             'reviewId'
                         ]
+                    case 'SVN':
+                        return [
+                            'webhookAliasName',
+                            'webhookCommitId'
+                        ]
                     default:
                         return [
                             'webhookAliasName',
@@ -162,9 +167,8 @@
                 switch (field) {
                     case 'newCommitId':
                         return this.material?.url ?? ''
-                    case 'reviewId':
-                        // return `${webHookRepo}/reviews/${this.material[field]}` ?? ''
-                        return ''
+                    // case 'reviewId':
+                    //     return `${webHookRepo}/reviews/${this.material[field]}` ?? ''
                     case 'issueIid':
                         return `${webHookRepo}/issues/${this.material[field]}` ?? ''
                     case 'noteId':
@@ -173,8 +177,8 @@
                         return this.material?.mrUrl ?? `${webHookRepo}/merge_requests/${this.material[field]}` ?? ''
                     case 'tagName':
                         return `${webHookRepo}/-/tags/${this.material[field]}` ?? ''
-                    case 'webhookCommitId':
-                        return `${webHookRepo}/commit/${this.material[field]}` ?? ''
+                    // case 'webhookCommitId':
+                    //     return `${webHookRepo}/commit/${this.material[field]}` ?? ''
                     default:
                         return ''
                 }
