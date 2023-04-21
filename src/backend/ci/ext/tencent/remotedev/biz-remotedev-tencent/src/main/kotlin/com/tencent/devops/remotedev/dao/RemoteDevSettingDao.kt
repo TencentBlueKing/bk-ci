@@ -33,6 +33,7 @@ import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.pojo.RemoteDevUserSettings
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -53,7 +54,8 @@ class RemoteDevSettingDao {
                 BASIC_SETTING,
                 TAPD_ATTACHED,
                 ENVS_FOR_VARIABLE,
-                DOTFILE_REPO
+                DOTFILE_REPO,
+                USER_SETTING
             )
                 .values(
                     userId,
@@ -61,7 +63,9 @@ class RemoteDevSettingDao {
                     JsonUtil.toJson(setting.basicSetting, false),
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
-                    setting.dotfileRepo
+                    setting.dotfileRepo,
+                    setting.userSetting.let { JsonUtil.toJson(it, false) }
+
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -69,6 +73,7 @@ class RemoteDevSettingDao {
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(USER_SETTING, setting.userSetting.let { JsonUtil.toJson(it, false) })
                 .execute()
         }
     }
@@ -94,7 +99,10 @@ class RemoteDevSettingDao {
                     ) ?: emptyMap(),
                     envsForFile = emptyList(),
                     dotfileRepo = it.dotfileRepo,
-                    projectId = it.projectId ?: ""
+                    projectId = it.projectId ?: "",
+                    userSetting = JsonUtil.toOrNull(
+                        it.userSetting, RemoteDevUserSettings::class.java
+                    ) ?: RemoteDevUserSettings()
                 )
             } ?: run {
                 createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
@@ -123,7 +131,8 @@ class RemoteDevSettingDao {
                     userId = it.userId,
                     wsMaxRunningCount = it.workspaceMaxRunningCount,
                     wsMaxHavingCount = it.workspaceMaxHavingCount,
-                    grayFlag = ByteUtils.byte2Bool(it.inGray)
+                    grayFlag = ByteUtils.byte2Bool(it.inGray),
+                    onlyCloudIDE = JsonUtil.toOrNull(it.userSetting, RemoteDevUserSettings::class.java)?.onlyCloudIDE
                 )
             }
         }
@@ -159,6 +168,7 @@ class RemoteDevSettingDao {
         opSetting: OPUserSetting
     ) {
         val setting = RemoteDevSettings()
+        val userSetting = RemoteDevUserSettings()
         with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.insertInto(
                 this,
@@ -185,22 +195,37 @@ class RemoteDevSettingDao {
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .let {
-                    if (opSetting.wsMaxRunningCount != null) it.set(
-                        WORKSPACE_MAX_RUNNING_COUNT,
-                        opSetting.wsMaxRunningCount
-                    ) else it
+                    if (opSetting.wsMaxRunningCount != null) {
+                        userSetting.maxRunningCount = opSetting.wsMaxRunningCount!!
+                        it.set(
+                            WORKSPACE_MAX_RUNNING_COUNT,
+                            opSetting.wsMaxRunningCount
+                        )
+                    } else it
                 }
                 .let {
-                    if (opSetting.wsMaxHavingCount != null) it.set(
-                        WORKSPACE_MAX_HAVING_COUNT,
-                        opSetting.wsMaxHavingCount
-                    ) else it
+                    if (opSetting.wsMaxHavingCount != null) {
+                        userSetting.maxHavingCount = opSetting.wsMaxHavingCount!!
+                        it.set(
+                            WORKSPACE_MAX_HAVING_COUNT,
+                            opSetting.wsMaxHavingCount
+                        )
+                    } else it
                 }
                 .let {
                     if (opSetting.grayFlag != null) it.set(
                         IN_GRAY,
                         ByteUtils.bool2Byte(opSetting.grayFlag!!)
                     ) else it
+                }
+                .let {
+                    if (opSetting.onlyCloudIDE != null) {
+                        userSetting.onlyCloudIDE = opSetting.onlyCloudIDE!!
+                        it.set(
+                            USER_SETTING,
+                            JsonUtil.toJson(userSetting, false)
+                        )
+                    } else it
                 }
                 .execute()
         }
