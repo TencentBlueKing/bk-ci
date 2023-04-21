@@ -53,6 +53,9 @@ module.exports = (env, argv) => {
             minify: {
                 removeComments: false
             },
+            templateParameters: {
+                PUBLIC_PATH_PREFIX: isProd ? '__BK_CI_PUBLIC_PATH__' : ''
+            },
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
         new webpack.DllReferencePlugin({
