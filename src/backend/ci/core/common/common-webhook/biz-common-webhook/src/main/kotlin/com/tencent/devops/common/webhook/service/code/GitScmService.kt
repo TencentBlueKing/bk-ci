@@ -186,37 +186,41 @@ class GitScmService @Autowired constructor(
     ): Set<String> {
         val type = getType(repo) ?: return emptySet()
         val changeSet = mutableSetOf<String>()
-        val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-        val token = getToken(
-            projectId = projectId,
-            credentialId = repo.credentialId,
-            userName = repo.userName,
-            authType = tokenType
-        )
-        for (i in 1..10) {
-            // 反向进行三点比较可以比较出rebase的真实提交
-            val result = client.get(ServiceGitResource::class).getChangeFileList(
-                token = token,
-                tokenType = tokenType,
-                gitProjectId = repo.projectName,
-                from = from,
-                to = to,
-                straight = false,
-                page = i,
-                pageSize = 100
-            ).data ?: emptyList()
-            changeSet.addAll(
-                result.map {
-                    if (it.deletedFile) {
-                        it.oldPath
-                    } else {
-                        it.newPath
-                    }
-                }
+        try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
             )
-            if (result.size < 100) {
-                break
+            for (i in 1..10) {
+                // 反向进行三点比较可以比较出rebase的真实提交
+                val result = client.get(ServiceGitResource::class).getChangeFileList(
+                    token = token,
+                    tokenType = tokenType,
+                    gitProjectId = repo.projectName,
+                    from = from,
+                    to = to,
+                    straight = false,
+                    page = i,
+                    pageSize = 100
+                ).data ?: emptyList()
+                changeSet.addAll(
+                    result.map {
+                        if (it.deletedFile) {
+                            it.oldPath
+                        } else {
+                            it.newPath
+                        }
+                    }
+                )
+                if (result.size < 100) {
+                    break
+                }
             }
+        } catch (ignore: Exception) {
+            logger.warn("fail to get change file list", ignore)
         }
         return changeSet
     }

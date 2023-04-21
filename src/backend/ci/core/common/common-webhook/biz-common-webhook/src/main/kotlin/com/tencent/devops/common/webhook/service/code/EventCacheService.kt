@@ -74,17 +74,12 @@ class EventCacheService @Autowired constructor(
     fun getChangeFileList(projectId: String, repo: Repository, from: String, to: String): Set<String> {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.gitCompareChangeFiles ?: run {
-            val compareChangFile = try {
-                gitScmService.getChangeFileList(
-                    projectId = projectId,
-                    repo = repo,
-                    from = from,
-                    to = to
-                )
-            } catch (e: Exception) {
-                logger.warn("fail to get change file list", e)
-                setOf()
-            }
+            val compareChangFile = gitScmService.getChangeFileList(
+                projectId = projectId,
+                repo = repo,
+                from = from,
+                to = to
+            )
             eventCache?.gitCompareChangeFiles = compareChangFile
             compareChangFile
         }

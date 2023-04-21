@@ -174,15 +174,17 @@ class TGitPushTriggerHandler(
                             to = event.before
                         )
                     } else {
-                        try {
+                        val changeFileList = mutableSetOf<String>()
+                        changeFileList.addAll(
                             gitScmService.getChangeFileList(
                                 projectId = projectId,
                                 repo = repository,
                                 from = event.before,
                                 to = event.after
                             )
-                        } catch (e: Exception) {
-                            // 兜底方案，若关联代码的权限失效，则使用webhook信息进行触发
+                        )
+                        if(changeFileList.isEmpty()){
+                            // 兜底方案，若关联代码的权限失效，则集合为空，使用webhook信息进行触发
                             logger.warn(
                                 "Failed to get the change file list," +
                                     "use webhook information to trigger," +
@@ -192,14 +194,14 @@ class TGitPushTriggerHandler(
                                     "form[${event.before}]," +
                                     "to[${event.after}]"
                             )
-                            val changeFiles = mutableSetOf<String>()
                             commits?.forEach { commit ->
-                                changeFiles.addAll(commit.added ?: listOf())
-                                changeFiles.addAll(commit.removed ?: listOf())
-                                changeFiles.addAll(commit.modified ?: listOf())
+                                changeFileList.addAll(commit.added ?: listOf())
+                                changeFileList.addAll(commit.removed ?: listOf())
+                                changeFileList.addAll(commit.modified ?: listOf())
                             }
-                            changeFiles
+
                         }
+                        changeFileList
                     }
                     pushChangeFiles = eventPaths
                     return PathFilterFactory.newPathFilter(
