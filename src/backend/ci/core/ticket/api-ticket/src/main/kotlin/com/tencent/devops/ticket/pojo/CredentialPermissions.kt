@@ -37,5 +37,7 @@ data class CredentialPermissions(
     @ApiModelProperty("查看权限", required = true)
     val view: Boolean,
     @ApiModelProperty("编辑权限", required = true)
-    val edit: Boolean
+    val edit: Boolean,
+    @ApiModelProperty("使用权限", required = true)
+    val use: Boolean? = null
 )

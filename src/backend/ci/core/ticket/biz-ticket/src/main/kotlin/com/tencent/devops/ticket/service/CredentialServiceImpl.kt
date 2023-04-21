@@ -261,7 +261,8 @@ class CredentialServiceImpl @Autowired constructor(
                 AuthPermission.LIST,
                 AuthPermission.DELETE,
                 AuthPermission.VIEW,
-                AuthPermission.EDIT
+                AuthPermission.EDIT,
+                AuthPermission.USE
             )
         )
         if (permissionToListMap.isNullOrEmpty()) {
@@ -271,6 +272,7 @@ class CredentialServiceImpl @Autowired constructor(
         val hasDeletePermissionCredentialIdList = permissionToListMap[AuthPermission.DELETE]!!
         val hasViewPermissionCredentialIdList = permissionToListMap[AuthPermission.VIEW]!!
         val hasEditPermissionCredentialIdList = permissionToListMap[AuthPermission.EDIT]!!
+        val hasUsePermissionCredentialIdList = permissionToListMap[AuthPermission.USE]!!
 
         val count = credentialDao.countByProject(
             dslContext,
@@ -291,6 +293,7 @@ class CredentialServiceImpl @Autowired constructor(
             val hasDeletePermission = hasDeletePermissionCredentialIdList.contains(it.credentialId)
             val hasViewPermission = hasViewPermissionCredentialIdList.contains(it.credentialId)
             val hasEditPermission = hasEditPermissionCredentialIdList.contains(it.credentialId)
+            val hasUsePermission = hasUsePermissionCredentialIdList.contains(it.credentialId)
             CredentialWithPermission(
                 credentialId = it.credentialId,
                 credentialName = it.credentialName ?: it.credentialId,
@@ -302,9 +305,10 @@ class CredentialServiceImpl @Autowired constructor(
                 v3 = credentialHelper.credentialMixer,
                 v4 = credentialHelper.credentialMixer,
                 permissions = CredentialPermissions(
-                    hasDeletePermission,
-                    hasViewPermission,
-                    hasEditPermission
+                    delete = hasDeletePermission,
+                    view = hasViewPermission,
+                    edit = hasEditPermission,
+                    use = hasUsePermission
                 ),
                 updateUser = it.updateUser,
                 allowAcrossProject = it.allowAcrossProject
