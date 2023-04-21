@@ -487,6 +487,7 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                width: calc(100% - 143px);
                 .atom-name {
                     display: flex;
                     align-items: center;
@@ -515,11 +516,12 @@
                 }
             }
             .atom-operate {
-                width: 60px;
+                width: 88px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
                 position: relative;
+
                 button.select-atom-btn[disabled] {
                     cursor: not-allowed !important;
                     background-color: #fff;

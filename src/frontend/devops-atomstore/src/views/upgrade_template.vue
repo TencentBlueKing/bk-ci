@@ -73,6 +73,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="templateDetail.description"
                                 >
@@ -122,7 +123,7 @@
                 isOverflow: false,
                 isDropdownShow: false,
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
+                docsLink: this.BKCI_DOCS.TEMPLATE_GUIDE_DOC,
                 progressStatus: [{
                     name: this.$t('store.开始'),
                     step: 1,
@@ -167,6 +168,9 @@
                     { name: this.templateDetail.templateName, to: { name: 'setting', params: { code: this.templateDetail.templateCode, type: 'template' } } },
                     { name: this.$t('store.上架模板') }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         created () {

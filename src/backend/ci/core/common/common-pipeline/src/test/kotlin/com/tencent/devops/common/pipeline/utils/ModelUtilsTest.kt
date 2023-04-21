@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.utils
 
+import com.tencent.devops.common.api.util.JsonUtil.toJson
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
 import com.tencent.devops.common.pipeline.container.Container
@@ -360,5 +361,79 @@ class ModelUtilsTest {
             pauseBeforeExec = false,
             subscriptionPauseUser = ""
         )
+    }
+
+    @Test
+    fun generateBuildModelDetail() {
+        // 结构相同的map对象合并
+        var baseModelMap = mutableMapOf<String, Any>(
+            "name" to "123",
+            "desc" to "456"
+        )
+        var modelFieldRecordMap = mapOf<String, Any>(
+            "name" to "哈哈",
+            "desc" to "测试"
+        )
+        var mergeModelMap = ModelUtils.generateBuildModelDetail(baseModelMap, modelFieldRecordMap)
+        assertEquals("{\"name\":\"哈哈\",\"desc\":\"测试\"}", toJson(mergeModelMap, false))
+        // 结构不相同的map对象合并
+        baseModelMap = mutableMapOf(
+            "name" to "123",
+            "desc" to "456",
+            "note" to "789"
+        )
+        modelFieldRecordMap = mapOf(
+            "name" to "哈哈",
+            "desc" to "测试"
+        )
+        mergeModelMap = ModelUtils.generateBuildModelDetail(baseModelMap, modelFieldRecordMap)
+        assertEquals("{\"name\":\"哈哈\",\"desc\":\"测试\",\"note\":\"789\"}", toJson(mergeModelMap, false))
+        baseModelMap = mutableMapOf(
+            "name" to "123",
+            "desc" to "456"
+        )
+        modelFieldRecordMap = mapOf(
+            "name" to "哈哈",
+            "desc" to "测试",
+            "note" to "789"
+        )
+        mergeModelMap = ModelUtils.generateBuildModelDetail(baseModelMap, modelFieldRecordMap)
+        assertEquals("{\"name\":\"哈哈\",\"desc\":\"测试\",\"note\":\"789\"}", toJson(mergeModelMap, false))
+        // 包含map对象和list对象的map集合合并
+        baseModelMap = mutableMapOf(
+            "name" to "123",
+            "desc" to "456",
+            "stages" to mutableListOf(
+                mutableMapOf(
+                    "id" to "stage-11",
+                    "name" to "stage-name-11",
+                    "status" to "BUILDING",
+                    "dataList" to mutableListOf(
+                        mutableListOf(1, 2),
+                        mutableListOf(4, 5, 6)
+                    )
+                )
+            )
+        )
+        modelFieldRecordMap = mutableMapOf(
+            "name" to "哈哈",
+            "desc" to "测试",
+            "stages" to listOf(
+                mapOf(
+                    "id" to "stage-1111",
+                    "name" to "stage-name-1111",
+                    "status" to "TEST",
+                    "dataList" to listOf<List<Any>>(
+                        listOf(8, 2, 5),
+                        listOf(),
+                        listOf(7, 8, 9)
+                    )
+                )
+            )
+        )
+        mergeModelMap = ModelUtils.generateBuildModelDetail(baseModelMap, modelFieldRecordMap)
+        assertEquals("{\"name\":\"哈哈\",\"desc\":\"测试\",\"stages\":[{\"id\":\"stage-1111\"," +
+            "\"name\":\"stage-name-1111\",\"status\":\"TEST\",\"dataList\":[[8,2,5],[4,5,6],[7,8,9]]}]}",
+            toJson(mergeModelMap, false))
     }
 }

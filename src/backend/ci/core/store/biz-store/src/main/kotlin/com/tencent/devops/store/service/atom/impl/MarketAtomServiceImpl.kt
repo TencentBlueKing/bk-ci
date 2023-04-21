@@ -119,6 +119,8 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
+import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -176,6 +178,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
 
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
@@ -291,6 +299,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -305,6 +315,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
+                val atomHonorInfos = atomHonorInfoMap[atomCode]
+                val atomIndexInfos = atomIndexInfosMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
@@ -351,7 +363,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                        indexInfos = atomIndexInfos,
+                        honorInfos = atomHonorInfos,
+                        hotFlag = statistic?.hotFlag
                     )
                 )
             }
@@ -639,13 +654,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         projectCode: String,
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean> {
-        val atomCode = storeErrorCodeInfo.storeCode
+        val atomCode = storeErrorCodeInfo.storeCode ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            params = arrayOf("atomCode")
+        )
         val errorCodeInfoList = storeErrorCodeInfo.errorCodeInfos
         val isStoreMember = storeMemberDao.isStoreMember(
             dslContext = dslContext,
             userId = userId,
             storeCode = atomCode,
-            storeType = storeErrorCodeInfo.storeType.type.toByte()
+            storeType = storeErrorCodeInfo.storeType!!.type.toByte()
         )
         if (!isStoreMember) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -688,15 +706,17 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeErrorCodeInfo = storeErrorCodeInfo
         )
         val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-            dslContext, storeErrorCodeInfo.storeCode, storeErrorCodeInfo.storeType
+            dslContext = dslContext,
+            storeCode = storeErrorCodeInfo.storeCode,
+            storeType = storeErrorCodeInfo.storeType
         ).toMutableList()
         val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
         errorCodeInfos.removeAll(newErrorCodeInfos)
         if (errorCodeInfos.isNotEmpty()) {
             storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
                 dslContext = dslContext,
-                storeCode = storeErrorCodeInfo.storeCode,
-                storeType = storeErrorCodeInfo.storeType,
+                storeCode = storeErrorCodeInfo.storeCode!!,
+                storeType = storeErrorCodeInfo.storeType!!,
                 errorCodes = errorCodeInfos.map { it.errorCode }
             )
         }
@@ -807,8 +827,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     // 开启插件yml显示
                     yamlFlag = true,
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }

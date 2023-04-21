@@ -56,6 +56,7 @@ class P4WebhookElementParams : ScmWebhookElementParams<CodeP4WebHookTriggerEleme
             params.includePaths = EnvUtils.parseEnv(includePaths ?: "", variables)
             params.excludePaths = EnvUtils.parseEnv(excludePaths ?: "", variables)
             params.codeType = CodeType.P4
+            params.version = element.version
             return params
         }
     }

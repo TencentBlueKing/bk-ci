@@ -57,6 +57,7 @@ import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
@@ -139,6 +140,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
 
     fun getAgentDetail(userId: String, projectId: String, nodeHashId: String): ThirdPartyAgentDetail? {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
+        if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.VIEW)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_VIEW_PERMISSSION)
+            )
+        }
         val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId = nodeId, projectId = projectId)
             ?: return null
 
@@ -254,7 +260,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun setParallelTaskCount(userId: String, projectId: String, nodeHashId: String, parallelTaskCount: Int) {
+    fun setParallelTaskCount(
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        parallelTaskCount: Int?,
+        dockerParallelTaskCount: Int?
+    ) {
         val nodeId = HashUtil.decodeIdToLong(nodeHashId)
         checkEditPermmission(userId, projectId, nodeId)
 
@@ -265,7 +277,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
                     params = arrayOf(nodeHashId)
                 )
-            agentRecord.parallelTaskCount = parallelTaskCount
+            agentRecord.parallelTaskCount = parallelTaskCount ?: agentRecord.parallelTaskCount
+            agentRecord.dockerParallelTaskCount = dockerParallelTaskCount ?: agentRecord.dockerParallelTaskCount
             thirdPartyAgentDao.saveAgent(context, agentRecord)
         }
     }
@@ -785,7 +798,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                        "mainProjectId: $sharedProjectId"
+                    "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -1007,8 +1020,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                    AgentStatus.isUnImport(status) ||
-                    agentRecord.startRemoteIp.isNullOrBlank())
+                AgentStatus.isUnImport(status) ||
+                agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1040,7 +1053,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp

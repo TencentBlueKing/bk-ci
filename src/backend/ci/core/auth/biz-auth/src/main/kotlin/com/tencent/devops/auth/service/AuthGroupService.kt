@@ -165,6 +165,13 @@ class AuthGroupService @Autowired constructor(
         }
     }
 
+    fun getGroupByRelationIds(relationIds: List<Int>): List<TAuthGroupInfoRecord> {
+        return groupDao.getGroupByRelationIds(
+            dslContext = dslContext,
+            relationIds = relationIds
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(AuthGroupService::class.java)
     }

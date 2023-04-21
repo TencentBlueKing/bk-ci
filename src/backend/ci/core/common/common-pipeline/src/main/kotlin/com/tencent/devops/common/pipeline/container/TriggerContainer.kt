@@ -30,6 +30,7 @@ package com.tencent.devops.common.pipeline.container
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -44,10 +45,13 @@ data class TriggerContainer(
     @ApiModelProperty("状态", required = true, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false)
+    @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
     @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
     @ApiModelProperty("参数化构建", required = false)
     var params: List<BuildFormProperty> = listOf(),
@@ -68,13 +72,15 @@ data class TriggerContainer(
     @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
+    override var executeCount: Int? = null,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var matrixGroupFlag: Boolean? = false
+    override var matrixGroupFlag: Boolean? = false,
+    @ApiModelProperty("各项耗时", required = true)
+    override var timeCost: BuildRecordTimeCost? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

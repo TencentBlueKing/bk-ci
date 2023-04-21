@@ -62,6 +62,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -86,6 +87,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -205,8 +207,9 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         // 这个任务是在构建子流程启动的，所以必须使用根流程进程ID
         // 注意区分buildId和vmSeqId，BuildId是一次构建整体的ID，
         // vmSeqId是该构建环境下的ID,旧流水引擎数据无法转换为String，仍然是序号的方式
-        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
-
+        containerBuildRecordService.containerPreparing(
+            projectId, pipelineId, buildId, vmSeqId, task.executeCount ?: 1
+        )
         dispatch(task, pipelineInfo!!, param, vmNames, container!!)
         logger.info("[$buildId]|STARTUP_VM|VM=${param.baseOS}-$vmNames($vmSeqId)|Dispatch startup")
         return AtomResponse(BuildStatus.CALL_WAITING)
@@ -290,7 +293,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,
-                    os = param.baseOS.name.toLowerCase()
+                    os = param.baseOS.name.lowercase()
                 ).data
                 if (res == null) {
                     buildLogPrinter.addRedLine(
@@ -404,7 +407,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 param.dispatchType is ThirdPartyAgentIDDispatchType
             ) {
-                thirdPartyAgentMnitorPrint(task)
+                thirdPartyAgentMonitorPrint(task)
             }
 
             AtomResponse(
@@ -416,7 +419,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun thirdPartyAgentMnitorPrint(task: PipelineBuildTask) {
+    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
         val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
         val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20

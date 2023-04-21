@@ -36,6 +36,7 @@ spring:
     port: __BK_CI_REDIS_PORT__
     password: __BK_CI_REDIS_PASSWORD__
     database: __BK_CI_REDIS_DB__
+    ssl: __BK_CI_REDIS_SSL__
     pool:
       max-active: 16
       max-wait:  2000
@@ -225,6 +226,8 @@ devopsGateway:
   devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
   oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
   ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileDevnetGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  fileIdcGateway: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
   
 # certificate server 配置
 certificate:
@@ -254,6 +257,11 @@ auth:
   # 用户组权限申请前端跳转页面HOST
   webHost: __BK_CI_IAM_WEB_URL__
   token: __BK_CI_APP_TOKEN__
+  # iam api网关地址
+  apigwUrl: __BK_CI_IAM_APIGW_URL__
+  # iam 系统ID
+  iamSystem: __BK_CI_IAM_SYSTEM_ID__
+  migrateToken: __BK_CI_IAM_MIGRATE_TOKEN__
   #  openapi服务需要配置accessToken鉴权时将enabled设为true，secret设为任意字符串string，expirationTime过期时间（毫秒）
   accessToken:
     enabled: __BK_CI_API_TOKEN_ENABLED__
@@ -269,7 +277,9 @@ esb:
 
 # codecc config
 codecc:
-  host: __BK_CODECC_PRIVATE_URL__  # 
+  host: __BK_CODECC_PRIVATE_URL__  #
+  gray:
+    projectId: __BK_CODECC_PRIVATE_PROJECT_ID__
 
 codeccGateway:
   gateway: __BK_CODECC_PRIVATE_URL__

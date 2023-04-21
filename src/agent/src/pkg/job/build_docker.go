@@ -14,6 +14,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
@@ -22,6 +23,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 )
@@ -114,14 +116,19 @@ const longLogTag = "toolong"
 
 // doDockerJob 使用docker启动构建
 func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
-	// 各种情况退出时减运行任务数量
 	defer func() {
+		// 各种情况退出时减运行任务数量
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
 	}()
 
 	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
+	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
+		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
+		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker凭据错误|"+dockerBuildInfo.Credential.ErrMsg, api.DockerCredGetErrorEnum))
+		return
+	}
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -130,7 +137,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	imageName := dockerBuildInfo.Image
+	imageName := strings.TrimSpace(dockerBuildInfo.Image)
 
 	// 判断本地是否已经有镜像了
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
@@ -149,8 +156,22 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	}
 
-	// 本地没有镜像的需要拉取新的镜像
-	if !localExist {
+	imageStrSub := strings.Split(imageStr, ":")
+	isLatest := false
+	// mirrors.tencent.com/ruotiantang/image-test:latest
+	// 长度为2说明第二个就是tag
+	if len(imageStrSub) == 2 && imageStrSub[1] == "latest" {
+		isLatest = true
+	} else if len(imageStr) == 1 {
+		// 等于1说明没填tag按照docker的规则默认会去拉取最新的为 latest
+		isLatest = true
+	}
+
+	// 本地没有镜像的获取版本号为最新的，需要拉取新的镜像
+	if !localExist || isLatest {
+		if isLatest {
+			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
+		}
 		postLog(false, "开始拉取镜像，镜像名称："+imageName, buildInfo, api.LogtypeLog)
 		postLog(false, "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。", buildInfo, api.LogtypeLog)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
@@ -185,6 +206,17 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
+	// 解析docker options
+	var dockerConfig *job_docker.ContainerConfig = nil
+	if dockerBuildInfo.Options != nil {
+		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+		if err != nil {
+			logs.Error("DOCKER_JOB|" + err.Error())
+			dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
+			return
+		}
+	}
+
 	// 创建容器
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
@@ -194,27 +226,41 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
 	}
-	var resources container.Resources
-	if dockerBuildInfo.DockerResource != nil {
-		resources = container.Resources{
-			Memory:    dockerBuildInfo.DockerResource.MemoryLimitBytes,
-			CPUQuota:  dockerBuildInfo.DockerResource.CpuQuota,
-			CPUPeriod: dockerBuildInfo.DockerResource.CpuPeriod,
+
+	var confg *container.Config
+	var hostConfig *container.HostConfig
+	var netConfig *network.NetworkingConfig
+	if dockerConfig != nil {
+		confg = dockerConfig.Config
+		confg.Image = imageStr
+		confg.Cmd = []string{}
+		confg.Entrypoint = []string{"/bin/sh", "-c", entryPointCmd}
+		confg.Env = parseContainerEnv(dockerBuildInfo)
+
+		hostConfig = dockerConfig.HostConfig
+		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
+		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
+		hostConfig.NetworkMode = container.NetworkMode("bridge")
+
+		netConfig = dockerConfig.NetworkingConfig
+	} else {
+		confg = &container.Config{
+			Image:      imageStr,
+			Cmd:        []string{},
+			Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
+			Env:        parseContainerEnv(dockerBuildInfo),
 		}
-	}
-	hostConfig := &container.HostConfig{
-		CapAdd:      []string{"SYS_PTRACE"},
-		Mounts:      mounts,
-		NetworkMode: container.NetworkMode("bridge"),
-		Resources:   resources,
+
+		hostConfig = &container.HostConfig{
+			CapAdd:      []string{"SYS_PTRACE"},
+			Mounts:      mounts,
+			NetworkMode: container.NetworkMode("bridge"),
+		}
+
+		netConfig = nil
 	}
 
-	creatResp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:      imageStr,
-		Cmd:        []string{},
-		Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
-		Env:        parseContainerEnv(dockerBuildInfo),
-	}, hostConfig, nil, nil, containerName)
+	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
 		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("创建容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerCreateErrorEnum))

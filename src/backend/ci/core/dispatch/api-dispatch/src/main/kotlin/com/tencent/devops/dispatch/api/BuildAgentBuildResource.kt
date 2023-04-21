@@ -68,7 +68,10 @@ interface BuildAgentBuildResource {
         agentId: String,
         @ApiParam("秘钥", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY)
-        secretKey: String
+        secretKey: String,
+        @ApiParam("尝试启动构建的类型", required = false)
+        @QueryParam("buildType")
+        buildType: String?
     ): AgentResult<ThirdPartyBuildInfo?>
 
     @ApiOperation("是否更新")

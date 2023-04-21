@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.dao.slave
 
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.model.environment.tables.TEnvironmentSlaveGateway
 import com.tencent.devops.model.environment.tables.records.TEnvironmentSlaveGatewayRecord
 import org.jooq.DSLContext
@@ -58,6 +59,32 @@ class SlaveGatewayDao {
                 }
                 transactionContext.batch(updates).execute()
             }
+        }
+    }
+
+    fun add(dslContext: DSLContext, gateWay: SlaveGateway): Boolean {
+        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
+            return dslContext.insertInto(this, NAME, SHOW_NAME, GATEWAY, FILE_GATEWAY, VISIBILITY)
+                .values(gateWay.zoneName, gateWay.showName, gateWay.gateway, gateWay.fileGateway, gateWay.visibility)
+                .execute() > 0
+        }
+    }
+
+    fun update(dslContext: DSLContext, gateWay: SlaveGateway): Boolean {
+        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
+            return dslContext.update(this)
+                .set(SHOW_NAME, gateWay.showName)
+                .set(GATEWAY, gateWay.gateway)
+                .set(FILE_GATEWAY, gateWay.fileGateway)
+                .set(VISIBILITY, gateWay.visibility)
+                .where(NAME.eq(gateWay.zoneName))
+                .execute() > 0
+        }
+    }
+
+    fun delete(dslContext: DSLContext, name: String): Boolean {
+        with(TEnvironmentSlaveGateway.T_ENVIRONMENT_SLAVE_GATEWAY) {
+            return dslContext.delete(this).where(NAME.eq(name)).execute() > 0
         }
     }
 }

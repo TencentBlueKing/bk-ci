@@ -55,7 +55,9 @@
                     <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
                     <div class="bk-form-content atom-item-content">
                         <bk-radio-group v-model="atomForm.jobType" class="radio-group">
-                            <bk-radio :value="entry.value" v-for="(entry, key) in jobTypeList" :key="key" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                            <span v-for="(entry, key) in jobTypeList" :key="key">
+                                <bk-radio v-show="entry.isShow" :value="entry.value" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                            </span>
                         </bk-radio-group>
                         <div v-if="formErrors.jobError" class="error-tips"> {{ $t('store.字段有误，请重新选择') }} </div>
                     </div>
@@ -92,11 +94,11 @@
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
                                 required: true,
-                                max: 70
+                                max: 256
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
@@ -119,6 +121,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             @imgAdd="addImage('mdHook', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -227,6 +230,7 @@
                             accept="application/zip"
                             @uploadSuccess="uploadPackageSuccess"
                             @uploadFail="uploadPackageErr"
+                            :key="atomForm.releaseType"
                         ></bk-file-upload>
                         <div v-if="formErrors.releasePackageError" class="error-tips"> {{ $t('store.发布包不能为空') }} </div>
                     </div>
@@ -234,7 +238,8 @@
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('store.版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <mavon-editor :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
+                        <mavon-editor
+                            :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
                             ref="versionMd"
                             v-model="atomForm.versionContent"
                             :toolbars="toolbarOptions"
@@ -243,6 +248,7 @@
                             preview-background="#fff"
                             name="versionContent"
                             v-validate="{ required: true }"
+                            :language="mavenLang"
                             @imgAdd="addImage('versionMd', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -266,7 +272,7 @@
     import bkFileUpload from '@/components/common/file-upload'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import api from '@/api'
-
+    
     export default {
         components: {
             selectLogo,
@@ -280,7 +286,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -289,8 +295,8 @@
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
                 jobTypeList: [
-                    { label: this.$t('store.编译环境'), value: 'AGENT' },
-                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS' }
+                    { label: this.$t('store.编译环境'), value: 'AGENT', isShow: true },
+                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS', isShow: true }
                 ],
                 envList: [
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
@@ -362,7 +368,8 @@
                     releaseTypeError: false
                 },
                 versionMap: {},
-                publishersList: []
+                publishersList: [],
+                containerList: []
             }
         },
         computed: {
@@ -387,6 +394,9 @@
             },
             userName () {
                 return this.$store.state.user.username
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         watch: {
@@ -415,12 +425,19 @@
             }
         },
         async created () {
+            await this.fetchContainerList()
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
             await this.fetchPublishersList(this.atomForm.atomCode)
             this.requestAtomClassify()
         },
         methods: {
+            fetchContainerList () {
+                this.$store.dispatch('store/getContainerList').then(res => {
+                    this.containerList = res
+                    this.jobTypeList[1].isShow = !!this.containerList.find(i => i.type === 'normal')
+                })
+            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',

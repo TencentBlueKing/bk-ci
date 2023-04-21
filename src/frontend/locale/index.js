@@ -3,7 +3,7 @@ import Vue from 'vue'
 import { lang, locale } from 'bk-magic-vue'
 import axios from 'axios'
 import cookies from 'js-cookie'
-const DEFAULT_LOCALE = 'zh-CN'
+const DEFAULT_LOCALE = window.INIT_LOCALE ?? 'zh-CN'
 const LS_KEY = 'blueking_language'
 const loadedModule = {}
 const localeLabelMap = {
@@ -25,8 +25,22 @@ const localeAliasMap = {
     'us': 'en-US'
 }
 
-const domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
-const BK_CI_DOMAIN = domainMatch.length > 2 ? domainMatch[2] : location.hostname
+function getSubDoamin () {
+    try {
+        return location.hostname.split('.').reduce((acc, _, index, list) => {
+            const last = list.length - 1
+            const item = list[last - index]
+            if (index > 0) {
+                acc.push([item, acc[index - 1]].join('.'))
+            } else {
+                acc.push(item)
+            }
+            return acc
+        }, []).slice(1)
+    } catch (error) {
+        return []
+    }
+}
 
 function getLsLocale () {
     try {
@@ -40,12 +54,15 @@ function getLsLocale () {
 function setLsLocale (locale) {
     const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
-        cookies.remove(LS_KEY, { domain: BK_CI_DOMAIN, path: '/' })
-        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
+        const subDomains = getSubDoamin()
+        subDomains.forEach(domain => {
+            cookies.remove(LS_KEY, { domain, path: '/' })
+        })
+        cookies.set(LS_KEY, formateLocale, { domain: subDomains[0] ?? location.hostname, path: '/' })
     }
 }
 
-export default (r) => {
+export default (r, initSetLocale = false) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
     const initLocale = getLsLocale()
@@ -55,8 +72,9 @@ export default (r) => {
         fallbackLocale: initLocale,
         messages
     })
-
-    setLocale(initLocale)
+    if (initSetLocale) {
+        setLocale(initLocale)
+    }
 
     locale.i18n((key, value) => i18n.t(key, value))
 
@@ -65,7 +83,7 @@ export default (r) => {
         if (loadedModule[localeModuleId]) {
             return Promise.resolve()
         }
-        return axios.get(`/${module}/${locale}.json?t=${+new Date()}`, {
+        return axios.get(`${window.PUBLIC_URL_PREFIX}/${module}/${locale}.json?t=${+new Date()}`, {
             crossdomain: true
         }).then(response => {
             const messages = response.data

@@ -28,11 +28,32 @@
 package com.tencent.devops.auth.service.iam
 
 interface PermissionExtService {
+    @Suppress("LongParameterList")
     fun resourceCreateRelation(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         resourceName: String
+    ): Boolean
+
+    fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
+
+    fun resourceCancelRelation(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
     ): Boolean
 }

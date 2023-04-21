@@ -39,7 +39,11 @@ interface PipelinePermissionService {
      * @param permission 权限
      * @return 有权限返回true
      */
-    fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean
+    fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean
 
     /**
      * 校验pipeline是否有指定权限
@@ -81,6 +85,13 @@ interface PipelinePermissionService {
         permission: AuthPermission
     ): List<String>
 
+    fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
+    ): Map<AuthPermission, List<String>>
+
     /**
      * 注册流水线到权限中心与权限关联
      * @param userId userId
@@ -88,7 +99,12 @@ interface PipelinePermissionService {
      * @param pipelineId pipelineId
      * @param pipelineName pipelineName
      */
-    fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String)
+    fun createResource(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String
+    )
 
     /**
      * 修改流水线在权限中心中的资源属性
@@ -96,14 +112,21 @@ interface PipelinePermissionService {
      * @param pipelineId pipelineId
      * @param pipelineName pipelineName
      */
-    fun modifyResource(projectId: String, pipelineId: String, pipelineName: String)
+    fun modifyResource(
+        projectId: String,
+        pipelineId: String,
+        pipelineName: String
+    )
 
     /**
      * 从权限中心删除流水线资源
      * @param projectId projectId
      * @param pipelineId pipelineId
      */
-    fun deleteResource(projectId: String, pipelineId: String)
+    fun deleteResource(
+        projectId: String,
+        pipelineId: String
+    )
 
     /**
      * 判断是否某个项目中某个组角色的成员
@@ -111,12 +134,19 @@ interface PipelinePermissionService {
      * @param projectId projectId
      * @param group 项目组角色
      */
-    fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean
+    fun isProjectUser(
+        userId: String,
+        projectId: String,
+        group: BkAuthGroup?
+    ): Boolean
 
     /**
      * 判断是否某个项目管理员
      * @param userId 用户id
      * @param projectId projectId
      */
-    fun checkProjectManager(userId: String, projectId: String): Boolean
+    fun checkProjectManager(
+        userId: String,
+        projectId: String
+    ): Boolean
 }

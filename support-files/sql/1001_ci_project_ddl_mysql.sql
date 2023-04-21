@@ -146,6 +146,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `relation_id` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
   `other_router_tags` varchar(128) DEFAULT NULL COMMENT '其他系统网关路由tags',
   `properties` text NULL COMMENT '项目其他配置',
+  `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
+  `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -311,5 +313,34 @@ CREATE TABLE IF NOT EXISTS `T_TABLE_SHARDING_CONFIG` (
   PRIMARY KEY (`ID`),
   UNIQUE KEY `UNI_INX_TTSC_CLUSTER_MODULE_NAME` (`CLUSTER_NAME`,`MODULE_CODE`,`TABLE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据库表分片配置';
+
+CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
+   `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+   `PROJECT_NAME` varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '项目名称',
+   `ENGLISH_NAME` varchar(64) NOT NULL COMMENT '英文名称',
+   `DESCRIPTION` text COMMENT '描述',
+   `CREATED_AT` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+   `UPDATED_AT` timestamp NULL DEFAULT NULL COMMENT '更新时间',
+   `CREATOR` varchar(32) DEFAULT NULL COMMENT '创建者',
+   `UPDATOR` varchar(32) DEFAULT NULL COMMENT '更新人',
+   `BG_ID` bigint(20) DEFAULT NULL COMMENT '事业群ID',
+   `BG_NAME` varchar(255) DEFAULT NULL COMMENT '事业群名称',
+   `DEPT_ID` bigint(20) DEFAULT NULL COMMENT '项目所属二级机构ID',
+   `DEPT_NAME` varchar(255) DEFAULT NULL COMMENT '项目所属二级机构名称',
+   `CENTER_ID` bigint(20) DEFAULT NULL COMMENT '中心ID',
+   `CENTER_NAME` varchar(255) DEFAULT NULL COMMENT '中心名字',
+   `LOGO_ADDR` text COMMENT 'logo地址',
+   `APPROVER` varchar(32) DEFAULT NULL COMMENT '批准人',
+   `APPROVAL_STATUS` int(10) DEFAULT '1' COMMENT '审核状态',
+   `APPROVAL_TIME` timestamp NULL DEFAULT NULL COMMENT '批准时间',
+   `RELATION_ID` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
+   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
+   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开,1-保密,2-机密',
+   `TIPS_STATUS` int(10) DEFAULT b'0' COMMENT '提示状态,0-不展示,1-展示创建成功,2-展示更新成功',
+   `PROJECT_TYPE` int(10) DEFAULT NULL comment '项目类型',
+   PRIMARY KEY (`ID`) USING BTREE,
+   UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
+   UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目审批表';
 
 SET FOREIGN_KEY_CHECKS = 1;

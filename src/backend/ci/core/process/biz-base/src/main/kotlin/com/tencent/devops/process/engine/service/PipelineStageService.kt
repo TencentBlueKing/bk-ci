@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
+import com.tencent.devops.process.engine.service.record.StageBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.service.BuildVariableService
@@ -84,6 +85,7 @@ class PipelineStageService @Autowired constructor(
     private val pipelineBuildStageDao: PipelineBuildStageDao,
     private val buildVariableService: BuildVariableService,
     private val stageBuildDetailService: StageBuildDetailService,
+    private val stageBuildRecordService: StageBuildRecordService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client
 ) {
@@ -137,10 +139,12 @@ class PipelineStageService @Autowired constructor(
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageSkip(
+            val allStageStatus = stageBuildRecordService.stageSkip(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
-                stageId = stageId
+                stageId = stageId,
+                executeCount = executeCount
             )
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
@@ -163,11 +167,12 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage) {
+    fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage, inOrOut: Boolean) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                projectId = projectId, buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
+            val allStageStatus = stageBuildRecordService.stageCheckQuality(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = stageId, executeCount = executeCount,
+                controlOption = controlOption!!, inOrOut = inOrOut,
                 checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
@@ -203,10 +208,12 @@ class PipelineStageService @Autowired constructor(
                 return@with
             }
             checkIn?.status = BuildStatus.REVIEWING.name
-            val allStageStatus = stageBuildDetailService.stagePause(
+            val allStageStatus = stageBuildRecordService.stagePause(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
+                executeCount = executeCount,
                 controlOption = controlOption!!,
                 checkIn = checkIn,
                 checkOut = checkOut
@@ -236,7 +243,7 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun startStage(
+    fun stageManualStart(
         userId: String,
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?
@@ -248,8 +255,9 @@ class PipelineStageService @Autowired constructor(
                 suggest = reviewRequest?.suggest
             )
             if (success != true) return false
-            stageBuildDetailService.stageReview(
-                projectId = projectId, buildId = buildId, stageId = stageId,
+            stageBuildRecordService.stageReview(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                stageId = stageId, executeCount = executeCount,
                 controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
@@ -270,10 +278,10 @@ class PipelineStageService @Autowired constructor(
                     buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
                 )
             } else {
-                val allStageStatus = stageBuildDetailService.stageStart(
-                    projectId = projectId, buildId = buildId, stageId = stageId,
-                    controlOption = controlOption!!,
-                    checkIn = checkIn, checkOut = checkOut
+                val allStageStatus = stageBuildRecordService.stageManualStart(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stageId, executeCount = executeCount,
+                    controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
                 )
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
@@ -379,8 +387,9 @@ class PipelineStageService @Autowired constructor(
             )
             // 5019 暂时只有准入有审核逻辑，准出待产品规划
             checkIn?.status = BuildStatus.REVIEW_ABORT.name
-            stageBuildDetailService.stageCancel(
-                projectId = projectId, buildId = buildId, stageId = stageId, controlOption = controlOption!!,
+            stageBuildRecordService.stageCancel(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId, stageId = stageId,
+                executeCount = executeCount, controlOption = controlOption!!,
                 checkIn = checkIn, checkOut = checkOut
             )
 
