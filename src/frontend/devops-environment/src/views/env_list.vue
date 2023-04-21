@@ -97,12 +97,10 @@
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
     import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
-import Template from '../../../devops-atomstore/src/components/common/detail-info/template.vue'
 
     export default {
         components: {
             emptyNode
-                Template
         },
         data () {
             return {
