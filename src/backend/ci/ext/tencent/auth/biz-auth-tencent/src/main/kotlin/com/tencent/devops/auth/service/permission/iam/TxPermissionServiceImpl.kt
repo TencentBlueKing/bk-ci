@@ -109,7 +109,6 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
-        logger.info("The system starts recording the verify result:useResourceCode=$useResourceCode")
         logger.info("The system starts recording the verify result:$verifyResult|$resourceCode|$useAction")
         authVerifyRecordService.createOrUpdateVerifyRecord(
             VerifyRecordDTO(

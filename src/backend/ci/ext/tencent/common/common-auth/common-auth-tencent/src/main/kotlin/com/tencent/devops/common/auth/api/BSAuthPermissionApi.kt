@@ -51,6 +51,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
 
 class BSAuthPermissionApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
@@ -126,14 +127,17 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
-                createVerifyRecord(
-                    user = user,
-                    permission = permission,
-                    projectCode = projectCode,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    verifyResult = result
-                )
+                // 异步记录鉴权结果
+                executor.submit {
+                    createVerifyRecord(
+                        user = user,
+                        permission = permission,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        verifyResult = result
+                    )
+                }
                 return result
             }
         } finally {
@@ -148,7 +152,7 @@ class BSAuthPermissionApi @Autowired constructor(
         projectCode: String,
         resourceType: AuthResourceType,
         resourceCode: String,
-        verifyResult: Boolean
+        verifyResult: Boolean? = true
     ) {
         // 若是创建动作，需要挂载在项目资源类型下
         val (verifyRecordResourceType, verifyRecordResourceCode) =
@@ -166,7 +170,7 @@ class BSAuthPermissionApi @Autowired constructor(
                     resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
                     resourceCode = verifyRecordResourceCode,
                     action = TActionUtils.buildAction(permission, resourceType),
-                    verifyResult = verifyResult
+                    verifyResult = verifyResult!!
                 )
             )
         } catch (e: Exception) {
@@ -282,6 +286,20 @@ class BSAuthPermissionApi @Autowired constructor(
                     val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
+                }
+                // 异步记录鉴权结果
+                executor.submit {
+                    permissionsResourcesMap.forEach { (permission, resourceCodeList) ->
+                        resourceCodeList.forEach { resourceCode ->
+                            createVerifyRecord(
+                                user = user,
+                                permission = permission,
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                            )
+                        }
+                    }
                 }
                 return permissionsResourcesMap
             }
@@ -418,5 +436,6 @@ class BSAuthPermissionApi @Autowired constructor(
         private const val HTTP_400 = 400
         private const val HTTP_500 = 500
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)
+        private val executor = Executors.newFixedThreadPool(5)
     }
 }
