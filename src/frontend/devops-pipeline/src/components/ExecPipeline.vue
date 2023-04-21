@@ -42,7 +42,7 @@
                         {{ step.title }}
                     </span>
                     <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
-                    <p>
+                    <p class="constant-width-num">
                         {{ step.description }}
                     </p>
                 </li>
@@ -208,18 +208,18 @@
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{ $t("details.queueCost") }}</span>
-                <span>{{ queueCost }}</span>
+                <span class="constant-width-num">{{ queueCost }}</span>
             </div>
         </div>
         <div class="time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{ $t("details.totalCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.running")}...` : totalCost }}</span>
+                <span class="constant-width-num">{{ isRunning ? `${$t("details.running")}...` : totalCost }}</span>
             </div>
             <ul class="pipeline-time-detail-sum-list">
                 <li v-for="cost in timeDetailRows" :key="cost.field">
                     <span>{{ cost.label }}</span>
-                    <span>{{ cost.value }}</span>
+                    <span class="constant-width-num">{{ cost.value }}</span>
                 </li>
             </ul>
         </div>
@@ -727,6 +727,9 @@
   flex-direction: column;
   overflow: hidden;
 }
+.constant-width-num {
+    font-family: "Microsoft Yahei";
+}
 .pipeline-exec-summary {
   display: flex;
   align-items: center;
@@ -915,7 +918,6 @@
       color: #63656e;
       text-align: left;
       font-weight: 600;
-      font-family: "Microsoft Yahei";
     }
 
     > span:first-child {
@@ -937,7 +939,6 @@
       > span {
         color: #63656e;
         text-align: left;
-        font-family: "Microsoft Yahei";
       }
       > span:first-child {
         color: #979ba5;
