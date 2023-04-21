@@ -32,11 +32,12 @@ import com.tencent.devops.model.quality.tables.TQualityIndicator
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
+import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository@Suppress("ALL")
 class QualityIndicatorDao {
@@ -227,6 +228,21 @@ class QualityIndicatorDao {
             dslContext.selectFrom(this)
                 .where(ID.eq(indicatorId))
                 .fetchOne()!!
+        }
+    }
+
+    fun batchCrateQualityIndicator(dslContext: DSLContext, qualityIndicatorPOs: List<QualityIndicatorPO>) {
+        with(TQualityIndicator.T_QUALITY_INDICATOR) {
+            dslContext.batch(
+                qualityIndicatorPOs.map {qualityIndicatorPO ->
+                    dslContext.insertInto(this)
+                        .set(dslContext.newRecord(this, qualityIndicatorPO))
+                        .onDuplicateKeyUpdate()
+                        .set(ELEMENT_NAME, qualityIndicatorPO.elementName)
+                        .set(DESC, qualityIndicatorPO.desc)
+                        .set(UPDATE_TIME, LocalDateTime.now())
+                }
+            ).execute()
         }
     }
 }

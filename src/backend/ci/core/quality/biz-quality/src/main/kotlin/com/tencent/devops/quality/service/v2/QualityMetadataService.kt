@@ -27,19 +27,25 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityMetadataRecord
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicatorMetadata
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
 import com.tencent.devops.quality.api.v2.pojo.op.ElementNameData
 import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.quality.dao.v2.QualityMetadataDao
+import com.tencent.devops.quality.pojo.po.QualityMetadataPO
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
 
 @Service@Suppress("ALL")
@@ -49,6 +55,19 @@ class QualityMetadataService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(QualityMetadataService::class.java)
+    }
+
+    @PostConstruct
+    fun init() {
+        logger.info("start init quality metadata")
+        val classPathResource = ClassPathResource(
+            "metadata_${I18nUtil.getDefaultLocaleLanguage()}.json"
+        )
+        val inputStream = classPathResource.inputStream
+        val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val qualityMetadataPOs = JsonUtil.to(json, object : TypeReference<List<QualityMetadataPO>>() {})
+        metadataDao.batchCrateQualityMetadata(dslContext, qualityMetadataPOs)
+        logger.info("init quality metadata end")
     }
 
     fun serviceListMetadata(metadataIds: Collection<Long>): List<QualityIndicatorMetadata> {
