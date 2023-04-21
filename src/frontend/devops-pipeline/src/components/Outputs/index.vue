@@ -549,7 +549,7 @@
   }
   .pipeline-exec-outputs-section {
     flex: 1;
-    overflow: auto;
+    overflow: hidden;
     .pipeline-exec-output-header {
       display: flex;
       align-items: center;
