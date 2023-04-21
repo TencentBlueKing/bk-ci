@@ -54,8 +54,11 @@
                     'MERGE_REQUEST_ACCEPT'
                 ].includes(this.material?.webhookEventType)
             },
+            scmType () {
+                return this.isWebhook ? `CODE_${this.material?.codeType}` : this.material?.scmType
+            },
             iconArray () {
-                const scmIcon = getMaterialIconByType(this.material?.scmType)
+                const scmIcon = getMaterialIconByType(this.scmType)
                 return {
                     aliasName: scmIcon,
                     branchName: 'branch',
@@ -76,7 +79,7 @@
                 if (!this.isWebhook) {
                     return [
                         'aliasName',
-                        ...(this.material.scmType === 'CODE_SVN' ? [] : ['branchName']),
+                        ...(this.scmType === 'CODE_SVN' ? [] : ['branchName']),
                         'newCommitId'
                     ]
                 }
@@ -120,7 +123,7 @@
                             'webhookAliasName',
                             'reviewId'
                         ]
-                    case 'SVN':
+                    case 'POST_COMMIT':
                         return [
                             'webhookAliasName',
                             'webhookCommitId'
