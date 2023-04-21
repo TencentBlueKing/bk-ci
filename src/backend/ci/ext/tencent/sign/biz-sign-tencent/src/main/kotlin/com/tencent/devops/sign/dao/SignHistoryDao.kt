@@ -60,6 +60,7 @@ class SignHistoryDao {
                 .where(TASK_ID.eq(taskId))
                 .and(BUILD_ID.eq(buildId))
                 .orderBy(TASK_EXECUTE_COUNT.desc())
+                .limit(1)
                 .fetchOne()
             if (record != null) {
                 executeCount = record.taskExecuteCount + 1
