@@ -56,6 +56,7 @@ class RedisHeartBeat @Autowired constructor(
      */
     fun autoHeartbeat(): Boolean {
         if (checkIfInWhitelistPeriod()) {
+            logger.info("start refresh all heart beat")
             val entries = redisOperation.hentries(heartbeatKey())?.ifEmpty { null } ?: return false
             val now = System.currentTimeMillis().toString()
             entries.mapValues { now }
