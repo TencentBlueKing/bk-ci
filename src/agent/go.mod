@@ -5,7 +5,10 @@ go 1.19
 require (
 	github.com/docker/docker v23.0.3+incompatible
 	github.com/gofrs/flock v0.8.1
-	github.com/influxdata/telegraf v1.25.3
+	// 1.24 以上的版本引入了memcall和memguard会导致
+	// 1、ulimit corefile被设置为0 https://github.com/ci-plugins/memguard/blob/master/core/init.go
+	// 2、arm64 linux panic报错 https://github.com/awnumar/memguard/issues/144
+	github.com/influxdata/telegraf v1.24.4
 	github.com/kardianos/service v1.2.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.0
@@ -48,7 +51,8 @@ require (
 	github.com/prometheus/common v0.39.0 // indirect
 	github.com/prometheus/prometheus v1.8.2-0.20210430082741-2a4b8e12bbf2 // indirect
 	github.com/rogpeppe/go-internal v1.6.2 // indirect
-	github.com/shirou/gopsutil/v3 v3.22.12 // indirect
+	// 1.24 telegraf 必须跟随 3.22.9 版本，之上的版本windows编译不通过
+	github.com/shirou/gopsutil/v3 v3.22.9 // indirect
 	github.com/sleepinggenius2/gosmi v0.4.4 // indirect
 	github.com/stretchr/objx v0.5.0 // indirect
 	github.com/stretchr/testify v1.8.1 // indirect
@@ -66,11 +70,11 @@ require (
 )
 
 require (
-	github.com/awnumar/memcall v0.1.2 // indirect
-	github.com/awnumar/memguard v0.22.3 // indirect
 	github.com/blues/jsonata-go v1.5.4 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/moby/patternmatcher v0.5.0 // indirect
+	github.com/moby/sys/sequential v0.5.0 // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0 // indirect
 	golang.org/x/crypto v0.5.0 // indirect
 )
