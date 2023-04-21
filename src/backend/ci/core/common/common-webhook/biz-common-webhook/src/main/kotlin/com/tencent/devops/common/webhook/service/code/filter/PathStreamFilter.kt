@@ -1,5 +1,6 @@
 package com.tencent.devops.common.webhook.service.code.filter
 
+import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
 /**
@@ -18,7 +19,18 @@ class PathStreamFilter(
     includedPaths = includedPaths,
     excludedPaths = excludedPaths
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PathStreamFilter::class.java)
+    }
+
     override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        if (userPath.endsWith("*")) {
+            logger.info(
+                "PathStreamFilter|path_end_with_*|" +
+                    "$eventPath|$userPath"
+            )
+        }
         val fullPathList = eventPath.removePrefix("/").split("/")
         val prefixPathList = userPath.removePrefix("/").split("/")
         if (fullPathList.size < prefixPathList.size) {
