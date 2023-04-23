@@ -31,7 +31,9 @@ jobs:
     - uses: actions/setup-go@v3
       with:
         go-version: 1.19.6
-    - run: make clean all
+    - run: |
+        version="$(basename $GITHUB_REF)"
+        make AGENT_VERSION=${version} clean all
       working-directory: src/agent/
     - uses: actions/upload-artifact@v1
       with:
@@ -124,7 +126,8 @@ jobs:
     - name: Gradle Build Backend Service -- CLOUD NATIVE
       working-directory: src/backend/ci
       run: |
-        ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
+        version="$(basename $GITHUB_REF)"
+        ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Dci_version=$version -Ddevops.assemblyMode=KUBERNETES \
         -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
     - name: Get Agent - CLOUD NATIVE
       uses: actions/download-artifact@v1
