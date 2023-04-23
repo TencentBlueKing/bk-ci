@@ -1,15 +1,13 @@
 package com.tencent.devops.remotedev.filter.impl
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_IP_LIST_KEY
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -20,13 +18,8 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 class IpFilter constructor(
-    private val redisOperation: RedisOperation
+    private val cacheService: RedisCacheService
 ) : ApiFilter {
-
-    private val redisCache = Caffeine.newBuilder()
-        .maximumSize(1)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
     enum class ApiType(val path: String) {
         BK_GPT("/api/user/remotedev/bkGPT");
@@ -58,7 +51,7 @@ class IpFilter constructor(
             )
             return true
         }
-        if (!isIpInWhitelist(ip, redisCache.get(REDIS_IP_LIST_KEY) ?: return true)) {
+        if (!isIpInWhitelist(ip, cacheService.getSetMembers(REDIS_IP_LIST_KEY) ?: emptySet())) {
             logger.info("ip($ip)wants to access the resource(${apiType.path}), but is blocked.")
             return false
         }
