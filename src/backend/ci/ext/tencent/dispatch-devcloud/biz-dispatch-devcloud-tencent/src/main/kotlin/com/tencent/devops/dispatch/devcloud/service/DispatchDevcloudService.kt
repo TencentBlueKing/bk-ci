@@ -1,6 +1,5 @@
 package com.tencent.devops.dispatch.devcloud.service
 
-import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -12,7 +11,6 @@ import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.dao.DevcloudPerformanceConfigDao
-import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse
@@ -20,11 +18,13 @@ import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
 import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceConfigVO
 import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceMap
 import com.tencent.devops.dispatch.devcloud.pojo.performance.UserPerformanceOptionsVO
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -67,7 +67,7 @@ class DispatchDevcloudService @Autowired constructor(
         pipelineId: String,
         buildId: String?,
         vmSeqId: String,
-        needCheckPermission: Boolean = false
+        needCheckPermission: Boolean = true
     ): DevCloudDebugResponse {
         logger.info("$userId start debug devcloud pipelineId: $pipelineId buildId: $buildId vmSeqId: $vmSeqId")
         // 根据是否传入buildId 查找containerName
