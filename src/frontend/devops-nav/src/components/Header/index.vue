@@ -27,7 +27,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
-                    :popover-width="328"
+                    :popover-width="345"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -51,7 +51,7 @@
                                 @click.stop.prevent="handleApplyProject"
                             >
                                 <icon name="icon-apply" size="14" class="mr5" />
-                                <span class="text">{{ $t('applyProject') }}</span>
+                                <span class="text">{{ $t('joinProject') }}</span>
                             </span>
                             <span class="extension-line" />
                             <span
@@ -59,7 +59,7 @@
                                 @click.stop.prevent="goToPm"
                             >
                                 <i class="devops-icon icon-apps mr5" />
-                                <span class="text">{{ $t('projectManage') }}</span>
+                                <span class="text">{{ $t('manageProject') }}</span>
                             </span>
                         </div>
                     </template>
@@ -106,19 +106,13 @@
     import { Action, Getter, State } from 'vuex-class'
     import eventBus from '../../utils/eventBus'
     import { urlJoin } from '../../utils/util'
+    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
     import LocaleSwitcher from '../LocaleSwitcher/index.vue'
     import Logo from '../Logo/index.vue'
     import ProjectDialog from '../ProjectDialog/index.vue'
     import DevopsSelect from '../Select/index.vue'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
-    import Logo from '../Logo/index.vue'
-    import LocaleSwitcher from '../LocaleSwitcher/index.vue'
-    import DevopsSelect from '../Select/index.vue'
-    import ProjectDialog from '../ProjectDialog/index.vue'
-    import ApplyProjectDialog from '../ApplyProjectDialog/index.vue'
-    import eventBus from '../../utils/eventBus'
-    import { urlJoin } from '../../utils/util'
 
     @Component({
         components: {
@@ -256,6 +250,7 @@
             const { projectId } = this.$route.params
             const oldProject = this.selectProjectList.find(project => project.projectCode === projectId)
             const project = this.selectProjectList.find(project => project.projectCode === id)
+            sessionStorage.removeItem('group-apply-query')
             
             if (projectId && !oldProject) { // 当前无权限时返回首页
                 this.goHomeById(id)
@@ -450,6 +445,7 @@
 
     .extension-wrapper {
         display: flex;
+        justify-content: center;
         align-items: center;
     }
     .extension-line {

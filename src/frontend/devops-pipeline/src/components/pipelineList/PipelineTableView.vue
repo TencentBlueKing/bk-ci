@@ -28,7 +28,7 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.permissions.canView"
+                    v-if="props.row.permissions && !props.row.permissions.canView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
@@ -37,7 +37,7 @@
                 <router-link
                     v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
-                    :disabled="!props.row.permissions.canView"
+                    :disabled="props.row.permissions && !props.row.permissions.canView"
                     :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
                 </router-link>
@@ -107,8 +107,8 @@
                         <template v-if="props.row.latestBuildNum">
                             <router-link
                                 class="pipeline-cell-link pipeline-exec-msg-title"
-                                :disabled="!props.row.permissions.canView"
-                                :event="props.row.permissions.canView ? 'click' : ''"
+                                :disabled="props.row.permissions && !props.row.permissions.canView"
+                                :event="props.row.permissions && props.row.permissions.canView ? 'click' : ''"
                                 :to="props.row.latestBuildRoute"
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
@@ -166,7 +166,7 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.permissions.canView && !props.row.delete"
+                    v-else-if="props.row.permissions && !props.row.permissions.canView && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
@@ -184,7 +184,7 @@
                     >
                         <span
                             v-perm="{
-                                hasPermission: props.row.permissions.canExecute,
+                                hasPermission: props.row.permissions && props.row.permissions.canExecute,
                                 disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,

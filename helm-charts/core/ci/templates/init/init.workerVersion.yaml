@@ -1,23 +1,23 @@
 # 初始化构建镜像
-{{ if .Values.init.defaultImage }}
+{{ if .Values.init.workerVersion }}
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "bkci.names.fullname" . }}-init-default-image
+  name: {{ include "bkci.names.fullname" . }}-init-worker-version
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/component: init-default-image
+    app.kubernetes.io/component: init-worker-version
   annotations:
     "helm.sh/hook": post-install,post-upgrade
-    "helm.sh/hook-weight": "-1"
+    "helm.sh/hook-weight": "1"
     "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
 spec:
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/component: init-default-image
+        app.kubernetes.io/component: init-worker-version
     spec:
       containers:
-        - name: init-default-image
+        - name: init-worker-version
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/
@@ -25,7 +25,7 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              services="store project"
+              services="environment"
               for service in $services
               do
                 until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
@@ -36,6 +36,8 @@ spec:
                 echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done
 
-              curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
+              version=$(cat VERSION)
+              curl "http://{{ include "bkci.names.fullname" . }}-environment.{{ .Release.Namespace }}.svc.cluster.local/api/op/thirdPartyAgent/agents/upgrade/${version}" -X PUT
+              curl "http://{{ include "bkci.names.fullname" . }}-environment.{{ .Release.Namespace }}.svc.cluster.local/api/op/thirdPartyAgent/agents/masterVersion/${version}" -X PUT
       restartPolicy: OnFailure
 {{- end -}}

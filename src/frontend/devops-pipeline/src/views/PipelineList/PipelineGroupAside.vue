@@ -231,7 +231,7 @@
                     id: 'projectViewList',
                     show: this.showClassify.projectViewList,
                     projected: true,
-                    disabled: this.isManage,
+                    disabled: !this.isManage,
                     tooltips: this.projectedGroupDisableTips,
                     stickyTop: '106px',
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({

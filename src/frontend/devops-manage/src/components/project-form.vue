@@ -42,8 +42,8 @@ const rules = {
   englishName: [
     {
       validator: (value) => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
-      message: t('英文缩写必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
-      trigger: 'change',
+      message: t('项目ID必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
+      trigger: 'blur',
     }
   ],
   bgId: [
@@ -61,6 +61,29 @@ const rules = {
     },
   ],
 };
+
+const projectTypeList = [
+  {
+    id: 1,
+    name: t('手游')
+  },
+  {
+    id: 2,
+    name: t('端游')
+  },
+  {
+    id: 3,
+    name: t('页游')
+  },
+  {
+    id: 4,
+    name: t('平台产品')
+  },
+  {
+    id: 5,
+    name: t('支撑产品')
+  }
+]
 
 const projectData = ref<any>(props.data);
 
@@ -273,7 +296,7 @@ watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], ()
 
 onMounted(async () => {
   await fetchUserDetail();
-  await fetchDepartmentList();
+  // await fetchDepartmentList();
   emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
@@ -294,6 +317,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.projectName"
         :placeholder="t('请输入1-32字符的项目名称')"
+        :maxlength="64"
         @change="handleChangeForm"
       ></bk-input>
       <div class="error-tips" v-if="validateProjectNameTips">
@@ -304,6 +328,7 @@ onBeforeUnmount(() => {
       <bk-input
         v-model="projectData.englishName"
         :disabled="type === 'edit'"
+        :maxlength="32"
         :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
       ></bk-input>
       <div class="error-tips" v-if="validateEnglishNameTips">
@@ -331,7 +356,7 @@ onBeforeUnmount(() => {
       />
       <span class="logo-upload-tip">{{ t('只允许上传png、jpg，大小不超过 2M')}}</span>
     </bk-form-item>
-    <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
+    <!-- <bk-form-item :label="t('项目所属组织')" property="bgId" :required="true">
       <div class="bk-dropdown-box">
         <bk-select
           v-model="projectData.bgId"
@@ -383,6 +408,21 @@ onBeforeUnmount(() => {
           />
         </bk-select>
       </div>
+    </bk-form-item> -->
+    <bk-form-item :label="t('项目类型')" property="projectType" :required="true">
+      <bk-select
+        v-model="projectData.projectType"
+        :placeholder="t('选择项目类型')"
+        name="center"
+        searchable
+      >
+        <bk-option
+          v-for="type in projectTypeList"
+          :value="type.id"
+          :key="type.id"
+          :label="type.name"
+        />
+      </bk-select>
     </bk-form-item>
     <bk-form-item :label="t('项目性质')" property="authSecrecy" :required="true">
       <bk-radio-group

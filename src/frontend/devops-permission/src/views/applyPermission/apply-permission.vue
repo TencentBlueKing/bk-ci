@@ -164,13 +164,13 @@ const handleSearchProject = (val) => {
   getAllProjectList(val);
 }
 
-const getAllProjectList = (name = '') => {
+const getAllProjectList = async (name = '') => {
   if (pageInfo.value.loadEnd || scrollLoading.value) {
     return
   }
   const { page, pageSize, projectName } = pageInfo.value;
   scrollLoading.value = true;
-  http.getAllProjectList({
+  await http.getAllProjectList({
     page: page,
     pageSize: pageSize,
     projectName: projectName ? projectName : undefined,
@@ -183,12 +183,18 @@ const getAllProjectList = (name = '') => {
   });
 };
 
-const getProjectByName = () => {
+const getProjectByName = async () => {
   const params = <any>{}
   if (formData.value.projectCode) {
     params.english_name = formData.value.projectCode;
   } 
-  http.getAllProjectList(params).then(res => {
+  const project = projectList.value.find(i => i.englishName === params.english_name);
+  if (project) {
+    curProject.value = project;
+    isDisabled.value = project.permission;
+    return
+  };
+  await http.getAllProjectList(params).then(res => {
     if (res.records.length) {
       res.records.forEach(i => {
         i.hide = true;

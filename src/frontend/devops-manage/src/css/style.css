@@ -56,15 +56,12 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .manage-icon-normal:before {
 	content: "\e106";
 }
-.manage-icon-unknown:before {
-	content: "\e105";
-}
 .manage-icon-organization:before {
 	content: "\e117";
 }
 .manage-icon-warning-circle-fill:before {
 	content: "\e118";
 }
-.manage-icon-unknown-2:before {
-	content: "\e119";
+.manage-icon-unknown:before {
+	content: "\e11c";
 }

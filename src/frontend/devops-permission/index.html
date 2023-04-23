@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html style="overflow: hidden;">
   <head>
-    <link rel="icon" href="/static/images/favicon.png" type="image/x-icon" />
-    <link rel="shortcut icon" href="/static/images/favicon.png" type="image/x-icon" />
-    <script src="/console/static/devops-utils.js?t="></script>
+    <link rel="icon" href="<%= process.env.BK_PUBLIC_URL_PREFIX %>/static/images/favicon.png" type="image/x-icon" />
+    <link rel="shortcut icon" href="<%= process.env.BK_PUBLIC_URL_PREFIX %>/static/images/favicon.png" type="image/x-icon" />
+    <script src="<%= process.env.BK_PUBLIC_URL_PREFIX %>/console/static/devops-utils.js?t="></script>
     <meta charset="utf-8">
     <title> index </title>
   </head>
@@ -13,6 +13,7 @@
         var BK_LOGIN_URL = '<%= process.env.BK_LOGIN_URL %>'
         var BK_IAM_URL_PREFIX = '<%= process.env.BK_IAM_URL_PREFIX %>'
         var BK_ITSM_URL_PREFIX = '<%= process.env.BK_ITSM_URL_PREFIX %>'
+        var PUBLIC_URL_PREFIX = '<%= process.env.BK_PUBLIC_URL_PREFIX %>' // 静态资源前缀
       </script>
     </body>
 </html>

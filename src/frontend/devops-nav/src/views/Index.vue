@@ -17,6 +17,7 @@
                         :desc="$t('accessDeny.desc')"
                     >
                         <bk-button
+                            v-if="curProjectCode"
                             theme="primary"
                             @click="handleApplyJoin"
                         >
@@ -50,7 +51,19 @@
                         <bk-button type='primary' @click='switchProject'>切换项目</bk-button>
                     </empty-tips>-->
                 </template>
-                <router-view v-if="!hasProjectList || isOnlineProject || isApprovalingProject" />
+                <template v-if="projectApprovalStatus === 1">
+                    <section class="devops-empty-tips">
+                        <bk-exception
+                            class="exception-wrap-item exception-part"
+                            :type="403"
+                            scene="part"
+                        >
+                            <span class="bk-exception-title">{{ $t('projectCreatingTitle') }}</span>
+                            <div class="bk-exception-description">{{ $t('projectCreatingDesc', [curProject.projectName]) }}</div>
+                        </bk-exception>
+                    </section>
+                </template>
+                <router-view v-else-if="!hasProjectList || isOnlineProject || isApprovalingProject" />
             </main>
         </template>
 
@@ -65,6 +78,7 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
+    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         components: {
@@ -89,6 +103,17 @@
 
         get hasProject (): boolean {
             return this.projectList.some(project => project.projectCode === this.curProjectCode)
+        }
+
+        get curProject (): any {
+            return this.projectList.find(project => project.projectCode === this.curProjectCode)
+        }
+
+        get projectApprovalStatus () : number {
+            if (this.curProject) {
+                return this.curProject.approvalStatus
+            }
+            return -1
         }
 
         get isDisableProject (): boolean {
@@ -141,6 +166,8 @@
         }
 
         created () {
+            const model = location.href.split('/')[4]
+            document.title = this.$t(mapDocumnetTitle(model)) as string
             eventBus.$on('update-project-id', projectId => {
                 this.$router.replace({
                     params: {
@@ -152,7 +179,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     @import '../assets/scss/conf';
     .devops-index {
         height: 100%;
@@ -174,5 +201,21 @@
             color: #fff;
             max-height: 32px;
         }
+    }
+    ::v-deep .bk-exception-img {
+        width: 480px !important;
+        height: 240px !important;
+    }
+    .bk-exception-title {
+        margin-top: 18px;
+        font-size: 24px;
+        line-height: 32px;
+        color: #313238;
+    }
+    .bk-exception-description {
+        margin-top: 16px;
+        font-size: 14px;
+        line-height: 22px;
+        color: #63656e;
     }
 </style>

@@ -74,6 +74,7 @@ init:
   turbo: false
   bkrepo: true
   defaultImage: true
+  workerVersion: true
   plugin:
     enabled: true
     atoms:
