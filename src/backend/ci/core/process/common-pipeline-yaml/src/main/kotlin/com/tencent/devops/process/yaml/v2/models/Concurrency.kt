@@ -36,5 +36,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class Concurrency(
     val group: String?,
     @JsonProperty("cancel-in-progress")
-    val cancelInProgress: Boolean?
+    val cancelInProgress: Boolean?,
+    @JsonProperty("queue-length")
+    val queueLength: Int?,
+    @JsonProperty("queue-timeout-minutes")
+    val queueTimeoutMinutes: Int?
 )
