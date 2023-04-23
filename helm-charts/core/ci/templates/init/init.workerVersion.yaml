@@ -38,6 +38,6 @@ spec:
 
               version=$(cat VERSION)
               curl "http://{{ include "bkci.names.fullname" . }}-environment.{{ .Release.Namespace }}.svc.cluster.local/api/op/thirdPartyAgent/agents/upgrade/${version}" -X PUT
-              curl "http://{{ include "bkci.names.fullname" . }}-environment.{{ .Release.Namespace }}.svc.cluster.local/api/op/thirdPartyAgent/agents/masterVersion/${agent_version}" -X PUT
+              curl "http://{{ include "bkci.names.fullname" . }}-environment.{{ .Release.Namespace }}.svc.cluster.local/api/op/thirdPartyAgent/agents/masterVersion/${version}" -X PUT
       restartPolicy: OnFailure
 {{- end -}}
