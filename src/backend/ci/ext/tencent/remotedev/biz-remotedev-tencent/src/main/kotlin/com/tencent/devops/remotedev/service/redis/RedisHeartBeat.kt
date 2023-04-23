@@ -18,30 +18,32 @@ class RedisHeartBeat @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RedisHeartBeat::class.java)
         private const val INACTIVETIME = 1800000L
+        private const val HEARTBEATKEY = "dispatchkubernetes:workspace_heartbeat"
     }
 
     fun refreshHeartbeat(
         workspaceName: String
     ) {
-        logger.info("heart beat hset(${heartbeatKey()}) $workspaceName")
+
+        logger.info("heart beat hset($HEARTBEATKEY) $workspaceName")
         redisOperation.hset(
-            key = heartbeatKey(),
+            key = HEARTBEATKEY,
             hashKey = workspaceName,
             values = System.currentTimeMillis().toString()
         )
     }
 
     fun deleteWorkspaceHeartbeat(userId: String, workspaceName: String) {
-        logger.info("User $userId hdelete(${heartbeatKey()}) $workspaceName")
-        redisOperation.hdelete(heartbeatKey(), workspaceName)
+        logger.info("User $userId hdelete($HEARTBEATKEY) $workspaceName")
+        redisOperation.hdelete(HEARTBEATKEY, workspaceName)
     }
 
     fun getWorkspaceHeartbeatList(): MutableMap<String, String> {
-        return redisOperation.hentries(heartbeatKey()) ?: mutableMapOf()
+        return redisOperation.hentries(HEARTBEATKEY) ?: mutableMapOf()
     }
 
     fun getSleepWorkspaceHeartbeats(): List<Pair<String, String>> {
-        val entries = redisOperation.hentries(heartbeatKey())
+        val entries = redisOperation.hentries(HEARTBEATKEY)
 
         val sleepValues = entries?.filter {
             val elapse = System.currentTimeMillis() - it.value.toLong()
@@ -57,9 +59,9 @@ class RedisHeartBeat @Autowired constructor(
     fun autoHeartbeat(): Boolean {
         if (checkIfInWhitelistPeriod()) {
             logger.info("start refresh all heart beat")
-            val entries = redisOperation.hentries(heartbeatKey())?.ifEmpty { null } ?: return false
+            val entries = redisOperation.hentries(HEARTBEATKEY)?.ifEmpty { null } ?: return false
             val now = System.currentTimeMillis().toString()
-            redisOperation.hmset(heartbeatKey(), entries.mapValues { now })
+            redisOperation.hmset(HEARTBEATKEY, entries.mapValues { now })
             return true
         }
         return false
@@ -81,9 +83,5 @@ class RedisHeartBeat @Autowired constructor(
             }
         }
         return false
-    }
-
-    private fun heartbeatKey(): String {
-        return "dispatchkubernetes:workspace_heartbeat"
     }
 }

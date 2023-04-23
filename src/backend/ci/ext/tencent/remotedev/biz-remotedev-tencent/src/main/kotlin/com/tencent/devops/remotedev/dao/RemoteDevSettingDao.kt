@@ -180,7 +180,8 @@ class RemoteDevSettingDao {
                 DOTFILE_REPO,
                 WORKSPACE_MAX_RUNNING_COUNT,
                 WORKSPACE_MAX_HAVING_COUNT,
-                IN_GRAY
+                IN_GRAY,
+                USER_SETTING
             )
                 .values(
                     opSetting.userId,
@@ -191,7 +192,8 @@ class RemoteDevSettingDao {
                     setting.dotfileRepo,
                     opSetting.wsMaxRunningCount,
                     opSetting.wsMaxHavingCount,
-                    ByteUtils.bool2Byte(opSetting.grayFlag ?: false)
+                    ByteUtils.bool2Byte(opSetting.grayFlag ?: false),
+                    JsonUtil.toJson(userSetting, false)
                 ).onDuplicateKeyUpdate()
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .let {
