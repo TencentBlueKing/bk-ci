@@ -191,6 +191,6 @@ class TxPermissionServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(TxPermissionServiceImpl::class.java)
-        private val executor = Executors.newFixedThreadPool(5)
+        private val executor = Executors.newFixedThreadPool(8)
     }
 }
