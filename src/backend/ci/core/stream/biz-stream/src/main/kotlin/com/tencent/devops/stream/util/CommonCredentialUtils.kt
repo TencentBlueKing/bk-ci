@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
@@ -39,13 +40,14 @@ object CommonCredentialUtils {
 
     private val logger = LoggerFactory.getLogger(CommonCredentialUtils::class.java)
 
+    @Suppress("ComplexMethod")
     fun getCredential(
         client: Client,
         projectId: String,
         credentialId: String,
-        type: CredentialType,
+        typeCheck: List<CredentialType>,
         acrossProject: Boolean = false
-    ): MutableMap<String, String> {
+    ): Credential {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
@@ -61,9 +63,12 @@ object CommonCredentialUtils {
         }
 
         val credential = credentialResult.data!!
-        if (type != credential.credentialType) {
-            logger.warn("CommonCredentialUtils|getCredential|${type.name}|${credential.credentialType.name}")
-            throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
+        if (credential.credentialType !in typeCheck) {
+            logger.warn("CommonCredentialUtils|getCredential|$typeCheck|${credential.credentialType.name}")
+            throw ParamBlankException(
+                "Fail to get the credential($credentialId) in ${credential.credentialType.name} " +
+                    "of project($projectId), only support (${typeCheck.joinToString { it.name }})"
+            )
         }
 
         if (acrossProject && !credential.allowAcrossProject) {
@@ -71,7 +76,6 @@ object CommonCredentialUtils {
             throw RuntimeException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
-        val ticketMap = mutableMapOf<String, String>()
         val v1 = String(
             DHUtil.decrypt(
                 decoder.decode(credential.v1),
@@ -79,41 +83,43 @@ object CommonCredentialUtils {
                 pair.privateKey
             )
         )
-        ticketMap["v1"] = v1
 
-        if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
-            val v2 = String(
+        val v2 = if (credential.v2 != null && credential.v2!!.isNotEmpty()) {
+            String(
                 DHUtil.decrypt(
                     decoder.decode(credential.v2),
                     decoder.decode(credential.publicKey),
                     pair.privateKey
                 )
             )
-            ticketMap["v2"] = v2
-        }
+        } else null
 
-        if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
-            val v3 = String(
+        val v3 = if (credential.v3 != null && credential.v3!!.isNotEmpty()) {
+            String(
                 DHUtil.decrypt(
                     decoder.decode(credential.v3),
                     decoder.decode(credential.publicKey),
                     pair.privateKey
                 )
             )
-            ticketMap["v3"] = v3
-        }
+        } else null
 
-        if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
-            val v4 = String(
+        val v4 = if (credential.v4 != null && credential.v4!!.isNotEmpty()) {
+            String(
                 DHUtil.decrypt(
                     decoder.decode(credential.v4),
                     decoder.decode(credential.publicKey),
                     pair.privateKey
                 )
             )
-            ticketMap["v4"] = v4
-        }
-
-        return ticketMap
+        } else null
+        return Credential(
+            credentialId = credentialId,
+            credentialType = credential.credentialType,
+            v1 = v1,
+            v2 = v2,
+            v3 = v3,
+            v4 = v4
+        )
     }
 }

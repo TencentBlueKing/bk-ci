@@ -291,4 +291,24 @@ interface ServiceThirdPartyAgentResource {
         @BkField(minLength = 3, maxLength = 32)
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取构建机详情(by node id)")
+    @GET
+    @Path("/projects/{projectId}/agent_detail_by_node_id")
+    fun getNodeDetail(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 128)
+        projectId: String,
+        @ApiParam("Node Hash ID", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @ApiParam("Node 别名", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
+    ): Result<ThirdPartyAgentDetail?>
 }

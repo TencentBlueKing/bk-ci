@@ -85,6 +85,8 @@ spec:
               value: {{ .Values.multiCluster.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
             - name: POD_NAME
               valueFrom:
                 fieldRef:

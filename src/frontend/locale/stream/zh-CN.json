@@ -250,7 +250,9 @@
         "crossRepoUse": "允许跨项目使用",
         "crossRepoUseTips": "仅支持通过模板共享凭据。如当前代码库下管理的模板A引用此凭据，其它项目下的流水线B引用模板A的场景下，流水线B运行时才能使用此凭据",
         "ticket": {
-            "credentialDesc": "在 YAML 中通过上下文 settings.&lt;key&gt;.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
+            "oauthTokenDesc": "Oauth Token 一般用于上层平台调用 Stream 的场景。用户对上层平台进行了Oauth授权，上层平台使用 Stream 服务时使用用户授权进行操作",
+            "oauthTokenPlaceholder": "OauthToken用于上层平台调用 Stream服务时传递用户授权信息",
+            "credentialDesc": "在 YAML 中通过上下文 settings.<key>.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
             "credentialType": "凭证类型",
             "credentialKey": "凭据标识（key）",
             "addCredential": "新增凭据",

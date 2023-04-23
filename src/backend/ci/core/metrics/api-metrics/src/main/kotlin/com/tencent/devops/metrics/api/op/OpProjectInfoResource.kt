@@ -33,8 +33,8 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
@@ -49,6 +49,15 @@ interface OpProjectInfoResource {
     @Path("/pipeline/label/sync")
     @GET
     fun syncPipelineLabelData(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
+
+    @ApiOperation("同步插件错误信息关联数据")
+    @Path("/atom/error/sync")
+    @GET
+    fun syncAtomErrorCodeRel(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String

@@ -37,6 +37,8 @@ data class NotifyTemplateMessage(
     val title: String? = "",
     @ApiModelProperty("消息内容", required = true)
     val body: String,
+    @ApiModelProperty("消息内容(md格式)", required = false)
+    val bodyMD: String? = null,
     @ApiModelProperty("邮件格式（邮件方式必填 0:文本 1:html网页）", allowableValues = "0,1", dataType = "int", required = false)
     val bodyFormat: EnumEmailFormat?,
     @ApiModelProperty("邮件类型（邮件方式必填 0:外部邮件 1:内部邮件）", allowableValues = "0,1", dataType = "int", required = false)

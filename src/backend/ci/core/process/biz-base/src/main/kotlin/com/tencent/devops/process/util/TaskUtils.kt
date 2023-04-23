@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -123,10 +126,12 @@ object TaskUtils {
                     !tmpTask.status.isSuccess() && tmpTask.status != BuildStatus.UNEXEC &&
                         !ControlUtils.continueWhenFailure(tmpTask.additionalOptions)
                 }
+
                 RunCondition.PRE_TASK_FAILED_BUT_CANCEL -> {
                     // 当前插件前面的插件存在取消的情况则返回true
                     tmpTask.status == BuildStatus.CANCELED
                 }
+
                 else -> {
                     false
                 }
@@ -198,6 +203,34 @@ object TaskUtils {
             retryCount < 1 || (executeCount != null && executeCount > 1)
         } else {
             true
+        }
+    }
+
+    /**
+     * 解析[task]中的[ElementAdditionalOptions]配置的超时设定，做变量替换，并返回日志信息
+     */
+    fun parseTimeout(task: PipelineBuildTask, contextMap: Map<String, String>): String {
+        val timeoutStr = task.additionalOptions?.timeoutVar
+        return if (!timeoutStr.isNullOrBlank()) {
+            val obj = Timeout.decTimeout(timeoutStr, contextMap)
+            task.additionalOptions!!.change = true
+            task.additionalOptions!!.timeout = obj.minutes.toLong() // 替换成真正的超时分钟数
+            val ele: Element = JsonUtil.mapTo((task.taskParams), Element::class.java)
+            ele.additionalOptions = task.additionalOptions
+            task.taskParams["additionalOptions"] = JsonUtil.toMap(task.additionalOptions!!) // opt有变需要一起变
+
+            if (obj.change && obj.replaceByVar) {
+                "[SystemLog]Task[${task.taskName}] " +
+                    "reset illegal timeout var[$timeoutStr=${obj.beforeChangeStr}]: ${obj.minutes} minutes"
+            } else if (obj.replaceByVar) {
+                "[SystemLog]Task[${task.taskName}] set timeout var[$timeoutStr]: ${obj.minutes} minutes"
+            } else if (obj.change) {
+                "[SystemLog]Task[${task.taskName}] reset illegal timeout[$timeoutStr]: ${obj.minutes} minutes"
+            } else {
+                "[SystemLog]Task[${task.taskName}] set timeout: ${obj.minutes} minutes"
+            }
+        } else {
+            "[SystemLog]Task[${task.taskName}] set timeout: ${task.additionalOptions?.timeout} minutes"
         }
     }
 }

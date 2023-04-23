@@ -1,5 +1,8 @@
 export function isVNode (node) {
-    return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
+    return (
+        typeof node === 'object'
+    && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
+    )
 }
 
 export function isInArray (ele, array) {
@@ -13,12 +16,49 @@ export function isInArray (ele, array) {
 }
 
 export function isInlineElment (node) {
-    const inlineElements = ['a', 'abbr', 'acronym', 'b', 'bdo', 'big', 'br', 'cite', 'code', 'dfn', 'em', 'font', 'i', 'img', 'input', 'kbd', 'label', 'q', 's', 'samp', 'select', 'small', 'span', 'strike', 'strong', 'sub', 'sup', 'textarea', 'tt', 'u', 'var']
-    const tag = (node.tagName).toLowerCase()
+    const inlineElements = [
+        'a',
+        'abbr',
+        'acronym',
+        'b',
+        'bdo',
+        'big',
+        'br',
+        'cite',
+        'code',
+        'dfn',
+        'em',
+        'font',
+        'i',
+        'img',
+        'input',
+        'kbd',
+        'label',
+        'q',
+        's',
+        'samp',
+        'select',
+        'small',
+        'span',
+        'strike',
+        'strong',
+        'sub',
+        'sup',
+        'textarea',
+        'tt',
+        'u',
+        'var'
+    ]
+    const tag = node.tagName.toLowerCase()
     const display = getComputedStyle(node).display
 
-    if ((isInArray(tag, inlineElements) && display === 'index') || display === 'inline') {
-        console.warn('Binding node is displayed as inline element. To avoid some unexpected rendering error, please set binding node displayed as block element.')
+    if (
+        (isInArray(tag, inlineElements) && display === 'index')
+    || display === 'inline'
+    ) {
+        console.warn(
+            'Binding node is displayed as inline element. To avoid some unexpected rendering error, please set binding node displayed as block element.'
+        )
 
         return true
     }
@@ -174,71 +214,9 @@ export function converStrToArr (str, indicator) {
  * 将字符串根据indicator转成数组并将内容都转成Number类型（仅限数组内容均为数字的字符串）
  */
 export function convertStrToNumArr (str, indicator) {
-    return converStrToArr(str, indicator).map(item => {
+    return converStrToArr(str, indicator).map((item) => {
         return ~~item
     })
-}
-
-/**
- *  将毫秒值转换成x时x分x秒的形式
- *  @param {Number} time - 时间的毫秒形式
- *  @return {String} str - 转换后的字符串
- */
-export function convertMStoString (time) {
-    function getSeconds (sec) {
-        return `${sec}秒`
-    }
-
-    function getMinutes (sec) {
-        if (sec / 60 >= 1) {
-            return `${Math.floor(sec / 60)}分${getSeconds(sec % 60)}`
-        } else {
-            return getSeconds(sec)
-        }
-    }
-
-    function getHours (sec) {
-        if (sec / 3600 >= 1) {
-            return `${Math.floor(sec / 3600)}小时${getMinutes(sec % 3600)}`
-        } else {
-            return getMinutes(sec)
-        }
-    }
-
-    function getDays (sec) {
-        if (sec / 86400 >= 1) {
-            return `${Math.floor(sec / 86400)}天${getHours(sec % 86400)}`
-        } else {
-            return getHours(sec)
-        }
-    }
-
-    return time ? getDays(Math.floor(time / 1000)) : '0秒'
-}
-
-/**
- *  将毫秒值转换成x时x分x秒的形式并使用格式化规则
- *  @param {Number} time - 时间的毫秒形式
- *  @return {String} str - 转换后的字符串
- */
-export function convertMStoStringByRule (time) {
-    const str = convertMStoString(time)
-    let res = str
-    const arr = str.match(/^\d{1,}([\u4e00-\u9fa5]){1,}/)
-    if (arr.length) {
-        switch (arr[1]) {
-            case '秒':
-                res = '1分钟内'
-                break
-            case '天':
-                res = `大于${arr[0]}`
-                break
-            case '时':
-                res = str.replace(/\d{1,}秒/, '')
-                break
-        }
-    }
-    return res
 }
 
 function prezero (num) {
@@ -254,7 +232,11 @@ function prezero (num) {
 export function convertTime (ms) {
     const time = new Date(ms)
 
-    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(time.getDate())} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(time.getSeconds())}`
+    return `${time.getFullYear()}-${prezero(time.getMonth() + 1)}-${prezero(
+        time.getDate()
+    )} ${prezero(time.getHours())}:${prezero(time.getMinutes())}:${prezero(
+        time.getSeconds()
+    )}`
 }
 
 /**
@@ -292,7 +274,7 @@ export function isObject (o) {
 
 export function mergeModules (target, ...modules) {
     return modules.reduce((merged, mod) => {
-        Object.keys(mod).forEach(key => {
+        Object.keys(mod).forEach((key) => {
             if (isObject(merged[key]) && isObject(mod[key])) {
                 merged[key] = {
                     ...merged[key],
@@ -333,7 +315,11 @@ export const getInnerWidth = (selector, parent) => {
 }
 
 const getDOMRect = (selector, parent) => {
-    const target = isDOMElement(selector) ? selector : parent ? parent.querySelector(selector) : document.querySelector(selector)
+    const target = isDOMElement(selector)
+        ? selector
+        : parent
+            ? parent.querySelector(selector)
+            : document.querySelector(selector)
 
     if (!target) {
         return {}
@@ -351,13 +337,17 @@ const getDOMRect = (selector, parent) => {
     }
 }
 
-const isDOMElement = obj => {
-    return (
-        typeof HTMLElement === 'object' ? obj instanceof HTMLElement : obj && typeof obj === 'object' && obj !== null && obj.nodeType === 1 && typeof obj.nodeName === 'string'
-    )
+const isDOMElement = (obj) => {
+    return typeof HTMLElement === 'object'
+        ? obj instanceof HTMLElement
+        : obj
+        && typeof obj === 'object'
+        && obj !== null
+        && obj.nodeType === 1
+        && typeof obj.nodeName === 'string'
 }
 
-export const deepCopy = obj => {
+export const deepCopy = (obj) => {
     return JSON.parse(JSON.stringify(obj))
 }
 
@@ -386,7 +376,8 @@ export function getAtomPath (...args) {
 export function getQueryString (name) {
     const reg = new RegExp('(^|&)' + name + '=([^&]*)(&|$)', 'i')
     const r = window.location.search.substr(1).match(reg)
-    if (r != null) return unescape(r[2]); return null
+    if (r != null) return unescape(r[2])
+    return null
 }
 
 const ICON_MAP = {

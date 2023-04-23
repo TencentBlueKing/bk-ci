@@ -41,10 +41,41 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PipelineVarUtil.MAX_VERSION_LEN
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class PipelineVarUtilTest {
+
+    @Test
+    fun isVar() {
+        val keyword = "\${{a}}"
+        assertTrue(PipelineVarUtil.isVar(keyword))
+
+        val spaceKeyword = "\${{ a }}"
+        assertTrue(PipelineVarUtil.isVar(spaceKeyword))
+
+        val spaceOneKeyword3 = "\${{a  }}"
+        assertTrue(PipelineVarUtil.isVar(spaceOneKeyword3))
+
+        val spaceOneKeyword4 = "\${{ a}}"
+        assertTrue(PipelineVarUtil.isVar(spaceOneKeyword4))
+
+        val notKeyword = "\${{ a}"
+        assertFalse(PipelineVarUtil.isVar(notKeyword))
+        val notKeyword2 = "\$ a}"
+        assertFalse(PipelineVarUtil.isVar(notKeyword2))
+    }
+    @Test
+    fun haveVar() {
+        val keyword = "hello\${{variables.abc}}"
+        assertTrue(PipelineVarUtil.haveVar(keyword))
+        val keyword1 = "hello\${{variables.abc}} cddfwf"
+        assertTrue(PipelineVarUtil.haveVar(keyword1))
+        val notKeyword2 = "\$ a}"
+        assertFalse(PipelineVarUtil.isVar(notKeyword2))
+    }
 
     @Test
     fun fillOldVarWithType() {

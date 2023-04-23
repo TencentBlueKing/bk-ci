@@ -10,7 +10,7 @@
             title: loading.title
         }">
             <div class="pipeline-list-header">
-                <div class="title">生效流水线</div>
+                <div class="title">{{$t('quality.生效流水线')}}</div>
                 <div><i class="devops-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="pipeline-content">
@@ -20,27 +20,27 @@
                     :data="pipelineList"
                     :pagination="pagination"
                     @page-change="handlePageChange">
-                    <bk-table-column label="流水线名称" prop="pipelineName" width="360">
+                    <bk-table-column :label="$t('quality.流水线名称')" prop="pipelineName" width="360">
                         <template slot-scope="props">
                             <a class="item-pipelinename" :title="props.row.pipelineName"
                                 target="_blank"
-                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.latestBuildId}`">{{ props.row.pipelineName }}
+                                :href="`/console/pipeline/${projectId}/${props.row.pipelineId}/detail/${props.row.latestBuildId}`">{{props.row.pipelineName}}
                             </a>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="插件个数" prop="taskCount">
+                    <bk-table-column :label="$t('quality.插件个数')" prop="taskCount">
                         <template slot-scope="props">
-                            <span>{{ props.row.taskCount }}</span>
+                            <span>{{props.row.taskCount}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="执行总次数" prop="buildCount">
+                    <bk-table-column :label="$t('quality.执行总次数')" prop="buildCount">
                         <template slot-scope="props">
-                            <span>{{ props.row.buildCount }}</span>
+                            <span>{{props.row.buildCount}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="最后执行时间" prop="latestBuildStartTime">
+                    <bk-table-column :label="$t('quality.最后执行时间')" prop="latestBuildStartTime">
                         <template slot-scope="props">
-                            <span>{{ localConvertTime(props.row.latestBuildStartTime) }}</span>
+                            <span>{{localConvertTime(props.row.latestBuildStartTime)}}</span>
                         </template>
                     </bk-table-column>
                 </bk-table>

@@ -8,20 +8,20 @@
             <div class="info-header">
                 <div class="title">
                     <i class="devops-icon icon-arrows-left" @click="toMetaDataList()"></i>
-                    <span class="header-text">{{ title }}</span>
+                    <span class="header-text">{{title}}</span>
                 </div>
                 <!-- <a class="job-guide" @click="linkToDocs">脚本任务指标使用指南<i class="devops-icon icon-tiaozhuan"></i></a> -->
             </div>
             <div class="create-meta-content">
-                <p class="info-title">基本信息</p>
+                <p class="info-title">{{$t('quality.基本信息')}}</p>
                 <hr>
                 <bk-form class="create-meta-form" :label-width="100" :model="createForm">
-                    <devops-form-item label="名称" :required="true" :property="'cnName'"
+                    <devops-form-item :label="$t('quality.名称')" :required="true" :property="'cnName'"
                         :is-error="errors.has('metaName')"
                         :error-msg="errors.first('metaName')">
                         <bk-input
                             class="meta-name-input"
-                            placeholder="例如：自定义代码覆盖率"
+                            :placeholder="$t('quality.例如：自定义代码覆盖率')"
                             name="metaName"
                             v-model="createForm.cnName"
                             v-validate="{
@@ -30,12 +30,12 @@
                             }">
                         </bk-input>
                     </devops-form-item>
-                    <devops-form-item label="英文ID" :required="true" :property="'name'"
+                    <devops-form-item :label="$t('quality.英文ID')" :required="true" :property="'name'"
                         :is-error="errors.has('metaEnglishName')"
                         :error-msg="errors.first('metaEnglishName')">
                         <bk-input
                             class="meta-name-input"
-                            placeholder="例如：CodeCoverage，创建后不可修改"
+                            :placeholder="$t('quality.例如：CodeCoverage，创建后不可修改')"
                             name="metaEnglishName"
                             v-model="createForm.name"
                             v-validate="{
@@ -45,18 +45,18 @@
                             }">
                         </bk-input>
                     </devops-form-item>
-                    <bk-form-item label="描述" :property="'desc'">
+                    <bk-form-item :label="$t('quality.描述')" :property="'desc'">
                         <bk-input
                             type="text"
                             class="meta-desc-input"
-                            placeholder="请输入描述"
+                            :placeholder="$t('quality.请输入描述')"
                             name="metaDesc"
                             v-model="createForm.desc">
                         </bk-input>
                     </bk-form-item>
-                    <devops-form-item label="数值类型" :required="true" :property="'dataType'"
+                    <devops-form-item :label="$t('quality.数值类型')" :required="true" :property="'dataType'"
                         :is-error="formErrors.typeError"
-                        :error-msg="'数值类型不能为空'">
+                        :error-msg="$t('quality.数值类型不能为空')">
                         <bk-select v-model="createForm.dataType" @selected="toggleType">
                             <bk-option v-for="(option, index) in metaTypeList"
                                 :key="index"
@@ -65,9 +65,9 @@
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <devops-form-item label="可选操作" :required="true" :property="'operation'"
+                    <devops-form-item :label="$t('quality.可选操作')" :required="true" :property="'operation'"
                         :is-error="formErrors.operationError"
-                        :error-msg="'可选操作不能为空'">
+                        :error-msg="$t('quality.可选操作不能为空')">
                         <bk-select multiple v-model="createForm.operation" @selected="toggleOperation">
                             <bk-option v-for="(option, index) in createForm.dataType === 'BOOLEAN' ? boolConf : handleListConf"
                                 :key="index"
@@ -76,9 +76,9 @@
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <devops-form-item label="默认阈值" :required="true" :property="'threshold'" class="default-threshlod-item"
+                    <devops-form-item :label="$t('quality.默认阈值')" :required="true" :property="'threshold'" class="default-threshlod-item"
                         :is-error="createForm.dataType === 'BOOLEAN' ? formErrors.thresholdError : errors.has('threshold')"
-                        :error-msg="errors.first('threshold') || '默认阈值不能为空'">
+                        :error-msg="errors.first('threshold') || $t('quality.默认阈值不能为空')">
                         <template v-if="createForm.dataType === 'BOOLEAN'">
                             <bk-select v-model="createForm.threshold" @selected="togglethreshold">
                                 <bk-option v-for="(option, index) in optionBoolean"
@@ -109,9 +109,9 @@
                             </bk-input>
                         </template>
                     </devops-form-item>
-                    <devops-form-item label="产出插件" :required="true" :property="'elementType'"
+                    <devops-form-item :label="$t('quality.产出插件')" :required="true" :property="'elementType'"
                         :is-error="formErrors.elementTypeError"
-                        :error-msg="'产出插件不能为空'">
+                        :error-msg="$t('quality.产出插件不能为空')">
                         <bk-select v-model="createForm.elementType" @selected="formErrors.elementTypeError = false">
                             <bk-option v-for="(option, index) in atomList"
                                 :key="index"
@@ -120,14 +120,14 @@
                             </bk-option>
                         </bk-select>
                     </devops-form-item>
-                    <bk-form-item label="使用说明">
+                    <bk-form-item :label="$t('quality.使用说明')">
                         <div class="meta-desc">
-                            <img src="../images/indicator-desc.png" class="use-nstruction">
+                            <img :src="indicatorDescUrl" class="use-nstruction">
                         </div>
                     </bk-form-item>
                     <bk-form-item>
-                        <bk-button theme="primary" @click.stop.prevent="submitHandle">完成</bk-button>
-                        <bk-button theme="default" @click="cancelHandle">{{ metaId ? '删除' : '取消' }}</bk-button>
+                        <bk-button theme="primary" @click.stop.prevent="submitHandle">{{$t('quality.完成')}}</bk-button>
+                        <bk-button theme="default" @click="cancelHandle">{{metaId ? $t('quality.删除') : $t('quality.取消')}}</bk-button>
                     </bk-form-item>
                 </bk-form>
             </div>
@@ -136,6 +136,7 @@
 </template>
 
 <script>
+    import i18nImages from '@/utils/i18nImages'
     export default {
         data () {
             return {
@@ -143,11 +144,11 @@
                 isInitEdit: false,
                 isEditing: false,
                 docsUrl: '',
-                title: '创建脚本任务指标',
+                title: this.$t('quality.创建脚本任务指标'),
                 metaTypeList: [
-                    { id: 'INT', name: '整数（int）' },
-                    { id: 'FLOAT', name: '浮点数（float）' },
-                    { id: 'BOOLEAN', name: '布尔值（bool）' }
+                    { id: 'INT', name: this.$t('quality.整数（int）') },
+                    { id: 'FLOAT', name: this.$t('quality.浮点数（float）') },
+                    { id: 'BOOLEAN', name: this.$t('quality.布尔值（bool）') }
                 ],
                 handleListConf: [
                     { name: '<', id: 'LT' },
@@ -157,15 +158,15 @@
                     { name: '>=', id: 'GE' }
                 ],
                 atomList: [
-                    { id: 'linuxScript', name: '脚本任务（linux和macOS环境）' },
-                    { id: 'windowsScript', name: '脚本任务（windows环境）' }
+                    { id: 'linuxScript', name: this.$t('quality.脚本任务（linux和macOS环境）') },
+                    { id: 'windowsScript', name: this.$t('quality.脚本任务（windows环境）') }
                 ],
                 boolConf: [
                     { name: '=', id: 'EQ' }
                 ],
                 optionBoolean: [
-                    { label: '是', value: 'true' },
-                    { label: '否', value: 'false' }
+                    { label: this.$t('quality.是'), value: 'true' },
+                    { label: this.$t('quality.否'), value: 'false' }
                 ],
                 loading: {
                     isLoading: false,
@@ -187,11 +188,11 @@
                     operation: []
                 },
                 metaNameRule: {
-                    getMessage: field => '只能输入英文、数字和下划线',
+                    getMessage: field => this.$t('quality.只能输入英文、数字和下划线'),
                     validate: value => /^[a-zA-Z0-9_]+$/.test(value)
                 },
                 floatTypeRule: {
-                    getMessage: field => '请输入正确的非负浮点数',
+                    getMessage: field => this.$t('quality.请输入正确的非负浮点数'),
                     validate: value => /^[0-9]+([.]{1}[0-9]+){0,1}$/.test(value)
                 }
             }
@@ -202,6 +203,9 @@
             },
             metaId () {
                 return this.$route.params.metaId
+            },
+            indicatorDescUrl () {
+                return i18nImages.indicatorImage[this.$i18n.locale]
             }
         },
         watch: {
@@ -222,7 +226,7 @@
         },
         async created () {
             if (this.metaId) {
-                this.title = '编辑脚本任务指标'
+                this.title = this.$t('quality.编辑脚本任务指标')
                 this.isInitEdit = true
                 this.isEditing = true
                 await this.requestIndicatorDetail()
@@ -292,10 +296,10 @@
                         style: {
                             textAlign: 'center'
                         }
-                    }, '确定删除该条指标？')
+                    }, this.$t('quality.确定删除该条指标？'))
 
                     this.$bkInfo({
-                        title: '删除',
+                        title: this.$t('quality.删除'),
                         subHeader: content,
                         confirmFn: async () => {
                             this.deleteIndicator()
@@ -315,7 +319,7 @@
                         metaId: this.metaId
                     })
 
-                    message = '删除成功'
+                    message = this.$t('quality.删除成功')
                     theme = 'success'
                 } catch (err) {
                     message = err.data ? err.data.message : err
@@ -347,7 +351,7 @@
                 if ((this.createForm.dataType === 'INT' && this.createForm.threshold && !IntReg.test(this.createForm.threshold))
                     || (this.createForm.dataType === 'FLOAT' && this.createForm.threshold && !floatReg.test(this.createForm.threshold))) {
                     this.$bkMessage({
-                        message: '请填写正确的阈值',
+                        message: this.$t('quality.请填写正确的阈值'),
                         theme: 'error'
                     })
                     errorCount++
@@ -390,7 +394,7 @@
                                     params
                                 })
 
-                                message = '编辑指标成功'
+                                message = this.$t('quality.编辑指标成功')
                                 theme = 'success'
                             } else {
                                 await this.$store.dispatch('quality/createIndicator', {
@@ -398,7 +402,7 @@
                                     params
                                 })
 
-                                message = '创建指标成功'
+                                message = this.$t('quality.创建指标成功')
                                 theme = 'success'
                             }
                         } catch (err) {

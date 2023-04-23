@@ -42,27 +42,34 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "MagicNumber", "LongMethod")
+@Suppress("LongParameterList", "MagicNumber", "LongMethod", "ComplexMethod")
 @Service
 class ContainerBuildRecordService(
     private val dslContext: DSLContext,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -72,7 +79,11 @@ class ContainerBuildRecordService(
     buildRecordModelDao = buildRecordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun getRecord(
@@ -237,14 +248,25 @@ class ContainerBuildRecordService(
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, LocalDateTime.now().timestampmilli()
                     )
-                    val recordTasks = recordTaskDao.getRecords(
-                        context, projectId, pipelineId, buildId, executeCount, containerId
-                    )
-                    buildTaskDao.getTasksInCondition(context, projectId, buildId, containerId, null)
-                        .associateBy { it.taskId }
-                    val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
-                    containerVar[Container::timeCost.name] = cost
-                    containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                    // 矩阵直接以类似stage的方式计算耗时
+                    if (recordContainer.matrixGroupFlag == true) {
+                        val groupContainers = recordContainerDao.getRecords(
+                            dslContext = context, projectId = projectId,
+                            pipelineId = pipelineId, buildId = buildId,
+                            executeCount = executeCount, stageId = null,
+                            matrixGroupId = containerId
+                        )
+                        recordContainer.generateMatrixTimeCost(groupContainers)?.let {
+                            containerVar[Container::timeCost.name] = it
+                        }
+                    } else {
+                        val recordTasks = recordTaskDao.getRecords(
+                            context, projectId, pipelineId, buildId, executeCount, containerId
+                        )
+                        val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
+                        cost?.let { containerVar[Container::timeCost.name] = it }
+                        containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                    }
                 }
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
@@ -309,6 +331,10 @@ class ContainerBuildRecordService(
             cancelUser = null, operation = "containerSkip#$containerId"
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
+            recordTaskDao.updateRecordStatus(
+                dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, containerId = containerId, buildStatus = BuildStatus.SKIP
+            )
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
@@ -316,17 +342,6 @@ class ContainerBuildRecordService(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
             )
-            recordTaskDao.getRecords(
-                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, containerId = containerId, executeCount = executeCount
-            ).forEach { task ->
-                recordTaskDao.updateRecord(
-                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
-                    buildId = buildId, taskId = task.taskId, executeCount = executeCount,
-                    taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
-                    startTime = null, endTime = null, timestamps = null
-                )
-            }
         }
     }
 
