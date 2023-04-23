@@ -456,6 +456,6 @@ class BSAuthPermissionApi @Autowired constructor(
         private const val HTTP_400 = 400
         private const val HTTP_500 = 500
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)
-        private val executor = Executors.newFixedThreadPool(5)
+        private val executor = Executors.newFixedThreadPool(8)
     }
 }
