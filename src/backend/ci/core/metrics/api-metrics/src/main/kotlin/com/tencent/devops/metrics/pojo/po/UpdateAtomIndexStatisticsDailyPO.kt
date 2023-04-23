@@ -25,23 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.pojo
+package com.tencent.devops.metrics.pojo.po
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("Gcloud配置")
-data class GcloudConf(
-    @ApiModelProperty("ID")
-    val id: String,
-    @ApiModelProperty("区域")
-    val region: String,
-    @ApiModelProperty("地址")
-    val address: String,
-    @ApiModelProperty("文件地址")
-    val fileAddress: String,
-    @ApiModelProperty("操作人")
-    val userId: String,
-    @ApiModelProperty("备注")
-    val remark: String?
+@ApiModel("更新插件指标每日统计数据")
+data class UpdateAtomIndexStatisticsDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("失败执行次数")
+    var failExecuteCount: Int,
+    @ApiModelProperty("失败合规次数")
+    var failComplianceCount: Int,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
 )
