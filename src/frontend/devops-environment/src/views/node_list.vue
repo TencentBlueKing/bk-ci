@@ -171,7 +171,8 @@
                         <template v-else>
                             <bk-button
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                theme="default"
+                                theme="primary"
+                                outline
                                 @click="handleApplyPermission(props.row)"
                             >
                                 {{ $t('environment.applyPermission') }}

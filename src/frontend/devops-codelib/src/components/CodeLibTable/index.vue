@@ -58,7 +58,8 @@
                 </template>
                 <template v-else>
                     <bk-button
-                        theme="default"
+                        theme="primary"
+                        outline
                         @click="handleApplyPermission(props.row)"
                     >{{ $t('codelib.applyPermission') }}</bk-button>
                 </template>

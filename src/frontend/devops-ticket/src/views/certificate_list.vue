@@ -51,7 +51,8 @@
                             </template>
                             <template v-else>
                                 <bk-button
-                                    theme="default"
+                                    theme="primary"
+                                    outline
                                     @click="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
                             </template>
                         </template>
