@@ -226,6 +226,7 @@
              * 跳转环境详情
              */
             toEnvDetail (row) {
+                if (!row.canUse) return
                 this.$router.push({
                     name: 'envDetail',
                     params: {

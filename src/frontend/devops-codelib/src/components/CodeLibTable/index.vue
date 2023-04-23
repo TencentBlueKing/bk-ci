@@ -211,7 +211,7 @@
                     projectId: this.projectId,
                     resourceType: RESOURCE_TYPE,
                     resourceCode: row.repositoryHashId,
-                    action: RESOURCE_ACTION.DELETE
+                    action: RESOURCE_ACTION.USE
                 })
             },
             deleteCodeLib ({ repositoryHashId, aliasName }) {
