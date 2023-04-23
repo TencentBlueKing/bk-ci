@@ -293,7 +293,7 @@ class BSAuthPermissionApi @Autowired constructor(
                         client.get(ServiceVerifyRecordResource::class).bathCreateOrUpdate(
                             userId = user,
                             projectCode = projectCode,
-                            resourceType = resourceType.value,
+                            resourceType = TActionUtils.extResourceType(resourceType),
                             permissionsResourcesMap = permissionsResourcesMap
                         )
                     } catch (e: Exception) {
