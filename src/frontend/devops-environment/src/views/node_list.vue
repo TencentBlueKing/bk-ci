@@ -172,16 +172,7 @@
                             <bk-button
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
                                 theme="default"
-                                v-perm="{
-                                    hasPermission: props.row.canUse,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.USE
-                                    }
-                                }"
+                                @click="handleApplyPermission(props.row)"
                             >
                                 {{ $t('environment.applyPermission') }}
                             </bk-button>
@@ -417,6 +408,14 @@
                         }
                     })
                 }
+            },
+            handleApplyPermission (node) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceCode: node.nodeHashId,
+                    action: NODE_RESOURCE_ACTION.USE
+                })
             },
             /**
              * 删除节点

@@ -50,17 +50,8 @@
                             </template>
                             <template v-else>
                                 <bk-button
-                                    v-perm="{
-                                        hasPermission: props.row.permissions.use,
-                                        disablePermissionApi: true,
-                                        permissionData: {
-                                            projectId: projectId,
-                                            resourceType: CRED_RESOURCE_TYPE,
-                                            resourceCode: props.row.credentialId,
-                                            action: CRED_RESOURCE_ACTION.USE
-                                        }
-                                    }"
-                                    theme="default">{{ $t('ticket.applyPermission') }}</bk-button>
+                                    theme="default"
+                                    @cliack="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
                             </template>
                         </template>
                     </bk-table-column>
@@ -197,6 +188,14 @@
                     })
                 }
                 this.showContent = true
+            },
+            handleApplyPermission (credential) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CRED_RESOURCE_TYPE,
+                    resourceCode: credential.credentialId,
+                    action: CRED_RESOURCE_ACTION.USE
+                })
             },
             async handleDeleteCredentail (credential) {
                 if (this.hasPermission(credential.permissions, 'delete')) {
