@@ -46,7 +46,7 @@ class AuthVerifyRecordService @Autowired constructor(
                         projectId = projectCode,
                         resourceType = resourceType,
                         resourceCode = resourceCode,
-                        action = permission.value,
+                        action = "${resourceType}_${permission.value}",
                         verifyResult = true
                     )
                 )
