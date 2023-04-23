@@ -35,5 +35,6 @@ data class ThirdPartyContainerInfo(
     val password: String?,
     val credId: String?,
     val acrossTemplateId: String?,
-    val options: DockerOptions?
+    val options: DockerOptions?,
+    val imagePullPolicy: String?
 )

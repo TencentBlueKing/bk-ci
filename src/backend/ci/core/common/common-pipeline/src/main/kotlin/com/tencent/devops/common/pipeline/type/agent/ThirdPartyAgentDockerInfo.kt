@@ -9,7 +9,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 data class ThirdPartyAgentDockerInfo(
     var image: String,
     var credential: Credential?,
-    var options: DockerOptions?
+    var options: DockerOptions?,
+    var imagePullPolicy: String?
 )
 
 fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
@@ -24,8 +25,6 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
         credential?.credentialId = EnvUtils.parseEnv(credential?.credentialId, variables)
     }
     if (options != null) {
-        val newV = options?.volumes?.map { v -> EnvUtils.parseEnv(v, variables) }
-        val newM = options?.mounts?.map { m -> EnvUtils.parseEnv(m, variables) }
         options?.volumes = options?.volumes?.map { v -> EnvUtils.parseEnv(v, variables) }
         options?.mounts = options?.mounts?.map { m -> EnvUtils.parseEnv(m, variables) }
         options?.gpus = if (options?.gpus == null) {
@@ -33,6 +32,9 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
         } else {
             EnvUtils.parseEnv(options?.gpus, variables)
         }
+    }
+    if (!imagePullPolicy.isNullOrBlank()) {
+        imagePullPolicy = EnvUtils.parseEnv(imagePullPolicy, variables)
     }
 }
 
@@ -64,9 +66,10 @@ data class ThirdPartyAgentDockerInfoDispatch(
     val secretKey: String,
     val image: String,
     val credential: Credential?,
-    val options: DockerOptions?
+    val options: DockerOptions?,
+    val imagePullPolicy: String?
 ) {
     constructor(agentId: String, secretKey: String, info: ThirdPartyAgentDockerInfo) : this(
-        agentId, secretKey, info.image, info.credential, info.options
+        agentId, secretKey, info.image, info.credential, info.options, info.imagePullPolicy
     )
 }

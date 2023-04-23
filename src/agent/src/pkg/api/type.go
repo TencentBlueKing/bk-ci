@@ -56,11 +56,23 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId    string         `json:"agentId"`
-	SecretKey  string         `json:"secretKey"`
-	Image      string         `json:"image"`
-	Credential *Credential    `json:"credential"`
-	Options    *DockerOptions `json:"options"`
+	AgentId         string         `json:"agentId"`
+	SecretKey       string         `json:"secretKey"`
+	Image           string         `json:"image"`
+	Credential      *Credential    `json:"credential"`
+	Options         *DockerOptions `json:"options"`
+	ImagePullPolicy string         `json:"imagePullPolicy"`
+}
+
+type ImagePullPolicyEnum string
+
+const (
+	ImagePullPolicyAlways       ImagePullPolicyEnum = "always"
+	ImagePullPolicyIfNotPresent ImagePullPolicyEnum = "if-not-present"
+)
+
+func (i ImagePullPolicyEnum) String() string {
+	return string(i)
 }
 
 type Credential struct {
