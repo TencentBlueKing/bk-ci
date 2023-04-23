@@ -88,7 +88,7 @@
                     <p>{{buttonInfo.des}}</p>
                 </template>
             </bk-popover>
-            <button class="detail-install mb16" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
+            <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
 
             <section class="click-area">
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
@@ -538,6 +538,7 @@
         display: flex;
         align-items: center;
         color: #63656E;
+        margin-top: 16px;
         .click-button {
             display: flex;
             align-items: center;

@@ -190,7 +190,7 @@ class StreamHistoryService @Autowired constructor(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = totalPage.toLong(),
-            records = records.sortedByDescending { it.buildHistory?.startTime }
+            records = records.sortedByDescending { it.buildHistory?.buildNum }
         )
     }
 

@@ -61,7 +61,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwPipelineViewResourceV4 {
 
-    @ApiOperation("用户获取视图流水线编排列表", tags = ["v4_user_pipeline_view_pipelines", "v4_app_pipeline_view_pipelines"])
+    @ApiOperation("用户获取视图(流水线组)流水线编排列表", tags = ["v4_user_pipeline_view_pipelines", "v4_app_pipeline_view_pipelines"])
     @GET
     @Path("/listViewPipelines")
     fun listViewPipelines(
@@ -109,7 +109,7 @@ interface ApigwPipelineViewResourceV4 {
         showDelete: Boolean? = false
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
-    @ApiOperation("获取视图列表", tags = ["v4_user_pipeline_view_list", "v4_app_pipeline_view_list"])
+    @ApiOperation("获取视图(流水线组)列表", tags = ["v4_user_pipeline_view_list", "v4_app_pipeline_view_list"])
     @GET
     @Path("/list")
     fun listView(
@@ -127,7 +127,7 @@ interface ApigwPipelineViewResourceV4 {
         viewType: Int? = null
     ): Result<List<PipelineNewViewSummary>>
 
-    @ApiOperation("添加视图", tags = ["v4_user_pipeline_view_create", "v4_app_pipeline_view_create"])
+    @ApiOperation("添加视图(流水线组)", tags = ["v4_user_pipeline_view_create", "v4_app_pipeline_view_create"])
     @POST
     @Path("")
     fun addView(
@@ -198,7 +198,7 @@ interface ApigwPipelineViewResourceV4 {
         pipelineView: PipelineViewForm
     ): Result<PipelineViewId>
 
-    @ApiOperation("获取视图", tags = ["v4_user_pipeline_view_get", "v4_app_pipeline_view_get"])
+    @ApiOperation("获取视图(流水线组)", tags = ["v4_user_pipeline_view_get", "v4_app_pipeline_view_get"])
     @GET
     @Path("")
     fun getView(
@@ -218,7 +218,7 @@ interface ApigwPipelineViewResourceV4 {
         isProject: Boolean?
     ): Result<PipelineNewView>
 
-    @ApiOperation("删除视图", tags = ["v4_user_pipeline_view_delete", "v4_app_pipeline_view_delete"])
+    @ApiOperation("删除视图(流水线组)", tags = ["v4_user_pipeline_view_delete", "v4_app_pipeline_view_delete"])
     @DELETE
     @Path("")
     fun deleteView(
@@ -239,7 +239,7 @@ interface ApigwPipelineViewResourceV4 {
         isProject: Boolean?
     ): Result<Boolean>
 
-    @ApiOperation("更改视图", tags = ["v4_user_pipeline_view_update", "v4_app_pipeline_view_update"])
+    @ApiOperation("更改视图(流水线组)", tags = ["v4_user_pipeline_view_update", "v4_app_pipeline_view_update"])
     @PUT
     @Path("")
     fun updateView(

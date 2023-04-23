@@ -35,13 +35,13 @@ import io.swagger.annotations.ApiModelProperty
 data class ProjectVO(
     @ApiModelProperty("主键ID")
     val id: Long,
-    @ApiModelProperty("项目ID")
+    @ApiModelProperty("项目ID（很少使用）")
     // @JsonProperty("project_id")
     val projectId: String,
     @ApiModelProperty("项目名称")
     // @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("项目代码")
+    @ApiModelProperty("项目代码（蓝盾项目Id）")
     // @JsonProperty("project_code")
     val projectCode: String,
     @ApiModelProperty("项目类型")
