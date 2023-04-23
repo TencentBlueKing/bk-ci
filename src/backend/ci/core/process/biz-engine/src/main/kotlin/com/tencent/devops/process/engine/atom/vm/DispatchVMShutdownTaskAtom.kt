@@ -85,6 +85,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
                 buildResult = true,
+                routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
                 dispatchType = getDispatchType(task, param),
                 executeCount = task.executeCount
             )
@@ -138,6 +139,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = true,
+                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
                         dispatchType = getDispatchType(task, param),
                         executeCount = task.executeCount
                     )
