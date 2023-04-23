@@ -29,6 +29,7 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TI18nMessage
 import com.tencent.devops.model.project.tables.records.TI18nMessageRecord
 import org.jooq.Condition
@@ -45,6 +46,7 @@ class I18nMessageDao {
             dslContext.batch(i18nMessages.map { i18nMessage ->
                 dslContext.insertInto(
                     this,
+                    ID,
                     MODULE_CODE,
                     LANGUAGE,
                     KEY,
@@ -53,6 +55,7 @@ class I18nMessageDao {
                     MODIFIER
                 )
                     .values(
+                        UUIDUtil.generate(),
                         i18nMessage.moduleCode.name,
                         i18nMessage.language,
                         i18nMessage.key,
@@ -60,7 +63,7 @@ class I18nMessageDao {
                         userId,
                         userId
                     ).onDuplicateKeyUpdate()
-                    .set(VALUE, i18nMessage.language)
+                    .set(VALUE, i18nMessage.value)
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(MODIFIER, userId)
             }).execute()

@@ -260,10 +260,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                             passTemplateReleaseAndNotify(
                                 context = context,
                                 userId = userId,
-                                approveResult = PASS,
                                 templateId = templateId,
-                                templateStatus = templateStatus,
-                                templateStatusMsg = ""
+                                templateStatus = templateStatus
                             )
                         }
                     } else {
@@ -334,10 +332,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             passTemplateReleaseAndNotify(
                 context = context,
                 userId = userId,
-                approveResult = PASS,
                 templateId = templateId,
-                templateStatus = templateStatus,
-                templateStatusMsg = ""
+                templateStatus = templateStatus
             )
         }
     }
@@ -345,10 +341,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     private fun passTemplateReleaseAndNotify(
         context: DSLContext,
         userId: String,
-        approveResult: String,
         templateId: String,
-        templateStatus: Byte,
-        templateStatusMsg: String
+        templateStatus: Byte
     ) {
         val record = marketTemplateDao.getTemplate(dslContext, templateId)!!
         handleTemplateRelease(
@@ -358,7 +352,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             template = record,
             templateStatus = templateStatus,
             templateStatusMsg = ""
-            )
+        )
         // 发通知消息
         templateNotifyService.sendTemplateReleaseAuditNotifyMessage(templateId, AuditTypeEnum.AUDIT_SUCCESS)
     }

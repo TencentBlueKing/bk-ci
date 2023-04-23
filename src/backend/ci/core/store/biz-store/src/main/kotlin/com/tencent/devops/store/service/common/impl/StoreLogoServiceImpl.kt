@@ -96,7 +96,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val fileName = disposition.fileName
         logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
         val index = fileName.lastIndexOf(".")
-        val fileType = fileName.substring(index + 1).toLowerCase()
+        val fileType = fileName.substring(index + 1).lowercase()
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadLogoTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType)) {

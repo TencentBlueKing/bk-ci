@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.OpAtomResource
@@ -64,11 +63,6 @@ class OpAtomResourceImpl @Autowired constructor(
         return atomService.updatePipelineAtom(userId, id, atomUpdateRequest)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun listAllPipelineAtoms(
         atomName: String?,
         atomCode: String?,
@@ -99,11 +93,6 @@ class OpAtomResourceImpl @Autowired constructor(
         )
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun getPipelineAtomById(id: String): Result<Atom?> {
         return opAtomService.getPipelineAtom(id)
     }

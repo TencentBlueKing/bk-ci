@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -58,20 +57,10 @@ class UserMarketAtomResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService
 ) : UserMarketAtomResource {
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].records[*].code", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun mainPageList(userId: String, page: Int?, pageSize: Int?): Result<List<MarketMainItem>> {
         return marketAtomService.mainPageList(userId, page, pageSize, urlProtocolTrim = true)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].code", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun list(
         userId: String,
         keyword: String?,
@@ -105,11 +94,6 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         )
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun listMyAtoms(
         accessToken: String,
         userId: String,
@@ -120,28 +104,14 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getMyAtoms(accessToken, userId, atomName, page, pageSize)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun getAtomById(userId: String, atomId: String): Result<AtomVersion?> {
         return marketAtomService.getAtomById(atomId, userId)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getAtomByCode(userId, atomCode)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"]
-    )
     override fun getAtomVersionsByCode(
         userId: String,
         atomCode: String,

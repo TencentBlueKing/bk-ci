@@ -16,15 +16,23 @@ import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import javax.ws.rs.container.ResourceInfo
+import javax.ws.rs.core.Context
 import javax.ws.rs.ext.Provider
 import javax.ws.rs.ext.WriterInterceptor
 import javax.ws.rs.ext.WriterInterceptorContext
 
 @Provider
 @BkInterfaceI18n
+@Component
 class BkWriterInterceptor : WriterInterceptor {
+
+    @Context
+    private var resourceInfo: ResourceInfo? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkWriterInterceptor::class.java)
@@ -38,11 +46,12 @@ class BkWriterInterceptor : WriterInterceptor {
      * @param context 拦截器上下文
      */
     override fun aroundWriteTo(context: WriterInterceptorContext?) {
-        if (context == null) {
+        if (context == null || resourceInfo == null) {
             return
         }
         // 1、只需拦截标上BkInterfaceI18n注解的接口
-        val bkInterfaceI18nAnnotation = context.annotations.firstOrNull { it is BkInterfaceI18n } as? BkInterfaceI18n
+        val method = resourceInfo!!.resourceMethod
+        val bkInterfaceI18nAnnotation = AnnotationUtils.findAnnotation(method, BkInterfaceI18n::class.java)
         if (bkInterfaceI18nAnnotation == null) {
             context.proceed()
             return
@@ -79,11 +88,11 @@ class BkWriterInterceptor : WriterInterceptor {
                     keyPrefixMap = keyPrefixMap
                 )
             }
-            i18nKeySb.append(fieldKey)
             val fixKeyTailPrefixName = bkInterfaceI18nAnnotation.fixKeyTailPrefixName
             if (fixKeyTailPrefixName.isNotBlank()) {
-                i18nKeySb.append(".$fixKeyTailPrefixName")
+                i18nKeySb.append("$fixKeyTailPrefixName.")
             }
+            i18nKeySb.append(fieldKey)
             val i18nKey = i18nKeySb.toString()
             // 根据国际化信息来源把字段信息分别放入不同的集合以便进行后续处理
             if (i18nFieldInfo.source == I18nSourceEnum.PROPERTIES) {

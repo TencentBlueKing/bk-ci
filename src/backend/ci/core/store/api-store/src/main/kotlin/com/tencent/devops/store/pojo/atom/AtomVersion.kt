@@ -76,13 +76,14 @@ data class AtomVersion(
     @ApiModelProperty("发布类型")
     val releaseType: String?,
     @ApiModelProperty("版本日志")
-    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "releaseInfo")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
     @ApiModelProperty("开发语言")
     val language: String?,
     @ApiModelProperty("代码库链接")
     val codeSrc: String?,
     @ApiModelProperty("发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
     @ApiModelProperty("创建人")
     val creator: String,

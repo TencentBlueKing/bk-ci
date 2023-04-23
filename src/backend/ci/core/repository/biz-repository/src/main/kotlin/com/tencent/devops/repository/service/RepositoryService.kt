@@ -267,8 +267,8 @@ class RepositoryService @Autowired constructor(
             val getGitRepositoryTreeInfoResult = gitService.getGitRepositoryTreeInfo(
                 userId = userId,
                 repoName = repo.projectName,
-                refName = null,
-                path = null,
+                refName = refName,
+                path = path,
                 token = token,
                 tokenType = tokenType
             )

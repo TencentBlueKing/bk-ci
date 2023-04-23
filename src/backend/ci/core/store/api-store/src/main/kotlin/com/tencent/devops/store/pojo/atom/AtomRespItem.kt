@@ -77,6 +77,7 @@ data class AtomRespItem(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
     @ApiModelProperty("创建人", required = true)
     val creator: String,

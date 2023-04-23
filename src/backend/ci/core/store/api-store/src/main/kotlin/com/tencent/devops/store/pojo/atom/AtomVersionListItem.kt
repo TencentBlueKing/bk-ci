@@ -46,6 +46,7 @@ data class AtomVersionListItem(
     @ApiModelProperty("版本号")
     val version: String,
     @ApiModelProperty("版本内容")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
     @ApiModelProperty(
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
