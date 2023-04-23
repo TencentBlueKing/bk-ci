@@ -169,8 +169,9 @@
                             </div>
                         </template>
                         <template v-else>
-                            <span
+                            <bk-button
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                theme="default"
                                 v-perm="{
                                     hasPermission: props.row.canUse,
                                     disablePermissionApi: true,
@@ -181,10 +182,9 @@
                                         action: NODE_RESOURCE_ACTION.USE
                                     }
                                 }"
-                                class="node-handle delete-node-text"
                             >
                                 {{ $t('environment.applyPermission') }}
-                            </span>
+                            </bk-button>
                         </template>
                     </template>
                 </bk-table-column>

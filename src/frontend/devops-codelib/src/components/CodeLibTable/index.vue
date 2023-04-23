@@ -58,7 +58,7 @@
                 </template>
                 <template v-else>
                     <bk-button
-                        theme="primary"
+                        theme="default"
                         v-perm="{
                             hasPermission: props.row.canUse,
                             disablePermissionApi: true,
@@ -69,7 +69,6 @@
                                 action: RESOURCE_ACTION.USE
                             }
                         }"
-                        text
                     >{{ $t('codelib.applyPermission') }}</bk-button>
                 </template>
             </template>

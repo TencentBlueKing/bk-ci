@@ -61,7 +61,7 @@
                                             action: CERT_RESOURCE_ACTION.USE
                                         }
                                     }"
-                                    theme="primary" text>{{ $t('ticket.applyPermission') }}</bk-button>
+                                    theme="default">{{ $t('ticket.applyPermission') }}</bk-button>
                             </template>
                         </template>
                     </bk-table-column>

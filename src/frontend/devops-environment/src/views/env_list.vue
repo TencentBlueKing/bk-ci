@@ -65,7 +65,8 @@
                             </span>
                         </template>
                         <template v-else>
-                             <span
+                            <bk-button
+                                theme="default"
                                 v-perm="{
                                     hasPermission: props.row.canUse,
                                     disablePermissionApi: true,
@@ -76,10 +77,9 @@
                                         action: ENV_RESOURCE_ACTION.USE
                                     }
                                 }"
-                                :class="{ 'handler-text': props.row.canUse }"
                             >
                                 {{ $t('environment.applyPermission') }}
-                            </span> 
+                            </bk-button>
                         </template>
                     </template>
                 </bk-table-column>
