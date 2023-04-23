@@ -53,7 +53,7 @@ class BkTimedAspect(
     @Value("\${spring.application.name:#{null}}")
     val applicationName: String? = null
 
-    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
+    @Around("@annotation(com.tencent.devops.common.service.prometheus.BkTimed)")
     @Throws(Throwable::class)
     fun timedMethod(pjp: ProceedingJoinPoint): Any? {
         var method = (pjp.signature as MethodSignature).method

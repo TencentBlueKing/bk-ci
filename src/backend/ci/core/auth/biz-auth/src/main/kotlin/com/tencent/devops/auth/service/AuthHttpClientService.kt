@@ -33,20 +33,20 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.security.jwt.JwtManager
-import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.OkHttpClient.Builder
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.slf4j.LoggerFactory
 
 @Service
 class AuthHttpClientService @Autowired constructor(
@@ -68,7 +68,7 @@ class AuthHttpClientService @Autowired constructor(
         try {
             val response = httpClient.newCall(request).execute()
             logger.info(
-                "Request($request) with code ${response.code()}"
+                "Request($request) with code ${response.code}"
             )
             return response
         } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
@@ -106,14 +106,14 @@ class AuthHttpClientService @Autowired constructor(
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
             if (!response.isSuccessful) {
-                val responseContent = response.body()?.string()
+                val responseContent = response.body?.string()
                 logger.warn(
-                    "Fail to request($request) with code ${response.code()} ," +
-                        " message ${response.message()} and response ($responseContent)"
+                    "Fail to request($request) with code ${response.code} ," +
+                            " message ${response.message} and response ($responseContent)"
                 )
-                throw RemoteServiceException(errorMessage, response.code(), responseContent)
+                throw RemoteServiceException(errorMessage, response.code, responseContent)
             }
-            return response.body()!!.string()
+            return response.body!!.string()
         }
     }
 
@@ -124,7 +124,7 @@ class AuthHttpClientService @Autowired constructor(
     fun buildPost(path: String, requestBody: RequestBody, gateway: String, token: String?): Request {
         val url = gateway + path
         logger.info("iam callback url: $url")
-        return Request.Builder().url(url).post(requestBody).headers(Headers.of(buildJwtAndToken(token))).build()
+        return Request.Builder().url(url).post(requestBody).headers(buildJwtAndToken(token).toHeaders()).build()
     }
 
     private fun buildJwtAndToken(iamToken: String?): Map<String, String> {
@@ -147,7 +147,7 @@ class AuthHttpClientService @Autowired constructor(
         .build()
 
     companion object {
-        val JsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val JsonMediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         private const val EMPTY = ""
         private const val CONNECT_TIMEOUT = 5L
         private const val READ_TIMEOUT = 1500L

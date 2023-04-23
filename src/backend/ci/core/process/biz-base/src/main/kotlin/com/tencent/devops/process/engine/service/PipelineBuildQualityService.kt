@@ -33,19 +33,22 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
-import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -54,14 +57,13 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
+import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
-import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
-import com.tencent.devops.common.quality.pojo.RuleCheckResult
-import com.tencent.devops.process.pojo.ReviewParam
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -82,6 +84,7 @@ class PipelineBuildQualityService(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService
 ) {
@@ -270,23 +273,6 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun getMatchRuleList(projectId: String, pipelineId: String, templateId: String?): List<QualityRuleMatchTask> {
-        val startTime = System.currentTimeMillis()
-        return try {
-            client.get(ServiceQualityRuleResource::class).matchRuleList(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                templateId = templateId,
-                startTime = LocalDateTime.now().timestamp()
-            ).data ?: listOf()
-        } catch (ignore: Exception) {
-            logger.error("quality get match rule list fail: ${ignore.message}", ignore)
-            return listOf()
-        } finally {
-            LogUtils.costTime("call rule", startTime)
-        }
-    }
-
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
         return try {
             val auditUserSet = client.get(ServiceQualityRuleResource::class).getAuditUserList(
@@ -320,26 +306,6 @@ class PipelineBuildQualityService(
     fun hasCodeccHisMetadata(buildId: String): Boolean {
         val hisMetadata = client.get(ServiceQualityRuleResource::class).getHisMetadata(buildId).data ?: listOf()
         return hisMetadata.any { it.elementType in QUALITY_CODECC_LAZY_ATOM }
-    }
-
-    fun generateQualityRuleElement(
-        ruleMatchList: List<QualityRuleMatchTask>
-    ): Triple<List<String>?, List<String>?, Map<String, List<Map<String, Any>>>?> {
-        val ruleMatchTaskList = ruleMatchList.map { ruleMatch ->
-            val gatewayIds =
-                ruleMatch.ruleList.filter { rule -> !rule.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
-            mapOf(
-                "position" to ruleMatch.controlStage.name,
-                "taskId" to ruleMatch.taskId,
-                "gatewayIds" to gatewayIds
-            )
-        }
-        val beforeElementSet =
-            ruleMatchTaskList.filter { it["position"] as String == "BEFORE" }.map { it["taskId"] as String }
-        val afterElementSet =
-            ruleMatchTaskList.filter { it["position"] as String == "AFTER" }.map { it["taskId"] as String }
-        val elementRuleMap = ruleMatchTaskList.groupBy { it["taskId"] as String }.toMap()
-        return Triple(beforeElementSet, afterElementSet, elementRuleMap)
     }
 
     fun handleResult(
@@ -439,6 +405,15 @@ class PipelineBuildQualityService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     taskId = interceptTask
+                )
+                taskBuildRecordService.updateTaskRecord(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+                    taskVar = mapOf(QualityGateInElement::reviewUsers.name to auditUsers),
+                    timestamps = mapOf(
+                        BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                            BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                    )
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,

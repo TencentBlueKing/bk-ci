@@ -63,10 +63,10 @@ const optionConfigMixin = {
                     default: false,
                     list: [{
                         value: false,
-                        label: '自动跳过'
+                        label: this.$t('storeMap.autoSkip')
                     }, {
                         value: true,
-                        label: '手动跳过'
+                        label: this.$t('storeMap.manualSkip')
                     }],
                     extCls: 'manual-skip-options',
                     isHidden: (element) => {
@@ -119,8 +119,8 @@ const optionConfigMixin = {
                         return !(element.additionalOptions && (element.additionalOptions.pauseBeforeExec === true))
                     }
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     label: this.$t('storeMap.atomTimeout'),
                     desc: this.$t('storeMap.timeoutDesc'),

@@ -68,7 +68,8 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
         userName = "mingshewhe",
         authType = RepoAuthType.HTTP,
         projectId = "mht",
-        repoHashId = "eraf"
+        repoHashId = "eraf",
+        gitProjectId = 0L
     )
 
     private val repositoryDyy = CodeGitRepository(
@@ -79,7 +80,8 @@ class GitWebHookMatcherTest : BkCiAbstractTest() {
         userName = "yongyiduan",
         authType = RepoAuthType.HTTP,
         projectId = "mht",
-        repoHashId = "eraf"
+        repoHashId = "eraf",
+        gitProjectId = 0L
     )
 
     @BeforeEach

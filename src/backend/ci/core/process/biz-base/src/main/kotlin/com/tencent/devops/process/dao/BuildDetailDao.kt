@@ -106,6 +106,18 @@ class BuildDetailDao {
         }
     }
 
+    fun getBuildCancelUser(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String
+    ): String? {
+        with(TPipelineBuildDetail.T_PIPELINE_BUILD_DETAIL) {
+            return dslContext.select(CANCEL_USER).from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun update(
         dslContext: DSLContext,
         projectId: String,

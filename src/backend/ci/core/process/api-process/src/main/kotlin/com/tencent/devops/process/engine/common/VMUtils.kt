@@ -59,4 +59,10 @@ object VMUtils {
     fun getWaitLabel() = "Wait_Finish_Job#"
 
     fun getEndLabel() = "end-"
+
+    fun isMatrixContainerId(containerId: String) = try {
+        containerId.toInt() > 1000
+    } catch (ignore: Throwable) {
+        false
+    }
 }

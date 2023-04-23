@@ -27,9 +27,10 @@
 
 package com.tencent.devops.common.websocket.dispatch
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 import com.tencent.devops.common.websocket.dispatch.push.TransferPush
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -38,32 +39,38 @@ class TransferDispatch(
     private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<TransferPush> {
     companion object {
-        val logger = LoggerFactory.getLogger(TransferDispatch::class.java)
+        private val logger = LoggerFactory.getLogger(TransferDispatch::class.java)
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: TransferPush) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
-                    if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
-                        eventType.routeKey + event.routeKeySuffix
-                    } else {
-                        eventType.routeKey
-                    }
-//                logger.info("[${eventType.exchange}|$routeKey|${event.userId}|${event.page}]
-//               dispatch the transfer event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    when {
-                        event.delayMills!! > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                        eventType.delayMills > 0 -> // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                    }
-                    message
-                }
+                send(event)
             } catch (ignored: Exception) {
-                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
+                    }
+                } else {
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                }
             }
+        }
+    }
+
+    private fun send(event: TransferPush) {
+        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+        val routeKey = eventType.routeKey
+        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+            when {
+                event.delayMills!! > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
+                eventType.delayMills > 0 -> // 事件类型固化默认值
+                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
+            }
+            message
         }
     }
 }

@@ -81,4 +81,9 @@ interface OpAtomService {
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<Boolean>
+
+    /**
+     * 将插件设置为默认
+     */
+    fun setDefault(userId: String, atomCode: String): Boolean
 }

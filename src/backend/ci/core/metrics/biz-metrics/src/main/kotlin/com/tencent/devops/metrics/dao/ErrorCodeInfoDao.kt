@@ -27,9 +27,9 @@
 
 package com.tencent.devops.metrics.dao
 
-import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
+import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -46,6 +46,7 @@ class ErrorCodeInfoDao {
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
             }
+            conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
             if (!queryCondition.errorTypes.isNullOrEmpty()) {
                 conditions.add(ERROR_TYPE.`in`(queryCondition.errorTypes))
             }
@@ -66,6 +67,7 @@ class ErrorCodeInfoDao {
     ): Long {
         val conditions = mutableListOf<Condition>()
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
+            conditions.add(ATOM_CODE.eq(queryCondition.atomCode))
             if (!queryCondition.keyword.isNullOrBlank()) {
                 conditions.add(ERROR_CODE.like("%${queryCondition.keyword}%"))
             }

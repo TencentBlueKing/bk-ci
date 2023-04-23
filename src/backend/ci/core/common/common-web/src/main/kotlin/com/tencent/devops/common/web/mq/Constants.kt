@@ -36,37 +36,3 @@ const val EXTEND_LISTENER_CONTAINER_NAME = "extendRabbitListenerContainerFactory
 const val EXTEND_CONNECTION_FACTORY_NAME = "extendConnectionFactory"
 const val EXTEND_RABBIT_ADMIN_NAME = "extendRabbitAdmin"
 const val EXTEND_RABBIT_TEMPLATE_NAME = "extendRabbitTemplate"
-
-const val QUEUE_PIPELINE_BUILD = "queue_pipeline_build"
-const val QUEUE_PIPELINE_BUILD_NEED_END = "queue_pipeline_build_need_end"
-const val EXCHANGE_PIPELINE_BUILD = "exchange_pipeline_build"
-const val ROUTE_PIPELINE_BUILD = "route_pipeline_build"
-const val ROUTE_PIPELINE_BUILD_NEED_END = "route_pipeline_build_need_end"
-
-const val ROUTE_PIPELINE_FINISH = "route_pipeline_finish"
-const val QUEUE_PIPELINE_FINISH = "queue_pipeline_finish"
-const val EXCHANGE_PIPELINE_FINISH = "exchange_pipeline_finish"
-
-const val ROUTE_NOTIFY_MESSAGE = "route_notify_message"
-const val QUEUE_NOTIFY_MESSAGE = "queue_notify_message"
-const val EXCHANGE_NOTIFY_MESSAGE = "exchange_notify_message"
-
-const val ROUTE_PAASCC_PROJECT_CREATE = "route_paascc_project_create"
-const val QUEUE_PAASCC_PROJECT_CREATE = "queue_paascc_project_create"
-const val EXCHANGE_PAASCC_PROJECT_CREATE = "exchange_paascc_project_create"
-
-const val ROUTE_PAASCC_PROJECT_UPDATE = "route_paascc_project_update"
-const val QUEUE_PAASCC_PROJECT_UPDATE = "queue_paascc_project_update"
-const val EXCHANGE_PAASCC_PROJECT_UPDATE = "exchange_paascc_project_update"
-
-const val EXCHANGE_PAASCC_PROJECT_UPDATE_LOGO = "exchange_paascc_project_update_logo"
-const val ROUTE_PAASCC_PROJECT_UPDATE_LOGO = "route_paascc_project_update_logo"
-const val QUEUE_PAASCC_PROJECT_UPDATE_LOGO = "queue_paascc_project_update_logo"
-
-const val ROUTE_GIT_COMMIT_CHECK = "route_git_commit_check"
-const val EXCHANGE_GIT_COMMIT_CHECK = "exchange_git_commit_check"
-const val QUEUE_GIT_COMMIT_CHECK = "queue_git_commit_check"
-
-const val ROUTE_GITHUB_PR = "route_github_pr"
-const val EXCHANGE_GITHUB_PR = "exchange_github_pr"
-const val QUEUE_GITHUB_PR = "queue_github_pr"

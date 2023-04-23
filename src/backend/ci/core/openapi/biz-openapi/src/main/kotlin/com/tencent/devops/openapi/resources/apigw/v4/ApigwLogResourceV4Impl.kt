@@ -71,7 +71,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V4|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$jobId" +
-                    "|$executeCount"
+                "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -103,7 +103,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V4|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
-                    "|$start|$end|$tag|$jobId|$executeCount"
+                "|$start|$end|$tag|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -136,7 +136,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V4|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
-                    "|$jobId|$executeCount"
+                "|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -180,7 +180,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             headers = headers
         )
         return Response
-            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
             .build()
@@ -224,8 +224,13 @@ class ApigwLogResourceV4Impl @Autowired constructor(
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

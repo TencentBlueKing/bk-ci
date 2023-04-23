@@ -162,7 +162,8 @@ object TriggerBuilder {
                 userName = enableUser,
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
-                repoHashId = null
+                repoHashId = null,
+                gitProjectId = 0L
             )
         }
     }
@@ -179,7 +180,8 @@ object TriggerBuilder {
             userName = action.data.getUserId(),
             authType = RepoAuthType.OAUTH,
             projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
-            repoHashId = null
+            repoHashId = null,
+            gitProjectId = 0L
         )
     }
 

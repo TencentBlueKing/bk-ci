@@ -41,8 +41,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -605,11 +603,6 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorType = errorCodeEnum?.errorType ?: ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 errorCode = errorCodeEnum?.errorCode ?: ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 errorMsg = errorMessage ?: "Fail to start up after 60 retries"
-            )
-            AlertUtils.doAlert(
-                level = AlertLevel.HIGH, title = "DevOps Alert Notify",
-                message =
-                "Start Build Fail! pipeline(${event.pipelineId}) buildId(${event.buildId}) type(${event.dispatchType})"
             )
             return
         }

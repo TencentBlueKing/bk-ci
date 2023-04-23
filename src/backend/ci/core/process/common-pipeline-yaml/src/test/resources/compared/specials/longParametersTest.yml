@@ -24,6 +24,8 @@ stages:
       container:
         image: "mirrors.tencent.com/ci/tlinux3_ci:latest"
         credentials: null
+        options: null
+        image-pull-policy: null
       agent-selector: null
       workspace: null
       xcode: null

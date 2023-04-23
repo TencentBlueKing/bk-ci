@@ -37,11 +37,15 @@ object CommonScriptUtils {
     fun execute(
         script: String,
         dir: File? = null,
-        runtimeVariables: Map<String, String> = mapOf()
+        runtimeVariables: Map<String, String> = mapOf(),
+        print2Logger: Boolean = false
     ): String {
         logger.info("execute script: ${SensitiveLineParser.onParseLine(script)}")
         val isWindows = System.getProperty("os.name").startsWith("Windows", true)
-        return if (isWindows) BatScriptUtil.executeEnhance(script, runtimeVariables, dir)
-        else ShellUtil.executeEnhance(script, runtimeVariables, dir)
+        return if (isWindows) {
+            BatScriptUtil.executeEnhance(script, runtimeVariables, dir, print2Logger)
+        } else {
+            ShellUtil.executeEnhance(script, runtimeVariables, dir, print2Logger)
+        }
     }
 }

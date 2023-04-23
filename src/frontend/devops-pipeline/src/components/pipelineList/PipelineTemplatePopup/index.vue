@@ -21,7 +21,10 @@
                     </span>
                 </div>
                 <div class="template-content" :style="{ height: viewHeight }">
-                    <div class="left-temp-list">
+                    <div :class="{
+                        'left-temp-list': true,
+                        'left-temp-preivew': showPreview && tempPipeline
+                    }">
                         <template v-if="tempList.length && !showPreview">
                             <div class="search-row-content" v-if="(tempTypeIndex === tempTypeList.length - 1)">
                                 <div class="search-input-row">
@@ -628,6 +631,9 @@
                 flex-direction: column;
                 width: 666px;
                 padding: 20px 0 20px 20px;
+                &.left-temp-preivew {
+                    overflow: auto;
+                }
                 > h2 {
                     font-size: 12px;
                     margin: 0 20px 18px 0;

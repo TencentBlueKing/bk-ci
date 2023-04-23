@@ -31,6 +31,10 @@ import com.tencent.devops.model.process.tables.TPipelineBuildCommits
 import com.tencent.devops.model.process.tables.TPipelineBuildContainer
 import com.tencent.devops.model.process.tables.TPipelineBuildDetail
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.TPipelineBuildSummary
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
@@ -119,6 +123,42 @@ class ProcessDataClearDao {
 
     fun deleteBuildHistoryByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
         with(TPipelineBuildHistory.T_PIPELINE_BUILD_HISTORY) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordPipelineByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordStageByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordContainerByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deleteBuildRecordTaskByBuildId(dslContext: DSLContext, projectId: String, buildId: String) {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))

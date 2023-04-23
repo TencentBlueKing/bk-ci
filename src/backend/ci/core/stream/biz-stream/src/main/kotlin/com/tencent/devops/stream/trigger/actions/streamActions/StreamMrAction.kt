@@ -107,4 +107,6 @@ interface StreamMrAction : BaseAction {
             } else reviewers
         } else emptyList()
     }
+
+    override fun checkIfModify() = true
 }

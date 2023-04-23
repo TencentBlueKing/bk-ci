@@ -33,7 +33,6 @@ object Versions {
     const val Ktlint = "0.29.0"
     const val Elasticsearch = "7.17.3"
     const val Lucene = "8.11.1"
-    const val PinyinPlus = "1.0"
     const val ShardingSphere = "5.2.0"
     const val Oshi = "5.8.3"
     const val Leaf = "1.0.2-RELEASE"
@@ -44,5 +43,6 @@ object Versions {
     const val mockk = "1.12.2"
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
+    const val Okhttp = "4.9.0"
     const val jgit = "5.13.1.202206130422-r"
 }

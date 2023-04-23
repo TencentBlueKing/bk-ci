@@ -142,7 +142,7 @@ private fun waitBuildLessJobStart() {
 private fun doResponse(
     resp: Response
 ): Boolean {
-    val responseBody = resp.body()?.string() ?: ""
+    val responseBody = resp.body?.string() ?: ""
     println("${LocalDateTime.now()} Get buildLessTask response: $responseBody")
     return if (resp.isSuccessful && responseBody.isNotBlank()) {
         val buildLessTask: Map<String, String> = jacksonObjectMapper().readValue(responseBody)
@@ -156,7 +156,7 @@ private fun doResponse(
         }
         true
     } else {
-        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body()} continue loop...")
+        println("${LocalDateTime.now()} No buildLessTask, resp: ${resp.body} continue loop...")
         false
     }
 }

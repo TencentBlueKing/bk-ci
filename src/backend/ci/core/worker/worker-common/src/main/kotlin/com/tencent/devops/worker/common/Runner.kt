@@ -75,7 +75,8 @@ object Runner {
         try {
             BuildEnv.setBuildId(buildVariables.buildId)
 
-            workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
+            // 准备工作空间并返回 + 启动日志服务 + 启动心跳 + 打印构建信息
+            workspacePathFile = prepareWorker(buildVariables, workspaceInterface)
 
             try {
                 // 上报agent启动给quota
@@ -87,11 +88,10 @@ object Runner {
                 logger.error("Other ignore error has occurred:", ignore)
                 LoggerService.addErrorLine("Other ignore error has occurred: " + ignore.message)
             } finally {
-                LoggerService.stop()
+                // 仅当有插件运行时会产生待归档日志
                 LoggerService.archiveLogFiles()
-                EngineService.endBuild(buildVariables.variables)
+                // 兜底try中的增加配额
                 QuotaService.removeRunningAgent(buildVariables)
-                Heartbeat.stop()
             }
         } catch (ignore: Exception) {
             failed = true
@@ -109,7 +109,7 @@ object Runner {
             EngineService.submitError(
                 ErrorInfo(
                     stageId = "",
-                    jobId = buildVariables.containerId,
+                    containerId = buildVariables.containerId,
                     taskId = "",
                     taskName = "",
                     atomCode = "",
@@ -118,9 +118,10 @@ object Runner {
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
             )
-            EngineService.endBuild(buildVariables.variables)
             throw ignore
         } finally {
+            // 对应prepareWorker的兜底动作
+            finishWorker(buildVariables)
             finally(workspacePathFile, failed)
 
             if (systemExit) {
@@ -145,7 +146,7 @@ object Runner {
         }
     }
 
-    private fun prepareWorkspace(buildVariables: BuildVariables, workspaceInterface: WorkspaceInterface): File {
+    private fun prepareWorker(buildVariables: BuildVariables, workspaceInterface: WorkspaceInterface): File {
         // 为进程加上ShutdownHook事件
         KillBuildProcessTree.addKillProcessTreeHook(
             projectId = buildVariables.projectId,
@@ -176,6 +177,12 @@ object Runner {
         )
         LoggerService.pipelineLogDir = workspaceAndLogPath.second
         return workspaceAndLogPath.first
+    }
+
+    private fun finishWorker(buildVariables: BuildVariables) {
+        LoggerService.stop()
+        EngineService.endBuild(buildVariables.variables)
+        Heartbeat.stop()
     }
 
     private fun loopPickup(workspacePathFile: File, buildVariables: BuildVariables): Boolean {

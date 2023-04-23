@@ -66,6 +66,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.Collator
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
@@ -698,7 +699,9 @@ class PipelineViewGroupService @Autowired constructor(
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
-        return views.sortedBy {
+        return views.sortedWith(Comparator { a, b ->
+            Collator.getInstance().compare(a.name, b.name)
+        }).sortedBy {
             viewScoreMap[it.id] ?: Int.MAX_VALUE
         }.map {
             PipelineNewViewSummary(

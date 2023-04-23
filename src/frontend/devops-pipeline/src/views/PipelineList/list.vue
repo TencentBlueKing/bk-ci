@@ -62,6 +62,9 @@
                     .search-pipeline-input {
                         flex: 1;
                         background: white;
+                        ::placeholder {
+                            color: #c4c6cc;
+                        }
                     }
                 }
             }
@@ -100,6 +103,7 @@
                                 display: flex;
                                 @include ellipsis();
                                 min-width: 0;
+                                margin-left: 6px;
                             }
                         }
                     }

@@ -1,6 +1,7 @@
 {
   "pipeline": "Pipeline",
   "pipelineName": "Name",
+  "pipelineId": "ID",
   "labelManage": "Labels",
   "label": "Label",
   "close": "Close",
@@ -8,6 +9,7 @@
   "templateManage": "Templates",
   "pluginManage": "Installed plugins",
   "operatorAudit": "Operational Audit",
+  "apply": "Apply",
   "audit": {
     "operator": "Operator",
     "operateTime": "Operation time",
@@ -321,6 +323,7 @@
     "noticeGroup": "Groups",
     "emptyNoticeGroup": "Groups to be notified are empty",
     "additionUser": "Additional user",
+    "additionUserPlaceholder": "Support environment variables (${var}), multiple environment variables are separated by commas",
     "noticeContent": "Content",
     "pipelineLink": "add pipeline link in the content",
     "pipelineLinkDesc": "When selected, url of the pipeline build detail will be added to the end of notification that is sent through Wechat Work, Wechat or SMS",
@@ -452,7 +455,7 @@
     "cardLayout": "Card layout",
     "tableLayout": "Table layout",
     "sumPipelinesTips": "Total {0} Pipelines",
-    "applyPerm": "Apply for permission",
+    "applyPerm": "Apply",
     "temp": "Template",
     "multipleBuilds": "Multi-Builds are running",
     "cannotManual": "Manually trigger is not suppoted",
@@ -861,6 +864,7 @@
       "debugConsole": "Debug",
       "loadingTitle": ", if the container can't be activated after one minute you did so, please contact DevOps (customer service from Blue Shield)",
       "exitDebug": "Exit debugging",
+      "exiting": "Exiting",
       "fromRunningTips": " Go to the current debugging through the portal of pipeline at runtime and the container for debugging is the one used for the current build",
       "failTitle": " Failed in login to debug",
       "failDesc": " Illegal name for mirroring or other errors",
@@ -904,7 +908,8 @@
       "templateDownload": "Download",
       "otherChoice": "Other Choice"
     },
-    "stageOption": "Control option"
+    "stageOption": "Control option",
+    "pipelineVersionSaveAt": "Version {0} save at {1}"
   },
   "storeMap": {
     "textarea": "Textarea",
@@ -950,9 +955,9 @@
     "retryCount": "Retry count",
     "retryCountPlaceholder": "Integers between 1 and 5, default 1",
     "atomTimeout": "Timeout",
-    "timeoutDesc": "All the integers between 0 and 10080 with 0 indicating the maximum timeout allowed by the system",
+    "timeoutDesc": "Positive integer between 1-10080, support for referencing pipeline variables",
     "prepareTimeoutDesc": "Timeout for queued waiting when the node is busy. Default 10 minutes",
-    "timeoutPlaceholder": "Specifies the maximum time, in minutes, that a task is allowed to execute before being canceled by server. A zero value indicates an infinite timeout.",
+    "timeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "atomRunCondition": "Run this task",
     "atomPreSuc": "Run when all pre-plugins run successfully (including continue when failed)",
     "atomEvenFail": "Even if a previous task has failed, unless the build was canceled",
@@ -989,12 +994,14 @@
     "mutualGroupNamePlaceholder": "The field must be filled and only supports English letter, numbers or variables ",
     "queueEnable": " Enable the queue of mutually exclusive groups",
     "mutualTimeout": "Maximum wait time(min)",
-    "mutualTimeoutPlaceholder": "Please fill in an integer between 1 and 10080 ",
+    "mutualTimeoutPlaceholder": "Positive integer between 1-10080, support for referencing pipeline variables",
     "queueLabel": " Maximum tasks in queues ",
     "queuePlaceholder": " Please fill in an integer between 1 and 10",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "After Pre Stage done",
-    "manualRunStage": "Manual"
+    "manualRunStage": "Manual",
+    "autoSkip": "Auto",
+    "manualSkip": "Manual"
   },
   "permissionRefreshtitle": "Permission Request form has been submitted",
   "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
@@ -1004,6 +1011,7 @@
   "allPipeline": "All Pipelines",
   "projectViewList": "Project Pipeline Groups",
   "personalViewList": "My Pipeline Groups",
+  "pipelineGroup": "Pipeline Groups",
   "patchManage": "Batch Manage",
   "searchPipelinePlaceholder": "pipeline name / creator / pipeline group name/ label",
   "ownGroupName": "Pipeline Group",

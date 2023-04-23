@@ -38,7 +38,7 @@ data class CodeGitRepository(
     override val aliasName: String,
     @ApiModelProperty("URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id", required = true)
+    @ApiModelProperty("凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
     override val credentialId: String,
     @ApiModelProperty("git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,
@@ -47,9 +47,11 @@ data class CodeGitRepository(
     @ApiModelProperty("仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
     @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
+    override var projectId: String?,
     @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
+    override val repoHashId: String?,
+    @ApiModelProperty("Git仓库ID", required = false)
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeGit"

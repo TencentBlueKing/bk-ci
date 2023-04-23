@@ -42,6 +42,7 @@ import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
@@ -332,7 +333,8 @@ class ScmService @Autowired constructor(
                     targetUrl = targetUrl,
                     context = context,
                     description = description,
-                    block = block
+                    block = block,
+                    targetBranch = targetBranch
                 )
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
@@ -563,6 +565,22 @@ class ScmService @Autowired constructor(
             region = null,
             userName = null
         ).getMrCommitList(mrId = mrId, page = page, size = size)
+    }
+
+    override fun getProjectInfo(projectName: String, url: String, type: ScmType, token: String?): GitProjectInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getProjectInfo(
+            projectName = projectName
+        )
     }
 
     companion object {

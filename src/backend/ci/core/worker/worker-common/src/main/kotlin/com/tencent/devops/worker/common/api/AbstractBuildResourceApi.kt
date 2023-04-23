@@ -46,8 +46,8 @@ import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
-import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -92,9 +92,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val httpClient = builder.build()
         val retryFlag = try {
             val response = httpClient.newCall(request).execute()
-            logger.info("Request($request) with code ${response.code()}")
+            logger.info("Request($request) with code ${response.code}")
 
-            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+            if (retryCodes.contains(response.code)) { // 网关502,503，可重试
                 true
             } else {
                 ErrorMsgLogUtil.resetErrorMsg() // #5806 成功时将异常信息清理掉
@@ -118,7 +118,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             }
         } catch (re: SocketTimeoutException) {
             if (re.message == "connect timed out" ||
-                (request.method() == "GET" && re.message == "timeout")
+                (request.method == "GET" && re.message == "timeout")
             ) {
                 logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 if (retryCount <= 0) {
@@ -165,14 +165,14 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
             if (!response.isSuccessful) {
-                val responseContent = response.body()?.string()
+                val responseContent = response.body?.string()
                 logger.warn(
-                    "Fail to request($request) with code ${response.code()} ," +
-                        " message ${response.message()} and response ($responseContent)"
+                    "Fail to request($request) with code ${response.code} ," +
+                            " message ${response.message} and response ($responseContent)"
                 )
-                throw RemoteServiceException(errorMessage, response.code(), responseContent)
+                throw RemoteServiceException(errorMessage, response.code, responseContent)
             }
-            return response.body()!!.string()
+            return response.body!!.string()
         }
     }
 
@@ -191,21 +191,23 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             readTimeoutInSec = readTimeoutInSec,
             writeTimeoutInSec = writeTimeoutInSec
         ).use { response ->
-            if (response.code() == HTTP_404) {
+            if (response.code == HTTP_404) {
                 throw RemoteServiceException("file does not exist")
             }
             if (!response.isSuccessful) {
-                LoggerService.addNormalLine(response.body()!!.string())
+                LoggerService.addNormalLine(response.body!!.string())
                 throw RemoteServiceException("Failed to get file")
             }
             val dest = destPath.toPath()
             if (Files.notExists(dest.parent)) Files.createDirectories(dest.parent)
             LoggerService.addNormalLine("${LOG_DEBUG_FLAG}save file >>>> ${destPath.canonicalPath}")
-            val body = response.body() ?: return
+            val body = response.body ?: return
             val contentLength = body.contentLength()
             if (contentLength != -1L) {
-                LoggerService.addNormalLine("download ${dest.fileName} " +
-                        ArchiveUtils.humanReadableByteCountBin(contentLength))
+                LoggerService.addNormalLine(
+                    "download ${dest.fileName} " +
+                            ArchiveUtils.humanReadableByteCountBin(contentLength)
+                )
             }
 
             // body copy时可能会出现readTimeout，即便http请求已正常响应
@@ -232,9 +234,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     }
 
     companion object {
-        val JsonMediaType = MediaType.parse("application/json; charset=utf-8")
-        val OctetMediaType = MediaType.parse("application/octet-stream")
-        val MultipartFormData = MediaType.parse("multipart/form-data")
+        val JsonMediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
+        val OctetMediaType = "application/octet-stream".toMediaTypeOrNull()
+        val MultipartFormData = "multipart/form-data".toMediaTypeOrNull()
         private const val EMPTY = ""
         private const val DEFAULT_RETRY_TIME = 5
         private const val sleepTimeMills = 500L
@@ -263,11 +265,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
 //                    map[AUTH_HEADER_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
+
                 BuildType.DOCKER -> {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
+
                 else -> Unit
             }
             logger.info("Get the request header - $map")
@@ -313,7 +317,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).get().build()
     }
 
     fun buildPost(
@@ -332,7 +336,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).post(requestBody).build()
     }
 
     fun buildPut(
@@ -351,13 +355,13 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileDevnetGateway: Boolean? = null
     ): Request {
         val url = buildUrl(path, useFileDevnetGateway)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).put(requestBody).build()
     }
 
     @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
-        return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
+        return Request.Builder().url(url).headers(getAllHeaders(headers).toHeaders()).delete().build()
     }
 
     fun getJsonRequest(data: Any): RequestBody {

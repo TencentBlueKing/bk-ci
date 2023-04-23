@@ -26,45 +26,31 @@
         <meta http-equiv="Pragma" content="no-cache" />
         <link
             rel="icon"
-            href="/static/images/favicon.ico"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
             type="image/x-icon"
         />
         <link
             rel="shortcut icon"
-            href="/static/images/favicon.ico"
+            href="<%= PUBLIC_PATH_PREFIX %>/console/static/images/favicon.ico"
             type="image/x-icon"
         />
         <meta charset="utf-8" />
         <title>流水线</title>
-
-        <script>
-            var ajax = new XMLHttpRequest();
-            ajax.open(
-                "GET",
-                "/svg-sprites/pipeline_sprite.svg?t=" + Math.random(),
-                true
-            );
-            ajax.send();
-            ajax.onload = function (e) {
-                var div = document.createElement("div");
-                div.setAttribute(
-                    "style",
-                    "position: absolute; width: 0; height: 0"
-                );
-                div.innerHTML = ajax.responseText;
-                document.body.insertBefore(div, document.body.childNodes[0]);
-            };
-        </script>
+        
     </head>
     <body>
+        <!-- gulp inject: svg sprite js -->
+        <!-- inject:js -->
+        <!-- endinject -->
         <div id="app"></div>
-        <script src="/console/static/vue.min.js"></script>
-        <script src="/console/static/vuex.min.js"></script>
-        <script src="/console/static/vue-router.min.js"></script>
-        <script src="/console/static/devops-utils.js?t="></script>
-        <script src="<%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
+        <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue.min.js"></script>
+        <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vuex.min.js"></script>
+        <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/vue-router.min.js"></script>
+        <script src="<%= PUBLIC_PATH_PREFIX %>/console/static/devops-utils.js?t="></script>
+        <script src="<%= PUBLIC_PATH_PREFIX %><%= htmlWebpackPlugin.options.VENDOR_LIBS%>"></script>
         <script>
             var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
+            var PUBLIC_URL_PREFIX = "<%= PUBLIC_PATH_PREFIX %>";
             var API_URL_PREFIX = "/ms";
             var WEB_URL_PREFIX = "/console";
             var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";

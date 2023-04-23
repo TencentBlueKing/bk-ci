@@ -73,7 +73,10 @@
         "passwordTokenDesc": "用于使用http方式关联Git类型代码库，",
         "usernamePassword": "用户名+密码",
         "sshKeyToken": "SSH私钥+私有Token",
-        "passwordToken": "用户名密码+私有token"
+        "passwordToken": "用户名密码+私有token",
+        "oauthTokenRequired": "Oauth Token 不能为空",
+        "oauthTokenDesc": "Oauth Token 一般用于上层平台调用 Stream 的场景。用户对上层平台进行了Oauth授权，上层平台使用 Stream 服务时使用用户授权进行操作",
+        "oauthTokenPlaceholder": "OauthToken用于上层平台调用 Stream服务时传递用户授权信息"
     },
     "cert": {
         "certName": "证书名称",

@@ -32,6 +32,7 @@ import com.tencent.devops.model.repository.tables.TRepositoryGithub
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -112,6 +113,14 @@ class RepositoryGithubDao {
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
+        }
+    }
+
+    fun list(dslContext: DSLContext, repositoryIds: Set<Long>): Result<TRepositoryGithubRecord>? {
+        with(TRepositoryGithub.T_REPOSITORY_GITHUB) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .fetch()
         }
     }
 }

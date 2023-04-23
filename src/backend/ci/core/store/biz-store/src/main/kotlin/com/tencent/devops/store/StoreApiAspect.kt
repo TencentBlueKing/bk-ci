@@ -53,13 +53,7 @@ class StoreApiAspect(
      *
      * @param jp
      */
-    @Before(
-        "execution(* com.tencent.devops.store.resources.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
-    ) // 所有controller包下面的所有方法的所有参数
+    @Before("within(com.tencent.devops.store.resources..*)") // 所有controller包下面的所有方法的所有参数
     @Suppress("ComplexMethod")
     fun beforeMethod(jp: JoinPoint) {
         // 参数value
@@ -89,13 +83,7 @@ class StoreApiAspect(
      * 后置增强：目标方法执行之前执行
      *
      */
-    @After(
-        "execution(* com.tencent.devops.store.resources.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.common.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.atom.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.container.*.*(..))" +
-                "||execution(* com.tencent.devops.store.resources.template.*.*(..))"
-    ) // 所有controller包下面的所有方法的所有参数
+    @After("within(com.tencent.devops.store.resources..*)") // 所有controller包下面的所有方法的所有参数
     fun afterMethod() {
         // 删除线程ThreadLocal数据,防止线程池复用。导致流量指向被污染
         bkTag.removeGatewayTag()

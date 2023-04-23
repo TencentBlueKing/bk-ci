@@ -38,7 +38,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("stage准入/准出配置模型")
+@ApiModel("stage准入准出配置模型")
 data class StagePauseCheck(
     @ApiModelProperty("是否人工触发", required = false)
     var manualTrigger: Boolean? = false,

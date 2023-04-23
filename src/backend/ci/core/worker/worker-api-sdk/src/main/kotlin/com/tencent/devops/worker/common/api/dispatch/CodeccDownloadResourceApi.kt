@@ -43,7 +43,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val request = buildGet(path)
 
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
+        if (response.code == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")
@@ -63,7 +63,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val path = "/dispatch/api/build/codecc/coverity/script?osType=${osType.name}&fileMd5=$fileMd5"
         val request = buildGet(path)
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
+        if (response.code == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")
@@ -83,7 +83,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         val path = "/dispatch/api/build/codecc/tools/script?osType=${osType.name}&fileMd5=$fileMd5"
         val request = buildGet(path)
         val response = requestForResponse(request)
-        if (response.code() == HttpStatus.NOT_MODIFIED.value) {
+        if (response.code == HttpStatus.NOT_MODIFIED.value) {
             return Response.Builder().request(request)
                 .protocol(Protocol.HTTP_1_1)
                 .message("")

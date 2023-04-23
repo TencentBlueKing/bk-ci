@@ -65,4 +65,37 @@ class SvnUtilsTest {
         )
         Assertions.assertEquals(expected, "trunk/aaa/test.java")
     }
+
+    @Test
+    fun getSvnProjectName() {
+        var url = "svn+ssh://abcd@abcd-svn.abcd.com/code_python/test_project_proj/branches/dir_1/dir_2"
+        var targetProjectName = "code_python/test_project_proj"
+        var result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+
+        url = "http://abcd-svn.abcd.com/code_java/java_project_proj/trunk"
+        targetProjectName = "code_java/java_project_proj"
+        result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+
+        url = "svn+ssh://abcdefg@abcdefg-svn.abcdefg.com/code_vue/vue_front/branches/dir_1/dir_2"
+        targetProjectName = "code_vue/vue_front"
+        result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+
+        url = "svn+ssh://xyz-xyz.svn.cn/code_js/jquery/jquery_proj/branches/2.design/1.word"
+        targetProjectName = "code_js/jquery/jquery_proj"
+        result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+
+        url = "svn+ssh://svn-xyz.com/code_c/c_lib/base_lib_proj/branches/test"
+        targetProjectName = "code_c/c_lib/base_lib_proj"
+        result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+
+        url = "http://svn-xyz.com/code_kotlin/k_code/branches/test"
+        targetProjectName = "code_kotlin/k_code"
+        result = SvnUtils.getSvnProjectName(url)
+        Assertions.assertEquals(result, targetProjectName)
+    }
 }

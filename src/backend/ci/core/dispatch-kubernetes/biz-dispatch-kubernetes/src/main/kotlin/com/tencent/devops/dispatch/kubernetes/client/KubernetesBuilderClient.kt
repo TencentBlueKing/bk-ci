@@ -45,7 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -74,7 +74,7 @@ class KubernetesBuilderClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] Get detail builderName: $name response: $responseContent")
                 if (response.isSuccessful) {
                     return objectMapper.readValue(responseContent)
@@ -90,7 +90,7 @@ class KubernetesBuilderClient @Autowired constructor(
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     "${ConstantsMessage.TROUBLE_SHOOTING}获取构建机详情接口异常" +
-                        "（Fail to get builder detail, http response code: ${response.code()}"
+                            "（Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -139,7 +139,7 @@ class KubernetesBuilderClient @Autowired constructor(
 
             is StartBuilderParams -> Pair(
                 clientCommon.baseRequest(userId, "$url/start")
-                    .put(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+                    .put(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
                     .build(),
                 "start"
             )
@@ -150,14 +150,14 @@ class KubernetesBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] operator builder: $name request body: $body")
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}操作构建机接口异常" +
-                            "（Fail to $action docker, http response code: ${response.code()}"
+                                "（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] operator builder: $name response: $responseContent")
@@ -196,20 +196,20 @@ class KubernetesBuilderClient @Autowired constructor(
         logger.info("[$buildId]|[$vmSeqId] create builder request url: $url")
         logger.info("[$buildId]|[$vmSeqId] create builder request body: $body")
         val request = clientCommon.baseRequest(userId, url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("[$buildId]|[$vmSeqId] create builder response: ${response.code()}, $responseContent")
+                val responseContent = response.body!!.string()
+                logger.info("[$buildId]|[$vmSeqId] create builder response: ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         "${ConstantsMessage.TROUBLE_SHOOTING}创建构建机接口异常: Fail to createBuilder, http response code: " +
-                            "${response.code()}"
+                                "${response.code}"
                     )
                 }
 
@@ -296,7 +296,7 @@ class KubernetesBuilderClient @Autowired constructor(
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("$projectId|$staffName|$builderName Get websocketUrl response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
@@ -304,7 +304,7 @@ class KubernetesBuilderClient @Autowired constructor(
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
+                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                     )
                 }
                 val result: KubernetesResult<String> = objectMapper.readValue(responseContent)

@@ -28,11 +28,13 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
+import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
@@ -138,6 +140,19 @@ class MetricsDataQueryDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchOne()
+        }
+    }
+
+    fun getAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        statisticsTime: LocalDateTime,
+        atomCodes: List<String>
+    ): Result<TAtomIndexStatisticsDailyRecord> {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            return dslContext.selectFrom(this)
+                .where(STATISTICS_TIME.eq(statisticsTime))
+                .and(ATOM_CODE.`in`(atomCodes))
+                .fetch()
         }
     }
 }

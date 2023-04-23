@@ -28,19 +28,21 @@
 package upgrade
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+
+	"github.com/pkg/errors"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 // UninstallAgent 卸载
@@ -107,7 +109,8 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 	}()
 	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
 		job.GBuildDockerManager.GetInstanceCount() > 0 {
-		logs.Info("agent has upgrade item, but has job running, so skip.")
+		logs.Infof("agent has upgrade item, but has job running prejob: %d, job: %d, dockerJob: %d. so skip.",
+			job.GBuildManager.GetPreInstancesCount(), job.GBuildManager.GetInstanceCount(), job.GBuildDockerManager.GetInstanceCount())
 		return nil
 	}
 

@@ -50,7 +50,7 @@ import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -167,12 +167,12 @@ class BuildLessClient @Autowired constructor(
             clusterType = clusterType
         ).delete(
             RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            JsonUtil.toJson(buildLessEndInfo)
-        )).build()
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(buildLessEndInfo)
+            )).build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             LOG.info("[$buildId|$vmSeqId|$dockerIp] End build less, response: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
@@ -202,17 +202,17 @@ class BuildLessClient @Autowired constructor(
             clusterType = DockerHostClusterType.BUILD_LESS
         ).post(
             RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
                 JsonUtil.toJson(buildLessStartInfo)
             )
         ).build()
 
         val buildLogKey = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime"
-        LOG.info("Start buildLess|$buildLogKey|$dockerIp|${request.url()}")
+        LOG.info("Start buildLess|$buildLogKey|$dockerIp|${request.url}")
         try {
             OkhttpUtils.doHttp(request).use { resp ->
                 if (resp.isSuccessful) {
-                    val responseBody = resp.body()!!.string()
+                    val responseBody = resp.body!!.string()
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     LOG.info("Response buildLess $buildLogKey status: ${response["status"]}")
                     dealWithResponse(
@@ -230,7 +230,7 @@ class BuildLessClient @Autowired constructor(
                         retryMax = retryMax,
                         dockerIp = dockerIp,
                         buildLessStartInfo = buildLessStartInfo,
-                        errorMessage = resp.message(),
+                        errorMessage = resp.message,
                         unAvailableIpList = unAvailableIpList
                     )
                 }

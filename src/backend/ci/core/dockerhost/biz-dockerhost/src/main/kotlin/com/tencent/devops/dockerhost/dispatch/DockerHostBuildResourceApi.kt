@@ -40,7 +40,7 @@ import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -62,11 +62,11 @@ class DockerHostBuildResourceApi constructor(
             val path = "/${getUrlPrefix()}/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
             val request = buildPost(
                 path = path,
-                requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message)
+                requestBody = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), message)
             )
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
                 }
@@ -80,7 +80,7 @@ class DockerHostBuildResourceApi constructor(
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/resource-config/pipelines/$pipelineId/vmSeqs/$vmSeqId"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("[$pipelineId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
                     throw TaskExecuteException(
@@ -111,7 +111,7 @@ class DockerHostBuildResourceApi constructor(
             val path = "/${getUrlPrefix()}/api/dockerhost/qpc/projects/$projectId/builds/$buildId/" +
                     "vmSeqs/$vmSeqId?poolNo=$poolNo"
             OkhttpUtils.doHttp(buildGet(path)).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error("[$projectId]|[$buildId]|[$vmSeqId] Get resourceConfig $path fail. $responseContent")
                     throw TaskExecuteException(
@@ -152,12 +152,12 @@ class DockerHostBuildResourceApi constructor(
 
         val request = buildPost(
             path,
-            RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerIpInfoVO))
+            RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(dockerIpInfoVO))
         )
 
         logger.info("Start refreshDockerIpStatus $path")
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
                 throw TaskExecuteException(
@@ -177,7 +177,7 @@ class DockerHostBuildResourceApi constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val contentLength = response.header("Content-Length")?.toLong()
             if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. ${response.code()}")
+                logger.error("DockerHostBuildResourceApi $path fail. ${response.code}")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                     errorType = ErrorType.SYSTEM,
@@ -192,7 +192,7 @@ class DockerHostBuildResourceApi constructor(
         val request = buildGet(path)
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
                 throw TaskExecuteException(

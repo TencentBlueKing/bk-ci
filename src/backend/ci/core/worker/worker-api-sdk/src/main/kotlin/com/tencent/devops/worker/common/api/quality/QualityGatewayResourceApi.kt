@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.api.quality
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 
@@ -48,8 +48,10 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
         try {
             val path = "/ms/quality/api/build/metadata/saveHisMetadata?" +
                     "elementType=$elementType&taskId=$taskId&taskName=$taskName"
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
-                objectMapper.writeValueAsString(data))
+            val requestBody = RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                objectMapper.writeValueAsString(data)
+            )
             val request = buildPost(path, requestBody)
             val responseContent = request(request, "保存脚本元数据失败")
             return Result(responseContent)

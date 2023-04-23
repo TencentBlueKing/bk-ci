@@ -38,13 +38,19 @@ object BatScriptUtil {
     fun executeEnhance(
         script: String,
         runtimeVariables: Map<String, String>,
-        dir: File? = null
+        dir: File? = null,
+        print2Logger: Boolean = false
     ): String {
         val enhanceScript = CommandLineUtils.solveSpecialChar(script)
-        return execute(enhanceScript, dir, runtimeVariables)
+        return execute(enhanceScript, dir, runtimeVariables, print2Logger)
     }
 
-    private fun execute(script: String, dir: File?, runtimeVariables: Map<String, String>): String {
+    private fun execute(
+        script: String,
+        dir: File?,
+        runtimeVariables: Map<String, String>,
+        print2Logger: Boolean = false
+    ): String {
         try {
             val tmpDir = System.getProperty("java.io.tmpdir")
             val file = if (tmpDir.isNullOrBlank()) {
@@ -82,7 +88,7 @@ object BatScriptUtil {
             val charset = Charset.defaultCharset()
 
             file.writeText(command.toString(), charset)
-            return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, true)
+            return CommandLineUtils.execute("cmd.exe /C \"${file.canonicalPath}\"", dir, print2Logger)
         } catch (ignore: Throwable) {
             logger.warn("Fail to execute bat script", ignore)
             throw ignore

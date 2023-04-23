@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.pojo.enums
 enum class CredentialType {
     PASSWORD,                               // v1 = password, v2=v3=v4=null
     ACCESSTOKEN,                            // v1 = access_token
+    OAUTHTOKEN,                             // v1 = oauth_token
     USERNAME_PASSWORD,                      // v1 = username, v2 = password, other = null
     SECRETKEY,                              // v1 = secretKey, other = null
     APPID_SECRETKEY,                        // v1 = appId, v2 = secretKey, other = null
@@ -45,6 +46,7 @@ enum class CredentialType {
             when (credentialType) {
                 PASSWORD.name -> keyMap["v1"] = "password"
                 ACCESSTOKEN.name -> keyMap["v1"] = "access_token"
+                OAUTHTOKEN.name -> keyMap["v1"] = "oauth_token"
                 USERNAME_PASSWORD.name -> {
                     keyMap["v1"] = "username"
                     keyMap["v2"] = "password"

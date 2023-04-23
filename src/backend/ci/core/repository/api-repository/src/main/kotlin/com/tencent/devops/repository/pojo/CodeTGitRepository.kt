@@ -41,14 +41,16 @@ data class CodeTGitRepository(
     @ApiModelProperty("凭据id", required = true)
     override val credentialId: String,
     @ApiModelProperty("tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
-    override val projectName: String,
+    override var projectName: String,
     @ApiModelProperty("用户名", required = true)
     override var userName: String,
     @ApiModelProperty("仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
     @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
-    override val repoHashId: String?
+    override var projectId: String?,
+    override val repoHashId: String?,
+    @ApiModelProperty("TGit仓库ID", required = false)
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeTGit"

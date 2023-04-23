@@ -60,7 +60,6 @@ import com.tencent.devops.quality.api.v2.pojo.op.QualityMetaData
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE
 import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID
-import com.tencent.devops.store.constant.StoreMessageCode.USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_PACKAGE_INVALID
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
@@ -106,6 +105,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.AtomIndexTriggerCalService
 import com.tencent.devops.store.service.atom.AtomNotifyService
 import com.tencent.devops.store.service.atom.AtomQualityService
 import com.tencent.devops.store.service.atom.AtomReleaseService
@@ -157,6 +157,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var atomNotifyService: AtomNotifyService
     @Autowired
     lateinit var atomQualityService: AtomQualityService
+    @Autowired
+    lateinit var atomIndexTriggerCalService: AtomIndexTriggerCalService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
     @Autowired
@@ -586,14 +588,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     }
                     storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
                 }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
-                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
-                )
+                // 无意义的抛出异常
+//            } else {
+//                throw ErrorCodeException(
+//                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
+//                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
+//                )
             }
-        } catch (ignored: Throwable) {
-            logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
+        } catch (ignored: Exception) {
+            logger.warn("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
     }
 
@@ -1088,6 +1091,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     atomCode = atomCode,
                     version = atomReleaseRequest.version,
                     releaseFlag = true
+                )
+                // 计算插件指标数据
+                atomIndexTriggerCalService.upgradeTriggerCalculate(
+                    userId = userId,
+                    atomCode = atomCode,
+                    version = atomReleaseRequest.version,
+                    releaseType = releaseType
                 )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)

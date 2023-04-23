@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.jooq.DSLContext
@@ -59,6 +60,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
     private val taskBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
@@ -121,11 +123,13 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         // 修改详情model
-        taskBuildDetailService.taskContinue(
+        taskBuildRecordService.taskContinue(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
+            executeCount = task.executeCount ?: 1,
             taskId = task.taskId,
             element = newElement
         )
@@ -169,11 +173,14 @@ class PipelineTaskPauseListener @Autowired constructor(
         pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        taskBuildDetailService.taskCancel(
+        taskBuildRecordService.taskCancel(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
+            stageId = task.stageId,
             containerId = task.containerId,
             taskId = task.taskId,
+            executeCount = task.executeCount ?: 1,
             cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
         )
 

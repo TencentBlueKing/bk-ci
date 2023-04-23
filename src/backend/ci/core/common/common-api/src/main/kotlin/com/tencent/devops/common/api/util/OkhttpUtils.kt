@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import okhttp3.ConnectionPool
-import okhttp3.Headers
-import okhttp3.HttpUrl
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -60,9 +60,9 @@ object OkhttpUtils {
 
     private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)
 
-    val jsonMediaType = MediaType.parse("application/json")
+    val jsonMediaType = "application/json".toMediaTypeOrNull()
 
-    private val octetStream = MediaType.parse("application/octet-stream")
+    private val octetStream = "application/octet-stream".toMediaTypeOrNull()
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         @Throws(CertificateException::class)
@@ -154,9 +154,9 @@ object OkhttpUtils {
     fun <R> doRedirectHttp(request: Request, handleResponse: (Response) -> R): R {
         doHttp(redirectOkHttpClient, request).use { response ->
             if (
-                request.method() == "POST" &&
-                (response.code() == HttpURLConnection.HTTP_MOVED_PERM ||
-                    response.code() == HttpURLConnection.HTTP_MOVED_TEMP)
+                request.method == "POST" &&
+                (response.code == HttpURLConnection.HTTP_MOVED_PERM ||
+                    response.code == HttpURLConnection.HTTP_MOVED_TEMP)
             ) {
                 val location = response.header("Location")
                 if (location != null) {
@@ -224,20 +224,20 @@ object OkhttpUtils {
         val request = if (headers == null) {
             Request.Builder().url(url).get().build()
         } else {
-            Request.Builder().url(url).headers(Headers.of(headers)).get().build()
+            Request.Builder().url(url).headers(headers.toHeaders()).get().build()
         }
         longHttpClient.newCall(request).execute().use { response ->
-            if (response.code() == 404) {
+            if (response.code == 404) {
                 logger.warn("The file $url is not exist")
                 throw RemoteServiceException("File is not exist!")
             }
             if (!response.isSuccessful) {
-                logger.warn("FAIL|Download file from $url| message=${response.message()}| code=${response.code()}")
+                logger.warn("FAIL|Download file from $url| message=${response.message}| code=${response.code}")
                 throw RemoteServiceException("Get file fail")
             }
             if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
             val buf = ByteArray(4096)
-            response.body()!!.byteStream().use { bs ->
+            response.body!!.byteStream().use { bs ->
                 var len = bs.read(buf)
                 FileOutputStream(destPath).use { fos ->
                     while (len != -1) {
@@ -250,17 +250,17 @@ object OkhttpUtils {
     }
 
     fun downloadFile(response: Response, destPath: File) {
-        if (response.code() == 304) {
+        if (response.code == 304) {
             logger.info("file is newest, do not download to $destPath")
             return
         }
         if (!response.isSuccessful) {
-            logger.warn("fail to download the file because of ${response.message()} and code ${response.code()}")
+            logger.warn("fail to download the file because of ${response.message} and code ${response.code}")
             throw RemoteServiceException("Get file fail")
         }
         if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
         val buf = ByteArray(4096)
-        response.body()!!.byteStream().use { bs ->
+        response.body!!.byteStream().use { bs ->
             var len = bs.read(buf)
             FileOutputStream(destPath).use { fos ->
                 while (len != -1) {
@@ -274,7 +274,7 @@ object OkhttpUtils {
     fun downloadFile(url: String, response: HttpServletResponse) {
         logger.info("downloadFile url is:$url")
         val httpResponse = getFileHttpResponse(url)
-        FileCopyUtils.copy(httpResponse.body()!!.byteStream(), response.outputStream)
+        FileCopyUtils.copy(httpResponse.body!!.byteStream(), response.outputStream)
     }
 
     fun downloadFile(url: String): javax.ws.rs.core.Response {
@@ -286,7 +286,7 @@ object OkhttpUtils {
             return javax.ws.rs.core.Response.status(javax.ws.rs.core.Response.Status.INTERNAL_SERVER_ERROR).build()
         }
         return javax.ws.rs.core.Response
-            .ok(httpResponse.body()!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .ok(httpResponse.body!!.byteStream(), javax.ws.rs.core.MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("Content-disposition", "attachment;filename=" + fileName!!)
             .header("Cache-Control", "no-cache").build()
     }
@@ -295,8 +295,8 @@ object OkhttpUtils {
         val request = Request.Builder().url(url).get().build()
         val httpResponse = doLongHttp(request)
         if (!httpResponse.isSuccessful) {
-            logger.error("FAIL|Download file from $url| message=${httpResponse.message()}| code=${httpResponse.code()}")
-            throw RemoteServiceException(httpResponse.message())
+            logger.error("FAIL|Download file from $url| message=${httpResponse.message}| code=${httpResponse.code}")
+            throw RemoteServiceException(httpResponse.message)
         }
         return httpResponse
     }
@@ -316,7 +316,7 @@ object OkhttpUtils {
         var totalBytesRead = 0
         var len: Int
         val result = CharArrayWriter()
-        body()!!.charStream().use { inStream ->
+        body!!.charStream().use { inStream ->
             result.use { outStream ->
                 while ((inStream.read(buf).also { len = it }) != -1) {
                     totalBytesRead += len
@@ -335,7 +335,7 @@ object OkhttpUtils {
 
     fun validUrl(url: String): Boolean {
         return try {
-            HttpUrl.get(url)
+            url.toHttpUrl()
             true
         } catch (e: IllegalArgumentException) {
             logger.warn("url Invalid: ${e.message}")

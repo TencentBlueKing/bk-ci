@@ -30,16 +30,18 @@ package systemutil
 import (
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/gofrs/flock"
 	"net"
 	"net/url"
 	"os"
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+
+	"github.com/gofrs/flock"
 )
 
 var GExecutableDir string
