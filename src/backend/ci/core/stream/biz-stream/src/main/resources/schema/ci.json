@@ -989,6 +989,27 @@
                         }, {
                           "type" : "string"
                         } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          }
+                        }
                       }
                     }
                   },
@@ -1265,6 +1286,27 @@
                         }, {
                           "type" : "string"
                         } ]
+                      },
+                      "options" : {
+                        "type" : "object",
+                        "additionalProperties" : false,
+                        "properties" : {
+                          "volumes" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "mounts" : {
+                            "type" : "array",
+                            "items" : {
+                              "type" : "string"
+                            }
+                          },
+                          "gpus" : {
+                            "type" : "string"
+                          }
+                        }
                       }
                     }
                   },

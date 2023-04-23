@@ -70,7 +70,13 @@ class P4ShelveTriggerHandler(
     )
     override fun getEventType(): CodeEventType = CodeEventType.SHELVE_COMMIT
 
-    override fun getEventType(event: P4ShelveEvent): CodeEventType = event.eventType
+    override fun getEventType(event: P4ShelveEvent): CodeEventType = when (event.eventType) {
+        P4ShelveEvent.SHELVE_COMMIT -> CodeEventType.SHELVE_COMMIT
+        P4ShelveEvent.SHELVE_DELETE -> CodeEventType.SHELVE_DELETE
+        P4ShelveEvent.SHELVE_SUBMIT -> CodeEventType.SHELVE_SUBMIT
+        else ->
+            CodeEventType.valueOf(event.eventType)
+    }
 
     override fun getMessage(event: P4ShelveEvent) = ""
 
@@ -82,6 +88,12 @@ class P4ShelveTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val p4Filter = WebhookUtils.getP4Filter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                webHookParams = webHookParams
+            )
             val urlFilter = P4PortFilter(
                 pipelineId = pipelineId,
                 triggerOnP4port = event.p4Port,
@@ -111,7 +123,7 @@ class P4ShelveTriggerHandler(
                     ).doFilter(response)
                 }
             }
-            return listOf(urlFilter, eventTypeFilter, pathFilter)
+            return listOf(p4Filter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 

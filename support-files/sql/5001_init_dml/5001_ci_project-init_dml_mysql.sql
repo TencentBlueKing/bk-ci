@@ -14,6 +14,7 @@ INSERT IGNORE INTO `T_SERVICE` (`name`, `english_name`, `service_type_id`, `link
 INSERT IGNORE INTO `T_SERVICE` (`name`, `english_name`, `service_type_id`, `link`, `link_new`, `inject_type`, `iframe_url`, `css_url`, `js_url`, `show_project_list`, `show_nav`, `project_id_type`, `status`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `gray_css_url`, `gray_js_url`, `weight`, `logo_url`, `web_socket`) VALUES ('敏捷开发(Teamwork)', 'Teamwork', 1, '/teamwork/', '/teamwork/', 'amd', '', '/teamwork/teamwork.css', '/teamwork/teamwork.js', b'1', b'1', 'path', 'planning', 'system', '2019-06-05 17:12:48', 'system', '2019-06-05 17:12:48', b'1', '', '', 90, 'teamwork', '');
 INSERT IGNORE INTO `T_SERVICE` (`name`, `english_name`, `service_type_id`, `link`, `link_new`, `inject_type`, `iframe_url`, `css_url`, `js_url`, `show_project_list`, `show_nav`, `project_id_type`, `status`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `gray_css_url`, `gray_js_url`, `weight`, `logo_url`, `web_socket`) VALUES ('编译加速(Turbo)', 'Turbo', 2, '/turbo/', '/turbo/', 'amd', '', '', '', b'1', b'1', 'path', 'planning', 'system', '2019-06-05 17:12:47', NULL, '2019-06-05 17:12:47', b'1', NULL, NULL, 89, 'turbo', '');
 INSERT IGNORE INTO `T_SERVICE` (`name`, `english_name`, `service_type_id`, `link`, `link_new`, `inject_type`, `iframe_url`, `css_url`, `js_url`, `show_project_list`, `show_nav`, `project_id_type`, `status`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `gray_css_url`, `gray_js_url`, `weight`, `logo_url`, `web_socket`) VALUES ('制品库(Repo)', 'Repo', 2, '/repo/', '/repo/', 'iframe', 'https://bkrepo.yourdomain.com/ui/', '', '', b'1', b'1', 'path', 'planning', 'system', '2021-06-17 10:58:25', 'system', '2021-06-17 10:58:25', b'1', '', '', 96, 'artifactory', '');
+INSERT IGNORE INTO `T_SERVICE` (`name`, `english_name`, `service_type_id`, `link`, `link_new`, `inject_type`, `iframe_url`, `css_url`, `js_url`, `show_project_list`, `show_nav`, `project_id_type`, `status`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `gray_css_url`, `gray_js_url`, `weight`, `logo_url`, `web_socket`) VALUES ('Metrics 看板(Metrics)', 'Metrics', 8, '/metrics/', '/metrics/', 'iframe', '/metrics/', '', '', b'1', b'1', 'path', 'new', 'system', '2022-10-24 21:11:48', 'system', '2022-10-24 21:11:48', b'0', '', '', 99, 'metrics', '');
 
 -- 服务分类初始化
 REPLACE INTO `T_SERVICE_TYPE` (`id`, `title`, `english_title`, `created_user`, `created_time`, `updated_user`, `updated_time`, `deleted`, `weight`) VALUES (1, '项目管理', 'Case', 'system', '2019-06-05 17:13:55', 'system', '2019-06-05 17:13:55', b'1', NULL);
@@ -569,6 +570,7 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) values('d3a1f3942f14442dbdfc79350e4e1aae','2120912','20','研发商店：敏感API[{0}]不存在','研發商店：敏感API[{0}]不存在','store: sensitive api [{0}] is not exist');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) values('d3a1f3942f14442dbdfc79350e4e111e','2120913','20','研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型','研發商店：當前發布類型下僅能新增歷史大版本下的小版本，請修改版本號或者發布類型','store: Under the current release type, only minor versions under the historical major version can be added. Please modify the version number or release type');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) values('5808ff8aea56ea34fe4c97a9b69e9078','2120914','20','研发商店：文件路径[{0}]错误','研发商店：文件路径[{0}]错误','store: the file path [{0}] error');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) values('e292957f39e412fa47aae9c113656b95','2120915','20','错误码{0}格式错误','错误码{0}格式错误','store: The error code {0} malformed');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('05136078d20a4a33bc17b4c8a08d0e1e', '2101055', '01', 'Stage[{0}]准入配置不正确', 'Stage[{0}]準入配置不正確', ' Stage[{0}] access configuration is incorrect');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('0f93789da4104eb0b7f35ab13edea8d5', '2101072', '01', 'Stage[{0}]的审核组[{1}]没有未配置可执行人', 'Stage[{0}]的審核組[{1}]沒有未配置可執行人', 'Stage[{0}]’s audit team [{1}] has no unconfigured executables');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('4cee1378c33b4c618fee1822a0507ad2', '2101073', '01', 'Stage[{0}]的审核组ID[{1}]不存在', 'Stage[{0}]的審核組ID[{1}]不存在', 'Stage[{0}]’s audit group ID [{1}] does not exist.');
@@ -646,16 +648,15 @@ REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES (
 REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_PROJECT_PIPELINE_LABEL_INFO', 1, 50, 'metris项目标签ID管理');
 REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('METRICS_PROJECT_THIRD_PLATFORM_DATA', 1, 100, 'metris项目下第三方平台ID管理');
 REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('ATOM_DISPLAY_CONFIG', 1, 100, '项目下展示插件配置ID管理');
+REPLACE INTO `T_LEAF_ALLOC`(`BIZ_TAG`, `MAX_ID`, `STEP`, `DESCRIPTION`) VALUES ('T_ATOM_INDEX_STATISTICS_DAILY', 1, 100, '插件每日指标数据ID管理');
 
 --国际化翻译初始化
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('86c1446794c0b9da1cdc4b722c628df0', 'SHENZHEN', '05', '深圳', '深圳', 'SZ');
-
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('f1df48e0ecf244fdb1418e102fcde521', 'ENV_NODE_TYPE_CMDB', '05', 'CMDB', 'CMDB', 'CMDB');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('a77b124c7dc840cfb595f8e9c78c7102', 'ENV_NODE_TYPE_DEVCLOUD', '05', 'DevCloud虚拟机', 'DevCloud虛擬機', 'DevCloud virtual machine');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('0351d77614fa2e17a08dd44e889db9fd', 'ENV_NODE_TYPE_THIRDPARTY', '05', '第三方构建机', '第三方構建機', 'Self-hosted Agent');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('7ba2eab3afd842668cdf64bfd22bc617', 'ENV_NODE_TYPE_OTHER', '05', '其他', '其他', 'Other');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('15163fbace914ac58946138568558197', 'ENV_NODE_TYPE_UNKNOWN', '05', '未知', '未知', 'Unknown');
-
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('845d5a9bc9d74b0ba3f0a1a8e94a61cb', 'ENV_NODE_STATUS_NORMAL', '05', '正常', '正常', 'Normal');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('d5c9077b03b17c20354c462b34048c10', 'ENV_NODE_STATUS_ABNORMAL', '05', '异常', '異常', 'Abnormal');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('7baab96fca3f469d91e3055e055666a1', 'ENV_NODE_STATUS_DELETED', '05', '已删除', '已刪除', 'Deleted');
@@ -671,23 +672,3 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('185054a8bc1b4670b9322b9c41bbf0b1', 'ENV_NODE_STATUS_BUILD_IMAGE_SUCCESS', '05', '制作镜像成功', '製作鏡像成功', 'Build image success');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('703ba6a3e11647bdac13b43334997285', 'ENV_NODE_STATUS_BUILD_IMAGE_FAILED', '05', '制作镜像失败', '製作鏡像失敗', 'Build image failed');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('fc86e25b8804413dbedda031a48ee502', 'ENV_NODE_STATUS_UNKNOWN', '05', '未知', '未知', 'Unknown');
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

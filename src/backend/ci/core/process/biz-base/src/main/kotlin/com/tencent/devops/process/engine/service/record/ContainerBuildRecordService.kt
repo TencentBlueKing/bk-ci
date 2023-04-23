@@ -59,7 +59,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "MagicNumber", "LongMethod")
+@Suppress("LongParameterList", "MagicNumber", "LongMethod", "ComplexMethod")
 @Service
 class ContainerBuildRecordService(
     private val dslContext: DSLContext,
@@ -256,14 +256,15 @@ class ContainerBuildRecordService(
                             executeCount = executeCount, stageId = null,
                             matrixGroupId = containerId
                         )
-                        containerVar[Container::timeCost.name] =
-                            recordContainer.generateMatrixTimeCost(groupContainers)
+                        recordContainer.generateMatrixTimeCost(groupContainers)?.let {
+                            containerVar[Container::timeCost.name] = it
+                        }
                     } else {
                         val recordTasks = recordTaskDao.getRecords(
                             context, projectId, pipelineId, buildId, executeCount, containerId
                         )
                         val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
-                        containerVar[Container::timeCost.name] = cost
+                        cost?.let { containerVar[Container::timeCost.name] = it }
                         containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
                     }
                 }
@@ -330,6 +331,10 @@ class ContainerBuildRecordService(
             cancelUser = null, operation = "containerSkip#$containerId"
         ) {
             logger.info("[$buildId]|container_skip|j($containerId)")
+            recordTaskDao.updateRecordStatus(
+                dslContext, projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, containerId = containerId, buildStatus = BuildStatus.SKIP
+            )
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = containerId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
