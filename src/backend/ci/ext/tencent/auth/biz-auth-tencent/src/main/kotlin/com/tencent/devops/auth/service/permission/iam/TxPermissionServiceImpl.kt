@@ -140,7 +140,18 @@ class TxPermissionServiceImpl @Autowired constructor(
             )) {
             return arrayListOf("*")
         }
-        return super.getUserResourceByAction(userId, action, projectCode, resourceType)
+        val permissionResult = super.getUserResourceByAction(userId, action, projectCode, resourceType)
+        if (permissionResult.isNotEmpty()) {
+            executor.submit {
+                authVerifyRecordService.bathCreateOrUpdateVerifyRecord(
+                    permissionsResourcesMap = mapOf(AuthPermission.get(action.substringAfter("_")) to permissionResult),
+                    userId = userId,
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            }
+        }
+        return permissionResult
     }
 
     override fun getUserResourcesByActions(

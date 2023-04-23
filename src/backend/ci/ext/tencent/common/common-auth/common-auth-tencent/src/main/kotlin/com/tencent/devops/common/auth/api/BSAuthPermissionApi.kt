@@ -217,6 +217,24 @@ class BSAuthPermissionApi @Autowired constructor(
                         )
                     }
                 }
+                // 异步批量记录鉴权结果
+                executor.submit {
+                    try {
+                        if (responseObject.data != null) {
+                            client.get(ServiceVerifyRecordResource::class).bathCreateOrUpdate(
+                                userId = user,
+                                projectCode = projectCode,
+                                resourceType = TActionUtils.extResourceType(resourceType),
+                                permissionsResourcesMap = mapOf(permission to responseObject.data)
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.warn(
+                            "batch create v0 verify record failed!|" +
+                                "$projectCode|$user|$resourceType|$responseObject.data"
+                        )
+                    }
+                }
                 return responseObject.data ?: emptyList()
             }
         } finally {
