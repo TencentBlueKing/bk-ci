@@ -52,7 +52,7 @@
                                 <bk-button
                                     theme="primary"
                                     outline
-                                    @cliack="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
+                                    @click="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
                             </template>
                         </template>
                     </bk-table-column>
