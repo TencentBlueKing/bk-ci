@@ -54,6 +54,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
@@ -134,7 +135,6 @@ class WorkspaceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private const val ADMIN_NAME = "system"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
