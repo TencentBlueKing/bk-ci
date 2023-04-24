@@ -611,10 +611,10 @@ class WorkspaceService @Autowired constructor(
         dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,
-            workspaceHost = null,
-            errorMsg = null,
+            workspaceHost = environmentHost,
+            errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_START,
-            status = null,
+            status = status,
             action = WorkspaceAction.START
         )
     }
@@ -702,7 +702,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = null,
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
-                status = null,
+                status = true,
                 action = WorkspaceAction.SLEEPING
             )
             return true
@@ -807,7 +807,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = null,
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
-                status = null,
+                status = true,
                 action = WorkspaceAction.DELETING
             )
             return true
@@ -1239,7 +1239,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = null,
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_SLEEP,
-                status = null,
+                status = true,
                 action = WorkspaceAction.SLEEPING
             )
             return true
@@ -1339,7 +1339,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceHost = null,
                 errorMsg = null,
                 type = WebSocketActionType.WORKSPACE_DELETE,
-                status = null,
+                status = true,
                 action = WorkspaceAction.DELETING
             )
             return true
@@ -1418,7 +1418,7 @@ class WorkspaceService @Autowired constructor(
             userId = operator,
             workspaceName = workspaceName,
             workspaceHost = null,
-            errorMsg = null,
+            errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_DELETE,
             status = status,
             action = WorkspaceAction.DELETE
@@ -1483,7 +1483,7 @@ class WorkspaceService @Autowired constructor(
             userId = operator,
             workspaceName = workspaceName,
             workspaceHost = null,
-            errorMsg = null,
+            errorMsg = errorMsg,
             type = WebSocketActionType.WORKSPACE_SLEEP,
             status = status,
             action = WorkspaceAction.SLEEP
