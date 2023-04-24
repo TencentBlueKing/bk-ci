@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
@@ -113,11 +114,6 @@ class DockerVMListener @Autowired constructor(
     }
 
     override fun onShutdown(event: PipelineAgentShutdownEvent) {
-        // 广播消息中非DockerDispatchType的消息直接返回
-        if (event.dispatchType !is DockerDispatchType) {
-            return
-        }
-
         logger.info("On shutdown - ($event)")
 
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(event.projectId)
@@ -131,12 +127,11 @@ class DockerVMListener @Autowired constructor(
         }
     }
 
-    private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
-        // 广播消息中非DockerDispatchType的消息直接返回
-        if (dispatchMessage.dispatchType !is DockerDispatchType) {
-            return
-        }
+    override fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return dispatchType is DockerDispatchType
+    }
 
+    private fun parseRoutingStartup(dispatchMessage: DispatchMessage, demoteFlag: Boolean = false) {
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion

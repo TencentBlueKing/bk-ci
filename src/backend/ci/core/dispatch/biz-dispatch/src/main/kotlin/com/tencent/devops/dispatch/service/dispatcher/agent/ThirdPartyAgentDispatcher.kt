@@ -107,35 +107,28 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     }
 
     override fun shutdown(event: PipelineAgentShutdownEvent) {
-        when (event.dispatchType) {
-            is ThirdPartyAgentIDDispatchType, is ThirdPartyDevCloudDispatchType, is ThirdPartyAgentEnvDispatchType -> {
+            try {
+                thirdPartyAgentBuildService.finishBuild(event)
+            } finally {
                 try {
-                    thirdPartyAgentBuildService.finishBuild(event)
-                } finally {
-                    try {
-                        sendDispatchMonitoring(
-                            client = client,
-                            projectId = event.projectId,
-                            pipelineId = event.pipelineId,
-                            buildId = event.buildId,
-                            vmSeqId = event.vmSeqId ?: "",
-                            actionType = event.actionType.name,
-                            retryTime = event.retryTime,
-                            routeKeySuffix = event.routeKeySuffix ?: "third",
-                            startTime = 0L,
-                            stopTime = System.currentTimeMillis(),
-                            errorCode = "0",
-                            errorMessage = "",
-                            errorType = ""
-                        )
-                    } catch (ignore: Exception) {
-                        logger.warn("${event.buildId}]SHUTDOWN_THIRD_PARTY_ERROR|e=$ignore", ignore)
-                    }
+                    sendDispatchMonitoring(
+                        client = client,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        buildId = event.buildId,
+                        vmSeqId = event.vmSeqId ?: "",
+                        actionType = event.actionType.name,
+                        retryTime = event.retryTime,
+                        routeKeySuffix = event.routeKeySuffix ?: "third",
+                        startTime = 0L,
+                        stopTime = System.currentTimeMillis(),
+                        errorCode = "0",
+                        errorMessage = "",
+                        errorType = ""
+                    )
+                } catch (ignore: Exception) {
+                    logger.warn("${event.buildId}]SHUTDOWN_THIRD_PARTY_ERROR|e=$ignore", ignore)
                 }
-            }
-
-            else -> {
-                logger.warn("Unknown agent type - ${event.dispatchType}")
             }
         }
     }

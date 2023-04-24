@@ -28,6 +28,10 @@
 package com.tencent.devops.dispatch.listener
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.exception.VMTaskFailException
 import com.tencent.devops.dispatch.service.PipelineDispatchService
@@ -47,6 +51,10 @@ class ThirdPartyAgentListener @Autowired constructor(
 ) {
     @BkTimed
     fun listenAgentStartUpEvent(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
+        if (!consumerFilter(pipelineAgentStartupEvent.dispatchType)) {
+            return
+        }
+
         try {
             if (checkRunning(pipelineAgentStartupEvent)) {
                 pipelineDispatchService.startUp(pipelineAgentStartupEvent)
@@ -60,6 +68,10 @@ class ThirdPartyAgentListener @Autowired constructor(
     }
 
     fun listenAgentShutdownEvent(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
+        if (!consumerFilter(pipelineAgentShutdownEvent.dispatchType)) {
+            return
+        }
+
         try {
             pipelineDispatchService.shutdown(pipelineAgentShutdownEvent)
         } catch (ignored: Throwable) {
@@ -87,6 +99,15 @@ class ThirdPartyAgentListener @Autowired constructor(
         }
 
         return true
+    }
+
+    private fun consumerFilter(dispatchType: DispatchType): Boolean {
+        return when (dispatchType) {
+            is ThirdPartyAgentIDDispatchType, is ThirdPartyDevCloudDispatchType, is ThirdPartyAgentEnvDispatchType -> {
+                true
+            }
+            else -> false
+        }
     }
 
     companion object {
