@@ -78,17 +78,17 @@ import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
+import java.net.URLEncoder
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
 
 @Suppress("ALL")
 @Service
@@ -591,11 +591,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                params = arrayOf(
-                    "(复制/copy)",
-                    pipeline.channelCode.name,
-                    channelCode.name
-                )
+                defaultMessage = "指定编辑的流水线渠道来源${pipeline.channelCode.name}不符合$channelCode",
+                params = arrayOf(pipeline.channelCode.name)
             )
         }
 
@@ -725,11 +722,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    params = arrayOf(
-                        "(复制/copy)",
-                        pipeline.channelCode.name,
-                        channelCode.name
-                    )
+                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channelCode.name}不符合$channelCode",
+                    params = arrayOf(pipeline.channelCode.name)
                 )
             }
 
@@ -858,11 +852,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                params = arrayOf(
-                    "(复制/copy)",
-                    pipelineInfo.channelCode.name,
-                    channelCode.name
-                )
+                defaultMessage = "指定编辑的流水线渠道来源${pipelineInfo.channelCode.name}不符合$channelCode",
+                params = arrayOf(pipelineInfo.channelCode.name)
             )
         }
 

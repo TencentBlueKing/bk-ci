@@ -115,4 +115,24 @@ object RepositoryMessageCode {
     const val BK_CODE_REPO_NOT_MATCHED = "bkCodeRepoNotMatched"// 未匹配到代码库
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit"// 请求文件不能超过1M
     const val BK_LOCAL_REPO_CREATION_FAILED = "bkLocalRepoCreationFailed"// 工程({0})本地仓库创建失败
+    const val OPERATION_BRANCH = "bkOperationBranch"// 拉分支
+    const val OPERATION_TAG = "bkOperationTag"// 拉标签
+    const val OPERATION_ADD_WEBHOOK = "bkOperationAddWebhook"// 添加WEBHOOK
+    const val OPERATION_UPDATE_WEBHOOK = "bkOperationUpdateWebhook"// 修改WEBHOOK
+    const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook"// 查询WEBHOOK
+    const val OPERATION_ADD_COMMIT_CHECK = "bkperationAddCommitCheck"// 添加COMMIT CHECK
+    const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment"// 添加MR COMMENT
+    const val CREATE_BRANCH = "bkCreateBranch"// 创建分支
+    const val DELETE_BRANCH = "bkDeleteBranch"// 删除分支
+    const val OPERATION_COMMIT = "bkOperationCommit"// 拉提交记录
+    const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff"// 查询commit变化
+    const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock"// 解锁hook锁
+    const val OPERATION_MR_CHANGE = "bkOperationMrChange"// 查询合并请求的代码变更
+    const val OPERATION_MR_INFO = "bkOperationMrInfo"// 查询项目合并请求
+    const val OPERATION_MR_REVIEW = "bkOperationMrReview"// 查询项目合并请求
+    const val OPERATION_GET_CHANGE_FILE_LIST = "bkOperationGetChangeFileList"// 查询变更文件列表
+    const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList"// 获取合并请求中的提交
+    const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo"// 获取项目中成员信息
+    const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems"// 查看绑定的TAPD单
+    const val GET_PROJECT_INFO = "bkGetProjectInfo"// 获取项目详情
 }

@@ -192,6 +192,8 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             if (it.response.error != null) {
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL,
+                    defaultMessage = "通知服务：腾讯云邮件通知发送失败,${it.response.error.message} " +
+                            "返回错误码 ${it.response.error.code}",
                     params = arrayOf(it.response.error.code)
                 )
             }
