@@ -114,8 +114,19 @@ object StoreUtils {
      * @param storeType 组件类型
      * @param storeCode 组件代码
      * @param version 组件版本
+     * @param fixPrefixName 固定前缀名称
      */
-    fun getStoreFieldKeyPrefix(storeType: StoreTypeEnum, storeCode: String, version: String): String {
-        return "${storeType.name}.$storeCode.$version"
+    fun getStoreFieldKeyPrefix(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        fixPrefixName: String? = null
+    ): String {
+        val dataKey = "${storeType.name}.$storeCode.$version"
+        return if (!fixPrefixName.isNullOrBlank()) {
+            "$dataKey.$fixPrefixName"
+        } else {
+            dataKey
+        }
     }
 }

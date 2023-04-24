@@ -261,7 +261,8 @@ object YamlObjects {
                         transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
                     }
                 )
-            }
+            },
+            imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)
         )
     }
 

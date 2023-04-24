@@ -68,6 +68,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -360,6 +361,7 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun releaseAtom(
         userId: String,
         atomCode: String,
@@ -464,7 +466,7 @@ class OpAtomServiceImpl @Autowired constructor(
             client = client,
             userId = userId
         )
-        taskJsonMap["releaseInfo"] = releaseInfo
+        taskJsonMap[KEY_RELEASE_INFO] = releaseInfo
         // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()

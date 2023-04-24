@@ -767,8 +767,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyLanName = if (classifyCode != null) {
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName,
-                    language = I18nUtil.getLanguage(userId)
+                    defaultMessage = classifyName
                 )
             } else classifyName
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
@@ -1173,7 +1172,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
             }
             val itemMap = mutableMapOf<String, Any>()
-            val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+            val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                jsonStr = value.props,
+                keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, value.atomCode, value.version)
+            )
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
             if (null != props["input"]) {
                 val input = props["input"] as Map<String, Any>
                 input.forEach { inputIt ->

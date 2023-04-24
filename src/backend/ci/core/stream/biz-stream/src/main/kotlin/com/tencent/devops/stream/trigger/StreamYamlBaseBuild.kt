@@ -576,7 +576,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     BuildTemplateAcrossInfo(
                         templateId = templateData.templateId,
                         templateType = it,
-                        templateInstancesIds = listOf(),
+                        templateInstancesIds = mutableListOf(),
                         targetProjectId = remoteProjectIdLong
                     )
                 }.toMutableMap()

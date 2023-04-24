@@ -70,6 +70,10 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
         return atomService.getProjectElements(projectCode)
     }
 
+    override fun getProjectElementsInfo(projectCode: String): Result<Map<String, String>> {
+        return atomService.getProjectElementsInfo(projectCode)
+    }
+
     override fun getAtomByCode(atomCode: String, username: String): Result<AtomVersion?> {
         return marketAtomService.getNewestAtomByCode(username, atomCode)
     }

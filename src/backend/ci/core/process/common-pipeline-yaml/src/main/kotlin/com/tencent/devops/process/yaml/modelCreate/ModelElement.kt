@@ -99,7 +99,7 @@ class ModelElement @Autowired(required = false) constructor(
             )
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(
-                step.ifModify, changeSet, event.checkIfModify
+                step.ifModify, changeSet, event.checkIfModify, event
             )
             // bash
             val element: Element? = when {

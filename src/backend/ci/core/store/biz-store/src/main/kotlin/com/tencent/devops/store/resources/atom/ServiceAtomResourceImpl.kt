@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
@@ -46,20 +45,12 @@ class ServiceAtomResourceImpl @Autowired constructor(
     private val atomClassifyService: MarketAtomClassifyService
 ) : ServiceAtomResource {
 
-    @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].atomCode", "data[*].version"]
-    )
     override fun getInstalledAtoms(
         projectCode: String
     ): Result<List<InstalledAtom>> {
         return Result(atomService.listInstalledAtomByProject(projectCode))
     }
 
-    @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
-    )
     override fun getAtomVersionInfo(atomCode: String, version: String): Result<PipelineAtom?> {
         return atomService.getPipelineAtomDetail(atomCode = atomCode, version = version)
     }
@@ -72,10 +63,6 @@ class ServiceAtomResourceImpl @Autowired constructor(
         return Result(atomPropService.getAtomProps(atomCodes))
     }
 
-    @BkInterfaceI18n(
-        fixKeyPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"]
-    )
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
     }

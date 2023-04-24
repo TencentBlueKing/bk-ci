@@ -56,7 +56,7 @@ if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
                         "message_$property.properties"
                     )
                 )
-                targetFile.parentFile.mkdir()
+                targetFile.parentFile.mkdirs()
                 val targetProperties = Properties()
                 if (targetFile.createNewFile()) {
                     println("create target file : ${targetFile.absolutePath}")
