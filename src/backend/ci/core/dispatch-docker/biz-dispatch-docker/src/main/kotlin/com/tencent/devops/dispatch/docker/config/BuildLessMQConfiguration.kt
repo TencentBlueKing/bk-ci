@@ -44,7 +44,7 @@ class BuildLessMQConfiguration @Autowired constructor() {
         const val STREAM_CONSUMER_GROUP = "dispatch-buildless-service"
     }
 
-    @EventConsumer(StreamBinding.QUEUE_AGENT_STARTUP, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH, STREAM_CONSUMER_GROUP)
     fun startListener(
         @Autowired agentLessListener: AgentLessListener
     ): Consumer<Message<PipelineBuildLessStartupEvent>> {
@@ -53,7 +53,7 @@ class BuildLessMQConfiguration @Autowired constructor() {
         }
     }
 
-    @EventConsumer(StreamBinding.QUEUE_AGENT_SHUTDOWN, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, STREAM_CONSUMER_GROUP)
     fun shutdownListener(
         @Autowired agentLessListener: AgentLessListener
     ): Consumer<Message<PipelineBuildLessShutdownEvent>> {
