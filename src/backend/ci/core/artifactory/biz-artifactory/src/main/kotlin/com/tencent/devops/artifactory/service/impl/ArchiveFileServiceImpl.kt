@@ -190,32 +190,28 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
                 if (fullUrl) {
                     urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
                 }
-                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download")
+                urlPrefix.append("/bkrepo/api/user/generic")
             }
             FileChannelTypeEnum.WEB_DOWNLOAD -> {
                 if (fullUrl) {
                     urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
                 }
-                urlPrefix.append("/ms/artifactory/api/user/artifactories/file/download/local")
+                urlPrefix.append("/bkrepo/api/user/generic")
             }
             FileChannelTypeEnum.SERVICE -> {
                 if (fullUrl) {
                     urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
                 }
-                urlPrefix.append("/ms/artifactory/api/service/artifactories/file/download")
+                urlPrefix.append("/bkrepo/api/service/generic")
             }
             FileChannelTypeEnum.BUILD -> {
                 if (fullUrl) {
                     urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
                 }
-                urlPrefix.append("/ms/artifactory/api/build/artifactories/file/download")
+                urlPrefix.append("/bkrepo/api/build/generic")
             }
         }
         val filePath = URLEncoder.encode("/$destPath", "UTF-8")
-        return if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
-            "$urlPrefix/${URLEncoder.encode(filePath, "UTF-8")}"
-        } else {
-            "$urlPrefix?filePath=$filePath"
-        }
+        return "$urlPrefix/$filePath"
     }
 }
