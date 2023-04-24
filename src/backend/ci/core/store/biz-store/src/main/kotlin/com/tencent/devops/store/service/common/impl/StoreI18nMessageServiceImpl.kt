@@ -74,13 +74,18 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
         fileDir: String,
-        keyPrefix: String?,
+        propertiesKeyPrefix: String?,
+        dbKeyPrefix: String?,
         repositoryHashId: String?
     ): Map<String, Any> {
-        logger.info("parseJsonMap params:[$userId|$projectCode|$fileDir|$keyPrefix|$repositoryHashId]")
+        logger.info(
+            "parseJsonMap params:[$userId|$projectCode|$fileDir|$propertiesKeyPrefix|$dbKeyPrefix|" +
+                "$repositoryHashId]"
+        )
         // 获取蓝盾默认语言信息
         val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
         val jsonLocaleLanguage = jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] ?: DEFAULT_LOCALE_LANGUAGE
+        logger.info("parseJsonMapI18nInfo:[$devopsDefaultLocaleLanguage|$jsonLocaleLanguage]")
         if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
             return jsonMap
@@ -97,6 +102,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             // 遍历map集合获取字段列表
             val fieldLocaleInfos = MessageUtil.traverseMap(
                 dataMap = jsonMap,
+                keyPrefix = propertiesKeyPrefix,
                 properties = defaultProperties
             )
             // 异步解析处理国际化资源文件信息
@@ -105,7 +111,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 fileDir = fileDir,
                 repositoryHashId = repositoryHashId,
                 fieldLocaleInfos = fieldLocaleInfos,
-                keyPrefix = keyPrefix,
+                dbKeyPrefix = dbKeyPrefix,
                 userId = userId
             )
         }
@@ -131,7 +137,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             fileDir = fileDir,
             repositoryHashId = repositoryHashId,
             fieldLocaleInfos = fieldLocaleInfos,
-            keyPrefix = keyPrefix,
+            dbKeyPrefix = keyPrefix,
             userId = userId
         )
     }
@@ -178,7 +184,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fileDir: String,
         repositoryHashId: String?,
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
-        keyPrefix: String?,
+        dbKeyPrefix: String?,
         userId: String
     ) {
         executors.submit {
@@ -205,7 +211,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
                     language = language,
-                    keyPrefix = keyPrefix
+                    dbKeyPrefix = dbKeyPrefix
                 )
                 // 按批次保存字段的国际化信息
                 ListUtils.partition(i18nMessages, BATCH_HANDLE_NUM).forEach { partitionMessages ->
@@ -219,7 +225,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         fieldLocaleInfos: MutableList<FieldLocaleInfo>,
         fileProperties: Properties,
         language: String,
-        keyPrefix: String? = null
+        dbKeyPrefix: String? = null
     ): MutableList<I18nMessage> {
         val i18nMessages = mutableListOf<I18nMessage>()
         fieldLocaleInfos.forEach { fieldLocaleInfo ->
@@ -227,9 +233,9 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             val fieldI18nValue = fileProperties[fieldName]
             fieldI18nValue?.let {
                 // 国际化资源文件中有该字段的值则把该字段信息加入国际化信息集合中
-                val key = if (!keyPrefix.isNullOrBlank()) {
+                val key = if (!dbKeyPrefix.isNullOrBlank()) {
                     // 如果字段key前缀不为空，需为key加上前缀
-                    "$keyPrefix.$fieldName"
+                    "$dbKeyPrefix.$fieldName"
                 } else {
                     fieldName
                 }
@@ -259,6 +265,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             fileName = fileName,
             repositoryHashId = repositoryHashId
         )
+        logger.info("getMessageProperties:[$fileName|$fileStr]")
         if (fileStr.isNullOrBlank()) {
             // 如果用户的组件未提供系统默认语言的资源文件，则抛出错误提示
             throw ErrorCodeException(

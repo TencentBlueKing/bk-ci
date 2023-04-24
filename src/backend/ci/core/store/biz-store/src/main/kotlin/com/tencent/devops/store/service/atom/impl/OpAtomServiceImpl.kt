@@ -361,6 +361,7 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun releaseAtom(
         userId: String,
         atomCode: String,

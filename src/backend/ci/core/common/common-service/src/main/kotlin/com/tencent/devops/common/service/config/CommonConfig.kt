@@ -126,4 +126,10 @@ class CommonConfig {
      */
     @Value("\${bkci.defaultLocale:$DEFAULT_LOCALE_LANGUAGE}")
     val devopsDefaultLocaleLanguage: String = DEFAULT_LOCALE_LANGUAGE
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.supportLanguages:$DEFAULT_LOCALE_LANGUAGE}")
+    val devopsSupportLanguages: String = DEFAULT_LOCALE_LANGUAGE
 }

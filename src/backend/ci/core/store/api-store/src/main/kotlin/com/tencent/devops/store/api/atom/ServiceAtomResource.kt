@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
@@ -52,6 +53,11 @@ interface ServiceAtomResource {
     @ApiOperation("获取项目下已安装的插件列表")
     @GET
     @Path("/projectCodes/{projectCode}/list")
+    @BkInterfaceI18n(
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data[*].atomCode", "data[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
+    )
     fun getInstalledAtoms(
         @ApiParam("项目代码", required = true)
         @PathParam("projectCode")
@@ -61,6 +67,11 @@ interface ServiceAtomResource {
     @ApiOperation("根据插件代码和版本号获取插件详细信息")
     @GET
     @Path("/codes/{atomCode}/versions/{version}")
+    @BkInterfaceI18n(
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
+    )
     fun getAtomVersionInfo(
         @ApiParam("插件代码", required = true)
         @PathParam("atomCode")
@@ -96,6 +107,11 @@ interface ServiceAtomResource {
     @ApiOperation("获取插件分类信息")
     @GET
     @Path("/codes/{atomCode}/classify/info")
+    @BkInterfaceI18n(
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
+    )
     fun getAtomClassifyInfo(
         @ApiParam("插件代码", required = true)
         @PathParam("atomCode")

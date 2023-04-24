@@ -1173,7 +1173,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 value = atomDao.getPipelineAtom(dslContext, it.atomCode, atom) ?: return@lit
             }
             val itemMap = mutableMapOf<String, Any>()
-            val props: Map<String, Any> = jacksonObjectMapper().readValue(value.props)
+            val propJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+                jsonStr = value.props,
+                keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, value.atomCode, value.version)
+            )
+            val props: Map<String, Any> = jacksonObjectMapper().readValue(propJsonStr)
             if (null != props["input"]) {
                 val input = props["input"] as Map<String, Any>
                 input.forEach { inputIt ->

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.resources.atom
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -37,8 +36,8 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,11 +45,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomService) :
     UserAtomResource {
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun getPipelineAtom(
         projectCode: String,
         atomCode: String,
@@ -65,11 +59,6 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         )
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun listAllPipelineAtoms(
         accessToken: String,
         userId: String,
@@ -110,11 +99,6 @@ class UserAtomResourceImpl @Autowired constructor(private val atomService: AtomS
         return atomService.getPipelineAtomVersions(projectCode, atomCode)
     }
 
-    @BkInterfaceI18n(
-        fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
-        fixKeyTailPrefixName = "releaseInfo"
-    )
     override fun getInstalledAtoms(
         userId: String,
         projectCode: String,

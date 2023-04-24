@@ -27,16 +27,18 @@
 
 package com.tencent.devops.project.api.user
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.LanguageInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
@@ -47,20 +49,29 @@ import javax.ws.rs.core.MediaType
 interface UserLocaleResource {
 
     @GET
-    @Path("/users/{userId}/get")
+    @Path("/get")
     @ApiOperation("获取用户国际化信息")
     fun getUserLocale(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
     ): Result<LocaleInfo>
 
+    @GET
+    @Path("/language/list")
+    @ApiOperation("获取蓝盾支持的语言")
+    fun listSupportLanguages(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String
+    ): Result<List<LanguageInfo>>
+
     @PUT
-    @Path("/users/{userId}/update")
+    @Path("/update")
     @ApiOperation("更新用户国际化信息")
     fun updateUserLocale(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
         @ApiParam(value = "国际化信息", required = true)
         localeInfo: LocaleInfo

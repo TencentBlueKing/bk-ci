@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwCallBackResourceV4 {
 
-    @ApiOperation("创建callback回调 #4319 支持Stage事件", tags = ["v4_app_callback_create", "v4_user_callback_create"])
+    @ApiOperation("创建callback回调，调用需要项目管理员身份", tags = ["v4_app_callback_create", "v4_user_callback_create"])
     @POST
     @Path("/")
     fun create(
@@ -83,7 +83,7 @@ interface ApigwCallBackResourceV4 {
         @ApiParam("event", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("secretToken", required = false)
+        @ApiParam("该参数将会在回调中X-DEVOPS-WEBHOOK-TOKEN返回", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>

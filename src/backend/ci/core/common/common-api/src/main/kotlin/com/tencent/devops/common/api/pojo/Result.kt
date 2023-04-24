@@ -29,7 +29,6 @@ package com.tencent.devops.common.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

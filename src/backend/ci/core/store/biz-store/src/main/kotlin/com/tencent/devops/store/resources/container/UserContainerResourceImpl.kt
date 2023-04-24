@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.resources.container
 
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -62,7 +61,6 @@ class UserContainerResourceImpl @Autowired constructor(private val containerServ
         return containerService.getContainerResource(userId, projectCode, null, os, buildType)
     }
 
-    @BkInterfaceI18n
     override fun getAllContainerInfos(userId: String, projectCode: String): Result<List<ContainerResp>> {
         return containerService.getAllContainerInfos(userId, projectCode, null, null)
     }

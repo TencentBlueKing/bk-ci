@@ -24,12 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.api.pojo
+package com.tencent.devops.project.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("语言环境信息")
-data class LocaleInfo(
+@ApiModel("语言信息")
+data class LanguageInfo(
     @ApiModelProperty("语言")
-    val language: String
+    val language: String,
+    @ApiModelProperty("语言名称")
+    val name: String
 )

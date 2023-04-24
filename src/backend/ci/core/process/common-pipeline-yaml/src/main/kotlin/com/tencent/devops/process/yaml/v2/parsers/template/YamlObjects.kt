@@ -28,9 +28,7 @@
 package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
+import com.tencent.devops.common.pipeline.type.agent.DockerOptions
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -186,12 +184,7 @@ object YamlObjects {
         )
 
         if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
-            throw YamlFormatException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
-                    params = arrayOf(fromPath)
-                )
-            )
+            throw YamlFormatException("$fromPath 中的step必须包含uses或run或checkout!")
         }
 
         // 检测step env合法性
@@ -241,7 +234,27 @@ object YamlObjects {
                     username = credentialsMap["username"]!!,
                     password = credentialsMap["password"]!!
                 )
-            }
+            },
+            options = if (containerMap["options"] == null) {
+                null
+            } else {
+                val optionsMap =
+                    transValue<Map<String, Any?>>(fromPath, "options", containerMap["options"])
+                DockerOptions(
+                    gpus = getNullValue("gpus", optionsMap),
+                    volumes = if (optionsMap["volumes"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "volumes", optionsMap["volumes"])
+                    },
+                    mounts = if (optionsMap["mounts"] == null) {
+                        null
+                    } else {
+                        transValue<List<String>>(fromPath, "mounts", optionsMap["mounts"])
+                    }
+                )
+            },
+            imagePullPolicy = getNullValue(key = "image-pull-policy", map = containerMap)
         )
     }
 

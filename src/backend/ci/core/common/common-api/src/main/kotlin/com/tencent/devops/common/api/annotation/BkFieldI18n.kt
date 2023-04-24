@@ -29,11 +29,9 @@ package com.tencent.devops.common.api.annotation
 
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-import javax.ws.rs.NameBinding
 
 @Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
-@NameBinding
 annotation class BkFieldI18n(
     val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES, // 翻译信息来源（默认来源于资源文件）
     val translateType: I18nTranslateTypeEnum = I18nTranslateTypeEnum.NAME, // 翻译类型（默认基于字段名称进行翻译）
