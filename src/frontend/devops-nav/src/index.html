@@ -439,7 +439,7 @@
           var cahceArray = ['projectList', 'allServices', 'userInfo']
           var actionArray = ['setProjectList', 'setServices', 'setUserInfo']
           var projectList = response[0]
-          window.BACKEND_LOCALE = response.pop()
+          window.INIT_LOCALE = response.pop()
 
           if (project && project.projectCode) {
             for (var j = 0; j < projectList.length; j++) {

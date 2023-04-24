@@ -57,9 +57,9 @@ function getSubDoamin () {
 
 async function getLsLocale () {
     try {
-        const cookieLocale = cookies.get(LS_KEY) ?? window.BACKEND_LOCALE
+        const cookieLocale = cookies.get(LS_KEY) ?? DEFAULT_LOCALE
         
-        console.log(cookieLocale, window.BACKEND_LOCALE)
+        console.log(cookieLocale, window.INIT_LOCALE)
         return localeAliasMap[cookieLocale.toLowerCase()] ?? DEFAULT_LOCALE
     } catch (error) {
         return DEFAULT_LOCALE
