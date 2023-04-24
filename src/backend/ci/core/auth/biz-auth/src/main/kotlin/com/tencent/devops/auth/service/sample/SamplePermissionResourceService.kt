@@ -69,6 +69,7 @@ class SamplePermissionResourceService : PermissionResourceService {
     ) = true
 
     override fun isEnablePermission(
+        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String

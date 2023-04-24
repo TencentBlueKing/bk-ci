@@ -122,10 +122,6 @@ class PermissionGradeManagerService @Autowired constructor(
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = resourceName
         )
-        val description = IamGroupUtils.buildManagerDescription(
-            projectName = resourceName,
-            userId = userId
-        )
         val manageGroupConfig = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
@@ -135,6 +131,7 @@ class PermissionGradeManagerService @Autowired constructor(
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
+        val description = manageGroupConfig.description
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
             authorizationScopesStr = manageGroupConfig.authorizationScopes,
             projectCode = projectCode,
@@ -160,7 +157,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .sync_perm(true)
                 .groupName(manageGroupConfig.groupName)
                 .build()
-            logger.info("create grade manager|$name|$description|$userId")
+            logger.info("create grade manager|$name|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
             gradeManagerId
         } else {
@@ -455,7 +452,11 @@ class PermissionGradeManagerService @Autowired constructor(
     ): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
-                ?: return true
+        // 审批单不存在或者已经结束
+        if (callbackRecord == null || callbackRecord.approveResult != null) {
+            logger.warn("itsm application has ended, no need to cancel|projectCode:$projectCode")
+            return true
+        }
         itsmService.cancelItsmApplication(
             ItsmCancelApplicationInfo(
                 sn = callbackRecord.sn,

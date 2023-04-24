@@ -2017,7 +2017,7 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "codecc_task_manage-permissions",
+        "id": "codecc_task_manage",
         "name": "任务权限管理",
         "name_en": "CodeCC Task Manage Permissions",
         "auth_type": "rbac",

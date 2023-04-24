@@ -40,6 +40,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
@@ -83,8 +84,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceType = resourceType,
-            resourceName = resourceName,
-            groupName = managerGroupConfig.groupName
+            resourceName = resourceName
         )
         val description = managerGroupConfig.description
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
@@ -94,6 +94,8 @@ class PermissionSubsetManagerService @Autowired constructor(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
+        // TODO 流水线组一期不创建拥有者
+        val syncPerm = resourceType != AuthResourceType.PIPELINE_GROUP.value
         val createSubsetManagerDTO = CreateSubsetManagerDTO.builder()
             .name(name)
             .description(description)
@@ -101,7 +103,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .authorizationScopes(authorizationScopes)
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
-            .syncPerm(true)
+            .syncPerm(syncPerm)
             .groupName(managerGroupConfig.groupName)
             .build()
         return iamV2ManagerService.createSubsetManager(
@@ -131,8 +133,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceType = resourceType,
-            resourceName = resourceName,
-            groupName = managerGroupConfig.groupName
+            resourceName = resourceName
         )
 
         val authorizationScopes = permissionGroupPoliciesService.buildAuthorizationScopes(
@@ -142,6 +143,8 @@ class PermissionSubsetManagerService @Autowired constructor(
             iamResourceCode = iamResourceCode,
             resourceName = resourceName
         )
+        // TODO 流水线组一期不创建拥有者
+        val syncPerm = resourceType != AuthResourceType.PIPELINE_GROUP.value
         val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(subsetManagerId)
         val updateSubsetManagerDTO = UpdateSubsetManagerDTO.builder()
             .name(name)
@@ -150,7 +153,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .authorizationScopes(authorizationScopes)
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
-            .syncPerm(true)
+            .syncPerm(syncPerm)
             .groupName(managerGroupConfig.groupName)
             .build()
         iamV2ManagerService.updateSubsetManager(

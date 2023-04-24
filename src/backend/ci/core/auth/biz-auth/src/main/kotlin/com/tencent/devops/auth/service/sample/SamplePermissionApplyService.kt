@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
-import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
@@ -53,14 +52,6 @@ class SamplePermissionApplyService : PermissionApplyService {
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
-        return true
-    }
-
-    override fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Boolean {
         return true
     }
 

@@ -34,7 +34,6 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
@@ -51,17 +50,11 @@ import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -117,12 +110,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = iamGroupInfoList.filterNot {
-            // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
-            val resourceGroup = resourceGroupMap[it.id]
-            resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
-                resourceGroup.groupCode == DefaultGroupType.MANAGER.value
-        }.map {
+        val iamGroupInfoVoList = iamGroupInfoList.map {
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
                 defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
@@ -229,7 +217,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
             .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)
-            .reason("续期用户组")
+            .reason("renewal user group")
             .applicant(userId).build()
         iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
         return true
@@ -257,16 +245,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         groupId: Int
     ): Boolean {
         logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
-        if (!permissionResourceService.hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-            )) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val authResourceGroup = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = projectId,
@@ -279,6 +263,13 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             )
         }
         iamV2ManagerService.deleteRoleGroupV2(groupId)
+        // 迁移的用户组,非默认的也会保存,删除时也应该删除
+        if (authResourceGroup != null) {
+            authResourceGroupDao.deleteByIds(
+                dslContext = dslContext,
+                ids = listOf(authResourceGroup.id)
+            )
+        }
         return true
     }
 
@@ -302,17 +293,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 defaultMessage = "group name cannot be less than 5 characters"
             )
         }
-        if (!permissionResourceService.hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-            )
-        ) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
+        permissionResourceService.hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val authResourceGroup = authResourceGroupDao.getByRelationId(
             dslContext = dslContext,
             projectCode = projectId,

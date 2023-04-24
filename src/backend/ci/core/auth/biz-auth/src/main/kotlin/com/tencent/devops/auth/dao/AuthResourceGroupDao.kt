@@ -31,11 +31,12 @@ package com.tencent.devops.auth.dao
 import com.tencent.devops.model.auth.tables.TAuthResourceGroup
 import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "TooManyFunctions")
 class AuthResourceGroupDao {
 
     fun create(
@@ -158,6 +159,19 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun listByRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupIds: List<String>
+    ): Result<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.`in`(iamGroupIds))
+                .fetch()
+        }
+    }
+
     fun getByGroupName(
         dslContext: DSLContext,
         projectCode: String,
@@ -185,6 +199,34 @@ class AuthResourceGroupDao {
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetch()
+        }
+    }
+
+    fun countByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Int {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByResourceType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String
+    ): Int {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectCount()
+                .from(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

@@ -61,7 +61,9 @@ enum class AuthResourceType(val value: String) {
     PROJECT("project"), // 项目管理
 
     TURBO("turbo"), // 编译加速
-    CODECC_TASK("codecc_task"); // codecc任务
+    CODECC_TASK("codecc_task"), // CodeCC任务
+    CODECC_IGNORE_TYPE("codecc_ignore_type"), // CodeCC忽略类型
+    CODECC_RULE_SET("codecc_rule_set"); // CodeCC规则集
 
     companion object {
         fun get(value: String): AuthResourceType {

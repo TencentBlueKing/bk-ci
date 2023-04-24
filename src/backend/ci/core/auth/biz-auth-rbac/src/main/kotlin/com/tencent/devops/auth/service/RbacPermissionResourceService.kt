@@ -50,6 +50,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.slf4j.LoggerFactory
+import javax.ws.rs.NotFoundException
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
@@ -240,30 +241,41 @@ class RbacPermissionResourceService(
             userId = userId,
             projectCode = projectId
         )
-        // TODO 流水线组一期先不上,流水线组权限由项目控制
-        if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
-            return checkProjectManage
+        if (checkProjectManage) {
+            return true
         }
-        return permissionService.validateUserResourcePermissionByRelation(
-            userId = userId,
-            action =  RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
-            ),
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            relationResourceType = null
-        )
+
+        // TODO 流水线组一期先不上,流水线组权限由项目控制
+        if (resourceType == AuthResourceType.PROJECT.value || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        } else {
+            val checkResourceManage = permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = RbacAuthUtils.buildAction(
+                    authPermission = AuthPermission.MANAGE,
+                    authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+                ),
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationResourceType = null
+            )
+            if (!checkResourceManage) {
+                throw PermissionForbiddenException(
+                    message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                )
+            }
+        }
+        return true
     }
 
     private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {
         if (resourceType == AuthResourceType.PROJECT.value) {
             val projectInfo =
-                client.get(ServiceProjectResource::class).get(resourceCode).data ?: throw ErrorCodeException(
-                    errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                    params = arrayOf(resourceCode)
-                )
+                client.get(ServiceProjectResource::class).get(resourceCode).data
+                    ?: throw NotFoundException("project - $resourceCode is not exist!")
             val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
             if (approvalStatus.isCreatePending()) {
                 throw ErrorCodeException(
@@ -277,11 +289,17 @@ class RbacPermissionResourceService(
     }
 
     override fun isEnablePermission(
+        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        checkProjectApprovalStatus(resourceType, resourceCode)
+        hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         return authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
@@ -296,17 +314,12 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        if (!hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        ) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
+        hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -348,17 +361,12 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("disable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        val hasManagerPermission = hasManagerPermission(
+        hasManagerPermission(
             userId = userId,
             projectId = projectId,
             resourceType = resourceType,
             resourceCode
         )
-        if (!hasManagerPermission) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
         if (resourceType == AuthResourceType.PROJECT.value) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_PROJECT_PERMISSION_CLOSE_FAIL,

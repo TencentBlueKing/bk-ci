@@ -364,7 +364,7 @@
                     "required": false
                   },
                   {
-                    "id": "codecc_task_manage-permissions",
+                    "id": "codecc_task_manage",
                     "required": false
                   }
                 ]

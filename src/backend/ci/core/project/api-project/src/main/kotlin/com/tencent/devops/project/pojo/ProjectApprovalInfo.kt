@@ -84,5 +84,7 @@ data class ProjectApprovalInfo(
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Int,
     @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
-    val tipsStatus: Int
+    val tipsStatus: Int,
+    @ApiModelProperty("项目性质")
+    val projectType: Int?
 )

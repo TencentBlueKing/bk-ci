@@ -109,5 +109,9 @@ data class ProjectDiffVO(
     @ApiModelProperty("项目性质")
     val authSecrecy: Int?,
     @ApiModelProperty("审批中项目性质")
-    val afterAuthSecrecy: Int? = null
+    val afterAuthSecrecy: Int? = null,
+    @ApiModelProperty("项目类型")
+    val projectType: Int?,
+    @ApiModelProperty("审批中项目类型")
+    val afterProjectType: Int?
 )

@@ -2,7 +2,6 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthApplyResource
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
-import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
@@ -44,20 +43,6 @@ class UserAuthApplyResourceImpl @Autowired constructor(
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Result<Boolean> {
         return Result(permissionApplyService.applyToJoinGroup(userId, applyJoinGroupInfo))
-    }
-
-    override fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
-    ): Result<Boolean> {
-        return Result(
-            permissionApplyService.applyToJoinProject(
-                userId = userId,
-                projectId = projectId,
-                applyJoinProjectInfo = applyJoinProjectInfo
-            )
-        )
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {

@@ -75,6 +75,9 @@ interface UserAuthResourceResource {
     @Path("{resourceCode}/isEnablePermission")
     @ApiOperation("是否启用权限管理")
     fun isEnablePermission(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -89,6 +92,7 @@ interface UserAuthResourceResource {
     @GET
     @Path("{resourceCode}/listGroup")
     @ApiOperation("获取用户组列表")
+    @Suppress("LongParameterList")
     fun listGroup(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

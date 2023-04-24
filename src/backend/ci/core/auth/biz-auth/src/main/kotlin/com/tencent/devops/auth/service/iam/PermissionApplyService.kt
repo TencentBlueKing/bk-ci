@@ -1,7 +1,6 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
-import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
@@ -26,12 +25,6 @@ interface PermissionApplyService {
     fun applyToJoinGroup(
         userId: String,
         applyJoinGroupInfo: ApplyJoinGroupInfo
-    ): Boolean
-
-    fun applyToJoinProject(
-        userId: String,
-        projectId: String,
-        applyJoinProjectInfo: ApplyJoinProjectInfo
     ): Boolean
 
     fun getGroupPermissionDetail(

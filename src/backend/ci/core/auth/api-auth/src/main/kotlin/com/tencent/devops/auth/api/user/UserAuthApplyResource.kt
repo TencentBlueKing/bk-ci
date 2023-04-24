@@ -1,7 +1,6 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
-import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
@@ -9,7 +8,6 @@ import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -74,20 +72,6 @@ interface UserAuthApplyResource {
         userId: String,
         @ApiParam("申请实体", required = true)
         applyJoinGroupInfo: ApplyJoinGroupInfo
-    ): Result<Boolean>
-
-    @ApiOperation("申请加入项目")
-    @Path("/{projectId}/applyToJoinProject/")
-    @POST
-    fun applyToJoinProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        applyJoinProjectInfo: ApplyJoinProjectInfo
     ): Result<Boolean>
 
     @GET
