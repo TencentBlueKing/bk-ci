@@ -61,6 +61,7 @@ import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -506,6 +507,42 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         )
         val fileInfoList = data.records.map { it.toFileInfo() }
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)
+    }
+
+    override fun generateFileDownloadUrl(
+        fileChannelType: FileChannelTypeEnum,
+        destPath: String,
+        fullUrl: Boolean
+    ): String {
+        val urlPrefix = StringBuilder()
+        when (fileChannelType) {
+            FileChannelTypeEnum.WEB_SHOW -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/user/generic")
+            }
+            FileChannelTypeEnum.WEB_DOWNLOAD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/user/generic")
+            }
+            FileChannelTypeEnum.SERVICE -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/service/generic")
+            }
+            FileChannelTypeEnum.BUILD -> {
+                if (fullUrl) {
+                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
+                }
+                urlPrefix.append("/bkrepo/api/build/generic")
+            }
+        }
+        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
+        return "$urlPrefix/$filePath"
     }
 
     companion object {

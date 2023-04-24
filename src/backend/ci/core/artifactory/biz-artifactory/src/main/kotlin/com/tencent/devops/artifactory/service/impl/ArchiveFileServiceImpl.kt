@@ -179,39 +179,12 @@ abstract class ArchiveFileServiceImpl : ArchiveFileService {
         return flag
     }
 
-    protected fun generateFileDownloadUrl(
+    /**
+     * 生成文件下载链接
+     */
+    abstract fun generateFileDownloadUrl(
         fileChannelType: FileChannelTypeEnum,
         destPath: String,
         fullUrl: Boolean = true
-    ): String {
-        val urlPrefix = StringBuilder()
-        when (fileChannelType) {
-            FileChannelTypeEnum.WEB_SHOW -> {
-                if (fullUrl) {
-                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
-                }
-                urlPrefix.append("/bkrepo/api/user/generic")
-            }
-            FileChannelTypeEnum.WEB_DOWNLOAD -> {
-                if (fullUrl) {
-                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
-                }
-                urlPrefix.append("/bkrepo/api/user/generic")
-            }
-            FileChannelTypeEnum.SERVICE -> {
-                if (fullUrl) {
-                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsApiGateway!!))
-                }
-                urlPrefix.append("/bkrepo/api/service/generic")
-            }
-            FileChannelTypeEnum.BUILD -> {
-                if (fullUrl) {
-                    urlPrefix.append(HomeHostUtil.getHost(commonConfig.devopsBuildGateway!!))
-                }
-                urlPrefix.append("/bkrepo/api/build/generic")
-            }
-        }
-        val filePath = URLEncoder.encode("/$destPath", "UTF-8")
-        return "$urlPrefix/$filePath"
-    }
+    ): String
 }
