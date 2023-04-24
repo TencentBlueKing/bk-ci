@@ -53,5 +53,6 @@
     "Success rate trend": "成功率趋势",
     "Success rate (%)": "成功率 (%)",
     "Plugin stat": "插件统计",
-    "Average time of failure runs (min)": "运行失败平均耗时 (分钟)"
+    "Average time of failure runs (min)": "运行失败平均耗时 (分钟)",
+    "noData": "无数据"
 }
