@@ -274,9 +274,13 @@ class WorkspaceService @Autowired constructor(
             userInfo = userInfo
         )
 
-        // 替换部分devfile内容
-        devfile.runsOn?.container?.image =
-            "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+        // 替换部分devfile内容，兼容使用老remoting的情况
+        if (devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-base-remoting") != true &&
+            devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-full-remoting") != true
+        ) {
+            devfile.runsOn?.container?.image =
+                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+        }
 
         // 发送给k8s
         dispatcher.dispatch(
