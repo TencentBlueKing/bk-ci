@@ -31,7 +31,9 @@ data class PreDevfile(
     @ApiModelProperty("配置需要监听的端口信息")
     val ports: List<DevfilePorts>?,
     @ApiModelProperty("用来指定工作空间声明周期命令")
-    val commands: DevfileCommands?
+    val commands: DevfileCommands?,
+    @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
+    var workspaceFolder: String?
 )
 
 data class PreRunsOn(

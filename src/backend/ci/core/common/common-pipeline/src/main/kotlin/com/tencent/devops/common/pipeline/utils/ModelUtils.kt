@@ -56,6 +56,7 @@ object ModelUtils {
                 c.jobControlOption = JobControlOption(
                     enable = true,
                     timeout = c.maxRunningMinutes,
+                    timeoutVar = c.maxRunningMinutes.toString(),
                     runCondition = if (c.enableSkip == true) {
                         if (c.conditions?.isNotEmpty() == true) {
                             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN
@@ -73,6 +74,7 @@ object ModelUtils {
                 c.jobControlOption = JobControlOption(
                     enable = true,
                     timeout = c.maxRunningMinutes,
+                    timeoutVar = c.maxRunningMinutes.toString(),
                     runCondition = JobRunCondition.STAGE_RUNNING
                 )
             }

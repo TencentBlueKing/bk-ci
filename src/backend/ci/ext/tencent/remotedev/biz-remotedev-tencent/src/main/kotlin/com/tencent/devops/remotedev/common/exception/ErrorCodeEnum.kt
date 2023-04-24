@@ -61,7 +61,7 @@ enum class ErrorCodeEnum(
     UPDATE_BK_TICKET_FAIL(
         errorType = ErrorType.USER,
         errorCode = "2130011",
-        formatErrorMessage = "update BkTicket fail,please check hostName exists."
+        formatErrorMessage = "update BkTicket fail."
     ),
     DENIAL_OF_SERVICE(
         errorType = ErrorType.USER,
@@ -72,5 +72,15 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2130013",
         formatErrorMessage = "Repeat request! Please try again later."
+    ),
+    WORKSPACE_ERROR(
+        errorType = ErrorType.USER,
+        errorCode = "2130014",
+        formatErrorMessage = "The workspace has error and cannot be repaired, please choose to destroy."
+    ),
+    WORKSPACE_ERROR_FIX(
+        errorType = ErrorType.USER,
+        errorCode = "2130015",
+        formatErrorMessage = "The errored workspace has been restored to [%s], please try again."
     )
 }

@@ -27,12 +27,36 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.process.permission.PipelinePermissionService
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
 
+    @Autowired
+    private lateinit var pipelinePermissionService: PipelinePermissionService
+
     override fun checkPermission(userId: String, projectId: String, pipelineId: String) {
-        // 开源版暂不做权限校验
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EXECUTE,
+            message = "用户（$userId) 无权限启动流水线($pipelineId)" // 只是默认消息，有国际化i18n会取代该mesg
+        )
+    }
+
+    @BkTimed // 要aop生效必须在子类上拦截
+    override fun webhookTriggerPipelineBuild(
+        projectId: String,
+        pipelineId: String,
+        codeRepositoryType: String,
+        matcher: ScmWebhookMatcher
+    ): Boolean {
+        return super.webhookTriggerPipelineBuild(projectId, pipelineId, codeRepositoryType, matcher)
     }
 }

@@ -15,19 +15,6 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
--- 频率限制
-if not accessControlUtil:isAccess() then
-    ngx.log(ngx.ERR, "request excess!")
-    ngx.exit(429)
-    return
-end
-
--- 安全限制
-if not securityUtil:isSafe() then
-    ngx.log(ngx.ERR, "unsafe request")
-    ngx.exit(422)
-end
-
 -- 获取服务名称
 local service_name = ngx.var.service
 if config.service_name ~= nil and config.service_name ~= "" then
@@ -73,6 +60,11 @@ end
 local devops_tag = tagUtil:get_tag(ns_config)
 if devops_tag == nil then
     devops_tag = ns_config.tag
+end
+
+-- 设置 rid
+if ngx.var.http_x_devops_rid == nil then
+    ngx.header["X-DEVOPS-RID"]=ngx.var.uuid
 end
 
 -- 负载均衡

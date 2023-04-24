@@ -1,13 +1,10 @@
 import os
 import yaml
-import base64
 
 output_value_yaml = './values.yaml'
-default_value_yaml = './build/values.yaml'
+default_value_yaml = './base/values.yaml'
 config_path = os.environ.get("config_path")
 configmap_template_parent = './templates/configmap/tpl/'
-secret_template_parent = './templates/secret/tpl/'
-spring_profile = os.environ.get("spring_profile")
 
 
 def write_application_tpl(config_path, tpl_path):
@@ -51,23 +48,6 @@ for service_name in os.listdir(config_server):
         service_tpl.write('{{- end -}}')
         service_tpl.flush()
         service_tpl.close()
-
-# 生成lambda的es的certificate
-lambda_certificate_path = config_server+'lambda/certificate/'+spring_profile
-if os.path.isdir(lambda_certificate_path):
-    keystore64 = ''
-    truststore64 = ''
-    with open(lambda_certificate_path+'/keystore.jks', 'rb') as ksObj:
-        keystore64 = base64.b64encode(ksObj.read()).decode('utf-8')
-    with open(lambda_certificate_path+'/truststore.jks', 'rb') as tsObj:
-        truststore64 = base64.b64encode(tsObj.read()).decode('utf-8')
-    os.mkdir(secret_template_parent)
-    lambda_tpl = open(secret_template_parent+'_lambda.tpl', 'w')
-    lambda_tpl.write('{{- define "secret.lambda.yaml" -}}\n')
-    lambda_tpl.write('keystore.jks: "'+keystore64+'"\n')
-    lambda_tpl.write('truststore.jks: "'+truststore64+'"\n')
-    lambda_tpl.write('{{- end -}}')
-    lambda_tpl.flush()
 
 
 # gateway config(伪装)

@@ -1,20 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <included>
+    <property name="pattern" value="%d{&quot;yyyy.MM.dd HH:mm:ss,SSS&quot;}|%X{bizId}|%mdc{trace_id}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable"/>
+
     <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
-            <pattern>%d{"yyyy.MM.dd HH:mm:ss,SSS"}|%X{bizId}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable</pattern>
+            <pattern>${pattern}</pattern>
         </encoder>
     </appender>
 
     <appender name="sync-app-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${service.log.dir}/${app_name}.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/${app_name}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <file>${service.log.dir}/service.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
-            <maxFileSize>1GB</maxFileSize>
+            <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{"yyyy.MM.dd HH:mm:ss,SSS"}|%X{bizId}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable</pattern>
+            <pattern>${pattern}</pattern>
         </encoder>
     </appender>
     <appender name="app-log" class="ch.qos.logback.classic.AsyncAppender">
@@ -27,14 +29,14 @@
 
 
     <appender name="sync-error-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${service.log.dir}/${app_name}-error.log</file>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/${app_name}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+        <file>${service.log.dir}/service-error.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
-            <maxFileSize>1GB</maxFileSize>
+            <totalSizeCap>10GB</totalSizeCap>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{"yyyy.MM.dd HH:mm:ss,SSS"}|%X{bizId}| [%12.12t] %-5level %-40.40logger{40} %L %msg%n%throwable</pattern>
+            <pattern>${pattern}</pattern>
         </encoder>
         <filter class="ch.qos.logback.classic.filter.LevelFilter">
             <level>ERROR</level>

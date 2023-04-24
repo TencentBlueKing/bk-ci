@@ -52,6 +52,7 @@
             }
         },
         created () {
+            console.log(this.optionModel, 'optionModel')
             if (!this.disabled) {
                 this.initOptionConfig()
             }

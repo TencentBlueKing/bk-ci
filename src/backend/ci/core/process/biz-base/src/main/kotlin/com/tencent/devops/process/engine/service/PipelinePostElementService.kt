@@ -224,7 +224,6 @@ class PipelinePostElementService @Autowired constructor(
             subscriptionPauseUser = null,
             customVariables = originAtomElement.additionalOptions?.customVariables,
             retryCount = 0,
-            timeout = 100,
             otherTask = null,
             customCondition = null,
             elementPostInfo = elementPostInfo

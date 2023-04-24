@@ -40,4 +40,8 @@ class OPQualityRuleBuildHisResourceImpl @Autowired constructor(
     override fun updateStatus(): Result<Int> {
         return Result(opQualityRuleBuildHisService.updateRuleBuildHisStatus())
     }
+
+    override fun cleanHisDetailMeta(cleanRound: Int, roundSize: Int, roundGap: Int): Result<Int> {
+        return Result(opQualityRuleBuildHisService.cleanHisDetailMeta(cleanRound, roundSize, roundGap))
+    }
 }

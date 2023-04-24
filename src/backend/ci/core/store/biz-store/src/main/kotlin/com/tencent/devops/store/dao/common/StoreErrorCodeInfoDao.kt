@@ -33,6 +33,8 @@ import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -45,7 +47,7 @@ class StoreErrorCodeInfoDao {
                 dslContext.insertInto(this)
                     .set(ID, UUIDUtil.generate())
                     .set(STORE_CODE, storeErrorCodeInfo.storeCode)
-                    .set(STORE_TYPE, storeErrorCodeInfo.storeType.type.toByte())
+                    .set(STORE_TYPE, storeErrorCodeInfo.storeType?.type?.toByte())
                     .set(ERROR_CODE, it.errorCode)
                     .set(ERROR_MSG_ZH_CN, it.errorMsgZhCn)
                     .set(ERROR_MSG_ZH_TW, it.errorMsgZhTw)
@@ -64,10 +66,26 @@ class StoreErrorCodeInfoDao {
         }).execute()
     }
 
-    fun getStoreErrorCodeInfo(
+    fun getStoreErrorCode(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        errorCode: Int
+    ): Result<Record> {
+        with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
+            return dslContext.select()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(ERROR_CODE.eq(errorCode))
+                .fetch()
+        }
+    }
+
+    fun getStoreErrorCodeInfo(
+        dslContext: DSLContext,
+        storeCode: String?,
+        storeType: StoreTypeEnum?
     ): List<ErrorCodeInfo> {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             return dslContext.select(
@@ -77,7 +95,7 @@ class StoreErrorCodeInfoDao {
                 ERROR_MSG_EN
             ).from(this)
                 .where(STORE_CODE.eq(storeCode))
-                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(STORE_TYPE.eq(storeType?.type?.toByte()))
                 .fetchInto(ErrorCodeInfo::class.java)
         }
     }

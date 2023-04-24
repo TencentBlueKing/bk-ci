@@ -337,53 +337,40 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
-    fun updateTaskStatusInfo(userId: String? = null, updateTaskInfo: UpdateTaskInfo) {
-        var starter: String? = null
-        var approver: String? = null
-        var startTime: LocalDateTime? = null
-        var endTime: LocalDateTime? = null
-        var totalTime: Long? = null
-        val projectId = updateTaskInfo.projectId
-        val buildId = updateTaskInfo.buildId
-        val taskId = updateTaskInfo.taskId
-        val taskStatus = updateTaskInfo.taskStatus
-        val taskRecord = pipelineBuildTaskDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        )
-        val dbStartTime = taskRecord?.startTime
-        val executeCount = taskRecord?.executeCount
-        if (taskStatus.isFinish()) {
-            endTime = LocalDateTime.now()
-            totalTime = if (dbStartTime == null || endTime == null) {
+    fun updateTaskStatusInfo(userId: String? = null, task: PipelineBuildTask?, updateTaskInfo: UpdateTaskInfo) {
+        val taskRecord by lazy {
+            task ?: pipelineBuildTaskDao.get(
+                dslContext = dslContext,
+                projectId = updateTaskInfo.projectId,
+                buildId = updateTaskInfo.buildId,
+                taskId = updateTaskInfo.taskId
+            )
+        }
+        if (updateTaskInfo.taskStatus.isFinish()) {
+            val dbStartTime = taskRecord?.startTime
+            updateTaskInfo.endTime = LocalDateTime.now()
+            updateTaskInfo.totalTime = if (dbStartTime == null) {
                 0
             } else {
-                Duration.between(dbStartTime, endTime).toMillis()
+                Duration.between(dbStartTime, updateTaskInfo.endTime).toMillis()
             }
-            if (taskStatus.isReview() && !userId.isNullOrBlank()) {
-                approver = userId
+            if (updateTaskInfo.taskStatus.isReview() && !userId.isNullOrBlank()) {
+                updateTaskInfo.approver = userId
+            }
+        } else if (updateTaskInfo.taskStatus.isRunning()) {
+            if (TaskUtils.isRefreshTaskTime(
+                    buildId = updateTaskInfo.buildId,
+                    taskId = updateTaskInfo.taskId,
+                    additionalOptions = taskRecord?.additionalOptions,
+                    executeCount = taskRecord?.executeCount
+                )) {
+                // 如果是自动重试则不重置task的时间
+                updateTaskInfo.startTime = LocalDateTime.now()
+                if (!userId.isNullOrBlank()) {
+                    updateTaskInfo.starter = userId
+                }
             }
         }
-        if (taskStatus.isRunning() && TaskUtils.isRefreshTaskTime(
-                buildId = buildId,
-                taskId = taskId,
-                additionalOptions = taskRecord?.additionalOptions,
-                executeCount = executeCount
-            )
-        ) {
-            // 如果是自动重试则不重置task的时间
-            startTime = LocalDateTime.now()
-            if (!userId.isNullOrBlank()) {
-                starter = userId
-            }
-        }
-        updateTaskInfo.starter = starter
-        updateTaskInfo.approver = approver
-        updateTaskInfo.startTime = startTime
-        updateTaskInfo.endTime = endTime
-        updateTaskInfo.totalTime = totalTime
         pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
     }
 
@@ -413,7 +400,7 @@ class PipelineTaskService @Autowired constructor(
         val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
         val pipelineIds = pipelineTasks?.map { it[KEY_PIPELINE_ID] as String }?.toSet()
         var pipelineNameMap: MutableMap<String, String>? = null
-        if (pipelineIds != null && pipelineIds.isNotEmpty()) {
+        if (!pipelineIds.isNullOrEmpty()) {
             pipelineNameMap = mutableMapOf()
             val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(
                 dslContext = dslContext,
@@ -643,9 +630,13 @@ class PipelineTaskService @Autowired constructor(
         val buildId = task.buildId
         val taskId = task.taskId
         val taskName = task.taskName
-        logger.info("${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode")
+        logger.info(
+            "${task.buildId}|UPDATE_TASK_STATUS|$taskName|$taskStatus|$userId|$errorCode" +
+                "|opt_change=${task.additionalOptions?.change}"
+        )
         updateTaskStatusInfo(
             userId = userId,
+            task = task,
             updateTaskInfo = UpdateTaskInfo(
                 projectId = projectId,
                 buildId = buildId,
@@ -655,7 +646,9 @@ class PipelineTaskService @Autowired constructor(
                 errorCode = errorCode,
                 errorMsg = errorMsg,
                 platformCode = platformCode,
-                platformErrorCode = platformErrorCode
+                platformErrorCode = platformErrorCode,
+                taskParams = task.taskParams.takeIf { task.additionalOptions?.change == true }, // opt有变需要一起变
+                additionalOptions = task.additionalOptions?.takeIf { task.additionalOptions!!.change }
             )
         )
         // #5109 非事务强相关，减少影响。仅做摘要展示，无需要时时更新

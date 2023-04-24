@@ -163,6 +163,15 @@ abstract class Element(
     }
 
     /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        if (additionalOptions != null && additionalOptions!!.timeoutVar.isNullOrBlank()) {
+            additionalOptions!!.timeoutVar = additionalOptions!!.timeout.toString()
+        }
+    }
+
+    /**
      * 根据[startType]类型返回element的id值，如果不符合，则返回空字符串""
      */
     open fun findFirstTaskIdByStartType(startType: StartType): String = ""

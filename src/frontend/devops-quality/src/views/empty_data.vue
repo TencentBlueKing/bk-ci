@@ -1,9 +1,9 @@
 <template>
     <div class="empty-data-wrapper">
-        <p class="title">{{ emptyInfo.title }}</p>
-        <p class="intro-prompt">{{ emptyInfo.desc }}</p>
+        <p class="title">{{emptyInfo.title}}</p>
+        <p class="intro-prompt">{{emptyInfo.desc}}</p>
         <div class="create-node-row">
-            <bk-button theme="primary" class="create-node-btn" @click="toCreateFn">新增</bk-button>
+            <bk-button theme="primary" class="create-node-btn" @click="toCreateFn">{{$t('quality.新增')}}</bk-button>
         </div>
     </div>
 </template>

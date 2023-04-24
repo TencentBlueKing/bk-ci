@@ -113,58 +113,49 @@
                 </bk-table-column>
             </bk-table>
         </main>
-
+        
         <bk-sideslider
             class="create-atom-slider g-slide-radio"
             :is-show.sync="createAtomsideConfig.show"
             :title="createAtomsideConfig.title"
             :quick-close="createAtomsideConfig.quickClose"
-            :width="createAtomsideConfig.width"
-        >
+            :width="createAtomsideConfig.width">
             <template slot="content">
-                <form
-                    class="bk-form create-atom-form"
-                    v-if="hasOauth"
+                <form class="bk-form create-atom-form" v-if="hasOauth"
                     v-bkloading="{
                         isLoading: createAtomsideConfig.isLoading
-                    }"
-                >
+                    }">
                     <div class="bk-form-item is-required">
                         <label class="bk-label"> {{ $t('store.名称') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%">
-                                <input
-                                    type="text"
-                                    class="bk-form-input atom-name-input"
-                                    :placeholder="$t('store.请输入中英文名称，不超过40个字符')"
+                                <bk-input class="atom-name-input" :placeholder="$t('store.请输入中英文名称，不超过40个字符')"
                                     name="atomName"
                                     v-model="createAtomForm.name"
                                     v-validate="{
                                         required: true,
-                                        regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_.]{1,40}$'
+                                        regex: '^[\u4e00-\u9fa5a-zA-Z0-9-_. ]{1,40}$'
                                     }"
                                     :class="{ 'is-danger': errors.has('atomName') }"
-                                >
+                                />
                                 <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">
                                     {{ errors.first("atomName") && errors.first("atomName").indexOf($t('store.正则')) > 0 ? $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') : errors.first("atomName") }}
                                 </p>
                             </div>
-                            <bk-popover placement="right">
+                            <bk-popover class="info-circle-icon" placement="right" max-width="400">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <template slot="content">
                                     <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
                                 </template>
                             </bk-popover>
                         </div>
+
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.标识') }} </label>
+                        <label class="bk-label"> {{ $t('store.标识：') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%;">
-                                <input
-                                    type="text"
-                                    class="bk-form-input atom-id-input"
-                                    :placeholder="$t('store.请输入英文名称，不超过30个字符')"
+                                <bk-input class="atom-id-input" :placeholder="$t('store.请输入英文名称，不超过30个字符')"
                                     name="atomId"
                                     v-model="createAtomForm.atomCode"
                                     v-validate="{
@@ -172,21 +163,27 @@
                                         regex: '^[a-zA-Z][a-zA-Z0-9_-]{1,30}$'
                                     }"
                                     :class="{ 'is-danger': errors.has('atomId') }"
-                                >
+                                />
                                 <p :class="errors.has('atomId') ? 'error-tips' : 'normal-tips'">
                                     {{ errors.first("atomId") && errors.first("atomId").indexOf($t('store.正则')) > 0 ? $t('store.由英文字母、数字、连字符(-)或下划线(_)组成，以英文字母开头，不超过30个字符') : errors.first("atomId") }}
                                 </p>
                             </div>
-                            <bk-popover placement="right">
+                            <bk-popover class="info-circle-icon" placement="right" max-width="400">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <template slot="content">
                                     <p> {{ $t('store.唯一标识，创建后不能修改。将作为插件代码库路径。') }} </p>
                                 </template>
                             </bk-popover>
                         </div>
+                        <bk-popover placement="right">
+                            <i class="devops-icon icon-info-circle"></i>
+                            <template slot="content">
+                                <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符') }} </p>
+                            </template>
+                        </bk-popover>
                     </div>
                     <div class="bk-form-item is-required">
-                        <label class="bk-label"> {{ $t('store.调试项目') }} </label>
+                        <label class="bk-label"> {{ $t('store.调试项目：') }} </label>
                         <div class="bk-form-content atom-item-content is-tooltips">
                             <div style="min-width: 100%">
                                 <bk-select
@@ -357,6 +354,7 @@
                 </div>
             </template>
         </bk-sideslider>
+        
         <bk-sideslider
             class="offline-atom-slider"
             :is-show.sync="offlinesideConfig.show"
@@ -413,7 +411,6 @@
                 </form>
             </template>
         </bk-sideslider>
-
         <bk-dialog
             v-model="deleteObj.visible"
             render-directive="if"
@@ -431,7 +428,7 @@
                 :label-width="0"
                 :model="deleteObj.formData"
             >
-                <p class="dialog-tip">{{$t('store.删除时将清理数据。删除后不可恢复！')}}</p>
+                <p class="dialog-tip">{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
                 <p class="dialog-tip">{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
                 <bk-form-item property="projectName">
                     <bk-input
@@ -528,10 +525,10 @@
 </template>
 
 <script>
-    import { debounce } from '@/utils'
     import formTips from '@/components/common/formTips/index'
-    import status from './status'
     import { atomStatusMap } from '@/store/constants'
+    import { debounce } from '@/utils'
+    import status from './status'
 
     export default {
         components: {
@@ -592,7 +589,7 @@
                     show: false,
                     isLoading: false,
                     quickClose: true,
-                    width: 565,
+                    width: 720,
                     title: this.$t('store.新增插件')
                 },
                 offlinesideConfig: {
@@ -1025,6 +1022,11 @@
 </script>
 
 <style lang="scss" scoped>
+    .info-circle-icon {
+        display: flex;
+        align-items: center;
+        padding-left: 8px;
+    }
     ::v-deep .atom-dialog-wrapper {
         .bk-form-item{
             .bk-label {

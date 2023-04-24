@@ -47,7 +47,8 @@ const dictionary = {
             mutualGroup: field => '字段不能为空，只支持英文、数字或填写变量',
             nonVarRule: field => '该字段不需要包含${{}}',
             notStartWithBKCI: field => '该字段不能以BK_CI开头',
-            paramsRule: field => '字段只能包含英文字母、数字及下划线'
+            paramsRule: field => '字段只能包含英文字母、数字及下划线',
+            timeoutsRule: field => '请输入1-10080之间的正整数，支持引用流水线变量'
         }
     },
     'en-US': {
@@ -77,7 +78,8 @@ const dictionary = {
             mutualGroup: field => 'Field only supports English, numbers or fill in variables',
             nonVarRule: field => 'This field does not need to be included ${{}}',
             notStartWithBKCI: field => "Field can not start with 'BK_CI'",
-            paramsRule: () => 'Field only support English letter, numbers and underscores'
+            paramsRule: () => 'Field only support English letter, numbers and underscores',
+            timeoutsRule: field => 'Please enter an integer between 1-10080, or a pipeline variable'
         }
     }
 }
