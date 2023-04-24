@@ -55,7 +55,7 @@ function getSubDoamin () {
     }
 }
 
-async function getLsLocale () {
+function getLsLocale () {
     try {
         const cookieLocale = cookies.get(LS_KEY) ?? DEFAULT_LOCALE
         
