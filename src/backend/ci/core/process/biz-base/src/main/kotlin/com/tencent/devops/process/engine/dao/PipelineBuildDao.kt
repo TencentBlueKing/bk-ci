@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -45,6 +46,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -65,29 +67,7 @@ class PipelineBuildDao {
         private const val DEFAULT_PAGE_SIZE = 10
     }
 
-    fun create(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        version: Int,
-        buildNum: Int,
-        trigger: String,
-        status: BuildStatus,
-        startUser: String,
-        triggerUser: String,
-        taskCount: Int,
-        firstTaskId: String,
-        channelCode: ChannelCode,
-        parentBuildId: String?,
-        parentTaskId: String?,
-        buildParameters: List<BuildParameters>,
-        webhookType: String?,
-        webhookInfo: String?,
-        buildMsg: String?,
-        buildNumAlias: String? = null,
-        concurrencyGroup: String? = null
-    ) {
+    fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
             with(T_PIPELINE_BUILD_HISTORY) {
                 dslContext.insertInto(
@@ -114,27 +94,27 @@ class PipelineBuildDao {
                     BUILD_NUM_ALIAS,
                     CONCURRENCY_GROUP
                 ).values(
-                    buildId,
-                    buildNum,
-                    projectId,
-                    pipelineId,
-                    parentBuildId,
-                    parentTaskId,
-                    startUser,
-                    triggerUser,
-                    status.ordinal,
-                    trigger,
-                    taskCount,
-                    firstTaskId,
-                    channelCode.name,
-                    version,
+                    startBuildContext.buildId,
+                    startBuildContext.buildNum,
+                    startBuildContext.projectId,
+                    startBuildContext.pipelineId,
+                    startBuildContext.parentBuildId,
+                    startBuildContext.parentTaskId,
+                    startBuildContext.userId,
+                    startBuildContext.triggerUser,
+                    startBuildContext.startBuildStatus.ordinal,
+                    startBuildContext.startType.name,
+                    startBuildContext.taskCount,
+                    startBuildContext.firstTaskId,
+                    startBuildContext.channelCode.name,
+                    startBuildContext.resourceVersion,
                     LocalDateTime.now(),
-                    JsonUtil.toJson(buildParameters, formatted = false),
-                    webhookType,
-                    webhookInfo,
-                    buildMsg,
-                    buildNumAlias,
-                    concurrencyGroup
+                    JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                    startBuildContext.variables[PIPELINE_WEBHOOK_TYPE],
+                    startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    startBuildContext.buildMsg,
+                    startBuildContext.buildNumAlias,
+                    startBuildContext.concurrencyGroup
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -159,12 +139,8 @@ class PipelineBuildDao {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                where.and(STATUS.`in`(statusIntSet))
+            if (!statusSet.isNullOrEmpty()) {
+                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
             where.fetch()
         }
@@ -301,12 +277,8 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
 
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                select.and(STATUS.`in`(statusIntSet))
+            if (!statusSet.isNullOrEmpty()) {
+                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
 
             if (buildNum != null && buildNum > 0) {
@@ -711,12 +683,12 @@ class PipelineBuildDao {
             var conditionsOr: Condition
 
             conditionsOr = JooqUtils.jsonExtract(t1 = MATERIAL, t2 = "\$[*].aliasName", lower = true)
-                .like("%${materialAlias.first().toLowerCase()}%")
+                .like("%${materialAlias.first().lowercase()}%")
 
             materialAlias.forEachIndexed { index, s ->
                 if (index == 0) return@forEachIndexed
                 conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.toLowerCase()}%")
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.lowercase()}%")
                 )
             }
             where.and(conditionsOr)
@@ -730,12 +702,12 @@ class PipelineBuildDao {
             var conditionsOr: Condition
 
             conditionsOr = JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true)
-                .like("%${materialBranch.first().toLowerCase()}%")
+                .like("%${materialBranch.first().lowercase()}%")
 
             materialBranch.forEachIndexed { index, s ->
                 if (index == 0) return@forEachIndexed
                 conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.toLowerCase()}%")
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.lowercase()}%")
                 )
             }
             where.and(conditionsOr)
@@ -791,7 +763,7 @@ class PipelineBuildDao {
                 ).lessOrEqual(totalTimeMax)
             )
         }
-        if (remark != null && remark.isNotEmpty()) {
+        if (!remark.isNullOrBlank()) {
             where.and(REMARK.like("%$remark%"))
         }
         if (buildNoStart != null && buildNoStart > 0) {
@@ -800,7 +772,7 @@ class PipelineBuildDao {
         if (buildNoEnd != null && buildNoEnd > 0) {
             where.and(BUILD_NUM.le(buildNoEnd))
         }
-        if (buildMsg != null && buildMsg.isNotEmpty()) {
+        if (!buildMsg.isNullOrBlank()) {
             where.and(BUILD_MSG.like("%$buildMsg%"))
         }
     }

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -46,10 +47,8 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
-import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -59,6 +58,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOptio
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -374,9 +374,6 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun prepareBuildContainerTasks(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
         stage: Stage,
         container: Container,
         context: StartBuildContext,
@@ -412,7 +409,7 @@ class PipelineContainerService @Autowired constructor(
                 rerun = context.needRerunTask(stage = stage, container = container)
             )
             if (status.isFinish()) {
-                logger.info("[$buildId|${atomElement.id}] status=$status")
+                logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
                 return@nextElement
             }
@@ -423,9 +420,9 @@ class PipelineContainerService @Autowired constructor(
                     context.taskCount++
                     addBuildTaskToList(
                         buildTaskList = buildTaskList,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
+                        projectId = context.projectId,
+                        pipelineId = context.pipelineId,
+                        buildId = context.buildId,
                         userId = context.userId,
                         stage = stage,
                         container = container,
@@ -452,7 +449,7 @@ class PipelineContainerService @Autowired constructor(
                             return@nextElement
                         }
                     } catch (ignored: Exception) { // 如果存在异常的ordinal
-                        logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
+                        logger.error("[${context.buildId}]|BAD_B_STATUS|${target?.taskId}|${target?.status}|$ignored")
                         return@nextElement
                     }
                 }
@@ -499,9 +496,9 @@ class PipelineContainerService @Autowired constructor(
         // 填入: 构建机或无编译环境的环境处理，需要启动和结束构建机/环境的插件任务
         if (needStartVM) {
             supplyVMTask(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
+                projectId = context.projectId,
+                pipelineId = context.pipelineId,
+                buildId = context.buildId,
                 userId = context.userId,
                 stage = stage,
                 container = container,
@@ -538,8 +535,8 @@ class PipelineContainerService @Autowired constructor(
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip =
-                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip = "${context.pipelineId}_Pipeline" +
+                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -549,8 +546,8 @@ class PipelineContainerService @Autowired constructor(
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip =
-                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip = "${context.pipelineId}_Pipeline" +
+                                "[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
@@ -560,9 +557,9 @@ class PipelineContainerService @Autowired constructor(
                 buildContainers.add(
                     Pair(
                         PipelineBuildContainer(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
+                            buildId = context.buildId,
                             stageId = stage.id!!,
                             containerId = container.id!!,
                             containerHashId = container.containerHashId ?: "",
@@ -582,7 +579,7 @@ class PipelineContainerService @Autowired constructor(
             // 新的构建需要为跳过的container增加SKIP的状态记录
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    projectId = context.projectId, pipelineId = context.pipelineId, buildId = context.buildId,
                     resourceVersion = context.resourceVersion, stageId = stage.id!!,
                     containerId = container.containerId!!, containerType = container.getClassType(),
                     executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
@@ -827,10 +824,7 @@ class PipelineContainerService @Autowired constructor(
                 containerType = container.getClassType(),
                 taskSeq = taskSeq,
                 taskId = atomElement.id!!,
-                taskName = CommonUtils.interceptStringInLength(
-                    string = atomElement.name,
-                    length = ELEMENT_NAME_MAX_LENGTH
-                ) ?: atomElement.getAtomCode(),
+                taskName = atomElement.name.coerceAtMaxLength(ELEMENT_NAME_MAX_LENGTH),
                 taskType = atomElement.getClassType(),
                 taskAtom = atomElement.getTaskAtom(),
                 status = status,
@@ -855,11 +849,9 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun setUpTriggerContainer(
-        resourceVersion: Int,
         stage: Stage,
         container: TriggerContainer,
         context: StartBuildContext,
-        startBuildStatus: BuildStatus,
         stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
@@ -947,7 +939,7 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
-        container.name = ContainerUtils.getQueuingWaitName(container.name, startBuildStatus)
+        container.name = ContainerUtils.getQueuingWaitName(container.name, context.startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
 

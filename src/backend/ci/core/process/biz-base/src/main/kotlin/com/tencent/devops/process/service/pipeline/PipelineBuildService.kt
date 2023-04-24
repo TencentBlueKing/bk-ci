@@ -35,19 +35,27 @@ import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNumAliasLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.engine.service.rule.PipelineRuleService
+import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -70,6 +78,7 @@ import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PROJECT_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.project.pojo.ProjectVO
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -81,6 +90,8 @@ class PipelineBuildService(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineElementService: PipelineElementService,
     private val projectCacheService: ProjectCacheService,
+    private val pipelineRuleService: PipelineRuleService,
+    private val redisOperation: RedisOperation,
     private val simpleRateLimiter: SimpleRateLimiter,
     private val buildIdGenerator: BuildIdGenerator
 ) {
@@ -151,88 +162,20 @@ class PipelineBuildService(
             }
             val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
 
-            val userName = when (startType) {
-                StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value ?: userId
-                StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value ?: userId
-                StartType.SERVICE -> pipelineParamMap[PIPELINE_START_SERVICE_USER_ID]?.value ?: userId
-                StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value ?: userId
-                StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value ?: userId
-                StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID) ?: userId
-                else -> userId
-            }
-            // 维持原样，保证可修改
-            pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)
-            pipelineParamMap[PIPELINE_START_USER_NAME] = BuildParameters(PIPELINE_START_USER_NAME, value = userName)
-            // 流水线名称有可能变
-            pipelineParamMap[PIPELINE_NAME] = BuildParameters(
-                key = PIPELINE_NAME,
-                value = startValues?.get(PIPELINE_NAME) ?: pipeline.pipelineName
+            val originStartParams = genOriginStartParams(
+                startType = startType,
+                pipelineParamMap = pipelineParamMap,
+                userId = userId,
+                startValues = startValues,
+                pipeline = pipeline,
+                projectVO = projectVO,
+                model = model,
+                channelCode = channelCode,
+                isMobile = isMobile,
+                projectId = projectId
             )
-            // 项目名称也是可能变化
-            pipelineParamMap[PROJECT_NAME_CHINESE] = BuildParameters(
-                key = PROJECT_NAME_CHINESE,
-                value = projectVO?.projectName ?: "",
-                valueType = BuildFormPropertyType.STRING
-            )
-
-            // 解析出定义的流水线变量
-            val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
-            val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
-            // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
-            val originStartContexts = ArrayList<BuildParameters>(realStartParamKeys.size)
-            realStartParamKeys.forEach { key ->
-                pipelineParamMap[key]?.let { param ->
-                    originStartParams.add(param)
-                    val keyWithPrefix = if (key.startsWith(CONTEXT_PREFIX)) {
-                        param.key
-                    } else {
-                        CONTEXT_PREFIX + param.key
-                    }
-                    originStartContexts.add(param.copy(key = keyWithPrefix))
-                }
-            }
-            pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
-            pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
-                key = PIPELINE_BUILD_MSG,
-                value = BuildMsgUtils.getBuildMsg(
-                    buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
-                        ?: pipelineParamMap[PIPELINE_BUILD_MSG]?.value?.toString(),
-                    startType = startType,
-                    channelCode = channelCode
-                ),
-                readOnly = true
-            )
-            pipelineParamMap[PIPELINE_START_TYPE] = BuildParameters(
-                key = PIPELINE_START_TYPE, value = startType.name, readOnly = true
-            )
-            pipelineParamMap[PIPELINE_START_CHANNEL] = BuildParameters(
-                key = PIPELINE_START_CHANNEL, value = channelCode.name, readOnly = true
-            )
-            pipelineParamMap[PIPELINE_START_MOBILE] = BuildParameters(
-                key = PIPELINE_START_MOBILE, value = isMobile, readOnly = true
-            )
-            pipelineParamMap[PIPELINE_CREATE_USER] = BuildParameters(
-                key = PIPELINE_CREATE_USER, value = pipeline.creator, readOnly = true
-            )
-            pipelineParamMap[PIPELINE_UPDATE_USER] = BuildParameters(
-                key = PIPELINE_UPDATE_USER, value = pipeline.lastModifyUser, readOnly = true
-            )
-            pipelineParamMap[PIPELINE_VERSION] = BuildParameters(PIPELINE_VERSION, pipeline.version, readOnly = true)
-            pipelineParamMap[PIPELINE_ID] = BuildParameters(PIPELINE_ID, pipeline.pipelineId, readOnly = true)
-            pipelineParamMap[PROJECT_NAME] = BuildParameters(PROJECT_NAME, projectId, readOnly = true)
-
-            pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
-            pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
-            pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
             val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
-
-            // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
-            setting?.concurrencyGroup?.let {
-                val varMap = pipelineParamMap.values.associate { param -> param.key to param.value.toString() }
-                setting.concurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
-                logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
-            }
 
             val interceptResult = pipelineInterceptorChain.filter(
                 InterceptData(
@@ -251,22 +194,166 @@ class PipelineBuildService(
                 )
             }
 
-            return pipelineRuntimeService.startBuild(
-                pipelineInfo = pipeline,
-                fullModel = model,
-                // #5264 保留启动参数的原始值以及重试中需要用到的字段
-                originStartParams = originStartParams,
-                pipelineParamMap = pipelineParamMap,
-                buildNo = buildNo,
-                buildNumRule = pipelineSetting.buildNumRule,
-                setting = setting,
+            val context = StartBuildContext.init(
+                projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
-                triggerReviewers = triggerReviewers
+                resourceVersion = pipeline.version,
+                // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
+                concurrencyGroup = if (setting?.runLockType == PipelineRunLockType.GROUP_LOCK) {
+                    // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
+                    setting.concurrencyGroup?.let {
+                        val varMap = pipelineParamMap.values.associate { param -> param.key to param.value.toString() }
+                        setting.concurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(varMap))
+                        logger.info("[$pipelineId]|Concurrency Group is ${setting.concurrencyGroup}")
+                    }
+                    setting.concurrencyGroup
+                } else null,
+                params = pipelineParamMap.values.associate { it.key to it.value.toString() },
+                buildParameters = originStartParams,
+                currentBuildNo = buildNo,
+                triggerReviewers = triggerReviewers,
+                buildNumAlias = genBuildNumAlias(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    pipelineSetting = pipelineSetting,
+                    pipelineParamMap = pipelineParamMap
+                )
+            )
+
+            return pipelineRuntimeService.startBuild(
+                fullModel = model,
+                context = context,
+                // #5264 保留启动参数的原始值以及重试中需要用到的字段
+                pipelineParamMap = pipelineParamMap
             )
         } finally {
             if (acquire) {
                 simpleRateLimiter.release(lockKey = lockKey)
             }
         }
+    }
+
+    private fun genBuildNumAlias(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        pipelineSetting: PipelineSetting,
+        pipelineParamMap: MutableMap<String, BuildParameters>
+    ): String? {
+
+        var buildNumAlias: String? = null
+
+        (if (!pipelineSetting.buildNumRule.isNullOrBlank())
+            PipelineBuildNumAliasLock(redisOperation = redisOperation, pipelineId = pipelineId)
+        else null
+            )?.use { pipelineBuildNumAliasLock ->
+                pipelineBuildNumAliasLock.lock()
+                buildNumAlias = pipelineRuleService.parsePipelineRule(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    busCode = PipelineRuleBusCodeEnum.BUILD_NUM.name,
+                    ruleStr = pipelineSetting.buildNumRule!!
+                )
+
+                // 写自定义构建号信息
+                if (!buildNumAlias.isNullOrBlank()) {
+                    pipelineParamMap[PIPELINE_BUILD_NUM_ALIAS] =
+                        BuildParameters(key = PIPELINE_BUILD_NUM_ALIAS, value = buildNumAlias!!, readOnly = true)
+                }
+            }
+        return buildNumAlias
+    }
+
+    private fun genOriginStartParams(
+        startType: StartType,
+        pipelineParamMap: MutableMap<String, BuildParameters>,
+        userId: String,
+        startValues: Map<String, String>?,
+        pipeline: PipelineInfo,
+        projectVO: ProjectVO?,
+        model: Model,
+        channelCode: ChannelCode,
+        isMobile: Boolean,
+        projectId: String
+    ): ArrayList<BuildParameters> {
+        val userName = when (startType) {
+            StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value
+            StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value
+            StartType.SERVICE -> pipelineParamMap[PIPELINE_START_SERVICE_USER_ID]?.value
+            StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value
+            StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value
+            StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID)
+        } ?: userId
+        // 维持原样，保证可修改
+        pipelineParamMap[PIPELINE_START_USER_ID] = BuildParameters(key = PIPELINE_START_USER_ID, value = userId)
+        pipelineParamMap[PIPELINE_START_USER_NAME] = BuildParameters(key = PIPELINE_START_USER_NAME, value = userName)
+        // 流水线名称有可能变
+        pipelineParamMap[PIPELINE_NAME] = BuildParameters(
+            key = PIPELINE_NAME,
+            value = startValues?.get(PIPELINE_NAME) ?: pipeline.pipelineName
+        )
+        // 项目名称也是可能变化
+        pipelineParamMap[PROJECT_NAME_CHINESE] = BuildParameters(
+            key = PROJECT_NAME_CHINESE,
+            value = projectVO?.projectName ?: "",
+            valueType = BuildFormPropertyType.STRING
+        )
+
+        // 解析出定义的流水线变量
+        val realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
+        val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
+
+        // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
+        val originStartContexts = ArrayList<BuildParameters>(realStartParamKeys.size)
+        realStartParamKeys.forEach { key ->
+            pipelineParamMap[key]?.let { param ->
+                originStartParams.add(param)
+                originStartContexts.add(
+                    if (key.startsWith(CONTEXT_PREFIX)) {
+                        param
+                    } else {
+                        param.copy(key = CONTEXT_PREFIX + key)
+                    }
+                )
+            }
+        }
+        pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
+
+        pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
+            key = PIPELINE_BUILD_MSG,
+            value = BuildMsgUtils.getBuildMsg(
+                buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
+                    ?: pipelineParamMap[PIPELINE_BUILD_MSG]?.value?.toString(),
+                startType = startType,
+                channelCode = channelCode
+            ),
+            readOnly = true
+        )
+        pipelineParamMap[PIPELINE_START_TYPE] = BuildParameters(
+            key = PIPELINE_START_TYPE, value = startType.name, readOnly = true
+        )
+        pipelineParamMap[PIPELINE_START_CHANNEL] = BuildParameters(
+            key = PIPELINE_START_CHANNEL, value = channelCode.name, readOnly = true
+        )
+        pipelineParamMap[PIPELINE_START_MOBILE] = BuildParameters(
+            key = PIPELINE_START_MOBILE, value = isMobile, readOnly = true
+        )
+        pipelineParamMap[PIPELINE_CREATE_USER] = BuildParameters(
+            key = PIPELINE_CREATE_USER, value = pipeline.creator, readOnly = true
+        )
+        pipelineParamMap[PIPELINE_UPDATE_USER] = BuildParameters(
+            key = PIPELINE_UPDATE_USER, value = pipeline.lastModifyUser, readOnly = true
+        )
+        pipelineParamMap[PIPELINE_VERSION] = BuildParameters(PIPELINE_VERSION, pipeline.version, readOnly = true)
+        pipelineParamMap[PIPELINE_ID] = BuildParameters(PIPELINE_ID, pipeline.pipelineId, readOnly = true)
+        pipelineParamMap[PROJECT_NAME] = BuildParameters(PROJECT_NAME, projectId, readOnly = true)
+
+        pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
+        pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
+        pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
+        return originStartParams
     }
 }

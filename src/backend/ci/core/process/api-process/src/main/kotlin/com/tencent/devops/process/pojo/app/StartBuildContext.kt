@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.pojo.app
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -34,8 +36,32 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_COMMIT_MESSAGE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.utils.DependOnUtils
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -47,6 +73,8 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
+import com.tencent.devops.process.utils.PipelineVarUtil
+import org.slf4j.LoggerFactory
 
 /**
  * 启动流水线上下文类，属于非线程安全类
@@ -73,7 +101,17 @@ data class StartBuildContext(
     var needUpdateStage: Boolean,
     val skipFailedTask: Boolean, // 跳过失败的插件 配合 stageRetry 可判断是否跳过所有失败插件
     val variables: Map<String, String>,
+    val startBuildStatus: BuildStatus,
+    val webhookInfo: WebhookInfo?,
+    val buildMsg: String?,
+    val triggerReviewers: List<String>?,
+    val buildParameters: MutableList<BuildParameters>,
+    val concurrencyGroup: String?,
+    val buildNumAlias: String? = null,
+    var buildNum: Int = 1, // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
+    // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNoType: BuildNoType? = null,
+    // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
     var currentBuildNo: Int? = null
 ) {
 
@@ -106,15 +144,19 @@ data class StartBuildContext(
             stage.finally -> {
                 false // finally stage 不会跳过
             }
+
             stage.id!! == retryStartTaskId -> { // 失败重试的Stage，不会跳过
                 false
             }
+
             retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
                 false
             }
+
             isRetryDependOnContainer(container) -> { // 开启dependOn Job并状态是跳过的不会跳过
                 false
             }
+
             else -> { // 当前插件不是要失败重试或要跳过的插件，会跳过
                 retryStartTaskId != taskId
             }
@@ -141,17 +183,18 @@ data class StartBuildContext(
                     false
                 }
             }
+
             isRetryDependOnContainer(container) -> false
             else -> retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
         }
     }
 
     // 失败重试,跳过的dependOn容器也应该被执行
-    fun isRetryDependOnContainer(container: Container): Boolean {
+    private fun isRetryDependOnContainer(container: Container): Boolean {
         return DependOnUtils.enableDependOn(container) && BuildStatus.parse(container.status) == BuildStatus.SKIP
     }
 
-    fun needRerun(stage: Stage): Boolean {
+    private fun needRerun(stage: Stage): Boolean {
         return stage.finally || retryStartTaskId == null || stage.id!! == retryStartTaskId
     }
 
@@ -160,13 +203,21 @@ data class StartBuildContext(
     }
 
     companion object {
+        private val logger = LoggerFactory.getLogger(StartBuildContext::class.java)
+        private const val MAX_LENGTH = 255
 
         fun init(
             projectId: String,
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
-            params: Map<String, String>
+            params: Map<String, String>,
+            buildParameters: MutableList<BuildParameters>,
+            buildNumAlias: String? = null,
+            startBuildStatus: BuildStatus? = null,
+            concurrencyGroup: String? = null,
+            triggerReviewers: List<String>? = null,
+            currentBuildNo: Int? = null
         ): StartBuildContext {
 
             val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
@@ -205,7 +256,53 @@ data class StartBuildContext(
                 },
                 retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toBoolean() ?: false,
                 skipFailedTask = params[PIPELINE_SKIP_FAILED_TASK]?.toBoolean() ?: false,
-                needUpdateStage = false
+                currentBuildNo = currentBuildNo,
+                webhookInfo = getWebhookInfo(params),
+                buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
+                buildParameters = buildParameters,
+                concurrencyGroup = concurrencyGroup?.let { self ->
+                    val tConcurrencyGroup = EnvUtils.parseEnv(self, PipelineVarUtil.fillContextVarMap(params))
+                    logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                    tConcurrencyGroup
+                },
+                triggerReviewers = triggerReviewers,
+                startBuildStatus = startBuildStatus ?: if (triggerReviewers.isNullOrEmpty())
+                    BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
+                needUpdateStage = false,
+                buildNumAlias = buildNumAlias
+            )
+        }
+
+        private fun getWebhookInfo(params: Map<String, Any>): WebhookInfo? {
+            if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
+                return null
+            }
+            return WebhookInfo(
+                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE]?.toString(),
+                nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME]?.toString(),
+                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE]?.toString(),
+                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL]?.toString(),
+                webhookType = params[PIPELINE_WEBHOOK_TYPE]?.toString(),
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH]?.toString(),
+                webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME]?.toString(),
+                // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
+                webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]?.toString()
+                } else {
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE]?.toString()
+                },
+                refId = params[PIPELINE_WEBHOOK_REVISION]?.toString(),
+                webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA]?.toString(),
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH]?.toString(),
+                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
+                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString(),
+                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString(),
+                tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME]?.toString(),
+                issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID]?.toString(),
+                noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID]?.toString(),
+                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]?.toString()
             )
         }
     }
