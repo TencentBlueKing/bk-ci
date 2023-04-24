@@ -131,7 +131,7 @@ export default (r, initSetLocale = false) => {
     async function syncLocaleBackend (localeLang) {
         try {
             console.log('sync backendLocalEnum', backendLocalEnum[localeLang], localeLang)
-            await axios.put('/ms/project/api/user/locale/update', {
+            await axios.put('/ms/project/api/user/locales/update', {
                 language: backendLocalEnum[localeLang]
             })
         } catch (error) {
