@@ -394,20 +394,13 @@ class TxProjectServiceImpl @Autowired constructor(
         val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
         val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
 
-        return ProjectCreateInfo(
-            projectName = projectCreateInfo.projectName,
-            projectType = projectCreateInfo.projectType,
-            secrecy = projectCreateInfo.secrecy,
-            description = projectCreateInfo.description,
-            kind = projectCreateInfo.kind,
+        return projectCreateInfo.copy(
             bgId = bgId,
             bgName = bgName,
             centerId = centerId,
             centerName = centerName,
             deptId = deptId,
-            deptName = deptName,
-            englishName = projectCreateInfo.englishName,
-            authSecrecy = projectCreateInfo.authSecrecy
+            deptName = deptName
         )
     }
 
