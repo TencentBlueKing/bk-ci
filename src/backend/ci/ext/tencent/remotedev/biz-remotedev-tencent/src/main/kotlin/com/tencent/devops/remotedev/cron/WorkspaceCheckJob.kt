@@ -1,10 +1,12 @@
 package com.tencent.devops.remotedev.cron
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
@@ -53,7 +55,15 @@ class WorkspaceCheckJob @Autowired constructor(
                     )
                     kotlin.runCatching {
                         workspaceService.heartBeatStopWS(workspaceName)
-                    }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
+                    }.onFailure {
+                        logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
+                        // 针对已经休眠或销毁的容器，删除上报心跳记录。
+                        if (it is ErrorCodeException &&
+                            (it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode)) {
+                            redisHeartBeat.deleteWorkspaceHeartbeat("", workspaceName)
+                        }
+                    }
                 }
                 workspaceService.fixUnexpectedWorkspace()
             }
