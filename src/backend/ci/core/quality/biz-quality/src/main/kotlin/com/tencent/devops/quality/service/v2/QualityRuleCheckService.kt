@@ -28,7 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
@@ -74,15 +74,15 @@ import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.*
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.Collections
-import java.util.concurrent.Executors
 
 @Service
 @Suppress(
