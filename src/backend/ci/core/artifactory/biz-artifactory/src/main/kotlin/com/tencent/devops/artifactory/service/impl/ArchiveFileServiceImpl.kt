@@ -38,14 +38,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import java.net.URLDecoder
-import java.net.URLEncoder
 import java.nio.charset.Charset
 
 @Suppress("MagicNumber")
