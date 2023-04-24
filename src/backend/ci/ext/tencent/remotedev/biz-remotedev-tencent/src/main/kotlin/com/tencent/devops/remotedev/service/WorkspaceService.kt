@@ -86,8 +86,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RU
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_GRAY_VERSION
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_PROD_VERSION
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -140,6 +138,7 @@ class WorkspaceService @Autowired constructor(
         private const val DEFAULT_WAIT_TIME = 60
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
         private const val BLANK_TEMPLATE_ID = 1
+        private const val DISCOUNT_TIME = 10000
     }
 
     fun getAuthorizedGitRepository(
@@ -1136,7 +1135,7 @@ class WorkspaceService @Autowired constructor(
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName) ?: return null
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
@@ -1633,7 +1632,7 @@ class WorkspaceService @Autowired constructor(
     fun initBilling(freeTime: Int? = null) {
         remoteDevBillingDao.monthlyInit(
             dslContext,
-            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560) * 60
+            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME) * 60
         )
     }
 
@@ -1784,34 +1783,5 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         }
-    }
-
-    // 校验是否有当前环境客户端的最新稳定版
-    fun checkUpdate(userId: String): String {
-        logger.info("checkUpdate|userId|$userId")
-        // 先查询该用户信息获取是否灰度用户标记
-        val grayFlag = remoteDevSettingDao.fetchAnyOpUserSetting(dslContext, userId)?.grayFlag ?: false
-        // 根据灰度标识读取不同redis key对应的版本
-        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
-        if (grayFlag) {
-            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
-        }
-        return redisCache.get(redisKey)?.ifBlank {
-            ""
-        } ?: ""
-    }
-
-    // 客户端版本升级后调用接口更新记录的版本信息
-    fun updateClientVersion(userId: String, env: String, version: String) {
-        logger.info("updateClientVersion|userId|$userId|env|$env|version|$version")
-        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
-        if (env == "gray") {
-            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
-        }
-        redisOperation.set(
-            key = redisKey,
-            value = version,
-            expired = false
-        )
     }
 }
