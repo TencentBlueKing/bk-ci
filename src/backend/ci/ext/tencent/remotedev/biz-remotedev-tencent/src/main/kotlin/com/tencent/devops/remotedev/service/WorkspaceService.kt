@@ -288,28 +288,14 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 发送给用户
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_CREATE,
-                status = true,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.PREPARING
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(userId, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = userId,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_CREATE,
+            status = true,
+            action = WorkspaceAction.PREPARING
         )
 
         return WorkspaceResponse(
@@ -376,30 +362,14 @@ class WorkspaceService @Autowired constructor(
             workspaceDao.deleteWorkspace(event.workspaceName, dslContext)
         }
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_CREATE,
-                status = event.status,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = event.environmentHost ?: "",
-                    workspaceName = event.workspaceName,
-                    status = WorkspaceAction.START,
-                    errorMsg = event.errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(event.userId, event.workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(event.workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(event.workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            workspaceHost = event.environmentHost,
+            errorMsg = event.errorMsg,
+            type = WebSocketActionType.WORKSPACE_CREATE,
+            status = event.status,
+            action = WorkspaceAction.START
         )
     }
 
@@ -491,30 +461,15 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_START,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.STARTING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_START,
+                status = true,
+                action = WorkspaceAction.STARTING
             )
-
             return WorkspaceResponse(
                 workspaceName = workspace.name,
                 workspaceHost = "",
@@ -652,30 +607,15 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_START,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = environmentHost ?: "",
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.START,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        // 分发到WS
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_START,
+            status = null,
+            action = WorkspaceAction.START
         )
     }
 
@@ -756,30 +696,15 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_SLEEP,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.SLEEPING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_SLEEP,
+                status = null,
+                action = WorkspaceAction.SLEEPING
             )
-
             return true
         }
     }
@@ -876,31 +801,53 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_DELETE,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.DELETING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_DELETE,
+                status = null,
+                action = WorkspaceAction.DELETING
             )
             return true
         }
+    }
+    // 封装统一分发WS的方法
+    fun dispatchWebsocketPushEvent(
+        userId: String,
+        workspaceName: String,
+        workspaceHost: String?,
+        errorMsg: String?,
+        type: WebSocketActionType,
+        status: Boolean?,
+        action: WorkspaceAction
+    ) {
+        webSocketDispatcher.dispatch(
+            WorkspaceWebsocketPush(
+                type = type,
+                status = status ?: true,
+                anyMessage = WorkspaceResponse(
+                    workspaceHost = workspaceHost ?: "",
+                    workspaceName = workspaceName,
+                    status = action,
+                    errorMsg = errorMsg
+                ),
+                projectId = "",
+                userIds = getWebSocketUsers(userId, workspaceName),
+                redisOperation = redisOperation,
+                page = WorkspacePageBuild.buildPage(workspaceName),
+                notifyPost = NotifyPost(
+                    module = "remotedev",
+                    level = NotityLevel.LOW_LEVEL.getLevel(),
+                    message = "",
+                    dealUrl = null,
+                    code = 200,
+                    webSocketType = "IFRAME",
+                    page = WorkspacePageBuild.buildPage(workspaceName)
+                )
+            )
+        )
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
@@ -1286,28 +1233,14 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_SLEEP,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.SLEEPING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(ADMIN_NAME, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = ADMIN_NAME,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_SLEEP,
+                status = null,
+                action = WorkspaceAction.SLEEPING
             )
             return true
         }
@@ -1400,28 +1333,14 @@ class WorkspaceService @Autowired constructor(
                 )
             )
 
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_DELETE,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspace.name,
-                        status = WorkspaceAction.DELETING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(ADMIN_NAME, workspace.name),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspace.name),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspace.name)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = ADMIN_NAME,
+                workspaceName = workspace.name,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_DELETE,
+                status = null,
+                action = WorkspaceAction.DELETING
             )
             return true
         }
@@ -1495,30 +1414,14 @@ class WorkspaceService @Autowired constructor(
             )
         }
         remoteDevBillingDao.endBilling(dslContext, workspaceName)
-
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_DELETE,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.DELETE,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_DELETE,
+            status = status,
+            action = WorkspaceAction.DELETE
         )
     }
 
@@ -1576,29 +1479,14 @@ class WorkspaceService @Autowired constructor(
 
         remoteDevBillingDao.endBilling(dslContext, workspaceName)
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_SLEEP,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.SLEEP,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_SLEEP,
+            status = status,
+            action = WorkspaceAction.SLEEP
         )
     }
 
