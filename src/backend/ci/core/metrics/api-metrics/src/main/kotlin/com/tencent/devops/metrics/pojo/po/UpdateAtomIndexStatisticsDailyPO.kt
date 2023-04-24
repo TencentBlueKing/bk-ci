@@ -25,27 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.pojo.po
 
-import org.jooq.DSLContext
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-interface MetricsDataClearService {
-
-    /**
-     * metrics数据清理
-     * @param dslContext jooq上下文
-     * @param projectId 项目ID
-     * @param pipelineId 流水线ID
-     * @param statisticsTime 统计时间
-     * @param buildId 构建ID
-     * @return 布尔值
-     */
-    fun metricsDataClear(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        statisticsTime: LocalDateTime,
-        buildId: String
-    ): Boolean
-}
+@ApiModel("更新插件指标每日统计数据")
+data class UpdateAtomIndexStatisticsDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("失败执行次数")
+    var failExecuteCount: Int,
+    @ApiModelProperty("失败合规次数")
+    var failComplianceCount: Int,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
+)

@@ -1,15 +1,13 @@
 package com.tencent.devops.remotedev.filter.impl
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_IP_LIST_KEY
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -20,16 +18,8 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 class IpFilter constructor(
-    private val redisOperation: RedisOperation
+    private val cacheService: RedisCacheService
 ) : ApiFilter {
-    companion object {
-        private val logger = LoggerFactory.getLogger(IpFilter::class.java)
-    }
-
-    private val redisCache = Caffeine.newBuilder()
-        .maximumSize(1)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
     enum class ApiType(val path: String) {
         BK_GPT("/api/user/remotedev/bkGPT");
@@ -61,7 +51,7 @@ class IpFilter constructor(
             )
             return true
         }
-        if (!isIpInWhitelist(ip, redisCache.get(REDIS_IP_LIST_KEY) ?: return true)) {
+        if (!isIpInWhitelist(ip, cacheService.getSetMembers(REDIS_IP_LIST_KEY) ?: emptySet())) {
             logger.info("ip($ip)wants to access the resource(${apiType.path}), but is blocked.")
             return false
         }
@@ -86,28 +76,32 @@ class IpFilter constructor(
         }
     }
 
-    fun isIpInWhitelist(ip: String, whitelist: Set<String>): Boolean {
-        val ips = ip.split(".").toTypedArray()
-        val ipAddr = (
-            ips[0].toInt() shl 24
-                or (ips[1].toInt() shl 16)
-                or (ips[2].toInt() shl 8) or ips[3].toInt()
-            )
+    companion object {
+        private val logger = LoggerFactory.getLogger(IpFilter::class.java)
 
-        whitelist.forEach { cidr ->
-            val splits = cidr.split("/")
-            val type = if (splits.size == 2) splits[1].toInt() else 32
-            val mask = -0x1 shl 32 - type
-            val cidrIp = splits[0]
-            val cidrIps = cidrIp.split(".").toTypedArray()
-            val cidrIpAddr = (
-                cidrIps[0].toInt() shl 24
-                    or (cidrIps[1].toInt() shl 16)
-                    or (cidrIps[2].toInt() shl 8)
-                    or cidrIps[3].toInt()
+        fun isIpInWhitelist(ip: String, whitelist: Set<String>): Boolean {
+            val ips = ip.split(".").toTypedArray()
+            val ipAddr = (
+                ips[0].toLong() shl 24
+                    or (ips[1].toLong() shl 16)
+                    or (ips[2].toLong() shl 8) or ips[3].toLong()
                 )
-            if (ipAddr and mask == cidrIpAddr and mask) return true
+
+            whitelist.forEach { cidr ->
+                val splits = cidr.split("/")
+                val type = if (splits.size == 2) splits[1].toInt() else 32
+                val mask = ((1L shl 32 - type) - 1L).inv()
+                val cidrIp = splits[0]
+                val cidrIps = cidrIp.split(".").toTypedArray()
+                val cidrIpAddr = (
+                    cidrIps[0].toLong() shl 24
+                        or (cidrIps[1].toLong() shl 16)
+                        or (cidrIps[2].toLong() shl 8)
+                        or cidrIps[3].toLong()
+                    )
+                if (ipAddr and mask == cidrIpAddr and mask) return true
+            }
+            return false
         }
-        return false
     }
 }

@@ -37,10 +37,10 @@ import java.time.LocalDateTime
 
 @Service
 class MetricsDataClearServiceImpl @Autowired constructor(
-    private val dslContext: DSLContext,
     private val metricsDataClearDao: MetricsDataClearDao
 ) : MetricsDataClearService {
     override fun metricsDataClear(
+        dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         statisticsTime: LocalDateTime,
