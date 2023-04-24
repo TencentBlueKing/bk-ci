@@ -126,5 +126,8 @@ module.exports = (env = {}, argv) => {
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]
     }
+    config.devServer.proxy = {
+        '/ms/': 'http://dev.devops.woa.com/ms/'
+    }
     return config
 }
