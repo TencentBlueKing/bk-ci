@@ -27,13 +27,9 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OauthForbiddenException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -64,7 +60,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
-import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -91,22 +86,16 @@ import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
-import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.SocketTimeoutException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("LongMethod")
@@ -126,8 +115,8 @@ class WorkspaceService @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val commonService: CommonService,
     private val redisCache: RedisCacheService,
+    private val bkTicketServie: BkTicketService,
     private val profile: Profile
 ) {
 
@@ -140,43 +129,6 @@ class WorkspaceService @Autowired constructor(
         private const val BLANK_TEMPLATE_ID = 1
         private const val DISCOUNT_TIME = 10000
     }
-
-    fun getAuthorizedGitRepository(
-        userId: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        gitType: RemoteDevGitType
-    ): List<RemoteDevRepository> {
-        logger.info("$userId get user git repository|$search|$page|$pageSize")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
-        return checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getProjectList(
-                userId = userId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search,
-                owned = false,
-                minAccessLevel = GitAccessLevelEnum.DEVELOPER
-            )
-        }
-    }
-
-    fun getRepositoryBranch(
-        userId: String,
-        pathWithNamespace: String,
-        gitType: RemoteDevGitType
-    ): List<String> {
-        logger.info("$userId get git repository branch list|$pathWithNamespace")
-        return checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getProjectBranches(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace
-            ) ?: emptyList()
-        }
-    }
-
     fun createWorkspace(userId: String, bkTicket: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
@@ -352,7 +304,7 @@ class WorkspaceService @Autowired constructor(
 
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
-            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
 
             // websocket 通知成功
         } else {
@@ -394,7 +346,7 @@ class WorkspaceService @Autowired constructor(
                 remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
-                updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
+                bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
@@ -519,7 +471,7 @@ class WorkspaceService @Autowired constructor(
             }
         }
         if (event.status) {
-            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
         }
 
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
@@ -1175,7 +1127,7 @@ class WorkspaceService @Autowired constructor(
         gitType: RemoteDevGitType
     ): List<String> {
         logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return checkOauthIllegal(userId) {
+        return permissionService.checkOauthIllegal(userId) {
             remoteDevGitTransfer.load(gitType).getFileNameTree(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
@@ -1530,23 +1482,6 @@ class WorkspaceService @Autowired constructor(
         } else setOf(operator)
     }
 
-    /**
-     * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
-     */
-    private fun <T> checkOauthIllegal(userId: String, action: () -> T): T {
-        return kotlin.runCatching {
-            action()
-        }.onFailure {
-            if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode,
-                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
-                    params = arrayOf(userId)
-                )
-            }
-        }.getOrThrow()
-    }
-
     private fun getOpHistory(key: OpHistoryCopyWriting) =
         redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name)?.ifBlank {
             key.default
@@ -1620,56 +1555,5 @@ class WorkspaceService @Autowired constructor(
             }
         }
         return true
-    }
-
-    fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
-        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
-        if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
-            return false
-        }
-        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
-        val params = mutableMapOf<String, Any?>()
-        params["ticket"] = bkTicket
-        params["user"] = userId
-        val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
-            .header("Cookie", "X-DEVOPS-BK-TICKET=$bkTicket")
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
-            .build()
-
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body!!.string()
-                logger.info("updateBkTicket|response code|${response.code}|content|$data")
-                if (!response.isSuccessful && retryTime > 0) {
-                    val retryTimeLocal = retryTime - 1
-                    return updateBkTicket(userId, bkTicket, hostName, retryTimeLocal)
-                }
-                if (!response.isSuccessful && retryTime <= 0) {
-                    throw ErrorCodeException(
-                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
-                    )
-                }
-
-                val dataMap = JsonUtil.toMap(data)
-                val status = dataMap["status"]
-                return (status == 0)
-            }
-        } catch (e: SocketTimeoutException) {
-            // 接口超时失败，重试三次
-            if (retryTime > 0) {
-                logger.info("User $userId updateBkTicket. retry: $retryTime")
-                return updateBkTicket(userId, bkTicket, hostName, retryTime - 1)
-            } else {
-                logger.error("User $userId updateBkTicket failed.", e)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
-                )
-            }
-        }
     }
 }
