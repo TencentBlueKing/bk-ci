@@ -248,6 +248,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 executeCount = task.executeCount,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
+                routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
                 customBuildEnv = param.customBuildEnv
             )
