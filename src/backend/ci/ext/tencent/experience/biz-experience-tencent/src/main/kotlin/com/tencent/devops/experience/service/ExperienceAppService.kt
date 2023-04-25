@@ -144,8 +144,7 @@ class ExperienceAppService(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_EXPERIENCE_PERMISSION,
-                params = arrayOf(experience.creator),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(experience.creator)
             )
         }
         val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
@@ -454,8 +453,7 @@ class ExperienceAppService(
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = NO_PERMISSION_QUERY_EXPERIENCE,
-                language = I18nUtil.getLanguage(userId)
+                errorCode = NO_PERMISSION_QUERY_EXPERIENCE
             )
         }
         val experience = experienceDao.get(dslContext, experienceId)

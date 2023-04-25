@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -68,13 +67,13 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.OpIdeAtomService
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class OpIdeAtomServiceImpl @Autowired constructor(
@@ -231,7 +230,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, it.id)
@@ -306,7 +305,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomClassifyCode = it["classifyCode"] as? String
             val classifyName = it["classifyName"] as? String
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
             val opIdeAtomItem = OpIdeAtomItem(

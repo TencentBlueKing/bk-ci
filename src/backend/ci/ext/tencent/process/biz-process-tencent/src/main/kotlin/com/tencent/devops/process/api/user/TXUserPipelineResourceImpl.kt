@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_MAXIMUM_NUMBER
-import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_MAXIMUM_QUEUE_LENGTH
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.DockerBuildService
@@ -43,8 +43,8 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class TXUserPipelineResourceImpl @Autowired constructor(
@@ -92,7 +92,7 @@ class TXUserPipelineResourceImpl @Autowired constructor(
             ) {
                 throw InvalidParamException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = ILLEGAL_MAXIMUM_QUEUE_LENGTH
+                        messageCode = MAXIMUM_QUEUE_LENGTH_ILLEGAL
                     )
                 )
             }
@@ -101,7 +101,7 @@ class TXUserPipelineResourceImpl @Autowired constructor(
             ) {
                 throw InvalidParamException(
                     I18nUtil.getCodeLanMessage(
-                        messageCode = ILLEGAL_MAXIMUM_NUMBER
+                        messageCode = MAXIMUM_NUMBER_QUEUES_ILLEGAL
                     )
                 )
             }

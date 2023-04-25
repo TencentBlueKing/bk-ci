@@ -41,8 +41,6 @@ import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
-import com.tencent.devops.stream.constant.StreamMessageCode.BK_MIRROR_VERSION_NOT_AVAILABLE
-import com.tencent.devops.stream.constant.StreamMessageCode.BK_NO_RECORD_MIRROR_VERSION
 import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
 import com.tencent.devops.stream.constant.StreamMessageCode.NO_RECORD_MIRROR_VERSION
 import com.tencent.devops.stream.dao.GitCIServicesConfDao

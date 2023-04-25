@@ -42,6 +42,7 @@ import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DESIGNATED_APPROVER_APPROVAL
 import com.tencent.devops.notify.constant.NotifyMessageCode.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
+import com.tencent.devops.notify.dao.MessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
@@ -78,7 +79,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val wechatService: WechatService,
     private val weworkService: WeworkService,
     private val wechatWorkService: WechatWorkService,
-    private val wechatWorkRobotService: WechatWorkRobotService
+    private val wechatWorkRobotService: WechatWorkRobotService,
+    private val messageTemplateDao: MessageTemplateDao
 ) : NotifyMessageTemplateServiceImpl(
     dslContext = dslContext,
     notifyMessageTemplateDao = notifyMessageTemplateDao,
@@ -88,7 +90,8 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     wechatService = wechatService,
     weworkService = weworkService,
     wechatWorkService = wechatWorkService,
-    wechatWorkRobotService = wechatWorkRobotService
+    wechatWorkRobotService = wechatWorkRobotService,
+    messageTemplateDao = messageTemplateDao
 ) {
 
     companion object {

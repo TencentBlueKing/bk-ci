@@ -29,16 +29,15 @@ package com.tencent.devops.store.service.ideatom.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomEnvInfoDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomFeatureDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomVersionLogDao
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.ideatom.IdeAtom
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomStatusEnum
 import com.tencent.devops.store.pojo.ideatom.enums.IdeAtomTypeEnum
@@ -73,7 +72,7 @@ class IdeAtomServiceImpl @Autowired constructor(
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
             val classifyLanName = I18nUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
             IdeAtom(

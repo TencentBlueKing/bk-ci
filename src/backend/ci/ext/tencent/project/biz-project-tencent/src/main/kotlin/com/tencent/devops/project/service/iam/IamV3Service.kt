@@ -52,15 +52,15 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.constant.ProcessMessageCode.FAILED_GET_USER_INFORMATION
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 class IamV3Service @Autowired constructor(
     val iamManagerService: ManagerService,
@@ -144,7 +144,7 @@ class IamV3Service @Autowired constructor(
         val bgName = userDao.get(dslContext, userId)?.bgName!!
         val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
             ?: throw ErrorCodeException(
-                errorCode = FAILED_GET_USER_INFORMATION,
+                errorCode = QUERY_USER_INFO_FAIL,
                 params = arrayOf(userId)
             )
         val bgId = deptInfo.results[0].id

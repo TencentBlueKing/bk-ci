@@ -43,7 +43,8 @@ import com.tencent.devops.plugin.constant.PluginMessageCode.URL_CODING_ERROR
 import com.tencent.devops.plugin.constant.PluginMessageCode.WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import io.vavr.collection.TreeMap
+import java.util.TreeMap
+import java.util.Arrays
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 import org.json.JSONException
