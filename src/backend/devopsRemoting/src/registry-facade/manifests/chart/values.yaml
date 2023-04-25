@@ -6,12 +6,7 @@ registry:
       memory: 1000Mi
     limits:
       cpu: 500m
-      memory: 1500Mi
-  staticLayers: 
-    - type: "image"
-      ref: "mirrors.tencent.com/ci/remote-dev-base:0.0.3"
-    - type: "image"
-      ref: "mirrors.tencent.com/ci/remote-dev-full:0.0.8"     
+      memory: 1500Mi 
   remoteSpecProvider:
     addr: 
     sha1key: 
