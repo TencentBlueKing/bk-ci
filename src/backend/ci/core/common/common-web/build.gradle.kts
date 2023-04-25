@@ -33,7 +33,6 @@ dependencies {
     api(project(":core:common:common-security"))
     api(project(":core:common:common-client"))
     api(project(":core:common:common-third-sdk:common-sdk-util"))
-    api(project(":core:project:api-project"))
     api("org.springframework.boot:spring-boot-starter-jersey")
     api("org.springframework.boot:spring-boot-starter-undertow")
     api("org.springframework.boot:spring-boot-starter-web")
