@@ -531,16 +531,17 @@ class EnvService @Autowired constructor(
             } else {
                 ""
             }
-
+            val nodeType = MessageCodeUtil.getCodeLanMessage("ENV_NODE_TYPE_${it.nodeType}")
+            val nodeStatus = MessageCodeUtil.getCodeLanMessage("ENV_NODE_STATUS_${it.nodeStatus}")
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeBaseInfo(
                 nodeHashId = HashUtil.encodeLongId(it.nodeId),
                 nodeId = nodeStringId,
                 name = it.nodeName,
                 ip = it.nodeIp,
-                nodeStatus = NodeStatus.getStatusName(it.nodeStatus),
+                nodeStatus = nodeStatus,
                 agentStatus = getAgentStatus(it),
-                nodeType = NodeType.getTypeName(it.nodeType),
+                nodeType = nodeType,
                 osName = it.osName,
                 createdUser = it.createdUser,
                 operator = it.operator,

@@ -131,7 +131,8 @@ object ExportJob {
                                 container = Container2(
                                     image = containerImage,
                                     credentials = credentials,
-                                    options = null
+                                    options = null,
+                                    imagePullPolicy = null
                                 ),
                                 agentSelector = null,
                                 needs = job.buildEnv
@@ -150,7 +151,8 @@ object ExportJob {
                                 container = Container2(
                                     image = containerImage,
                                     credentials = credentials,
-                                    options = null
+                                    options = null,
+                                    imagePullPolicy = null
                                 ),
                                 agentSelector = null,
                                 needs = job.buildEnv

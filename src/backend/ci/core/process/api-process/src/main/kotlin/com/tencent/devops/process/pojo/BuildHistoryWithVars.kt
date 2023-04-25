@@ -90,6 +90,6 @@ data class BuildHistoryWithVars(
     var buildMsg: String?,
     @ApiModelProperty("自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @ApiModelProperty("构建变量集合", required = true)
+    @ApiModelProperty("构建变量集合(30天左右过期删除)", required = true)
     val variables: Map<String, String>
 )

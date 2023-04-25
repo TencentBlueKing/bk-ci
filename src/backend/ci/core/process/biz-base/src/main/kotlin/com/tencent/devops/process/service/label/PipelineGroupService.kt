@@ -60,8 +60,10 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataAccessException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.sql.SQLIntegrityConstraintViolationException
 import java.time.LocalDateTime
 
 @Suppress("ALL")
@@ -151,9 +153,11 @@ class PipelineGroupService @Autowired constructor(
                 userId = userId,
                 id = id
             )
-        } catch (t: DuplicateKeyException) {
-            logger.warn("Fail to create the group $pipelineGroup by userId $userId")
-            throw OperationException("The group is already exist")
+        } catch (t: DataAccessException) {
+            if (t.cause is SQLIntegrityConstraintViolationException) {
+                logger.warn("Fail to create the group $pipelineGroup by userId $userId")
+                throw OperationException("The group is already exist")
+            } else throw t
         }
         return true
     }
@@ -167,9 +171,11 @@ class PipelineGroupService @Autowired constructor(
                 name = pipelineGroup.name,
                 userId = userId
             )
-        } catch (t: DuplicateKeyException) {
-            logger.warn("Fail to update the group $pipelineGroup by userId $userId")
-            throw OperationException("The group is already exist")
+        } catch (t: DataAccessException) {
+            if (t.cause is SQLIntegrityConstraintViolationException) {
+                logger.warn("Fail to create the group $pipelineGroup by userId $userId")
+                throw OperationException("The group is already exist")
+            } else throw t
         }
     }
 
@@ -421,8 +427,10 @@ class PipelineGroupService @Autowired constructor(
                 }
             )
         )
-        logger.info("LableChangeMetricsBroadCastEvent： " +
-                "updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds")
+        logger.info(
+            "LableChangeMetricsBroadCastEvent： " +
+                "updatePipelineLabel-create $projectId|$pipelineId|$labelIdArr|$labelIds"
+        )
     }
 
     private fun pipelineLabelSegmentIdPairs(labelIdArr: Set<Long>): MutableList<Pair<Long, Long?>> {
