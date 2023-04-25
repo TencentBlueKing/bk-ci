@@ -31,6 +31,10 @@ import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -53,6 +57,7 @@ import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import java.text.MessageFormat
 
 class DefaultModelCheckPluginTest : TestBase() {
 
@@ -121,15 +126,15 @@ class DefaultModelCheckPluginTest : TestBase() {
         every {
             client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
         } returns (
-                Result(genAtomVersion())
-                )
+            Result(genAtomVersion())
+            )
 
         every { client.get(ServiceAtomResource::class) } returns (serviceAtomResource)
         every {
             client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
         } returns (
-                Result(genInstallAtomInfo())
-                )
+            Result(genInstallAtomInfo())
+            )
         every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
         every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
@@ -137,20 +142,20 @@ class DefaultModelCheckPluginTest : TestBase() {
                 atomVersions = any()
             )
         } returns (
-                Result(
-                    mapOf(
-                        "manualTrigger:1.*" to AtomRunInfo(
-                            atomCode = "manualTrigger",
-                            atomName = "手动触发",
-                            version = "1.*",
-                            initProjectCode = projectId,
-                            jobType = JobTypeEnum.AGENT,
-                            buildLessRunFlag = false,
-                            inputTypeInfos = null
-                        )
+            Result(
+                mapOf(
+                    "manualTrigger:1.*" to AtomRunInfo(
+                        atomCode = "manualTrigger",
+                        atomName = "手动触发",
+                        version = "1.*",
+                        initProjectCode = projectId,
+                        jobType = JobTypeEnum.AGENT,
+                        buildLessRunFlag = false,
+                        inputTypeInfos = null
                     )
                 )
-                )
+            )
+            )
         every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
         every { pipelineCommonSettingConfig.maxStageNum } returns (20)
         every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)
@@ -213,32 +218,137 @@ class DefaultModelCheckPluginTest : TestBase() {
         checkPlugin.clearUpModel(model)
     }
 
-    @Test
-    fun checkJob() {
-        // trigger
-        val triggerContainers = genContainers(1, 1, 2)
-        checkPlugin.checkJob(triggerContainers[0], projectId, pipelineId, userId, false)
-        val allContainers = genContainers(2, 3, 2)
-        val mac = allContainers[0]
-        checkPlugin.checkJob(mac, projectId, pipelineId, userId, false)
-        val win = allContainers[1]
-        checkPlugin.checkJob(win, projectId, pipelineId, userId, false)
-        val linux = allContainers[2]
-        checkPlugin.checkJob(linux, projectId, pipelineId, userId, false)
-    }
-
-    private fun checkModelIntegrityEmptyElement() {
+    private fun checkModelIntegrityEmptyElement(): ErrorCodeException? {
         val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
-        Assertions.assertThrows(ErrorCodeException::class.java) { checkPlugin.checkModelIntegrity(model, projectId) }
+        return Assertions.assertThrows(ErrorCodeException::class.java) {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
     }
 
     @Test
     fun checkModelIntegrity() {
-        try {
-            checkModelIntegrityEmptyElement()
-        } catch (actual: ErrorCodeException) {
-            Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
+        var actual: ErrorCodeException? = checkModelIntegrityEmptyElement()
+        Assertions.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutElement("\${{$illegalTimeoutVar}}", illegal = true) // 插件非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutElement("\${{$biggerTimeoutVar}}", illegal = true) // 插件超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutJob("\${{$illegalTimeoutVar}}", illegal = true) // Job非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityTimeoutJob("\${{$biggerTimeoutVar}}", illegal = true) // Job超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        // 互斥组场景
+        actual = checkModelIntegrityIllegalTimeoutJobMutex("\${{$illegalTimeoutVar}}") // 互斥组非法字符
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual?.params) }}")
+
+        actual = checkModelIntegrityIllegalTimeoutJobMutex("\${{$biggerTimeoutVar}}") // 互斥组超出最大值
+        Assertions.assertEquals(ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR, actual?.errorCode)
+        println("actual=${actual?.message?.let { MessageFormat(it).format(actual.params) }}")
+
+        checkModelIntegrityTimeoutJob("\${{$timeoutVar}}") // 正常的Job变量场景
+        checkModelIntegrityTimeoutJob("60") // timeout 60 minutes
+
+        checkModelIntegrityTimeoutElement("\${{$timeoutVar}}") // 正常的插件变量场景
+        checkModelIntegrityTimeoutElement("60") // timeout 60 minutes
+
+        checkModelIntegrityVarTimeoutJobMutex("\${{$timeoutVar}}") // 正常的互斥组变量场景
+        checkModelIntegrityVarTimeoutJobMutex("60") // timeout 60 minutes
+    }
+
+    private fun checkModelIntegrityTimeoutElement(varName: String, illegal: Boolean = false): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setElementTimeoutVar(model, varName)
+        return if (illegal) {
+            Assertions.assertThrows(ErrorCodeException::class.java) {
+                checkPlugin.checkModelIntegrity(model, projectId)
+            }
+        } else {
+            checkPlugin.checkModelIntegrity(model, projectId)
+            null
         }
+    }
+
+    private fun checkModelIntegrityTimeoutJob(varName: String, illegal: Boolean = false): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setJobTimeoutVar(model, varName)
+        return if (illegal) {
+            Assertions.assertThrows(ErrorCodeException::class.java) {
+                checkPlugin.checkModelIntegrity(model, projectId)
+            }
+        } else {
+            checkPlugin.checkModelIntegrity(model, projectId)
+            null
+        }
+    }
+
+    private fun checkModelIntegrityIllegalTimeoutJobMutex(varName: String): ErrorCodeException? {
+        val model = genModel(stageSize = 2, jobSize = 2, elementSize = 2)
+        setJobMutexTimeoutVar(model, varName)
+        return Assertions.assertThrows(ErrorCodeException::class.java) {
+            checkPlugin.checkModelIntegrity(model, projectId)
+        }
+    }
+
+    private fun setElementTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers[0].elements.forEach {
+            val jop = it.additionalOptions
+            jop?.timeoutVar = varName
+        }
+    }
+
+    private fun setJobTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers.forEach {
+            val jop = when (it) {
+                is VMBuildContainer -> it.jobControlOption
+                is NormalContainer -> it.jobControlOption
+                else -> return@forEach
+            }
+            jop?.timeoutVar = varName
+        }
+    }
+
+    private fun checkModelIntegrityVarTimeoutJobMutex(value: String) {
+        val model = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
+        setJobMutexTimeoutVar(model, value)
+        checkPlugin.checkModelIntegrity(model, projectId)
+    }
+
+    private fun setJobMutexTimeoutVar(model: Model, varName: String) {
+        model.stages[1].containers.forEach {
+            val mut = when (it) {
+                is VMBuildContainer -> {
+                    it.mutexGroup ?: run { it.mutexGroup = getMutex(); it.mutexGroup }
+                }
+
+                is NormalContainer -> {
+                    it.mutexGroup ?: run { it.mutexGroup = getMutex(); it.mutexGroup }
+                }
+
+                else -> return@forEach
+            }
+            mut?.timeoutVar = varName
+        }
+    }
+
+    private fun getMutex(): MutexGroup {
+        return MutexGroup(
+            enable = true,
+            mutexGroupName = "mutexGroupName\${var1}",
+            queueEnable = true,
+            timeout = 100800,
+            queue = 15
+        )
     }
 
     @Test

@@ -219,6 +219,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
+                        task = task,
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,

@@ -125,7 +125,7 @@ export function importScript (src, oHead) {
     return new Promise(resolve => {
         const oScript = document.createElement('script')
         oScript.type = 'text\/javascript'
-        oScript.setAttribute('src', src)
+        oScript.setAttribute('src', window.PUBLIC_URL_PREFIX + src)
         oHead.appendChild(oScript)
 
         oScript.onload = resolve
@@ -138,7 +138,7 @@ export function importStyle (href, oHead) {
         const oStyle = document.createElement('link')
         oStyle.setAttribute('rel', 'stylesheet')
         oStyle.setAttribute('type', 'text/css')
-        oStyle.setAttribute('href', href)
+        oStyle.setAttribute('href', window.PUBLIC_URL_PREFIX + href)
         oHead.appendChild(oStyle)
 
         oStyle.onload = resolve

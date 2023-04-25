@@ -24,7 +24,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            codelib: './src/index'
+            codelib: './src/entry'
         },
         publicPath: '/codelib/',
         dist: '/codelib',

@@ -30,6 +30,7 @@ package com.tencent.devops.stream.trigger.git.service
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
+import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitDiffInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitFileInfo
@@ -199,4 +200,13 @@ interface StreamGitApiService {
         request: CommitCheckRequest,
         retry: ApiRequestRetryInfo
     )
+
+    /*
+    * 获取某次commit 提交的文件diff信息
+    */
+    fun getCommitDiff(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        sha: String
+    ): List<StreamGitCommitDiffInfo>
 }

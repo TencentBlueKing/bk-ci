@@ -41,7 +41,9 @@ data class GithubProjectInfo(
     override val description: String?,
     override val avatarUrl: String?,
     override val pathWithNamespace: String?,
-    override val nameWithNamespace: String
+    override val nameWithNamespace: String,
+    override val repoCreatedTime: String,
+    override val repoCreatorId: String
 ) : StreamGitProjectInfo {
 
     constructor(g: GithubRepo) : this(
@@ -55,6 +57,8 @@ data class GithubProjectInfo(
         description = g.description,
         avatarUrl = g.owner.avatarUrl,
         pathWithNamespace = g.fullName,
-        nameWithNamespace = g.fullName
+        nameWithNamespace = g.fullName,
+        repoCreatedTime = g.createdAt,
+        repoCreatorId = g.owner.login
     )
 }

@@ -28,17 +28,16 @@
 package com.tencent.devops.process.engine.control.command.container
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.command.CmdContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 
 data class ContainerContext(
     val container: PipelineBuildContainer, // 当前容器
-    val mutexGroup: MutexGroup?, // 互斥组配置
     val containerTasks: List<PipelineBuildTask>, // 当前容器下的插件任务列表
     var buildStatus: BuildStatus, // 每次流转最近一次的状态，用于传递到最终容器执行状态
     val event: PipelineBuildContainerEvent, // 当前容器消息事件
@@ -47,6 +46,7 @@ data class ContainerContext(
     val stageMatrixCount: Int = 0,
     var firstQueueTaskId: String? = null, // 缓存找到的第一个待执行的任务（未必执行）
     val pipelineAsCodeEnabled: Boolean? = null,
+    var needUpdateControlOption: PipelineBuildContainerControlOption? = null, // 是否需要更新Job设置（超时、互斥组等）
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

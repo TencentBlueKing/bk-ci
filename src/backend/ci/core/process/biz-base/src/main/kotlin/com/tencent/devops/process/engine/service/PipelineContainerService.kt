@@ -37,6 +37,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -87,6 +88,7 @@ class PipelineContainerService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val dslContext: DSLContext,
+    private val modelCheckPlugin: ModelCheckPlugin,
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
     private val containerBuildRecordService: ContainerBuildRecordService,
@@ -177,6 +179,7 @@ class PipelineContainerService @Autowired constructor(
         stageId: String,
         containerId: String,
         startTime: LocalDateTime? = null,
+        controlOption: PipelineBuildContainerControlOption? = null,
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
@@ -189,6 +192,7 @@ class PipelineContainerService @Autowired constructor(
             containerId = containerId,
             buildStatus = buildStatus,
             startTime = startTime,
+            controlOption = controlOption,
             endTime = endTime
         )
     }
@@ -223,14 +227,6 @@ class PipelineContainerService @Autowired constructor(
             buildStatus = buildStatus,
             matrixOption = controlOption.matrixControlOption!!,
             modelContainer = modelContainer
-        )
-    }
-
-    fun deletePipelineBuildContainers(transactionContext: DSLContext?, projectId: String, pipelineId: String): Int {
-        return pipelineBuildContainerDao.deletePipelineBuildContainers(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId
         )
     }
 
@@ -383,7 +379,6 @@ class PipelineContainerService @Autowired constructor(
         buildId: String,
         stage: Stage,
         container: Container,
-        startParamMap: Map<String, Any>,
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
@@ -400,6 +395,7 @@ class PipelineContainerService @Autowired constructor(
         val containerElements = container.elements
 
         containerElements.forEach nextElement@{ atomElement ->
+            modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
             taskSeq++ // 跳过的也要+1，Seq不需要连续性
             // 计算启动构建机的插件任务的序号
             if (startVMTaskSeq < 0) {
@@ -410,7 +406,7 @@ class PipelineContainerService @Autowired constructor(
             }
 
             // #4245 直接将启动时跳过的插件置为不可用，减少存储变量
-            atomElement.disableBySkipVar(variables = startParamMap)
+            atomElement.disableBySkipVar(variables = context.variables)
 
             val status = atomElement.initStatus(
                 rerun = context.needRerunTask(stage = stage, container = container)
@@ -542,20 +538,24 @@ class PipelineContainerService @Autowired constructor(
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip =
+                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
+
                     is VMBuildContainer -> PipelineBuildContainerControlOption(
                         jobControlOption = container.jobControlOption!!,
                         matrixControlOption = container.matrixControlOption,
                         inFinallyStage = stage.finally,
                         mutexGroup = container.mutexGroup?.also { s ->
-                            s.linkTip = "${pipelineId}_Pipeline[${startParamMap[PIPELINE_NAME]}]Job[${container.name}]"
+                            s.linkTip =
+                                "${pipelineId}_Pipeline[${context.variables[PIPELINE_NAME]}]Job[${container.name}]"
                         },
                         containPostTaskFlag = container.containPostTaskFlag
                     )
-                    else -> null
+
+                    else -> PipelineBuildContainerControlOption(jobControlOption = JobControlOption())
                 }
                 buildContainers.add(
                     Pair(

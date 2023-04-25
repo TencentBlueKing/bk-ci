@@ -59,7 +59,7 @@ import java.util.concurrent.TimeUnit
 interface IAtomTask<T> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)!!
+        val logger = LoggerFactory.getLogger(IAtomTask::class.java)!!
     }
 
     /**
@@ -112,23 +112,19 @@ interface IAtomTask<T> {
             val timeoutMills: Long =
                 if (param is Element) {
                     val additionalOptions = param.additionalOptions
-                    var timeoutMinutes = additionalOptions?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN.toLong()
-                    if (timeoutMinutes == 0L) {
-                        timeoutMinutes = Timeout.MAX_MINUTES.toLong()
-                    }
-                    TimeUnit.MINUTES.toMillis(timeoutMinutes)
+                    Timeout.transMinuteTimeoutToMills(additionalOptions?.timeout?.toInt())
                 } else if (param is NormalContainer) {
-                    TimeUnit.MINUTES.toMillis(
-                        (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES).toLong()
+                    Timeout.transMinuteTimeoutToMills(
+                        (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES)
                     )
                 } else if (param is VMBuildContainer) {
                     // docker 构建机要求10分钟内超时
                     if (param.dispatchType is DockerDispatchType || !param.dockerBuildVersion.isNullOrBlank()) {
-                        TimeUnit.MINUTES.toMillis(
-                            (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES).toLong()
+                        Timeout.transMinuteTimeoutToMills(
+                            (param.jobControlOption?.prepareTimeout ?: Timeout.DEFAULT_PREPARE_MINUTES)
                         )
                     } else {
-                        TimeUnit.MINUTES.toMillis((param.jobControlOption?.timeout ?: Timeout.MAX_MINUTES).toLong())
+                        Timeout.transMinuteTimeoutToMills(param.jobControlOption?.timeout)
                     }
                 } else {
                     0L
@@ -214,7 +210,7 @@ interface IAtomTask<T> {
         if (value.isNullOrBlank()) {
             return ""
         }
-        return EnvUtils.parseEnv(value!!, runVariables)
+        return EnvUtils.parseEnv(value, runVariables)
     }
 
     fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {

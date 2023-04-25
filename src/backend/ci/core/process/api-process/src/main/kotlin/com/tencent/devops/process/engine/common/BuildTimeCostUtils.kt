@@ -73,8 +73,8 @@ object BuildTimeCostUtils {
 
     fun BuildRecordStage.generateStageTimeCost(
         containerRecords: List<BuildRecordContainer>
-    ): BuildRecordTimeCost {
-        val startTime = startTime ?: return BuildRecordTimeCost()
+    ): BuildRecordTimeCost? {
+        val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var containerExecuteCost = emptyList<BuildRecordTimeLine.Moment>()
@@ -117,8 +117,8 @@ object BuildTimeCostUtils {
 
     fun BuildRecordContainer.generateMatrixTimeCost(
         containerRecords: List<BuildRecordContainer>
-    ): BuildRecordTimeCost {
-        val startTime = startTime ?: return BuildRecordTimeCost()
+    ): BuildRecordTimeCost? {
+        val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var containerExecuteCost = emptyList<BuildRecordTimeLine.Moment>()
@@ -160,9 +160,9 @@ object BuildTimeCostUtils {
      */
     fun BuildRecordContainer.generateContainerTimeCost(
         taskRecords: List<BuildRecordTask>
-    ): Pair<BuildRecordTimeCost, BuildRecordTimeLine> {
+    ): Pair<BuildRecordTimeCost?, BuildRecordTimeLine> {
         val containerTimeLine = BuildRecordTimeLine()
-        val startTime = startTime ?: return Pair(BuildRecordTimeCost(), containerTimeLine)
+        val startTime = startTime ?: return Pair(null, containerTimeLine)
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L
@@ -181,8 +181,8 @@ object BuildTimeCostUtils {
             containerTimeLine.queueCostMoments.addAll(taskTimeLine.queueCostMoments)
             containerTimeLine.waitCostMoments.addAll(taskTimeLine.waitCostMoments)
             containerTimeLine.executeCostMoments.addAll(taskTimeLine.executeCostMoments)
-            executeCost += cost.executeCost
-            waitCost += cost.waitCost
+            cost?.executeCost?.let { executeCost += it }
+            cost?.waitCost?.let { waitCost += it }
         }
         val systemCost = totalCost - executeCost - waitCost - queueCost
         return Pair(
@@ -202,8 +202,8 @@ object BuildTimeCostUtils {
      * queueCost、 systemCost 保持为 0
      * @param timeLine 计算task时为null, 计算container时会传入以记录具体时刻
      */
-    fun BuildRecordTask.generateTaskTimeCost(timeLine: BuildRecordTimeLine? = null): BuildRecordTimeCost {
-        val startTime = startTime ?: return BuildRecordTimeCost()
+    fun BuildRecordTask.generateTaskTimeCost(timeLine: BuildRecordTimeLine? = null): BuildRecordTimeCost? {
+        val startTime = startTime ?: return null
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
         val waitCost = timestamps.toList().sumOf { (type, time) ->

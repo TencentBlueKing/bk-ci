@@ -389,10 +389,30 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         )
     }
 
+    override fun tryFinishStuckBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Boolean> {
+        logger.info("OPENAPI_BUILD_V4|$userId|tryFinishStuckBuilds|$projectId|$pipelineId|$buildIds")
+        return client.get(ServiceBuildResource::class).tryFinishStuckBuilds(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildIds = buildIds
+        )
+    }
+
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

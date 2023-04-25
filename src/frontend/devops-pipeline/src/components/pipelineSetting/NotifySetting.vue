@@ -12,7 +12,7 @@
                 <staff-input
                     :handle-change="(name, value) => subscription.users = value.join(',')"
                     :value="subscription.users.split(',').filter(Boolean)"
-                    :placeholder="'支持环境变量(${var})，多个环境变量以英文逗号分隔'">
+                    :placeholder="$t('settings.additionUserPlaceholder')">
                 </staff-input>
             </bk-form-item>
             <bk-form-item :label="$t('settings.noticeContent')" :required="true">

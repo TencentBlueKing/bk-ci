@@ -39,6 +39,6 @@ data class PipelineBuildContainerControlOption(
     val jobControlOption: JobControlOption,
     val matrixControlOption: MatrixControlOption? = null,
     val inFinallyStage: Boolean = false,
-    val mutexGroup: MutexGroup? = null,
+    var mutexGroup: MutexGroup? = null,
     var containPostTaskFlag: Boolean? = null // 是否包含post任务
 )

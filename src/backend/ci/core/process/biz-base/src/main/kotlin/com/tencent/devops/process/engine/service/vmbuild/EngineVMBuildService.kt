@@ -68,6 +68,7 @@ import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -126,6 +127,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -211,7 +213,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     val (containerEnv, context, timeoutMills) = when (c) {
                         is VMBuildContainer -> {
                             val envList = mutableListOf<BuildEnv>()
-                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             val asCodeEnabled = asCodeSettings?.enable == true
@@ -227,7 +229,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                         onlyExpression = asCodeEnabled,
                                         contextPair = contextPair
                                     ),
-                                    os = c.baseOS.name.toLowerCase()
+                                    os = c.baseOS.name.lowercase()
                                 ).data?.let { self -> envList.add(self) }
                             }
 
@@ -249,13 +251,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 )
                             }?.let { self -> variablesWithType.addAll(self) }
 
-                            Triple(envList, contextMap, timeoutMills)
+                            Triple(envList, contextMap, tm)
                         }
                         is NormalContainer -> {
-                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, null, c.matrixContext, asCodeSettings?.enable)
-                            Triple(mutableListOf(), contextMap, timeoutMills)
+                            Triple(mutableListOf(), contextMap, tm)
                         }
                         else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
                     }
@@ -683,6 +685,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
+                task = null,
                 updateTaskInfo = UpdateTaskInfo(
                     projectId = projectId,
                     buildId = buildId,
@@ -710,6 +713,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 platformCode = result.platformCode, platformErrorCode = result.platformErrorCode
             )
         )
+
+        task?.let {
+            pipelineBuildTaskService.finishTask(
+                buildTask = task,
+                buildStatus = buildStatus,
+                actionType = ActionType.REFRESH,
+                source = "completeClaimBuildTask",
+                sendEventFlag = false
+            )
+        }
 
         if (buildStatus.isFailure()) {
             // #1613 可能为空，需要先对预置

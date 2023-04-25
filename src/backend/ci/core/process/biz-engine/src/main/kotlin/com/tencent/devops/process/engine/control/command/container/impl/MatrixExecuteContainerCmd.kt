@@ -134,7 +134,7 @@ class MatrixExecuteContainerCmd(
         val containerHashId = commandContext.container.containerHashId
 
         val executeCount = commandContext.executeCount
-        val matrixOption = parentContainer.controlOption?.matrixControlOption!!
+        val matrixOption = parentContainer.controlOption.matrixControlOption!!
         var newActionType = event.actionType
 
         var running: BuildStatus? = null

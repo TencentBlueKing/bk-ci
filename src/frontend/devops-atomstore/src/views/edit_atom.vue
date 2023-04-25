@@ -94,11 +94,11 @@
                     <div class="bk-form-content atom-item-content is-tooltips">
                         <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
                                 required: true,
-                                max: 70
+                                max: 256
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
@@ -121,6 +121,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             @imgAdd="addImage('mdHook', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -236,7 +237,8 @@
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('store.版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <mavon-editor :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
+                        <mavon-editor
+                            :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
                             ref="versionMd"
                             v-model="atomForm.versionContent"
                             :toolbars="toolbarOptions"
@@ -245,6 +247,7 @@
                             preview-background="#fff"
                             name="versionContent"
                             v-validate="{ required: true }"
+                            :language="mavenLang"
                             @imgAdd="addImage('versionMd', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -268,7 +271,7 @@
     import bkFileUpload from '@/components/common/file-upload'
     import breadCrumbs from '@/components/bread-crumbs.vue'
     import api from '@/api'
-
+    
     export default {
         components: {
             selectLogo,
@@ -282,7 +285,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -390,6 +393,9 @@
             },
             userName () {
                 return this.$store.state.user.username
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         watch: {

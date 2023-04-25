@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.pojo.event
 
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.enums.ActionType
@@ -46,7 +45,6 @@ data class PipelineBuildMonitorEvent(
     override val pipelineId: String,
     override val userId: String,
     val buildId: String,
-    val buildStatus: BuildStatus,
     val executeCount: Int = 0, // 0 为了兼容旧的事件没有该字段，默认为0
     override var actionType: ActionType = ActionType.START,
     override var delayMills: Int = 0

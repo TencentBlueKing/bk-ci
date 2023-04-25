@@ -39,6 +39,7 @@ import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import java.util.LinkedList
 
 @Component
 class ClearTimeoutCron(
@@ -85,15 +86,10 @@ class ClearTimeoutCron(
         logger.info("start clear Session by Timer")
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
-            if (redisData != null) {
+            if (!redisData.isNullOrBlank()) {
                 logger.info("websocket timer $bucket, data:$redisData")
-                var newSessionList: String? = null
-                val sessionList = redisData.split(",")
-                if (sessionList.isEmpty()) {
-                    logger.info("this bucket is empty,redisKey[${WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket}]")
-                    continue
-                }
-                sessionList.forEach {
+                var newRedisData = LinkedList<String>()
+                redisData.split(",").forEach {
                     try {
                         val timeout: Long = it.substringAfter("&").toLong()
                         val userId = it.substringAfter("#").substringBefore("&")
@@ -116,21 +112,17 @@ class ClearTimeoutCron(
                                 clearSessionByMq(userId, sessionId)
                             }
                         } else {
-                            newSessionList = if (newSessionList == null) {
-                                it
-                            } else {
-                                "$newSessionList,$it"
-                            }
+                            newRedisData.add(it)
                         }
                     } catch (e: Exception) {
                         logger.warn("fail msg: ${e.message}")
                     }
                 }
-                if (newSessionList != null) {
-                    logger.info("websocket timer reset $bucket, data: $newSessionList")
+                if (newRedisData != null) {
+                    logger.info("websocket timer reset $bucket, data: $newRedisData")
                     redisOperation.set(
                         WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
-                        newSessionList!!,
+                        newRedisData.joinToString(","),
                         null,
                         true
                     )

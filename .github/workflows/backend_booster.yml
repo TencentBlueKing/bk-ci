@@ -6,11 +6,11 @@ name: Backend Booster Check
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
     - 'src/backend/booster/**'
   pull_request:
-    branches: [ master, release-* ]
+    branches: [master, release-*]
     paths:
     - 'src/backend/booster/**'
 
@@ -27,7 +27,7 @@ jobs:
     - uses: actions/checkout@v2
     - uses: actions/setup-go@v2
       with:
-        go-version: 1.17
+        go-version: 1.19.6
     - name: GO Mod
       working-directory: src/backend/booster
       run: |

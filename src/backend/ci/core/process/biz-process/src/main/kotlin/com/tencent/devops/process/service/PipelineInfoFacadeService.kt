@@ -48,7 +48,6 @@ import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -132,6 +131,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ILLEGAL_PIPELINE_MODEL_JSON))
 
+        // 适配兼容老数据
+        model.stages.forEach {
+            it.transformCompatibility()
+        }
         val modelAndSetting = PipelineModelAndSetting(model = model, setting = settingInfo)
         logger.info("exportPipeline |$pipelineId | $projectId| $userId")
         return exportModelToFile(modelAndSetting, settingInfo.pipelineName)
@@ -434,7 +437,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode
-    ) {
+    ): DeployPipelineResult {
         val watcher = Watcher(id = "restorePipeline|$pipelineId|$userId")
         try {
             watcher.start("isProjectManager")
@@ -465,6 +468,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelineId = pipelineId,
                 pipelineName = model.name
             )
+            return DeployPipelineResult(pipelineId, pipelineName = model.name, version = model.latestVersion)
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
@@ -796,6 +800,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
+                it.transformCompatibility()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
@@ -889,19 +894,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         return pipelineRepositoryService.isPipelineExist(
             projectId = projectId, pipelineName = name, channelCode = channelCode, excludePipelineId = pipelineId
         )
-    }
-
-    fun batchUpdatePipelineNamePinYin(userId: String) {
-        logger.info("$userId batchUpdatePipelineNamePinYin")
-        val redisLock = RedisLock(redisOperation, "process:batchUpdatePipelineNamePinYin", 5 * 60)
-        if (redisLock.tryLock()) {
-            try {
-                pipelineInfoDao.batchUpdatePipelineNamePinYin(dslContext)
-            } finally {
-                redisLock.unlock()
-                logger.info("$userId batchUpdatePipelineNamePinYin finished")
-            }
-        }
     }
 
     fun getPipelineChannel(projectId: String, pipelineId: String): ChannelCode? {

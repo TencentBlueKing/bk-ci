@@ -41,7 +41,9 @@ data class TGitProjectInfo(
     override val description: String?,
     override val avatarUrl: String?,
     override val pathWithNamespace: String?,
-    override val nameWithNamespace: String
+    override val nameWithNamespace: String,
+    override val repoCreatorId: String,
+    override val repoCreatedTime: String
 ) : StreamGitProjectInfo {
     constructor(g: GitProjectInfo) : this(
         gitProjectId = g.id.toString(),
@@ -54,6 +56,8 @@ data class TGitProjectInfo(
         description = g.description,
         avatarUrl = g.avatarUrl,
         pathWithNamespace = g.pathWithNamespace,
-        nameWithNamespace = g.namespaceName
+        nameWithNamespace = g.namespaceName,
+        repoCreatorId = g.creatorId ?: "",
+        repoCreatedTime = g.createdAt ?: ""
     )
 }

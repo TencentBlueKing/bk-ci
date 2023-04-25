@@ -73,19 +73,19 @@
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content template-item-content is-tooltips">
-                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('store.展示在模板市场上的文本简介，不超过70个字符。')"
+                        <input type="text" class="bk-form-input template-introduction-input" :placeholder="$t('store.展示在模板市场上的文本简介，不超过256个字符。')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="templateForm.summary"
                             v-validate="{
                                 required: true,
-                                max: 70
+                                max: 256
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }">
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.模版一句话简介，不超过70个字符，展示在模版市场上') }} </p>
+                                <p> {{ $t('store.模版一句话简介，不超过256个字符，展示在模版市场上') }} </p>
                             </template>
                         </bk-popover>
                     </div>
@@ -101,6 +101,7 @@
                             :toolbars="toolbarOptions"
                             :external-link="false"
                             :box-shadow="false"
+                            :language="mavenLang"
                             preview-background="#fff"
                             @imgAdd="addImage"
                             @imgDel="delImage"
@@ -167,7 +168,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
+                docsLink: this.BKCI_DOCS.TEMPLATE_GUIDE_DOC,
                 sortList: [],
                 labelList: [],
                 categoryList: [],
@@ -209,6 +210,9 @@
                     { name: this.$t('store.工作台'), to: { name: 'templateWork' } },
                     { name: this.$t('store.上架模板') }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         watch: {

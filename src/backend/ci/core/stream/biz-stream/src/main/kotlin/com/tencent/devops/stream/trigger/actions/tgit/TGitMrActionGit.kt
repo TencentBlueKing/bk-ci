@@ -586,7 +586,7 @@ class TGitMrActionGit(
             sourceBranch = GitActionCommon.getTriggerBranch(event.object_attributes.source_branch),
             targetBranch = GitActionCommon.getTriggerBranch(event.object_attributes.target_branch),
             changeSet = getChangeSet(),
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             mrAction = mrAction
         )
         return TriggerResult(

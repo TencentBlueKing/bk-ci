@@ -63,13 +63,13 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
@@ -176,13 +176,9 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 更新buildNo
-        if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
-            )
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
+            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         }
 
         // 设置状态
@@ -245,32 +241,24 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        retryFlag: Boolean
-    ) {
+    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
 
         if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
             // 使用分布式锁防止并发更新
-            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
-            try {
+            PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId, retryFlag)
-            } finally {
-                buildNoLock.unlock()
+                updateBuildNoInfo(projectId, pipelineId)
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String, retryFlag: Boolean) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
-        if (buildNo != null && !retryFlag) {
+        if (buildNo != null) {
             pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
