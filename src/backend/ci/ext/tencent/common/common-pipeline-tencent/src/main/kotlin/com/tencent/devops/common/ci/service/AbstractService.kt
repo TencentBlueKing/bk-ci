@@ -56,10 +56,9 @@ abstract class AbstractService(
     fun parseImage(): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-            I18nUtil.getCodeLanMessage(
-                messageCode = ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
-            )
+            throw CustomException(
+                status = Response.Status.INTERNAL_SERVER_ERROR,
+                message = I18nUtil.getCodeLanMessage(ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT)
                 )
         }
         return Pair(list[0], list[1])

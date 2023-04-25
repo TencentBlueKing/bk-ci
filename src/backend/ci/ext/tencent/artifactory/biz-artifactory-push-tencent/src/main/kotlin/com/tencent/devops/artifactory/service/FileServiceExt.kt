@@ -34,14 +34,14 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Paths
 
 @Service
 class FileServiceExt @Autowired constructor(
@@ -79,11 +79,13 @@ class FileServiceExt @Autowired constructor(
             }
         }
         if (count == 0) {
-            throw RuntimeException(MessageUtil.getMessageByLocale(
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
                 messageCode = PushMessageCode.FILE_NOT_EXITS,
                 params = arrayOf(fileName),
                 language = I18nUtil.getLanguage(userId)
-            ))
+                )
+            )
         }
         return downloadFiles
     }
@@ -134,18 +136,17 @@ class FileServiceExt @Autowired constructor(
             val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get jfrog files($url) fail:\n $responseBody")
-                throw RuntimeException(I18nUtil.getCodeLanMessage(
-                    messageCode = PushMessageCode.GET_FILE_FAIL,
-                    params = null))
+                throw RuntimeException(
+                    I18nUtil.getCodeLanMessage(messageCode = PushMessageCode.GET_FILE_FAIL)
+                )
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
                 logger.warn("get jfrog files($url) fail\n$responseBody")
-                throw RuntimeException(I18nUtil.getCodeLanMessage(
-                    messageCode = PushMessageCode.GET_FILE_FAIL,
-                    params = null
-                ))
+                throw RuntimeException(
+                    I18nUtil.getCodeLanMessage(messageCode = PushMessageCode.GET_FILE_FAIL)
+                )
             }
         }
     }

@@ -92,17 +92,15 @@ class AcrossProjectDistributionAtom @Autowired constructor(
                 ), task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
-            buildLogPrinter.addRedLine(buildId,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_SUCCESSFULLY_FAILED
-                ) + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(
+                buildId,
+                I18nUtil.getCodeLanMessage(messageCode = BK_SUCCESSFULLY_FAILED)
+                        + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = BK_SUCCESSFULLY_FAILED
-                ) + "$result"
+                errorMsg = I18nUtil.getCodeLanMessage(messageCode = BK_SUCCESSFULLY_FAILED) + "$result"
             )
         }
     }

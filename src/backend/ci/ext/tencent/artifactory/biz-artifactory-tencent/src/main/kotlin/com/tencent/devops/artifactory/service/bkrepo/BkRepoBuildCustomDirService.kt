@@ -43,11 +43,11 @@ import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.web.utils.I18nUtil
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoBuildCustomDirService @Autowired constructor(
@@ -71,11 +71,12 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
-            ?: throw NotFoundException(I18nUtil.getCodeLanMessage(
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
                     messageCode = FILE_NOT_EXIST,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 )
-                )
+            )
         return RepoUtils.toFileDetail(fileDetail)
     }
 

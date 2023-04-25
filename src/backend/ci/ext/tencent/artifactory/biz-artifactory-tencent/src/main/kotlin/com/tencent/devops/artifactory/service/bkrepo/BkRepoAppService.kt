@@ -55,10 +55,10 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 @SuppressWarnings("LongMethod")
@@ -132,8 +132,10 @@ class BkRepoAppService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(userId, projectId, message =
-                    MessageUtil.getMessageByLocale(
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    message = MessageUtil.getMessageByLocale(
                         messageCode = USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
                         language = I18nUtil.getLanguage(userId),
                         params = arrayOf(userId, projectId)
