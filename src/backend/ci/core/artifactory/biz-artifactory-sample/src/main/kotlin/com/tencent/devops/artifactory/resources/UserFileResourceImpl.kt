@@ -27,8 +27,10 @@
 
 package com.tencent.devops.artifactory.resources
 
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.user.UserFileResource
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.pojo.CopyFileRequest
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -98,5 +100,22 @@ class UserFileResourceImpl @Autowired constructor(
 
     override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
         downloadFile(userId, filePath, logo, response)
+    }
+
+    override fun copy(userId: String, copyFileRequest: CopyFileRequest) {
+        with(copyFileRequest) {
+            val filename = PathUtils.resolveName(srcFileFullPath)
+            val dstFullPath = PathUtils.combineFullPath(dstDirFullPath, filename)
+            archiveFileService.copyFile(
+                userId = userId,
+                srcProjectId = projectId,
+                srcArtifactoryType = srcArtifactoryType,
+                srcFullPath = srcFileFullPath,
+                dstProjectId = projectId,
+                dstArtifactoryType = dstArtifactoryType,
+                dstFullPath = dstFullPath
+            )
+        }
+
     }
 }

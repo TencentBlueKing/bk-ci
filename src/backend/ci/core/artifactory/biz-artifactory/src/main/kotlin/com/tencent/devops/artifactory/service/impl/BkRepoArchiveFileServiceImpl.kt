@@ -508,6 +508,28 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)
     }
 
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        val srcRepo = BkRepoUtils.getRepoName(srcArtifactoryType)
+        val dstRepo = BkRepoUtils.getRepoName(dstArtifactoryType)
+        bkRepoClient.copy(
+            userId = userId,
+            fromProject = srcProjectId,
+            fromRepo = srcRepo,
+            fromPath = srcFullPath,
+            toProject = dstProjectId,
+            toRepo = dstRepo,
+            toPath = dstFullPath
+        )
+    }
+
     companion object {
         private const val ACROSS_PROJECT_COPY_LIMIT = 1000
         private const val DOWNLOAD_FILE_URL_LIMIT = 1000
