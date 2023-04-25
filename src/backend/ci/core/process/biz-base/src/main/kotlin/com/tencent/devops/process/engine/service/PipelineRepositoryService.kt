@@ -399,7 +399,7 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
-                c.timeCost = null
+                e.timeCost = null
                 distIds.add(e.id!!)
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
