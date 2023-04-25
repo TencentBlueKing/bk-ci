@@ -14,77 +14,77 @@ enum class ErrorCodeEnum(
 
     USER_NOT_EXISTS(
         errorType = ErrorType.USER,
-        errorCode = "2130001",
-        formatErrorMessage = "2130001"
+        errorCode = "2132001",
+        formatErrorMessage = "2132001"
     ),//Account [%s] does not exist, please contact DevOps-helper to register
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
-        errorCode = "2130002",
-        formatErrorMessage = "2130002"
+        errorCode = "2132002",
+        formatErrorMessage = "2132002"
     ),//%s oauth invalid, need to re-authorize
     WORKSPACE_NOT_FIND(
         errorType = ErrorType.USER,
-        errorCode = "2130003",
-        formatErrorMessage = "2130003"
+        errorCode = "2132003",
+        formatErrorMessage = "2132003"
     ),//workspace %s not find
     DEVFILE_ERROR(
         errorType = ErrorType.USER,
-        errorCode = "2130004",
-        formatErrorMessage = "2130004"
+        errorCode = "2132004",
+        formatErrorMessage = "2132004"
     ),//load devfile error: %s
     USERINFO_ERROR(
         errorType = ErrorType.USER,
-        errorCode = "2130005",
-        formatErrorMessage = "2130005"
+        errorCode = "2132005",
+        formatErrorMessage = "2132005"
     ),//load user info error: %s
     WORKSPACE_STATUS_CHANGE_FAIL(
         errorType = ErrorType.USER,
-        errorCode = "2130006",
-        formatErrorMessage = "2130006"
+        errorCode = "2132006",
+        formatErrorMessage = "2132006"
     ),//workspace(%s) change failed: %s
     WORKSPACE_SHARE_FAIL(
         errorType = ErrorType.USER,
-        errorCode = "2130007",
-        formatErrorMessage = "2130007"
+        errorCode = "2132007",
+        formatErrorMessage = "2132007"
     ),//workspace share failed: %s
     FORBIDDEN(
         errorType = ErrorType.USER,
-        errorCode = "2130008",
-        formatErrorMessage = "2130008"
+        errorCode = "2132008",
+        formatErrorMessage = "2132008"
     ),//You do not have permission: %s
     WORKSPACE_MAX_RUNNING(
         errorType = ErrorType.USER,
-        errorCode = "2130009",
-        formatErrorMessage = "2130009"
+        errorCode = "2132009",
+        formatErrorMessage = "2132009"
     ),//The current workspace running count(%s) has reached the user limit(%s)
     WORKSPACE_MAX_HAVING(
         errorType = ErrorType.USER,
-        errorCode = "2130010",
-        formatErrorMessage = "2130010"
+        errorCode = "2132010",
+        formatErrorMessage = "2132010"
     ),//The number of created workspaces(%s) has reached the user limit(%s)
     UPDATE_BK_TICKET_FAIL(
         errorType = ErrorType.USER,
-        errorCode = "2130011",
-        formatErrorMessage = "update BkTicket fail."
-    ),
+        errorCode = "2132011",
+        formatErrorMessage = "2132011"
+    ),// update BkTicket fail.
     DENIAL_OF_SERVICE(
         errorType = ErrorType.USER,
-        errorCode = "2130012",
-        formatErrorMessage = "2130012"
+        errorCode = "2132012",
+        formatErrorMessage = "2132012"
     ),// Repeat request! Please try again later.
     REPEAT_REQUEST(
         errorType = ErrorType.USER,
-        errorCode = "2130013",
-        formatErrorMessage = "2130013"
+        errorCode = "2132013",
+        formatErrorMessage = "2132013"
     ),// The workspace has error and cannot be repaired, please choose to destroy.
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
-        errorCode = "2130014",
-        formatErrorMessage = "2130014"
+        errorCode = "2132014",
+        formatErrorMessage = "2132014"
     ),// The errored workspace has been restored to [%s], please try again.
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
-        errorCode = "2130015",
-        formatErrorMessage = "2130015"
+        errorCode = "2132015",
+        formatErrorMessage = "2132015"
     )
 }

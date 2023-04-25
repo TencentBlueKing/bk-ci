@@ -11,7 +11,7 @@ enum class ErrorCodeEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "2123001"),//Dispatch-windows系统错误
-    NO_IDLE_WINDOWS_ERROR(ErrorType.THIRD_PARTY, 2123002, "2123002");//DEVCLOUD WINDOWS构建机启动失败，没有空闲的构建机
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2133028, "2133028"),//Dispatch-windows系统错误
+    NO_IDLE_WINDOWS_ERROR(ErrorType.THIRD_PARTY, 2133029, "2133029");//DEVCLOUD WINDOWS构建机启动失败，没有空闲的构建机
 
 }

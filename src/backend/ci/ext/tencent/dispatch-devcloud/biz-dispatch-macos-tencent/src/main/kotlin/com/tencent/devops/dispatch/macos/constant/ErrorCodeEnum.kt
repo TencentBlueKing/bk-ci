@@ -11,8 +11,8 @@ enum class ErrorCodeEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "2123001"),//Dispatcher-macos系统错误
-    NO_IDLE_MACOS_ERROR(ErrorType.THIRD_PARTY, 2123002, "2123002");//DEVCLOUD MACOS构建机启动失败，没有空闲的构建机
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2133021, "2133021"),//Dispatcher-macos系统错误
+    NO_IDLE_MACOS_ERROR(ErrorType.THIRD_PARTY, 2133022, "2133022");//DEVCLOUD MACOS构建机启动失败，没有空闲的构建机
 
 
 }
