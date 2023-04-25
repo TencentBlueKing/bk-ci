@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.event.listener.pipeline
 
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -35,8 +35,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
-abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: PipelineEventDispatcher) :
-    Listener<T> {
+abstract class PipelineEventListener<in T : IPipelineEvent>(val pipelineEventDispatcher: PipelineEventDispatcher) :
+    EventListener<T> {
 
     companion object {
         private const val TryTime = 3

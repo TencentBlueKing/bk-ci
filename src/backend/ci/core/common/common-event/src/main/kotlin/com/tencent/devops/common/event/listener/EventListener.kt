@@ -25,27 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.listener.run.callback
-
-import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.process.engine.control.CallBackControl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+package com.tencent.devops.common.event.listener
 
 /**
- *  MQ实现的流水线插件任务状态回调事件
+ * 监听器
  *
  * @version 1.0
  */
-@Component
-class PipelineBuildCallBackListener @Autowired constructor(
-    private val callBackControl: CallBackControl,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : PipelineEventListener<PipelineBuildStatusBroadCastEvent>(pipelineEventDispatcher) {
+interface EventListener<in T> {
 
-    override fun run(event: PipelineBuildStatusBroadCastEvent) {
-        callBackControl.callBackBuildEvent(event)
-    }
+    fun execute(event: T)
 }

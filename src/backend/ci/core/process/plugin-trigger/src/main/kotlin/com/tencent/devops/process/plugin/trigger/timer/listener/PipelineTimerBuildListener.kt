@@ -29,7 +29,7 @@ package com.tencent.devops.process.plugin.trigger.timer.listener
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.api.service.ServiceTimerBuildResource
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
 import com.tencent.devops.process.plugin.trigger.service.PipelineTimerService
@@ -46,7 +46,7 @@ class PipelineTimerBuildListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val serviceTimerBuildResource: ServiceTimerBuildResource,
     private val pipelineTimerService: PipelineTimerService
-) : BaseListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTimerBuildEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTimerBuildEvent) {
         with(event) {

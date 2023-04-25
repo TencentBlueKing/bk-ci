@@ -31,7 +31,6 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.DispatchRouteKeySuffix
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
 import com.tencent.devops.dispatch.kubernetes.service.DispatchBuildService
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType

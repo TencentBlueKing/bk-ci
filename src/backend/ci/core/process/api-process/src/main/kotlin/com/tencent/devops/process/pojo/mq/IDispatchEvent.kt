@@ -3,6 +3,7 @@ package com.tencent.devops.process.pojo.mq
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.IEvent
 
+@Suppress("LongParameterList")
 abstract class IDispatchEvent(
     open var actionType: ActionType,
     open val source: String,

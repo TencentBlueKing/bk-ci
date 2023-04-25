@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.listener.run
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -65,7 +65,7 @@ class PipelineTaskPauseListener @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter
-) : BaseListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineTaskPauseEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineTaskPauseEvent) {
         val taskRecord = pipelineTaskService.getBuildTask(event.projectId, event.buildId, event.taskId)

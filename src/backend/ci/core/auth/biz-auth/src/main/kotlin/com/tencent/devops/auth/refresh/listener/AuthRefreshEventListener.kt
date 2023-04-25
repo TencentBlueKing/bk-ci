@@ -33,7 +33,7 @@ import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.auth.refresh.event.StrategyUpdateEvent
 import com.tencent.devops.auth.service.UserPermissionService
 import com.tencent.devops.auth.service.iam.IamCacheService
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.listener.EventListener
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -46,7 +46,7 @@ import org.springframework.stereotype.Component
 class AuthRefreshEventListener @Autowired constructor(
     val userPermissionService: UserPermissionService,
     val iamCacheService: IamCacheService
-) : Listener<RefreshBroadCastEvent> {
+) : EventListener<RefreshBroadCastEvent> {
 
     /**
      * 默认实现了Listener的消息处理方法做转换处理

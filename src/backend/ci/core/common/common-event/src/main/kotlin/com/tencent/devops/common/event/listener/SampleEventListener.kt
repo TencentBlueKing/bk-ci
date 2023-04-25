@@ -27,12 +27,20 @@
 
 package com.tencent.devops.common.event.listener
 
-/**
- * 监听器
- *
- * @version 1.0
- */
-interface Listener<in T> {
+import com.tencent.devops.common.event.pojo.IEvent
+import org.slf4j.LoggerFactory
 
-    fun execute(event: T)
+abstract class SampleEventListener<T : IEvent> : EventListener<T> {
+
+    protected val logger = LoggerFactory.getLogger(javaClass)!!
+
+    override fun execute(event: T) {
+        try {
+            run(event)
+        } catch (ignored: Throwable) { // #5109 打开堆栈，追踪未知错误
+            logger.warn("[ENGINE_MQ_SEVERE]|Failed to handle event|event=$event", ignored)
+        }
+    }
+
+    abstract fun run(event: T)
 }
