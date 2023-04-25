@@ -307,7 +307,7 @@ class BuildStartControl @Autowired constructor(
                     oldStatus = BuildStatus.QUEUE_CACHE,
                     showMsg = MessageCodeUtil.getCodeLanMessage(
                         messageCode = BUILD_QUEUE_FOR_CONCURRENCY,
-                        defaultMessage = "concurrency for group($concurrencyGroup)",
+                        defaultMessage = "QUEUE: concurrency for group($concurrencyGroup)",
                         params = arrayOf(concurrencyGroup)
                     )
                 )
@@ -351,7 +351,7 @@ class BuildStartControl @Autowired constructor(
                     projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
                     showMsg = MessageCodeUtil.getCodeLanMessage(
                         messageCode = BUILD_QUEUE_FOR_SINGLE,
-                        defaultMessage = "The current build is queued"
+                        defaultMessage = "QUEUE: The current build is queued"
                     )
                 )
 
