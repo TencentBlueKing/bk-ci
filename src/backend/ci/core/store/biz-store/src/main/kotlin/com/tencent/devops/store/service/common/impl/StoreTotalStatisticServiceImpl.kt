@@ -50,7 +50,7 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
