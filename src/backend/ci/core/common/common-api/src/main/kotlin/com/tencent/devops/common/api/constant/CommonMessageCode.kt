@@ -85,6 +85,7 @@ object CommonMessageCode {
     const val JOB_BUILD_STOPS = "2100064"// 流水线JOB已经不再运行，构建停止
     const val PIPELINE_NAME_OCCUPIED = "2100065"// 流水线名称已被他人使用
     const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100066"// 内部依赖服务异常
+    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2100067" //公共构建资源池不存在，请检查yml配置.
 
     const val ILLEGAL_JOB_TYPE = "2100035" //非法的job类型!
     const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036" //GITCI Service镜像格式非法
