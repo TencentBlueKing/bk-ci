@@ -129,6 +129,8 @@ class WorkspaceService @Autowired constructor(
         private const val BLANK_TEMPLATE_ID = 1
         private const val DISCOUNT_TIME = 10000
     }
+
+    // 处理创建工作空间逻辑
     fun createWorkspace(userId: String, bkTicket: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
