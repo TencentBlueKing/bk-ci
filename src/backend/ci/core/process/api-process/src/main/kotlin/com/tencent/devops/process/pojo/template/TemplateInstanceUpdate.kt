@@ -44,6 +44,6 @@ data class TemplateInstanceUpdate(
     val pipelineName: String,
     @ApiModelProperty("构建版本号", required = false)
     val buildNo: BuildNo?,
-    @ApiModelProperty("流水线变量列表", required = false)
+    @ApiModelProperty("流水线变量列表, 建议先通过v4_app_template_get获取，再按需修改。", required = false)
     val param: List<BuildFormProperty>?
 )

@@ -327,7 +327,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         setting.checkParam()
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
-            setting = setting,
+            setting = setting.copy(projectId, pipelineId),
             checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
         )

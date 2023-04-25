@@ -25,38 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.pojo.code.p4
+package com.tencent.devops.metrics.service
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModelProperty
+import org.jooq.DSLContext
+import java.time.LocalDateTime
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class P4ShelveEvent(
-    val change: Int,
-    val p4Port: String,
-    @JsonProperty("event_type")
-    val eventType: String,
-    val user: String? = null,
-    @ApiModelProperty("文件变更列表")
-    val files: List<String>? = null,
-    // 指定项目触发
-    override val projectId: String? = null
-) : P4Event(projectId = projectId) {
-    companion object {
-        const val classType = "SHELVE"
-        const val SHELVE_COMMIT = "shelve-commit"
-        const val SHELVE_DELETE = "shelve-delete"
-        const val SHELVE_SUBMIT = "shelve-submit"
-    }
+interface MetricsDataClearService {
 
     /**
-     * 是否由用户自己配置触发器,2.0以后的插件,都由用户配置p4 trigger,插件不再主动注册
+     * metrics数据清理
+     * @param dslContext jooq上下文
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param statisticsTime 统计时间
+     * @param buildId 构建ID
+     * @return 布尔值
      */
-    override fun isCustomTrigger(): Boolean {
-        return when (eventType) {
-            SHELVE_COMMIT, SHELVE_DELETE, SHELVE_SUBMIT -> true
-            else -> false
-        }
-    }
+    fun metricsDataClear(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        statisticsTime: LocalDateTime,
+        buildId: String
+    ): Boolean
 }

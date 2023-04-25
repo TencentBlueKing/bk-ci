@@ -37,8 +37,8 @@ import com.tencent.devops.metrics.pojo.po.SavePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.SavePipelineStageOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomFailSummaryDataPO
+import com.tencent.devops.metrics.pojo.po.UpdateAtomIndexStatisticsDailyPO
 import com.tencent.devops.metrics.pojo.po.UpdateAtomOverviewDataPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineFailSummaryDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineOverviewDataPO
 import com.tencent.devops.metrics.pojo.po.UpdatePipelineStageOverviewDataPO
@@ -51,6 +51,7 @@ import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -250,30 +251,50 @@ class MetricsDataReportDao {
         }
     }
 
-    fun batchSaveAtomIndexStatisticsDailyData(
+    fun saveAtomIndexStatisticsDailyData(
         dslContext: DSLContext,
-        saveAtomIndexStatisticsDailyPOs: List<SaveAtomIndexStatisticsDailyPO>
+        saveAtomIndexStatisticsDailyPO: SaveAtomIndexStatisticsDailyPO
     ) {
         with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            saveAtomIndexStatisticsDailyPOs.forEach { saveAtomIndexStatisticsDailyPO ->
-                dslContext.insertInto(this)
-                    .set(ID, saveAtomIndexStatisticsDailyPO.id)
-                    .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
-                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
-                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                    .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
-                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                    .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
-                    .onDuplicateKeyUpdate()
-                    .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
-                    .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
-                    .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
-                    .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
-                    .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
-                    .execute()
-            }
+            dslContext.insertInto(this)
+                .set(ID, saveAtomIndexStatisticsDailyPO.id)
+                .set(ATOM_CODE, saveAtomIndexStatisticsDailyPO.atomCode)
+                .set(FAIL_EXECUTE_COUNT, saveAtomIndexStatisticsDailyPO.failExecuteCount)
+                .set(FAIL_COMPLIANCE_COUNT, saveAtomIndexStatisticsDailyPO.failComplianceCount)
+                .set(STATISTICS_TIME, saveAtomIndexStatisticsDailyPO.statisticsTime)
+                .set(CREATOR, saveAtomIndexStatisticsDailyPO.creator)
+                .set(MODIFIER, saveAtomIndexStatisticsDailyPO.modifier)
+                .set(UPDATE_TIME, saveAtomIndexStatisticsDailyPO.updateTime)
+                .set(CREATE_TIME, saveAtomIndexStatisticsDailyPO.createTime)
+                .execute()
+        }
+    }
+
+    fun getAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        atomCode: String,
+        statisticsTime: LocalDateTime
+    ): Long? {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            return dslContext.select(ID).from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(STATISTICS_TIME.eq(statisticsTime))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun updateAtomIndexStatisticsDailyData(
+        dslContext: DSLContext,
+        updateAtomIndexStatisticsDailyPO: UpdateAtomIndexStatisticsDailyPO
+    ) {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            dslContext.update(this)
+                .set(FAIL_EXECUTE_COUNT, updateAtomIndexStatisticsDailyPO.failExecuteCount)
+                .set(FAIL_COMPLIANCE_COUNT, updateAtomIndexStatisticsDailyPO.failComplianceCount)
+                .set(MODIFIER, updateAtomIndexStatisticsDailyPO.modifier)
+                .set(UPDATE_TIME, updateAtomIndexStatisticsDailyPO.updateTime)
+                .where(ID.eq(updateAtomIndexStatisticsDailyPO.id))
+                .execute()
         }
     }
 
@@ -386,24 +407,8 @@ class MetricsDataReportDao {
         dslContext: DSLContext,
         saveErrorCodeInfoPOs: Set<SaveErrorCodeInfoPO>
     ) {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
-                dslContext.insertInto(this)
-                    .set(ID, saveErrorCodeInfoPO.id)
-                    .set(ERROR_TYPE, saveErrorCodeInfoPO.errorType)
-                    .set(ERROR_CODE, saveErrorCodeInfoPO.errorCode)
-                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                    .set(CREATOR, saveErrorCodeInfoPO.creator)
-                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                    .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
-                    .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                    .onDuplicateKeyUpdate()
-                    .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
-                    .set(MODIFIER, saveErrorCodeInfoPO.modifier)
-                    .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
-                    .execute()
-            }
+        saveErrorCodeInfoPOs.forEach { saveErrorCodeInfoPO ->
+            saveErrorCodeInfo(dslContext, saveErrorCodeInfoPO)
         }
     }
 
@@ -422,25 +427,10 @@ class MetricsDataReportDao {
                 .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
                 .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
-                .execute()
-        }
-    }
-
-    fun updateErrorCodeInfo(
-        dslContext: DSLContext,
-        atomCode: String,
-        updateErrorCodeInfoPO: UpdateErrorCodeInfoPO
-    ) {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            dslContext.update(this)
-                .set(ERROR_MSG, updateErrorCodeInfoPO.errorMsg)
-                .set(MODIFIER, updateErrorCodeInfoPO.modifier)
-                .set(UPDATE_TIME, updateErrorCodeInfoPO.updateTime)
-                .where(
-                    ERROR_CODE.eq(updateErrorCodeInfoPO.errorCode)
-                        .and(ATOM_CODE.eq(atomCode))
-                        .and(ERROR_TYPE.eq(updateErrorCodeInfoPO.errorType))
-                )
+                .onDuplicateKeyUpdate()
+                .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
+                .set(MODIFIER, saveErrorCodeInfoPO.modifier)
+                .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .execute()
         }
     }

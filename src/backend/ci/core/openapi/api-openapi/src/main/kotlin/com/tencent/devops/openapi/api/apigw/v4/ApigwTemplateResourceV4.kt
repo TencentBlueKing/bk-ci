@@ -109,28 +109,7 @@ interface ApigwTemplateResourceV4 {
         templateId: String,
         @ApiParam("模板版本", required = false)
         @QueryParam("version")
-        version: Long?
-    ): Result<TemplateModelDetail>
-
-    @ApiOperation("获取流水线模板详情", tags = ["v4_user_template_get", "v4_app_template_get"])
-    @GET
-    @Path("/{templateId}/get")
-    fun getTemplate(
-        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode: String?,
-        @ApiParam(value = "apigw Type", required = true)
-        @PathParam("apigwType")
-        apigwType: String?,
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("模板ID", required = true)
-        @PathParam("templateId")
-        templateId: String,
+        version: Long?,
         @ApiParam("模板版本名称", required = false)
         @QueryParam("versionName")
         versionName: String?
