@@ -111,7 +111,6 @@ object RepositoryMessageCode {
     const val FAIL_TO_GET_SVN_DIRECTORY = "2115065"// 获取Svn目录失败, msg:{0}
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115066"// 仓库ID和仓库名都为空
 
-    const val BK_PROJECT_NO_CODE_BASE = "bkProjectNoCodeBase"// 项目下无代码库
     const val BK_CODE_REPO_NOT_MATCHED = "bkCodeRepoNotMatched"// 未匹配到代码库
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit"// 请求文件不能超过1M
     const val BK_LOCAL_REPO_CREATION_FAILED = "bkLocalRepoCreationFailed"// 工程({0})本地仓库创建失败
@@ -135,4 +134,12 @@ object RepositoryMessageCode {
     const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo"// 获取项目中成员信息
     const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems"// 查看绑定的TAPD单
     const val GET_PROJECT_INFO = "bkGetProjectInfo"// 获取项目详情
+
+    const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns"// 添加检测任务
+    const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns"// 更新检测任务
+    const val OPERATION_GET_REPOS = "OperationGetRepos"// 获取仓库列表
+    const val OPERATION_GET_BRANCH = "OperationGetBranch"// 获取指定分支
+    const val OPERATION_GET_TAG = "OperationGetTag"// 获取指定Tag
+    const val OPERATION_LIST_BRANCHS = "OperationListBranchs"// 获取分支列表
+    const val OPERATION_LIST_TAGS = "OperationListTags"// 获取Tag列表
 }

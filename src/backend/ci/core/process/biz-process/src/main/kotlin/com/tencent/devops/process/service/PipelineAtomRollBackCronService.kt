@@ -232,11 +232,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = params,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
-                    )
+                    params = params
                 )
             }
             val sourceVersion = pipelineReplaceHistory.sourceVersion

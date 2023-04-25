@@ -68,17 +68,17 @@ import com.tencent.devops.ticket.pojo.CertWithPermission
 import com.tencent.devops.ticket.pojo.enums.CertAndroidType
 import com.tencent.devops.ticket.pojo.enums.CertType
 import com.tencent.devops.ticket.util.MobileProvisionUtil
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
+import java.nio.charset.Charset
+import java.time.LocalDateTime
+import java.util.*
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.ByteArrayOutputStream
-import java.io.InputStream
-import java.nio.charset.Charset
-import java.time.LocalDateTime
-import java.util.Base64
 
 @Suppress("ALL")
 @Service
@@ -118,7 +118,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -136,7 +137,8 @@ class CertServiceImpl @Autowired constructor(
                         userId,
                         projectId,
                         certCredentialId,
-                        if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                        use.getI18n(I18nUtil.getLanguage(userId))
+                    )
                 )
             )
         }
@@ -244,7 +246,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -267,7 +270,8 @@ class CertServiceImpl @Autowired constructor(
                         userId,
                         projectId,
                         certCredentialId,
-                        if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                        use.getI18n(I18nUtil.getLanguage(userId))
+                    )
                 )
             )
         }
@@ -362,7 +366,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -473,7 +478,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -576,7 +582,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         val use = AuthPermission.USE
@@ -592,7 +599,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         certPermissionService.validatePermission(
@@ -607,7 +615,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     aliasCredentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -704,7 +713,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -726,7 +736,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -742,7 +753,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     aliasCredentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                    use.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -836,7 +848,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         if (certDao.has(dslContext, projectId, certId)) {
@@ -976,7 +989,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
@@ -1108,7 +1122,8 @@ class CertServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     certId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") delete.alias else delete.value)
+                    delete.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 

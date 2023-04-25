@@ -125,12 +125,7 @@ class PipelineRetryFacadeService @Autowired constructor(
     ) {
         if (!containerInfo.status.isFinish()) {
             logger.warn("retry runningJob: $projectId|$buildId｜${containerInfo.containerId} is running")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_JOB_RUNNING,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    ProcessMessageCode.ERROR_JOB_RUNNING
-                )
-            )
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_JOB_RUNNING)
         }
     }
 

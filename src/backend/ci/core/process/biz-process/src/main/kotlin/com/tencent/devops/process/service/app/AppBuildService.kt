@@ -29,15 +29,9 @@ package com.tencent.devops.process.service.app
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.Property
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_FILE_COUNT_AND_VERSION
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_THE_WEB_DATA
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUERY_FAVORITE_PIPELINE
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUERY_PIPELINE_INFO
 import com.tencent.devops.process.pojo.pipeline.AppModelDetail
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -72,10 +66,7 @@ class AppBuildService @Autowired constructor(
             pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
         val buildStatusWithVars =
             pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
-        logger.info(
-            MessageUtil.getMessageByLocale(BK_CHECK_THE_WEB_DATA, I18nUtil.getLanguage(userId)) +
-            " ${System.currentTimeMillis() - beginTime} ms"
-        )
+        logger.info("Get web-side data ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 文件个数、版本
@@ -89,26 +80,17 @@ class AppBuildService @Autowired constructor(
                     .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }
-        logger.info(
-            MessageUtil.getMessageByLocale(BK_CHECK_FILE_COUNT_AND_VERSION, I18nUtil.getLanguage(userId)) +
-            " ${System.currentTimeMillis() - beginTime} ms"
-        )
+        logger.info("Query the number and version of the file: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 查流水线信息
         val (name, version) = pipelineInfoFacadeService.getPipelineNameVersion(projectId, pipelineId)
-        logger.info(
-            MessageUtil.getMessageByLocale(BK_QUERY_PIPELINE_INFO, I18nUtil.getLanguage(userId)) +
-            " ${System.currentTimeMillis() - beginTime} ms"
-        )
+        logger.info("Query the pipeline information ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
         // 查询收藏的流水线
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId, projectId)
-        logger.info(
-            MessageUtil.getMessageByLocale(BK_QUERY_FAVORITE_PIPELINE, I18nUtil.getLanguage(userId)) +
-            " ${System.currentTimeMillis() - beginTime} ms"
-        )
+        logger.info("Query the collection pipeline ${System.currentTimeMillis() - beginTime} ms")
 
         return AppModelDetail(
             buildId = modelDetail.id,

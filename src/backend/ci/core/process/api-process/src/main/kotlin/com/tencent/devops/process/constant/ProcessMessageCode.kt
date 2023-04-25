@@ -55,7 +55,6 @@ object ProcessMessageCode {
     const val ALL_PIPELINES_LABEL = "CONST_PROCESS_VIEW_LABEL_ALL" // "全部流水线"
 
     const val BK_PIPELINE_SINGLE_BUILD = "bkPipelineSingleBuild" // 当前流水线已设置为同时只能运行一个构建任务，开始排队！
-    const val BK_MUTEX_GROUP_SINGLE_BUILD = "bkMutexGroupSingleBuild" // 当前互斥组[{0}]同时只能运行一个构建任务，开始排队！
     const val BK_NON_TIMED_TRIGGER_SKIP = "bkNonTimedTriggerSkip" // 非定时触发，直接跳过
     const val BK_FIRST_STAGE_ENV_NOT_EMPTY = "bkFirstStageEnvNotEmpty" // 第一阶段的环境不能为空
     const val BK_QUALITY_CHECK_SUCCEED = "bkQualityCheckSucceed" // 质量红线({0})检测已通过
@@ -70,10 +69,6 @@ object ProcessMessageCode {
     const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether" // <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
     const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin" // 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
     const val BK_BUILD_IN_REVIEW_STATUS = "bkBuildInReviewStatus" // 项目【{0}】下的流水线【{1}】#{2} 构建处于待审核状态
-    const val BK_CHECK_THE_WEB_DATA = "bkCheckTheWebData" // 查web端数据:
-    const val BK_CHECK_FILE_COUNT_AND_VERSION = "bkCheckFileCountAndVersion" // 查文件个数、版本:
-    const val BK_QUERY_PIPELINE_INFO = "bkQueryPipelineInfo" // 查流水线信息:
-    const val BK_QUERY_FAVORITE_PIPELINE = "bkQueryFavoritePipeline" // 查询收藏的流水线:
     const val BK_PROJECT_NO_PIPELINE = "bkProjectNoPipeline" // 项目下无流水线
     const val BK_NO_MATCHING_STARTED_PIPELINE = "bkNoMatchingStartedPipeline"//未匹配到启用流水线
     const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions" // 用户（{0}) 没有流水线({1})的执行权限
@@ -125,7 +120,7 @@ object ProcessMessageCode {
     const val ERROR_SOURCE_TEMPLATE_NOT_EXISTS = "2101035" // 源模板不存在
     const val FAIL_TO_LIST_TEMPLATE_PARAMS = "2101036" // 列举流水线模板参数失败
     const val ONLY_ONE_TRIGGER_JOB_IN_PIPELINE = "2101037" // 流水线只能有一个触发Stage
-    const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
+    const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线{0}不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
     const val ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS = "2101040" // 流水线的模型中指定构建容器{0}不存在
     const val ERROR_SAVE_PIPELINE_TIMER = "2101041" // 流水线的定时触发器保存失败

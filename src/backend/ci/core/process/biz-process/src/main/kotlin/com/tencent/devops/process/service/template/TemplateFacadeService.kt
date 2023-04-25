@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -59,13 +60,15 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OPERATE_PIPELINE_FAIL
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -983,8 +986,12 @@ class TemplateFacadeService @Autowired constructor(
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
                 // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-                templateResult.tips = message ?: ignored.defaultMessage
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = ignored.errorCode,
+                    params = ignored.params,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                templateResult.tips = message
             }
         }
         val latestVersion = TemplateVersion(
@@ -1065,7 +1072,11 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateCompareModelResult {
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
-            ?: throw NotFoundException("流水线模板不存在")
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                language = userId
+            ))
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
@@ -1618,7 +1629,6 @@ class TemplateFacadeService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
-                concurrencyGroup = concurrencyGroup,
                 hasPermission = hasPermission,
                 maxPipelineResNum = maxPipelineResNum,
                 maxConRunningQueueSize = maxConRunningQueueSize,

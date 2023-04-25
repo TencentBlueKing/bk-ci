@@ -2185,9 +2185,7 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
-                    )
+                msg = "$msg| ${I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
                 }"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")

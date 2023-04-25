@@ -39,7 +39,6 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_NO_MATCHING_STARTED_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROJECT_NO_PIPELINE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -182,12 +181,7 @@ class AuthPipelineService @Autowired constructor(
         val result = FetchInstanceInfo()
 
         if (pipelineInfos.isEmpty()) {
-            logger.info(
-                "$ids ${MessageUtil.getMessageByLocale(
-                    BK_NO_MATCHING_STARTED_PIPELINE,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )}"
-            )
+            logger.info("$ids does not match to the enable pipeline")
             return result.buildFetchInstanceFailResult()
         }
 
