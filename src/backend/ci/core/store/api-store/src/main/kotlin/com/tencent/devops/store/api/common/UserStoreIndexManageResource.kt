@@ -69,7 +69,7 @@ interface UserStoreIndexManageResource {
 
     @ApiOperation("删除研发商店指标")
     @DELETE
-    @Path("/indexIds/{indexId}/delete}")
+    @Path("/indexIds/{indexId}/delete")
     fun delete(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

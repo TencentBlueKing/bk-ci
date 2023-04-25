@@ -156,10 +156,10 @@ class ModelCreate @Autowired constructor(
                     yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                     else -> PipelineRunLockType.MULTIPLE
                 },
-                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
+                waitQueueTimeMinute = yaml.concurrency?.queueTimeoutMinutes ?: TimeUnit.HOURS.toMinutes(8).toInt(),
                 // #6090 stream重试时均需要清理变量表
                 cleanVariablesWhenRetry = true,
-                maxQueueSize = 1,
+                maxQueueSize = yaml.concurrency?.queueLength ?: 1,
                 labels = labelList,
                 pipelineAsCodeSettings = asCodeSettings
             )

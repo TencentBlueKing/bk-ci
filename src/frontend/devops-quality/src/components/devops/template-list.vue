@@ -40,7 +40,7 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('quality.来源')" prop="templateType">
                         <template slot-scope="props">
-                            <span>{{_f("templateTypeFilter")(props.row.templateType)}}</span>
+                            <span>{{templateTypeFilter(props.row.templateType)}}</span>
                         </template>
                     </bk-table-column>
                     <bk-table-column :label="$t('quality.关联代码库')" width="320">
@@ -71,21 +71,6 @@
 
 <script>
     export default {
-        filters: {
-            templateTypeFilter (val) {
-                let res = ''
-                switch (val) {
-                    case 'constraint':
-                    case 'CONSTRAINT':
-                        res = this.$t('quality.研发商店')
-                        break
-                    default:
-                        res = this.$t('quality.自定义')
-                        break
-                }
-                return res
-            }
-        },
         props: {
             isShow: {
                 type: Boolean,
@@ -141,6 +126,19 @@
                 })
 
                 return tips
+            },
+            templateTypeFilter (val) {
+                let res = ''
+                switch (val) {
+                    case 'constraint':
+                    case 'CONSTRAINT':
+                        res = this.$t('quality.研发商店')
+                        break
+                    default:
+                        res = this.$t('quality.自定义')
+                        break
+                }
+                return res
             },
             async requestList (page, pageSize, isPageTurn) {
                 const params = {
@@ -283,7 +281,7 @@
             }
         }
         .template-content {
-            height: 546px;
+            min-height: 546px;
             padding: 0 24px;
             overflow: hidden;
         }
