@@ -28,9 +28,12 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -55,7 +58,7 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(projectService.getByEnglishName(userId, projectId, accessToken)
-            ?: throw OperationException("项目不存在"))
+            ?: throw OperationException(MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))))
     }
 
     override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {

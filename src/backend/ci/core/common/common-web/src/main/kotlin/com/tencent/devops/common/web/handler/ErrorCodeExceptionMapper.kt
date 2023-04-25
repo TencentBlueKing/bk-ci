@@ -37,18 +37,19 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
 
 @BkExceptionMapper
-class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
+    class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
     companion object {
         val logger = LoggerFactory.getLogger(ErrorCodeExceptionMapper::class.java)!!
     }
 
     override fun toResponse(exception: ErrorCodeException): Response {
         logger.warn("Failed with errorCode client exception:$exception")
-        val errorResult = MessageUtil.generateResponseDataObject(
+        val errorResult = I18nUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,
-            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            defaultMessage = exception.defaultMessage
         )
 
         return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)

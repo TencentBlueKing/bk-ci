@@ -353,7 +353,9 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
-                taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
+                recordTask.generateTaskTimeCost()?.let {
+                    taskVar[Element::timeCost.name] = it
+                }
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,

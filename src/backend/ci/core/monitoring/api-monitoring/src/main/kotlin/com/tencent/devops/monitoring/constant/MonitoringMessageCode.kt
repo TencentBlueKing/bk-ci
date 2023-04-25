@@ -39,5 +39,4 @@ object MonitoringMessageCode {
     const val BK_WARNING_MESSAGE_FROM_GRAFANA = "bkWarningMessageFromGrafana" //来自Grafana的预警信息
     const val BK_MONITORING_OBJEC = "bkMonitoringObjec" //监控对象：{0}，当前值为：{1}；
     const val BK_SEND_MONITORING_MESSAGES = "bkSendMonitoringMessages" //只有处于alerting告警状态的信息才发送监控消息
-
 }

@@ -28,14 +28,16 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
+import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
@@ -48,6 +50,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -144,21 +147,23 @@ class DispatchService constructor(
         if (statusResult.isNotOk() || statusResult.data == null) {
             logger.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
+            val errorMessage = I18nUtil.getCodeLanMessage(UNABLE_GET_PIPELINE_JOB_STATUS)
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
-                formatErrorMessage = "无法获取流水线JOB状态，构建停止",
-                errorMessage = "无法获取流水线JOB状态，构建停止"
+                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
             )
         }
 
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
+            val errorMessage = I18nUtil.getCodeLanMessage(JOB_BUILD_STOPS)
             throw BuildFailureException(
                 errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
-                formatErrorMessage = "流水线JOB已经不再运行，构建停止",
-                errorMessage = "流水线JOB已经不再运行，构建停止"
+                errorCode = JOB_BUILD_STOPS.toInt(),
+                formatErrorMessage = errorMessage,
+                errorMessage = errorMessage
             )
         }
     }

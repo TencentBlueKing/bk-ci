@@ -36,7 +36,7 @@ package com.tencent.devops.plugin.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -48,4 +48,8 @@ object PluginMessageCode {
     const val ERROR_RETRY_3_FAILED = "2113001" // 重试3次仍然失败
     const val ERROR_CAN_NOT_FIND_TAG = "2113002" // 找不到指定Tag[{0}]
     const val ERROR_UNKNOWN_REPO = "2113003" // 找不到指定代码库[{0}]
+
+    const val WETEST_FAILED_GET = "2113004" // WeTest获取secretId,secretKey失败，返回码: {0}, 错误消息: {1}
+    const val GET_SIGNATURE_ERROR = "2113005" // 获取Signature错误，err:
+    const val URL_CODING_ERROR = "2113006" // url编码错误, err:
 }

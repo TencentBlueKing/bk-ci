@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -108,7 +108,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = logoFile,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                language = I18nUtil.getLanguage(userId)
+            )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -142,7 +148,12 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         return true
     }

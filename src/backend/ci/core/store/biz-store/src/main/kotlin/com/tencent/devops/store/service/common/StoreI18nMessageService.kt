@@ -36,7 +36,8 @@ interface StoreI18nMessageService {
      * @param projectCode 项目标识
      * @param jsonMap map集合
      * @param fileDir 资源文件目录
-     * @param keyPrefix map字段在资源文件中key的前缀
+     * @param propertiesKeyPrefix map字段在properties中key的前缀
+     * @param dbKeyPrefix map字段在db中key的前缀
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
@@ -45,7 +46,8 @@ interface StoreI18nMessageService {
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
         fileDir: String,
-        keyPrefix: String? = null,
+        propertiesKeyPrefix: String? = null,
+        dbKeyPrefix: String? = null,
         repositoryHashId: String? = null
     ): Map<String, Any>
 
@@ -55,7 +57,7 @@ interface StoreI18nMessageService {
      * @param projectCode 项目标识
      * @param errorCodes map集合
      * @param fileDir 资源文件目录
-     * @param keyPrefix map字段在资源文件中key的前缀
+     * @param keyPrefix map字段key的前缀
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */

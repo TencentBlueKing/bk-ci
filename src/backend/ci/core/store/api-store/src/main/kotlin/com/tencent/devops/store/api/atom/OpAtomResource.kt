@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.atom
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -93,6 +94,11 @@ interface OpAtomResource {
     @ApiOperation("获取所有流水线插件信息")
     @GET
     @Path("/")
+    @BkInterfaceI18n(
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
+        fixKeyTailPrefixName = "releaseInfo"
+    )
     fun listAllPipelineAtoms(
         @ApiParam("插件名称", required = false)
         @QueryParam("atomName")
@@ -136,6 +142,11 @@ interface OpAtomResource {
     @ApiOperation("根据ID获取流水线插件信息")
     @GET
     @Path("/{id}")
+    @BkInterfaceI18n(
+        fixKeyHeadPrefixName = "ATOM",
+        keyPrefixNames = ["data.atomCode", "data.version"],
+        fixKeyTailPrefixName = "releaseInfo"
+    )
     fun getPipelineAtomById(
         @ApiParam("流水线插件ID", required = true)
         @QueryParam("id")

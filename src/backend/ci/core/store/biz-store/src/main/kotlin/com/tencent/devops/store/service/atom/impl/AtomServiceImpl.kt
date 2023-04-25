@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -51,7 +52,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -61,6 +61,7 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
@@ -86,6 +87,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.KEY_ICON
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -112,7 +114,9 @@ import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreHonorService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
@@ -154,6 +158,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
+    @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
 
     @Autowired
     lateinit var storeProjectService: StoreProjectService
@@ -225,13 +238,17 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 ).data
             } catch (ignored: Throwable) {
                 logger.warn("verifyUserProjectPermission error, params[$userId|$projectCode]", ignored)
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             logger.info("verifyUserProjectPermission validateFlag is :$validateFlag")
             if (null == validateFlag || !validateFlag) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = StoreMessageCode.USER_QUERY_PROJECT_PERMISSION_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
         }
@@ -293,6 +310,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomIdSet.add(it[KEY_ID] as String)
             atomCodeSet.add(it[KEY_ATOM_CODE] as String)
         }
+        val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
+        val atomIndexInfosMap =
+            storeIndexManageService.getStoreIndexInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
         val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
         // 查询使用插件的流水线数量
         var atomPipelineCntMap: Map<String, Int>? = null
@@ -324,6 +344,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val defaultVersion = VersionUtils.convertLatestVersion(version)
             val classType = it[KEY_CLASS_TYPE] as String
             val serviceScopeStr = it[KEY_SERVICE_SCOPE] as? String
+            val honorInfos = atomHonorInfoMap[atomCode]
+            val indexInfos = atomIndexInfosMap[atomCode]
             val serviceScopeList = if (!serviceScopeStr.isNullOrBlank()) {
                 JsonUtil.getObjectMapper().readValue(serviceScopeStr, List::class.java) as List<String>
             } else listOf()
@@ -386,7 +408,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 uninstallFlag = if (atomPipelineCnt == null) null else atomPipelineCnt < 1,
                 labelList = atomLabelInfoMap?.get(it[KEY_ID] as String),
                 installFlag = installFlag,
-                installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode)
+                installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode),
+                honorInfos = honorInfos,
+                indexInfos = indexInfos,
+                hotFlag = it[KEY_HOT_FLAG] as Boolean
             )
             dataList.add(pipelineAtomRespItem)
         }
@@ -443,6 +468,34 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         return Result(atomNameMap)
     }
 
+    override fun getProjectElementsInfo(projectCode: String): Result<Map<String, String>> {
+        // 从缓存中取出插件的名称集合信息
+        val cacheKey = projectCode + "_info"
+        var atomNameMap = atomNameCache.getIfPresent(cacheKey)
+        if (atomNameMap == null) {
+            // 缓存中没有名称信息则实时去DB查
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
+            atomNameMap = defaultAtomCodeRecords.associate {
+                it.value1() to StoreProjectTypeEnum.COMMON.name
+            }.toMutableMap()
+            val projectAtomCodeRecords = storeProjectRelDao.getValidStoreCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeType = StoreTypeEnum.ATOM
+            )
+            projectAtomCodeRecords?.map {
+                if (atomNameMap[it.value1()] == null ||
+                    it.value2().toInt() == StoreProjectTypeEnum.INIT.type ||
+                    it.value2().toInt() == StoreProjectTypeEnum.TEST.type) {
+                    atomNameMap[it.value1()] = StoreProjectTypeEnum.getProjectType(it.value2().toInt())
+                }
+            }
+            // 把插件的名称信息放入缓存
+            atomNameCache.put(cacheKey, atomNameMap)
+        }
+        return Result(atomNameMap)
+    }
+
     /**
      * 根据插件代码和版本号获取插件信息
      */
@@ -473,9 +526,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     storeCode = atomCode,
                     storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
-                if (count == 0) return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf("$projectCode+$atomCode")
+                if (count == 0) return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$projectCode+$atomCode")
                 )
             }
         }
@@ -629,7 +682,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val atomStatusName = AtomStatusEnum.getAtomStatus(atomStatus.toInt())
                 val storeAtomStatusPrefix = STORE_ATOM_STATUS + "_"
-                val atomStatusMsg = MessageCodeUtil.getCodeLanMessage("$storeAtomStatusPrefix$atomStatusName")
+                val atomStatusMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "$storeAtomStatusPrefix$atomStatusName"
+                )
                 versionName = "$atomVersion ($atomStatusMsg)"
                 latestVersionName = "$latestVersionName ($atomStatusMsg)"
             }
@@ -676,10 +731,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val codeCount = atomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomName = atomRequest.name
@@ -687,18 +743,20 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val nameCount = atomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 校验插件分类是否合法
         classifyService.getClassify(atomRequest.classifyId).data
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomRequest.classifyId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val classType = handleClassType(atomRequest.os)
         atomRequest.os.sort() // 给操作系统排序
@@ -726,10 +784,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updatePipelineAtom userId=$userId|id=$id|atomUpdateRequest=$atomUpdateRequest")
         // 校验插件分类是否合法
         classifyService.getClassify(atomUpdateRequest.classifyId).data
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomUpdateRequest.classifyId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
         return if (null != atomRecord) {
@@ -803,7 +862,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             Result(true)
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id), false)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(id),
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -826,10 +890,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode atomId=$atomId|atomCode=$atomCode")
         val count = atomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("atomId:$atomId,atomCode:$atomCode"),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return Result(true)
@@ -842,7 +907,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("judgeAtomExistByIdAndCode userId=$userId|atomCode=$atomCode")
         val count = atomDao.countByUserIdAndCode(dslContext, userId, atomCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = null,
+                data = false,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         return Result(true)
     }
@@ -1004,7 +1074,11 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         val isInstaller = storeProjectRelDao.isInstaller(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         logger.info("uninstallAtom, isInstaller=$isInstaller")
         if (!(hasManagerPermission(projectCode, userId) || isInstaller)) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(atomCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         // 是否还有流水线使用待卸载的插件
@@ -1014,9 +1088,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         ).data
             ?: 0
         if (pipelineCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_USED,
-                params = arrayOf(atomCode, projectCode)
+                params = arrayOf(atomCode, projectCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -1056,7 +1131,10 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         logger.info("updateAtomBaseInfo userId:$userId,atomCode:$atomCode,updateRequest:$atomBaseInfoUpdateRequest")
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         // 查询插件的最新记录
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)

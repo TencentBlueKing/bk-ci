@@ -3,11 +3,12 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <template v-if="isExtendTx">
-                    <bk-button theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
-                    <bk-button theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
-                </template>
-                <bk-button v-else theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    class="import-vmbuild-btn"
+                    @click="toImportNode('construct')">
+                    {{ $t('environment.nodeInfo.importNode') }}
+                </bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -57,23 +58,7 @@
                 </bk-table-column>
                 <bk-table-column :label="`${$t('environment.nodeInfo.source')}/${$t('environment.nodeInfo.importer')}`" prop="createdUser" min-width="120">
                     <template slot-scope="props">
-                        <div v-if="(props.row.nodeType === 'CC' || props.row.nodeType === 'CMDB') && ((props.row.nodeType === 'CC' && props.row.createdUser !== props.row.operator && props.row.createdUser !== props.row.bakOperator)
-                            || (props.row.nodeType === 'CMDB' && props.row.createdUser !== props.row.operator && props.row.bakOperator.split(';').indexOf(props.row.createdUser) === -1))">
-                            <div class="edit-operator" v-if="userInfo.username === props.row.operator || userInfo.username === props.row.bakOperator">
-                                <i class="devops-icon icon-exclamation-circle"></i><span @click="changeCreatedUser(props.row.nodeHashId)">{{ $t('environment.nodeInfo.operatorModfied') }}</span>
-                            </div>
-                            <div class="prompt-operator" v-else>
-                                <bk-popover placement="top">
-                                    <span><i class="devops-icon icon-exclamation-circle"></i>{{ $t('environment.nodeInfo.prohibited') }}</span>
-                                    <template slot="content">
-                                        <p>{{ $t('environment.nodeInfo.currentImporter') }}<span>{{ props.row.createdUser }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.currentOperator') }}<span>{{ props.row.operator }}</span><span v-if="props.row.nodeType === 'CC'">/{{ props.row.bakOperator }}</span></p>
-                                        <p>{{ $t('environment.nodeInfo.contactOperator') }}</p>
-                                    </template>
-                                </bk-popover>
-                            </div>
-                        </div>
-                        <div v-else>
+                        <div>
                             <span class="node-name">{{ $t('environment.nodeTypeMap')[props.row.nodeType] || '-' }}</span>
                             <span>({{ props.row.createdUser }})</span>
                         </div>
@@ -82,7 +67,7 @@
                 <bk-table-column :label="$t('environment.status')" prop="nodeStatus">
                     <template slot-scope="props">
                         <div class="table-node-item node-item-status"
-                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE' && props.row.nodeType === 'DEVCLOUD'">
+                            v-if="props.row.nodeStatus === 'BUILDING_IMAGE'">
                             <span class="node-status-icon normal-stutus-icon"></span>
                             <span class="node-status">{{ $t('environment.nodeInfo.normal') }}</span>
                         </div>
@@ -105,13 +90,13 @@
                             </div>
                             <!-- 状态值 -->
                             <span class="install-agent"
-                                v-if="props.row.nodeType === 'DEVCLOUD' && props.row.nodeStatus === 'RUNNING'"
+                                v-if="props.row.nodeStatus === 'RUNNING'"
                                 @click="installAgent(props.row)">
                                 {{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}
                             </span>
                             <span class="node-status" v-else>{{ $t('environment.nodeStatusMap')[props.row.nodeStatus] }}</span>
                             <div class="install-agent"
-                                v-if="['CC','CMDB','THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
+                                v-if="['THIRDPARTY'].includes(props.row.nodeType) && props.row.nodeStatus === 'ABNORMAL'"
                                 @click="installAgent(props.row)"
                             >{{ `（${$t('environment.install')}Agent）` }}</div>
                         </div>
@@ -132,25 +117,9 @@
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
                             <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
-                                v-if="props.row.canDelete && !['TSTACK', 'DEVCLOUD'].includes(props.row.nodeType)"
+                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
-                            <span class="node-handle delete-node-text"
-                                v-if="!props.row.canUse && props.row.nodeStatus !== 'CREATING'"
-                                @click.stop="toNodeApplyPerm(props.row)"
-                            >{{ $t('environment.applyPermission') }}</span>
-                            <span id="moreHandler" class="node-handle more-handle"
-                                v-if="props.row.canUse && props.row.nodeType === 'DEVCLOUD'">
-                                <bk-popover
-                                    placement="bottom-start"
-                                    size="samll"
-                                    theme="light">
-                                    <span>{{ $t('environment.more') }}</span>
-                                    <div slot="content" class="devcloud-menu-list">
-                                        <dropdown-list :is-show="showTooltip" @handleNode="handleNode" :node="props.row"></dropdown-list>
-                                    </div>
-                                </bk-popover>
-                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -161,15 +130,6 @@
                 :empty-info="emptyInfo"
             ></empty-node>
         </section>
-
-        <!-- 导入CMDB -->
-        <config-manage-node :node-select-conf="cmdbNodeSelectConf"
-            :node-list="nodeList"
-            @confirm-fn="confirmCmdbFn"
-            @cancel-fn="cancelCmdbFn"
-        ></config-manage-node>
-
-        <!-- 导入第三方构建机 -->
         <third-construct :construct-tool-conf="constructToolConf"
             :construct-import-form="constructImportForm"
             :connect-node-detail="connectNodeDetail"
@@ -183,42 +143,29 @@
             :is-agent="isAgent"
             :node-ip="nodeIp"
         ></third-construct>
-
-        <make-mirror-dialog
-            :current-node="createImageNode"
-            :make-mirror-conf="makeMirrorConf"
-            @cancelMakeMirror="makeMirrorConf.isShow = false"
-            @submitMakeMirror="requestList"
-        ></make-mirror-dialog>
     </div>
 </template>
 
 <script>
     import emptyNode from './empty_node'
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
-    import configManageNode from '@/components/devops/environment/config-manage-node'
-    import dropdownList from '@/components/devops/environment/dropdown-list'
-    import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
 
     export default {
         components: {
             emptyNode,
-            thirdConstruct,
-            configManageNode,
-            dropdownList,
-            makeMirrorDialog
+            thirdConstruct
         },
         data () {
             return {
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
-                createImageNode: '',
                 nodeIp: '',
                 isAgent: false,
                 isMultipleBtn: false,
                 isEditNodeStatus: false,
+                isDropdownShow: false, // 导入菜单
                 showContent: false, // 内容显示
                 hasPermission: true, // 构建机权限
                 showTooltip: false,
@@ -262,14 +209,6 @@
                     hostname: '',
                     status: 'UN_IMPORT',
                     os: 'macOS 10.13.4'
-                },
-                // CMDB弹窗配置
-                cmdbNodeSelectConf: {
-                    isShow: false,
-                    quickClose: false,
-                    hasHeader: false,
-                    unselected: true,
-                    importText: '导入'
                 },
                 makeMirrorConf: {
                     isShow: false
@@ -369,6 +308,7 @@
 
                     res.forEach(item => {
                         item.isEnableEdit = item.nodeHashId === this.curEditNodeItem
+                        item.isMore = item.nodeHashId === this.lastCliCKNode.nodeHashId
                         this.nodeList.push(item)
                     })
                 } catch (err) {
@@ -387,21 +327,26 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                // this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
-                //     id: this.projectId,
-                //     type: this.$permissionResourceTypeMap.PROJECT
-                // }])
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_creator=env_node`)
+                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             toNodeApplyPerm (row) {
-                // this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
-                //     id: this.projectId,
-                //     type: this.$permissionResourceTypeMap.PROJECT
-                // }, {
-                //     id: row.nodeHashId,
-                //     type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
-                // }])
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`)
+                this.applyPermission(this.$permissionActionMap.use, this.$permissionResourceMap.envNode, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }, {
+                    id: row.nodeHashId,
+                    type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
+                }])
+            },
+            dropdownIsShow (isShow) {
+                if (isShow === 'show') {
+                    this.isDropdownShow = true
+                } else {
+                    this.isDropdownShow = false
+                }
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
@@ -440,21 +385,20 @@
                                 name: row.nodeId
                             }],
                             projectId: this.projectId
-                        }],
-                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
+                        }]
                     })
                 } else {
                     this.$bkInfo({
                         theme: 'warning',
                         type: 'warning',
                         title: this.$t('environment.delete'),
-                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
+                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
                         confirmFn: async () => {
                             let message, theme
                             try {
                                 await this.$store.dispatch('environment/toDeleteNode', {
                                     projectId: this.projectId,
-                                    params
+                                    params: params
                                 })
 
                                 message = this.$t('environment.successfullyDeleted')
@@ -470,8 +414,7 @@
                                                 name: row.nodeId
                                             }],
                                             projectId: this.projectId
-                                        }],
-                                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=node&project_code=${this.projectId}&service_code=environment&role_manager=env_node:${row.nodeHashId}`
+                                        }]
                                     })
                                 } else {
                                     message = err.data ? err.data.message : err
@@ -487,37 +430,6 @@
                         }
                     })
                 }
-            },
-            /**
-             * 构建机信息
-             */
-            async changeCreatedUser (id) {
-                this.$bkInfo({
-                    title: this.$t('environment.nodeInfo.modifyImporter'),
-                    subTitle: this.$t('environment.nodeInfo.modifyOperatorTips'),
-                    confirmFn: async () => {
-                        let message, theme
-                        
-                        try {
-                            await this.$store.dispatch('environment/changeCreatedUser', {
-                                projectId: this.projectId,
-                                nodeHashId: id
-                            })
-
-                            message = this.$t('environment.successfullyModified')
-                            theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
-                        }
-                    }
-                })
             },
             /**
              * 构建机信息
@@ -559,8 +471,8 @@
                     if (res) {
                         this.constructToolConf.isShow = true
                         if (node) {
-                            const gateway = node.nodeType === 'DEVCLOUD' ? 'shenzhen' : node.gateway
-                            this.constructImportForm.model = node.nodeType === 'DEVCLOUD' ? 'LINUX' : node.osName.toUpperCase()
+                            const gateway = node.gateway
+                            this.constructImportForm.model = node.osName.toUpperCase()
                             this.requestGateway(gateway, node)
                         } else {
                             this.constructImportForm.model = 'LINUX'
@@ -610,7 +522,7 @@
                         this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
 
-                    if (node && ['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
+                    if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
                         this.requestDevCommand()
@@ -689,22 +601,15 @@
                 }
             },
             installAgent (node) {
-                if (['DEVCLOUD', 'THIRDPARTY'].includes(node.nodeType)) {
+                if (['THIRDPARTY'].includes(node.nodeType)) {
                     this.nodeIp = node.ip
                     this.isAgent = true
                     this.constructToolConf.importText = this.$t('environment.comfirm')
                     this.switchConstruct(node)
-                } else if (['CC', 'CMDB'].includes(node.nodeType)) {
-                    const url = `${IWIKI_DOCS_URL}/x/WtMrAg`
-                    window.open(url, '_blank')
                 }
             },
             async toImportNode (type) {
-                if (type === 'cmdb') {
-                    this.cmdbNodeSelectConf.isShow = true
-                } else {
-                    this.switchConstruct()
-                }
+                this.switchConstruct()
             },
             /**
              * 构建机导入节点
@@ -824,78 +729,15 @@
                     }
                 })
             },
-            async destoryNode (node) {
-                const h = this.$createElement
-                const content = h('p', {
-                    style: {
-                        textAlign: 'center'
-                    }
-                }, `${this.$t('environment.nodeInfo.destoryNode')}？`)
-
-                this.$bkInfo({
-                    theme: 'warning',
-                    type: 'warning',
-                    subHeader: content,
-                    confirmFn: async () => {
-                        clearTimeout(this.timer)
-
-                        let message, theme
-                        try {
-                            await this.$store.dispatch('environment/toDestoryNode', {
-                                projectId: this.projectId,
-                                nodeHashId: node.nodeHashId
-                            })
-
-                            message = this.$t('environment.successfullySubmited')
-                            theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
-                            this.$bkMessage({
-                                message,
-                                theme
-                            })
-                            this.requestList()
-                        }
-                    }
-                })
-            },
-            makeImage (node) {
-                this.createImageNode = node
-                // this.showCreateImage = true
-                this.makeMirrorConf.isShow = true
-            },
-            handleNode (name, canUse, node) {
-                if (canUse) {
-                    switch (name) {
-                        case 'destory':
-                            this.destoryNode(node)
-                            break
-                        case 'makeImage':
-                            this.makeImage(node)
-                            break
-                        default:
-                            break
-                    }
-                }
-            },
             canShowDetail (row) {
-                return row.nodeType === 'THIRDPARTY' || (row.nodeType === 'DEVCLOUD' && row.nodeStatus === 'NORMAL')
-            },
-            confirmCmdbFn (nodes) {
-                this.cmdbNodeSelectConf.isShow = false
-                this.requestList()
-            },
-            cancelCmdbFn () {
-                this.cmdbNodeSelectConf.isShow = false
+                return row.nodeType === 'THIRDPARTY'
             }
         }
     }
 </script>
 
 <style lang="scss">
-@import './../scss/conf';
+    @import './../scss/conf';
 
     %flex {
         display: flex;
@@ -906,6 +748,10 @@
         min-width: 1126px;
         height: 100%;
         overflow: hidden;
+
+        .create-node-btn {
+            margin-right: 6px;
+        }
 
         .prompt-operator,
         .edit-operator {
@@ -1020,6 +866,7 @@
             .is-danger {
                 border-color: #ff5656;
                 background-color: #fff4f4;
+                
             }
         }
 
@@ -1042,7 +889,7 @@
                     cursor: pointer;
                 }
                 .useless {
-                  color: $fontLighterColor;
+                  color: $fontLigtherColor;
                 }
                 .icon-edit {
                     position: relative;
@@ -1074,9 +921,9 @@
             .node-item-row {
               &.node-row-useless {
                 cursor: url('../images/cursor-lock.png'), auto;
-                color: $fontLighterColor;
+                color: $fontLigtherColor;
                 .node-count-item {
-                  color: $fontLighterColor;
+                  color: $fontLigtherColor;
                 }
               }
               .no-node-delete-permission {

@@ -32,6 +32,8 @@ import com.tencent.devops.model.store.tables.TStoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -44,7 +46,7 @@ class StoreErrorCodeInfoDao {
                 dslContext.insertInto(this)
                     .set(ID, UUIDUtil.generate())
                     .set(STORE_CODE, storeErrorCodeInfo.storeCode)
-                    .set(STORE_TYPE, storeErrorCodeInfo.storeType.type.toByte())
+                    .set(STORE_TYPE, storeErrorCodeInfo.storeType?.type?.toByte())
                     .set(ERROR_CODE, errorCode)
                     .set(CREATOR, userId)
                     .set(MODIFIER, userId)
@@ -55,6 +57,22 @@ class StoreErrorCodeInfoDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
             }
         }).execute()
+    }
+
+    fun getStoreErrorCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int
+    ): Result<Record> {
+        with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
+            return dslContext.select()
+                .from(this)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(ERROR_CODE.eq(errorCode))
+                .fetch()
+        }
     }
 
     fun getStoreErrorCodes(

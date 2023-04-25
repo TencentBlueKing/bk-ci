@@ -36,6 +36,7 @@ import java.net.URLEncoder
 
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+
     override fun getPropertiesFileStr(
         projectCode: String,
         fileDir: String,

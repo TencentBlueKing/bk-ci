@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -35,11 +37,33 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object NotifyTemplateUtils {
 
-    const val COMMON_SHUTDOWN_SUCCESS_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行成功，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。"
+    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "CommonShutdownSuccessContent"// 【${0}】- 【${1}】#${2} 执行成功，耗时${3}, 触发人：${4}。
 
-    const val COMMON_SHUTDOWN_FAILURE_CONTENT =
-        "【\${$PROJECT_NAME_CHINESE}】- 【\${$PIPELINE_NAME}】#\${$PIPELINE_BUILD_NUM} 执行失败，" +
-            "耗时\${$PIPELINE_TIME_DURATION}, 触发人：\${$PIPELINE_START_USER_NAME}。 "
+    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "CommonShutdownFailureContent"// 【${0}】- 【${1}】#${2} 执行失败，耗时${3}, 触发人：${4}。
+
+    fun getCommonShutdownSuccessContent(): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = COMMON_SHUTDOWN_SUCCESS_CONTENT,
+            params = arrayOf(
+                PROJECT_NAME_CHINESE,
+                PIPELINE_NAME,
+                PIPELINE_BUILD_NUM,
+                PIPELINE_TIME_DURATION,
+                PIPELINE_START_USER_NAME
+            )
+        )
+    }
+
+    fun getCommonShutdownFailureContent(): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = COMMON_SHUTDOWN_FAILURE_CONTENT,
+            params = arrayOf(
+                PROJECT_NAME_CHINESE,
+                PIPELINE_NAME,
+                PIPELINE_BUILD_NUM,
+                PIPELINE_TIME_DURATION,
+                PIPELINE_START_USER_NAME
+            )
+        )
+    }
 }

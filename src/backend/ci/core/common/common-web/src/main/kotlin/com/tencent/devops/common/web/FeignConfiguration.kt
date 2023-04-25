@@ -30,6 +30,7 @@ package com.tencent.devops.common.web
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.security.jwt.JwtManager
@@ -61,10 +62,12 @@ class FeignConfiguration @Autowired constructor(
         return RequestInterceptor { requestTemplate ->
             requestTemplate.decodeSlash(false)
 
+            if (!requestTemplate.headers().containsKey(AUTH_HEADER_PROJECT_ID)) {
             // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            val tag = bkTag.getFinalTag()
-            requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
-            logger.debug("gateway tag is : $tag")
+                val tag = bkTag.getFinalTag()
+                requestTemplate.header(AUTH_HEADER_GATEWAY_TAG, tag)
+                logger.debug("gateway tag is : $tag")
+            }
 
             // 设置traceId
             requestTemplate.header(

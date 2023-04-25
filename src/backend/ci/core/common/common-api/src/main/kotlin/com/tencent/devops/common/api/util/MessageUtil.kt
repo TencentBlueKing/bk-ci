@@ -30,11 +30,12 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
-import com.tencent.devops.common.api.pojo.Result
-import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
 import java.text.MessageFormat
-import java.util.*
+import java.util.Locale
+import java.util.Properties
+import java.util.ResourceBundle
+import org.slf4j.LoggerFactory
 
 object MessageUtil {
 
@@ -57,12 +58,17 @@ object MessageUtil {
         baseName: String = DEFAULT_BASE_NAME,
         defaultMessage: String? = null
     ): String {
-        val localeObj = Locale(language)
-        // 根据locale和baseName生成resourceBundle对象
-        val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
-        // 通过resourceBundle获取对应语言的描述信息
         var message: String? = null
         try {
+            val parts = language.split("_")
+            val localeObj = if (parts.size > 1) {
+                Locale(parts[0], parts[1])
+            } else {
+                Locale(language)
+            }
+            // 根据locale和baseName生成resourceBundle对象
+            val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
+            // 通过resourceBundle获取对应语言的描述信息
             message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
         } catch (ignored: Throwable) {
             logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)
@@ -327,30 +333,5 @@ object MessageUtil {
             }
             bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = itemEntity, fieldPath = newFieldPath))
         }
-    }
-
-    /**
-     * 生成请求响应对象
-     * @param messageCode 状态码
-     * @param params 替换状态码描述信息占位符的参数数组
-     * @param data 数据对象
-     * @return Result响应结果对象
-     */
-    @Suppress("UNCHECKED_CAST")
-    fun <T> generateResponseDataObject(
-        messageCode: String,
-        params: Array<String>? = null,
-        data: T? = null,
-        language: String,
-        defaultMessage: String? = null
-    ): Result<T> {
-        val message = getMessageByLocale(
-            messageCode = messageCode,
-            language = language,
-            params = params,
-            defaultMessage = defaultMessage
-        )
-        // 生成Result对象
-        return Result(messageCode.toInt(), message, data)
     }
 }

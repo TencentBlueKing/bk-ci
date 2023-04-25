@@ -31,8 +31,9 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
@@ -84,8 +85,7 @@ class NodeService @Autowired constructor(
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-    fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
-        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
@@ -115,6 +115,11 @@ class NodeService @Autowired constructor(
                 nodeWebsocketService.buildDetailMessage(projectId, userId)
             )
         }
+    }
+
+    fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
+        val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
+        deleteNodes(userId, projectId, listOf(node))
     }
 
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
@@ -385,7 +390,10 @@ class NodeService @Autowired constructor(
         )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         checkDisplayName(projectId, nodeId, displayName)

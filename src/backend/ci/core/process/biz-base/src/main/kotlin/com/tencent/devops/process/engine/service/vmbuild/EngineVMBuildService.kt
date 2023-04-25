@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,10 +51,11 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -68,6 +70,7 @@ import com.tencent.devops.process.engine.pojo.builds.CompleteTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.engine.service.PipelineBuildTaskService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -126,6 +129,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     private val client: Client,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineAsCodeService: PipelineAsCodeService,
+    private val pipelineBuildTaskService: PipelineBuildTaskService,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val redisOperation: RedisOperation
 ) {
@@ -394,7 +398,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
 
         // #1613 完善日志
-        errorType?.let { message = "$message \nerrorType: ${errorType.typeName}" }
+        errorType?.let { message = "$message \nerrorType: ${I18nUtil.getCodeLanMessage(errorType.typeName)}" }
         errorCode?.let { message = "$message \nerrorCode: $errorCode" }
         errorMsg?.let { message = "$message \nerrorMsg: $errorMsg" }
 
@@ -501,7 +505,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("ENGINE|$buildId|BC_RUNNING|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.status}")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "正在处理当前上报的任务, 请稍等。。。(Waiting please)",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -712,6 +719,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
 
+        task?.let {
+            pipelineBuildTaskService.finishTask(
+                buildTask = task,
+                buildStatus = buildStatus,
+                actionType = ActionType.REFRESH,
+                source = "completeClaimBuildTask",
+                sendEventFlag = false
+            )
+        }
+
         if (buildStatus.isFailure()) {
             // #1613 可能为空，需要先对预置
             task?.errorCode = result.errorCode
@@ -910,9 +927,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     (
                         errorCode?.let {
                             "\n${
-                                MessageCodeUtil.getCodeLanMessage(
+                                I18nUtil.getCodeLanMessage(
                                     messageCode = errorCode.toString(),
-                                    checkUrlDecoder = true
+                                    checkUrlDecoder = true,
+                                    language = I18nUtil.getDefaultLocaleLanguage()
                                 )
                             }\n"
                         }

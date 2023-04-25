@@ -27,22 +27,28 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.RuleIndicatorSet
 import com.tencent.devops.quality.api.v2.pojo.RuleTemplate
-import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
-import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
-import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateData
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateIndicatorMap
 import com.tencent.devops.quality.api.v2.pojo.op.TemplateUpdateData
 import com.tencent.devops.quality.dao.v2.QualityControlPointDao
+import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
+import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
+import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
+import com.tencent.devops.quality.pojo.po.QualityRuleTemplatePO
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
 
 @Service
@@ -55,6 +61,19 @@ class QualityTemplateService @Autowired constructor(
     private val ruleTemplateIndicatorDao: QualityTemplateIndicatorMapDao,
     private val indicatorDao: QualityIndicatorDao
 ) {
+
+    @PostConstruct
+    fun init() {
+        logger.info("start init quality rule template")
+        val classPathResource = ClassPathResource(
+            "ruleTemplate_${I18nUtil.getDefaultLocaleLanguage()}.json"
+        )
+        val inputStream = classPathResource.inputStream
+        val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+        val qualityRuleTemplatePOs = JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
+        ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
+        logger.info("init quality rule template end")
+    }
 
     fun userListIndicatorSet(): List<RuleIndicatorSet> {
         return ruleTemplateDao.listIndicatorSetEnable(dslContext)?.map { record ->

@@ -174,11 +174,47 @@ class I18nMessageServiceImpl @Autowired constructor(
         }
         // 2、未在缓存中的key，则批量去db中查询
         noCacheKeys?.let {
+            if (i18nMessages == null) {
+                i18nMessages = mutableListOf()
+            }
             handleNoCacheKey(
                 moduleCode = moduleCode,
                 noCacheKeys = it,
                 language = language,
-                i18nMessages = i18nMessages
+                i18nMessages = i18nMessages!!
+            )
+        }
+        return i18nMessages
+    }
+
+    override fun getI18nMessages(
+        userId: String,
+        moduleCode: SystemModuleEnum,
+        keyPrefix: String,
+        language: String
+    ): List<I18nMessage>? {
+        val busModuleCodeName = moduleCode.name
+        val commonModuleCodeName = SystemModuleEnum.COMMON.name
+        val moduleCodes = setOf(busModuleCodeName, commonModuleCodeName)
+        // 查询业务模块和公共模块key前缀为keyPrefix的记录
+        val i18nMessageRecords = i18nMessageDao.list(
+            dslContext = dslContext,
+            moduleCodes = moduleCodes,
+            keyPrefix = keyPrefix,
+            language = language
+        )
+        var i18nMessages: MutableList<I18nMessage>? = null
+        i18nMessageRecords?.forEach { i18nMessageRecord ->
+            if (i18nMessages == null) {
+                i18nMessages = mutableListOf()
+            }
+            i18nMessages!!.add(
+                I18nMessage(
+                    moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
+                    language = language,
+                    key = i18nMessageRecord.key,
+                    value = i18nMessageRecord.value
+                )
             )
         }
         return i18nMessages
@@ -228,9 +264,8 @@ class I18nMessageServiceImpl @Autowired constructor(
         moduleCode: SystemModuleEnum,
         noCacheKeys: MutableList<String>,
         language: String,
-        i18nMessages: MutableList<I18nMessage>?
+        i18nMessages: MutableList<I18nMessage>
     ) {
-        var tmpI18nMessages = i18nMessages
         // 从db查找未缓存key的信息
         val busModuleCodeName = moduleCode.name
         val commonModuleCodeName = SystemModuleEnum.COMMON.name
@@ -254,9 +289,6 @@ class I18nMessageServiceImpl @Autowired constructor(
         }
         var handleKeys: MutableSet<String>? = null
         i18nMessageRecords?.forEach { i18nMessageRecord ->
-            if (tmpI18nMessages == null) {
-                tmpI18nMessages = mutableListOf()
-            }
             if (handleKeys == null) {
                 handleKeys = mutableSetOf()
             }
@@ -264,7 +296,7 @@ class I18nMessageServiceImpl @Autowired constructor(
                 // 如处理过的key集合中包括该key，说明业务模块也有该key的记录，无需再处理公共模块的记录
                 return@forEach
             }
-            tmpI18nMessages?.add(
+            i18nMessages.add(
                 I18nMessage(
                     moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
                     language = language,

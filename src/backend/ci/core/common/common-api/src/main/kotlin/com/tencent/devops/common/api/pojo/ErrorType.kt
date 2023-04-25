@@ -34,10 +34,10 @@ enum class ErrorType(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "errorType", reusePrefixFlag = false)
     val typeName: String,
     val num: Int
-    ) {
+) {
     SYSTEM("system", 0), // 0 系统运行报错
     USER("user", 1), // 1 用户配置报错
-    THIRD_PARTY("third_party", 2), // 2 第三方系统接入错误
+    THIRD_PARTY("thirdParty", 2), // 2 第三方系统接入错误
     PLUGIN("plugin", 3); // 3 插件执行错误
 
     companion object {

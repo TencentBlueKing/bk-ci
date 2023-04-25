@@ -33,16 +33,17 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import java.util.Base64
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Base64
+import kotlin.collections.ArrayList
 
 @Service
 class CredentialService @Autowired constructor(
@@ -192,7 +193,7 @@ class CredentialService @Autowired constructor(
     fun checkUsername(username: String?) {
         if (username.isNullOrEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
             )
         }
     }
@@ -200,7 +201,7 @@ class CredentialService @Autowired constructor(
     fun checkPassword(password: String?) {
         if (password.isNullOrBlank()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
             )
         }
     }

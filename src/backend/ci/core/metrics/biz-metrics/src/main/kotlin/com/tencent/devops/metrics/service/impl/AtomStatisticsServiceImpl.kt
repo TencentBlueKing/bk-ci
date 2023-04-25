@@ -29,7 +29,8 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE_FIELD_NAME_ENGLISH
@@ -40,6 +41,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
@@ -57,11 +60,13 @@ import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomTrendInfoDO
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
@@ -169,6 +174,30 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         return AtomTrendInfoVO(
             atomTrendInfoMap.values.toList()
         )
+    }
+
+    override fun queryAtomComplianceInfo(
+        userId: String,
+        atomCode: String,
+        queryIntervalVO: QueryIntervalVO
+    ): ComplianceInfoDO? {
+        val queryAtomComplianceInfo = atomStatisticsDao.queryAtomComplianceInfo(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            startDateTime = queryIntervalVO.startDateTime,
+            endDateTime = queryIntervalVO.endDateTime
+        )
+        if (queryAtomComplianceInfo != null) {
+            val failExecuteCount = queryAtomComplianceInfo.get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?
+            val failComplianceCount = queryAtomComplianceInfo.get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?
+            if (failExecuteCount != null && failComplianceCount != null) {
+                return ComplianceInfoDO(
+                    failExecuteCount.toInt(),
+                    failComplianceCount.toInt()
+                )
+            }
+        }
+        return null
     }
 
     override fun queryAtomExecuteStatisticsInfo(
@@ -317,13 +346,16 @@ class AtomStatisticsServiceImpl @Autowired constructor(
 
     private fun getHeaderInfo(): MutableMap<String, String> {
         val headerInfo = mutableMapOf<String, String>()
-        headerInfo[BK_ATOM_CODE] = MessageCodeUtil.getCodeLanMessage(BK_ATOM_CODE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_CLASSIFY_CODE] = MessageCodeUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_SUCCESS_RATE] = MessageCodeUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
-        headerInfo[BK_AVG_COST_TIME] = MessageCodeUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
-        headerInfo[BK_TOTAL_EXECUTE_COUNT] = MessageCodeUtil
+        headerInfo[BK_ATOM_CODE] = I18nUtil.getCodeLanMessage(BK_ATOM_CODE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_CLASSIFY_CODE] =
+            I18nUtil.getCodeLanMessage(BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_SUCCESS_RATE] =
+            I18nUtil.getCodeLanMessage(BK_SUCCESS_RATE_FIELD_NAME_ENGLISH)
+        headerInfo[BK_AVG_COST_TIME] =
+            I18nUtil.getCodeLanMessage(BK_AVG_COST_TIME_FIELD_NAME_ENGLISH)
+        headerInfo[BK_TOTAL_EXECUTE_COUNT] = I18nUtil
             .getCodeLanMessage(BK_TOTAL_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
-        headerInfo[BK_SUCCESS_EXECUTE_COUNT] = MessageCodeUtil
+        headerInfo[BK_SUCCESS_EXECUTE_COUNT] = I18nUtil
             .getCodeLanMessage(BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH)
         return headerInfo
     }

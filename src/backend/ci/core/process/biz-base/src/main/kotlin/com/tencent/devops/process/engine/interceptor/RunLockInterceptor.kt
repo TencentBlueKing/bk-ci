@@ -28,6 +28,9 @@
 package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTEX_GROUP_SINGLE_BUILD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_SINGLE_BUILD
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_LOCK
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -62,11 +65,15 @@ class RunLockInterceptor @Autowired constructor(
         concurrencyGroup: String?
     ): Response<BuildStatus> {
         val result: Response<BuildStatus> = if (checkLock(runLockType)) {
-            Response(ERROR_PIPELINE_LOCK.toInt(), "当前流水线已被锁定，无法执行，请解锁后重试")
+            Response(
+                ERROR_PIPELINE_LOCK.toInt(),
+                I18nUtil.getCodeLanMessage(ERROR_PIPELINE_LOCK)
+            )
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
-                logger.info("[$pipelineId] 当前流水线已设置为同时只能运行一个构建任务，开始排队！")
+                logger.info("[$pipelineId]" + I18nUtil.getCodeLanMessage(BK_PIPELINE_SINGLE_BUILD)
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)
@@ -91,7 +98,10 @@ class RunLockInterceptor @Autowired constructor(
                 return@let size
             } ?: 0
             if (concurrencyGroupRunningCount >= 1) {
-                logger.info("[$pipelineId] 当前互斥组[$concurrencyGroup]同时只能运行一个构建任务，开始排队！")
+                logger.info("[$pipelineId] " + I18nUtil.getCodeLanMessage(
+                    messageCode = BK_MUTEX_GROUP_SINGLE_BUILD,
+                    params = arrayOf("$concurrencyGroup")
+                ))
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)

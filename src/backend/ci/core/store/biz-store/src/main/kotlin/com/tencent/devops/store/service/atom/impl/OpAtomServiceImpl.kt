@@ -36,13 +36,15 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.model.store.tables.records.TClassifyRecord
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_UPLOAD_FILE_PATH_ERROR
@@ -51,6 +53,7 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
+import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
@@ -65,6 +68,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import com.tencent.devops.store.pojo.common.Classify
+import com.tencent.devops.store.pojo.common.KEY_RELEASE_INFO
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
@@ -278,20 +282,26 @@ class OpAtomServiceImpl @Autowired constructor(
     override fun approveAtom(userId: String, atomId: String, approveReq: ApproveReq): Result<Boolean> {
         // 判断插件是否存在
         val atom = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(atomId)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
             )
 
         val oldStatus = atom.atomStatus
         if (oldStatus != AtomStatusEnum.AUDITING.status.toByte()) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         if (approveReq.result != PASS && approveReq.result != REJECT) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf(approveReq.result)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(approveReq.result),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomCode = atom.atomCode
@@ -351,6 +361,7 @@ class OpAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    @Suppress("UNCHECKED_CAST")
     override fun releaseAtom(
         userId: String,
         atomCode: String,
@@ -371,9 +382,10 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         val taskJsonFile = File("$atomPath$fileSeparator$TASK_JSON_NAME")
         if (!taskJsonFile.exists()) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_CONF_INVALID,
-                arrayOf(TASK_JSON_NAME)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_CONF_INVALID,
+                params = arrayOf(TASK_JSON_NAME),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val taskJsonMap: Map<String, Any>
@@ -385,9 +397,10 @@ class OpAtomServiceImpl @Autowired constructor(
             val releaseInfoMap = taskJsonMap["releaseInfo"]
             releaseInfo = JsonUtil.mapTo(releaseInfoMap as Map<String, Any>, ReleaseInfo::class.java)
         } catch (e: JsonProcessingException) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo")
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                params = arrayOf("releaseInfo"),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 新增插件
@@ -453,7 +466,7 @@ class OpAtomServiceImpl @Autowired constructor(
             client = client,
             userId = userId
         )
-        taskJsonMap["releaseInfo"] = releaseInfo
+        taskJsonMap[KEY_RELEASE_INFO] = releaseInfo
         // 将替换好的文本写入task.json文件
         val taskJson = taskJsonMap.toJsonString()
         val fileOutputStream = taskJsonFile.outputStream()

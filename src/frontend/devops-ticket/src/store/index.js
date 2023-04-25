@@ -217,6 +217,19 @@ const store = {
                     type: 'password',
                     modelName: 'v3'
                 }
+            },
+            OAUTHTOKEN: {
+                v1: {
+                    label: 'OauthToken',
+                    component: 'vue-input',
+                    rules: 'required',
+                    rule: { required: true },
+                    default: '',
+                    placeholder: 'ticket.credential.oauthTokenPlaceholder',
+                    errorMsg: 'ticket.credential.oauthTokenRequired',
+                    modelName: 'v1',
+                    type: 'password'
+                }
             }
         },
         ticketType: [
@@ -264,6 +277,11 @@ const store = {
                 id: 'TOKEN_USERNAME_PASSWORD',
                 name: 'passwordToken',
                 desc: 'passwordTokenDesc'
+            },
+            {
+                id: 'OAUTHTOKEN',
+                name: 'OauthToken',
+                desc: 'oauthTokenDesc'
             }
         ]
     },

@@ -73,7 +73,10 @@
         "passwordTokenDesc": "Used for linking Git-typed code repo through http",
         "usernamePassword": "User name+password",
         "sshKeyToken": "SSH private key + private Token",
-        "passwordToken": "User password+private token"
+        "passwordToken": "User password+private token",
+        "oauthTokenRequired": "Oauth Token cannot be empty",
+        "oauthTokenDesc": "Oauth Token is generally used in scenarios where the upper platform invokes Stream. The user has authorized the upper platform with Oauth, and the upper platform uses the user authorization to operate when using the Stream service",
+        "oauthTokenPlaceholder": "OauthToken is used to pass user authorization information when the upper platform invokes the Stream service"
     },
     "cert": {
         "certName": "Name",

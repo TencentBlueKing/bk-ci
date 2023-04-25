@@ -1,13 +1,24 @@
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_ADMINISTRATOR_EXPIRED
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_ADMINISTRATOR_NOT_EXPIRED
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_AGREE_RENEW
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_APPROVER_AGREE_RENEW
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_APPROVER_REFUSE_RENEW
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_REFUSE_RENEW
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_WEWORK_ROBOT_NOTIFY_MESSAGE
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_YOU_AGREE_RENEW
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_YOU_REFUSE_RENEW
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthManagerApprovalDao
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.pojo.enum.ApprovalType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.auth.tables.records.TAuthManagerApprovalRecord
 import com.tencent.devops.model.auth.tables.records.TAuthManagerUserRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
@@ -18,6 +29,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import java.time.LocalDateTime
 
 @Service
@@ -84,19 +96,19 @@ class AuthManagerApprovalService @Autowired constructor(
         val actions: MutableList<WeworkMarkdownAction> = ArrayList()
         val agreeButton = WeworkMarkdownAction(
             name = "agree",
-            text = "同意续期",
+            text = MessageUtil.getMessageByLocale(BK_AGREE_RENEW, I18nUtil.getLanguage(userId)),
             type = "button",
             value = approvalId.toString(),
-            replaceText = "你已选择同意用户续期",
+            replaceText = MessageUtil.getMessageByLocale(BK_YOU_AGREE_RENEW, I18nUtil.getLanguage(userId)),
             borderColor = "2EAB49",
             textColor = "2EAB49"
         )
         val refuseButton = WeworkMarkdownAction(
             name = "refuse",
-            text = "拒绝续期",
+            text = MessageUtil.getMessageByLocale(BK_REFUSE_RENEW, I18nUtil.getLanguage(userId)),
             type = "button",
             value = approvalId.toString(),
-            replaceText = "你已选择拒绝用户续期",
+            replaceText = MessageUtil.getMessageByLocale(BK_YOU_REFUSE_RENEW, I18nUtil.getLanguage(userId)),
             borderColor = "2EAB49",
             textColor = "2EAB49"
         )
@@ -106,8 +118,11 @@ class AuthManagerApprovalService @Autowired constructor(
             receivers = manager,
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
-            message = "**蓝盾超级管理员权限续期申请审批**\\n申请人：$userId\\n授权名称：$authName" +
-                "\\n授权详情：$authDetail\\n用户权限过期时间：$expiredTime\\n请选择是否同意用户续期权限\\n",
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_WEWORK_ROBOT_NOTIFY_MESSAGE,
+                I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, authName, authDetail, expiredTime)
+            ),
             attachments = WeworkMarkdownAttachment(
                 callbackId = "approval",
                 actions = actions
@@ -132,7 +147,7 @@ class AuthManagerApprovalService @Autowired constructor(
                     receivers = userId,
                     receiverType = WeworkReceiverType.single,
                     textType = WeworkTextType.markdown,
-                    message = "审批人同意了您的权限续期"
+                    message = MessageUtil.getMessageByLocale(BK_APPROVER_AGREE_RENEW, I18nUtil.getLanguage(userId))
                 )
                 client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
                 authManagerApprovalDao.updateApprovalStatus(
@@ -147,7 +162,7 @@ class AuthManagerApprovalService @Autowired constructor(
                     receivers = userId,
                     receiverType = WeworkReceiverType.single,
                     textType = WeworkTextType.markdown,
-                    message = "审批人拒绝了您的权限续期"
+                    message = MessageUtil.getMessageByLocale(BK_APPROVER_REFUSE_RENEW, I18nUtil.getLanguage(userId))
                 )
                 client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
                 authManagerApprovalDao.updateApprovalStatus(
@@ -246,19 +261,19 @@ class AuthManagerApprovalService @Autowired constructor(
     ): WeworkRobotNotifyMessage {
         val agreeButton = WeworkMarkdownAction(
             name = "agree",
-            text = "同意续期",
+            text = MessageUtil.getMessageByLocale(BK_AGREE_RENEW, I18nUtil.getLanguage(userId)),
             type = "button",
             value = approvalId.toString(),
-            replaceText = "你已选择同意续期",
+            replaceText = MessageUtil.getMessageByLocale(BK_YOU_AGREE_RENEW, I18nUtil.getLanguage(userId)),
             borderColor = "2EAB49",
             textColor = "2EAB49"
         )
         val refuseButton = WeworkMarkdownAction(
             name = "refuse",
-            text = "拒绝续期",
+            text = MessageUtil.getMessageByLocale(BK_REFUSE_RENEW, I18nUtil.getLanguage(userId)),
             type = "button",
             value = approvalId.toString(),
-            replaceText = "你已选择拒绝续期",
+            replaceText = MessageUtil.getMessageByLocale(BK_YOU_REFUSE_RENEW, I18nUtil.getLanguage(userId)),
             borderColor = "2EAB49",
             textColor = "2EAB49"
         )
@@ -269,8 +284,11 @@ class AuthManagerApprovalService @Autowired constructor(
             receivers = userId,
             receiverType = WeworkReceiverType.single,
             textType = WeworkTextType.markdown,
-            message = "**蓝盾超级管理员权限续期**\\n授权名称：$authName\\n授权详情：$authDetail" +
-                "\\n审批人：$manager\\n用户权限过期时间：$expiredTime\\n请选择是否需要续期权限\\n",
+            message = MessageUtil.getMessageByLocale(
+                BK_WEWORK_ROBOT_NOTIFY_MESSAGE,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, authName, authDetail, expiredTime)
+            ),
             attachments = WeworkMarkdownAttachment(
                 callbackId = "renewal",
                 actions = actions
@@ -286,8 +304,7 @@ class AuthManagerApprovalService @Autowired constructor(
         if (approvalRecord == null) {
             logger.warn("userRenewalAuth : approvalRecord is not exist! | approvalId = $approvalId")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.APPROVAL_RECORD_NOT_EXIST,
-                defaultMessage = "审批记录不存在！"
+                errorCode = AuthMessageCode.APPROVAL_RECORD_NOT_EXIST
             )
         }
         val managerId = approvalRecord.managerId
@@ -311,7 +328,7 @@ class AuthManagerApprovalService @Autowired constructor(
                 receivers = userId,
                 receiverType = WeworkReceiverType.single,
                 textType = WeworkTextType.markdown,
-                message = "权限还未过期，不需要操作！"
+                message = MessageUtil.getMessageByLocale(BK_ADMINISTRATOR_NOT_EXPIRED, I18nUtil.getLanguage(userId))
             )
             client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
             return true

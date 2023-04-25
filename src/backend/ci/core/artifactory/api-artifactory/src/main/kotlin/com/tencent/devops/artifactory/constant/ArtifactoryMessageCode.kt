@@ -36,7 +36,7 @@ package com.tencent.devops.artifactory.constant
  *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26:dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker 32：statistics）
+ *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -45,17 +45,27 @@ package com.tencent.devops.artifactory.constant
  *
  */
 object ArtifactoryMessageCode {
-    const val UPLOAD_FILE_TYPE_IS_NOT_SUPPORT = "2102001" // {0}类型文件不支持上传，您可以上传{1}类型文件
-    const val UPLOAD_FILE_IS_TOO_LARGE = "2102002" // 上传的文件不能超过{0}
-    const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
-    const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
-    const val SHORT_URL_EXPIRED = "2102005" // 短链接已过期
-    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006" // 用户{0}没有项目{1}下载权限
-    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007" // 用户{0}在项目{1}下没有流水线{2}下载构件权限
-    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
-    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
-    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
+    const val UPLOAD_FILE_TYPE_IS_NOT_SUPPORT = "2102001"// {0}类型文件不支持上传，您可以上传{1}类型文件
+    const val UPLOAD_FILE_IS_TOO_LARGE = "2102002"// 上传的文件不能超过{0}
+    const val FILE_SIZE_EXCEEDS_LIMIT = "2102003"// 文件大小不能超过{0}
+    const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004"// 非法自定义仓库路径
+    const val SHORT_URL_EXPIRED = "2102005"// 短链接已过期
+    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006"// 用户{0}没有项目{1}下载权限
+    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007"// 用户{0}在项目{1}下没有流水线{2}下载构件权限
+    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008"// 流水线最后修改人{0}没有项目{1}下载权限
+    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009"// 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
+    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010"// 用户{0}在项目{1}下没有流水线{2}分享构件权限
+    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011"// 获取下载链接请求出错
+    const val UPLOAD_CUSTOM_FILE_FAILED = "2102012"// 上传自定义文件失败
+    const val UPLOAD_PIPELINE_FILE_FAILED = "2102013"// 上传流水线文件失败
+    const val UPLOAD_FILE_FAILED = "2102014"// 上传文件失败
 
+    const val GET_CREDENTIAL_INFO_FAILED = "2102023"// 获取凭证信息失败
+    const val GET_BUILD_BASE_INFO_FAIL = "2102024"// 获取构建机基本信息失败
+    const val GET_PLUGIN_ENV_INFO_FAILED = "2102025"// 获取插件执行环境信息失败
+    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102026"// 更新插件执行环境信息失败
+    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102027"// 获取插件敏感信息失败
+    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102028"// 归档插件文件失败
     const val GRANT_DOWNLOAD_PERMISSION = "2102029" //请联系流水线负责人授予下载构件权限
     const val GRANT_PIPELINE_PERMISSION = "2102030" //访问件构请联系流水线负责人：\n{0} 授予流水线权限。
     const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" //元数据({0})不存在，请通过共享下载文件
@@ -68,6 +78,7 @@ object ArtifactoryMessageCode {
     const val METADATA_NOT_EXIST = "2102038" //元数据({0})不存在
     const val BUILD_NOT_EXIST = "2102039" //构建不存在({0})
     const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" //用户({0})在工程({1})下没有流水线{2}权限
+
 
     //artifactory
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}文件

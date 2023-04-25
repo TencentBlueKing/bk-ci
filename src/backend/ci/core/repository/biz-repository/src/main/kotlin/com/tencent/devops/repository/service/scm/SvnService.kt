@@ -29,7 +29,9 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_LOCAL_REPO_CREATION_FAILED
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
@@ -208,9 +210,12 @@ class SvnService : ISvnService {
         try {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
-            logger.error("工程($url)本地仓库创建失败", e)
+            logger.error(
+                MessageUtil.getMessageByLocale(BK_LOCAL_REPO_CREATION_FAILED, I18nUtil.getDefaultLocaleLanguage()),
+                e
+            )
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -226,7 +231,9 @@ class SvnService : ISvnService {
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
+                ),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -274,7 +281,9 @@ class SvnService : ISvnService {
             return result
         } catch (e: SVNException) {
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                message = I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.CALL_REPO_ERROR
+                ),
                 scmType = ScmType.CODE_SVN.name
             )
         }

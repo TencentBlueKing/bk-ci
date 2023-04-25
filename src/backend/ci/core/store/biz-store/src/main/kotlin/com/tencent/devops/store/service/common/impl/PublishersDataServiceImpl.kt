@@ -33,15 +33,17 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStorePublisherInfoRecord
 import com.tencent.devops.model.store.tables.records.TStorePublisherMemberRelRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.store.dao.common.PublisherMemberDao
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
+import com.tencent.devops.store.dao.common.StoreDockingPlatformErrorCodeDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
@@ -65,7 +67,8 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val client: Client,
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
-    private val storeUserService: StoreUserService
+    private val storeUserService: StoreUserService,
+    private val storeDockingPlatformErrorCodeDao: StoreDockingPlatformErrorCodeDao
 ) : PublishersDataService {
     override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
@@ -121,6 +124,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val addStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         val delStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
+        val createPublisherData = mutableListOf<PublishersRequest>()
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             val deptInfos = analysisDept(userId, it.organization)
@@ -128,9 +132,9 @@ class PublishersDataServiceImpl @Autowired constructor(
                 logger.warn("update publisherData fail, analysis dept data error!")
                 return 0
             }
-            publisherId?.let { id ->
+            if (publisherId != null) {
                 val records = TStorePublisherInfoRecord()
-                records.id = id
+                records.id = publisherId
                 records.publisherCode = it.publishersCode
                 records.publisherName = it.name
                 records.firstLevelDeptName = deptInfos[0].name
@@ -156,11 +160,13 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storePublisherInfoRecords.add(records)
                 updateMembers(
                     userId = userId,
-                    publisherId = id,
+                    publisherId = publisherId,
                     newMembers = it.members,
                     addRecords = addStorePublisherMemberRelRecords,
                     delRecords = delStorePublisherMemberRelRecords
                 )
+            } else {
+                createPublisherData.add(it)
             }
         }
         var count = 0
@@ -170,6 +176,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             publisherMemberDao.batchCreatePublisherMemberRel(context, addStorePublisherMemberRelRecords)
             publisherMemberDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
         }
+        count += createPublisherData(userId, createPublisherData)
         return count
     }
 
@@ -214,25 +221,44 @@ class PublishersDataServiceImpl @Autowired constructor(
         }
     }
 
-    override fun createPlatformsData(
+    override fun savePlatformsData(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
-        return storeDockingPlatformDao.batchCreate(dslContext, userId, storeDockingPlatformRequests)
+        storeDockingPlatformRequests.forEach {
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                storeDockingPlatformDao.add(context, userId, it)
+                if (!it.errorCodeInfo.isNullOrEmpty()) {
+                    storeDockingPlatformErrorCodeDao.batchSaveErrorCodeInfo(
+                        dslContext = context,
+                        platformCode = it.platformCode,
+                        errorCodeInfos = it.errorCodeInfo
+                    )
+                }
+            }
+        }
+        return storeDockingPlatformRequests.size
     }
 
     override fun deletePlatformsData(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
-        return storeDockingPlatformDao.batchDelete(dslContext, userId, storeDockingPlatformRequests)
-    }
-
-    override fun updatePlatformsData(
-        userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
-        return storeDockingPlatformDao.batchUpdate(dslContext, userId, storeDockingPlatformRequests)
+        storeDockingPlatformRequests.forEach {
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                if (it.errorCodeInfo != null) {
+                    storeDockingPlatformErrorCodeDao.deletePlatformErrorCodeInfo(
+                        dslContext = context,
+                        platformCode = it.platformCode,
+                        errorCodes = it.errorCodeInfo!!.map { errorCodeInfo -> errorCodeInfo.errorCode }
+                    )
+                }
+                storeDockingPlatformDao.delete(context, it)
+            }
+        }
+        return storeDockingPlatformRequests.size
     }
 
     override fun getPublishers(
@@ -247,15 +273,18 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val organizationPublisherIds =
             publisherMemberDao.getPublisherMemberRelByMemberId(dslContext, userId)
         if (organizationPublisherIds.isNotEmpty()) {
             // 获取组织发布者信息
-            organizationPublisherIds.forEach {
-                val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, it)
-                publishersInfos.add(organizationPublisherInfo!!)
+            organizationPublisherIds.forEach { id ->
+                val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, id)
+                organizationPublisherInfo?.let { it -> publishersInfos.add(it) }
             }
         }
         var personPublisherInfo = publishersDao.getPublisherInfoByCode(dslContext, userId)

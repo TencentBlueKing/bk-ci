@@ -36,7 +36,9 @@
                     <button class="bk-button bk-default" type="button" @click="toBack"> {{ $t('store.取消') }} </button>
                 </div>
                 <section v-if="installedProject.length">
-                    <p class="project-title">{{ $t('store.该') }}{{ type|typeFilter }}{{ $t('store.已安装至以下项目：') }} </p>
+                    <p class="project-title">
+                        {{ $t('store.该 {0} 已安装至以下项目：', [type || typeFilter]) }}
+                    </p>
                     <table class="bk-table project-table">
                         <thead>
                         </thead>

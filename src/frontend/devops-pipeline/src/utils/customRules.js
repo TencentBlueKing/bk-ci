@@ -95,7 +95,7 @@ const customeRules = {
     },
     timeoutsRule: {
         validate: function (value, args) {
-            return /^([1-9]\d{0,3}|10[0-7]\d{2}|10080)$/.test(value) || value.isBkVar()
+            return /\b([1-9]|[1-9]\d{1,3}|10080|100[0-7][0-9]|10079|10000)\b/.test(value) || value.isBkVar()
         }
     }
 }

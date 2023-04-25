@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -50,7 +51,9 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewGroupDao
@@ -86,13 +89,13 @@ import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -268,15 +271,16 @@ class PipelineRepositoryService constructor(
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
-                defaultMessage = "非法的流水线编排"
+                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
             )
         }
         val c = (
                 stage.containers.getOrNull(0)
                     ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                        defaultMessage = "第一阶段的环境不能为空"
+                        params = arrayOf(
+                            MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
+                        )
                     )
                 ) as TriggerContainer
 
@@ -340,7 +344,9 @@ class PipelineRepositoryService constructor(
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                defaultMessage = "阶段的环境不能为空"
+                params = arrayOf(
+                    MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
+                )
             )
         }
         stage.containers.forEach { c ->
@@ -381,9 +387,8 @@ class PipelineRepositoryService constructor(
                 }
             } catch (ignore: Exception) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR,
-                    params = arrayOf(c.name, ignore.message ?: ""),
-                    defaultMessage = "Job[${c.name}]的矩阵YAML配置错误: ${ignore.message}"
+                    errorCode = ProcessMessageCode.ERROR_JOB_MATRIX_YAML_CONFIG_ERROR,
+                    params = arrayOf(c.name, ignore.message ?: "")
                 )
             }
 
@@ -446,7 +451,7 @@ class PipelineRepositoryService constructor(
         if (option == null) throw DependNotFoundException("matrix option not found")
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "构建矩阵并发数(${option.maxConcurrency}) 超过 $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                "matrix maxConcurrency number(${option.maxConcurrency}) exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
                         "matrix maxConcurrency(${option.maxConcurrency}) " +
                         "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )

@@ -40,4 +40,8 @@ object DockerConstants {
     const val ENV_KEY_GATEWAY = "devops_gateway"
 
     const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+
+    const val BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY = "bkJobReachedMaxQuotaSoonRetry"
+    const val BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED = "bkJobReachedMaxQuotaAndAlreadyDelayed"
+    const val BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED = "bkJobReachedMaxQuotaAndSoonDelayed"
 }

@@ -29,7 +29,9 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -75,6 +77,7 @@ data class AtomRespItem(
     @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
     @ApiModelProperty("创建人", required = true)
     val creator: String,
@@ -107,5 +110,11 @@ data class AtomRespItem(
     @ApiModelProperty("是否有权限安装标识", required = false)
     val installFlag: Boolean? = null,
     @ApiModelProperty("是否已安装", required = false)
-    val installed: Boolean? = null
+    val installed: Boolean? = null,
+    @ApiModelProperty("荣誉信息", required = false)
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null,
+    @ApiModelProperty("hotFlag")
+    val hotFlag: Boolean? = null
 )

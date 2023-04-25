@@ -29,12 +29,16 @@ package com.tencent.devops.scm.code.svn.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_CALL_ERROR
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_NOT_EXIST
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_UNAUTHORIZED
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
@@ -82,7 +86,7 @@ object SVNApi {
         val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
         if (hookResponse.status != "200") {
             logger.info("Fail to add the hook. ${hookResponse.message}")
-            throw ScmException("添加Svn Webhook失败，原因：${hookResponse.message}", ScmType.CODE_SVN.name)
+            throw ScmException("add Svn Webhook fail，cause：${hookResponse.message}", ScmType.CODE_SVN.name)
         }
     }
 
@@ -144,9 +148,18 @@ object SVNApi {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 when {
-                    response.code == 401 -> throw ScmException("工程仓库访问未授权", ScmType.CODE_SVN.name)
-                    response.code == 404 -> throw ScmException("工程仓库不存在", ScmType.CODE_SVN.name)
-                    else -> throw ScmException("工程仓库访问异常", ScmType.CODE_SVN.name)
+                    response.code == 401 -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_UNAUTHORIZED),
+                        ScmType.CODE_SVN.name
+                    )
+                    response.code == 404 -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_NOT_EXIST),
+                        ScmType.CODE_SVN.name
+                    )
+                    else -> throw ScmException(
+                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_CALL_ERROR),
+                        ScmType.CODE_SVN.name
+                    )
                 }
             }
             return response.body!!.string()

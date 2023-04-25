@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
@@ -70,21 +71,18 @@ class TimerTriggerElementBizPlugin constructor(
             val eConvertExpressions = element.convertExpressions(params = params)
             if (eConvertExpressions.isEmpty()) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数不合法",
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
             }
             eConvertExpressions.forEach { cron ->
                 if (!CronExpression.isValidExpression(cron)) {
                     throw ErrorCodeException(
-                        defaultMessage = "定时触发器的定时参数[$cron]不合法",
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
                         params = arrayOf(cron)
                     )
                 }
                 if (!CronExpressionUtils.isValidTimeInterval(cron)) {
                     throw ErrorCodeException(
-                        defaultMessage = "定时触发器的定时参数[$cron]不能秒级触发",
                         errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
                         params = arrayOf(cron)
                     )
@@ -104,7 +102,6 @@ class TimerTriggerElementBizPlugin constructor(
             logger.info("[$pipelineId]|$userId| Update pipeline timer|crontab=$crontabExpressions")
             if (result.isNotOk()) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数不合法",
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
                 )
             }

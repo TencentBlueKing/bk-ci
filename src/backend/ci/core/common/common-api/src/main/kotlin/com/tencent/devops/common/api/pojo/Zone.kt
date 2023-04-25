@@ -27,15 +27,21 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 /**
  * 构建机地域
  */
-enum class Zone(name: String) {
-    DEFAULT("默认"),
-    SHENZHEN("深圳"),
-    SHANGHAI("上海"),
-    CHENGDU("成都"),
-    TIANJIN("天津"),
-    GITHUB("GitHub"),
-    EXTERNAL("外网")
+enum class Zone(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "zone", reusePrefixFlag = false)
+    name: String
+) {
+    DEFAULT("default"),// 默认
+    SHENZHEN("shenzhen"),// 深圳
+    SHANGHAI("shanghai"),// 上海
+    CHENGDU("chengdu"),// 成都
+    TIANJIN("tianjin"),// 天津
+    GITHUB("github"),// GitHub
+    EXTERNAL("external")// 外网
 }

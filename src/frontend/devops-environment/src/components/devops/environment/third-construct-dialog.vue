@@ -22,7 +22,7 @@
                     <label class="bk-label env-item-label">
                         <!-- 地点： -->
                         <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.location') }}</span>：
+                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.model') }}</span>：
                             <template slot="content">
                                 <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
                                     {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
@@ -30,7 +30,7 @@
                             </template>
                         </bk-popover>
                     </label>
-                    <div class="bk-form-content gateway-item-content" style="margin-top:4px;">
+                    <div class="bk-form-content" style="margin-top:4px;">
                         <bk-radio-group v-model="constructImportForm.location">
                             <bk-radio v-for="(model, index) in gatewayList"
                                 :key="index"
@@ -58,11 +58,7 @@
                         2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
                     </div>
                 </div>
-                <div class="handler-prompt-node">
-                    <p>{{ $t('environment.nodeInfo.connectedNodes') }}</p>
-                    <a :href="spawnNodesDescLink" target="_blank">
-                        {{ $t('environment.nodeInfo.unableToSpawnNodes') }}</a>
-                </div>
+                <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
                 <div class="construct-card-item connection-node-card">
                     <p class="no-connection-node" v-if="connectNodeDetail.status === 'UN_IMPORT'">
                         {{ $t('environment.nodeInfo.noConnectedNodes') }}，<span class="refresh-detail" @click="requetConstructNode">{{ $t('environment.clickToRefresh') }}</span>
@@ -129,8 +125,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=36426596`,
-                spawnNodesDescLink: `${IWIKI_DOCS_URL}/p/1083624634`
+                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE
             }
         },
         methods: {
@@ -177,22 +172,6 @@
             text-align: left;
         }
 
-        .handler-prompt-node {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 24px;
-            a {
-                cursor: pointer;
-                color: $primaryColor;
-            }
-        }
-
-        .gateway-item-content {
-            .bk-form-radio {
-                margin-bottom: 10px;
-            }
-        }
-
         .construct-card-item {
             display: flex;
             justify-content: space-between;
@@ -237,7 +216,7 @@
         .no-connection-node {
             margin-top: 18px;
             width: 100%;
-            color: $fontLighterColor;
+            color: $fontLigtherColor;
         }
 
         .refresh-detail {
@@ -288,7 +267,7 @@
             .icon-close {
                 position: relative;
                 top: -26px;
-                color: $fontLighterColor;
+                color: $fontLigtherColor;
                 font-size: 12px;
                 cursor: pointer;
             }

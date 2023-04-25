@@ -32,10 +32,11 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.SensitiveConfDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -82,18 +83,20 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         checkUserAuthority(userId, storeCode, storeType)
         val fieldName = sensitiveConfReq.fieldName
         if (fieldName.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf(fieldName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val fieldValue = sensitiveConfReq.fieldValue
         if (fieldValue.isEmpty()) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf(fieldValue),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 判断同名
@@ -105,10 +108,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             id = null
         )
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(fieldName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val fieldType = sensitiveConfReq.fieldType
@@ -145,10 +149,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
         logger.info("updateSensitiveConf params: [$storeType | $storeCode | $id | $sensitiveConfReq]")
         checkUserAuthority(userId, storeCode, storeType)
         val sensitiveConfRecord = sensitiveConfDao.getById(dslContext, id)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val fieldName = sensitiveConfReq.fieldName
         val fieldValue = sensitiveConfReq.fieldValue
@@ -161,10 +166,11 @@ class UserSensitiveConfServiceImpl @Autowired constructor(
             id = id
         )
         if (isNameExist) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SENSITIVE_CONF_EXIST,
                 params = arrayOf(fieldName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val fieldType = sensitiveConfReq.fieldType

@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
@@ -79,7 +79,12 @@ class CodeGithubRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.GITHUB.name) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GITHUB_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->

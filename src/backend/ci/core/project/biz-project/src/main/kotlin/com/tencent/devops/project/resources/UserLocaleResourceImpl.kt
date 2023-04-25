@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserLocaleResource
 import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.project.pojo.LanguageInfo
 import com.tencent.devops.project.service.UserLocaleService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -38,8 +39,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserLocaleResourceImpl @Autowired constructor(
     private val userLocaleService: UserLocaleService
 ) : UserLocaleResource {
+
     override fun getUserLocale(userId: String): Result<LocaleInfo> {
         return Result(userLocaleService.getUserLocale(userId))
+    }
+
+    override fun listSupportLanguages(userId: String): Result<List<LanguageInfo>> {
+        return Result(userLocaleService.listSupportLanguages(userId))
     }
 
     override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
