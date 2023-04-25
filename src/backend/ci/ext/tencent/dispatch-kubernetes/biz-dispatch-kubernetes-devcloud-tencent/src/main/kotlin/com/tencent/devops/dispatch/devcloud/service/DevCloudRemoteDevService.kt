@@ -94,8 +94,6 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${remotedev.idePort}")
     val idePort: String = ""
 
-
-
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.runsOn?.container?.credentials != null) {
