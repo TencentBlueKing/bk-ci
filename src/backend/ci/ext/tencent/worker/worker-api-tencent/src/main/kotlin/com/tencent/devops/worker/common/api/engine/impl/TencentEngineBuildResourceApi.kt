@@ -55,7 +55,8 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val gitProjectId = projectId.removePrefix("git_")
                 val url = "/ms/repository/api/build/gitci/getToken?gitProjectId=$gitProjectId"
                 val request = buildGet(url)
-                val responseContent = request(request,
+                val responseContent = request(
+                    request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
                         language = I18nUtil.getDefaultLocaleLanguage()
@@ -77,7 +78,8 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
             if (projectId.startsWith("git_") && !gitToken.isNullOrBlank()) {
                 val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
                 val request = buildDelete(url)
-                val responseContent = request(request,
+                val responseContent = request(
+            request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
                         language = I18nUtil.getDefaultLocaleLanguage()

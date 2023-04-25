@@ -42,7 +42,8 @@ class CertResourceApi : AbstractBuildResourceApi() {
     fun queryIos(certId: String, publicKey: String): Result<CertIOS> {
         val path = "/ticket/api/build/certs/ios/$certId?publicKey=${encode(publicKey)}"
         val request = buildGet(path)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_IOS_CERTIFICATE,
                 language = I18nUtil.getDefaultLocaleLanguage()
@@ -53,7 +54,8 @@ class CertResourceApi : AbstractBuildResourceApi() {
     fun queryAndroid(certId: String, publicKey: String): Result<CertAndroid> {
         val path = "/ticket/api/build/certs/android/$certId?publicKey=${encode(publicKey)}"
         val request = buildGet(path)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ANDROID_CERTIFICATE,
                 language = I18nUtil.getDefaultLocaleLanguage()

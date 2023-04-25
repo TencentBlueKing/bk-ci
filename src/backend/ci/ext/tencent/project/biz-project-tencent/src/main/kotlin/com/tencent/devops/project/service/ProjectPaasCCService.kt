@@ -96,7 +96,8 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .post(requestBody).build()
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_BSC_CREATE_PROJECT,
                 language = I18nUtil.getLanguage(userId)
@@ -142,7 +143,8 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = FAILED_UPDATE_PROJECT_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
@@ -175,7 +177,8 @@ class ProjectPaasCCService @Autowired constructor(
             .addHeader("Authorization", "Bearer $bcsToken")
             .addHeader("X-Project-Username", userId)
             .put(requestBody).build()
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = FAILED_UPDATE_LOGO_INFORMATION,
                 language = I18nUtil.getLanguage(userId)
@@ -201,7 +204,8 @@ class ProjectPaasCCService @Autowired constructor(
         val request = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $bcsToken")
             .get().build()
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_FAILED_GET_PAASCC_INFORMATION
             ))

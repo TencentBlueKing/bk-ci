@@ -161,7 +161,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = CALL_PEM_FAIL,
                 language = I18nUtil.getLanguage(userId)

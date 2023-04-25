@@ -40,7 +40,8 @@ class VMResourceApi : AbstractBuildResourceApi() {
     fun getVmByPipeline(): Result<VM> {
         val path = "/dispatch/api/build/vms/getVmByPipeLine"
         val request = buildGet(path)
-        val response = request(request,
+        val response = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_BUILDER_INFORMATION,
                 language = I18nUtil.getDefaultLocaleLanguage()

@@ -57,7 +57,8 @@ class IOSSignApi : AbstractBuildResourceApi() {
             .build()
         val request = buildPost(path, requestBody)
         val timeout = (1 + file.length() / 1024 / 1024 / 1024) * 14 // 每G给14分钟，再增加14分钟做签名。
-        val response = request(request,
+        val response = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ENTERPRISE_SIGNATURE_FAILED,
                 language = I18nUtil.getDefaultLocaleLanguage()

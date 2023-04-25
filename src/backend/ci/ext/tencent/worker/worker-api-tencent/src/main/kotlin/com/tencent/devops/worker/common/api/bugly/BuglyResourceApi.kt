@@ -68,7 +68,8 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
             .addFormDataPart("file", file.name, file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
             .build()
         val request = buildPost(path, body)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_UPLOAD_BUGLY_FILE,
                 language = I18nUtil.getDefaultLocaleLanguage()

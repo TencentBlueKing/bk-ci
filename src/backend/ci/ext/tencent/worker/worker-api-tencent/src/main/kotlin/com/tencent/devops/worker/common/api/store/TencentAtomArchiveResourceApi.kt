@@ -96,7 +96,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }
         val request = buildGet(path)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_PLUG,
                 language = I18nUtil.getDefaultLocaleLanguage()
@@ -119,7 +120,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_UPDATE_PLUG,
                 language = I18nUtil.getDefaultLocaleLanguage()
@@ -133,7 +135,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     override fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?> {
         val path = "/store/api/build/store/sensitiveConf/types/ATOM/codes/$atomCode"
         val request = buildGet(path)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_SENSITIVE_INFORMATION,
                 language = I18nUtil.getDefaultLocaleLanguage()
@@ -151,7 +154,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     ): Result<List<AtomDevLanguageEnvVar>?> {
         val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION,
                 language = I18nUtil.getDefaultLocaleLanguage()
@@ -169,7 +173,8 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)
-        val responseContent = request(request,
+        val responseContent = request(
+            request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ADD_INFORMATION,
                 language = I18nUtil.getDefaultLocaleLanguage()
