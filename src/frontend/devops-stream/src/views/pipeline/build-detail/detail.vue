@@ -28,7 +28,12 @@
         </section>
         <section class="detail-content">
             <section class="detail-header">
-                <i :class="[getIconClass(buildDetail.status), 'header-icon']"></i>
+                <i
+                    :class="[getIconClass(buildDetail.status), 'header-icon']"
+                    v-bk-tooltips="{
+                        content: buildDetail.stageStatus && buildDetail.stageStatus[0] && buildDetail.stageStatus[0].showMsg
+                    }"
+                ></i>
                 <p class="detail-info">
                     <span class="info-title">
                         <span class="build-title text-ellipsis" v-bk-overflow-tips>{{ buildDetail.buildTitle }}</span>
@@ -207,7 +212,8 @@
                         startTime: modelDetail.startTime,
                         status: modelDetail.status,
                         buildNum: modelDetail.buildNum,
-                        triggerReviewers: modelDetail.triggerReviewers || []
+                        triggerReviewers: modelDetail.triggerReviewers || [],
+                        stageStatus: modelDetail.stageStatus || []
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
