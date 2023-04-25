@@ -66,7 +66,7 @@ import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
-import java.util.*
+import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
