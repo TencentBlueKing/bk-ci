@@ -1618,6 +1618,7 @@ class TemplateFacadeService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
+                concurrencyGroup = concurrencyGroup,
                 hasPermission = hasPermission,
                 maxPipelineResNum = maxPipelineResNum,
                 maxConRunningQueueSize = maxConRunningQueueSize,

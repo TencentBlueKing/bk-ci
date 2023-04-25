@@ -136,7 +136,9 @@ object ExportJob {
                                 poolName = JobRunsOnType.DOCKER.type,
                                 container = Container2(
                                     image = containerImage,
-                                    credentials = credentials
+                                    credentials = credentials,
+                                    options = null,
+                                    imagePullPolicy = null
                                 ),
                                 agentSelector = null,
                                 needs = job.buildEnv
@@ -154,7 +156,9 @@ object ExportJob {
                                 poolName = JobRunsOnType.DOCKER.type,
                                 container = Container2(
                                     image = containerImage,
-                                    credentials = credentials
+                                    credentials = credentials,
+                                    options = null,
+                                    imagePullPolicy = null
                                 ),
                                 agentSelector = null,
                                 needs = job.buildEnv

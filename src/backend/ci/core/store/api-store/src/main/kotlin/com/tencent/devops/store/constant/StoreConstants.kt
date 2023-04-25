@@ -25,22 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.store.constant
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
+object StoreConstants {
 
-@ApiModel("保存错误码信息")
-data class UpdateErrorCodeInfoPO(
-    @ApiModelProperty("错误类型")
-    val errorType: Int,
-    @ApiModelProperty("错误码")
-    val errorCode: Int,
-    @ApiModelProperty("错误描述")
-    val errorMsg: String? = null,
-    @ApiModelProperty("修改人")
-    val modifier: String,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
-)
+    const val STORE_INDEX_CODE = "INDEX_CODE"
+    const val STORE_INDEX_NAME = "INDEX_NAME"
+    const val STORE_INDEX_ICON_URL = "ICON_URL"
+    const val STORE_INDEX_DESCRIPTION = "DESCRIPTION"
+    const val STORE_INDEX_ICON_TIPS = "ICON_TIPS"
+    const val STORE_INDEX_LEVEL_NAME = "LEVEL_NAME"
+    const val STORE_CODE = "STORE_CODE"
+    const val STORE_NAME = "STORE_NAME"
+    const val STORE_TYPE = "STORE_TYPE"
+    const val STORE_DAILY_FAIL_DETAIL = "DAILY_FAIL_DETAIL"
+    const val DELETE_STORE_INDEX_RESULT_LOCK_KEY = "DELETE_STORE_INDEX_RESULT_LOCK"
+    const val DELETE_STORE_INDEX_RESULT_KEY = "DELETE_STORE_INDEX_RESULT"
+    const val STORE_HONOR_ID = "HONOR_ID"
+    const val STORE_HONOR_TITLE = "HONOR_TITLE"
+    const val STORE_HONOR_NAME = "HONOR_NAME"
+    const val STORE_CREATOR = "CREATOR"
+    const val STORE_MODIFIER = "MODIFIER"
+    const val STORE_CREATE_TIME = "CREATE_TIME"
+    const val STORE_UPDATE_TIME = "UPDATE_TIME"
+    const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
+    const val CREATE_TIME = "CREATE_TIME"
+}

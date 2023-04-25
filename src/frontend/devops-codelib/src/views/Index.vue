@@ -1,7 +1,7 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="hasCodelibs">
-            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
+        <template v-if="hasCodelibs || isSearch">
+            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib" :is-blue-king="isBlueKing"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
@@ -11,16 +11,18 @@
                 :clearable="true"
                 right-icon="icon-search"
                 v-model="aliasName"
-                @enter="refreshCodelibList(projectId, page, pageSize, aliasName)"
+                @enter="query"
                 @change="clearAliasName"
             >
             </bk-input>
             <code-lib-table v-bind="codelibs" :switch-page="switchPage" @handleSortChange="handleSortChange"></code-lib-table>
         </template>
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <bk-button v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
-                {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
-            </bk-button>
+            <template v-for="typeLabel in codelibTypes" theme="primary">
+                <bk-button v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing" :key="typeLabel" @click="createCodelib(typeLabel)">
+                    {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
+                </bk-button>
+            </template>
         </empty-tips>
         <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
             <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
@@ -31,18 +33,16 @@
 </template>
 
 <script>
-    import LinkCodeLib from '../components/LinkCodeLib'
-    import CodeLibTable from '../components/CodeLibTable'
+    import { mapActions, mapState } from 'vuex'
     import CodeLibDialog from '../components/CodeLibDialog'
-    import { mapState, mapActions } from 'vuex'
+    import CodeLibTable from '../components/CodeLibTable'
+    import LinkCodeLib from '../components/LinkCodeLib'
     import {
         codelibTypes,
         getCodelibConfig,
         isGit,
         isGithub,
-        isGitLab,
-        isTGit,
-        isP4
+        isGitLab, isP4, isTGit
     } from '../config/'
     export default {
         name: 'codelib-list',
@@ -56,6 +56,7 @@
         data () {
             return {
                 isLoading: !this.codelibs,
+                isSearch: false,
                 defaultPagesize: 10,
                 startPage: 1,
                 showCodelibDialog: false,
@@ -71,12 +72,29 @@
             projectId () {
                 return this.$route.params.projectId
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             codelibTypes () {
-                return codelibTypes
+                let typeList = codelibTypes
+                if (!this.isExtendTx) {
+                    typeList = typeList.filter(type => !['Git', 'TGit'].includes(type))
+                }
+                return typeList
             },
             hasCodelibs () {
                 const { codelibs } = this
                 return codelibs && codelibs.records && codelibs.records.length > 0
+            },
+            isBlueKing () {
+                const projectId = this.$route.params.projectId
+                const filterArr = this.projectList.find(item => {
+                    return (
+                        item.centerName === '蓝鲸产品中心'
+                        && item.projectCode === projectId
+                    )
+                })
+                return filterArr
             }
         },
 
@@ -85,6 +103,7 @@
                 this.isLoading = false
             },
             projectId (projectId) {
+                this.isSearch = false
                 this.refreshCodelibList(projectId)
             }
         },
@@ -124,6 +143,12 @@
                 this.refreshCodelibList(projectId, page, pageSize)
             },
 
+            query () {
+                const { projectId, startPage, defaultPagesize, aliasName } = this
+                this.isSearch = true
+                this.refreshCodelibList(projectId, startPage, defaultPagesize, aliasName)
+            },
+
             refreshCodelibList (
                 projectId = this.projectId,
                 page = this.startPage,
@@ -133,6 +158,7 @@
                 sortType = this.sortType
             ) {
                 this.isLoading = true
+                aliasName = encodeURIComponent(aliasName)
                 this.requestList({
                     projectId,
                     aliasName,
@@ -178,10 +204,7 @@
             },
 
             async toApplyPermission () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=code&project_code=${this.projectId}&service_code=code&role_creator=repertory`)
             },
 
             goCreatePermission () {
@@ -191,7 +214,10 @@
                         resourceId: this.$permissionResourceMap.code,
                         instanceId: [],
                         projectId: this.projectId
-                    }]
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                        this.projectId
+                    }&service_code=code&role_creator=repertory`
                 })
             },
 

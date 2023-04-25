@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
@@ -656,10 +657,12 @@ class BkRepoService @Autowired constructor(
             pathNamePairs = pathNamePairs,
             metadata = condition.properties,
             page = 0,
-            pageSize = 10000
+            pageSize = 10000,
+            sortBy = "lastModifiedDate",
+            direction = Sort.Direction.DESC
         ).records
 
-        return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
+        return fileList.map { it.fullPath }
     }
 
     override fun copyToCustom(

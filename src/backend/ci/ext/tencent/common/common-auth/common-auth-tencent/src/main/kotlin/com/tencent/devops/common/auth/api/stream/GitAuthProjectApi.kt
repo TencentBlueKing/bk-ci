@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.api.gitci
+package com.tencent.devops.common.auth.api.stream
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -38,7 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.springframework.beans.factory.annotation.Autowired
 
-class GitCIAuthProjectApi @Autowired constructor(
+class GitAuthProjectApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
 ) : AuthProjectApi {

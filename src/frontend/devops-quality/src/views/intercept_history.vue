@@ -77,15 +77,25 @@
                                 </a>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.规则名称')" prop="ruleName">
+                        <bk-table-column :label="$t('quality.规则名称')" prop="ruleName" width="150">
                             <template slot-scope="props">
                                 <span>{{props.row.ruleName}}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column :label="$t('quality.状态')" prop="interceptResult" width="100">
+                        <bk-table-column :label="$t('状态')" prop="interceptResult" width="150">
                             <template slot-scope="props">
                                 <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">{{$t('quality.已通过')}}</span>
-                                <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">{{$t('quality.已拦截')}}</span>
+                                <span v-if="props.row.interceptResult === 'FAIL'">{{$t('quality.拦截后直接终止')}}</span>
+                                <span v-if="props.row.interceptResult === 'WAIT'">{{$t('quality.拦截后审核中')}}</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT'">{{$t('quality.拦截后审核终止')}}</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT_PASS'">{{$t('quality.拦截后审核继续')}}</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT_TIMEOUT'">{{$t('quality.拦截后超时终止')}}</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column :label="$t('实际审核人')" prop="qualityRuleBuildHisOpt" width="100">
+                            <template slot-scope="props">
+                                <span v-if="props.row.qualityRuleBuildHisOpt">{{ props.row.qualityRuleBuildHisOpt.gateOptUser }}</span>
+                                <span v-else>--</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column :label="$t('quality.内容')" prop="remark" min-width="200">
@@ -119,8 +129,12 @@
                 showContent: false,
                 statusList: [
                     { label: this.$t('quality.全部'), value: 'ALL' },
-                    { label: this.$t('quality.已拦截'), value: 'FAIL' },
-                    { label: this.$t('quality.已通过'), value: 'PASS' }
+                    { label: this.$t('quality.已通过'), value: 'PASS' },
+                    { label: this.$t('quality.拦截后直接终止'), value: 'FAIL' },
+                    { label: this.$t('quality.拦截后审核中'), value: 'WAIT' },
+                    { label: this.$t('quality.拦截后审核终止'), value: 'INTERCEPT' },
+                    { label: this.$t('quality.拦截后审核继续'), value: 'INTERCEPT_PASS' },
+                    { label: this.$t('quality.拦截后超时终止'), value: 'INTERCEPT_TIMEOUT' }
                 ],
                 pipelineList: [],
                 ruleList: [],

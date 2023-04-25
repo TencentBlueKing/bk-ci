@@ -32,6 +32,7 @@ import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.dao.OPQualityRuleBuildHisDao
+import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.service.v2.QualityRuleBuildHisService
@@ -40,6 +41,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("NestedBlockDepth")
@@ -47,6 +49,7 @@ class OPQualityRuleBuildHisService @Autowired constructor(
     private val qualityRuleBuildHisDao: OPQualityRuleBuildHisDao,
     private val buildHisDao: QualityRuleBuildHisDao,
     private val qualityRuleBuildHisOperationDao: QualityRuleBuildHisOperationDao,
+    private val qualityHisMetadataDao: QualityHisMetadataDao,
     private val dslContext: DSLContext,
     private val client: Client
 ) {
@@ -90,5 +93,31 @@ class OPQualityRuleBuildHisService @Autowired constructor(
             currId = records.lastOrNull()?.id ?: 0
         }
         return count
+    }
+
+    fun cleanHisDetailMeta(cleanRound: Int, roundSize: Int, roundGap: Int): Int {
+        val deleteTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(31)
+
+        logger.info("op start to delete quality his meta data: $deleteTime, $cleanRound, $roundSize, $roundGap")
+
+        // 执行cleanRound轮清理数据
+        for (i in 1..cleanRound) {
+            val result = qualityHisMetadataDao.getHisMetadataByCreateTime(dslContext, deleteTime, roundSize)
+
+            val resultIds = result.map { it.id }.toMutableSet()
+
+            logger.info("start to delete quality his detail meta data before: $deleteTime, ${resultIds.size}")
+            qualityHisMetadataDao.deleteHisMetadataById(dslContext, resultIds)
+
+            // 等待roundGap秒
+            Thread.sleep(roundGap.toLong() * 1000)
+
+            if (result.size < roundSize) {
+                break
+            }
+        }
+
+        logger.info("delete quality his meta data done.")
+        return cleanRound * roundSize
     }
 }

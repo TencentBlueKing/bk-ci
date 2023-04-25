@@ -80,10 +80,10 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
-    import BuildLog from '@/components/Log'
-    import detailInfo from '../components/detailInfo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import BuildLog from '@/components/Log'
+    import { mapActions } from 'vuex'
+    import detailInfo from '../components/detailInfo'
 
     export default {
         components: {
