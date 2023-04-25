@@ -105,7 +105,12 @@ class ArchiveAtomToBkRepoServiceImpl : ArchiveAtomServiceImpl() {
     }
 
     override fun deleteAtom(userId: String, projectCode: String, atomCode: String) {
-        bkRepoClient.delete(userId, BKREPO_STORE_PROJECT_ID, REPO_NAME_PLUGIN, "$projectCode/$atomCode")
+        bkRepoClient.delete(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = BKREPO_STORE_PROJECT_ID,
+            repoName = REPO_NAME_PLUGIN,
+            path = "$projectCode/$atomCode"
+        )
     }
 
     override fun clearServerTmpFile(projectCode: String, atomCode: String, version: String) {
