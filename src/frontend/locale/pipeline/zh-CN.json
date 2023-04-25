@@ -678,7 +678,7 @@
     "triggerRepo": "触发材料",
     "hideSkipStep": "隐藏跳过的步骤",
     "num": "第",
-    "times": "次",
+    "times": "次，{0}",
     "copyTo": "复制至",
     "copyArtifactTo": "将制品 <b>{0}</b> 复制到",
     "serachCustomRepo": "搜索自定义仓库",

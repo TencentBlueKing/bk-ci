@@ -3,7 +3,7 @@
         <span v-for="(field) in materialInfos" :key="field">
             <logo :name="iconArray[field] || 'commit'" size="14" />
             <bk-link
-                v-if="includeLink(field)"
+                v-if="getLink(field)"
                 class="material-span"
                 theme="primary"
                 target="_blank"

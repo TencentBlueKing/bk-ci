@@ -335,6 +335,7 @@ export default {
         if (!state.hideSkipExecTask) {
             return state.execDetail
         }
+        console.time('getExecDetail')
         const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
             const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
                 const elements = container.elements.filter(
@@ -348,21 +349,24 @@ export default {
                             const subElements = groupContainer.elements.filter(
                                 (element, index) => !isSkip(element.status ?? elements[index]?.status)
                             )
-                            return Object.assign(groupContainer, {
+                            return {
+                                ...groupContainer,
                                 elements: subElements
-                            })
+                            }
                         })
                     }
                 }
-                return Object.assign(container, {
+                return {
+                    ...container,
                     elements
-                })
+                }
             })
             return {
                 ...stage,
                 containers
             }
         })
+        console.timeEnd('getExecDetail')
         return Object.assign({}, state.execDetail, {
             model: {
                 ...state.execDetail.model,

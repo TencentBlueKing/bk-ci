@@ -202,7 +202,6 @@
                     {
                         text: this.$t('details.goRepo'),
                         handler: () => {
-                            console.log(this.activeOutput)
                             const pos = this.activeOutput.fullPath.lastIndexOf('/')
                             const fileName = this.activeOutput.fullPath.substring(0, pos)
                             const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]

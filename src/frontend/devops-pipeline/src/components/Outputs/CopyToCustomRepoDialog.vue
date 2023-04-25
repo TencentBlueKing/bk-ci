@@ -124,7 +124,7 @@
                     const res = await this.requestCopyArtifactory({
                         ...this.$route.params,
                         params: {
-                            files: [this.artifact.name],
+                            files: [this.artifact.fullPath],
                             destPath: this.activeFolder,
                             copyAll: false
                         }

@@ -23,7 +23,7 @@
                     </bk-option>
                 </bk-select>
                 <span class="exec-status-label">
-                    {{ $t("details.times") }}，{{ statusLabel }}
+                    {{ $t("details.times", [statusLabel]) }}
                     <span
                         v-if="execDetail.status === 'CANCELED'"
                         v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
@@ -165,12 +165,12 @@
                                             :ref="`error-${props.$index}`"
                                             :class="{
                                                 'build-error-info': true,
-                                                'is-overflow': checkOverflow(props)
+                                                'is-overflow': isErrorOverflow[props.$index]
                                             }">
-                                            {{props.row.errorMsg}}
+                                            {{ props.row.errorMsg }}
                                         </span>
                                         <bk-button
-                                            v-if="checkOverflow(props)"
+                                            v-if="isErrorOverflow[props.$index]"
                                             class="build-error-see-more"
                                             theme="primary"
                                             text
@@ -284,6 +284,7 @@
                 afterAsideVisibleDone: null,
                 seeMoreErrorInfo: false,
                 errorRow: null,
+                isErrorOverflow: [],
                 pipelineErrorGuideLink:
                     '//bk.tencent.com/docs/markdown/持续集成平台/产品白皮书/FAQS/FAQ.md'
             }
@@ -317,8 +318,9 @@
                 }
             },
             errorList () {
-                return this.execDetail?.errorInfoList?.map((error) => ({
+                return this.execDetail?.errorInfoList?.map((error, index) => ({
                     ...error,
+                    errorTypeAlias: this.$t(errorTypeMap[error.errorType].title),
                     errorTypeConf: errorTypeMap[error.errorType]
                 }))
             },
@@ -348,7 +350,7 @@
                 return [
                     {
                         label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorType',
+                        prop: 'errorTypeAlias',
                         width: 150
                     },
                     {
@@ -453,6 +455,7 @@
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
+            this.calcOverflow()
             if (this.errorList?.length > 0) {
                 this.setAtomLocate(this.errorList[0])
                 this.setShowErrorPopup()
@@ -462,6 +465,9 @@
             this.togglePropertyPanel({
                 isShow: false
             })
+        },
+        updated () {
+            this.calcOverflow()
         },
         methods: {
             ...mapActions('atom', [
@@ -477,8 +483,11 @@
             isSkip (status) {
                 return ['SKIP'].includes(status)
             },
-            checkOverflow (props) {
-                const ele = this.$refs?.[`error-${props.$index}`]?.[0]
+            calcOverflow () {
+                this.isErrorOverflow = this.errorList?.map((_, index) => this.checkOverflow(index)) ?? []
+            },
+            checkOverflow (index) {
+                const ele = this.$refs?.[`error-${index}`]?.[0]
                 return ele?.scrollWidth - 100 > ele?.offsetWidth
             },
             showErrorMsgDetail (row) {

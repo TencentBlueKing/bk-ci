@@ -675,7 +675,7 @@
     "addRemarkForBuild": "Add Remark",
     "hideSkipStep": "Hide Skipped Steps",
     "num": "No.",
-    "times": "Times",
+    "times": "Times, {0}",
     "copyTo": "Copy",
     "copyArtifactTo": "Copy <b>{0}</b> To",
     "serachCustomRepo": "Search Custom Repo",
