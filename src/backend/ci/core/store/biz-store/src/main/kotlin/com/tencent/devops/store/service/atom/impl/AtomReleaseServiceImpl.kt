@@ -658,10 +658,10 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = qualityDataMap["stage"] as String
                 val stage = when (stageCode) {
-                    "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
-                    "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
-                    "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
-                    "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
+                    "DEVELOP" -> I18nUtil.getCodeLanMessage(DEVELOP)
+                    "TEST" -> I18nUtil.getCodeLanMessage(TEST)
+                    "DEPLOY" -> I18nUtil.getCodeLanMessage(DEPLOY)
+                    "SECURITY" -> I18nUtil.getCodeLanMessage(SECURITY)
                     else -> throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
@@ -985,7 +985,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomId = atomId,
             atomStatus = status,
             userId = userId,
-            msg = MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
+            msg = I18nUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
