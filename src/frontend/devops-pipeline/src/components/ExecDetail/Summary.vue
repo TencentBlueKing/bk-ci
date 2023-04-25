@@ -165,11 +165,13 @@
                         })
                     }
                 } catch (e) {
+                    this.tempRemark = this.execDetail.remark
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
                     })
                 } finally {
+                    this.isChangeRemark = false
                     this.hideRemarkEdit()
                 }
             }
