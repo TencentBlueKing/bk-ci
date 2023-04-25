@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.project.pojo.LanguageInfo
 
 interface UserLocaleService {
 
@@ -60,4 +61,11 @@ interface UserLocaleService {
      * @return 用户国际化信息
      */
     fun getUserLocale(userId: String): LocaleInfo
+
+    /**
+     * 获取蓝盾支持的语言信息
+     * @param userId 用户ID
+     * @return 支持的语言信息列表
+     */
+    fun listSupportLanguages(userId: String): List<LanguageInfo>
 }

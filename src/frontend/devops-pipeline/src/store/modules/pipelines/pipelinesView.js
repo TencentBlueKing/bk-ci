@@ -30,7 +30,7 @@ const state = {
     showViewCreate: false,
     isManage: false,
     currentViewId: '',
-    viewManageAuth: [],
+    userInfo: [],
     currentViewList: [],
     viewSettingList: [],
     createViewForm: {
@@ -47,7 +47,7 @@ const getters = {
     getTagGroupList: state => state.tagGroupList, // 标签分组集
     getShowViewCreate: state => state.showViewCreate,
     getCreateViewForm: state => state.createViewForm,
-    getViewManageAuth: state => state.viewManageAuth
+    getUserInfo: state => state.userInfo
 }
 
 const mutations = {
@@ -78,8 +78,8 @@ const mutations = {
     updateViewForm (state, obj) {
         state.createViewForm = obj
     },
-    setViewManageAuth (state, res) {
-        state.viewManageAuth = res
+    setUserInfo (state, res) {
+        state.userInfo = res
     }
 }
 
@@ -127,6 +127,11 @@ const actions = {
     },
     deletePipelineView ({ commit }, { projectId, viewId }) {
         return ajax.delete(`${prefix}/pipelineViews/projects/${projectId}/views/${viewId}`).then(response => {
+            return response.data
+        })
+    },
+    requestUserInfo ({ commit }, { projectId }) {
+        return ajax.get(`/project/api/user/users/projects/${projectId}/roles/list/`).then(response => {
             return response.data
         })
     },

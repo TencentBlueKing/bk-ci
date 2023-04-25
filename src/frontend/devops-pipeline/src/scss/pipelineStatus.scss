@@ -25,16 +25,15 @@
 .CALL_WAITING {
     color: $loadingColor;
 }
-
+// .SKIP,
 .UNEXEC {
-    background-color: $fontWeightColor;
+    color: $fontWeightColor;
 }
 
 .CANCELED,
 .REVIEW_ABORT,
 .TRY_FINALLY,
-.QUEUE_CACHE,
-.SKIP {
+.QUEUE_CACHE {
     color: $cancelColor;
 }
 .FAILED,

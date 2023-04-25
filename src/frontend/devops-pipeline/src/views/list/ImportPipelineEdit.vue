@@ -78,7 +78,7 @@
             }),
             async savePipeline () {
                 const { data } = await this.save()
-                const pipelineId = data.data
+                const pipelineId = data[0].data
                 this.$router.push({
                     name: 'pipelinesEdit',
                     params: {

@@ -53,6 +53,7 @@
 
         methods: {
             initData () {
+                this.list = []
                 if (this.url) {
                     const url = this.handleDeepValue(/\$\{([^\}]+)\}/gim, this.url)
                     this.$ajax.get(url).then((res) => {
@@ -84,7 +85,6 @@
                     return res
                 })
 
-                this.list = []
                 this.tip = str.replace(/{([^\{\}]+)}/gim, (str, key) => {
                     const exisParamKey = typeof this.paramValues[key] !== 'undefined'
                     const value = exisParamKey ? this.paramValues[key] : str

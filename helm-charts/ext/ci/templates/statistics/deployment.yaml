@@ -1,0 +1,114 @@
+#statistics Deployment
+{{ if .Values.statistics.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-statistics
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: statistics
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: statistics
+  {{- if not .Values.statistics.autoscaling.enabled }}
+  replicas: {{ .Values.statistics.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.statistics.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.statistics.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: statistics
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.statistics.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.statistics.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.statistics.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.statistics.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.statistics.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.statistics.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.statistics.nodeAffinityPreset.type "key" .Values.statistics.nodeAffinityPreset.key "values" .Values.statistics.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.statistics.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.statistics.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.statistics.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.statistics.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.statistics.priorityClassName }}
+      priorityClassName: {{ .Values.statistics.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.statistics.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.statistics.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: statistics
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.statistics.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.statistics.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.statistics.resources }}
+          resources: {{- toYaml .Values.statistics.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: statistics
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/statistics
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/statistics/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

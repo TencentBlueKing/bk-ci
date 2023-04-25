@@ -23,6 +23,13 @@
                         >
                             {{ $t('accessDeny.switchProject') }}
                         </bk-button>
+                        <a
+                            target="_blank"
+                            class="empty-btns-item"
+                            :href="`/console/perm/apply-join-project${$route.params.projectId ? `?project_code=${$route.params.projectId}` : ''}`"
+                        >
+                            <bk-button theme="success">{{ $t('apply') }}</bk-button>
+                        </a>
                     </empty-tips>
 
                     <empty-tips
@@ -52,6 +59,8 @@
         </template>
 
         <ask-permission-dialog />
+        <extension-aside-panel />
+        <extension-dialog />
     </div>
 </template>
 
@@ -59,24 +68,36 @@
     import Vue from 'vue'
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
+    import ExtensionAsidePanel from '../components/ExtensionAsidePanel/index.vue'
+    import ExtensionDialog from '../components/ExtensionDialog/index.vue'
     import { Component } from 'vue-property-decorator'
-    import { State, Getter } from 'vuex-class'
+    import { State, Getter, Action } from 'vuex-class'
     import eventBus from '../utils/eventBus'
+
+    Component.registerHooks([
+        'beforeRouteEnter',
+        'beforeRouteLeave',
+        'beforeRouteUpdate'
+    ])
 
     @Component({
         components: {
             Header,
-            AskPermissionDialog
+            AskPermissionDialog,
+            ExtensionAsidePanel,
+            ExtensionDialog
         }
     })
     export default class Index extends Vue {
         @State currentNotice
+        @State currentPage
         @State projectList
         @State headerConfig
         @Getter showAnnounce
         @Getter enableProjectList
         @Getter disableProjectList
         @Getter approvalingProjectList
+        @Action fetchServiceHooks
 
         get loadingOption (): object {
             return {
@@ -117,6 +138,16 @@
                     }
                 })
             })
+
+            eventBus.$on('change-extension-route', options => {
+              this.$router.push(options.url)
+            })
+
+            if (this.currentPage) {
+                this.fetchServiceHooks({
+                    serviceId: this.currentPage.id
+                })
+            }
         }
     }
 </script>

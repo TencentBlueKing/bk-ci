@@ -767,7 +767,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyLanName = if (classifyCode != null) {
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName
+                    defaultMessage = classifyName,
+                    language = I18nUtil.getLanguage(userId)
                 )
             } else classifyName
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {

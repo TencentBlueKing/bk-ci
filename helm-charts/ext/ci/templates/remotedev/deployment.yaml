@@ -1,0 +1,114 @@
+#remotedev Deployment
+{{ if .Values.remotedev.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-remotedev
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: remotedev
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: remotedev
+  {{- if not .Values.remotedev.autoscaling.enabled }}
+  replicas: {{ .Values.remotedev.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.remotedev.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.remotedev.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: remotedev
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.remotedev.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.remotedev.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.remotedev.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.remotedev.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.remotedev.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.remotedev.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.remotedev.nodeAffinityPreset.type "key" .Values.remotedev.nodeAffinityPreset.key "values" .Values.remotedev.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.remotedev.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.remotedev.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.remotedev.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.remotedev.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.remotedev.priorityClassName }}
+      priorityClassName: {{ .Values.remotedev.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.remotedev.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.remotedev.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: remotedev
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.remotedev.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.remotedev.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.remotedev.resources }}
+          resources: {{- toYaml .Values.remotedev.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: remotedev
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: JAVA_TOOL_OPTIONS
+              value: {{ .Values.java.options }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/remotedev
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/remotedev/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

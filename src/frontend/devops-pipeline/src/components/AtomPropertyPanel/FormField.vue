@@ -46,7 +46,7 @@
                 <div class={{ 'form-field': true, 'bk-form-item': !inline, 'bk-form-inline-item': inline, 'is-required': required, 'is-danger': isError }} >
                     { label && <label title={label} class='bk-label atom-form-label'>{label}：
                         { docsLink
-                            && <a target="_blank" href={docsLink}><i class="bk-icon icon-question-circle"></i></a>
+                            && <a target="_blank" href={docsLink}><i class="devops-icon icon-question-circle"></i></a>
                         }
                         { label.trim() && desc.trim() && <bk-popover placement="top">
                             <i class="bk-icon icon-info-circle"></i>

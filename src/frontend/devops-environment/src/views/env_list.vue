@@ -144,17 +144,7 @@
             async confirmDelete (row) {
                 const id = row.envHashId
                 if (!row.canDelete) {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.environment,
-                            instanceId: [{
-                                id,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }]
-                    })
+                    this.askEnvDeletePermission(id, row.name)
                     return
                 }
                 
@@ -175,17 +165,7 @@
                             theme = 'success'
                         } catch (err) {
                             if (err.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.delete,
-                                        resourceId: this.$permissionResourceMap.environment,
-                                        instanceId: [{
-                                            id,
-                                            name: row.name
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
+                                this.askEnvDeletePermission(id, row.name)
                             } else {
                                 message = err.data ? err.data.message : err
                                 theme = 'error'
@@ -221,7 +201,8 @@
                                 name: row.name
                             }],
                             projectId: this.projectId
-                        }]
+                        }],
+                        applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment:${row.envHashId}`
                     })
                 }
             },
@@ -230,6 +211,21 @@
              */
             localConvertTime (timestamp) {
                 return convertTime(timestamp * 1000)
+            },
+
+            askEnvDeletePermission (id, name) {
+                this.$showAskPermissionDialog({
+                    noPermissionList: [{
+                        actionId: this.$permissionActionMap.delete,
+                        resourceId: this.$permissionResourceMap.environment,
+                        instanceId: [{
+                            id,
+                            name
+                        }],
+                        projectId: this.projectId
+                    }],
+                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
+                })
             }
         }
     }
@@ -255,9 +251,9 @@
             cursor: pointer;
             &.env-row-useless {
               cursor: url('../images/cursor-lock.png'), auto;
-              color: $fontLigtherColor;
+              color: $fontLighterColor;
               .node-count-item {
-                color: $fontLigtherColor;
+                color: $fontLighterColor;
               }
             }
             .no-env-delete-permission {

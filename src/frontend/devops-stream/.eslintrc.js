@@ -26,12 +26,17 @@ module.exports = {
         // value 为 true 允许被重写，为 false 不允许被重写
         NODE_ENV: false,
         AJAX_URL_PREFIX: false,
+        AJAX_MOCK_PARAM: false,
+        LOGIN_URL: false,
+        USER_INFO_URL: false,
         LOGIN_SERVICE_URL: false,
-        DEVNET_HOST: false,
+        PROXY_URL_PREFIX: false,
         WEBSOCKET_URL_PREFIX: false,
         X_DEVOPS_PROJECT_ID: false,
         ROUTER_TAG: false,
+        BKUI_HOST: false,
         BKREPO_HOST: false,
+        DEPLOY_ENVIRONMENT: false,
         DEVOPS_HOST: false
     },
     // add your custom rules hered

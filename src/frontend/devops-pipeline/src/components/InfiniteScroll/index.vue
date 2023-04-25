@@ -117,6 +117,7 @@
                     })
                 } finally {
                     this.isLoadingMore = false
+                    this.animateScroll(this.scrollTop)
                 }
             },
 

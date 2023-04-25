@@ -1,3 +1,4 @@
+const webpack = require('webpack')
 const path = require('path')
 const MiniCssExtractPlugin = require('mini-css-extract-plugin')
 const CssMinimizerPlugin = require('css-minimizer-webpack-plugin')
@@ -9,7 +10,9 @@ const BundleWebpackPlugin = require('./webpackPlugin/bundle-webpack-plugin')
 module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
     const isDev = argv.mode === 'development'
     const envDist = env && env.dist ? env.dist : 'frontend'
+    const version = env && env.version ? env.version : 'tencent'
     const buildDist = path.join(__dirname, envDist, dist)
+    console.log(path.join(__dirname, 'locale', dist), version)
     return {
         cache: {
             type: 'filesystem',
@@ -20,7 +23,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
         devtool: 'eval-cheap-module-source-map',
         entry,
         output: {
-            publicPath,
+            publicPath: isDev ? `//dev-static.devops.woa.com${publicPath}` : publicPath,
             chunkFilename: '[name].[chunkhash].js',
             filename: '[name].[contenthash].min.js',
             path: buildDist,
@@ -105,12 +108,16 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                 chunkFilename: '[id].[contenthash].css',
                 ignoreOrder: true
             }),
+            new webpack.DefinePlugin({
+                VERSION_TYPE: JSON.stringify(version)
+            }),
             new CopyWebpackPlugin({
                 patterns: [
                     {
                         from: path.join(__dirname, 'locale', dist),
                         to: buildDist
-                    }],
+                    }
+                ],
                 options: {
                     concurrency: 100
                 }

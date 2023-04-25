@@ -96,7 +96,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
     import viewPart from '@/components/viewPart'
     import codeRecord from '@/components/codeRecord'
@@ -113,7 +113,9 @@
     import { convertMStoStringByRule } from '@/utils/util'
     import Logo from '@/components/Logo'
     import MiniMap from '@/components/MiniMap'
+    import customExtMixin from '@/mixins/custom-extension-mixin'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import { ExecuteDetailTabHooks } from '@/components/Hooks/'
     import CheckAtomDialog from '@/components/CheckAtomDialog'
 
     export default {
@@ -133,7 +135,7 @@
             AtomPropertyPanel,
             CheckAtomDialog
         },
-        mixins: [pipelineOperateMixin, pipelineConstMixin],
+        mixins: [pipelineOperateMixin, pipelineConstMixin, customExtMixin],
 
         data () {
             return {
@@ -160,15 +162,17 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.execute, {
-                                    id: this.routerParams.pipelineId,
-                                    type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
-                                })
+                                // this.toApplyPermission(this.$permissionActionMap.execute, {
+                                //     id: this.routerParams.pipelineId,
+                                //     name: this.routerParams.pipelineId
+                                // })
+                                this.toApplyPermission(this.roleMap.executor)
                             },
                             text: this.$t('applyPermission')
                         }
                     ]
-                }
+                },
+                element: {}
             }
         },
 
@@ -184,59 +188,85 @@
                 'isShowCompleteLog',
                 'showPanelType',
                 'fetchingAtomList',
-                'pipeline',
                 'showStageReviewPanel'
             ]),
             ...mapState([
                 'fetchError'
             ]),
+            ...mapGetters('atom', [
+                'getRealSeqId'
+            ]),
+            hooks () {
+                return this.extensionExecuteDetailTabsHooks
+            },
             userName () {
                 return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
             },
+            extensionTabs () {
+                return this.extensions.map(ext => ({
+                    name: ext.serviceName,
+                    label: ext.serviceName,
+                    component: ExecuteDetailTabHooks,
+                    bindData: {
+                        tabData: {
+                            ...ext.props.data,
+                            projectId: this.routerParams.projectId,
+                            pipelineId: this.routerParams.pipelineId,
+                            buildId: this.routerParams.buildNo,
+                            userInfo: this.$userInfo
+                        },
+                        hookIframeUrl: this.getResUrl(ext.props.entryResUrl || 'index.html', ext.baseUrl)
+                    }
+                }))
+            },
             panels () {
                 return [{
-                    name: 'executeDetail',
-                    label: this.$t('details.executeDetail'),
-                    component: 'bk-pipeline',
-                    className: 'exec-pipeline',
-                    bindData: {
-                        editable: false,
-                        isExecDetail: true,
-                        userName: this.userName,
-                        cancelUserId: this.execDetail && this.execDetail.cancelUserId,
-                        pipeline: this.execDetail && this.execDetail.model,
-                        matchRules: this.curMatchRules
-                    },
-                    listeners: {
-                        click: this.handlePiplineClick,
-                        'stage-check': this.handleStageCheck,
-                        'stage-retry': this.handleRetry,
-                        'atom-quality-check': this.qualityCheck,
-                        'atom-review': this.reviewAtom,
-                        'atom-continue': this.handleContinue,
-                        'atom-exec': this.handleExec
-                    }
-                }, {
-                    name: 'partView',
-                    label: this.$t('details.partView'),
-                    className: '',
-                    component: 'view-part',
-                    bindData: {}
-                }, {
-                    name: 'codeRecords',
-                    label: this.$t('details.codeRecords'),
-                    className: '',
-                    component: 'code-record',
-                    bindData: {}
-                }, {
-                    name: 'output',
-                    label: this.$t('details.outputReport'),
-                    className: '',
-                    component: 'output-option',
-                    bindData: {
-                        curPipeline: this.execDetail && this.execDetail.model
-                    }
-                }]
+                            name: 'executeDetail',
+                            label: this.$t('details.executeDetail'),
+                            component: 'bk-pipeline',
+                            className: 'exec-pipeline',
+                            bindData: {
+                                editable: false,
+                                isExecDetail: true,
+                                userName: this.userName,
+                                cancelUserId: this.execDetail && this.execDetail.cancelUserId,
+                                isLatestBuild: this.isLatestBuild,
+                                pipeline: this.execDetail && this.execDetail.model,
+                                matchRules: this.curMatchRules
+                            },
+                            listeners: {
+                                click: this.handlePiplineClick,
+                                'stage-check': this.handleStageCheck,
+                                'stage-retry': this.handleRetry,
+                                'atom-quality-check': this.qualityCheck,
+                                'atom-review': this.reviewAtom,
+                                'atom-continue': this.handleContinue,
+                                'atom-exec': this.handleExec,
+                                'debug-container': this.debugDocker
+                            }
+                        }, {
+                            name: 'partView',
+                            label: this.$t('details.partView'),
+                            className: '',
+                            component: 'view-part',
+                            bindData: {}
+                        }, {
+                            name: 'codeRecords',
+                            label: this.$t('details.codeRecords'),
+                            className: '',
+                            component: 'code-record',
+                            bindData: {}
+                        }, {
+                            name: 'output',
+                            label: this.$t('details.outputReport'),
+                            className: '',
+                            component: 'output-option',
+                            bindData: {
+                                curPipeline: this.execDetail && this.execDetail.model
+                            }
+                        },
+                        ...this.extensionTabs
+                ]
             },
             showLog: {
                 get () {
@@ -309,6 +339,13 @@
             },
             curMatchRules () {
                 return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+            },
+            isLatestBuild () {
+                const { execDetail } = this
+                return execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
 
@@ -316,6 +353,9 @@
             execDetail (val) {
                 console.log(val, 'execDetailexecDetail')
                 this.isLoading = val === null
+                if (val?.model?.instanceFromTemplate && val?.model?.templateId) {
+                    this.requestMatchTemplateRules(val.model.templateId)
+                }
             },
             'routerParams.buildNo': {
                 handler (val, oldVal) {
@@ -395,7 +435,34 @@
                     }
                 })
             },
-            async qualityCheck ({ elementId, action }, done) {
+
+            getRelativeRuleHashId (rules) {
+                const result = []
+                rules.map(rule => {
+                    if (rule.taskId === this.element.atomCode && rule.ruleList.every(rule => !rule.gatewayId)) {
+                        result.push(rule)
+                    } else if (rule.taskId === this.element.atomCode
+                        && rule.ruleList.some(val => this.element.name.indexOf(val.gatewayId) > -1)) {
+                        const temp = {
+                            ...rule,
+                            ruleList: rule.ruleList.filter(item => this.element.name.indexOf(item.gatewayId) > -1)
+                        }
+                        return result.push(temp)
+                    }
+                    return false
+                })
+
+                const hashIds = []
+                result.forEach(item => {
+                    item.ruleList.forEach(rule => {
+                        hashIds.push(rule.ruleHashId)
+                    })
+                })
+
+                return hashIds
+            },
+
+            async qualityCheck ({ elementId, action, stageIndex, containerIndex, containerGroupIndex, atomIndex }, done) {
                 try {
                     const data = {
                         projectId: this.routerParams.projectId,
@@ -404,6 +471,20 @@
                         elementId,
                         action
                     }
+
+                    let elementIndex = 0
+                    if (containerGroupIndex !== undefined) {
+                        const curAtom = this.execDetail.model.stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex].elements[atomIndex]
+                        curAtom.atomCode === 'qualityGateInTask' ? elementIndex = atomIndex + 1 : elementIndex = atomIndex - 1
+                        this.element = this.execDetail.model.stages[stageIndex].containers[containerIndex].groupContainers[containerGroupIndex].elements[elementIndex]
+                    } else {
+                        const curAtom = this.execDetail.model.stages[stageIndex].containers[containerIndex].elements[atomIndex]
+                        curAtom.atomCode === 'qualityGateInTask' ? elementIndex = atomIndex + 1 : elementIndex = atomIndex - 1
+                        this.element = this.execDetail.model.stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                    }
+
+                    data.ruleIds = this.getRelativeRuleHashId(this.curMatchRules)
+
                     const res = await this.reviewExcuteAtom(data)
                     if (res) {
                         this.$showTips({
@@ -437,6 +518,7 @@
                 await this.retryPipeline()
                 done()
             },
+
             async handleExec ({
                 stageIndex,
                 containerIndex,
@@ -529,6 +611,16 @@
                     this.skipTask = false
                 }
             },
+            async debugDocker ({ stageIndex, containerIndex, container }) {
+                const vmSeqId = container.containerId || this.getRealSeqId(this.execDetail.model.stages, stageIndex, containerIndex)
+                const { projectId, pipelineId, buildNo: buildId } = this.$route.params
+                const buildResourceType = container.dispatchType?.buildType
+                const buildIdStr = buildId ? `&buildId=${buildId}` : ''
+
+                const tab = window.open('about:blank')
+                const url = `${WEB_URL_PREFIX}/pipeline/${projectId}/dockerConsole/?pipelineId=${pipelineId}&dispatchType=${buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`
+                tab.location = url
+            },
             switchTab (tabType = 'executeDetail') {
                 this.$router.push({
                     name: 'pipelinesDetail',
@@ -536,6 +628,12 @@
                         ...this.routerParams,
                         type: tabType
                     }
+                })
+            },
+            requestMatchTemplateRules (templateId) {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
+                    projectId: this.projectId,
+                    templateId
                 })
             }
         }

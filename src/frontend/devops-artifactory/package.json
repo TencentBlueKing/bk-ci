@@ -7,6 +7,7 @@
     "clipboard": "^1.7.1",
     "js-cookie": "^3.0.1",
     "vee-validate": "^2.0.3",
+    "vue": "2.6.12",
     "vue-file-upload": "^0.1.12",
     "vue-property-decorator": "^6.0.0",
     "vue-template-compiler": "2.6.12",

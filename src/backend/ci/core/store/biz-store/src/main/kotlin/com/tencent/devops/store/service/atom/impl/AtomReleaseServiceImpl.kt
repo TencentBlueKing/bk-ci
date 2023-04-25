@@ -46,7 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.quality.api.v2.ServiceQualityControlPointMarketResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorMarketResource
@@ -190,10 +190,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val codeCount = atomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(atomCode)
             )
         }
         val atomName = marketAtomCreateRequest.name
@@ -201,10 +200,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val nameCount = atomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
-                params = arrayOf(atomName),
-                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            return MessageCodeUtil.generateResponseDataObject(
+                CommonMessageCode.PARAMETER_IS_EXIST,
+                arrayOf(atomName)
             )
         }
         return null
@@ -310,11 +308,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 判断插件是不是首次创建版本
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 1) {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode),
-                language = I18nUtil.getLanguage(userId)
-            )
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val releaseType = marketAtomUpdateRequest.releaseType
@@ -335,10 +329,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             branch = branch
         )
         if (getAtomConfResult.errorCode != "0") {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = getAtomConfResult.errorCode,
-                params = getAtomConfResult.errorParams,
-                language = I18nUtil.getLanguage(userId)
+            return MessageCodeUtil.generateResponseDataObject(
+                getAtomConfResult.errorCode,
+                getAtomConfResult.errorParams
             )
         }
         // 把传入的请求报文参数做国际化
@@ -424,17 +417,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
             logger.info("quality.json not found , skip...")
         } else if (getAtomQualityResult.errorCode != "0") {
-            return I18nUtil.generateResponseDataObject(
-                messageCode = getAtomQualityResult.errorCode,
-                params = getAtomQualityResult.errorParams,
-                language = I18nUtil.getLanguage(userId)
+            return MessageCodeUtil.generateResponseDataObject(
+                getAtomQualityResult.errorCode,
+                getAtomQualityResult.errorParams
             )
         }
 
-        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
-            messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-            params = arrayOf(KEY_EXECUTION),
-            language = I18nUtil.getLanguage(userId)
+        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return MessageCodeUtil.generateResponseDataObject(
+            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
         )
         val propsMap = mutableMapOf<String, Any?>()
         propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
@@ -666,12 +656,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 )
                 val indicators = qualityDataMap["indicators"] as Map<String, Any>
                 val stageCode = qualityDataMap["stage"] as String
-                val language = I18nUtil.getLanguage(userId)
                 val stage = when (stageCode) {
-                    "DEVELOP" -> I18nUtil.getCodeLanMessage(messageCode = DEVELOP, language = language)
-                    "TEST" -> I18nUtil.getCodeLanMessage(messageCode = TEST, language = language)
-                    "DEPLOY" -> I18nUtil.getCodeLanMessage(messageCode = DEPLOY, language = language)
-                    "SECURITY" -> I18nUtil.getCodeLanMessage(messageCode = SECURITY, language = language)
+                    "DEVELOP" -> MessageCodeUtil.getCodeLanMessage(DEVELOP)
+                    "TEST" -> MessageCodeUtil.getCodeLanMessage(TEST)
+                    "DEPLOY" -> MessageCodeUtil.getCodeLanMessage(DEPLOY)
+                    "SECURITY" -> MessageCodeUtil.getCodeLanMessage(SECURITY)
                     else -> throw ErrorCodeException(
                         errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                         params = arrayOf(stageCode)
@@ -934,11 +923,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
         return if (null == record) {
-            I18nUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId),
-                language = I18nUtil.getLanguage(userId)
-            )
+            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         } else {
             val atomCode = record.atomCode
             // 判断用户是否有查询权限
@@ -999,7 +984,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             atomId = atomId,
             atomStatus = status,
             userId = userId,
-            msg = I18nUtil.getCodeLanMessage(messageCode = UN_RELEASE, language = I18nUtil.getLanguage(userId))
+            msg = MessageCodeUtil.getCodeLanMessage(UN_RELEASE)
         )
         // 更新插件当前大版本内是否有测试版本标识
         redisOperation.hset(
@@ -1026,13 +1011,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        val info = logger.info("passTest, userId=$userId, atomId=$atomId")
+        logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return I18nUtil.generateResponseDataObject(
+            ?: return MessageCodeUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
-                data = false,
-                language = I18nUtil.getLanguage(userId)
+                data = false
             )
         val atomCode = atomRecord.atomCode
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核

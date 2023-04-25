@@ -109,7 +109,11 @@ export default {
     },
 
     toggleEnableCi (enabled, projectInfo) {
-        return api.post(`${STREAM_PERFIX}/user/basic/setting/enable?enabled=${enabled}`, projectInfo)
+        if (enabled) {
+            return this.resetAuthorization(projectInfo.id)
+        } else {
+            return api.post(`${STREAM_PERFIX}/user/basic/setting/enable?enabled=${enabled}`, projectInfo)
+        }
     },
 
     resetAuthorization (gitProjectId) {

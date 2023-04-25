@@ -20,7 +20,7 @@ const artifactoryRecent = () => import(/* webpackChunkName: 'artifactoryRecent' 
 const artifactoryRecycle = () => import(/* webpackChunkName: 'artifactoryRecycle' */'../views/recycle.vue')
 
 const meta = {
-    title: '制品库',
+    title: VERSION_TYPE === 'tencent' ? '版本仓库' : '制品库',
     header: 'artifactory',
     logo: 'artifactory',
     to: 'artifactory'

@@ -94,7 +94,55 @@ function uninstallAgentService()
 
 function writeSSHConfig()
 {
-  echo "writeSSHConfig"
+    config_file=$HOME/.ssh/config
+    if [[ ! -d $HOME/.ssh ]];then
+        mkdir -p $HOME/.ssh
+    fi
+
+    if [[ -f ${config_file} ]];then
+
+        if [[ $(cat ${config_file}| grep "\-svn.tencent.com"  | wc -l) -lt 1 ]];then
+            echo "" >> ${config_file}
+            echo "Host *-svn.tencent.com" >> ${config_file}
+            echo "StrictHostKeyChecking no" >> ${config_file}
+            echo "Port 22" >> $config_file
+        fi
+        if [[ $(cat ${config_file}| grep "\-scm.tencent.com"  | wc -l) -lt 1 ]];then
+            echo "" >> ${config_file}
+            echo "Host *-scm.tencent.com" >> ${config_file}
+            echo "StrictHostKeyChecking no" >> ${config_file}
+            echo "Port 22" >> ${config_file}
+        fi
+        if [[ $(cat $config_file| grep "\-cd1.tencent.com"  | wc -l) -lt 1 ]];then
+            echo "" >> ${config_file}
+            echo "Host *-cd1.tencent.com" >> ${config_file}
+            echo "StrictHostKeyChecking no" >> ${config_file}
+            echo "Port 22" >> ${config_file}
+        fi
+        if [[ $(cat ${config_file}| grep "Host git.code.oa.com"  | wc -l) -lt 1 ]];then
+            echo "" >> ${config_file}
+            echo "Host git.code.oa.com" >> ${config_file}
+            echo "StrictHostKeyChecking no" >> ${config_file}
+            echo "HostName git.code.oa.com" >> ${config_file}
+            echo "Port 22" >> ${config_file}
+        fi
+    else
+      cat > ${config_file} <<EOF
+Host *-svn.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host *-scm.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host *-cd1.tencent.com
+StrictHostKeyChecking no
+Port 22
+Host git.code.oa.com
+StrictHostKeyChecking no
+HostName git.code.oa.com
+Port 22
+EOF
+    fi
 }
 
 # if [[ "${workspace}" = ~ ]]; then

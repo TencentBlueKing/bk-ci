@@ -21,6 +21,7 @@
 import request from '@/utils/request'
 import {
     FETCH_ERROR,
+    BACKEND_API_URL_PREFIX,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
     ARTIFACTORY_API_URL_PREFIX,
@@ -30,6 +31,8 @@ import {
 
 import {
     REPOSITORY_MUTATION,
+    GCLOUD_TEMPLATE_MUTATION,
+    JOBEXECUTE_TASK_MUTATION,
     TEMPLATE_CATEGORY_MUTATION,
     PIPELINE_TEMPLATE_MUTATION,
     STORE_TEMPLATE_MUTATION,
@@ -53,11 +56,15 @@ export const state = {
     storeTemplate: null,
     template: null,
     reposList: null,
+    gcloudTempList: null,
+    jobTaskList: null,
     appNodes: {},
     pipelineSetting: {},
     ruleList: [],
     templateRuleList: [],
-    qualityAtom: []
+    qualityAtom: [],
+    projectGroupAndUsers: [],
+    dockerWhiteList: []
 }
 
 export const mutations = {
@@ -120,6 +127,20 @@ export const mutations = {
         })
         return state
     },
+    [GCLOUD_TEMPLATE_MUTATION]: (state, records) => {
+        const gcloudTempList = records
+        Object.assign(state, {
+            gcloudTempList
+        })
+        return state
+    },
+    [JOBEXECUTE_TASK_MUTATION]: (state, records) => {
+        const jobTaskList = records
+        Object.assign(state, {
+            jobTaskList
+        })
+        return state
+    },
     [UPDATE_PIPELINE_SETTING_MUNTATION]: (state, { container, param }) => {
         Object.assign(container, param)
         return state
@@ -139,7 +160,6 @@ export const mutations = {
 }
 
 export const actions = {
-    
     // 获取模板的所有范畴
     requestCategory: async ({ commit }) => {
         try {
@@ -166,7 +186,6 @@ export const actions = {
     requestStoreTemplate: async ({ commit }, params) => {
         return request.get(`/${STORE_API_URL_PREFIX}/user/market/template/list`, { params })
     },
-
     requestQualityAtom: async ({ commit }, { projectId }) => {
         try {
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/controlPoints/v2/list?projectId=${projectId}`)
@@ -211,7 +230,7 @@ export const actions = {
     requestMatchTemplateRuleList: async ({ commit }, { projectId, templateId }) => {
         try {
             const response = await request.get(`/${QUALITY_API_URL_PREFIX}/user/rules/v2/${projectId}/matchTemplateRuleList?templateId=${templateId}`)
-            console.log('get', response.data)
+
             commit(INTERCEPT_TEMPLATE_MUTATION, {
                 templateRuleList: response.data
             })
@@ -247,7 +266,13 @@ export const actions = {
             return response.data
         })
     },
-
+    requestDevnetGateway: async ({ commit }) => {
+        return request.get(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/checkDevnetGateway`).then(response => {
+            return response.data
+        }).catch(e => {
+            return false
+        })
+    },
     requestDownloadUrl: async ({ commit }, { projectId, artifactoryType, path }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${artifactoryType}/downloadUrl?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
@@ -278,6 +303,45 @@ export const actions = {
             return response.data
         })
     },
+    /**
+     * wetest测试报告
+     */
+    requestWetestReport: async ({ commit }, { projectId, pipelineId, buildId }) => {
+        return request.get(`wetest/api/user/wetest/taskInst/${projectId}/listByBuildId?pipelineId=${pipelineId}&buildId=${buildId}`).then(response => {
+            return response.data
+        })
+    },
+    requestRepository: async ({ commit }, payload) => {
+        try {
+            const { data } = await request.get(`/${REPOSITORY_API_URL_PREFIX}/user/repositories/${payload.projectId}?repositoryType=${payload.repoType}`)
+            commit(REPOSITORY_MUTATION, data)
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+    requestGcloudTempList: async ({ commit }, payload) => {
+        try {
+            const { data } = await request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/gcloud/templates/${payload.projectId}/`)
+            const finalData = data
+            await Promise.all(data.map(function (item, index) {
+                return request.get(`${BACKEND_API_URL_PREFIX}/api/ci/pipeline/gcloud/templates/${payload.projectId}/${item.id}/`)
+            })).then((array) => {
+                data.forEach((item, index) => {
+                    item = Object.assign(item, { param: array[index].data })
+                    data.splice(index, 1, item)
+                })
+            })
+            commit(GCLOUD_TEMPLATE_MUTATION, finalData)
+        } catch (e) {
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+
+    requestJobTaskParam: async ({ commit }, { projectId, taskId }) => {
+        return request.get(`/plugin/api/user/job/projects/${projectId}/tasks/${taskId}/`).then(response => {
+            return (response.data && response.data.globalVarList) || []
+        })
+    },
     reviewExcuteAtom: async ({ commit }, { projectId, pipelineId, buildId, elementId, action }) => {
         return request.post(`/${PROCESS_API_URL_PREFIX}/user/quality/builds/${projectId}/${pipelineId}/${buildId}/${elementId}/qualityGateReview/${action}`).then(response => {
             return response.data
@@ -293,8 +357,23 @@ export const actions = {
             return response.data
         })
     },
-    
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
+    }
+}
+
+export const getters = {
+    getAppNodes: state => (os) => state.appNodes[os] || {},
+    getHasAtomCheck: state => (stages, atom) => {
+        return stages.some((stage, index) => {
+            if (index) {
+                return stage.containers.some(container => {
+                    return container.elements.find(el => {
+                        return el.atomCode === atom
+                    })
+                })
+            }
+            return false
+        })
     }
 }

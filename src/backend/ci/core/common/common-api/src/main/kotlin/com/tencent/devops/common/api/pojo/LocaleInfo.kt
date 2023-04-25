@@ -30,6 +30,6 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("语言环境信息")
 data class LocaleInfo(
-    @ApiModelProperty("语言环境信息")
+    @ApiModelProperty("语言")
     val language: String
 )

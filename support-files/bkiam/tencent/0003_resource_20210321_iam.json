@@ -1,0 +1,162 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data":{
+        "id": "bk_ci",
+        "name": "持续集成平台",
+        "name_en": "bkci",
+        "clients": "bkci,bk_ci",
+        "provider_config": {
+          "host": "http://devops.oa.com/ms/auth",
+          "auth": "basic",
+          "healthz": "/api/v1/healthz"
+        }
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "name_en": "Project",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/open/auth/resource/projects"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "pipeline",
+        "name": "流水线",
+        "name_en": "Pipeline",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "repertory",
+        "name": "代码库",
+        "name_en": "Repository",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "credential",
+        "name": "凭据",
+        "name_en": "Credential",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cert",
+        "name": "证书",
+        "name_en": "Cert",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "environment",
+        "name": "环境",
+        "name_en": "Environment",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "env_node",
+        "name": "节点",
+        "name_en": "Node",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "experience_task",
+        "name": "体验任务",
+        "name_en": "experience_task",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "experience_group",
+        "name": "体验组",
+        "name_en": "experience_group",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "rule",
+        "name": "质量红线规则",
+        "name_en": "Rule",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "quality_group",
+        "name": "质量红线通知组",
+        "name_en": "Group",
+        "parents": [{"system_id": "bk_ci", "id": "project"}],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list"
+        },
+        "version": 1
+      }
+    }
+  ]
+}

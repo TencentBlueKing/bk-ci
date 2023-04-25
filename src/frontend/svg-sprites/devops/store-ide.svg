@@ -1,15 +1,19 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Generator: Adobe Illustrator 22.1.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
-<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 viewBox="0 0 64 64" style="enable-background:new 0 0 64 64;" xml:space="preserve">
-<g id="辅助线">
-</g>
-<g id="小">
-	<g id="圆">
-	</g>
-	<g>
-		<path d="M29.5,58.8L5.2,34.5c-1.4-1.4-1.4-3.7,0-5.2L29.5,5.1c1.4-1.4,3.7-1.4,5.2,0l24.3,24.3c1.4,1.4,1.4,3.7,0,5.2
-			L34.6,58.8C33.2,60.2,30.9,60.2,29.5,58.8z M18.2,31.9l13.8,13.9L45.9,32L32.1,18.1L18.2,31.9z"/>
-	</g>
-</g>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="16px" height="18px" viewBox="0 0 16 18" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 52.4 (67378) - http://www.bohemiancoding.com/sketch -->
+    <title>icon_idecj</title>
+    <desc>Created with Sketch.</desc>
+    <g id="蓝盾服务扩展商店" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="研发商店" transform="translate(-105.000000, -245.000000)" fill="currentcolor" fill-rule="nonzero">
+            <g id="Group-4" transform="translate(69.000000, 88.000000)">
+                <g id="Group-2-Copy" transform="translate(19.000000, 146.000000)">
+                    <g id="编组-7">
+                        <g id="Group-25" transform="translate(16.000000, 11.000000)">
+                            <path d="M9.56217783,9.25277675 L9.56217783,13.6754265 L9,14 L8.56217783,13.7472233 L8.56217783,9.32457352 L4.66987298,7.07735027 L4.66987298,6.5 L5.16987298,6.21132487 L9,8.42264973 L12.830127,6.21132487 L13.330127,6.5 L13.330127,7.07735027 L9.56217783,9.25277675 Z M9,1.57735027 L2.57179677,5.28867513 L2.57179677,12.7113249 L9,16.4226497 L15.4282032,12.7113249 L15.4282032,5.28867513 L9,1.57735027 Z M16.4282032,4.71132487 L16.4282032,13.2886751 L9,17.5773503 L1.57179677,13.2886751 L1.57179677,4.71132487 L9,0.422649731 L16.4282032,4.71132487 Z" id="icon_idecj"></path>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
 </svg>

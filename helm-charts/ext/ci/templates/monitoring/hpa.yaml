@@ -1,0 +1,38 @@
+# monitoring hpa
+{{ if .Values.monitoring.enabled -}}
+{{ if .Values.monitoring.autoscaling.enabled }}
+apiVersion: autoscaling/v2beta1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-monitoring
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    app.kubernetes.io/name: monitoring
+    app.kubernetes.io/component: microservice
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+  {{- if .Values.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" (dict "value" .Values.commonAnnotations "context" $) | nindent 4 }}
+  {{- end }}
+spec:
+  scaleTargetRef:
+    apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+    kind: Deployment
+    name: {{ include "bkci.names.fullname" . }}-monitoring
+  minReplicas: {{ .Values.monitoring.autoscaling.minReplicas }}
+  maxReplicas: {{ .Values.monitoring.autoscaling.maxReplicas }}
+  metrics:
+    {{- if .Values.monitoring.autoscaling.targetCPU }}
+    - type: Resource
+      resource:
+        name: cpu
+        targetAverageUtilization: {{ .Values.monitoring.autoscaling.targetCPU }}
+    {{- end }}
+    {{- if .Values.monitoring.autoscaling.targetMemory }}
+    - type: Resource
+      resource:
+        name: memory
+        targetAverageUtilization: {{ .Values.monitoring.autoscaling.targetMemory  }}
+    {{- end }}
+{{- end }}
+{{- end -}}

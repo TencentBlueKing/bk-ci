@@ -21,7 +21,6 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Action } from 'vuex-class'
     import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
-    import { mapDocumnetTitle } from '@/utils/constants'
     
     @Component({
         components: {
@@ -46,13 +45,7 @@
             })
         }
 
-        getDocumentTitle (model) {
-            return this.$t(mapDocumnetTitle(model)) as string
-        }
-
         async created () {
-            const model = location.href.split('/')[4]
-            document.title = this.getDocumentTitle(model)
             const announce = await this.getAnnouncement()
             if (announce && announce.id) {
                 this.setAnnouncement(announce)

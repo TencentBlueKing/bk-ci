@@ -226,7 +226,7 @@
                 return this.saveStatus || this.executeStatus
             },
             saveBtnDisabled () {
-                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
+                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0 || (this.authSettingEditing && Object.keys(this.pipelineAuthority).length === 0)
             },
             canManualStartup () {
                 return this.curPipeline ? this.curPipeline.canManualStartup : false

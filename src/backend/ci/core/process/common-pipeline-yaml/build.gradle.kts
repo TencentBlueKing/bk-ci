@@ -34,7 +34,6 @@ dependencies {
     api("org.apache.ant:ant")
     api("org.apache.commons:commons-text")
     api("org.yaml:snakeyaml")
-    api("com.github.fge:json-schema-validator")
 }
 
 plugins {
