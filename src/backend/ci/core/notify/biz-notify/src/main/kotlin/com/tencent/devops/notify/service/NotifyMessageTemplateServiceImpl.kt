@@ -51,7 +51,6 @@ import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateR
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
-import com.tencent.devops.notify.constant.NotifyMessageCode.BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.MessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
@@ -649,7 +648,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             val existsNotifyType =
                 JsonUtil.getObjectMapper().readValue(record, List::class.java) as ArrayList<String>
             logger.info(
-                I18nUtil.getCodeLanMessage(BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO) +
+                "delete the message template subtable information:" +
                         "$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}"
             )
             when (notifyType) {

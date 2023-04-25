@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.interceptor
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MUTEX_GROUP_SINGLE_BUILD
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINE_SINGLE_BUILD
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_LOCK
 import com.tencent.devops.process.engine.pojo.Response
@@ -98,10 +97,10 @@ class RunLockInterceptor @Autowired constructor(
                 return@let size
             } ?: 0
             if (concurrencyGroupRunningCount >= 1) {
-                logger.info("[$pipelineId] " + I18nUtil.getCodeLanMessage(
-                    messageCode = BK_MUTEX_GROUP_SINGLE_BUILD,
-                    params = arrayOf("$concurrencyGroup")
-                ))
+                logger.info(
+                    "[$pipelineId] The current mutex group [$concurrencyGroup] " +
+                            "can only run one build task at a time to start queuing"
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)

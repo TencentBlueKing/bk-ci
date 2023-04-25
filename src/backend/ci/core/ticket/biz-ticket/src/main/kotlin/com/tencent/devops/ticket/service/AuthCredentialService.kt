@@ -71,7 +71,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
-            logger.info("$ids ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
+            logger.info("$ids no credential")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

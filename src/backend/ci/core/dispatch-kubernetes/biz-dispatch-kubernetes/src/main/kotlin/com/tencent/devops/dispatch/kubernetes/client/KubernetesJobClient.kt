@@ -137,9 +137,9 @@ class KubernetesJobClient @Autowired constructor(
                 logger.info("$userId build and push image response: $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
+                        errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
                         I18nUtil.getCodeLanMessage(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION) +
                                 "（Fail to build image, http response code: ${response.code}"
                     )

@@ -106,7 +106,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         if (pipeline == null) {
             logger.warn("The pipeline of auth $auth is not exist")
             throw OperationException(
-                MessageUtil.getMessageByLocale(ERROR_NO_MATCHING_PIPELINE, I18nUtil.getLanguage())
+                I18nUtil.getCodeLanMessage(ERROR_NO_MATCHING_PIPELINE)
             )
         }
         var userId = pipelineReportService.getPipelineInfo(pipeline.projectId, pipeline.pipelineId)?.lastModifyUser

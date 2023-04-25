@@ -55,15 +55,15 @@ import com.tencent.devops.quality.pojo.QualityRuleBuildHisOpt
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
 import com.tencent.devops.quality.util.QualityUrlUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -172,7 +172,7 @@ class QualityHistoryService @Autowired constructor(
                             BK_CURRENT_VALUE,
                             I18nUtil.getLanguage(userId),
                             arrayOf(
-                                "${intercept.indicatorName}",
+                                intercept.indicatorName,
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
@@ -434,7 +434,7 @@ class QualityHistoryService @Autowired constructor(
                             BK_CURRENT_VALUE,
                             I18nUtil.getLanguage(userId),
                             arrayOf(
-                                "${intercept.indicatorName}",
+                                intercept.indicatorName,
                                 "${intercept.actualValue}",
                                 "$thresholdOperationName${intercept.value}"
                             )
@@ -705,7 +705,7 @@ class QualityHistoryService @Autowired constructor(
                         BK_CURRENT_VALUE,
                         I18nUtil.getLanguage(userId),
                         arrayOf(
-                            "${intercept.indicatorName}",
+                            intercept.indicatorName,
                             "${intercept.actualValue}",
                             "$thresholdOperationName${intercept.value}"
                         )

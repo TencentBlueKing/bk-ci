@@ -33,13 +33,16 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -47,9 +50,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
@@ -66,13 +66,13 @@ import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RuleRange
 import com.tencent.devops.quality.service.QualityPermissionService
 import com.tencent.devops.quality.util.ElementUtils
+import java.time.LocalDateTime
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 @Suppress("ALL")
@@ -111,7 +111,7 @@ class QualityRuleService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
                 I18nUtil.getLanguage(userId),
-                arrayOf(if (I18nUtil.getLanguage(userId) == "zh_CN") permission.alias else permission.value)
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
         return serviceCreate(
@@ -168,7 +168,7 @@ class QualityRuleService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
                 I18nUtil.getLanguage(userId),
-                arrayOf(if (I18nUtil.getLanguage(userId) == "zh_CN") permission.alias else permission.value)
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
         dslContext.transactionResult { configuration ->
@@ -209,7 +209,7 @@ class QualityRuleService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
                 I18nUtil.getLanguage(userId),
-                arrayOf(if (I18nUtil.getLanguage(userId) == "zh_CN") permission.alias else permission.value)
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
         qualityRuleDao.updateEnable(dslContext = dslContext, ruleId = ruleId, enable = enable)
@@ -229,7 +229,7 @@ class QualityRuleService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 BK_USER_NO_OPERATE_INTERCEPT_RULE_PERMISSION,
                 I18nUtil.getLanguage(userId),
-                arrayOf(if (I18nUtil.getLanguage(userId) == "zh_CN") permission.alias else permission.value)
+                arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         )
         qualityRuleDao.delete(dslContext, ruleId)

@@ -483,7 +483,7 @@ class DispatchBuildService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
                 dispatchBuild.log.troubleShooting + MessageUtil.getMessageByLocale(
                             BK_BUILD_MACHINE_STARTUP_FAILED,
-                            I18nUtil.getLanguage(userId),
+                            I18nUtil.getLanguage(),
                             arrayOf(failedMsg ?: "")
                 )
             )

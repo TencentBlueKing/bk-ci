@@ -46,7 +46,6 @@ import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.ticket.constant.TicketMessageCode
-import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
 import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
@@ -57,13 +56,13 @@ import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import java.util.*
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Base64
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -140,7 +139,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     "",
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+                    create.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -219,7 +219,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -250,7 +251,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+                    edit.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -276,7 +278,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") delete.alias else delete.value)
+                    delete.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -432,7 +435,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") view.alias else view.value)
+                    view.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 
@@ -477,7 +481,8 @@ class CredentialServiceImpl @Autowired constructor(
                     userId,
                     projectId,
                     credentialId,
-                    if (I18nUtil.getLanguage(userId) == "zh_CN") view.alias else view.value)
+                    view.getI18n(I18nUtil.getLanguage(userId))
+                )
             )
         )
 

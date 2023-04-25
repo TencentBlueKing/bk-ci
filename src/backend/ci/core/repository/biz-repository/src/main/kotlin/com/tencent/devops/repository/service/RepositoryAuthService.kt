@@ -30,14 +30,10 @@ package com.tencent.devops.repository.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_CODE_REPO_NOT_MATCHED
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_PROJECT_NO_CODE_BASE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -81,10 +77,7 @@ class RepositoryAuthService @Autowired constructor(
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             repositoryInfos = repositoryService.getInfoByHashIds(ids as List<String>)
             if (repositoryInfos == null) {
-                logger.info("$ids ${MessageUtil.getMessageByLocale(
-                    BK_CODE_REPO_NOT_MATCHED,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )}")
+                logger.info("$ids not matched to the codebase")
                 return result.buildFetchInstanceFailResult()
             }
         }

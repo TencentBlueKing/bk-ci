@@ -32,15 +32,10 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_GROUPING
-import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_RULE
-import com.tencent.devops.quality.constant.BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
@@ -65,10 +60,7 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityRuleInfos == null) {
-            logger.info(projectId + I18nUtil.getCodeLanMessage(
-                BK_PROJECT_QUALITY_RULE,
-                I18nUtil.getDefaultLocaleLanguage())
-            )
+            logger.info(projectId + "Quality rules under the project")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -125,10 +117,7 @@ class AuthQualityService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (qualityRuleInfos == null) {
             logger.info(
-                projectId + I18nUtil.getCodeLanMessage(
-                    BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )
+                projectId + "There is no Quality user group under the project"
             )
             return result.buildSearchInstanceFailResult()
         }
@@ -157,12 +146,7 @@ class AuthQualityService @Autowired constructor(
             limit = limit)
         val result = ListInstanceInfo()
         if (qualityGroupInfos == null) {
-            logger.info(
-                projectId + I18nUtil.getCodeLanMessage(
-                    BK_PROJECT_QUALITY_GROUPING,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )
-            )
+            logger.info(projectId + "The project is grouped under the Quality")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -219,10 +203,7 @@ class AuthQualityService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (qualityGroupInfos == null) {
             logger.info(
-                projectId + I18nUtil.getCodeLanMessage(
-                    BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )
+                projectId + "There is no Quality user group under the project"
             )
             return result.buildSearchInstanceFailResult()
         }

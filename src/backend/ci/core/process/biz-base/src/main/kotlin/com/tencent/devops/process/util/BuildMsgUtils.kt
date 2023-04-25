@@ -52,9 +52,9 @@ object BuildMsgUtils {
             StartType.SERVICE ->
                 if (channelCode != null) {
                     if (channelCode == ChannelCode.BS) {
-                        "OpenAPI触发"
+                        "OpenAPI trigger"
                     } else {
-                        channelCode.name + "触发"
+                        channelCode.name + " trigger"
                     }
                 } else {
                     I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)

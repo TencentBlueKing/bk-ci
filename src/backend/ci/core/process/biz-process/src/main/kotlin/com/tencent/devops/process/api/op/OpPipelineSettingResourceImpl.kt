@@ -122,7 +122,8 @@ class OpPipelineSettingResourceImpl @Autowired constructor(
             maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
         ) {
             throw InvalidParamException(
-                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
+                message = I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
+                errorCode = MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL,
                 params = arrayOf("maxConRunningQueueSize")
             )
         }

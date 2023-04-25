@@ -47,7 +47,7 @@ package com.tencent.devops.common.api.constant
 object CommonMessageCode {
     const val MSG_CODE_ROLE_PREFIX = "MSG_CODE_ROLE_PREFIX_"// 角色国际化前缀
     const val MSG_CODE_PERMISSION_PREFIX = "MSG_CODE_PERMISSION_PREFIX_"// 操作权限国际化前缀
-    const val SUCCESS = "0"// 成功
+    const val SUCCESS = "0"//成功
     const val OAUTH_DENERD = 418 // 自定义状态码, 未进行oauth认证
     const val SYSTEM_ERROR = "2100001"// 系统内部繁忙，请稍后再试
     const val PARAMETER_IS_NULL = "2100002"// 参数{0}不能为空

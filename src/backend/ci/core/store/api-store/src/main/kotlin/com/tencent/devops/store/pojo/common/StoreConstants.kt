@@ -29,9 +29,9 @@ package com.tencent.devops.store.pojo.common
 
 const val PASS = "PASS"
 const val REJECT = "REJECT"
-const val LATEST = "latest"
-const val HOTTEST = "hottest"
-const val UN_RELEASE = "unRelease"
+const val LATEST = "latest"// 最新
+const val HOTTEST = "hottest"// 最热
+const val UN_RELEASE = "unRelease"// 取消发布
 const val TASK_JSON_NAME = "task.json"
 const val QUALITY_JSON_NAME = "quality.json"
 const val ERROR_JSON_NAME = "errorCodes.json"

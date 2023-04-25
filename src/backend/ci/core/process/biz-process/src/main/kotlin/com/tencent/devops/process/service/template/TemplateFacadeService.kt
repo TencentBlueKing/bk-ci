@@ -1072,7 +1072,8 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateCompareModelResult {
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
-            ?: throw NotFoundException(I18nUtil.getCodeLanMessage(
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
                 messageCode = ERROR_TEMPLATE_NOT_EXISTS,
                 language = userId
             ))

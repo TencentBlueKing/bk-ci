@@ -34,8 +34,14 @@ import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_REPOS
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_TAG
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.exception.CustomException
@@ -57,17 +63,17 @@ import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -256,7 +262,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/branches?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = getMessageByLocale(OPERATION_LIST_BRANCHS)
+                    val operation = getMessageByLocale(RepositoryMessageCode.OPERATION_LIST_BRANCHS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
                 }
@@ -277,7 +283,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/tags?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = getMessageByLocale(OPERATION_LIST_TAGS)
+                    val operation = getMessageByLocale(RepositoryMessageCode.OPERATION_LIST_TAGS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
                 }
@@ -367,12 +373,5 @@ class GithubService @Autowired constructor(
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
         private const val GITHUB_API_URL = "https://api.github.com"
-        private const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns"// 添加检测任务
-        private const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns"// 更新检测任务
-        private const val OPERATION_GET_REPOS = "OperationGetRepos"// 获取仓库列表
-        private const val OPERATION_GET_BRANCH = "OperationGetBranch"// 获取指定分支
-        private const val OPERATION_GET_TAG = "OperationGetTag"// 获取指定Tag
-        private const val OPERATION_LIST_BRANCHS = "OperationListBranchs"// 获取分支列表
-        private const val OPERATION_LIST_TAGS = "OperationListTags"// 获取Tag列表
     }
 }

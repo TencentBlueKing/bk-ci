@@ -39,7 +39,7 @@ object StreamEnvUtils {
                 throw YamlFormatException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED,
-                        params = arrayOf(fileName ?: "")
+                        params = arrayOf("$fileName")
                     )
                 )
             }
@@ -49,7 +49,7 @@ object StreamEnvUtils {
                     throw YamlFormatException(
                         I18nUtil.getCodeLanMessage(
                             messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                            params = arrayOf(fileName ?: "", "key", "128", t)
+                            params = arrayOf("$fileName", "key", "128", t)
                         )
                     )
                 }
@@ -57,7 +57,7 @@ object StreamEnvUtils {
                 if (u != null && u.toString().length > 4000) {
                     throw YamlFormatException(I18nUtil.getCodeLanMessage(
                         messageCode = ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
-                        params = arrayOf(fileName ?: "", "value", "4k", t)
+                        params = arrayOf("$fileName", "value", "4k", t)
                     ))
                 }
             }

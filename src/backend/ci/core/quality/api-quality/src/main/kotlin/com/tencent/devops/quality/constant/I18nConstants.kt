@@ -27,9 +27,7 @@
 
 package com.tencent.devops.quality.constant
 
-const val BK_PROJECT_QUALITY_RULE = "bkProjectQualityRule"// 项目下红线规则
-const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup"// 项目下无红线用户组
-const val BK_PROJECT_QUALITY_GROUPING= "bkProjectQualityGrouping"// 项目下红线分组
+const val BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP = "bkProjectUnderNoQualityUserGroup"// 项目下无Quality用户组
 const val BK_PASSED = "bkPassed"// 已通过：
 const val BK_BLOCKED= "bkBlocked"// 已拦截：
 const val BK_CURRENT_VALUE = "bkCurrentValue"// {0}当前值({1})，期望${2}\n

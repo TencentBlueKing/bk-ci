@@ -123,12 +123,7 @@ class CallBackService @Autowired constructor(
                 val relatedResourceRecord = iamCallBackDao.get(dslContext, it)
                 if (relatedResourceRecord == null) {
                     logger.warn("resource[$it] related not exist")
-                    throw ErrorCodeException(
-                        errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
-                        )
-                    )
+                    throw ErrorCodeException(errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL)
                 }
             }
         }
