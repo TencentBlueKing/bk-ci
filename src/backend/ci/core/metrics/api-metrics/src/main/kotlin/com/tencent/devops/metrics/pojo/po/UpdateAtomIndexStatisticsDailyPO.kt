@@ -31,14 +31,14 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("保存错误码信息")
-data class UpdateErrorCodeInfoPO(
-    @ApiModelProperty("错误类型")
-    val errorType: Int,
-    @ApiModelProperty("错误码")
-    val errorCode: Int,
-    @ApiModelProperty("错误描述")
-    val errorMsg: String? = null,
+@ApiModel("更新插件指标每日统计数据")
+data class UpdateAtomIndexStatisticsDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("失败执行次数")
+    var failExecuteCount: Int,
+    @ApiModelProperty("失败合规次数")
+    var failComplianceCount: Int,
     @ApiModelProperty("修改人")
     val modifier: String,
     @ApiModelProperty("更新时间")

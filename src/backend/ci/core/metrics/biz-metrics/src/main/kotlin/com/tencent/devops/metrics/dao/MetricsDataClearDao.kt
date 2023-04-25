@@ -27,132 +27,143 @@
 
 package com.tencent.devops.metrics.dao
 
+import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
-import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
+import com.tencent.devops.model.metrics.tables.TPipelineFailDetailData
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
-import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
-import com.tencent.devops.model.metrics.tables.records.TAtomIndexStatisticsDailyRecord
-import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
-import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
-import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
-import com.tencent.devops.model.metrics.tables.records.TPipelineStageOverviewDataRecord
-import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
-class MetricsDataQueryDao {
+class MetricsDataClearDao {
 
-    fun getPipelineOverviewData(
+    fun clearRedundantPipelineOverviewData(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         statisticsTime: LocalDateTime
-    ): TPipelineOverviewDataRecord? {
+    ) {
         with(TPipelineOverviewData.T_PIPELINE_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchOne()
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
-    fun getPipelineStageOverviewDatas(
+    fun clearRedundantPipelineStageOverviewData(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statisticsTime: LocalDateTime,
-        stageTagNames: List<String>
-    ): Result<TPipelineStageOverviewDataRecord>? {
+        statisticsTime: LocalDateTime
+    ) {
         with(TPipelineStageOverviewData.T_PIPELINE_STAGE_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
-            conditions.add(STAGE_TAG_NAME.`in`(stageTagNames))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetch()
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
-    fun getPipelineFailSummaryData(
+    fun clearRedundantPipelineFailSummaryData(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statisticsTime: LocalDateTime,
-        errorType: Int
-    ): TPipelineFailSummaryDataRecord? {
+        statisticsTime: LocalDateTime
+    ) {
         with(TPipelineFailSummaryData.T_PIPELINE_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
-            conditions.add(ERROR_TYPE.eq(errorType))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchOne()
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ERROR_TYPE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
-    fun getAtomOverviewDatas(
+    fun clearRedundantPipelineFailDetailData(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         statisticsTime: LocalDateTime,
-        atomCodes: List<String>
-    ): Result<TAtomOverviewDataRecord>? {
+        buildId: String
+    ) {
+        with(TPipelineFailDetailData.T_PIPELINE_FAIL_DETAIL_DATA) {
+            dslContext.deleteFrom(this).where(
+                PROJECT_ID.eq(projectId)
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(STATISTICS_TIME.eq(statisticsTime))
+                    .and(BUILD_ID.eq(buildId))
+            ).execute()
+        }
+    }
+
+    fun clearRedundantAtomOverviewData(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        statisticsTime: LocalDateTime
+    ) {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
-            conditions.add(ATOM_CODE.`in`(atomCodes))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetch()
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ATOM_CODE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
-    fun getAtomFailSummaryData(
+    fun clearRedundantAtomFailDetailData(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        statisticsTime: LocalDateTime,
-        errorType: Int,
-        atomCode: String
-    ): TAtomFailSummaryDataRecord? {
+        statisticsTime: LocalDateTime
+    ) {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectId))
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(STATISTICS_TIME.eq(statisticsTime))
-            conditions.add(ERROR_TYPE.eq(errorType))
-            conditions.add(ATOM_CODE.eq(atomCode))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchOne()
+            conditions.add(ID.notIn(
+                dslContext.select(DSL.min(ID)).from(this).where(conditions).groupBy(ERROR_TYPE, ATOM_CODE)
+            ))
+            dslContext.deleteFrom(this).where(conditions).execute()
         }
     }
 
-    fun getAtomIndexStatisticsDailyData(
+    fun clearRedundantAtomFailDetailData(
         dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
         statisticsTime: LocalDateTime,
-        atomCode: String
-    ): TAtomIndexStatisticsDailyRecord? {
-        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
-            return dslContext.selectFrom(this)
-                .where(STATISTICS_TIME.eq(statisticsTime))
-                .and(ATOM_CODE.eq(atomCode))
-                .fetchOne()
+        buildId: String
+    ) {
+        with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
+            dslContext.deleteFrom(this).where(
+                PROJECT_ID.eq(projectId)
+                    .and(PIPELINE_ID.eq(pipelineId))
+                    .and(STATISTICS_TIME.eq(statisticsTime))
+                    .and(BUILD_ID.eq(buildId))
+            ).execute()
         }
     }
 }
