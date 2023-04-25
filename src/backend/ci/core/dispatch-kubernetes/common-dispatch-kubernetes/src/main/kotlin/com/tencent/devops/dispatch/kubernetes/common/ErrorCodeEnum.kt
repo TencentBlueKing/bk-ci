@@ -40,11 +40,12 @@ enum class ErrorCodeEnum(
 ) {
     SYSTEM_ERROR(ErrorType.SYSTEM, 2126301, "2126301"),// Dispatcher-base系统错误
     NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2126302, "2126302"),// 构建机启动失败，没有空闲的构建机
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2126350, "2126350"),// 已超过dispatch base创建Job容器上限.
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 212603, "2126303"),// 已超过dispatch base创建Job容器上限.
 
-    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2126318, "2126318"),// 第三方服务异常，异常信息 - 接口请求超时
     START_VM_ERROR(ErrorType.THIRD_PARTY, 2126304, "2126304"),// 第三方服务异常，异常信息 - 构建机启动失败
     CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2126305, "2126305"),// 第三方服务异常，异常信息 - 构建机创建失败
     STOP_VM_ERROR(ErrorType.THIRD_PARTY, 2126306, "2126306"),// 第三方服务异常，异常信息 - 构建机休眠失败
-    DELETE_VM_ERROR(ErrorType.THIRD_PARTY, 2126307, "2126307")// 第三方服务异常，异常信息 - 构建机销毁失败
+    DELETE_VM_ERROR(ErrorType.THIRD_PARTY, 2126307, "2126307"),// 第三方服务异常，异常信息 - 构建机销毁失败
+    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2126308, "2126308")// 第三方服务异常，异常信息 - 接口请求超时
+
 }
