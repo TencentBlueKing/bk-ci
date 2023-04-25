@@ -27,12 +27,16 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.UserLocaleDao
 import com.tencent.devops.common.api.pojo.LocaleInfo
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.pojo.LanguageInfo
 import com.tencent.devops.project.service.UserLocaleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,6 +49,7 @@ class UserLocaleServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val commonConfig: CommonConfig
 ) : UserLocaleService {
+
     override fun addUserLocale(userId: String, language: String): Boolean {
         val key = LocaleUtil.getUserLocaleLanguageKey(userId)
         val lock = RedisLock(redisOperation, "$key:add", 10)
@@ -78,6 +83,15 @@ class UserLocaleServiceImpl @Autowired constructor(
     }
 
     override fun updateUserLocale(userId: String, language: String): Boolean {
+        // 获取蓝盾支持的语言列表
+        val supportLanguages = commonConfig.devopsSupportLanguages.split(",")
+        if (!supportLanguages.contains(language)) {
+            // 如果更新的语言不在支持的语言列表中则给出错误提示
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_LANGUAGE_IS_NOT_SUPPORT,
+                params = supportLanguages.toTypedArray()
+            )
+        }
         val key = LocaleUtil.getUserLocaleLanguageKey(userId)
         val lock = RedisLock(redisOperation, "$key:update", 10)
         try {
@@ -110,5 +124,20 @@ class UserLocaleServiceImpl @Autowired constructor(
         }
         // 用户未配置locale语言信息则默认返回系统默认配置
         return LocaleInfo(language)
+    }
+
+    override fun listSupportLanguages(userId: String): List<LanguageInfo> {
+        // 获取蓝盾支持的语言列表
+        val supportLanguages = commonConfig.devopsSupportLanguages.split(",")
+        val languageInfos = mutableListOf<LanguageInfo>()
+        supportLanguages.forEach { language ->
+            languageInfos.add(
+                LanguageInfo(
+                    language = language,
+                    name = I18nUtil.getCodeLanMessage(messageCode = "language.$language", defaultMessage = language)
+                )
+            )
+        }
+        return languageInfos
     }
 }

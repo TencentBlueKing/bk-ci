@@ -60,8 +60,12 @@ object MessageUtil {
     ): String {
         var message: String? = null
         try {
-            val arrs = language.split("_")
-            val localeObj = Locale(arrs[0], arrs[1])
+            val parts = language.split("_")
+            val localeObj = if (parts.size > 1) {
+                Locale(parts[0], parts[1])
+            } else {
+                Locale(language)
+            }
             // 根据locale和baseName生成resourceBundle对象
             val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
             // 通过resourceBundle获取对应语言的描述信息
