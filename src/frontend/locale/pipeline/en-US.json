@@ -1012,7 +1012,7 @@
   "projectViewList": "Project Pipeline Groups",
   "personalViewList": "My Pipeline Groups",
   "pipelineGroup": "Pipeline Groups",
-  "patchManage": "Batch Manage",
+  "patchManage": "Bulk Operations",
   "searchPipelinePlaceholder": "pipeline name / creator / pipeline group name/ label",
   "ownGroupName": "Pipeline Group",
   "latestExec": "Recently Executed",
