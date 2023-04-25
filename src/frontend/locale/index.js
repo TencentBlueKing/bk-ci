@@ -80,6 +80,7 @@ function setLsLocale (locale) {
 export default (r, initSetLocale = false) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
+    
     const initLocale = getLsLocale()
     // export localeList
     const i18n = new VueI18n({
@@ -118,7 +119,9 @@ export default (r, initSetLocale = false) => {
                 dynamicLoadModule(module, localeLang)
             }
         })
-        syncLocaleBackend(localeLang)
+        if (localeLang !== localeAliasMap[window.INIT_LOCALE]) {
+            syncLocaleBackend(localeLang)
+        }
         i18n.locale = localeLang
         setLsLocale(localeLang)
         locale.use(lang[localeLang.replace('-', '')])
