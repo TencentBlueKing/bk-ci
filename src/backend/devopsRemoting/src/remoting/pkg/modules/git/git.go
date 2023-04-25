@@ -28,6 +28,8 @@ func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
 		{"credential.helper", gitcache},
 		{"safe.directory", "*"},
 		// 工蜂域名更改
+		{"--unset", "url.git@git.code.oa.com:.insteadOf"},
+		{"--unset", "url.git@git.woa.com:.insteadOf"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "http://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "https://git.code.oa.com/"},
 		{"--add", "url.http://git.woa.com/.insteadOf", "git@git.woa.com:"},

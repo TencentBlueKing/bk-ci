@@ -1,10 +1,10 @@
 package main
 
 import (
+	"common/cli/check"
 	"common/logs"
 	"fmt"
 	"os"
-	"common/cli/check"
 
 	"github.com/spf13/cobra"
 )

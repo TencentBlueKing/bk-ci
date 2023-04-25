@@ -87,9 +87,9 @@ type blobHandler struct {
 	Digest  digest.Digest
 	Name    string
 
-	Spec              *api.ImageSpec
-	Resolver          remotes.Resolver
-	Store             BlobStore
+	Spec     *api.ImageSpec
+	Resolver remotes.Resolver
+	Store    BlobStore
 	// IPFS              *IPFSBlobCache
 	AdditionalSources []BlobSource
 	ConfigModifier    ConfigModifier

@@ -13,6 +13,7 @@ import (
 	"remoting/pkg/config"
 	"remoting/pkg/modules/user"
 	"remoting/pkg/service"
+	"sync"
 
 	"github.com/pkg/errors"
 )
@@ -23,7 +24,9 @@ func StartPreci(
 	cfg *config.Config,
 	tokenService *service.TokenService,
 	childProcessEnv []string,
+	wg *sync.WaitGroup,
 ) {
+	defer wg.Done()
 
 	workDir := filepath.Join(cfg.WorkSpace.WorkspaceRootPath, "PreCI")
 

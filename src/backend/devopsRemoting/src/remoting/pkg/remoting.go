@@ -17,6 +17,7 @@ import (
 	"remoting/pkg/modules/preci"
 	"remoting/pkg/modules/ssh"
 	"remoting/pkg/modules/terminal"
+	"remoting/pkg/modules/turbo"
 	"remoting/pkg/service"
 	"remoting/pkg/thirdpartapi"
 	"remoting/pkg/types"
@@ -153,14 +154,22 @@ func Run() {
 	)
 	wg.Add(1)
 	go service.StartContentInit(ctx, remotingConfig, &wg, cstate, thirdApi, childProcEnvvars)
+
 	wg.Add(1)
 	go api.StartAPIServer(ctx, remotingConfig, &wg)
+
 	wg.Add(1)
 	go ssh.StartSSHServer(ctx, remotingConfig, &wg, childProcEnvvars)
+
 	wg.Add(1)
-	go preci.StartPreci(ctx, cstate, remotingConfig, service.ApiService.Token, childProcEnvvars)
+	go preci.StartPreci(ctx, cstate, remotingConfig, service.ApiService.Token, childProcEnvvars, &wg)
+
+	wg.Add(1)
+	go turbo.StartTurbo(ctx, remotingConfig, childProcEnvvars, &wg)
+
 	wg.Add(1)
 	go commandManager.Run(ctx, &wg)
+
 	wg.Add(1)
 	go portMgmt.Run(ctx, &wg)
 

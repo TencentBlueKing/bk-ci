@@ -113,6 +113,9 @@ type WorkspaceConfig struct {
 	PreciGateWayUrl string `env:"DEVOPS_REMOTING_PRECI_GATEWAY_URL"`
 	// BackendHost 蓝盾后台地址
 	BackendHost string `env:"DEVOPS_REMOTING_BACKEND_HOST"`
+
+	// TurboDownUrl 编译加速下载地址
+	TurboDownUrl string `env:"DEVOPS_REMOTING_TURBO_DOWN_URL"`
 }
 
 type InjectFile struct {

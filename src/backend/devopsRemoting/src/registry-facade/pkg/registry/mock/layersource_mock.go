@@ -9,10 +9,10 @@ import (
 	io "io"
 	reflect "reflect"
 
-	api "registry-facade/api"
-	registry "registry-facade/pkg/registry"
 	gomock "github.com/golang/mock/gomock"
 	digest "github.com/opencontainers/go-digest"
+	api "registry-facade/api"
+	registry "registry-facade/pkg/registry"
 )
 
 // MockLayerSource is a mock of LayerSource interface.

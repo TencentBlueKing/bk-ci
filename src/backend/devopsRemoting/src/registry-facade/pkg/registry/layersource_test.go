@@ -10,8 +10,8 @@ import (
 	"testing"
 	"time"
 
-	ctesting "registry-facade/pkg/common/testing"
 	"golang.org/x/xerrors"
+	ctesting "registry-facade/pkg/common/testing"
 
 	"github.com/containerd/containerd/remotes"
 	"github.com/containerd/containerd/remotes/docker"
