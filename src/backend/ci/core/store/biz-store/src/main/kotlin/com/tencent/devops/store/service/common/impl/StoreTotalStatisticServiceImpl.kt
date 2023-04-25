@@ -50,7 +50,7 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import java.math.BigDecimal
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
@@ -349,7 +349,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
             successRate = successRate,
-            hotFlag = record?.get(KEY_HOT_FLAG) as Boolean
+            hotFlag = record?.get(KEY_HOT_FLAG) as? Boolean ?: false
         )
     }
 
