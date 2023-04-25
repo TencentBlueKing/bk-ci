@@ -153,7 +153,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 file = file,
                 properties = metadata
             )
-            generateFileDownloadUrl(fileChannelType, "${BKREPO_STORE_PROJECT_ID}/${REPO_NAME_STATIC}/$destPath")
+            generateFileDownloadUrl(fileChannelType, "$BKREPO_STORE_PROJECT_ID/$REPO_NAME_STATIC/$destPath")
         } else {
             bkRepoClient.uploadLocalFile(userId, repoProjectId, repoName, destPath, file, properties = metadata)
             generateFileDownloadUrl(fileChannelType, "$repoProjectId/$repoName/$destPath")
