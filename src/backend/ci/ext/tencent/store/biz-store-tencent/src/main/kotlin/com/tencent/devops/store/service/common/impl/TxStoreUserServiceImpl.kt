@@ -84,7 +84,7 @@ class TxStoreUserServiceImpl : StoreUserService {
             userDeptInfo = client.get(ServiceTxUserResource::class).get(userId).data
         } catch (ignored: Throwable) {
             logger.warn("getUserDeptDetailFromCache fail!", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -97,7 +97,7 @@ class TxStoreUserServiceImpl : StoreUserService {
             if (userDeptInfo.groupName.isNotEmpty()) commenterDept.append("/").append(userDeptInfo.groupName)
             Result(commenterDept.toString())
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId)
             )

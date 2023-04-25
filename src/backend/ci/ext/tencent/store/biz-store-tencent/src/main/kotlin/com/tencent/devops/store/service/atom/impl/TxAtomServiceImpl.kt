@@ -80,7 +80,7 @@ class TxAtomServiceImpl : TxAtomService, AtomServiceImpl() {
                 )
             } catch (ignored: Throwable) {
                 logger.warn("updateGitCodeRepository fail!", ignored)
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )

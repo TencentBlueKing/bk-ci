@@ -67,7 +67,7 @@ class FileService @Autowired constructor(private val client: Client) {
         // 校验文件类型是否满足上传文件类型的要求
         val allowUploadFileTypeList = allowUploadFileTypes.split(",")
         if (!allowUploadFileTypeList.contains(fileType.toLowerCase())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = SupportMessageCode.UPLOAD_FILE_TYPE_IS_NOT_SUPPORT,
                 params = arrayOf(fileType, allowUploadFileTypes),
                 language = I18nUtil.getLanguage(userId)
@@ -81,7 +81,7 @@ class FileService @Autowired constructor(private val client: Client) {
         val fileSize = file.length()
         val maxFileSize = maxUploadFileSize.toLong()
         if (fileSize > maxFileSize) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = SupportMessageCode.UPLOAD_FILE_IS_TOO_LARGE,
                 params = arrayOf((maxFileSize / 1048576).toString() + "M"),
                 language = I18nUtil.getLanguage(userId)
@@ -97,7 +97,7 @@ class FileService @Autowired constructor(private val client: Client) {
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
-                    return MessageUtil.generateResponseDataObject(
+                    return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.SYSTEM_ERROR,
                         language = I18nUtil.getLanguage(userId)
                     )

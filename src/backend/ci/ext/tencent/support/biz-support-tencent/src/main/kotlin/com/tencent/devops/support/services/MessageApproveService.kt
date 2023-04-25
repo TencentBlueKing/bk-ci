@@ -47,7 +47,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.Date
 
 @Service
 class MessageApproveService @Autowired constructor() {
@@ -94,7 +94,7 @@ class MessageApproveService @Autowired constructor() {
         OkhttpUtils.doHttp(request).use { res ->
             val data = res.body!!.string()
             logger.info("the response>> $data")
-            if (!res.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!res.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -122,7 +122,7 @@ class MessageApproveService @Autowired constructor() {
         OkhttpUtils.doHttp(request).use { res ->
             val data = res.body!!.string()
             logger.info("the response>> $data")
-            if (!res.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!res.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -154,7 +154,7 @@ class MessageApproveService @Autowired constructor() {
         OkhttpUtils.doHttp(request).use { res ->
             val data = res.body!!.string()
             logger.info("the response>> $data")
-            if (!res.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!res.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
@@ -183,7 +183,7 @@ class MessageApproveService @Autowired constructor() {
         OkhttpUtils.doHttp(request).use { res ->
             val data = res.body!!.string()
             logger.info("the response>> $data")
-            if (!res.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!res.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             val response: Map<String, Any> = JsonUtil.toMap(data)

@@ -58,7 +58,7 @@ class ExtServiceHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val serviceId = storeBuildResultRequest.storeId
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())

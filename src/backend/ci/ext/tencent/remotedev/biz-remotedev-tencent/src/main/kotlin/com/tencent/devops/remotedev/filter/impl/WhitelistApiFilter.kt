@@ -81,7 +81,7 @@ class WhitelistApiFilter constructor(
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
-                        MessageUtil.generateResponseDataObject(
+                        I18nUtil.generateResponseDataObject(
                             messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
                             params = null,
                             data = null,

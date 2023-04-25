@@ -178,7 +178,7 @@ class ExternalMarketIdeAtomServiceImpl @Autowired constructor(
         logger.info("installIdeAtom installIdeAtomReq is:$installIdeAtomReq")
         val atomCode = installIdeAtomReq.atomCode
         val atomRecord = ideAtomDao.getLatestReleaseAtomByCode(dslContext, atomCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 data = null,

@@ -100,7 +100,7 @@ class MessageCodeDetailService @Autowired constructor(
             redisOperation.set(key = BCI_CODE_PREFIX + messageCode, value = JsonUtil.getObjectMapper().writeValueAsString(messageCodeDetailResult.data), expired = false)
             Result(data = true)
         } else {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(messageCode),
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -116,7 +116,7 @@ class MessageCodeDetailService @Autowired constructor(
         val messageCodeDetailResult = getMessageCodeDetail(addMessageCodeRequest.messageCode)
         // 判断code信息是否存在，存在才添加
         val messageCode = addMessageCodeRequest.messageCode
-        if (null != messageCodeDetailResult.data) return MessageUtil.generateResponseDataObject(
+        if (null != messageCodeDetailResult.data) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
             params = arrayOf(messageCode),
             data = false,
@@ -143,7 +143,7 @@ class MessageCodeDetailService @Autowired constructor(
         logger.info("messageCode is: $messageCode,updateMessageCodeRequest is: $updateMessageCodeRequest")
         val messageCodeDetailResult = getMessageCodeDetail(messageCode)
         // 判断code信息是否存在，存在才更新
-        val messageCodeDetail = messageCodeDetailResult.data ?: return MessageUtil.generateResponseDataObject(
+        val messageCodeDetail = messageCodeDetailResult.data ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
             params = arrayOf(messageCode),
             data = false, language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()))

@@ -53,7 +53,7 @@ class OnsService @Autowired constructor() {
         return if (ent.code == 0) {
             Result(OnsNameInfo(ip = ent.ip, port = ent.port))
         } else {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) // 获取名字服务失败，抛出错误提示

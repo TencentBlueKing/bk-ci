@@ -53,7 +53,7 @@ class ExtServiceArchiveService {
         // 校验用户是否是该扩展服务的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
         if (!flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }

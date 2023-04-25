@@ -188,7 +188,7 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -250,7 +250,7 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -305,7 +305,7 @@ class ExtServiceBcsService {
                 storeCode = serviceCode,
                 storeType = StoreTypeEnum.SERVICE.type.toByte())
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )

@@ -60,7 +60,7 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
             "$sendNotify|$checkPermissionFlag|$testProjectCode")
         val serviceCode = storeMemberReq.storeCode
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -72,7 +72,7 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
                 storeType = storeType.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -109,13 +109,13 @@ abstract class ExtServiceMemberImpl : StoreMemberServiceImpl() {
     ): Result<Boolean> {
         logger.info("deleteExtServiceMember params:[$userId|$id|$storeCode|$storeType|$checkPermissionFlag]")
         val serviceRecord = extServiceFeatureDao.getServiceByCode(dslContext, storeCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(storeCode),
                 language = I18nUtil.getLanguage(userId)
             )
         val memberRecord = storeMemberDao.getById(dslContext, id)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
                 language = I18nUtil.getLanguage(userId))

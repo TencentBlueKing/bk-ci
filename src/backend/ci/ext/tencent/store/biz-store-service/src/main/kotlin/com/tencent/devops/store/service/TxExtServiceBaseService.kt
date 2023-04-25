@@ -91,13 +91,13 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         serviceCode: String
     ): Result<Map<String, String>?> {
         logger.info("handleServicePackage params:[$extensionInfo|$serviceCode|$userId]")
-        extensionInfo.authType ?: return MessageUtil.generateResponseDataObject(
+        extensionInfo.authType ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("authType"),
             data = null,
             language = I18nUtil.getLanguage(userId)
         )
-        extensionInfo.visibilityLevel ?: return MessageUtil.generateResponseDataObject(
+        extensionInfo.visibilityLevel ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("visibilityLevel"),
             data = null,
@@ -106,7 +106,7 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         val repositoryInfo: RepositoryInfo?
         if (extensionInfo.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
             if (extensionInfo.privateReason.isNullOrBlank()) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf("privateReason"),
                     data = null,
@@ -148,12 +148,12 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
             }
         } catch (ignored: Throwable) {
             logger.error("service[$serviceCode] createGitCodeRepository fail!", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL
             ,language = I18nUtil.getLanguage(userId))
         }
         if (null == repositoryInfo) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
                 language = I18nUtil.getLanguage(userId))
         }

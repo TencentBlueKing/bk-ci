@@ -65,7 +65,7 @@ class ExtServiceEnvService @Autowired constructor(
         logger.info("updateExtServiceEnvInfo params:[$projectCode|$serviceCode|$version|$updateExtServiceEnvInfo")
         val extServiceRecord = extServiceDao.getExtService(dslContext, serviceCode, version)
         if (null == extServiceRecord || extServiceRecord.deleteFlag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("$serviceCode+$version"),
                 data = false,
@@ -82,7 +82,7 @@ class ExtServiceEnvService @Autowired constructor(
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
             if (!flag) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("$serviceCode+$version"),
                     data = false,

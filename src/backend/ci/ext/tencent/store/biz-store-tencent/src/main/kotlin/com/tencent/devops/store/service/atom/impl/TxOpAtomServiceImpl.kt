@@ -67,7 +67,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("moveGitProjectToGroup userId is:$userId, groupCode is:$groupCode, atomCode is:$atomCode")
         val atomRecord = atomDao.getRecentAtomByCode(dslContext, atomCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 data = false,
@@ -93,7 +93,7 @@ class TxOpAtomServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("atom[$atomCode] moveProjectToGroupResult fail!", ignored)
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(userId))
         }

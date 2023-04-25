@@ -45,7 +45,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import java.io.File
-import java.util.*
+import java.util.Base64
 
 @TaskClassType(classTypes = [AndroidCertInstallElement.classType])
 class AndroidCertInstallTask : ITask() {

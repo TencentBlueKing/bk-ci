@@ -79,7 +79,7 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
                 val request = buildDelete(url)
                 val responseContent = request(
-            request,
+                    request,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_GET_WORKER_BEE,
                         language = I18nUtil.getDefaultLocaleLanguage()

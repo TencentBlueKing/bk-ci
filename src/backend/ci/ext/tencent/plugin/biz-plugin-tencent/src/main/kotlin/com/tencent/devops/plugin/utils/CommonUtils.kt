@@ -43,6 +43,7 @@ import com.tencent.devops.plugin.constant.PluginMessageCode.URL_CODING_ERROR
 import com.tencent.devops.plugin.constant.PluginMessageCode.WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import io.vavr.collection.TreeMap
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 import org.json.JSONException
@@ -56,7 +57,7 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URLEncoder
 import java.security.NoSuchAlgorithmException
-import java.util.*
+import java.util.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 

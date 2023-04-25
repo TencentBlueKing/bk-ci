@@ -238,7 +238,7 @@ class OpExtServiceService @Autowired constructor(
     fun approveService(userId: String, serviceId: String, approveReq: ServiceApproveReq): Result<Boolean> {
         // 判断扩展服务是否存在
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(userId)
@@ -246,7 +246,7 @@ class OpExtServiceService @Autowired constructor(
 
         val oldStatus = serviceRecord.serviceStatus
         if (oldStatus != ExtServiceStatusEnum.AUDITING.status.toByte()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(userId)
@@ -254,7 +254,7 @@ class OpExtServiceService @Autowired constructor(
         }
 
         if (approveReq.result != PASS && approveReq.result != REJECT) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(approveReq.result),
                 language = I18nUtil.getLanguage(userId)
@@ -320,7 +320,7 @@ class OpExtServiceService @Autowired constructor(
     ): Result<Boolean> {
         logger.info("deleteService userId: $userId , serviceId: $serviceId , checkPermissionFlag: $checkPermissionFlag")
         val serviceRecord =
-            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageUtil.generateResponseDataObject(
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(userId)
@@ -333,7 +333,7 @@ class OpExtServiceService @Autowired constructor(
                 StoreTypeEnum.SERVICE.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -341,7 +341,7 @@ class OpExtServiceService @Autowired constructor(
         val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                messageCode = StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -351,7 +351,7 @@ class OpExtServiceService @Autowired constructor(
         val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
         logger.info("installedCount: $releasedCount")
         if (installedCount > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)

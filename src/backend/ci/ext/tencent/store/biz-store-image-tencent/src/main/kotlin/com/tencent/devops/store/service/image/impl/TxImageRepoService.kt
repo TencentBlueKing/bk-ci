@@ -67,7 +67,7 @@ class TxImageRepoService @Autowired constructor(
             val imageCode: String?
             if (null != imageId) {
                 val imageRecord = imageDao.getImage(dslContext, imageId)
-                    ?: return MessageUtil.generateResponseDataObject(
+                    ?: return I18nUtil.generateResponseDataObject(
                         messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                         params = arrayOf(imageId),
                         data = null,

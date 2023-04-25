@@ -73,13 +73,13 @@ class AtomRepositoryServiceImpl : AtomRepositoryService {
                 storeCode = atomCode,
                 storeType = StoreTypeEnum.ATOM.type.toByte())
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
         }
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
                 language = I18nUtil.getLanguage(userId)

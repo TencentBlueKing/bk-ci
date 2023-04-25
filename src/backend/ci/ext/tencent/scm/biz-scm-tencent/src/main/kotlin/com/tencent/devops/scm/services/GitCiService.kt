@@ -228,7 +228,7 @@ class GitCiService {
         RetryUtils.doRetryHttp(request).use {
             val response = it.body!!.string()
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
-            if (!it.isSuccessful) return MessageUtil.generateResponseDataObject(
+            if (!it.isSuccessful) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.SYSTEM_ERROR,
                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )

@@ -73,12 +73,12 @@ class ServiceRepositoryService {
         logger.info("updateServiceRepositoryUserInfo params:[$userId|$projectCode|$serviceCode]")
         // 判断用户是否是插件管理员，移交代码库只能针对插件管理员
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }
         val serviceRecord = extServiceFeatureDao.getLatestServiceByCode(dslContext, serviceCode)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)

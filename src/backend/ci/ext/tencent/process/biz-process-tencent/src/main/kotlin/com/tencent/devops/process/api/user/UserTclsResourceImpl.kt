@@ -39,8 +39,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.TCLS_ENVIRONMENT
-import com.tencent.devops.process.constant.ProcessMessageCode.TCLS_ENVIRONMENT_MESSAGE
 import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -51,7 +49,7 @@ import okhttp3.RequestBody
 import org.jooq.tools.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.*
+import java.util.Base64
 
 @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught", "MagicNumber")
 @RestResource

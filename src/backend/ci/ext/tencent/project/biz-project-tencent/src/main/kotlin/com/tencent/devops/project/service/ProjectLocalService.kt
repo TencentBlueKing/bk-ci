@@ -500,7 +500,7 @@ class ProjectLocalService @Autowired constructor(
         val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
         if (!validateFlag) {
-            val messageResult = MessageUtil.generateResponseDataObject<String>(
+            val messageResult = I18nUtil.generateResponseDataObject<String>(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
             return Result(messageResult.status, messageResult.message, null)

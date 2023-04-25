@@ -139,7 +139,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 data = false,
                 language = I18nUtil.getLanguage(userId)
@@ -188,7 +188,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 storeCode = storeCode,
                 storeType = storeType.type.toByte()
             )) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 data = false,
                 language = I18nUtil.getLanguage(userId)

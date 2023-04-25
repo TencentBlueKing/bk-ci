@@ -55,7 +55,7 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern

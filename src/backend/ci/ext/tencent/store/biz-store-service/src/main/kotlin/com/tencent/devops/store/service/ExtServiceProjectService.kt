@@ -231,7 +231,7 @@ class ExtServiceProjectService @Autowired constructor(
         logger.info("uninstallService, isAdmin=$isAdmin")
 
         if (!(isAdmin || isInstaller)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)

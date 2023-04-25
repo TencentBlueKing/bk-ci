@@ -305,7 +305,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         // 判断扩展服务是不是首次创建版本
         val serviceCount = extServiceDao.countByCode(dslContext, serviceCode)
         if (serviceCount < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -317,7 +317,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 submitDTO.serviceName,
                 submitDTO.serviceCode
             )
-        ) return MessageUtil.generateResponseDataObject(
+        ) return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
             params = arrayOf(submitDTO.serviceName),
             language = I18nUtil.getLanguage(userId)
@@ -349,7 +349,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             }
 
         if (!requireVersionList.contains(version)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_VERSION_IS_INVALID,
                 params = arrayOf(version, requireVersionList.toString()),
                 language = I18nUtil.getLanguage(userId)
@@ -370,7 +370,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
 
         if (!serviceFinalStatusList.contains(serviceRecord.serviceStatus)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_VERSION_IS_NOT_FINISH,
                 params = arrayOf(serviceRecord.serviceName, serviceRecord.version),
                 language = I18nUtil.getLanguage(userId)
@@ -505,7 +505,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         logger.info("getProcessInfo userId is $userId,serviceId is $serviceId")
         val record = extServiceDao.getServiceById(dslContext, serviceId)
         return if (null == record) {
-            MessageUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(userId)
@@ -516,7 +516,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             val queryFlag =
                 storeMemberDao.isStoreMember(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())
             if (!queryFlag) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PERMISSION_DENIED,
                     language = I18nUtil.getLanguage(userId))
             }
@@ -649,7 +649,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             it["id"] as String
         }
         if (extServiceId.isNullOrBlank()) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_NOT_EXIST,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -657,14 +657,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         }
         val type = StoreTypeEnum.SERVICE.type.toByte()
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, type)) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }
         val releasedCount = extServiceDao.countReleaseServiceByCode(dslContext, serviceCode)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -674,7 +674,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val installedCount = storeProjectRelDao.countInstalledProject(dslContext, serviceCode, type)
         logger.info("installedCount: $releasedCount")
         if (installedCount > 0) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_SERVICE_USED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
@@ -767,7 +767,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun offlineService(userId: String, serviceCode: String, serviceOfflineDTO: ServiceOfflineDTO): Result<Boolean> {
         // 判断用户是否有权限下线
         if (!storeMemberDao.isStoreAdmin(dslContext, userId, serviceCode, StoreTypeEnum.SERVICE.type.toByte())) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId)
             )
@@ -865,7 +865,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun cancelRelease(userId: String, serviceId: String): Result<Boolean> {
         logger.info("extService cancelRelease, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 data = false,
@@ -874,7 +874,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val status = ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -922,7 +922,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     fun passTest(userId: String, serviceId: String): Result<Boolean> {
         logger.info("passTest, userId=$userId, serviceId=$serviceId")
         val serviceRecord = extServiceDao.getServiceById(dslContext, serviceId)
-            ?: return MessageUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 data = false,
@@ -944,14 +944,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val status = ExtServiceStatusEnum.BUILDING.status.toByte()
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, status)
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code,
                 language = I18nUtil.getLanguage(userId)
             )
         }
         // 拉取extension.json，检查格式，更新入库
         val serviceRecord =
-            extServiceDao.getServiceById(dslContext, serviceId) ?: return MessageUtil.generateResponseDataObject(
+            extServiceDao.getServiceById(dslContext, serviceId) ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(serviceId),
                 language = I18nUtil.getLanguage(userId)
@@ -1026,7 +1026,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus, isNormalUpgrade)
 
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -1080,7 +1080,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val (checkResult, code) = checkServiceVersionOptRight(userId, serviceId, newStatus.status.toByte())
 
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -1607,7 +1607,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                 storeType = StoreTypeEnum.SERVICE.type.toByte()
             )
         ) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
                 language = I18nUtil.getLanguage(userId))
         }

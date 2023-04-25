@@ -52,7 +52,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
             val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.SYSTEM_ERROR,
                     language = I18nUtil.getLanguage(userId)
                 )

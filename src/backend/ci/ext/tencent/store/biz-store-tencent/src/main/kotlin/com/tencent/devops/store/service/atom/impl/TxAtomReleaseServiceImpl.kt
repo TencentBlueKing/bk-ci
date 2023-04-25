@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -80,6 +79,8 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
+import java.util.Date
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -88,8 +89,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.util.*
-import java.util.concurrent.Executors
 
 @Service
 @RefreshScope
@@ -129,13 +128,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         atomCode: String
     ): Result<Map<String, String>?> {
         logger.info("handleAtomPackage params:[$marketAtomCreateRequest|$atomCode|$userId]")
-        marketAtomCreateRequest.authType ?: return MessageUtil.generateResponseDataObject(
+        marketAtomCreateRequest.authType ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("authType"),
             data = null,
             language = I18nUtil.getLanguage(userId)
         )
-        marketAtomCreateRequest.visibilityLevel ?: return MessageUtil.generateResponseDataObject(
+        marketAtomCreateRequest.visibilityLevel ?: return I18nUtil.generateResponseDataObject(
             messageCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("visibilityLevel"),
             data = null,
@@ -144,7 +143,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val repositoryInfo: RepositoryInfo?
         if (marketAtomCreateRequest.visibilityLevel == VisibilityLevelEnum.PRIVATE) {
             if (marketAtomCreateRequest.privateReason.isNullOrBlank()) {
-                return MessageUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_NULL,
                     params = arrayOf("privateReason"),
                     data = null,
@@ -177,13 +176,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
         } catch (ignored: Throwable) {
             logger.warn("atom[$atomCode] createGitCodeRepository fail!", ignored)
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
                 language = I18nUtil.getLanguage(userId)
             )
         }
         if (null == repositoryInfo) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -293,7 +292,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             }
         }
         if (!flag) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_REPOSITORY_BK_FRONTEND_DIR_IS_NULL,
                 params = arrayOf(BK_FRONTEND_DIR_NAME),
                 data = false,
@@ -433,7 +432,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         val status = AtomStatusEnum.BUILDING.status.toByte()
         val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
         if (!checkResult) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = code,
                 language = I18nUtil.getLanguage(userId))
         }
@@ -454,7 +453,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         )
         logger.info("rebuild, getAtomConfResult: $getAtomConfResult")
         if (getAtomConfResult.errorCode != "0") {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
                 params = getAtomConfResult.errorParams,
                 language = I18nUtil.getLanguage(userId)
@@ -472,7 +471,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             taskDataMap = taskDataMap,
             fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
         )
-        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return MessageUtil.generateResponseDataObject(
+        val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
             messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
             params = arrayOf(KEY_EXECUTION),
             language = I18nUtil.getLanguage(userId)
@@ -492,7 +491,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         if (getAtomQualityResult.errorCode == StoreMessageCode.USER_REPOSITORY_PULL_QUALITY_JSON_FILE_FAIL) {
             logger.info("quality.json not found , skip...")
         } else if (getAtomQualityResult.errorCode != "0") {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomQualityResult.errorCode,
                 params = getAtomQualityResult.errorParams,
                 language = I18nUtil.getLanguage(userId)

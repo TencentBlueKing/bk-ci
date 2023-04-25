@@ -346,7 +346,7 @@ class MarketIdeAtomServiceImpl @Autowired constructor(
     override fun judgeAtomExistByIdAndCode(atomId: String, atomCode: String): Result<Boolean> {
         val count = ideAtomDao.countByIdAndCode(dslContext, atomId, atomCode)
         if (count < 1) {
-            return MessageUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf("atomId:$atomId,atomCode:$atomCode"),
                 data = false,
