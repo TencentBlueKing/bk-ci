@@ -34,6 +34,9 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
     -- 转发到容器环境里
     if not in_container and string.find(devops_tag, '^kubernetes-') then
+        if config.gw_token ~= nil and ngx.var.devops_token == '' then
+            ngx.var.devops_token = config.gw_token
+        end
         local kubernetes_domain = nil
         if gateway_project == 'codecc' then
             kubernetes_domain = config.kubernetes.codecc.domain

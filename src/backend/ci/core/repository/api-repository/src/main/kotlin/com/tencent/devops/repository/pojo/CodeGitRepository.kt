@@ -38,7 +38,7 @@ data class CodeGitRepository(
     override val aliasName: String,
     @ApiModelProperty("URL", required = true)
     override val url: String,
-    @ApiModelProperty("凭据id", required = true)
+    @ApiModelProperty("凭据id(该凭证需要有git仓库Reporter以上权限)", required = true)
     override val credentialId: String,
     @ApiModelProperty("git项目名称", example = "devops/devops_ci_example_proj", required = true)
     override val projectName: String,

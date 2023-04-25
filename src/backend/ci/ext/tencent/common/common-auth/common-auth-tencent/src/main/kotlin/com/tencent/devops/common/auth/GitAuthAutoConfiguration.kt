@@ -31,12 +31,11 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.api.gitci.GitCIAuthProjectApi
-import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.auth.api.stream.GitAuthPermissionApi
+import com.tencent.devops.common.auth.api.stream.GitAuthProjectApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
@@ -52,7 +51,7 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "git")
-class GitCIAuthAutoConfiguration {
+class GitAuthAutoConfiguration {
 
     @Bean
     fun apigwHttpClientServiceImpl(
@@ -76,12 +75,10 @@ class GitCIAuthAutoConfiguration {
     @Bean
     @Primary
     fun authPermissionApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi
+        client: Client,
+        tokenService: ClientTokenService
     ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi)
+        GitAuthPermissionApi(client = client, tokenService = tokenService)
 
     @Bean
     @Primary
@@ -98,5 +95,5 @@ class GitCIAuthAutoConfiguration {
         client: Client,
         tokenService: ClientTokenService
     ) =
-        GitCIAuthProjectApi(client, tokenService)
+        GitAuthProjectApi(client, tokenService)
 }

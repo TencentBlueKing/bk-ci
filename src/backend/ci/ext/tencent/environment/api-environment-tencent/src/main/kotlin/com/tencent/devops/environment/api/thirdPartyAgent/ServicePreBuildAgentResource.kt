@@ -69,7 +69,10 @@ interface ServicePreBuildAgentResource {
         zoneName: String?,
         @ApiParam("初始IP", required = false)
         @QueryParam("zoneName")
-        initIp: String?
+        initIp: String?,
+        @ApiParam("指定生成node的别名", required = false)
+        @QueryParam("nodeStingId")
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
 
     @ApiOperation("拉取Prebuild构建机Agent列表")

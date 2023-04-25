@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
+import com.tencent.devops.common.api.constant.TEMPLATE_ACROSS_INFO_ID
 import com.tencent.devops.common.api.exception.DependNotFoundException
 import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -62,8 +63,10 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_STAGE_CONTAINERS_COUNT_MAX
@@ -89,6 +92,7 @@ class InitializeMatrixGroupStageCmd(
     private val dslContext: DSLContext,
     private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    private val templateAcrossInfoService: PipelineBuildTemplateAcrossInfoService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
@@ -213,6 +217,9 @@ class InitializeMatrixGroupStageCmd(
         val contextCaseList: List<Map<String, String>>
         val jobControlOption: JobControlOption
 
+        val matrixJobIds = mutableListOf<String>()
+        val matrixTaskIds = mutableListOf<String>()
+
         // 每一种上下文组合都是一个新容器
         when (modelContainer) {
             is VMBuildContainer -> {
@@ -269,7 +276,7 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, postParentIdMap
+                        modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val newContainer = VMBuildContainer(
                         name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
@@ -305,7 +312,7 @@ class InitializeMatrixGroupStageCmd(
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
                         }
                     )
-
+                    newContainer.jobId?.let { matrixJobIds.add(it) }
                     groupContainers.add(
                         pipelineContainerService.prepareMatrixBuildContainer(
                             projectId = event.projectId,
@@ -382,7 +389,7 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, postParentIdMap
+                        modelContainer.elements, context.executeCount, postParentIdMap, matrixTaskIds
                     )
                     val replacement = if (asCodeEnabled) {
                         EnvReplacementParser.getCustomExecutionContextByMap(variables)
@@ -413,7 +420,7 @@ class InitializeMatrixGroupStageCmd(
                         executeCount = context.executeCount,
                         containPostTaskFlag = modelContainer.containPostTaskFlag
                     )
-
+                    newContainer.jobId?.let { matrixJobIds.add(it) }
                     groupContainers.add(
                         pipelineContainerService.prepareMatrixBuildContainer(
                             projectId = event.projectId,
@@ -450,6 +457,22 @@ class InitializeMatrixGroupStageCmd(
                         "type(${modelContainer.getClassType()}) is invalid"
                 )
             }
+        }
+
+        variables[TEMPLATE_ACROSS_INFO_ID]?.let { templateId ->
+            LOG.info("ENGINE|INIT_MATRIX_CONTAINER|UPDATE_TEMPLATE_ACROSS|$templateId")
+            val info = templateAcrossInfoService.getAcrossInfo(event.projectId, event.pipelineId, templateId)
+            info.firstOrNull {
+                it.templateType == TemplateAcrossInfoType.JOB &&
+                    it.templateInstancesIds.contains(modelContainer.jobId)
+            } ?: return@let
+            info.forEach {
+                when (it.templateType) {
+                    TemplateAcrossInfoType.JOB -> it.templateInstancesIds.addAll(matrixJobIds)
+                    TemplateAcrossInfoType.STEP -> it.templateInstancesIds.addAll(matrixTaskIds)
+                }
+            }
+            templateAcrossInfoService.batchUpdateAcrossInfo(event.projectId, event.pipelineId, event.buildId, info)
         }
 
         // 输出结果信息到矩阵的构建日志中
@@ -551,7 +574,8 @@ class InitializeMatrixGroupStageCmd(
     private fun generateMatrixElements(
         elements: List<Element>,
         executeCount: Int,
-        postParentIdMap: MutableMap<String, String>
+        postParentIdMap: MutableMap<String, String>,
+        matrixTaskIds: MutableList<String>
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
@@ -565,6 +589,7 @@ class InitializeMatrixGroupStageCmd(
                 postParentIdMap[newTaskId] = newId
                 e.additionalOptions?.elementPostInfo?.parentElementId = newId
             }
+            matrixTaskIds.add(newTaskId)
 
             // 刷新ID为新的唯一值，强制设为无法重试
             e.id = newTaskId

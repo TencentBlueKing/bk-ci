@@ -66,9 +66,10 @@ class UserPreBuildResourceImpl @Autowired constructor(
         userId: String,
         os: OS,
         ip: String,
-        hostName: String
+        hostName: String,
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo> {
-        return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName))
+        return Result(preBuildService.getOrCreatePreAgent(userId, os, ip, hostName, nodeStingId))
     }
 
     override fun getAgentStatus(
