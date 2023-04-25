@@ -163,7 +163,6 @@ const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
 const val CREATE_TIME = "CREATE_TIME"
 const val BK_SUM_DAILY_SUCCESS_NUM = "bkSumDailySuccessNum"
 const val BK_SUM_DAILY_FAIL_NUM = "bkSumDailyFailNum"
-
 const val BK_UP_TO_PAR = "bkUpToPar"// 达标
 const val BK_NOT_UP_TO_PAR = "bkNotUpToPar"// 不达标
 const val BK_ATOM_SLA = "bkAtomSla"// 插件SLA
