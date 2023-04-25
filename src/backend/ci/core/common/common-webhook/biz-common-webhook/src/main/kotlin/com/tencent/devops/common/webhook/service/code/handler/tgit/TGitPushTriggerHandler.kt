@@ -283,7 +283,7 @@ class TGitPushTriggerHandler(
     ): Set<String> {
         val changeFileList = mutableSetOf<String>()
         changeFileList.addAll(
-            eventCacheService.getChangeFileList(
+            gitScmService.getChangeFileList(
                 projectId = projectId,
                 repo = repository,
                 from = event.before,
