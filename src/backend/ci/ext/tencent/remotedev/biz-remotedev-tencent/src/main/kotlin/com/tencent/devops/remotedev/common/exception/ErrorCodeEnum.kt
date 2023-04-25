@@ -71,20 +71,20 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2130012",
         formatErrorMessage = "2130012"
-    ),//Sorry, you are not authorized to access this resource.
+    ),// Repeat request! Please try again later.
     REPEAT_REQUEST(
         errorType = ErrorType.USER,
         errorCode = "2130013",
-        formatErrorMessage = "Repeat request! Please try again later."
-    ),
+        formatErrorMessage = "2130013"
+    ),// The workspace has error and cannot be repaired, please choose to destroy.
     WORKSPACE_ERROR(
         errorType = ErrorType.USER,
         errorCode = "2130014",
-        formatErrorMessage = "The workspace has error and cannot be repaired, please choose to destroy."
-    ),
+        formatErrorMessage = "2130014"
+    ),// The errored workspace has been restored to [%s], please try again.
     WORKSPACE_ERROR_FIX(
         errorType = ErrorType.USER,
         errorCode = "2130015",
-        formatErrorMessage = "The errored workspace has been restored to [%s], please try again."
+        formatErrorMessage = "2130015"
     )
 }
