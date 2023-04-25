@@ -1,14 +1,13 @@
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_ADMINISTRATOR_EXPIRED
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_ADMINISTRATOR_NOT_EXPIRED
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_AGREE_RENEW
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_APPROVER_AGREE_RENEW
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_APPROVER_REFUSE_RENEW
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_REFUSE_RENEW
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_WEWORK_ROBOT_NOTIFY_MESSAGE
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_YOU_AGREE_RENEW
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_YOU_REFUSE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_ADMINISTRATOR_NOT_EXPIRED
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AGREE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_APPROVER_AGREE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_APPROVER_REFUSE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REFUSE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_WEWORK_ROBOT_NOTIFY_MESSAGE
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_YOU_AGREE_RENEW
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_YOU_REFUSE_RENEW
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthManagerApprovalDao
 import com.tencent.devops.auth.dao.ManagerUserDao
@@ -25,12 +24,11 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WeworkMarkdownAction
 import com.tencent.devops.notify.pojo.WeworkMarkdownAttachment
 import com.tencent.devops.notify.pojo.WeworkRobotNotifyMessage
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
 
 @Service
 @SuppressWarnings("ALL")
