@@ -27,8 +27,11 @@
 
 package com.tencent.devops.artifactory.resources.user
 
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.user.UserTencentFileResource
+import com.tencent.devops.artifactory.pojo.CopyFileRequest
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
+import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -40,13 +43,36 @@ import java.io.InputStream
 
 @RestResource
 class UserTencentFileResourceImpl @Autowired constructor(
-    val bkRepoCustomDirService: BkRepoCustomDirService
+    val bkRepoCustomDirService: BkRepoCustomDirService,
+    val bkRepoService: BkRepoService
 ) : UserTencentFileResource {
 
-    override fun uploadToPath(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    override fun uploadToPath(
+        userId: String,
+        projectId: String,
+        path: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition, 10)
         return Result(true)
+    }
+
+    override fun copy(userId: String, copyFileRequest: CopyFileRequest) {
+        with(copyFileRequest) {
+            val filename = PathUtils.resolveName(srcFileFullPath)
+            val dstFullPath = PathUtils.combineFullPath(dstDirFullPath, filename)
+            bkRepoService.copyFile(
+                userId = userId,
+                srcProjectId = projectId,
+                srcArtifactoryType = srcArtifactoryType,
+                srcFullPath = srcFileFullPath,
+                dstProjectId = projectId,
+                dstArtifactoryType = dstArtifactoryType,
+                dstFullPath = dstFullPath
+            )
+        }
     }
 
     private fun checkParam(userId: String, projectId: String, path: String) {

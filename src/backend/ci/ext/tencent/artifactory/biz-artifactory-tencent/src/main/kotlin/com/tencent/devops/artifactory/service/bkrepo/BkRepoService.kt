@@ -43,6 +43,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -723,6 +724,28 @@ class BkRepoService @Autowired constructor(
             )
         }
         return Count(srcFiles.size)
+    }
+
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        val srcRepo = BkRepoUtils.getRepoName(srcArtifactoryType)
+        val dstRepo = BkRepoUtils.getRepoName(dstArtifactoryType)
+        bkRepoClient.copy(
+            userId = userId,
+            fromProject = srcProjectId,
+            fromRepo = srcRepo,
+            fromPath = srcFullPath,
+            toProject = dstProjectId,
+            toRepo = dstRepo,
+            toPath = dstFullPath
+        )
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {
