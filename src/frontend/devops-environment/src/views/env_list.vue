@@ -46,25 +46,33 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span
-                            v-perm="{
-                                hasPermission: props.row.canDelete,
-                                disablePermissionApi: true,
-                                permissionData: {
-                                    projectId: projectId,
-                                    resourceType: ENV_RESOURCE_TYPE,
-                                    resourceCode: props.row.envHashId,
-                                    action: ENV_RESOURCE_ACTION.DELETE
-                                }
-                            }"
-                        >
+                        <template v-if="props.row.canUse">
                             <span
+                                v-perm="{
+                                    hasPermission: props.row.canDelete,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: props.row.envHashId,
+                                        action: ENV_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
                                 :class="{ 'handler-text': props.row.canDelete }"
                                 @click.stop="confirmDelete(props.row)"
                             >
                                 {{ $t('environment.delete') }}
                             </span>
-                        </span>
+                        </template>
+                        <template v-else>
+                            <bk-button
+                                theme="primary"
+                                outline
+                                @click="handleApplyPermission(props.row)"
+                            >
+                                {{ $t('environment.applyPermission') }}
+                            </bk-button>
+                        </template>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -165,6 +173,14 @@
             toCreateEnv () {
                 this.$router.push({ name: 'createEnv' })
             },
+            handleApplyPermission (row) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: row.envHashId,
+                    action: ENV_RESOURCE_ACTION.USE
+                })
+            },
             /**
              * 删除环境
              */
@@ -210,6 +226,7 @@
              * 跳转环境详情
              */
             toEnvDetail (row) {
+                if (!row.canUse) return
                 this.$router.push({
                     name: 'envDetail',
                     params: {

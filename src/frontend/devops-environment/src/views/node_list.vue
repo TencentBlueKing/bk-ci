@@ -147,26 +147,37 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <div class="table-node-item node-item-handler"
-                            :class="{ 'over-handler': isMultipleBtn }">
-                            <span
+                        <template v-if="props.row.canUse">
+                            <div class="table-node-item node-item-handler">
+                                <span
+                                    v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                    v-perm="{
+                                        hasPermission: props.row.canDelete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: NODE_RESOURCE_TYPE,
+                                            resourceCode: props.row.nodeHashId,
+                                            action: NODE_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    class="node-handle delete-node-text"
+                                    @click.stop="confirmDelete(props.row, index)"
+                                >
+                                    {{ $t('environment.delete') }}
+                                </span>
+                            </div>
+                        </template>
+                        <template v-else>
+                            <bk-button
                                 v-if="!['TSTACK'].includes(props.row.nodeType)"
-                                v-perm="{
-                                    hasPermission: props.row.canDelete,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.DELETE
-                                    }
-                                }"
-                                class="node-handle delete-node-text"
-                                @click.stop="confirmDelete(props.row, index)"
+                                theme="primary"
+                                outline
+                                @click="handleApplyPermission(props.row)"
                             >
-                                {{ $t('environment.delete') }}
-                            </span>
-                        </div>
+                                {{ $t('environment.applyPermission') }}
+                            </bk-button>
+                        </template>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -398,6 +409,14 @@
                         }
                     })
                 }
+            },
+            handleApplyPermission (node) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceCode: node.nodeHashId,
+                    action: NODE_RESOURCE_ACTION.USE
+                })
             },
             /**
              * 删除节点

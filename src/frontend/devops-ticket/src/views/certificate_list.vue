@@ -22,29 +22,39 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button
-                                v-perm="{
-                                    tooltips: $t('ticket.noPermission'),
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: CERT_RESOURCE_TYPE,
-                                        resourceCode: props.row.certId,
-                                        action: CERT_RESOURCE_ACTION.EDIT
-                                    }
-                                }"
-                                theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            
-                            <bk-button
-                                v-perm="{
-                                    tooltips: $t('ticket.noPermission'),
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: CERT_RESOURCE_TYPE,
-                                        resourceCode: props.row.certId,
-                                        action: CERT_RESOURCE_ACTION.DELETE
-                                    }
-                                }"
-                                theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <template v-if="props.row.permissions.use">
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.edit,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                                
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.delete,
+                                        disablePermissionApi: true,
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: CERT_RESOURCE_TYPE,
+                                            resourceCode: props.row.certId,
+                                            action: CERT_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            </template>
+                            <template v-else>
+                                <bk-button
+                                    theme="primary"
+                                    outline
+                                    @click="handleApplyPermission(props.row)">{{ $t('ticket.applyPermission') }}</bk-button>
+                            </template>
                         </template>
                     </bk-table-column>
                 </bk-table>
@@ -206,6 +216,14 @@
             },
             hasPermission (permissions, action) {
                 return permissions && permissions[action]
+            },
+            handleApplyPermission (cert) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CERT_RESOURCE_TYPE,
+                    resourceCode: cert.certId,
+                    action: CERT_RESOURCE_ACTION.USE
+                })
             },
             async handleDeleteCert (cert) {
                 if (this.hasPermission(cert.permissions, 'delete')) {

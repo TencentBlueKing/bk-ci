@@ -127,7 +127,6 @@
 
                         <bk-button
                             v-perm="{
-                                tooltips: $t('ticket.noPermission'),
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: CRED_RESOURCE_TYPE,

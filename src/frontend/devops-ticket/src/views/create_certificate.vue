@@ -74,7 +74,6 @@
                     <div class="operate-btn">
                         <bk-button
                             v-perm="{
-                                tooltips: $t('ticket.noPermission'),
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: CERT_RESOURCE_TYPE,
