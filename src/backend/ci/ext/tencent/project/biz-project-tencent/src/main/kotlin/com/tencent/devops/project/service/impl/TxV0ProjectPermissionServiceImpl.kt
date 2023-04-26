@@ -190,6 +190,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun needApproval(needApproval: Boolean?) = false
 
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+
     companion object {
         val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)
     }

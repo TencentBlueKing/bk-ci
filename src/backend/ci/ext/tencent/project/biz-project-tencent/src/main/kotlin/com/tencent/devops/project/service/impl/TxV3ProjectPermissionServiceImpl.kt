@@ -131,6 +131,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun needApproval(needApproval: Boolean?) = false
 
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
+
     override fun verifyUserProjectPermission(
         accessToken: String?,
         projectCode: String,
@@ -191,7 +193,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code} , " +
-                            "message ${response.message} and response $responseContent")
+                        "message ${response.message} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent

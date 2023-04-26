@@ -185,38 +185,6 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(
-        userId: String,
-        accessToken: String?,
-        enabled: Boolean?,
-        unApproved: Boolean
-    ): List<ProjectVO> {
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val englishNames = getProjectFromAuth(userId, accessToken).toMutableSet()
-            if (englishNames.isEmpty() && !unApproved) {
-                return emptyList()
-            }
-            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved) {
-                projectDao.listUnapprovedByUserId(
-                    dslContext = dslContext,
-                    userId = userId
-                )?.map { englishNames.add(it.englishName) }
-            }
-            val list = ArrayList<ProjectVO>()
-            if (englishNames.isNotEmpty()) {
-                projectDao.listByCodes(dslContext, englishNames, enabled = enabled)
-                    .map {
-                        list.add(ProjectUtils.packagingBean(it))
-                    }
-            }
-            return list
-        } finally {
-            logger.info("$userId|It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
-        }
-    }
-
     override fun getDeptInfo(userId: String): UserDeptDetail {
         try {
             return tofService.getUserDeptDetail(userId, "")
