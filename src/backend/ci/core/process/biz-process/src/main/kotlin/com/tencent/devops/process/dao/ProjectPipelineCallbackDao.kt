@@ -163,4 +163,22 @@ class ProjectPipelineCallbackDao {
             dslContext.update(this).set(ENABLE, false).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
         }
     }
+
+    fun getDisableCallbackList(
+        dslContext: DSLContext,
+        projectId: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectPipelineCallbackRecord> {
+        return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val conditions = mutableListOf(ENABLE.eq(false))
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
 }
