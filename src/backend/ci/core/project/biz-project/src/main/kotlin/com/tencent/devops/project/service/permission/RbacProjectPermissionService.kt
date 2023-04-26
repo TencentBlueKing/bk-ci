@@ -225,11 +225,11 @@ class RbacProjectPermissionService(
 
     override fun needApproval(needApproval: Boolean?) = needApproval == true && authProjectApproval
 
-    override fun filterProjectsWithManagePermission(userId: String): List<String>? {
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? {
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
             userId = userId,
-            permission = AuthPermission.MANAGE,
+            permission = permission,
             supplier = null
         )
     }

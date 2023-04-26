@@ -75,5 +75,5 @@ interface ProjectPermissionService {
 
     fun needApproval(needApproval: Boolean?): Boolean
 
-    fun filterProjectsWithManagePermission(userId: String, ): List<String>?
+    fun filterProjects(userId: String, permission: AuthPermission): List<String>?
 }

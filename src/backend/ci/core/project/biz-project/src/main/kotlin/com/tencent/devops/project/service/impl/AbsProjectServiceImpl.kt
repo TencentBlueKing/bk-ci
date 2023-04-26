@@ -573,8 +573,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
-            val projectsWithManagePermission = projectPermissionService.filterProjectsWithManagePermission(userId)
             if (projectsWithVisitPermission.isNotEmpty()) {
+                val projectsWithManagePermission = projectPermissionService.filterProjects(
+                    userId = userId,
+                    permission = AuthPermission.MANAGE
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
