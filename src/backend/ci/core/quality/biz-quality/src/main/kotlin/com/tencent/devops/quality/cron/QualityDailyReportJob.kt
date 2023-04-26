@@ -28,6 +28,8 @@
 package com.tencent.devops.quality.cron
 
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
@@ -44,7 +46,8 @@ import java.time.format.DateTimeFormatter
 class QualityDailyReportJob @Autowired constructor(
     private val historyDao: HistoryDao,
     private val qualityDailyDispatch: QualityDailyDispatch,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation
 ) {
 
     private val logger = LoggerFactory.getLogger(QualityDailyReportJob::class.java)
@@ -62,35 +65,45 @@ class QualityDailyReportJob @Autowired constructor(
             return
         }
 
-        if (!clusterName.split(",").contains(CommonUtils.getDbClusterName())) {
-            return
-        } else {
-            val startTime = LocalDateTime.now().minusDays(1)
-            val endTime = LocalDateTime.now()
-            val result = historyDao.batchDailyTotalCount(
-                dslContext = dslContext,
-                startTime = startTime,
-                endTime = endTime
-            )
-            result.forEach {
-                val interceptCount = historyDao.countIntercept(
+        val redisLock = RedisLock(redisOperation, "QUALITY_DAILY_REPORT", 3600L)
+        try {
+            if (!redisLock.tryLock()) {
+                logger.info("get QUALITY_DAILY_REPORT lock failed, skip.")
+                return
+            }
+
+            if (!clusterName.split(",").contains(CommonUtils.getDbClusterName())) {
+                return
+            } else {
+                val startTime = LocalDateTime.now().minusDays(1)
+                val endTime = LocalDateTime.now()
+                val result = historyDao.batchDailyTotalCount(
                     dslContext = dslContext,
-                    projectId = it.value1(),
-                    pipelineId = null,
-                    ruleId = null,
                     startTime = startTime,
                     endTime = endTime
                 )
-                qualityDailyDispatch.dispatch(
-                    QualityReportEvent(
-                        statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
+                result.forEach {
+                    val interceptCount = historyDao.countIntercept(
+                        dslContext = dslContext,
                         projectId = it.value1(),
-                        interceptedCount = interceptCount.toInt(),
-                        totalCount = it.value2()
+                        pipelineId = null,
+                        ruleId = null,
+                        startTime = startTime,
+                        endTime = endTime
                     )
-                )
+                    qualityDailyDispatch.dispatch(
+                        QualityReportEvent(
+                            statisticsTime = startTime.format(DateTimeFormatter.ISO_DATE),
+                            projectId = it.value1(),
+                            interceptedCount = interceptCount.toInt(),
+                            totalCount = it.value2()
+                        )
+                    )
+                }
+                logger.info("finish to send quality daily data.")
             }
-            logger.info("finish to send quality daily data.")
+        } finally {
+            redisLock.unlock()
         }
     }
 }

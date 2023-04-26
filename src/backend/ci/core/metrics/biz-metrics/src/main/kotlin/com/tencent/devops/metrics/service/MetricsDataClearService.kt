@@ -27,12 +27,14 @@
 
 package com.tencent.devops.metrics.service
 
+import org.jooq.DSLContext
 import java.time.LocalDateTime
 
 interface MetricsDataClearService {
 
     /**
      * metrics数据清理
+     * @param dslContext jooq上下文
      * @param projectId 项目ID
      * @param pipelineId 流水线ID
      * @param statisticsTime 统计时间
@@ -40,6 +42,7 @@ interface MetricsDataClearService {
      * @return 布尔值
      */
     fun metricsDataClear(
+        dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         statisticsTime: LocalDateTime,
