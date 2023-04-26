@@ -298,6 +298,8 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         val queueTime = buildRecordModel?.queueTime?.timestampmilli() ?: buildInfo.queueTime
         val startTime = buildRecordModel?.startTime?.timestampmilli() ?: buildInfo.startTime
+        val endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime
+        val queueTimeCost = startTime?.let { it - queueTime } ?: endTime?.let { it - queueTime }
 
         return ModelRecord(
             id = buildInfo.buildId,
@@ -308,8 +310,8 @@ class PipelineBuildRecordService @Autowired constructor(
             trigger = triggerInfo,
             queueTime = queueTime,
             startTime = startTime,
-            queueTimeCost = startTime?.let { it - queueTime },
-            endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime,
+            queueTimeCost = queueTimeCost,
+            endTime = endTime,
             status = buildRecordModel?.status ?: buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
