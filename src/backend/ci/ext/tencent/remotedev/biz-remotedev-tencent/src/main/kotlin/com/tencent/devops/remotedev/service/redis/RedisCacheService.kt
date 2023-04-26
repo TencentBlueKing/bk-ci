@@ -51,7 +51,7 @@ class RedisCacheService @Autowired constructor(
 
     fun deleteWorkspaceDetail(workspaceName: String) {
         logger.info("delete workspace detail from redis|$workspaceName")
-        redisOperation.delete("$WORKSPACE_CACHE_KEY_PREFIX:$workspaceName")
+        redisOperation.delete("$WORKSPACE_CACHE_KEY_PREFIX$workspaceName")
     }
 
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
