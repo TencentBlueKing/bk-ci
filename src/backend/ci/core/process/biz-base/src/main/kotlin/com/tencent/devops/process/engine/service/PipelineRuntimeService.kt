@@ -914,6 +914,7 @@ class PipelineRuntimeService @Autowired constructor(
                     updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
                     containerBuildRecords = containerBuildRecords,
+                    taskBuildRecords = taskBuildRecords,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
                 )
