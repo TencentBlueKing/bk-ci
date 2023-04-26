@@ -502,7 +502,7 @@ class ProjectDao {
     fun listUnapprovedByUserId(
         dslContext: DSLContext,
         userId: String
-    ): Result<TProjectRecord>? {
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.project.service.permission.config
 
+import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -102,6 +103,7 @@ class ProjectPermissionConfiguration {
         dslContext = dslContext,
         authResourceApi = authResourceApi
     )
+
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
     fun githubStreamProjectPermissionService(

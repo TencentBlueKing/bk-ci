@@ -59,6 +59,13 @@ abstract class AbsPermissionProjectService @Autowired constructor(
         }
     }
 
+    override fun getUserProjectsByPermission(
+        userId: String,
+        action: String
+    ): List<String> {
+        return emptyList()
+    }
+
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         // 1. 转换projectCode为iam侧分级管理员Id
         val iamProjectId = getProjectId(projectCode)

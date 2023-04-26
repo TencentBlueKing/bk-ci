@@ -568,22 +568,27 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // 是否需要toset
-            val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects.isEmpty() && !unApproved) {
+            val projectsWithVisitPermission = getProjectFromAuth(userId, accessToken).toSet()
+            if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }
             val list = ArrayList<ProjectVO>()
-            if (projects.isNotEmpty()) {
+            val projectsWithManagePermission = projectPermissionService.filterProjectsWithManagePermission(userId)
+            if (projectsWithVisitPermission.isNotEmpty()) {
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
-                    englishNameList = projects.toList(),
+                    englishNameList = projectsWithVisitPermission.toList(),
                     offset = null,
                     limit = null,
                     searchName = null,
                     enabled = enabled
                 ).map {
-                    list.add(ProjectUtils.packagingBean(it))
+                    list.add(
+                        ProjectUtils.packagingBean(
+                            tProjectRecord = it,
+                            projectsWithManagePermission = projectsWithManagePermission
+                        )
+                    )
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
@@ -591,7 +596,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
-                )?.map { list.add(ProjectUtils.packagingBean(it)) }
+                ).map {
+                    list.add(
+                        ProjectUtils.packagingBean(
+                            tProjectRecord = it,
+                            projectsWithManagePermission = listOf(it.englishName)
+                        )
+                    )
+                }
             }
             success = true
             return list
