@@ -50,6 +50,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -94,6 +95,7 @@ class RbacAuthAutoConfiguration {
     ) = TokenServiceImpl(iamConfiguration, apigwHttpClientServiceImpl)
 
     @Bean
+    @ConditionalOnMissingBean
     fun authTokenApi(
         redisOperation: RedisOperation,
         iamTokenService: TokenServiceImpl
