@@ -250,13 +250,9 @@ class DevCloudRemoteDevService @Autowired constructor(
         event: WorkspaceCreateEvent
     ): List<EnvVar> {
         val envVarList = mutableListOf<EnvVar>()
-        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
-        allCustomizedEnvs.forEach { (t, u) ->
-            envVarList.add(EnvVar(t, u))
-        }
-
         envVarList.addAll(
             listOf(
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
@@ -265,7 +261,6 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
-                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
                 EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
@@ -276,6 +271,11 @@ class DevCloudRemoteDevService @Autowired constructor(
 
             )
         )
+
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
+        }
 
         return envVarList
     }
