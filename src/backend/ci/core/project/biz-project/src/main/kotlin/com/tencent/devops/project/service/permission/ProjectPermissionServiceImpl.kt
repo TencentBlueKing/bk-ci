@@ -135,4 +135,6 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun needApproval(needApproval: Boolean?) = false
+
+    override fun filterProjectsWithManagePermission(userId: String, ): List<String>? = null
 }
