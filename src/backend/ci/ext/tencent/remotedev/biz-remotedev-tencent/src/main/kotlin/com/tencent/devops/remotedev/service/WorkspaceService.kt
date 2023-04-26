@@ -60,6 +60,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -767,6 +768,7 @@ class WorkspaceService @Autowired constructor(
             return true
         }
     }
+
     // 封装统一分发WS的方法
     fun dispatchWebsocketPushEvent(
         userId: String,
@@ -1102,18 +1104,38 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
+        redisCache.getWorkspaceDetail(workspaceName)?.let {
+            return WorkspaceProxyDetail(
+                workspaceName = workspaceName,
+                podIp = it.environmentIP,
+                sshKey = it.sshKey,
+                environmentHost = it.environmentHost
+            )
+        }
+
         val userSet = workspaceDao.fetchWorkspaceUser(
             dslContext,
             workspaceName
         ).toSet()
         val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName)
-
+        val workspaceInfo =
+            client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
+        redisCache.saveWorkspaceDetail(
+            workspaceName,
+            WorkSpaceCacheInfo(
+                sshKey,
+                workspaceInfo.environmentHost,
+                workspaceInfo.hostIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.namespace
+            )
+        )
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
-            podIp = workspaceInfo.data?.environmentIP ?: "",
+            podIp = workspaceInfo.environmentIP,
             sshKey = sshKey,
-            environmentHost = workspaceInfo.data?.environmentHost ?: ""
+            environmentHost = workspaceInfo.environmentHost
         )
     }
 
