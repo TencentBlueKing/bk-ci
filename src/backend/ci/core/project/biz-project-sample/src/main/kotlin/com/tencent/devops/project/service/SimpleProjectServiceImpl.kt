@@ -131,7 +131,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): List<String>? {
         return projectPermissionService.filterProjects(
-            userId = userId!!,
+            userId = userId,
             permission = permission
         )
     }
