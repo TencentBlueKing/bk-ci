@@ -247,16 +247,13 @@ class BcsContainerService @Autowired constructor(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
                     ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_MACHINE_CREATION_FAILED) +
+                    I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
                     ":${failedMsg ?: taskStatus.message}"
                 )
             }
             return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
         }
-    }
-
-    private fun combinationI18nMessage(message: String, errorMessage: String): String {
-        return I18nUtil.getCodeLanMessage(message) + I18nUtil.getCodeLanMessage(errorMessage)
     }
 
     override fun startBuilder(
