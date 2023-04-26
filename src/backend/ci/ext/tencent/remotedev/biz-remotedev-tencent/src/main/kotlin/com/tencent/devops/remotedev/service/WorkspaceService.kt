@@ -1350,7 +1350,7 @@ class WorkspaceService @Autowired constructor(
                         "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
-            //清缓存
+            // 清缓存
             redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
@@ -1415,7 +1415,7 @@ class WorkspaceService @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
-            //清缓存
+            // 清缓存
             redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
