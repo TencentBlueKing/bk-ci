@@ -589,7 +589,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
-                            projectsWithManagePermission = projectsWithManagePermission
+                            managePermission = projectsWithManagePermission?.contains(it.englishName)
                         )
                     )
                 }
@@ -603,7 +603,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
-                            projectsWithManagePermission = listOf(it.englishName)
+                            managePermission = true
                         )
                     )
                 }

@@ -42,7 +42,7 @@ object ProjectUtils {
 
     fun packagingBean(
         tProjectRecord: TProjectRecord,
-        projectsWithManagePermission: List<String>? = null
+        managePermission: Boolean? = null
     ): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
@@ -106,7 +106,7 @@ object ProjectUtils {
                 JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
             },
             authSecrecy = tProjectRecord.authSecrecy,
-            managePermission = projectsWithManagePermission?.contains(tProjectRecord.englishName)
+            managePermission = managePermission
         )
     }
 
