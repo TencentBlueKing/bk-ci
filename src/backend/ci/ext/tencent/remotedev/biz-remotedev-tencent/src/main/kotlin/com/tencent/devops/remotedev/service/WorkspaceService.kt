@@ -305,6 +305,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
+            getOrSaveWorkspaceDetail(event.workspaceName)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
             bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
@@ -539,6 +540,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
+            getOrSaveWorkspaceDetail(workspaceName)
             redisHeartBeat.refreshHeartbeat(workspaceName)
         } else {
             // 启动失败,记录为EXCEPTION
@@ -1104,25 +1106,26 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        redisCache.getWorkspaceDetail(workspaceName)?.let {
-            return WorkspaceProxyDetail(
+        return getOrSaveWorkspaceDetail(workspaceName).let {
+            WorkspaceProxyDetail(
                 workspaceName = workspaceName,
                 podIp = it.environmentIP,
                 sshKey = it.sshKey,
                 environmentHost = it.environmentHost
             )
         }
+    }
 
-        val userSet = workspaceDao.fetchWorkspaceUser(
-            dslContext,
-            workspaceName
-        ).toSet()
-        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-        val workspaceInfo =
-            client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
-        redisCache.saveWorkspaceDetail(
-            workspaceName,
-            WorkSpaceCacheInfo(
+    private fun getOrSaveWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo {
+        return redisCache.getWorkspaceDetail(workspaceName) ?: run {
+            val userSet = workspaceDao.fetchWorkspaceUser(
+                dslContext,
+                workspaceName
+            ).toSet()
+            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
+            val cache = WorkSpaceCacheInfo(
                 sshKey,
                 workspaceInfo.environmentHost,
                 workspaceInfo.hostIP,
@@ -1130,13 +1133,12 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.environmentIP,
                 workspaceInfo.namespace
             )
-        )
-        return WorkspaceProxyDetail(
-            workspaceName = workspaceName,
-            podIp = workspaceInfo.environmentIP,
-            sshKey = sshKey,
-            environmentHost = workspaceInfo.environmentHost
-        )
+            redisCache.saveWorkspaceDetail(
+                workspaceName,
+                cache
+            )
+            return cache
+        }
     }
 
     fun preCiAgent(agentId: String, workspaceName: String): Boolean {
@@ -1348,6 +1350,8 @@ class WorkspaceService @Autowired constructor(
                         "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
+            //清缓存
+            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
@@ -1411,6 +1415,8 @@ class WorkspaceService @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
+            //清缓存
+            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->

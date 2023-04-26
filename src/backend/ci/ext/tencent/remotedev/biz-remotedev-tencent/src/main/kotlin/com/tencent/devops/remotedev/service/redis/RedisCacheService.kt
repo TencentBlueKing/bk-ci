@@ -15,7 +15,7 @@ import java.util.concurrent.TimeUnit
 @Service
 class RedisCacheService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper,
+    private val objectMapper: ObjectMapper
 ) {
 
     companion object {
@@ -41,11 +41,17 @@ class RedisCacheService @Autowired constructor(
         workspaceName: String,
         cache: WorkSpaceCacheInfo
     ) {
+        logger.info("save workspace detail from redis|$workspaceName|$cache")
         redisOperation.set(
             key = "$WORKSPACE_CACHE_KEY_PREFIX:$workspaceName",
             value = JsonUtil.toJson(cache),
             expiredInSecond = CACHE_EXPIRE_TIME
         )
+    }
+
+    fun deleteWorkspaceDetail(workspaceName: String) {
+        logger.info("delete workspace detail from redis|$workspaceName")
+        redisOperation.delete("$WORKSPACE_CACHE_KEY_PREFIX:$workspaceName")
     }
 
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
