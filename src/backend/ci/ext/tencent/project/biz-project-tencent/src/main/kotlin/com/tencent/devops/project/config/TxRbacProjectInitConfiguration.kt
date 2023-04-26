@@ -48,6 +48,10 @@ class TxRbacProjectInitConfiguration {
 
     @Bean
     @Primary
+    fun bkAuthProperties() = BkAuthProperties()
+
+    @Bean
+    @Primary
     fun authTokenApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
