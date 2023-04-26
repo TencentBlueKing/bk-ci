@@ -30,6 +30,7 @@ package com.tencent.devops.artifactory.resources.user
 import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.devops.artifactory.api.user.UserTencentFileResource
 import com.tencent.devops.artifactory.pojo.CopyFileRequest
+import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -61,17 +62,22 @@ class UserTencentFileResourceImpl @Autowired constructor(
 
     override fun copy(userId: String, copyFileRequest: CopyFileRequest) {
         with(copyFileRequest) {
-            val filename = PathUtils.resolveName(srcFileFullPath)
-            val dstFullPath = PathUtils.combineFullPath(dstDirFullPath, filename)
-            bkRepoService.copyFile(
-                userId = userId,
-                srcProjectId = projectId,
-                srcArtifactoryType = srcArtifactoryType,
-                srcFullPath = srcFileFullPath,
-                dstProjectId = projectId,
-                dstArtifactoryType = dstArtifactoryType,
-                dstFullPath = dstFullPath
-            )
+            if (dstArtifactoryType != ArtifactoryType.CUSTOM_DIR) {
+                throw IllegalArgumentException("invalid dstArtifactoryType")
+            }
+            srcFileFullPaths.forEach {
+                val filename = PathUtils.resolveName(it)
+                val dstFullPath = PathUtils.combineFullPath(dstDirFullPath, filename)
+                bkRepoService.copyFile(
+                    userId = userId,
+                    srcProjectId = projectId,
+                    srcArtifactoryType = srcArtifactoryType,
+                    srcFullPath = it,
+                    dstProjectId = projectId,
+                    dstArtifactoryType = dstArtifactoryType,
+                    dstFullPath = dstFullPath
+                )
+            }
         }
     }
 
