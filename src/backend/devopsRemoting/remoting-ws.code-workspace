@@ -26,6 +26,12 @@
         },
         {
             "path": "src/registry-facade-api"
+        },
+        {
+            "path": "src/proxy"
+        },
+        {
+            "path": "../../../../remote-dev-images"
         }
     ],
     "settings": {

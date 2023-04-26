@@ -1,0 +1,96 @@
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent
+
+proxy:
+  # 远程开发泛域名
+  domain: 
+  https:
+    crt:
+    key:
+  # wsproxy service名称
+  wsproxyName: wsproxy 
+  # registry-facade service名称 
+  registryFacadeName: registry-facade
+
+apisix:
+  initContainer:
+    image: mirrors.tencent.com/ruotiantang/apisix
+    tag: busybox-1.28
+
+  apisix:
+    image:
+      repository: mirrors.tencent.com/ruotiantang/apisix
+      pullPolicy: IfNotPresent
+      tag: 3.2.0-debian
+
+  admin:
+    credentials:
+      admin: edd1c9f034335f136f87ad84b625c8f1
+      viewer: 4054f7cf07e344346cd3f287985e76a2
+
+  gateway:
+    type: LoadBalancer
+    externalTrafficPolicy: Cluster
+    http:
+      enabled: true
+      servicePort: 80
+      containerPort: 9080
+      # -- Support multiple http ports, See [Configuration](https://github.com/apache/apisix/blob/0bc65ea9acd726f79f80ae0abd8f50b7eb172e3d/conf/config-default.yaml#L24)
+      additionalContainerPorts: 
+        - port: 9000
+    tls:
+      enabled: true
+      servicePort: 443
+      containerPort: 9443
+      additionalContainerPorts:
+        - port: 20000
+    stream:
+      enabled: true
+      only: false
+      tcp: 
+        - 2200
+
+  dashboard:
+    enabled: true  
+    image:
+      repository: mirrors.tencent.com/ruotiantang/apisix
+      pullPolicy: IfNotPresent
+      tag: apisix-dashboard-3.0.0-alpine
+    config:
+      authentication:
+        secret: secret
+        expireTime: 3600
+        users:
+          - username: admin
+            password: admin
+      conf:
+        etcd:
+          endpoints:
+            # 修改releasename时要在这里同步更改，因为是引用的chart无法从values中插入 {{ .Release.Name }}
+            - proxy-etcd:2379
+
+  etcd:
+    image:
+      registry: mirrors.tencent.com
+      repository: ruotiantang/apisix
+      tag: etcd-3.5.7-debian-11-r14
+      pullPolicy: IfNotPresent
+    volumePermissions:
+        image:
+          registry: mirrors.tencent.com
+          repository: ruotiantang/apisix
+          tag: bitnami-shell-11-debian-11-r90
+          pullPolicy: IfNotPresent 
+    persistence:
+      enabled: false
+      size: 100Mi
+
+  apisix-ingress-controller:
+    image:
+      repository: mirrors.tencent.com/ruotiantang/apisix
+      pullPolicy: IfNotPresent
+      tag: apisix-ingress-controller-1.6.0
+    initContainer:
+      image: mirrors.tencent.com/ruotiantang/apisix
+      tag: busybox-1.28
