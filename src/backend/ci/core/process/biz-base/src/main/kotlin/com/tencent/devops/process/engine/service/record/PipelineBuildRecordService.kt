@@ -397,10 +397,11 @@ class PipelineBuildRecordService @Autowired constructor(
             }
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             val recordStages = recordStageDao.getRecords(
-                context, projectId, pipelineId, buildId, executeCount, runningStatusSet
+                context, projectId, pipelineId, buildId, executeCount
             )
             // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
+                if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态（包括矩阵）
                 val recordContainers = recordContainerDao.getRecords(
@@ -472,10 +473,11 @@ class PipelineBuildRecordService @Autowired constructor(
             }
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
             val recordStages = recordStageDao.getRecords(
-                context, projectId, pipelineId, buildId, executeCount, runningStatusSet
+                context, projectId, pipelineId, buildId, executeCount
             )
             // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
+                if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态
                 val recordContainers = recordContainerDao.getRecords(
