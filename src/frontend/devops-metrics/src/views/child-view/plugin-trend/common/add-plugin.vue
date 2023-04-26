@@ -169,6 +169,7 @@ watch(
             </li>
             <bk-exception
               type="empty"
+              :description="t('noData')"
               scene="part"
               v-if="projectOptionPluginList.length <= 0"
             />
@@ -188,6 +189,7 @@ watch(
             </li>
             <bk-exception
               type="empty"
+              :description="t('noData')"
               scene="part"
               v-if="projectPluginList.length <= 0"
             />
