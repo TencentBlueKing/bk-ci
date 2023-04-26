@@ -604,7 +604,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             )
             if (!errorJsonStr.isNullOrBlank() && JsonSchemaUtil.validateJson(errorJsonStr)) {
                 val errorCodes = JsonUtil.to(errorJsonStr, object : TypeReference<Set<Int>>() {})
-                if (errorCodes.isNotEmpty()) {
+                if (errorCodes.isEmpty()) {
                     return
                 }
                 // 校验code码是否符合插件自定义错误码规范

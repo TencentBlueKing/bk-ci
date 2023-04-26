@@ -69,7 +69,7 @@ interface UserAtomResource {
     @Path("/")
     @BkInterfaceI18n(
         fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data.atomCode", "data.version"],
+        keyPrefixNames = ["data.records[*].atomCode", "data.records[*].version"],
         fixKeyTailPrefixName = "releaseInfo"
     )
     fun listAllPipelineAtoms(

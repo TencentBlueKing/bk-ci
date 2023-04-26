@@ -52,6 +52,7 @@ data class InstalledAtom(
     @ApiModelProperty("插件范畴")
     val category: String?,
     @ApiModelProperty("插件简介")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("发布者")
     @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")

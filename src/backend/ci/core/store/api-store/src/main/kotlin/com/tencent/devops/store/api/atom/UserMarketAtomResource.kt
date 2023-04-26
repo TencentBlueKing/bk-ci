@@ -74,7 +74,7 @@ interface UserMarketAtomResource {
     @GET
     @BkInterfaceI18n(
         fixKeyHeadPrefixName = "ATOM",
-        keyPrefixNames = ["data[*].records[*].code", "data.records[*].version"],
+        keyPrefixNames = ["data[*].records[*].code", "data[*].records[*].version"],
         fixKeyTailPrefixName = "releaseInfo"
     )
     fun mainPageList(
