@@ -572,7 +572,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }
-            val list = ArrayList<ProjectVO>()
+            val projectsResp = mutableListOf<ProjectVO>()
             if (projectsWithVisitPermission.isNotEmpty()) {
                 val projectsWithManagePermission = projectPermissionService.filterProjects(
                     userId = userId,
@@ -585,8 +585,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     limit = null,
                     searchName = null,
                     enabled = enabled
-                ).map {
-                    list.add(
+                ).forEach {
+                    projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             projectsWithManagePermission = projectsWithManagePermission
@@ -599,8 +599,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
-                ).map {
-                    list.add(
+                ).forEach {
+                    projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
                             projectsWithManagePermission = listOf(it.englishName)
@@ -609,7 +609,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             success = true
-            return list
+            return projectsResp
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
