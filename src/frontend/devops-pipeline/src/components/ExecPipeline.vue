@@ -162,21 +162,15 @@
                                 <template v-slot="props">
                                     <div class="build-error-cell">
                                         <span
-                                            :ref="`error-${props.$index}`"
-                                            :class="{
-                                                'build-error-info': true,
-                                                'is-overflow': isErrorOverflow[props.$index]
-                                            }">
+                                            class="build-error-info">
                                             {{ props.row.errorMsg }}
                                         </span>
                                         <bk-button
-                                            v-if="isErrorOverflow[props.$index]"
                                             class="build-error-see-more"
                                             theme="primary"
                                             text
-                                            @click="showErrorMsgDetail(props.row)"
                                         >
-                                            {{$t('editPage.seeMore')}}
+                                            {{$t('history.viewLog')}}
                                         </bk-button>
                                     </div>
                                 </template>
@@ -229,24 +223,6 @@
                 :execute-count="executeCount"
             ></complete-log>
         </template>
-        <bk-dialog
-            v-model="seeMoreErrorInfo"
-            render-directive="if"
-            :width="960"
-            :title="$t('错误信息')"
-            @confirm="hideErrorMsgDetail"
-        >
-            <div class="error-row-detail" v-if="errorRow">
-                <h3>
-                    <bk-tag>{{ $t(errorRow.errorTypeConf.title) }}</bk-tag>
-                    <span>{{ errorRow.errorCode }}</span>
-                    <span>{{ errorRow.taskName }}</span>
-                </h3>
-                <pre>
-                    {{ errorRow.errorMsg }}
-                </pre>
-            </div>
-        </bk-dialog>
     </div>
 </template>
 
@@ -282,9 +258,9 @@
                 showErrors: false,
                 activeErrorAtom: null,
                 afterAsideVisibleDone: null,
-                seeMoreErrorInfo: false,
                 errorRow: null,
                 isErrorOverflow: [],
+                curPipeline: this.execDetail?.model,
                 pipelineErrorGuideLink:
                     '//bk.tencent.com/docs/markdown/持续集成平台/产品白皮书/FAQS/FAQ.md'
             }
@@ -296,9 +272,7 @@
                 'showPanelType',
                 'isPropertyPanelVisible'
             ]),
-            curPipeline () {
-                return this.execDetail?.model
-            },
+
             panels () {
                 return [
                     {
@@ -451,11 +425,15 @@
                     this.afterAsideVisibleDone?.()
                     this.afterAsideVisibleDone = null
                 }
+            },
+            'execDetail.model': function (val) {
+                if (val) {
+                    this.curPipeline = val
+                }
             }
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
-            this.calcOverflow()
             if (this.errorList?.length > 0) {
                 this.setAtomLocate(this.errorList[0])
                 this.setShowErrorPopup()
@@ -465,9 +443,6 @@
             this.togglePropertyPanel({
                 isShow: false
             })
-        },
-        updated () {
-            this.calcOverflow()
         },
         methods: {
             ...mapActions('atom', [
@@ -483,20 +458,8 @@
             isSkip (status) {
                 return ['SKIP'].includes(status)
             },
-            calcOverflow () {
-                this.isErrorOverflow = this.errorList?.map((_, index) => this.checkOverflow(index)) ?? []
-            },
-            checkOverflow (index) {
-                const ele = this.$refs?.[`error-${index}`]?.[0]
-                return ele?.scrollWidth - 100 > ele?.offsetWidth
-            },
             showErrorMsgDetail (row) {
-                this.seeMoreErrorInfo = true
                 this.errorRow = row
-            },
-            hideErrorMsgDetail () {
-                this.seeMoreErrorInfo = false
-                this.errorRow = null
             },
             toggleCompleteLog () {
                 this.showLog = !this.showLog
@@ -671,29 +634,66 @@
             async locateAtom (row, isLocate = true) {
                 try {
                     const { stageId, containerId, taskId, matrixFlag } = row
-                    const stage = this.curPipeline.stages.find((stage) => stage.id === stageId)
+                    let stageIndex, containerGroupIndex, containerIndex, elementIndex
+                    const stage = this.curPipeline.stages.find((stage, index) => {
+                        if (stage.id === stageId) {
+                            stageIndex = index
+                            return true
+                        }
+                        return false
+                    })
                     let container
                     if (matrixFlag) {
                         const numContainerId = parseInt(containerId, 10)
-                        const matrixId = Math.floor(numContainerId / 1000)
+                        const matrixId = Math.floor(numContainerId / 1000).toString()
                         container = stage.containers
-                            .filter((item) => Array.isArray(item.groupContainers))
-                            .map((item) => item.groupContainers)
-                            .flat()
-                            .find((item) => item.id === containerId)
+                            .find((item, index) => {
+                                if (item.id === matrixId) {
+                                    containerIndex = index
+                                    return true
+                                }
+                                return false
+                            })?.groupContainers?.find?.((item, index) => {
+                                if (item.id === containerId) {
+                                    containerGroupIndex = index
+                                    return true
+                                }
+                                return false
+                            })
+                        console.log(stage.containers)
                         await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
                     } else {
-                        container = stage.containers.find((item) => item.id === containerId)
+                        container = stage.containers.find((item, index) => {
+                            if (item.id === containerId) {
+                                containerIndex = index
+                                return true
+                            }
+                            return false
+                        })
                     }
 
-                    const element = container.elements.find((element) => element.id === taskId)
+                    const element = container.elements.find((element, index) => {
+                        if (element.id === taskId) {
+                            elementIndex = index
+                            return true
+                        }
+                        return false
+                    })
                     if (element) {
                         this.$set(element, 'locateActive', isLocate)
                     } else {
                         this.$set(container, 'locateActive', isLocate)
                     }
 
-                    console.log(container, element, taskId)
+                    this.togglePropertyPanel({
+                        isShow: true,
+                        editingElementPos: {
+                            stageIndex,
+                            containerGroupIndex,
+                            containerIndex,
+                            elementIndex
+                        }
+                    })
                 } catch (e) {
                     console.log(e)
                 }
@@ -703,7 +703,6 @@
                 if (this.activeErrorAtom?.taskId) {
                     this.locateAtom(this.activeErrorAtom, false)
                 }
-                this.hideErrorPopup()
                 this.locateAtom(row)
                 this.activeErrorAtom = row
             },
@@ -967,35 +966,5 @@
   .exec-count-select-option-user {
     color: #979ba5;
   }
-}
-.error-row-detail {
-    max-height: 600px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    > h3 {
-        margin: 0 0 16px 0;
-        display: inline-grid;
-        flex-direction: row;
-        align-items: center;
-        grid-auto-flow: column;
-        grid-gap: 12px;
-        font-size: 12px;
-        font-weight: normal;
-        flex-shrink: 0;
-    }
-    > pre {
-        flex: 1;
-        width: 100%;
-        margin: 6px 0;
-        padding: 6px 10px;
-        background: #fafbfd;
-        border: 1px solid #dcdee5;
-        border-radius: 2px;
-        overflow-y: auto;
-        white-space: pre-wrap;
-        word-wrap: break-word;
-        text-align: left;
-    }
 }
 </style>

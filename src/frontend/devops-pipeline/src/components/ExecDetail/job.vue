@@ -14,7 +14,7 @@
             @click="handleDebug"
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-
+            <error-summary v-if="activeErorr" :error="activeErorr"></error-summary>
             <plugin-log :id="currentJob.containerHashId"
                 :build-id="execDetail.id"
                 :exec-detail="execDetail"
@@ -51,6 +51,7 @@
     import jobLog from './log/jobLog'
     import pluginLog from './log/pluginLog'
     import detailContainer from './detailContainer'
+    import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import ContainerContent from '@/components/ContainerPropertyPanel/ContainerContent'
 
     export default {
@@ -58,7 +59,8 @@
             detailContainer,
             jobLog,
             pluginLog,
-            ContainerContent
+            ContainerContent,
+            ErrorSummary
         },
         props: {
             execDetail: {
@@ -118,6 +120,13 @@
             executeCount () {
                 const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1)
                 return Math.max(...executeCountList)
+            },
+            activeErorr () {
+                try {
+                    return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id)
+                } catch (error) {
+                    return null
+                }
             }
         },
         methods: {

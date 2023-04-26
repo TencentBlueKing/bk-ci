@@ -174,28 +174,28 @@
         props: {
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             container: {
                 type: Object,
-                requiured: true
+                required: true
             },
             atom: {
                 type: Object,
-                requiured: true
+                required: true
             },
             stageIndex: {
                 type: Number,
-                requiured: true
+                required: true
             },
             containerIndex: {
                 type: Number,
-                requiured: true
+                required: true
             },
             containerGroupIndex: Number,
             atomIndex: {
                 type: Number,
-                requiured: true
+                required: true
             },
             isWaiting: Boolean,
             containerDisabled: Boolean,

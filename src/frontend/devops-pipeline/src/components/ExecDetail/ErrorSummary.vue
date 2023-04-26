@@ -1,0 +1,85 @@
+<template>
+    <div class="error-log-summary">
+        <p @click="toggleCollapse" class="error-log-summary-header">
+            <span>
+                <i :class="['devops-icon icon-angle-down', {
+                    collapsed: isCollapse
+                }]"></i>
+                {{ errorTypeAlias }}
+            </span>
+            <span>{{ error.errorCode }}</span>
+        </p>
+        <article v-if="!isCollapse" class="error-log-summary-content">
+            {{ error.errorMsg }}
+        </article>
+    </div>
+</template>
+
+<script>
+    import { errorTypeMap } from '@/utils/pipelineConst'
+
+    export default {
+        props: {
+            error: {
+                type: Object,
+                default: () => ({})
+            }
+        },
+        data () {
+            return {
+                isCollapse: false
+            }
+        },
+        computed: {
+            errorTypeAlias () {
+                return this.$t(errorTypeMap[this.error?.errorType]?.title ?? '--')
+            }
+        },
+        methods: {
+            toggleCollapse () {
+                this.isCollapse = !this.isCollapse
+            }
+        }
+    }
+</script>
+
+<style lang="scss">
+    .error-log-summary{
+        padding: 12px;
+        display: flex;
+        flex-direction: column;
+        font-size: 12px;
+        background: #404145;
+        &-header {
+            flex-shrink: 0;
+            color: #f73131;
+            display: flex;
+            align-items: center;
+            span:first-child {
+                display: flex;
+                align-items: center;
+                &:after {
+                    content: '-';
+                    margin: 0 4px;
+                    font-size: 12px;
+                    color: #f73131;
+                }
+                > .devops-icon {
+                    margin-right: 10px;
+                    font-weight: bold;
+                    font-size: 10px;
+                    transform: rotate(0);
+                    &.collapsed {
+                        transition: transform 0.3s ease;
+                        transform: rotate(-90deg);
+                    }
+                }
+            }
+        }
+        &-content {
+            flex: 1;
+            padding: 8px 20px;
+            color: white;
+        }
+    }
+</style>

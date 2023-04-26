@@ -125,11 +125,11 @@
         props: {
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             container: {
                 type: Object,
-                requiured: true
+                required: true
             },
             stageIndex: Number,
             containerIndex: Number,

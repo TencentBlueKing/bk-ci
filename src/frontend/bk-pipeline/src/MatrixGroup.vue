@@ -51,7 +51,7 @@
         props: {
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             matrix: {
                 type: Object,

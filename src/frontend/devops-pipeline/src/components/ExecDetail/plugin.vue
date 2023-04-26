@@ -16,6 +16,7 @@
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
+            <error-summary v-if="activeErorr" :error="activeErorr"></error-summary>
             <plugin-log :id="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
@@ -43,6 +44,7 @@
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
     import pluginLog from './log/pluginLog'
+    import ErrorSummary from '@/components/ExecDetail/ErrorSummary'
     import Report from './Report'
     import Artifactory from './Artifactory'
 
@@ -50,7 +52,8 @@
         components: {
             detailContainer,
             ReferenceVariable,
-            pluginLog
+            pluginLog,
+            ErrorSummary
         },
         props: {
             execDetail: {
@@ -132,6 +135,14 @@
                             isInstanceTemplate: false
                         }
                     }
+                }
+            },
+
+            activeErorr () {
+                try {
+                    return this.execDetail.errorInfoList.find(error => error.taskId === this.currentElement.id)
+                } catch (error) {
+                    return null
                 }
             },
 

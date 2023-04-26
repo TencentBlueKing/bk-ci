@@ -181,7 +181,7 @@
             },
             stage: {
                 type: Object,
-                requiured: true
+                required: true
             },
             stageIndex: Number,
             stageLength: Number,

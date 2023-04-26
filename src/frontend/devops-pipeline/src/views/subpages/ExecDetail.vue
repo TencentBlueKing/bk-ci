@@ -329,9 +329,7 @@
                 return mapThemeOfStatus(this.execDetail?.status)
             },
             statusLabel () {
-                return this.execDetail?.status
-        ? this.$t(`details.statusMap.${this.execDetail?.status}`)
-                : ''
+                return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
             }
         },
 

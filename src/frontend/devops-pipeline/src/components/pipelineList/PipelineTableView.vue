@@ -172,7 +172,7 @@
                     {{ $t('apply') }}
                 </bk-button>
                 <template
-                    v-else-if="props.row.hasPermission"
+                    v-else-if="props.row.hasPermission && !props.row.delete"
                 >
                     <bk-button
                         text
