@@ -574,8 +574,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             val projectsResp = mutableListOf<ProjectVO>()
             if (projectsWithVisitPermission.isNotEmpty()) {
-                val projectsWithManagePermission = projectPermissionService.filterProjects(
+                val projectsWithManagePermission = getProjectFromAuth(
                     userId = userId,
+                    accessToken = accessToken,
                     permission = AuthPermission.MANAGE
                 )
                 projectDao.listByEnglishName(
@@ -641,7 +642,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
-                    // todo routerTag 是灰度的项目，跳转去哪里申请权限
                     routerTag = buildRouterTag(it.value3())
                 )
             )
@@ -1092,6 +1092,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
+
+    abstract fun getProjectFromAuth(userId: String?, accessToken: String?, permission: AuthPermission): List<String>?
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 

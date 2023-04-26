@@ -56,6 +56,11 @@ interface ProjectPermissionService {
 
     fun getUserProjectsAvailable(userId: String): Map<String, String>
 
+    fun filterProjects(
+        userId: String,
+        permission: AuthPermission
+    ): List<String>?
+
     fun verifyUserProjectPermission(
         accessToken: String? = null,
         projectCode: String,
@@ -74,6 +79,4 @@ interface ProjectPermissionService {
     )
 
     fun needApproval(needApproval: Boolean?): Boolean
-
-    fun filterProjects(userId: String, permission: AuthPermission): List<String>?
 }

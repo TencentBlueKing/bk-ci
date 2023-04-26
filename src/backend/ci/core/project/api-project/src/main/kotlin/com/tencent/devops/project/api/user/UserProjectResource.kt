@@ -62,6 +62,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface UserProjectResource {
 
     @GET
@@ -84,7 +85,7 @@ interface UserProjectResource {
 
     @GET
     @Path("/listProjectsForApply")
-    @ApiOperation("查询项目--用于申请加入")
+    @ApiOperation("查询项目--用于权限申请界面")
     fun listProjectsForApply(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
