@@ -1106,14 +1106,17 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        return getOrSaveWorkspaceDetail(workspaceName).let {
+        return redisCache.getWorkspaceDetail(workspaceName)?.let {
             WorkspaceProxyDetail(
                 workspaceName = workspaceName,
                 podIp = it.environmentIP,
                 sshKey = it.sshKey,
                 environmentHost = it.environmentHost
             )
-        }
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+            defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.formatErrorMessage
+        )
     }
 
     private fun getOrSaveWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo {
