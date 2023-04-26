@@ -27,115 +27,75 @@
 
 package com.tencent.devops.common.pipeline.init
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PCG_PUBLIC_BUILD_RESOURCES
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PRIVATE_BUILD_A_CLUSTER
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PRIVATE_SINGLE_BUIL_MACHINE
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUBLIC_DOCKER_ON_BCS
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUBLIC_DOCKER_ON_DEVCLOUD
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TENCENT_SELF_DEVELOPED_CLOUD
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
 
 class BuildTypeEnumModifier : EnumModifier {
 
     override fun modified() {
+        val language = I18nUtil.getDefaultLocaleLanguage()
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.MACOS), false, true, false)
+            additionalValues = arrayOf(BuildType.ESXi.getI18n(language), listOf(OS.MACOS), false, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.MACOS.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.MACOS), false, true, true)
+            additionalValues = arrayOf(BuildType.MACOS.getI18n(language), listOf(OS.MACOS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.DOCKER.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(BuildType.DOCKER.getI18n(language), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_DEVCLOUD.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_PUBLIC_DOCKER_ON_DEVCLOUD,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(BuildType.PUBLIC_DEVCLOUD.getI18n(language), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_BCS.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_PUBLIC_DOCKER_ON_BCS,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.LINUX), true, true, false)
+            additionalValues = arrayOf(BuildType.PUBLIC_BCS.getI18n(language), listOf(OS.LINUX), true, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ID.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_PRIVATE_SINGLE_BUIL_MACHINE,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues =
+            arrayOf(
+                BuildType.THIRD_PARTY_AGENT_ID.getI18n(language), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true,
+                true
+            )
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ENV.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_PRIVATE_BUILD_A_CLUSTER,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues =
+            arrayOf(
+                BuildType.THIRD_PARTY_AGENT_ENV.getI18n(language), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true,
+                true
+            )
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_PCG.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_PCG_PUBLIC_BUILD_RESOURCES,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ), listOf(OS.LINUX), false, true, true)
+            additionalValues =
+            arrayOf(BuildType.THIRD_PARTY_PCG.getI18n(language), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_TENCENT_SELF_DEVELOPED_CLOUD,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ), listOf(OS.LINUX), false, true, true)
+            additionalValues =
+            arrayOf(BuildType.THIRD_PARTY_DEVCLOUD.getI18n(language), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.WINDOWS.name,
-            additionalValues = arrayOf(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ), listOf(OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf(BuildType.WINDOWS.getI18n(language), listOf(OS.WINDOWS), false, true, true)
         )
     }
 }
