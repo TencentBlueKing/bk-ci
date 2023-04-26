@@ -1098,7 +1098,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
 
-    abstract fun getProjectFromAuth(userId: String?, accessToken: String?, permission: AuthPermission): List<String>?
+    abstract fun getProjectFromAuth(userId: String, accessToken: String?, permission: AuthPermission): List<String>?
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 

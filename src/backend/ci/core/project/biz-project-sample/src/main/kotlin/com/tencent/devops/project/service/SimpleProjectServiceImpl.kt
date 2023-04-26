@@ -126,7 +126,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     override fun getProjectFromAuth(
-        userId: String?,
+        userId: String,
         accessToken: String?,
         permission: AuthPermission
     ): List<String>? {

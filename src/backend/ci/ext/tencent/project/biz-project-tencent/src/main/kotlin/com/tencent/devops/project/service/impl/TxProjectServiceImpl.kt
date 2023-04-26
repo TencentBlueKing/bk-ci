@@ -228,27 +228,13 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun deleteAuth(projectId: String, accessToken: String?) {
-//        logger.warn("Deleting the project $projectId from auth")
-//        try {
-//            val url = "$authUrl/$projectId?access_token=$accessToken"
-//            val request = Request.Builder().url(url).delete().build()
-//            val responseContent = request(request, "Fail to delete the project $projectId")
-//            logger.info("Get the delete project $projectId response $responseContent")
-//            val response: Response<Any?> = objectMapper.readValue(responseContent)
-//            if (response.code.toInt() != 0) {
-//                logger.warn("Fail to delete the project $projectId with response $responseContent")
-//            }
-//            logger.info("Finish deleting the project $projectId from auth")
-//        } catch (t: Throwable) {
-//            logger.warn("Fail to delete the project $projectId from auth", t)
-//        }
         projectPermissionService.deleteResource(projectId)
     }
 
-    // 此处为兼容V0,V3并存的情况, 拉群用户有权限的项目列表需取V0+V3的并集, 无论啥集群, 都需取两个iam环境下的数据, 完全迁移完后可直接指向V3
-    override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
-        // 全部迁移完后,直接用此实现
-//        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
+    override fun getProjectFromAuth(
+        userId: String?,
+        accessToken: String?
+    ): List<String> {
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
         val projectList = mutableSetOf<String>()
@@ -262,6 +248,25 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         return projectList.toList()
     }
+
+    override fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission
+    ): List<String>? {
+        if (rbacTag.isBlank()) {
+            return emptyList()
+        }
+        return bkTag.invokeByTag(rbacTag) {
+            client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+                userId = userId,
+                token = tokenService.getSystemToken(null)!!,
+                action = permission.value
+            ).data
+        }
+
+    }
+
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
@@ -413,7 +418,7 @@ class TxProjectServiceImpl @Autowired constructor(
             return emptyList()
         }
         logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
-        val projectList: MutableList<String> = ArrayList()
+        val projectList = mutableListOf<String>()
         try {
             getIamProjectList(
                 tag = v3Tag,
