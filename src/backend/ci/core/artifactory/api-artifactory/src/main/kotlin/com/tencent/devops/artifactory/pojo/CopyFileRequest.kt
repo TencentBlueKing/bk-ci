@@ -11,9 +11,9 @@ data class CopyFileRequest(
     @ApiModelProperty("源制品类型")
     val srcArtifactoryType: ArtifactoryType,
     @ApiModelProperty("源文件完整路径")
-    val srcFileFullPath: String,
+    val srcFileFullPaths: List<String>,
     @ApiModelProperty("目标制品类型")
-    val dstArtifactoryType: ArtifactoryType,
+    val dstArtifactoryType: ArtifactoryType = ArtifactoryType.CUSTOM_DIR,
     @ApiModelProperty("目标目录完整路径")
     val dstDirFullPath: String
 )
