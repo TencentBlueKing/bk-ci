@@ -196,9 +196,6 @@ const getProjectByName = async () => {
   };
   await http.getAllProjectList(params).then(res => {
     if (res.records.length) {
-      res.records.forEach(i => {
-        i.hide = true;
-      });
       projectList.value = [...res.records, ...projectList.value];
       curProject.value = res.records[0];
       isDisabled.value = curProject.value.permission;
@@ -252,6 +249,7 @@ onMounted(async () => {
               :scroll-loading="scrollLoading"
               @scroll-end="getAllProjectList"
               :remote-method="handleSearchProject"
+              :key="projectList.length"
             >
               <div v-for="(project, index) in projectList"
                 :key="index">
