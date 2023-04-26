@@ -90,11 +90,11 @@ object ProjectMessageCode {
     const val FAILED_UPDATE_LOGO_INFORMATION = "2119041" //更新bcs的项目LOGO信息失败
     const val USER_RESIGNED = "2119042" //用户{0} 已离职
     const val FAILED_USER_INFORMATION = "2119043" //获取用户{0} 信息失败
+    const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" //容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" //调用BSC接口创建项目失败
     const val BK_FAILED_GET_PAASCC_INFORMATION = "bkFailedGetPaasccInformation" //获取PAASCC项目信息失败
-    const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
 
     const val BK_AUTH_CENTER_CREATE_PROJECT_INFO = "BkAuthCenterCreateProjectInfo" // 权限中心创建项目信息：
 }

@@ -46,33 +46,33 @@ package com.tencent.devops.ticket.constant
  *
  */
 object TicketMessageCode {
-    const val CERT_ID_TOO_LONG = "2118001" // 证书名字不能超过128个字符
-    const val CERT_NOT_FOUND = "2118108" // 证书{0}不存在
-    const val CERT_FILE_TYPE_ERROR = "2118109" // 证书文件必须是{0}}文件
-    const val DESCRIPTION_FILE_TYPE_ERROR = "2118110" // 描述文件必须是{0}文件
-    const val CERT_FILE_MUST_BE = "2118111" // 证书文件必须是{0}文件
-    const val INVALID_CERT_ID = "2118113" // 无效的证书ID
+    const val CERT_ID_TOO_LONG = "2129001" // 证书名字不能超过128个字符
 
-    const val CREDENTIAL_NAME_ILLEGAL = "2118101" // 凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)
-    const val CREDENTIAL_ID_ILLEGAL = "2118102" // 凭证标识必须是英文字母、数字或下划线(_)
-    const val CREDENTIAL_NOT_FOUND = "2118103" // 凭证{0}不存在
-    const val CREDENTIAL_FORMAT_INVALID = "2118104" // 凭证格式不正确
-    const val CREDENTIAL_NAME_TOO_LONG = "2118105" // 凭证名字超过32个字符
-    const val CREDENTIAL_ID_TOO_LONG = "2118106" // 凭证ID超过32个字符
-    const val CREDENTIAL_EXIST = "2118107" // 凭证{0}已存在
+    const val CREDENTIAL_NAME_ILLEGAL = "2129002" // 凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)
+    const val CREDENTIAL_ID_ILLEGAL = "2129003" // 凭证标识必须是英文字母、数字或下划线(_)
+    const val CREDENTIAL_NOT_FOUND = "2129004" // 凭证{0}不存在
+    const val CREDENTIAL_FORMAT_INVALID = "2129005" // 凭证格式不正确
+    const val CREDENTIAL_NAME_TOO_LONG = "2129006" // 凭证名字超过32个字符
+    const val CREDENTIAL_ID_TOO_LONG = "2129007" // 凭证ID超过32个字符
+    const val CREDENTIAL_EXIST = "2129008" // 凭证{0}已存在
+    const val CERT_NOT_FOUND = "2129009" // 证书{0}不存在
+    const val CERT_FILE_TYPE_ERROR = "2129010" // 证书文件必须是{0}}文件
+    const val DESCRIPTION_FILE_TYPE_ERROR = "2129011" // 描述文件必须是{0}文件
+    const val CERT_FILE_MUST_BE = "2129012" // 证书文件必须是{0}文件
 
-    const val KEY_FILE_MUST_BE = "2118112" // 密钥文件必须是{0}文件
-    const val FILE_SIZE_CANT_EXCEED = "2118114" // {0}文件大小不能超过{1}
-    const val NAME_SIZE_CANT_EXCEED = "2118115" // {0}名称不能超过{1}
-    const val ILLEGAL_FILE = "2118116" // 不合法的{0}文件
-    const val CERTIFICATE_PASSWORD_WRONG = "2118117" // 证书密码错误
-    const val CERTIFICATE_ALIAS_OR_PASSWORD_WRONG = "2118118" // 证书别名或者别名密码错误
-    const val CERT_USED_BY_OTHERS = "2118119" // 证书{0}已被他人使用
-    const val NAME_ALREADY_EXISTS = "2118120" // 名称{0}已存在
-    const val CERT_ALREADY_EXISTS = "2118121" // 证书{0}已存在
-    const val NAME_NO_EXISTS = "2118122" // 名称{0}不存在
-    const val USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS = "2118123" // 用户({0})在工程({1})下没有证书{2}的{3}权限
-    const val USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS = "2118124" // 用户({0})在工程({1})下没有凭据{2}的{3}权限
+    const val KEY_FILE_MUST_BE = "2129013" // 密钥文件必须是{0}文件
+    const val INVALID_CERT_ID = "2129014" // 无效的证书ID
+    const val FILE_SIZE_CANT_EXCEED = "2129015" // {0}文件大小不能超过{1}
+    const val NAME_SIZE_CANT_EXCEED = "2129016" // {0}名称不能超过{1}
+    const val ILLEGAL_FILE = "2129017" // 不合法的{0}文件
+    const val CERTIFICATE_PASSWORD_WRONG = "2129018" // 证书密码错误
+    const val CERTIFICATE_ALIAS_OR_PASSWORD_WRONG = "2129019" // 证书别名或者别名密码错误
+    const val CERT_USED_BY_OTHERS = "2129020" // 证书{0}已被他人使用
+    const val NAME_ALREADY_EXISTS = "2129021" // 名称{0}已存在
+    const val CERT_ALREADY_EXISTS = "2129022" // 证书{0}已存在
+    const val NAME_NO_EXISTS = "2129023" // 名称{0}不存在
+    const val USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS = "2129024" // 用户({0})在工程({1})下没有证书{2}的{3}权限
+    const val USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS = "2129025" // 用户({0})在工程({1})下没有凭据{2}的{3}权限
 
     const val BK_NO_CREDENTIAL = "bkNoCredential" // 无凭证
     const val BK_NO_CERT = "bkNoCert" // 无证书
