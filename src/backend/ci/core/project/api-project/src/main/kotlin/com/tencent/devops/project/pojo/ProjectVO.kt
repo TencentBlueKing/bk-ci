@@ -167,5 +167,7 @@ data class ProjectVO(
     @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
     val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
     @ApiModelProperty("项目审批message")
-    val approvalMsg: String? = ""
+    val approvalMsg: String? = "",
+    @ApiModelProperty("是否拥有新版权限中心项目管理权限")
+    val managePermission: Boolean? = null
 )

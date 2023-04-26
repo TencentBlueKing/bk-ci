@@ -154,6 +154,8 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun needApproval(needApproval: Boolean?) = false
 
+    override fun filterProjectsWithManagePermission(userId: String, ): List<String>? = null
+
     companion object {
         private val projectResourceType = AuthResourceType.PROJECT
     }
