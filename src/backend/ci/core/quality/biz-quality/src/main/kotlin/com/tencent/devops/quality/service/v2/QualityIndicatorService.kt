@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
@@ -57,7 +59,8 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import java.util.Base64
+import java.util.*
+import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -74,22 +77,37 @@ class QualityIndicatorService @Autowired constructor(
     private val dslContext: DSLContext,
     private val indicatorDao: QualityIndicatorDao,
     private val metadataService: QualityMetadataService,
-    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao
+    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
+    private val redisOperation: RedisOperation
 ) {
 
     private val encoder = Base64.getEncoder()
 
     @PostConstruct
     fun init() {
-        logger.info("start init quality indicator")
-        val classPathResource = ClassPathResource(
-            "indicator_${I18nUtil.getDefaultLocaleLanguage()}.json"
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_INDICATOR_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
         )
-        val inputStream = classPathResource.inputStream
-        val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
-        indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
-        logger.info("init quality indicator end")
+        if (redisLock.tryLock()) {
+            Executors.newFixedThreadPool(1).submit {
+                try {
+                    logger.info("start init quality indicator")
+                    val classPathResource = ClassPathResource(
+                        "indicator_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
+                    indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
+                    logger.info("init quality indicator end")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
     }
 
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {

@@ -31,6 +31,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityControlPointRecord
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
@@ -60,20 +62,35 @@ class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
     private val controlPointDao: QualityControlPointDao,
     private val qualityRuleDao: QualityRuleDao,
-    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao
+    private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @PostConstruct
     fun init() {
-        logger.info("start init quality control point")
-        val classPathResource = ClassPathResource(
-            "controlPoint_${I18nUtil.getDefaultLocaleLanguage()}.json"
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_CONTROL_POINT_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
         )
-        val inputStream = classPathResource.inputStream
-        val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
-        controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
-        logger.info("init quality control point end")
+        if (redisLock.tryLock()) {
+            Executors.newFixedThreadPool(1).submit {
+                try {
+                    logger.info("start init quality control point")
+                    val classPathResource = ClassPathResource(
+                        "controlPoint_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val controlPointPOs = JsonUtil.to(json, object : TypeReference<List<ControlPointPO>>() {})
+                    controlPointDao.batchCrateControlPoint(dslContext, controlPointPOs)
+                    logger.info("init quality control point end")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
     }
     fun userGetByType(projectId: String, elementType: String?): QualityControlPoint? {
         return serviceGetByType(projectId, elementType)
