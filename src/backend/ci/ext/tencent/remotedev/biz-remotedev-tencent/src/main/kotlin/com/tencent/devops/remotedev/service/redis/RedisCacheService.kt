@@ -43,7 +43,7 @@ class RedisCacheService @Autowired constructor(
     ) {
         logger.info("save workspace detail from redis|$workspaceName|$cache")
         redisOperation.set(
-            key = "$WORKSPACE_CACHE_KEY_PREFIX:$workspaceName",
+            key = "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName",
             value = JsonUtil.toJson(cache),
             expiredInSecond = CACHE_EXPIRE_TIME
         )
@@ -57,7 +57,7 @@ class RedisCacheService @Autowired constructor(
     fun getWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo? {
         return try {
             val result = redisOperation.get(
-                "$WORKSPACE_CACHE_KEY_PREFIX:$workspaceName"
+                "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName"
             )
             if (result != null) {
                 objectMapper.readValue<WorkSpaceCacheInfo>(result)
