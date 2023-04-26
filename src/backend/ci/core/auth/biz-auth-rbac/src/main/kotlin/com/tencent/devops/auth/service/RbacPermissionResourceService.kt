@@ -294,12 +294,15 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        hasManagerPermission(
-            userId = userId,
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
+        // 项目不能进入[成员管理]页面,其他资源不需要校验权限，有普通成员视角查看权限页面
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            hasManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        }
         return authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
