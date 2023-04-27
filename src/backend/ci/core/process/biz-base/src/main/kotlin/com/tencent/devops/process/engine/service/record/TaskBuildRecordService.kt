@@ -41,7 +41,6 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -76,7 +75,6 @@ class TaskBuildRecordService(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
     recordModelService: PipelineRecordModelService,
@@ -361,12 +359,7 @@ class TaskBuildRecordService(
         }
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
-        val executeCount = buildTaskDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        )?.executeCount ?: 1
+        val executeCount = taskBuildEndParam.executeCount
 
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,

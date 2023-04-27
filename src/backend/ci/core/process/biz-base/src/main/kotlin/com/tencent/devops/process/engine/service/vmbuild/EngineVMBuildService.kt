@@ -676,6 +676,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             buildId = buildId,
             containerId = vmSeqId,
             taskId = result.elementId,
+            executeCount = buildInfo.executeCount ?: 1,
             buildStatus = buildStatus,
             errorType = errorType,
             errorCode = result.errorCode,

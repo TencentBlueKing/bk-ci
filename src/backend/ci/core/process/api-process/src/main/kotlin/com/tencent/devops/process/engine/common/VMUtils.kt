@@ -60,6 +60,8 @@ object VMUtils {
 
     fun getEndLabel() = "end-"
 
+    fun isVMTask(taskId: String) = taskId
+
     fun isMatrixContainerId(containerId: String) = try {
         containerId.toInt() > 1000
     } catch (ignore: Throwable) {
