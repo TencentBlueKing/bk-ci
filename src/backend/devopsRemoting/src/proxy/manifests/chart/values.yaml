@@ -23,6 +23,7 @@ apisix:
       repository: mirrors.tencent.com/ruotiantang/apisix
       pullPolicy: IfNotPresent
       tag: 3.2.0-debian
+    replicaCount: 1  
 
   admin:
     credentials:
