@@ -45,7 +45,6 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
