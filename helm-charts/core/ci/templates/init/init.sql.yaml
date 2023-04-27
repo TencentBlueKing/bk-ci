@@ -26,7 +26,7 @@ spec:
             - "/bin/sh"
             - "-c"
             - |
-              while ! mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }; do
+              while ! mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}; do
                 echo "mysql connecting.."
                 sleep 3
               done
