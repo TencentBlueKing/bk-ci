@@ -43,17 +43,15 @@
                                 </div>
                                 <span
                                     v-if="item.showUserManageIcon"
-                                    class="bk-selector-create-item"
+                                    :class="{
+                                        'user-manaeg-icon': true,
+                                        'is-selected': projectId === item.projectCode,
+                                        'is-disabled': !item.managePermission
+                                    }"
                                     v-bk-tooltips="$t('userManage')"
                                     @click.stop.prevent="goToUserManage(item.managePermission)">
-                                    <icon
-                                        :name="item.managePermission ? 'user-manage' : 'user-manage-disabled'"
-                                        size="14"
-                                        :class="{
-                                            'user-manaeg-icon': true,
-                                            'is-selected': projectId === item.projectCode,
-                                            'is-disabled': !item.managePermission
-                                        }" />
+                                    <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
+                                    <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
                                 </span>
                             </div>
                         </template>
@@ -450,9 +448,11 @@
         align-items: center;
         justify-content: space-between;
         &:hover {
-            .user-manaeg-icon,
+            .user-manaeg-icon {
+                display: block !important;
+            }
             .is-selected {
-                display: block;
+                display: block !important;
             }
         }
         .project-name {
@@ -461,8 +461,11 @@
             white-space: nowrap;
         }
         .user-manaeg-icon {
+            width: 20px;
             display: none;
             cursor: pointer;
+            position: relative;
+            top: 5px;
         }
         
         .is-selected {
