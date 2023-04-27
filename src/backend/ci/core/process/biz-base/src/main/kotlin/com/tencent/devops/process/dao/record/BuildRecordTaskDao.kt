@@ -122,14 +122,14 @@ class BuildRecordTaskDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-            update.where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-            )
-            stageId?.let { update.set(STAGE_ID, stageId) }
-            containerId?.let { update.set(CONTAINER_ID, containerId) }
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                )
+            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
+            containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
             update.execute()
         }
     }
@@ -141,7 +141,7 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -150,6 +150,7 @@ class BuildRecordTaskDao {
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }

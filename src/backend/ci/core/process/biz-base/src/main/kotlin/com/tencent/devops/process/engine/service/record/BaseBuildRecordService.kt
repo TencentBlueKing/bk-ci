@@ -116,7 +116,7 @@ open class BaseBuildRecordService(
 
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
-            if (!change) {
+            if (!change && cancelUser.isNullOrBlank()) {
                 message = "Will not update"
                 return
             }
@@ -143,7 +143,7 @@ open class BaseBuildRecordService(
             lock.unlock()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
@@ -210,7 +210,7 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineDetailChangeEvent(
+    private fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -289,9 +289,9 @@ open class BaseBuildRecordService(
             newTimestamps.forEach { (type, new) ->
                 val old = oldTimestamps[type]
                 result[type] = if (old != null) {
-                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    // 如果时间戳已存在，开始时间不变，则结束时间将新值覆盖旧值
                     BuildRecordTimeStamp(
-                        startTime = new.startTime ?: old.startTime,
+                        startTime = old.startTime ?: new.startTime,
                         endTime = new.endTime ?: old.endTime
                     )
                 } else {

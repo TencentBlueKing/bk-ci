@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -182,7 +181,11 @@ class StageBuildRecordService(
             updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
+                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                )
             )
         }
         return stageBuildDetailService.stagePause(
@@ -223,7 +226,11 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null
+                buildStatus = null,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
         stageBuildDetailService.stageCancel(
@@ -354,7 +361,11 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = BuildStatus.QUEUE
+                buildStatus = BuildStatus.QUEUE,
+                timestamps = mutableMapOf(
+                    BuildTimestampType.STAGE_CHECK_IN_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
         return stageBuildDetailService.stageStart(
@@ -391,7 +402,6 @@ class StageBuildRecordService(
                 return@transaction
             }
             // 结束时进行启动状态校准，并计算所有耗时
-            var timeCost: BuildRecordTimeCost? = null
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()

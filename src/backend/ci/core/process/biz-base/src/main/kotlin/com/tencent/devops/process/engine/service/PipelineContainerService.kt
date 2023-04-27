@@ -385,6 +385,7 @@ class PipelineContainerService @Autowired constructor(
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -393,6 +394,7 @@ class PipelineContainerService @Autowired constructor(
         var needUpdateContainer = false
         var taskSeq = 0
         val containerElements = container.elements
+        val retryFlag = lastTimeBuildTasks.isEmpty()
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -414,11 +416,21 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[$buildId|${atomElement.id}] status=$status")
                 atomElement.status = status.name
+                if (retryFlag) taskBuildRecords.add(
+                    BuildRecordTask(
+                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                        stageId = stage.id!!, containerId = container.containerId!!,
+                        taskId = atomElement.id!!, classType = atomElement.getClassType(),
+                        atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                        resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
+                        taskVar = mutableMapOf(), timestamps = mapOf()
+                    )
+                )
                 return@nextElement
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (lastTimeBuildTasks.isEmpty()) {
+            if (retryFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     addBuildTaskToList(
