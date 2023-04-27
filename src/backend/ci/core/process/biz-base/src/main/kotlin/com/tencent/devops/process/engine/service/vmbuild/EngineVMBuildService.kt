@@ -530,7 +530,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         projectId = task.projectId,
                         pipelineId = task.pipelineId,
                         buildId = buildId,
-                        containerId = task.containerId,
                         taskId = task.taskId,
                         executeCount = task.executeCount ?: 1
                     )

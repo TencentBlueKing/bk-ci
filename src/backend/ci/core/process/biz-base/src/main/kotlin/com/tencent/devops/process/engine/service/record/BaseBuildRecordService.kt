@@ -143,7 +143,7 @@ open class BaseBuildRecordService(
             lock.unlock()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_record| $message")
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
+            pipelineRecordChangeEvent(projectId, pipelineId, buildId, startUser, executeCount)
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
         }
@@ -210,7 +210,7 @@ open class BaseBuildRecordService(
         }
     }
 
-    private fun pipelineDetailChangeEvent(
+    private fun pipelineRecordChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
