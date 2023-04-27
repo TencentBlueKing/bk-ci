@@ -136,6 +136,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return projectPermissionService.isShowUserManageIcon()
+    }
+
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
     }

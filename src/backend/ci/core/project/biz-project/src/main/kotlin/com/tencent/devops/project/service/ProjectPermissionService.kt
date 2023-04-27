@@ -79,4 +79,6 @@ interface ProjectPermissionService {
     )
 
     fun needApproval(needApproval: Boolean?): Boolean
+
+    fun isShowUserManageIcon(): Boolean
 }
