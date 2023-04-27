@@ -1075,7 +1075,7 @@ class TemplateFacadeService @Autowired constructor(
             ?: throw NotFoundException(
                 I18nUtil.getCodeLanMessage(
                 messageCode = ERROR_TEMPLATE_NOT_EXISTS,
-                language = userId
+                language = I18nUtil.getLanguage(userId)
             ))
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template

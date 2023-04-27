@@ -304,9 +304,18 @@ class QualityIndicatorService @Autowired constructor(
     fun opCreate(userId: String, indicatorUpdate: IndicatorUpdate): Msg {
         checkSystemIndicatorExist(indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_SUCCESS, language = userId), true)
+            return Msg(
+                0,
+                I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_SUCCESS,
+                    language = I18nUtil.getLanguage(userId)),
+                true
+            )
         }
-        return Msg(-1, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = userId), false)
+        return Msg(
+            -1,
+            I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = I18nUtil.getLanguage(userId)),
+            false
+        )
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
@@ -335,13 +344,13 @@ class QualityIndicatorService @Autowired constructor(
         if (indicatorDao.update(userId, id, indicatorUpdate, dslContext) > 0) {
             return Msg(
                 0,
-                I18nUtil.getCodeLanMessage(messageCode = BK_METRIC_DATA_UPDATE_SUCCESS, language = userId),
+                I18nUtil.getCodeLanMessage(messageCode = BK_METRIC_DATA_UPDATE_SUCCESS),
                 true
             )
         }
         return Msg(
             code = -1,
-            msg = I18nUtil.getCodeLanMessage(messageCode = BK_UPDATE_FAIL, language = userId),
+            msg = I18nUtil.getCodeLanMessage(messageCode = BK_UPDATE_FAIL),
             flag = false
         )
     }
