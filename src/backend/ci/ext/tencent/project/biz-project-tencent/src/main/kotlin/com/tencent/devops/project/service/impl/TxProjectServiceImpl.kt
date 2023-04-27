@@ -267,6 +267,8 @@ class TxProjectServiceImpl @Autowired constructor(
 
     }
 
+    override fun isShowUserManageIcon(routerTag: String?): Boolean =
+        routerTag?.contains(rbacTag) ?: false
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
