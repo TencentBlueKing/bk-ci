@@ -74,16 +74,16 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
@@ -250,9 +250,8 @@ class BkRepoService @Autowired constructor(
                     channelCode = ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
-                        MessageUtil.getMessageByLocale(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_NOT_EXIST,
-                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf(crossBuildNo)
                         )
                 )).id
@@ -266,10 +265,9 @@ class BkRepoService @Autowired constructor(
             )
         ) {
             throw PermissionForbiddenException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    params = arrayOf(lastModifyUser, projectId),
-                    language = I18nUtil.getDefaultLocaleLanguage()
+                    params = arrayOf(lastModifyUser, projectId)
                 )
             )
         }
@@ -279,10 +277,9 @@ class BkRepoService @Autowired constructor(
                 projectId = targetProjectId,
                 pipelineId = targetPipelineId,
                 permission = AuthPermission.DOWNLOAD,
-                message = MessageUtil.getMessageByLocale(
+                message = I18nUtil.getCodeLanMessage(
                     messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                    params = arrayOf(lastModifyUser, projectId, targetPipelineId),
-                    language = I18nUtil.getDefaultLocaleLanguage()
+                    params = arrayOf(lastModifyUser, projectId, targetPipelineId)
                 )
             )
         }
@@ -344,10 +341,9 @@ class BkRepoService @Autowired constructor(
             projectId,
             pipelineId,
             AuthPermission.DOWNLOAD,
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(userId, projectId, pipelineId),
-                language = I18nUtil.getDefaultLocaleLanguage()
+                params = arrayOf(userId, projectId, pipelineId)
             )
         )
 
@@ -464,9 +460,8 @@ class BkRepoService @Autowired constructor(
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
             throw BadRequestException(
-                    MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                         messageCode = METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId),
                         params = arrayOf("pipelineId")
                     )
             )
@@ -482,11 +477,7 @@ class BkRepoService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
             bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException(
-                    I18nUtil.getCodeLanMessage(
-                            messageCode = FILE_NOT_EXIST
-                        )
-                )
+                ?: throw NotFoundException(I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_EXIST))
 
         return RepoUtils.toFileDetail(fileDetail)
     }

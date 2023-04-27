@@ -13,7 +13,6 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
@@ -49,14 +48,15 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import java.util.*
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.Random
 
 /**
  * deng
@@ -228,13 +228,9 @@ class DevCloudBuildListener @Autowired constructor(
                 e.errorCode,
                 e.formatErrorMessage,
                 (e.message ?: I18nUtil.getCodeLanMessage(
-                    messageCode = BK_FAILED_START_DEVCLOUD,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )) +
-                    "\n" + I18nUtil.getCodeLanMessage(
-                    messageCode = BK_CONTAINER_BUILD_EXCEPTIONS,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + "：$devCloudHelpUrl"
+                    messageCode = BK_FAILED_START_DEVCLOUD
+                )) + "\n" + I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_EXCEPTIONS) +
+                        "：$devCloudHelpUrl"
             )
         } catch (e: Exception) {
             logger.error(
@@ -247,11 +243,9 @@ class DevCloudBuildListener @Autowired constructor(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorCode,
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.formatErrorMessage,
                     I18nUtil.getCodeLanMessage(
-                        messageCode = BK_DEVCLOUD_EXCEPTION,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                        messageCode = BK_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
-                        messageCode = BK_INTERFACE_REQUEST_TIMEOUT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                        messageCode = BK_INTERFACE_REQUEST_TIMEOUT
                     )
                 )
             }
@@ -259,13 +253,10 @@ class DevCloudBuildListener @Autowired constructor(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_CREATE_BUILD_MACHINE,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + ":${e.message}. \n" + MessageUtil.getMessageByLocale(
-                    messageCode = BK_CONTAINER_BUILD_EXCEPTIONS,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ) + "：$devCloudHelpUrl"
+                I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_CREATE_BUILD_MACHINE) +
+                        ":${e.message}. \n" +
+                        I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_EXCEPTIONS) +
+                        "：$devCloudHelpUrl"
             )
         }
     }
@@ -416,12 +407,10 @@ class DevCloudBuildListener @Autowired constructor(
                     createResult.third.errorType,
                     createResult.third.errorCode,
                     ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_DEVCLOUD_EXCEPTION,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + MessageUtil.getMessageByLocale(
-                        messageCode = BK_FAILED_CREATE_BUILD_MACHINE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DEVCLOUD_EXCEPTION
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_FAILED_CREATE_BUILD_MACHINE
                     ) + ":${createResult.second}"
                 )
             }
@@ -544,12 +533,10 @@ class DevCloudBuildListener @Autowired constructor(
                     startResult.third.errorType,
                     startResult.third.errorCode,
                     ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_DEVCLOUD_EXCEPTION,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + MessageUtil.getMessageByLocale(
-                        messageCode = BK_BUILD_MACHINE_FAILS_START,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_DEVCLOUD_EXCEPTION
+                    ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_BUILD_MACHINE_FAILS_START
                     ) + ":${startResult.second}"
                 )
             }
@@ -813,10 +800,7 @@ class DevCloudBuildListener @Autowired constructor(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_FREE_BUILD_MACHINE,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BK_NO_FREE_BUILD_MACHINE)
             )
         } finally {
             lock.unlock()

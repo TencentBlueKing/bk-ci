@@ -28,13 +28,9 @@
 package com.tencent.devops.plugin.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_GET_NETWORK_CARD
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -43,14 +39,6 @@ import com.tencent.devops.plugin.constant.PluginMessageCode.URL_CODING_ERROR
 import com.tencent.devops.plugin.constant.PluginMessageCode.WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import java.util.TreeMap
-import java.util.Arrays
-import okhttp3.Request
-import org.apache.commons.lang3.StringUtils
-import org.json.JSONException
-import org.json.JSONObject
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 import java.io.IOException
 import java.io.UnsupportedEncodingException
 import java.net.Inet4Address
@@ -58,9 +46,15 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URLEncoder
 import java.security.NoSuchAlgorithmException
-import java.util.Base64
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import okhttp3.Request
+import org.apache.commons.lang3.StringUtils
+import org.json.JSONException
+import org.json.JSONObject
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 
 object CommonUtils {
 
@@ -81,12 +75,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_ETH1_NETWORK_CARD_IP_EMPTY,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            )
+            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -115,10 +104,7 @@ object CommonUtils {
                     val netInterface = allNetInterfaces.nextElement()
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) { // 过滤掉127.0.0.1的IP
-                        logger.info(MessageUtil.getMessageByLocale(
-                            messageCode = BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ))
+                        logger.info("The loopback address or NIC name is empty")
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -133,10 +119,7 @@ object CommonUtils {
                 }
             }
         } catch (e: Exception) {
-            logger.error(MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_GET_NETWORK_CARD,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ), e)
+            logger.error("Failed to obtain NIC", e)
         }
 
         return allIp
@@ -231,7 +214,7 @@ object CommonUtils {
             val msg = response.optString("msg")
             logger.error("fail to get getApiKey from weTest, retCode: $ret, msg: $msg")
             throw OperationException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = WETEST_FAILED_GET,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(ret.toString(), msg)
@@ -255,9 +238,7 @@ object CommonUtils {
             encodeUrl(String(Base64Coder.encode(hash)))
         } catch (e: NoSuchAlgorithmException) {
             throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = GET_SIGNATURE_ERROR
-                ) + "$e"
+                I18nUtil.getCodeLanMessage(messageCode = GET_SIGNATURE_ERROR) + "$e"
             )
         }
     }
@@ -283,9 +264,7 @@ object CommonUtils {
             return URLEncoder.encode(input, "UTF-8").replace("+", "%20").replace("*", "%2A")
         } catch (e: UnsupportedEncodingException) {
             throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = URL_CODING_ERROR
-                ) + "$e"
+                I18nUtil.getCodeLanMessage(messageCode = URL_CODING_ERROR) + "$e"
             )
         }
     }

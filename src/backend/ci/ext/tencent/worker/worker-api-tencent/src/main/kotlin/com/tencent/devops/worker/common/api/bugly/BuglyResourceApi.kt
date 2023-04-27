@@ -29,16 +29,15 @@ package com.tencent.devops.worker.common.api.bugly
 
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_UPLOAD_BUGLY_FILE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import java.io.File
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.net.URLEncoder
 
 class BuglyResourceApi : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(BuglyResourceApi::class.java)
@@ -70,10 +69,8 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
         val request = buildPost(path, body)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_UPLOAD_BUGLY_FILE,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+            I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_UPLOAD_BUGLY_FILE)
+        )
 
         val obj = parser.parse(responseContent).asJsonObject
         return if (obj["rtcode"].asString != "0") {

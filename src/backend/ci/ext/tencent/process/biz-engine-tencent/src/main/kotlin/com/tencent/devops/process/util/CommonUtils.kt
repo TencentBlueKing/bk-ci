@@ -27,16 +27,11 @@
 
 package com.tencent.devops.process.util
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_GET_NETWORK_CARD
-import com.tencent.devops.common.api.constant.CommonMessageCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 
 @Suppress("LongMethod", "NestedBlockDepth")
 object CommonUtils {
@@ -47,11 +42,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                messageCode = BK_ETH1_NETWORK_CARD_IP_EMPTY,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+            logger.info("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -81,12 +72,7 @@ object CommonUtils {
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) {
                         // 过滤掉127.0.0.1的IP
-                        logger.info(
-                            MessageUtil.getMessageByLocale(
-                                messageCode = BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY,
-                                language = I18nUtil.getDefaultLocaleLanguage()
-                            )
-                        )
+                        logger.info("The loopback address or NIC name is empty")
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -103,11 +89,7 @@ object CommonUtils {
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_GET_NETWORK_CARD,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ), ignore)
+            logger.warn("Failed to obtain NIC", ignore)
         }
 
         return allIp

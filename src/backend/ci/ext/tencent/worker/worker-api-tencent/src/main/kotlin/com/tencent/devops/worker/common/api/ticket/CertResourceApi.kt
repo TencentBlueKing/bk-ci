@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.ticket
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.pojo.CertAndroid
 import com.tencent.devops.ticket.pojo.CertIOS
@@ -44,10 +43,7 @@ class CertResourceApi : AbstractBuildResourceApi() {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_IOS_CERTIFICATE,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+            I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_IOS_CERTIFICATE))
         return objectMapper.readValue(responseContent)
     }
 
@@ -56,10 +52,8 @@ class CertResourceApi : AbstractBuildResourceApi() {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_FAILED_ANDROID_CERTIFICATE,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+            I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_ANDROID_CERTIFICATE)
+        )
         return objectMapper.readValue(responseContent)
     }
 }

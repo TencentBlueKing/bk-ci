@@ -51,11 +51,11 @@ import com.tencent.devops.common.ci.yaml.MergeRequest
 import com.tencent.devops.common.ci.yaml.Stage
 import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 
 object CiYamlUtils {
 
@@ -164,10 +164,10 @@ object CiYamlUtils {
     fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
         if (originYaml.stages != null && originYaml.steps != null) {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE
-            ))
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(messageCode = STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE)
+            )
         }
 
         val stages = originYaml.stages ?: listOf(
@@ -194,11 +194,10 @@ object CiYamlUtils {
                 run {
                     val type = job.job.type
                     if (type != null && type != "" && type != VM_JOB && type != NORMAL_JOB) {
-                        throw CustomException(Response.Status.BAD_REQUEST,
-                            I18nUtil.getCodeLanMessage(
-                                messageCode = ILLEGAL_JOB_TYPE
-                            )
-                            )
+                        throw CustomException(
+                            Response.Status.BAD_REQUEST,
+                            I18nUtil.getCodeLanMessage(messageCode = ILLEGAL_JOB_TYPE)
+                        )
                     }
                 }
             }

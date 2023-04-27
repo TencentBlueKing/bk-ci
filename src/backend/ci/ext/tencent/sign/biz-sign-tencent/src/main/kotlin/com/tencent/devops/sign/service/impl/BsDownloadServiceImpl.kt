@@ -30,15 +30,10 @@ package com.tencent.devops.sign.service.impl
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.pojo.enums.GatewayType
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.constant.SignMessageCode.BK_FAILED_CREATE_DOWNLOAD_CONNECTION
-import com.tencent.devops.sign.api.constant.SignMessageCode.BK_SIGNING_TASK_SIGNATURE_HISTORY
-import com.tencent.devops.sign.api.constant.SignMessageCode.BK_SIGNING_TASK_SIGNATURE_INFORMATION
 import com.tencent.devops.sign.dao.SignHistoryDao
 import com.tencent.devops.sign.dao.SignIpaInfoDao
 import com.tencent.devops.sign.service.DownloadService
@@ -63,24 +58,12 @@ class BsDownloadServiceImpl @Autowired constructor(
     override fun getDownloadUrl(userId: String, resignId: String, downloadType: String): String {
         val signIpaInfoResult = signIpaInfoDao.getSignInfo(dslContext, resignId)
         if (signIpaInfoResult == null) {
-            logger.warn(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_SIGNING_TASK_SIGNATURE_INFORMATION,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(resignId)
-                )
-            )
+            logger.warn("The signature message (resign id=$resignId) does not exist.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
         }
         val signHistoryResult = signHistoryDao.getSignHistory(dslContext, resignId)
         if (signHistoryResult == null) {
-            logger.warn(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_SIGNING_TASK_SIGNATURE_HISTORY,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(resignId)
-                )
-            )
+            logger.warn("The signature history (resign id={$resignId}) does not exist.")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_RESIGN_TASK_NOT_EXIST, defaultMessage = "签名任务不存在。")
         }
         var artifactoryType: ArtifactoryType? = null
@@ -149,13 +132,7 @@ class BsDownloadServiceImpl @Autowired constructor(
 //            }
 //        }
         if (downloadUrl == null) {
-            logger.error(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_FAILED_CREATE_DOWNLOAD_CONNECTION,
-                    language = I18nUtil.getLanguage(userId),
-                    params = arrayOf(resignId)
-                )
-            )
+            logger.error("Failed to create download connection (resign id={$resignId})")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_CREATE_DOWNLOAD_URL, defaultMessage = "创建下载连接失败。")
         }
         return downloadUrl
