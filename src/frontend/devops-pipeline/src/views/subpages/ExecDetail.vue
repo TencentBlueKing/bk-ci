@@ -58,7 +58,9 @@
                 :exec-detail="execDetail"
             ></Summary>
 
-            <main class="exec-detail-main">
+            <main :class="['exec-detail-main', {
+                'is-outputs-panel': curItemTab === 'outputs'
+            }]">
                 <bk-tab
                     :active="curItemTab"
                     @tab-change="switchTab"
@@ -547,6 +549,14 @@
     margin: 16px 24px 0 24px;
     background: #f5f7fa;
     flex: 1;
+    &.is-outputs-panel {
+        overflow: hidden;
+        .pipeline-detail-tab-card {
+            .bk-tab-section {
+                overflow: hidden;
+            }
+        }
+    }
   }
   .pipeline-detail-tab-card {
     height: 100%;
