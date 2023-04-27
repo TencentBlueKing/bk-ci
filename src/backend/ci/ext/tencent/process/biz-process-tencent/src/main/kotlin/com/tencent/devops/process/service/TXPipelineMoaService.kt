@@ -57,7 +57,7 @@ class TXPipelineMoaService @Autowired constructor(
     @Value("\${esb.appSecret}")
     private val appSecret = ""
 
-    private val ignoredMoaMessage = listOf(
+    private fun ignoredMoaMessage() = listOf(
         I18nUtil.getCodeLanMessage(
             messageCode = BK_QUICK_APPROVAL_MOA
         ),
@@ -179,7 +179,7 @@ class TXPipelineMoaService @Autowired constructor(
 
     private fun checkSuggest(suggest: String): String {
         var str = suggest
-        for (s in ignoredMoaMessage) {
+        for (s in ignoredMoaMessage()) {
             str = str.replace(s, "")
         }
         return str
