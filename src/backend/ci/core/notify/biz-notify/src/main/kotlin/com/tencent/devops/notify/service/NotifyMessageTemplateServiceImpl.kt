@@ -41,6 +41,8 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -67,6 +69,7 @@ import com.tencent.devops.notify.pojo.SubNotifyMessageTemplate
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.notify.pojo.messageTemplate.MessageTemplate
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -89,6 +92,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     private val weworkService: WeworkService,
     private val wechatWorkService: WechatWorkService,
     private val wechatWorkRobotService: WechatWorkRobotService,
+    private val redisOperation: RedisOperation,
     private val messageTemplateDao: MessageTemplateDao
 ) : NotifyMessageTemplateService {
 
@@ -102,9 +106,23 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     @PostConstruct
     fun init() {
-        logger.info("start init MessageTemplate")
-        updateMessageTemplate()
-        logger.info("start init succeed")
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "NOTIFY_MESSAGE_TEMPLATE_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
+        )
+        if (redisLock.tryLock()) {
+            Executors.newFixedThreadPool(1).submit {
+                try {
+                    logger.info("start init MessageTemplate")
+                    updateMessageTemplate()
+                    logger.info("start init succeed")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
     }
 
     fun updateMessageTemplate() {

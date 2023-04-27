@@ -47,12 +47,12 @@ package com.tencent.devops.artifactory.constant
  */
 object PushMessageCode {
     // 2102901起
-    const val FUSH_FILE_VALIDATE_FAIL = "2102901" // 用户无操作下载权限
-    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102902" // 目标机器不能为空
-    const val ENV_NAME_MACHINE_NOT_EXITS = "2102903" // 输入环境名不存在{0},请导入机器至项目
-    const val ENV_MACHINE_NOT_AUTH = "2102904" // 用户没有操作这些环境的权限！环境ID{0}
-    const val NODE_NAME_MACHINE_NOT_EXITS = "2102905" // 输入节点名不存在{0},请导入机器至项目
-    const val FILE_NOT_EXITS = "2102906" // 未匹配到文件{0}
-    const val GET_FILE_FAIL = "2102907" // 构建分发获取文件失败
-    const val JOB_EXECUTE_FAIL = "2102908" // JOB执行失败,msg{0}
+    const val FUSH_FILE_VALIDATE_FAIL = "2102041" // 用户无操作下载权限
+    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102042" // 目标机器不能为空
+    const val ENV_NAME_MACHINE_NOT_EXITS = "2102043" // 输入环境名不存在{0},请导入机器至项目
+    const val ENV_MACHINE_NOT_AUTH = "2102044" // 用户没有操作这些环境的权限！环境ID{0}
+    const val NODE_NAME_MACHINE_NOT_EXITS = "2102045" // 输入节点名不存在{0},请导入机器至项目
+    const val FILE_NOT_EXITS = "2102046" // 未匹配到文件{0}
+    const val GET_FILE_FAIL = "2102047" // 构建分发获取文件失败
+    const val JOB_EXECUTE_FAIL = "2102048" // JOB执行失败,msg{0}
 }

@@ -31,6 +31,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.RuleIndicatorSet
@@ -43,6 +45,7 @@ import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleTemplateDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.po.QualityRuleTemplatePO
+import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -59,20 +62,35 @@ class QualityTemplateService @Autowired constructor(
     private val controlPointService: QualityControlPointService,
     private val qualityControlPointDao: QualityControlPointDao,
     private val ruleTemplateIndicatorDao: QualityTemplateIndicatorMapDao,
-    private val indicatorDao: QualityIndicatorDao
+    private val indicatorDao: QualityIndicatorDao,
+    private val redisOperation: RedisOperation
 ) {
 
     @PostConstruct
     fun init() {
-        logger.info("start init quality rule template")
-        val classPathResource = ClassPathResource(
-            "ruleTemplate_${I18nUtil.getDefaultLocaleLanguage()}.json"
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_RULE_TEMPLATE_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
         )
-        val inputStream = classPathResource.inputStream
-        val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-        val qualityRuleTemplatePOs = JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
-        ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
-        logger.info("init quality rule template end")
+        if (redisLock.tryLock()) {
+            Executors.newFixedThreadPool(1).submit {
+                try {
+                    logger.info("start init quality rule template")
+                    val classPathResource = ClassPathResource(
+                        "ruleTemplate_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val qualityRuleTemplatePOs = JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
+                    ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
+                    logger.info("init quality rule template end")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
     }
 
     fun userListIndicatorSet(): List<RuleIndicatorSet> {

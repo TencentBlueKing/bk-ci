@@ -61,62 +61,62 @@ object WorkerMessageCode {
     const val UNBEKNOWN_BUILD_TYPE = "2130011" // 未知的BuildType类型:
 
     // dockerHost-docker机器
-    const val UPDATE_IMAGE_MARKET_INFO_FAILED = "2130101" // 更新镜像市场信息失败
+    const val UPDATE_IMAGE_MARKET_INFO_FAILED = "2130012" // 更新镜像市场信息失败
 
     // log-日志
-    const val LOGS_END_STATUS_FAILED = "2130151" // 上报结束状态失败
-    const val LOGS_REPORT_FAILED = "2130152" // 上报日志失败
-    const val LOG_STORAGE_STATUS_FAILED = "2130153" // 上报日志存储状态失败
+    const val LOGS_END_STATUS_FAILED = "2130013" // 上报结束状态失败
+    const val LOGS_REPORT_FAILED = "2130014" // 上报日志失败
+    const val LOG_STORAGE_STATUS_FAILED = "2130015" // 上报日志存储状态失败
 
 
     // scm-软件配置管理
-    const val ADD_CODE_BASE_COMMIT_INFO_FAIL = "2130201" // 添加代码库commit信息失败
-    const val GET_LAST_CODE_BASE_COMMIT_INFO_FAIL = "2130202" // 获取最后一次代码commit信息失败
-    const val ADD_SOURCE_MATERIAL_INFO_FAILURE = "2130203" // 添加源材料信息失败
-    const val GET_OAUTH_INFO_FAIL = "2130204" // 获取oauth认证信息失败
-    const val GET_CODE_BASE_FAIL = "2130205" // 获取代码库失败
-    const val GIT_CREDENTIAL_ILLEGAL = "2130206" // git凭据不合法
-    const val CODE_REPO_PARAM_NOT_IN_PARAMS = "2130207" // 代码仓库{0}没存在参数中
+    const val ADD_CODE_BASE_COMMIT_INFO_FAIL = "2130016" // 添加代码库commit信息失败
+    const val GET_LAST_CODE_BASE_COMMIT_INFO_FAIL = "2130017" // 获取最后一次代码commit信息失败
+    const val ADD_SOURCE_MATERIAL_INFO_FAILURE = "2130018" // 添加源材料信息失败
+    const val GET_OAUTH_INFO_FAIL = "2130019" // 获取oauth认证信息失败
+    const val GET_CODE_BASE_FAIL = "2130020" // 获取代码库失败
+    const val GIT_CREDENTIAL_ILLEGAL = "2130021" // git凭据不合法
+    const val CODE_REPO_PARAM_NOT_IN_PARAMS = "2130022" // 代码仓库{0}没存在参数中
 
     // dispatch-分发
-    const val DOWNLOAD_CODECC_TOOL_FAIL = "2130251" // 下载Codecc的 {0} 工具失败
-    const val DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL = "2130252" // 下载codecc的coverity的执行脚本失败
-    const val DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL = "2130253" // 下载codecc的多工具执行脚本失败
+    const val DOWNLOAD_CODECC_TOOL_FAIL = "2130023" // 下载Codecc的 {0} 工具失败
+    const val DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL = "2130024" // 下载codecc的coverity的执行脚本失败
+    const val DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL = "2130025" // 下载codecc的多工具执行脚本失败
 
 
     // process-流水线
-    const val NOTIFY_SERVER_START_BUILD_FAILED = "2130301" // 通知服务端启动构建失败
-    const val RECEIVE_BUILD_MACHINE_TASK_FAILED = "2130302" // 领取构建机任务失败
-    const val RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED = "2130303" // 领取构建机任务详情失败
-    const val BUILD_FINISH_REQUEST_FAILED = "2130304" // 构建完成请求失败
-    const val REPORT_TASK_FINISH_FAILURE = "2130305" // 报告任务完成失败
-    const val HEARTBEAT_FAIL = "2130306" // 心跳失败
-    const val GET_BUILD_TASK_DETAILS_FAILURE = "2130307" // 获取构建任务详情失败
-    const val BUILD_TIMEOUT_END_REQUEST_FAILURE = "2130308" // 构建超时结束请求失败
-    const val GET_TEMPLATE_CROSS_PROJECT_INFO_FAILURE = "2130309" // 获取模板跨项目信息失败
-    const val ATOM_EXECUTION_TIMEOUT = "2130310" // 插件执行超时, 超时时间:{0}分钟
+    const val NOTIFY_SERVER_START_BUILD_FAILED = "2130026" // 通知服务端启动构建失败
+    const val RECEIVE_BUILD_MACHINE_TASK_FAILED = "2130027" // 领取构建机任务失败
+    const val RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED = "2130028" // 领取构建机任务详情失败
+    const val BUILD_FINISH_REQUEST_FAILED = "2130029" // 构建完成请求失败
+    const val REPORT_TASK_FINISH_FAILURE = "2130030" // 报告任务完成失败
+    const val HEARTBEAT_FAIL = "2130031" // 心跳失败
+    const val GET_BUILD_TASK_DETAILS_FAILURE = "2130032" // 获取构建任务详情失败
+    const val BUILD_TIMEOUT_END_REQUEST_FAILURE = "2130033" // 构建超时结束请求失败
+    const val GET_TEMPLATE_CROSS_PROJECT_INFO_FAILURE = "2130034" // 获取模板跨项目信息失败
+    const val ATOM_EXECUTION_TIMEOUT = "2130035" // 插件执行超时, 超时时间:{0}分钟
 
     // quality-质量红线
-    const val SAVE_SCRIPT_METADATA_FAILURE = "2130351" // 保存脚本元数据失败
+    const val SAVE_SCRIPT_METADATA_FAILURE = "2130036" // 保存脚本元数据失败
 
     // ticket-证书凭据
-    const val GET_CREDENTIAL_FAILED = "2130401" // 获取凭证失败
-    const val CREDENTIAL_ID_NOT_EXIST = "2130402" // 凭证ID变量({0})不存在
+    const val GET_CREDENTIAL_FAILED = "2130037" // 获取凭证失败
+    const val CREDENTIAL_ID_NOT_EXIST = "2130038" // 凭证ID变量({0})不存在
     // artifactory-版本仓库
-    const val START_BUILD_IMAGE_NAME = "2130416" // 启动构建镜像，镜像名称：
-    const val WAIT_BUILD_IMAGE_FINISH = "2130403" // 启动构建镜像成功，等待构建镜像结束，镜像名称：
-    const val BUILD_IMAGE_FAIL_DETAIL = "2130404" // 构建镜像失败，错误详情：
-    const val DOCKERFILE_FIRST_LINE_CHECK = "2130405" // Dockerfile第一行请确认使用 {0}
-    const val START_BUILD_IMAGE_FAIL = "2130406" // 启动构建镜像失败！请联系【蓝盾助手】
-    const val QUERY_BUILD_IMAGE_STATUS_FAIL = "2130407" // 查询构建镜像状态失败！请联系【蓝盾助手】
-    const val START_BUILD_FAIL = "2130408" // 启动构建失败！请联系【蓝盾助手】
-    const val FOLDER_NOT_EXIST = "2130409" // 文件夹{0}不存在
-    const val ENTRANCE_FILE_NOT_IN_FOLDER = "2130410" // 入口文件({0})不在文件夹({1})下
-    const val ENTRANCE_FILE_CHECK_FINISH = "2130411" // 入口文件检测完成
-    const val UPLOAD_CUSTOM_OUTPUT_SUCCESS = "2130412" // 上传自定义产出物成功，共产生了{0}个文件
-    const val NO_MATCHING_ARCHIVE_FILE = "2130413" // 没有匹配到任何待归档文件，请检查工作空间下面的文件
-    const val ARCHIVE_FILE_LIMIT = "2130414" // 单次归档文件数太多，请打包后再归档！
-    const val ARCHIVE_ATOM_FILE_FAIL = "2130415" // 归档插件文件失败
+    const val WAIT_BUILD_IMAGE_FINISH = "2130039" // 启动构建镜像成功，等待构建镜像结束，镜像名称：
+    const val BUILD_IMAGE_FAIL_DETAIL = "2130040" // 构建镜像失败，错误详情：
+    const val DOCKERFILE_FIRST_LINE_CHECK = "2130041" // Dockerfile第一行请确认使用 {0}
+    const val START_BUILD_IMAGE_FAIL = "2130042" // 启动构建镜像失败！请联系【蓝盾助手】
+    const val QUERY_BUILD_IMAGE_STATUS_FAIL = "2130043" // 查询构建镜像状态失败！请联系【蓝盾助手】
+    const val START_BUILD_FAIL = "2130044" // 启动构建失败！请联系【蓝盾助手】
+    const val FOLDER_NOT_EXIST = "2130045" // 文件夹{0}不存在
+    const val ENTRANCE_FILE_NOT_IN_FOLDER = "2130046" // 入口文件({0})不在文件夹({1})下
+    const val ENTRANCE_FILE_CHECK_FINISH = "2130047" // 入口文件检测完成
+    const val UPLOAD_CUSTOM_OUTPUT_SUCCESS = "2130048" // 上传自定义产出物成功，共产生了{0}个文件
+    const val NO_MATCHING_ARCHIVE_FILE = "2130049" // 没有匹配到任何待归档文件，请检查工作空间下面的文件
+    const val ARCHIVE_FILE_LIMIT = "2130050" // 单次归档文件数太多，请打包后再归档！
+    const val ARCHIVE_ATOM_FILE_FAIL = "2130051" // 归档插件文件失败
+    const val START_BUILD_IMAGE_NAME = "2130052" // 启动构建镜像，镜像名称：
 
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
     const val BK_ARCHIVE_PLUGIN_FILE= "bkArchivePluginFile" // 归档插件文件
