@@ -27,35 +27,48 @@
 
 package com.tencent.devops.quality.service.v2
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.google.common.collect.Maps
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
+import com.tencent.devops.quality.constant.BK_CREATE_FAIL
+import com.tencent.devops.quality.constant.BK_CREATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_METRIC_DATA_UPDATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
+import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import java.util.*
+import java.util.concurrent.Executors
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.core.io.ClassPathResource
 import org.springframework.stereotype.Service
-import java.util.Base64
 
 @Service
 @Suppress("ALL")
@@ -64,10 +77,38 @@ class QualityIndicatorService @Autowired constructor(
     private val dslContext: DSLContext,
     private val indicatorDao: QualityIndicatorDao,
     private val metadataService: QualityMetadataService,
-    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao
+    private val templateIndicatorMapDao: QualityTemplateIndicatorMapDao,
+    private val redisOperation: RedisOperation
 ) {
 
     private val encoder = Base64.getEncoder()
+
+    @PostConstruct
+    fun init() {
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "QUALITY_INDICATOR_INIT_LOCK",
+            expiredTimeInSeconds = 60
+
+        )
+        if (redisLock.tryLock()) {
+            Executors.newFixedThreadPool(1).submit {
+                try {
+                    logger.info("start init quality indicator")
+                    val classPathResource = ClassPathResource(
+                        "indicator_${I18nUtil.getDefaultLocaleLanguage()}.json"
+                    )
+                    val inputStream = classPathResource.inputStream
+                    val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
+                    val qualityIndicatorPOs = JsonUtil.to(json, object : TypeReference<List<QualityIndicatorPO>>() {})
+                    indicatorDao.batchCrateQualityIndicator(dslContext, qualityIndicatorPOs)
+                    logger.info("init quality indicator end")
+                } finally {
+                    redisLock.unlock()
+                }
+            }
+        }
+    }
 
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {
 
@@ -263,9 +304,9 @@ class QualityIndicatorService @Autowired constructor(
     fun opCreate(userId: String, indicatorUpdate: IndicatorUpdate): Msg {
         checkSystemIndicatorExist(indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "创建成功", true)
+            return Msg(0, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_SUCCESS, language = userId), true)
         }
-        return Msg(-1, "未知的异常，创建失败", false)
+        return Msg(-1, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = userId), false)
     }
 
     fun userDelete(userId: String, id: Long): Boolean {
@@ -292,9 +333,17 @@ class QualityIndicatorService @Autowired constructor(
         checkSystemIndicatorExcludeExist(id, indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         if (indicatorDao.update(userId, id, indicatorUpdate, dslContext) > 0) {
-            return Msg(0, "更新指标数据成功", true)
+            return Msg(
+                0,
+                I18nUtil.getCodeLanMessage(messageCode = BK_METRIC_DATA_UPDATE_SUCCESS, language = userId),
+                true
+            )
         }
-        return Msg(code = -1, msg = "未知的异常，更新失败", flag = false)
+        return Msg(
+            code = -1,
+            msg = I18nUtil.getCodeLanMessage(messageCode = BK_UPDATE_FAIL, language = userId),
+            flag = false
+        )
     }
 
     fun userCreate(userId: String, projectId: String, indicatorCreate: IndicatorCreate): Boolean {

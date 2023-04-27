@@ -28,16 +28,16 @@
 package com.tencent.devops.environment.service.slave
 
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class SlaveGatewayService @Autowired constructor(
@@ -62,7 +62,7 @@ class SlaveGatewayService @Autowired constructor(
                 return it.showName
             }
         }
-        return MessageCodeUtil.getCodeLanMessage("SHENZHEN")
+        return I18nUtil.getCodeLanMessage("SHENZHEN")
     }
 
     fun getFileGateway(zoneName: String?): String? {

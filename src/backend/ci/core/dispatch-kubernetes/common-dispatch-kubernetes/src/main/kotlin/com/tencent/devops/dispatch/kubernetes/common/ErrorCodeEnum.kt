@@ -27,20 +27,23 @@
 
 package com.tencent.devops.dispatch.kubernetes.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2123001, "Dispatcher-base系统错误"),
-    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2123002, "构建机启动失败，没有空闲的构建机"),
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2123050, "已超过dispatch base创建Job容器上限."),
-
-    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2123018, "第三方服务异常，异常信息 - 接口请求超时"),
-    START_VM_ERROR(ErrorType.THIRD_PARTY, 2123004, "第三方服务异常，异常信息 - 构建机启动失败"),
-    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2123005, "第三方服务异常，异常信息 - 构建机创建失败"),
-    STOP_VM_ERROR(ErrorType.THIRD_PARTY, 2123006, "第三方服务异常，异常信息 - 构建机休眠失败"),
-    DELETE_VM_ERROR(ErrorType.THIRD_PARTY, 2123007, "第三方服务异常，异常信息 - 构建机销毁失败")
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2126024, "2126024"),// Dispatcher-base系统错误
+    NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2126025, "2126025"),// 构建机启动失败，没有空闲的构建机
+    START_VM_ERROR(ErrorType.THIRD_PARTY, 2126026, "2126026"),// 第三方服务异常，异常信息 - 构建机启动失败
+    CREATE_VM_ERROR(ErrorType.THIRD_PARTY, 2126027, "2126027"),// 第三方服务异常，异常信息 - 构建机创建失败
+    STOP_VM_ERROR(ErrorType.THIRD_PARTY, 2126028, "2126028"),// 第三方服务异常，异常信息 - 构建机休眠失败
+    DELETE_VM_ERROR(ErrorType.THIRD_PARTY, 2126029, "2126029"),// 第三方服务异常，异常信息 - 构建机销毁失败
+    INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2126030, "2126030"),// 第三方服务异常，异常信息 - 接口请求超时
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2126031, "2126031");// 已超过dispatch base创建Job容器上限.
 }

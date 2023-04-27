@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
@@ -49,7 +50,7 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.util.*
+import java.util.Enumeration
 
 object CommonUtils {
 
@@ -136,7 +137,8 @@ object CommonUtils {
         serviceUrlPrefix: String,
         file: File,
         fileChannelType: String,
-        logo: Boolean = false
+        logo: Boolean = false,
+        language: String
     ): Result<String?> {
         val serviceUrl = "$serviceUrlPrefix/service/artifactories/file/upload" +
                 "?userId=$userId&fileChannelType=$fileChannelType&logo=$logo"
@@ -145,7 +147,11 @@ object CommonUtils {
             val responseContent = response.body!!.string()
             logger.error("uploadFile responseContent is: $responseContent")
             if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = language
+                )
+                Result(CommonMessageCode.SYSTEM_ERROR.toInt(), message, null)
             }
             return JsonUtil.to(responseContent, object : TypeReference<Result<String?>>() {})
         }

@@ -30,6 +30,7 @@ package com.tencent.devops.common.web.utils
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
@@ -37,9 +38,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
+import java.net.URLDecoder
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.net.URLDecoder
 
 object I18nUtil {
 
@@ -118,6 +119,10 @@ object I18nUtil {
         }
     }
 
+    fun getMessageByLocale(chinese: String, english: String?): String {
+        return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english ?: chinese
+    }
+
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
@@ -152,5 +157,31 @@ object I18nUtil {
         } else {
             i18nMessage
         }
+    }
+
+
+    /**
+     * 生成请求响应对象
+     * @param messageCode 状态码
+     * @param params 替换状态码描述信息占位符的参数数组
+     * @param data 数据对象
+     * @return Result响应结果对象
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T> generateResponseDataObject(
+        messageCode: String,
+        params: Array<String>? = null,
+        data: T? = null,
+        language: String? = null,
+        defaultMessage: String? = null
+    ): Result<T> {
+        val message = getCodeLanMessage(
+            messageCode = messageCode,
+            language = language,
+            params = params,
+            defaultMessage = defaultMessage
+        )
+        // 生成Result对象
+        return Result(messageCode.toInt(), message, data)
     }
 }

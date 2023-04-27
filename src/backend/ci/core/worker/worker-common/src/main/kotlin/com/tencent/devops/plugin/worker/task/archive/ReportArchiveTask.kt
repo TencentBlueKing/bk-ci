@@ -27,12 +27,14 @@
 
 package com.tencent.devops.plugin.worker.task.archive
 
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.process.pojo.BuildTask
@@ -43,6 +45,11 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_CHECK_FINISH
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ENTRANCE_FILE_NOT_IN_FOLDER
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_OUTPUT_SUCCESS
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
@@ -92,7 +99,11 @@ class ReportArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = "文件夹($fileDirParam)不存在"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        FOLDER_NOT_EXIST,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(fileDirParam)
+                    )
                 )
             }
 
@@ -101,10 +112,16 @@ class ReportArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = "入口文件($indexFileParam)不在文件夹($fileDirParam)下"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        ENTRANCE_FILE_NOT_IN_FOLDER,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(indexFileParam, fileDirParam)
+                    )
                 )
             }
-            LoggerService.addNormalLine("入口文件检测完成")
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(ENTRANCE_FILE_CHECK_FINISH, AgentEnv.getLocaleLanguage())
+            )
             val reportRootUrl = api.getRootUrl(elementId).data!!
             addEnv(REPORT_DYNAMIC_ROOT_URL, reportRootUrl)
 
@@ -130,7 +147,13 @@ class ReportArchiveTask : ITask() {
                     uploadReportFile(fileDirPath, it, elementId, buildVariables, token)
                 }
             }
-            LoggerService.addNormalLine("上传自定义产出物成功，共产生了${allFileList.size}个文件")
+            LoggerService.addNormalLine(
+                MessageUtil.getMessageByLocale(
+                    UPLOAD_CUSTOM_OUTPUT_SUCCESS,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf("${allFileList.size}")
+                )
+            )
         } else {
             val reportUrl = taskParams["reportUrl"] as String
             indexFileParam = reportUrl // 第三方构建产出物链接

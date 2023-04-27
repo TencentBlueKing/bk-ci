@@ -31,6 +31,11 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
@@ -90,7 +95,10 @@ data class PipelineSetting(
     @Suppress("ALL")
     fun checkParam() {
         if (maxPipelineResNum < 1) {
-            throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
+            throw InvalidParamException(
+                message = I18nUtil.getCodeLanMessage(PIPELINE_ORCHESTRATIONS_NUMBER_ILLEGAL),
+                params = arrayOf("maxPipelineResNum")
+            )
         }
         if (runLockType == PipelineRunLockType.SINGLE ||
             runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
@@ -98,12 +106,18 @@ data class PipelineSetting(
             if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
             ) {
-                throw InvalidParamException("最大排队时长非法", params = arrayOf("waitQueueTimeMinute"))
+                throw InvalidParamException(
+                    I18nUtil.getCodeLanMessage(MAXIMUM_QUEUE_LENGTH_ILLEGAL),
+                    params = arrayOf("waitQueueTimeMinute")
+                )
             }
             if (maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
                 maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
             ) {
-                throw InvalidParamException("最大排队数量非法", params = arrayOf("maxQueueSize"))
+                throw InvalidParamException(
+                    I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_QUEUES_ILLEGAL),
+                    params = arrayOf("maxQueueSize")
+                )
             }
         }
         if (maxConRunningQueueSize != null && (
@@ -111,7 +125,10 @@ data class PipelineSetting(
                 maxConRunningQueueSize > PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
             )
         ) {
-            throw InvalidParamException("最大并发数量非法", params = arrayOf("maxConRunningQueueSize"))
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL),
+                params = arrayOf("maxConRunningQueueSize")
+            )
         }
     }
 }

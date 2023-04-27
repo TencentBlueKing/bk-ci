@@ -24,10 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo.messageTemplate
 
-package com.tencent.devops.dispatch.kubernetes.common
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object ConstantsMessage {
-    const val TROUBLE_SHOOTING = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
-    const val NO_EMPTY_BUILDER = "Kubernetes构建机启动失败，没有空闲的构建机"
-}
+@ApiModel("模板配置信息")
+data class MoaMessageTemplate(
+    @ApiModelProperty("模板ID", required = true)
+    val id: String,
+    @ApiModelProperty("标题", required = false)
+    var title: String?,
+    @ApiModelProperty("内容", required = true)
+    var body: String,
+    @ApiModelProperty("回调地址", required = false)
+    val callbackUrl: String?,
+    @ApiModelProperty("流程名称: 单据所属的业务流程名称，由业务传入", required = true)
+    val processName: String
+)

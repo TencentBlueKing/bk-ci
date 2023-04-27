@@ -295,7 +295,7 @@ class BuildLessClient @Autowired constructor(
                 )
             }
             // 母机无空闲容器资源
-            response["status"] == 2127003 -> {
+            response["status"] == ErrorCodeEnum.POOL_VM_ERROR.errorCode -> {
                 doRetry(
                     retryTime = retryTime,
                     retryMax = retryMax,

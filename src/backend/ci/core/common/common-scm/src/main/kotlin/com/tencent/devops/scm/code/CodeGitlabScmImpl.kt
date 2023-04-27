@@ -29,7 +29,7 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
@@ -97,7 +97,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.USER_ACCESS_CHECK_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -111,7 +113,9 @@ class CodeGitlabScmImpl constructor(
             } catch (ignored: Throwable) {
                 logger.warn("Fail to check the private key of git", ignored)
                 throw ScmException(
-                    ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID),
+                    ignored.message ?: I18nUtil.getCodeLanMessage(
+                        RepositoryMessageCode.GITLAB_INVALID
+                    ),
                     ScmType.CODE_GITLAB.name
                 )
             }
@@ -124,7 +128,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.USER_ACCESS_CHECK_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -133,13 +139,17 @@ class CodeGitlabScmImpl constructor(
     override fun addWebHook(hookUrl: String) {
         if (token.isEmpty()) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_EMPTY),
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GITLAB_TOKEN_EMPTY
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
         if (hookUrl.isEmpty()) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY),
+                I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GITLAB_HOOK_URL_EMPTY
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -149,7 +159,9 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
-                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(
+                    RepositoryMessageCode.GITLAB_TOKEN_FAIL
+                ),
                 ScmType.CODE_GITLAB.name
             )
         }

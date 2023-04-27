@@ -29,6 +29,9 @@ package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.pipeline.type.agent.DockerOptions
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.GitNotices
@@ -184,7 +187,12 @@ object YamlObjects {
         )
 
         if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
-            throw YamlFormatException("$fromPath 中的step必须包含uses或run或checkout!")
+            throw YamlFormatException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                    params = arrayOf(fromPath)
+                )
+            )
         }
 
         // 检测step env合法性

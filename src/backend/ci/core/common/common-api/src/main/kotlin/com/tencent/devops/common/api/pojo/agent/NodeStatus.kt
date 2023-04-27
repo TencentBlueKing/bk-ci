@@ -27,32 +27,39 @@
 
 package com.tencent.devops.common.api.pojo.agent
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.api.util.MessageUtil
+
 @Suppress("UNUSED")
-enum class NodeStatus(val statusName: String) {
-    NORMAL("正常"),
-    ABNORMAL("异常"),
-    DELETED("已删除"),
-    LOST("失联"),
-    CREATING("正在创建中"),
-    RUNNING("安装Agent"),
-    STARTING("正在开机中"),
-    STOPPING("正在关机中"),
-    STOPPED("已关机"),
-    RESTARTING("正在重启中"),
-    DELETING("正在销毁中"),
-    BUILDING_IMAGE("正在制作镜像中"),
-    BUILD_IMAGE_SUCCESS("制作镜像成功"),
-    BUILD_IMAGE_FAILED("制作镜像失败"),
-    UNKNOWN("未知");
+enum class NodeStatus(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "nodeStatus", reusePrefixFlag = false)
+    val statusName: String
+) {
+    NORMAL("normal"),//正常
+    ABNORMAL("abnormal"),//异常
+    DELETED("deleted"),//已删除
+    LOST("lost"),//失联
+    CREATING("creating"),//正在创建中
+    RUNNING("running"),//安装Agent
+    STARTING("starting"),//正在开机中
+    STOPPING("stopping"),//正在关机中
+    STOPPED("stopped"),//已关机
+    RESTARTING("restarting"),//正在重启中
+    DELETING("deleting"),//正在销毁中
+    BUILDING_IMAGE("buildingImage"),//正在制作镜像中
+    BUILD_IMAGE_SUCCESS("buildImageSuccess"),//制作镜像成功
+    BUILD_IMAGE_FAILED("buildImageFailed"),//制作镜像失败
+    UNKNOWN("unknown");// 未知
 
     companion object {
-        fun getStatusName(status: String): String {
+        fun getStatusName(status: String, language: String): String {
             values().forEach {
                 if (it.name == status) {
-                    return it.statusName
+                    return MessageUtil.getMessageByLocale(messageCode = it.statusName, language = language)
                 }
             }
-            return UNKNOWN.statusName
+            return MessageUtil.getMessageByLocale(messageCode = UNKNOWN.statusName, language = language)
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
@@ -98,9 +105,9 @@ enum class NodeStatus(val statusName: String) {
 //            }
         }
 
-        fun parseByStatusName(statusName: String): NodeStatus {
+        fun parseByStatusName(statusName: String, language: String): NodeStatus {
             values().forEach {
-                if (it.statusName == statusName) {
+                if (MessageUtil.getMessageByLocale(messageCode = it.statusName, language = language) == statusName) {
                     return it
                 }
             }

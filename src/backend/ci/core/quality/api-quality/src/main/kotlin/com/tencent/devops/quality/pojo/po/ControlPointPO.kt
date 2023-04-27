@@ -25,22 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch
+package com.tencent.devops.quality.pojo.po
 
-const val QUEUE_BUILD = "queue_build"
-const val QUEUE_BUILD_NEED_END = "queue_build_need_end"
-const val EXCHANGE_BUILD = "exchange_build"
-const val ROUTE_BUILD = "build"
-const val ROUTE_BUILD_NEED_END = "build_need_end"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-const val EXCHANGE_BUILD_ABORT = "exchange_build_abort"
-const val ROUTE_BUILD_ABORT = "route_build_abort"
-const val QUEUE_BUILD_ABORT = "queue_build_abort"
-
-const val QUEUE_TASK_BEGIN = "queue_dispatch_vm_task_begin"
-const val QUEUE_TASK_END = "queue_dispatch_vm_task_end"
-const val QUEUE_TASK_NEDD_END = "queue_dispatch_vm_task_need_end"
-const val EXCHANGE_TASK = "exchange_vm_task"
-const val ROUTE_TASK_BEGIN = "dispatch_vm_task_begin"
-const val ROUTE_TASK_END = "dispatch_vm_task_end"
-const val ROUTE_TASK_NEDD_END = "dispatch_vm_task_need_end"
+@ApiModel("质量红线控制点PO")
+data class ControlPointPO(
+    @ApiModelProperty("ID")
+    val id: Long,
+    @ApiModelProperty("原子的ClassType")
+    val elementType: String,
+    @ApiModelProperty("控制点名称(原子名称)")
+    var name: String,
+    @ApiModelProperty("研发阶段")
+    var stage: String,
+    @ApiModelProperty("支持红线位置(准入-BEFORE, 准出-AFTER)")
+    val availablePosition: String,
+    @ApiModelProperty("默认红线位置")
+    val defaultPosition: String,
+    @ApiModelProperty("是否启用")
+    val enable: Boolean,
+    @ApiModelProperty("创建用户")
+    val createUser: String,
+    @ApiModelProperty("更新用户")
+    val updateUser: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val atomVersion: String = "1.0.0",
+    @ApiModelProperty("更新时间")
+    val testProject: String = "",
+    @ApiModelProperty("更新时间")
+    val tag: String? = null,
+    @ApiModelProperty("更新时间")
+    val controlPointHashId: String? = null
+)

@@ -31,10 +31,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TContainerRecord
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
@@ -251,7 +252,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -271,7 +275,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         } catch (ignored: Throwable) {
             logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|$containerId|" +
                 "$buildType|error=${ignored.message}", ignored)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -298,10 +305,11 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
         if (count > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(name),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(name),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         dslContext.transaction { t ->
@@ -330,10 +338,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             // 判断更新的容器名称是否属于自已
             val pipelineContainer = containerDao.getPipelineContainer(dslContext, id)
             if (null != pipelineContainer && name != pipelineContainer.name) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(name),
-                    false
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(name),
+                    data = false
                 )
             }
         }

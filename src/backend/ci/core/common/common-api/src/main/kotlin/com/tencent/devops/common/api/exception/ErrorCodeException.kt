@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.pojo.ErrorType
 
 /**
  * 根据错误码会反查错误信息，用于改造现有直接抛出一些错误的异常
@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 open class ErrorCodeException(
     val statusCode: Int = 400, // 默认返回的http状态码
     val errorCode: String,
+    val errorType: ErrorType? = null,
     val defaultMessage: String? = null,
-    val params: Array<String>? = null,
-    val language: String = DEFAULT_LOCALE_LANGUAGE
+    val params: Array<String>? = null
 ) : UniqueIdException("[errorCode=$errorCode]$defaultMessage")

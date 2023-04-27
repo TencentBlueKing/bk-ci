@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
@@ -57,12 +58,12 @@ import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreHonorService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class StoreHonorServiceImpl @Autowired constructor(
@@ -117,9 +118,9 @@ class StoreHonorServiceImpl @Autowired constructor(
         logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
         val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
         if (honorTitleCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(addStoreHonorRequest.honorTitle)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(addStoreHonorRequest.honorTitle)
             )
         }
         val id = UUIDUtil.generate()
@@ -135,7 +136,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
             val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
             if (atomName.isNullOrBlank()) {
-                return MessageCodeUtil.generateResponseDataObject(
+                return I18nUtil.generateResponseDataObject(
                     CommonMessageCode.ERROR_INVALID_PARAM_,
                     arrayOf("${addStoreHonorRequest.storeType.name}:$it")
                 )

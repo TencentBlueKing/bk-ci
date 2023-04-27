@@ -45,8 +45,8 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
@@ -98,17 +98,17 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
-import java.time.LocalDateTime
-import java.util.Optional
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTemplateService {
@@ -346,7 +346,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         logger.info("mainPageList userDeptList is:$userDeptList")
         val futureList = mutableListOf<Future<MarketTemplateResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
-        labelInfoList.add(MarketMainItemLabel(LATEST, MessageCodeUtil.getCodeLanMessage(LATEST)))
+        labelInfoList.add(
+            MarketMainItemLabel(
+                LATEST, I18nUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId))
+            )
+        )
         futureList.add(
             getMarketTemplateList(
                 userId = userId,
@@ -364,7 +368,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 pageSize = pageSize
             )
         )
-        labelInfoList.add(MarketMainItemLabel(HOTTEST, MessageCodeUtil.getCodeLanMessage(HOTTEST)))
+        labelInfoList.add(
+            MarketMainItemLabel(
+                HOTTEST,
+                I18nUtil.getCodeLanMessage(HOTTEST, language = I18nUtil.getLanguage(userId))
+            )
+        )
         futureList.add(
             getMarketTemplateList(
                 userId = userId,
@@ -385,9 +394,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val classifyList = classifyDao.getAllClassify(dslContext, StoreTypeEnum.TEMPLATE.type.toByte())
         classifyList.forEach {
             val classifyCode = it.classifyCode
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                defaultMessage = it.classifyName
+            val classifyLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.TEMPLATE.name}.classify.$classifyCode",
+                defaultMessage = it.classifyName,
+                language = I18nUtil.getLanguage(userId)
             )
             labelInfoList.add(MarketMainItemLabel(classifyCode, classifyLanName))
             futureList.add(
@@ -474,9 +484,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailByCode(userId: String, templateCode: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailByCode userId is :$userId, templateCode is :$templateCode")
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateCode)
+                params = arrayOf(templateCode),
+                language = I18nUtil.getLanguage(userId)
             )
         return getTemplateDetail(templateRecord, userId)
     }
@@ -484,9 +495,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     override fun getTemplateDetailById(userId: String, templateId: String): Result<TemplateDetail?> {
         logger.info("getTemplateDetailById userId is :$userId, templateId is :$templateId")
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateId)
+                params = arrayOf(templateId),
+                language = I18nUtil.getLanguage(userId)
             )
         return getTemplateDetail(templateRecord, userId)
     }
@@ -557,17 +569,19 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val type = StoreTypeEnum.TEMPLATE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, type)
         if (!isOwner) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(templateCode)
+                params = arrayOf(templateCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
         val releasedCnt = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
         if (releasedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_TEMPLATE_RELEASED,
-                params = arrayOf(templateCode)
+                params = arrayOf(templateCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         logger.info("releasedCnt: $releasedCnt")
@@ -575,9 +589,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 如果已经被安装到其他项目下使用，不能删除关联
         val installedCnt = storeProjectRelDao.countInstalledProject(dslContext, templateCode, type)
         if (installedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_TEMPLATE_USED,
-                params = arrayOf(templateCode)
+                params = arrayOf(templateCode),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
@@ -606,10 +621,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
         val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(templateCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         // 校验用户是否在模板下插件的可见范围之内和模板的可见范围是否都在其下面的插件可见范围之内
         val validateResult = validateUserTemplateComponentVisibleDept(userId, templateCode, projectCodeList)
@@ -668,13 +684,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         return if (projectCodeList.isNullOrEmpty()) {
             installStoreComponentResult
         } else {
-            MessageCodeUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_INSTALL_TEMPLATE_CODE_IS_INVALID,
                 params = arrayOf(
                     template.templateName,
                     projectCodeList.joinToString(",")
                 ),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }
@@ -691,7 +708,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         val templateDetail = templateDetailResult.data
         val templateModel = templateDetail?.templateModel
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            ?: return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         return verificationModelComponentVisibleDept(
             userId = userId,
             model = templateModel,
@@ -1013,10 +1033,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         logger.info("the templateId is:$templateId, templateCode is:$templateCode")
         val count = marketTemplateDao.countByIdAndCode(dslContext, templateId, templateCode)
         if (count < 1) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_INVALID,
-                arrayOf("templateId:$templateId,templateCode:$templateCode"),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("templateId:$templateId,templateCode:$templateCode"),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return Result(true)

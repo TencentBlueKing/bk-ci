@@ -32,8 +32,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -115,7 +116,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         // 不是重新上传的包才需要校验版本号
@@ -154,7 +159,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         return if (getAtomConfResult.errorCode != "0") {
-            MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
+            I18nUtil.generateResponseDataObject(
+                messageCode = getAtomConfResult.errorCode,
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             Result(getAtomConfResult)
         }
@@ -181,9 +190,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         if (getAtomConfResult.errorCode != "0") {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
-                params = getAtomConfResult.errorParams
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val taskDataMap = getAtomConfResult.taskDataMap

@@ -30,7 +30,8 @@ package com.tencent.devops.store.service.template.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.StoreTemplateDao
 import com.tencent.devops.store.pojo.common.Classify
@@ -147,22 +148,25 @@ class OpTemplateServiceImpl @Autowired constructor(
         logger.info("approveTemplate userId is :$userId,templateId is :$templateId,approveReq is :$approveReq")
         // 判断模版是否存在
         val template = marketTemplateDao.getTemplate(dslContext, templateId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateId)
+                params = arrayOf(templateId),
+                language = I18nUtil.getLanguage(userId)
             )
         val oldStatus = template.templateStatus
         if (oldStatus != TemplateStatusEnum.AUDITING.status.toByte()) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateId)
+                params = arrayOf(templateId),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val approveResult = approveReq.result
         if (approveResult != PASS && approveResult != REJECT) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(approveResult)
+                params = arrayOf(approveResult),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val templateStatus =

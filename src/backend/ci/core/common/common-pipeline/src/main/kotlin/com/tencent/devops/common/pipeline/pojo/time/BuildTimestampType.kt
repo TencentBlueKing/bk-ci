@@ -27,18 +27,23 @@
 package com.tencent.devops.common.pipeline.pojo.time
 
 import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
 @ApiModel("构建详情记录-时间戳类型（勿随意删除）")
-enum class BuildTimestampType(val action: String) {
-    BUILD_REVIEW_WAITING("流水线触发审核等待"),
-    BUILD_CONCURRENCY_QUEUE("流水线并发排队"),
-    STAGE_CHECK_IN_WAITING("stage准入等待"),
-    STAGE_CHECK_OUT_WAITING("stage准出等待"),
-    JOB_MUTEX_QUEUE("job互斥并发排队"),
-    JOB_THIRD_PARTY_QUEUE("job第三方构建机资源排队"),
-    JOB_CONTAINER_STARTUP("job构建机启动（包含了第三方构建机资源等待）"),
-    JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
-    TASK_REVIEW_PAUSE_WAITING("task等待（包括插件暂停、人工审核、质量红线审核）");
+enum class BuildTimestampType(
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "buildTimestampType", reusePrefixFlag = false)
+    val action: String
+) {
+    BUILD_REVIEW_WAITING("buildReviewWaiting"),// 流水线触发审核等待
+    BUILD_CONCURRENCY_QUEUE("buildConcurrencyQueue"),// 流水线并发排队
+    STAGE_CHECK_IN_WAITING("stageCheckInWaiting"),// stage准入等待
+    STAGE_CHECK_OUT_WAITING("stageCheckOutWaiting"),// stage准出等待
+    JOB_MUTEX_QUEUE("jobMutexQueue"),// job互斥并发排队
+    JOB_THIRD_PARTY_QUEUE("jobThirdPartyQueue"),// job第三方构建机资源排队
+    JOB_CONTAINER_STARTUP("jobContainerStartup"),// job构建机启动（包含了第三方构建机资源等待）
+    JOB_CONTAINER_SHUTDOWN("jobContainerShutdown"),// job构建机关闭
+    TASK_REVIEW_PAUSE_WAITING("taskReviewPauseWaiting");// task等待（包括插件暂停、人工审核、质量红线审核）
 
     /*使插件处于等待的类型*/
     fun taskCheckWait() = this == TASK_REVIEW_PAUSE_WAITING
