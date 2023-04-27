@@ -568,7 +568,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            val projectsWithVisitPermission = getProjectFromAuth(userId, accessToken).toSet()
+            val projectsWithVisitPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = accessToken
+            ).toSet()
             if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }
@@ -582,15 +585,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
                     englishNameList = projectsWithVisitPermission.toList(),
-                    offset = null,
-                    limit = null,
-                    searchName = null,
                     enabled = enabled
                 ).forEach {
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
-                            managePermission = projectsWithManagePermission?.contains(it.englishName)
+                            managePermission = projectsWithManagePermission?.contains(it.englishName),
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
                         )
                     )
                 }
@@ -604,7 +605,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectsResp.add(
                         ProjectUtils.packagingBean(
                             tProjectRecord = it,
-                            managePermission = true
+                            managePermission = true,
+                            showUserManageIcon = true
                         )
                     )
                 }
@@ -1094,6 +1096,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
 
     abstract fun getProjectFromAuth(userId: String, accessToken: String?, permission: AuthPermission): List<String>?
+
+    abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 

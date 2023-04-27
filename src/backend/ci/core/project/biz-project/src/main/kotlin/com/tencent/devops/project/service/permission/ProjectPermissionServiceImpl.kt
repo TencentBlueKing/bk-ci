@@ -136,5 +136,7 @@ class ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun needApproval(needApproval: Boolean?) = false
 
+    override fun isShowUserManageIcon(): Boolean = false
+
     override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
 }

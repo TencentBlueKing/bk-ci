@@ -225,6 +225,8 @@ class RbacProjectPermissionService(
 
     override fun needApproval(needApproval: Boolean?) = needApproval == true && authProjectApproval
 
+    override fun isShowUserManageIcon(): Boolean = true
+
     override fun filterProjects(userId: String, permission: AuthPermission): List<String>? {
         return authProjectApi.getUserProjectsByPermission(
             serviceCode = projectAuthServiceCode,
