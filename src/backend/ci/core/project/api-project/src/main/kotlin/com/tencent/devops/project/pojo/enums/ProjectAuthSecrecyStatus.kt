@@ -29,8 +29,8 @@
 package com.tencent.devops.project.pojo.enums
 
 enum class ProjectAuthSecrecyStatus(val value: Int, val desc: String) {
-    PUBLIC(0, "公开项目"),
-    PRIVATE(1, "私有项目"),
+    PUBLIC(0, "私有项目"),
+    PRIVATE(1, "保密项目"),
     CLASSIFIED(2, "机密项目");
 
     companion object {
