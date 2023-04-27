@@ -81,9 +81,9 @@ spec:
                           "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:80": 1
                       },
                       "timeout": {
-                          "send": 30,
-                          "connect": 30,
-                          "read": 30
+                          "send": 60,
+                          "connect": 60,
+                          "read": 60
                       },
                       "keepalive_pool": {
                           "size": 320,
@@ -91,7 +91,23 @@ spec:
                           "requests": 1000
                       },
                       "type": "roundrobin"
-                  }
+                  },
+                  "plugins": {
+                    "limit-count": {
+                        "key_type": "var",
+                        "rejected_code": 503,
+                        "rejected_msg": "limit_count",
+                        "allow_degradation": true,
+                        "_meta": {
+                            "disable": true
+                        },
+                        "count": 20,
+                        "key": "remote_addr",
+                        "time_window": 1,
+                        "policy": "local",
+                        "show_limit_quota_header": true
+                    }
+                }
               }'
 
               # 创建https sni
@@ -122,9 +138,9 @@ spec:
                           "{{ .Values.proxy.wsproxyName }}.{{ .Release.Namespace }}.svc.cluster.local:443": 1
                       },
                       "timeout": {
-                          "send": 30,
-                          "connect": 30,
-                          "read": 30
+                          "send": 60,
+                          "connect": 60,
+                          "read": 60
                       },
                       "keepalive_pool": {
                           "size": 320,
@@ -133,6 +149,22 @@ spec:
                       },
                       "scheme": "https",
                       "type": "roundrobin"
+                  },
+                  "plugins": {
+                    "limit-count": {
+                        "key_type": "var",
+                        "rejected_code": 503,
+                        "rejected_msg": "limit_count",
+                        "allow_degradation": true,
+                        "_meta": {
+                            "disable": true
+                        },
+                        "count": 20,
+                        "key": "remote_addr",
+                        "time_window": 1,
+                        "policy": "local",
+                        "show_limit_quota_header": true
+                    }
                   }
               }'
 
