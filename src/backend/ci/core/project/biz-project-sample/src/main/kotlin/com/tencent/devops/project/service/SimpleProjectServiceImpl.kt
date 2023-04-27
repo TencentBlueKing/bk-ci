@@ -125,6 +125,21 @@ class SimpleProjectServiceImpl @Autowired constructor(
         return projectPermissionService.getUserProjects(userId!!)
     }
 
+    override fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission
+    ): List<String>? {
+        return projectPermissionService.filterProjects(
+            userId = userId,
+            permission = permission
+        )
+    }
+
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return projectPermissionService.isShowUserManageIcon()
+    }
+
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
     }

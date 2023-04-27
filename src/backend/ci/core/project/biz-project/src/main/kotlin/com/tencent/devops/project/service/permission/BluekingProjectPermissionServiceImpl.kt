@@ -127,5 +127,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
 
     override fun needApproval(needApproval: Boolean?) = false
 
-    override fun filterProjectsWithManagePermission(userId: String, ): List<String>? = null
+    override fun isShowUserManageIcon(): Boolean = false
+
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
 }
