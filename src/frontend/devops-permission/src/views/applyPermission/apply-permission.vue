@@ -15,7 +15,6 @@ import {
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import { useRoute, useRouter } from 'vue-router';
-import selectVue from '../../../../devops-turbo/src/components/render/select.vue';
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
