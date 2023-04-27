@@ -499,7 +499,7 @@ class ProjectDao {
     }
 
     // 拉取用户未审核通过的项目，即未在iam注册的项目
-    fun listUnapprovedByUserId(
+    fun listUnApprovedByUserId(
         dslContext: DSLContext,
         userId: String
     ): Result<TProjectRecord> {
