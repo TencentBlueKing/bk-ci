@@ -3,7 +3,7 @@
         <span v-for="(field) in materialInfos" :key="field">
             <logo :name="iconArray[field] || 'commit'" size="14" />
             <bk-link
-                v-if="getLink(field)"
+                v-if="includeLink(field)"
                 class="material-span"
                 theme="primary"
                 target="_blank"
@@ -57,6 +57,9 @@
             scmType () {
                 return this.isWebhook ? `CODE_${this.material?.codeType}` : this.material?.scmType
             },
+            isSVN () {
+                return this.scmType === 'CODE_SVN'
+            },
             iconArray () {
                 const scmIcon = getMaterialIconByType(this.scmType)
                 return {
@@ -79,7 +82,7 @@
                 if (!this.isWebhook) {
                     return [
                         'aliasName',
-                        ...(this.scmType === 'CODE_SVN' ? [] : ['branchName']),
+                        ...(this.isSVN ? [] : ['branchName']),
                         'newCommitId'
                     ]
                 }
@@ -154,7 +157,7 @@
                     'mrIid',
                     'tagName'
                     // 'webhookCommitId'
-                ].includes(field)
+                ].includes(field) && !this.isSVN
             },
             formatField (field) {
                 switch (field) {
