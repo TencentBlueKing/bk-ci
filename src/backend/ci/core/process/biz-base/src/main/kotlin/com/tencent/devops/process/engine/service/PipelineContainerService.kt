@@ -47,6 +47,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
@@ -170,7 +171,9 @@ class PipelineContainerService @Autowired constructor(
     }
 
     fun batchUpdate(transactionContext: DSLContext?, containerList: List<PipelineBuildContainer>) {
-        return pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.batchUpdate(transactionContext ?: dslContext, containerList)
+        }
     }
 
     fun updateContainerStatus(
@@ -184,17 +187,19 @@ class PipelineContainerService @Autowired constructor(
         buildStatus: BuildStatus
     ) {
         logger.info("[$buildId]|updateContainerStatus|status=$buildStatus|containerSeqId=$containerId|s($stageId)")
-        pipelineBuildContainerDao.updateStatus(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = containerId,
-            buildStatus = buildStatus,
-            startTime = startTime,
-            controlOption = controlOption,
-            endTime = endTime
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.updateStatus(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = containerId,
+                buildStatus = buildStatus,
+                startTime = startTime,
+                controlOption = controlOption,
+                endTime = endTime
+            )
+        }
     }
 
     fun updateMatrixGroupStatus(
@@ -209,14 +214,16 @@ class PipelineContainerService @Autowired constructor(
         controlOption: PipelineBuildContainerControlOption
     ) {
         logger.info("[$buildId]|updateMatrixGroupStatus|option=$controlOption|matrixGroupId=$matrixGroupId|s($stageId)")
-        pipelineBuildContainerDao.updateControlOption(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            containerId = matrixGroupId,
-            controlOption = controlOption
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildContainerDao.updateControlOption(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                stageId = stageId,
+                containerId = matrixGroupId,
+                controlOption = controlOption
+            )
+        }
         containerBuildRecordService.updateMatrixGroupContainer(
             projectId = projectId,
             pipelineId = pipelineId,
