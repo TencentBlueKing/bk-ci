@@ -168,7 +168,7 @@ class PipelineTaskService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             containerId = null,
-            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING)
+            statusSet = listOf(BuildStatus.RUNNING, BuildStatus.REVIEWING, BuildStatus.PAUSE)
         )
         val list = mutableListOf<Map<String, Any>>()
         listByStatus.forEach {
