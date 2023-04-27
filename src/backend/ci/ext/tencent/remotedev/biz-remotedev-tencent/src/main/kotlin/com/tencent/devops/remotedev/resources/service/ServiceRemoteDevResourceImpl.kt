@@ -11,7 +11,6 @@ class ServiceRemoteDevResourceImpl(
     private val workspaceService: WorkspaceService
 ) : ServiceRemoteDevResource {
     override fun updateClientVersion(userId: String, env: String, version: String): Result<Boolean> {
-        workspaceService.updateClientVersion(userId, env, version)
         return Result(true)
     }
 }
