@@ -76,7 +76,7 @@
                         :placeholder="$t('details.addRemarkForBuild')"
                         class="exec-remark"
                     />
-                    <span class="exec-remark" v-else>{{ tempRemark || "--" }}</span>
+                    <span class="exec-remark" v-else>{{ remark || "--" }}</span>
                 </div>
             </div>
         </div>
@@ -105,6 +105,7 @@
             return {
                 remarkEditable: false,
                 tempRemark: this.execDetail.remark,
+                remark: this.execDetail.remark,
                 isChangeRemark: false,
                 isShowMoreMaterial: false
             }
@@ -132,6 +133,7 @@
             execDetail: function (val) {
                 if (val.remark !== this.tempRemark) {
                     this.tempRemark = val.remark
+                    this.remark = val.remark
                 }
             }
         },
@@ -159,13 +161,14 @@
                             buildId: this.$route.params.buildNo,
                             remark: this.tempRemark
                         })
+                        this.remark = this.tempRemark
                         this.$showTips({
                             theme: 'success',
                             message: this.$t('updateSuc')
                         })
                     }
                 } catch (e) {
-                    this.tempRemark = this.execDetail.remark
+                    this.tempRemark = this.remark
                     this.$showTips({
                         theme: 'error',
                         message: this.$t('updateFail')
