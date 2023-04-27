@@ -474,11 +474,10 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         }
+        doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
         if (event.status) {
             bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
         }
-
-        doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
     }
 
     private fun doStartWS(
