@@ -53,8 +53,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.KUBERNETES_BUILD_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_KUBERNETES_BUILD_CONTAINER_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.CONTAINER_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -82,13 +82,13 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isStarting
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
+import java.util.stream.Collectors
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
@@ -111,10 +111,12 @@ class KubernetesContainerService @Autowired constructor(
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
+    override fun getLog() = DispatchBuildLog(
         readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
-        startContainerError = I18nUtil.getCodeLanMessage(START_KUBERNETES_BUILD_CONTAINER_FAIL),
-        troubleShooting = I18nUtil.getCodeLanMessage(KUBERNETES_BUILD_ERROR)
+        startContainerError =
+        I18nUtil.getCodeLanMessage(messageCode = START_BUILD_CONTAINER_FAIL, params = arrayOf("kubernetes")),
+        troubleShooting =
+        I18nUtil.getCodeLanMessage(messageCode = CONTAINER_BUILD_ERROR, params = arrayOf("kubernetes"))
     )
 
     @Value("\${kubernetes.resources.builder.cpu}")
