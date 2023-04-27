@@ -29,12 +29,8 @@ package com.tencent.devops.dispatch.kubernetes.pojo
 
 const val BK_READY_CREATE_KUBERNETES_BUILD_MACHINE = "bkReadyCreateKubernetesBuildMachine"// 准备创建kubernetes构建机...
 const val BK_READY_CREATE_BCS_BUILD_MACHINE = "bkReadyCreateBcsBuildMachine"// 准备创建BCS(蓝鲸容器平台)构建机...
-
 const val BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL = "bkRequestCreateBuildMachineSuccessful"// 下发创建构建机请求成功，builderName: {0} 等待机器创建...
-
-
-
-
+const val BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE = "bkReadyCreateDevcloudBuildMachine"// 准备创建devcloud构建机...
 const val BK_GET_LOGIN_DEBUG_LINK_TIMEOUT = "bkGetLoginDebugLinkTimeout"// 获取登录调试链接接口超时
 const val BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION = "bkBuildAndPushInterfaceException"// 构建并推送接口异常
 const val BK_BUILD_AND_PUSH_INTERFACE_RETURN_FAIL = "bkBuildAndPushInterfaceReturnFail"// 构建并推送接口返回失败
