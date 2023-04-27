@@ -49,7 +49,7 @@
                                         'is-disabled': !item.managePermission
                                     }"
                                     v-bk-tooltips="$t('userManage')"
-                                    @click.stop.prevent="goToUserManage(item.managePermission)">
+                                    @click.stop.prevent="goToUserManage(item)">
                                     <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
                                     <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
                                 </span>
@@ -242,9 +242,9 @@
             }
         }
 
-        goToUserManage (val): void {
-            if (val) {
-                this.to('/console/manage/hw-rbac-6/group')
+        goToUserManage (payload): void {
+            if (payload.managePermission) {
+                this.to(`/console/manage/${payload.projectCode}/group`)
             }
         }
 
