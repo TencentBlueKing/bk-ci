@@ -28,8 +28,9 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Properties
 
-val i18nPath: String? = System.getProperty("i18n.path")
-if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
+val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
+println("rootDir is: $rootDir, i18nPath is: $i18nPath")
+if (File(i18nPath).isDirectory) {
     println("i18n load register , Path is $i18nPath")
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
@@ -38,14 +39,13 @@ if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
             if (moduleName.isNullOrBlank()) {
                 moduleName = project.name.split("-")[1].let { if (it == "engine") "process" else it }
             }
-            val propertyArray = languages(joinPath(i18nPath, moduleName))
-            propertyArray.addAll(languages(i18nPath))
+            val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 
-            println("copy i18n into $moduleName classpath... , propertyArray is : $propertyArray")
-            for (property in propertyArray) {
+            println("copy i18n into $moduleName classpath... , moduleFileNames is : $moduleFileNames")
+            for (fileName in moduleFileNames) {
                 // set variables for input files
-                val file1 = File(joinPath(i18nPath, "message_$property.properties"))
-                val file2 = File(joinPath(i18nPath, moduleName, "message_$property.properties"))
+                val file1 = File(joinPath(i18nPath, fileName))
+                val file2 = File(joinPath(i18nPath, moduleName, fileName))
                 val targetFile = File(
                     joinPath(
                         projectDir.absolutePath,
@@ -53,7 +53,7 @@ if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
                         "main",
                         "resources",
                         "i18n",
-                        "message_$property.properties"
+                        fileName
                     )
                 )
                 targetFile.parentFile.mkdirs()
@@ -85,11 +85,8 @@ if (!i18nPath.isNullOrBlank() && File(i18nPath).isDirectory) {
 fun joinPath(vararg folders: String) = folders.joinToString(File.separator)
 
 /**
- * 获取多语言列表
+ * 获取路径下文件名列表
  */
-fun languages(path: String) = File(path)
-    .listFiles { file ->
-        file.isFile && file.name.startsWith("message_") && file.name.endsWith(".properties")
-    }?.map { it.name }
-    ?.map { it.replace("message_", "").replace(".properties", "") }
+fun getFileNames(path: String) = File(path)
+    .listFiles()?.filter { it.isFile }?.map { it.name }
     ?.toMutableSet() ?: mutableSetOf()
