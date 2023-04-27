@@ -154,7 +154,7 @@
             async handleRemarkChange (row) {
                 if (this.isChangeRemark) return
                 try {
-                    if (this.tempRemark && this.tempRemark !== this.execDetail.remark) {
+                    if (this.tempRemark !== this.remark) {
                         this.isChangeRemark = true
                         await this.updateBuildRemark({
                             ...this.$route.params,
