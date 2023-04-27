@@ -598,7 +598,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
             if (unApproved) {
-                projectDao.listUnapprovedByUserId(
+                projectDao.listUnApprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
                 ).forEach {
@@ -628,7 +628,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         pageSize: Int
     ): Pagination<ProjectWithPermission> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectListWithPermission: MutableList<ProjectWithPermission> = mutableListOf()
+        val projectsResp = mutableListOf<ProjectWithPermission>()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
         projectDao.listProjectsForApply(
@@ -639,7 +639,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
         ).forEach {
-            projectListWithPermission.add(
+            projectsResp.add(
                 ProjectWithPermission(
                     projectName = it.value1(),
                     englishName = it.value2(),
@@ -649,8 +649,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         return Pagination(
-            hasNext = projectListWithPermission.size == pageSize,
-            records = projectListWithPermission
+            hasNext = projectsResp.size == pageSize,
+            records = projectsResp
         )
     }
 
@@ -659,7 +659,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-
             projectDao.listByCodes(dslContext, projectCodes, enabled = true).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
