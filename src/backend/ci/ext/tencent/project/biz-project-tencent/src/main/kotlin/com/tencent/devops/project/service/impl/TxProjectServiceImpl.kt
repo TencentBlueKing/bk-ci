@@ -264,7 +264,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 action = permission.value
             ).data
         }
-
     }
 
     override fun isShowUserManageIcon(routerTag: String?): Boolean =
