@@ -60,6 +60,9 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.process.pojo.code.WebhookInfo
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
@@ -75,11 +78,13 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
+import java.time.LocalDateTime
 
 /**
  * 启动流水线上下文类，属于非线程安全类
  */
 data class StartBuildContext(
+    val now: LocalDateTime = LocalDateTime.now(),
     val projectId: String,
     val pipelineId: String,
     val buildId: String,
@@ -105,9 +110,11 @@ data class StartBuildContext(
     val webhookInfo: WebhookInfo?,
     val buildMsg: String?,
     val triggerReviewers: List<String>?,
+    val pipelineParamMap: MutableMap<String, BuildParameters>,
     val buildParameters: MutableList<BuildParameters>,
     val concurrencyGroup: String?,
-    val buildNumAlias: String? = null,
+    val pipelineSetting: PipelineSetting?,
+    var buildNumAlias: String? = null, // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNum: Int = 1, // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     // 注意：该字段是在pipelineRuntimeService.startBuild 才赋值
     var buildNoType: BuildNoType? = null,
@@ -211,16 +218,16 @@ data class StartBuildContext(
             pipelineId: String,
             buildId: String,
             resourceVersion: Int,
-            params: Map<String, String>,
-            buildParameters: MutableList<BuildParameters>,
-            buildNumAlias: String? = null,
-            startBuildStatus: BuildStatus? = null,
-            concurrencyGroup: String? = null,
+            pipelineSetting: PipelineSetting? = null,
+            realStartParamKeys: List<String>,
+            pipelineParamMap: MutableMap<String, BuildParameters>,
             triggerReviewers: List<String>? = null,
             currentBuildNo: Int? = null
         ): StartBuildContext {
 
-            val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
+            val params: Map<String, String> = pipelineParamMap.values.associate { it.key to it.value.toString() }
+
+            val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]
 
             val (actionType, executeCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
                 val count = try {
@@ -244,13 +251,13 @@ data class StartBuildContext(
                 firstTaskId = params[PIPELINE_START_TASK_ID] ?: "",
                 stageRetry = isStageRetry,
                 retryStartTaskId = retryStartTaskId,
-                userId = params[PIPELINE_START_USER_ID].toString(),
-                triggerUser = params[PIPELINE_START_USER_NAME].toString(),
-                startType = StartType.valueOf(params[PIPELINE_START_TYPE] as String),
+                userId = params[PIPELINE_START_USER_ID]!!,
+                triggerUser = params[PIPELINE_START_USER_NAME]!!,
+                startType = StartType.valueOf(params[PIPELINE_START_TYPE]!!),
                 parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID],
                 parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID],
                 channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
-                    ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString())
+                    ChannelCode.valueOf(params[PIPELINE_START_CHANNEL]!!)
                 } else {
                     ChannelCode.BS
                 },
@@ -259,51 +266,134 @@ data class StartBuildContext(
                 currentBuildNo = currentBuildNo,
                 webhookInfo = getWebhookInfo(params),
                 buildMsg = params[PIPELINE_BUILD_MSG]?.coerceAtMaxLength(MAX_LENGTH),
-                buildParameters = buildParameters,
-                concurrencyGroup = concurrencyGroup?.let { self ->
-                    val tConcurrencyGroup = EnvUtils.parseEnv(self, PipelineVarUtil.fillContextVarMap(params))
-                    logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
-                    tConcurrencyGroup
-                },
+                buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
+                // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
+                concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
+                    ?.concurrencyGroup.let {
+                        val tConcurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(params))
+                        logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
+                        tConcurrencyGroup
+                    },
                 triggerReviewers = triggerReviewers,
-                startBuildStatus = startBuildStatus ?: if (triggerReviewers.isNullOrEmpty())
-                    BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
+                startBuildStatus =
+                if (triggerReviewers.isNullOrEmpty()) BuildStatus.QUEUE else BuildStatus.TRIGGER_REVIEWING,
                 needUpdateStage = false,
-                buildNumAlias = buildNumAlias
+                pipelineSetting = pipelineSetting,
+                pipelineParamMap = pipelineParamMap
             )
         }
 
-        private fun getWebhookInfo(params: Map<String, Any>): WebhookInfo? {
+        private fun getWebhookInfo(params: Map<String, String>): WebhookInfo? {
             if (params[PIPELINE_START_TYPE] != StartType.WEB_HOOK.name) {
                 return null
             }
             return WebhookInfo(
-                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE]?.toString(),
-                nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME]?.toString(),
-                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE]?.toString(),
-                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL]?.toString(),
-                webhookType = params[PIPELINE_WEBHOOK_TYPE]?.toString(),
-                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH]?.toString(),
-                webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME]?.toString(),
+                codeType = params[BK_REPO_WEBHOOK_REPO_TYPE],
+                nameWithNamespace = params[BK_REPO_WEBHOOK_REPO_NAME],
+                webhookMessage = params[PIPELINE_WEBHOOK_COMMIT_MESSAGE],
+                webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL],
+                webhookType = params[PIPELINE_WEBHOOK_TYPE],
+                webhookBranch = params[PIPELINE_WEBHOOK_BRANCH],
+                webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME],
                 // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
                 webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
-                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]?.toString()
+                    params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
                 } else {
-                    params[PIPELINE_WEBHOOK_EVENT_TYPE]?.toString()
+                    params[PIPELINE_WEBHOOK_EVENT_TYPE]
                 },
-                refId = params[PIPELINE_WEBHOOK_REVISION]?.toString(),
-                webhookCommitId = params[PIPELINE_WEBHOOK_REVISION] as String?,
-                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA]?.toString(),
-                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH]?.toString(),
-                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
-                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
-                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString(),
-                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString(),
-                tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME]?.toString(),
-                issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID]?.toString(),
-                noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID]?.toString(),
-                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]?.toString()
+                refId = params[PIPELINE_WEBHOOK_REVISION],
+                webhookCommitId = params[PIPELINE_WEBHOOK_REVISION],
+                webhookMergeCommitSha = params[BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA],
+                webhookSourceBranch = params[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH],
+                mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID],
+                mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER],
+                mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL],
+                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER],
+                tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME],
+                issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID],
+                noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID],
+                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]
             )
+        }
+
+        /**
+         * 简易只为实现推送PipelineBuildStartEvent事件所需要的参数，不是全部
+         */
+        fun init4SendBuildStartEvent(
+            userId: String,
+            projectId: String,
+            pipelineId: String,
+            buildId: String,
+            resourceVersion: Int,
+            actionType: ActionType,
+            executeCount: Int,
+            firstTaskId: String,
+            startType: StartType,
+            startBuildStatus: BuildStatus
+        ): StartBuildContext = StartBuildContext(
+            now = LocalDateTime.now(),
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            resourceVersion = resourceVersion,
+            actionType = actionType,
+            executeCount = executeCount,
+            userId = userId,
+            firstTaskId = firstTaskId,
+            startBuildStatus = startBuildStatus,
+            startType = startType,
+            parentBuildId = "",
+            stageRetry = false,
+            retryStartTaskId = null,
+            triggerUser = "",
+            parentTaskId = "",
+            channelCode = ChannelCode.BS,
+            retryFailedContainer = false,
+            needUpdateStage = false,
+            skipFailedTask = false,
+            variables = emptyMap(),
+            webhookInfo = null,
+            buildMsg = null,
+            triggerReviewers = null,
+            pipelineParamMap = mutableMapOf(),
+            buildParameters = mutableListOf(),
+            concurrencyGroup = null,
+            pipelineSetting = null
+
+        )
+
+        private const val CONTEXT_PREFIX = "variables."
+
+        /**
+         * 根据[realStartParamKeys]启动参数Key列表读取[pipelineParamMap]参数值来生成流水线启动变量列表，不包含其他
+         */
+        private fun genOriginStartParamsList(
+            realStartParamKeys: List<String>,
+            pipelineParamMap: MutableMap<String, BuildParameters>
+        ): ArrayList<BuildParameters> {
+
+            val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
+
+            // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
+            val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size)
+            realStartParamKeys.forEach { key ->
+                pipelineParamMap[key]?.let { param ->
+                    originStartParams.add(param)
+                    if (key.startsWith(CONTEXT_PREFIX)) {
+                        originStartContexts[key] = param
+                    } else {
+                        val ctxKey = CONTEXT_PREFIX + key
+                        originStartContexts[ctxKey] = param.copy(key = ctxKey)
+                    }
+                }
+            }
+            pipelineParamMap.putAll(originStartContexts)
+
+            pipelineParamMap[BUILD_NO]?.let { buildNoParam -> originStartParams.add(buildNoParam) }
+            pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
+            pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
+
+            return originStartParams
         }
     }
 }

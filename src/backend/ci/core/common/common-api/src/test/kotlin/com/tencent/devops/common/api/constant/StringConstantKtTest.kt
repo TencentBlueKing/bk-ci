@@ -1,8 +1,7 @@
 package com.tencent.devops.common.api.constant
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
-
-import org.junit.jupiter.api.Assertions.*
 
 class StringConstantKtTest {
 

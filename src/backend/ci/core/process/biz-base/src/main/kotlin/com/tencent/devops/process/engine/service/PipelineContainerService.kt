@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
@@ -63,6 +64,7 @@ import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -869,38 +871,6 @@ class PipelineContainerService @Autowired constructor(
 
         val buildNoObj = container.buildNo
         if (buildNoObj != null && context.actionType == ActionType.START) {
-//            val buildNoObj = container.buildNo
-//            if (buildNoObj != null && context.actionType == ActionType.START) {
-//                buildNoType = buildNoObj.buildNoType
-//                val buildNoLock = if (acquire != true) PipelineBuildNoLock(
-//                    redisOperation = redisOperation,
-//                    pipelineId = pipelineId
-//                ) else null
-//                try {
-//                    buildNoLock?.lock()
-//                    if (buildNoType == BuildNoType.CONSISTENT) {
-//                        if (currentBuildNo != null) {
-//                            // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
-//                            updateBuildNo(projectId, pipelineId, currentBuildNo!!)
-//                            logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
-//                        }
-//                    } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-//                        val buildSummary = getBuildSummaryRecord(pipelineInfo.projectId, pipelineId)
-//                        // buildNo根据数据库的记录值每次新增1
-//                        currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
-//                            1
-//                        } else buildSummary.buildNo + 1
-//                        updateBuildNo(projectId, pipelineId, currentBuildNo!!)
-//                    }
-//                    // 兼容buildNo为空的情况
-//                    if (currentBuildNo == null) {
-//                        currentBuildNo = getBuildSummaryRecord(pipelineInfo.projectId, pipelineId)?.buildNo
-//                            ?: buildNoObj.buildNo
-//                    }
-//                } finally {
-//                    buildNoLock?.unlock()
-//                }
-//            }
             context.buildNoType = buildNoObj.buildNoType
             var needUpdateBuildNoRecord = false
             var needAddCurrentBuildNo = false
@@ -913,14 +883,13 @@ class PipelineContainerService @Autowired constructor(
             }
 
             if (needAddCurrentBuildNo || needUpdateBuildNoRecord || context.currentBuildNo == null) {
-                val projectId = context.projectId
-                val pipelineId = context.pipelineId
-
-                PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { lock ->
+                PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = context.pipelineId).use { lock ->
                     lock.lock()
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
-                        context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(dslContext, projectId, pipelineId)
+                        context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(
+                            dslContext = dslContext, projectId = context.projectId, pipelineId = context.pipelineId
+                        )
                             ?: let {
                                 if (needAddCurrentBuildNo) {
                                     0
@@ -937,11 +906,17 @@ class PipelineContainerService @Autowired constructor(
                     if (needUpdateBuildNoRecord) {
                         pipelineBuildSummaryDao.updateBuildNo(
                             dslContext = dslContext,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
+                            projectId = context.projectId,
+                            pipelineId = context.pipelineId,
                             buildNo = context.currentBuildNo!!
                         )
                     }
+                }
+
+                if (context.buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT) { // 成功才+1的构建只在真正启动时赋值,配合排队
+                    val buildParameters = BuildParameters(BUILD_NO, value = context.currentBuildNo!!, readOnly = true)
+                    context.pipelineParamMap[BUILD_NO] = buildParameters
+                    context.buildParameters.add(buildParameters)
                 }
             }
         }

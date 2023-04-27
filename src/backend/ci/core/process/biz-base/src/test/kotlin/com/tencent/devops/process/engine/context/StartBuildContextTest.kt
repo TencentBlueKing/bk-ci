@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.context
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
@@ -106,19 +107,21 @@ class StartBuildContextTest : TestBase() {
         Assertions.assertEquals(false, needSkipContainerWhenFailRetry)
     }
 
-    private fun initDefaultStartBuildContext() = StartBuildContext.init(
-        projectId = projectId,
-        pipelineId = pipelineId,
-        buildId = buildId,
-        resourceVersion = version,
-        params = params,
-        buildParameters = mutableListOf(),
-        currentBuildNo = null,
-        concurrencyGroup = null,
-        buildNumAlias = null,
-        startBuildStatus = null,
-        triggerReviewers = null
-    )
+    private fun initDefaultStartBuildContext(): StartBuildContext {
+        val pipelineParamMap: MutableMap<String, BuildParameters> = params.toList().associate {
+            it.first to BuildParameters(key = it.first, value = it.second)
+        }.toMutableMap()
+        return StartBuildContext.init(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            resourceVersion = version,
+            realStartParamKeys = emptyList(),
+            pipelineParamMap = pipelineParamMap,
+            currentBuildNo = null,
+            triggerReviewers = null
+        )
+    }
 
     @Test
     fun needSkipTaskWhenRetry() {

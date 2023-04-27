@@ -400,7 +400,7 @@ class BuildEndControl @Autowired constructor(
             varValue = endTime
         )
         val duration = if (startTime <= 0L) { // 未启动，直接取消的情况下，耗时不准确
-          "0"
+            "0"
         } else {
             ((endTime - startTime) / 1000).toString()
         }

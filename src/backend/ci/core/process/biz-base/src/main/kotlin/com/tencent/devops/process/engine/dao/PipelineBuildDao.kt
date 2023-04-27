@@ -38,7 +38,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.service.utils.JooqUtils
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -110,7 +109,7 @@ class PipelineBuildDao {
                     startBuildContext.resourceVersion,
                     LocalDateTime.now(),
                     JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
-                    startBuildContext.variables[PIPELINE_WEBHOOK_TYPE],
+                    startBuildContext.webhookInfo?.webhookType,
                     startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
                     startBuildContext.buildMsg,
                     startBuildContext.buildNumAlias,
@@ -528,12 +527,15 @@ class PipelineBuildDao {
         }
     }
 
-    fun count(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+    fun count(dslContext: DSLContext, projectId: String, pipelineId: String, status: List<BuildStatus>? = null): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
+            val where = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)!!
+            if (!status.isNullOrEmpty()) {
+                where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            where.fetchOne(0, Int::class.java)!!
         }
     }
 

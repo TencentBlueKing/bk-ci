@@ -69,6 +69,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
@@ -105,6 +106,7 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRecordService: PipelineBuildRecordService,
@@ -485,10 +487,11 @@ class BuildStartControl @Autowired constructor(
                 Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
             )
         )
+        val nowMills = now.timestampmilli()
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
+        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
-        container.startEpoch = now.timestampmilli()
+        container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount
@@ -497,7 +500,7 @@ class BuildStartControl @Autowired constructor(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
-                Container::startEpoch.name to now.timestampmilli(),
+                Container::startEpoch.name to nowMills,
                 Container::systemElapsed.name to (stage.elapsed ?: 0),
                 Container::elementElapsed.name to 0,
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
@@ -679,7 +682,7 @@ class BuildStartControl @Autowired constructor(
                 varValue = System.currentTimeMillis().toString()
             )
             // 增加Model版本引用计数
-            pipelineRuntimeService.addVersionRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
+            pipelineRepositoryVersionService.addVerRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
         }
 
         val stages = model.stages
