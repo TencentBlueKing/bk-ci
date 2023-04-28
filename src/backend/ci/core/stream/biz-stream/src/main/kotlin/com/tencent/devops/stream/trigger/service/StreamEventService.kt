@@ -28,11 +28,9 @@
 package com.tencent.devops.stream.trigger.service
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao

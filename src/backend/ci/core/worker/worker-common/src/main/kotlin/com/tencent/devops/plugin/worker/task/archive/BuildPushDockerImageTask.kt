@@ -29,7 +29,6 @@ package com.tencent.devops.plugin.worker.task.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -57,11 +56,11 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
-import java.io.File
 
 @TaskClassType(classTypes = [BuildPushDockerImageElement.classType])
 @Suppress("ALL")

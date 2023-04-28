@@ -41,7 +41,6 @@ import com.tencent.devops.common.api.expression.ExpressionException
 import com.tencent.devops.common.api.expression.Lex
 import com.tencent.devops.common.api.expression.Word
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.EXCEPTION
 import com.tencent.devops.common.api.constant.NORMAL
 import com.tencent.devops.common.api.constant.NUM_UNIT
 import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource

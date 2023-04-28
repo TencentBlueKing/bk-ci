@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -53,12 +52,12 @@ import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.utils.StoreUtils
+import java.net.URLEncoder
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service

@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
@@ -47,11 +46,11 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
+import java.io.File
+import java.nio.file.Files
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.io.File
-import java.nio.file.Files
 
 @ApiPriority(priority = 9)
 class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {

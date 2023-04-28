@@ -30,7 +30,6 @@ package com.tencent.devops.process.yaml.modelCreate
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Container
@@ -57,9 +56,9 @@ import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired(required = false) constructor(

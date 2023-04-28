@@ -34,7 +34,6 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_CREDEN
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_CUSTOM_FILE_FAILED
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -47,10 +46,10 @@ import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
 
 @ApiPriority(priority = 9)
 class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {

@@ -28,7 +28,6 @@
 package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

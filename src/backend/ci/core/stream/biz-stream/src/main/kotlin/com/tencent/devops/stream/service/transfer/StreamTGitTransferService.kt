@@ -43,7 +43,6 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.constant.StreamMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
