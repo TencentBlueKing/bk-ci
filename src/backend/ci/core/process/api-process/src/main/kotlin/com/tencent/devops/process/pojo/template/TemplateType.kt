@@ -40,7 +40,7 @@ enum class TemplateType(
 ) {
     CUSTOMIZE("customize"), // 自定义模板
     CONSTRAINT("constraint"), // 来自商店
-    PUBLIC("public");// 公共模版
+    PUBLIC("public"); // 公共模版
 
     companion object {
         fun getTemplateTypeDesc(type: String): String {

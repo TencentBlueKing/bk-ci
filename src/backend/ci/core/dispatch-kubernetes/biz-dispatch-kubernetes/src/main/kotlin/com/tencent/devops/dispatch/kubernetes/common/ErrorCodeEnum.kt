@@ -53,5 +53,5 @@ enum class ErrorCodeEnum(
     CREATE_IMAGE_VERSION_INTERFACE_FAIL(ErrorType.THIRD_PARTY, 2126044, "2126044"), // Dispatcher-kubernetes 异常，异常信息 - 创建镜像新版本接口返回失败
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126045, "2126045"), // Dispatcher-kubernetes 异常，异常信息 - 获取TASK状态接口异常
     WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126046, "2126046"), // Dispatcher-kubernetes 异常，异常信息 - 获取websocket接口异常
-    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2126047, "2126047");// 请检查webConsole网关代理配置
+    WEBSOCKET_NO_GATEWAY_PROXY(ErrorType.SYSTEM, 2126047, "2126047"); // 请检查webConsole网关代理配置
 }

@@ -42,7 +42,7 @@ enum class ErrorCodeEnum(
     SYSTEM_ERROR(ErrorType.SYSTEM, 2127001, "2127001"), // Buildless 系统错误
     CREATE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127002, "2127002"), // 创建容器异常
     NO_IDLE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127003, "2127003"), // 当前母机无可用空闲容器
-    GET_LOCK_FAILED(ErrorType.SYSTEM, 2127004, "2127004");// 获取锁失败
+    GET_LOCK_FAILED(ErrorType.SYSTEM, 2127004, "2127004"); // 获取锁失败
 
     fun ErrorCodeEnum.getFormatErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.formatErrorMessage)

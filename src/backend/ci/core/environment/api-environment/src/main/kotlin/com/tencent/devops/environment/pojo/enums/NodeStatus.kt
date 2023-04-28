@@ -49,7 +49,7 @@ enum class NodeStatus(
     BUILDING_IMAGE("buildingImage"), // 正在制作镜像中
     BUILD_IMAGE_SUCCESS("buildImageSuccess"), // 制作镜像成功
     BUILD_IMAGE_FAILED("buildImageFailed"), // 制作镜像失败
-    UNKNOWN("unknown");// 未知
+    UNKNOWN("unknown"); // 未知
 
     companion object {
         fun getStatusName(status: String): String {
