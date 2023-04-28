@@ -82,7 +82,7 @@ const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_MY_LIST_PIPELINES = "myListPipeline" // 兼容APP , 后面需要干掉
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
-const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"// 流水线师徒未分组
+const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified" // 流水线视图未分组
 const val PIPELINE_VIEW_RECENT_USE = "recentUse"
 
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url

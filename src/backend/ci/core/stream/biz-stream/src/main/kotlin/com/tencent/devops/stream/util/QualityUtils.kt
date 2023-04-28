@@ -32,12 +32,12 @@ import com.tencent.devops.common.web.utils.I18nUtil
 @Suppress("MaxLineLength")
 object QualityUtils {
 
-    private const val BK_TRIGGER_METHOD = "BkTriggerMethod"// 触发方式
-    private const val BK_QUALITY = "BkQuality"// 质量红线
-    private const val BK_QUALITY_OUTPUT_ATOM = "BkQualityOutputAtom"// 质量红线产出插件
-    private const val BK_INDEX = "BkIndex"// 指标
-    private const val BK_RESULT = "BkResult"// 结果
-    private const val BK_ANTICIPATE = "BkAnticipate"// 预期
+    private const val BK_TRIGGER_METHOD = "bkTriggerMethod" // 触发方式
+    private const val BK_QUALITY = "bkQuality" // 质量红线
+    private const val BK_QUALITY_OUTPUT_ATOM = "bkQualityOutputAtom" // 质量红线产出插件
+    private const val BK_INDEX = "bkIndex" // 指标
+    private const val BK_RESULT = "bkResult" // 结果
+    private const val BK_ANTICIPATE = "bkAnticipate" // 预期
 
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
         val (status, timeCost, triggerType, pipelineName, url) = titleData

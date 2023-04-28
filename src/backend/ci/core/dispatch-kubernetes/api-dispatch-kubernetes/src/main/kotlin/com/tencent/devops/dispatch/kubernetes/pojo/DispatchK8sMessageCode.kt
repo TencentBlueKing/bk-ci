@@ -46,17 +46,17 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  *
  */
 object DispatchK8sMessageCode {
-    const val START_KUBERNETES_BUILD_CONTAINER_FAIL = "2126011"// 启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
-    const val KUBERNETES_BUILD_ERROR = "2126012"// Kubernetes构建异常，请联系蓝盾助手排查，异常信息 -
-    const val START_BCS_BUILD_CONTAINER_FAIL = "2126013"// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
-    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126014"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
-    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126015"// 获取构建机详情接口超时
+    const val START_BUILD_CONTAINER_FAIL = "2126011" // 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+    const val CONTAINER_BUILD_ERROR = "2126012" // {0}构建异常，请联系蓝盾助手排查，异常信息 -
+    const val START_BCS_BUILD_CONTAINER_FAIL = "2126013" // 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
+    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126014" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126015" // 获取构建机详情接口超时
     const val MACHINE_INTERFACE_ERROR = "2126016" // 操作构建机接口异常
-    const val TROUBLE_SHOOTING = "2126017"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
-    const val NO_EMPTY_BUILDER = "2126018"// BCS构建机启动失败，没有空闲的构建机
-    const val MACHINE_INTERFACE_RETURN_FAIL = "2126019"// 操作构建机接口返回失败
-    const val MACHINE_INTERFACE_TIMEOUT = "2126020"// 操作构建机接口超时
-    const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126021"// 获取kubernetes task({0})状态接口异常
-    const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126022"// 获取kubernetes task状态接口超时
-    const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126023"// 获取kubernetes任务执行超时
+    const val TROUBLE_SHOOTING = "2126017" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
+    const val NO_EMPTY_BUILDER = "2126018" // BCS构建机启动失败，没有空闲的构建机
+    const val MACHINE_INTERFACE_RETURN_FAIL = "2126019" // 操作构建机接口返回失败
+    const val MACHINE_INTERFACE_TIMEOUT = "2126020" // 操作构建机接口超时
+    const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126021" // 获取kubernetes task({0})状态接口异常
+    const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126022" // 获取kubernetes task状态接口超时
+    const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126023" // 获取kubernetes任务执行超时
 }

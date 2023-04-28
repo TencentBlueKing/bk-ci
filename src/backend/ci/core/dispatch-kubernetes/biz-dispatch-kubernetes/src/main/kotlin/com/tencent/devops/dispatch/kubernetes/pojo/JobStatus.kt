@@ -44,10 +44,10 @@ enum class JobStatusEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "jobStatus", reusePrefixFlag = false)
     val message: String
 ) {
-    PENDING("pending", "pending"),// job正在创建
-    RUNNING("running", "running"),// job正在运行
-    FAILED("failed", "failed"),// job失败
-    SUCCEEDED("succeeded", "succeeded"),// job成功
+    PENDING("pending", "pending"), // job正在创建
+    RUNNING("running", "running"), // job正在运行
+    FAILED("failed", "failed"), // job失败
+    SUCCEEDED("succeeded", "succeeded"), // job成功
     UNKNOWN("unknown", "unknown");// 状态位置
 
     companion object {

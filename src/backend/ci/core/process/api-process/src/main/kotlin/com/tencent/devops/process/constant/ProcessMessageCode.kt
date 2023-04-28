@@ -77,8 +77,8 @@ object ProcessMessageCode {
     const val BK_OPERATE_PIPELINE_FAIL = "bkOperatePipelineFail" // {0}流水线失败
     const val BK_PIPELINE_NAME = "bkPipelineName" // 流水线名称
     const val BK_CREATOR = "bkCreator" // 创建人
-    const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage"// 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
-    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment"// 获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
+    const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是否正确
 
     const val OK = 0
 

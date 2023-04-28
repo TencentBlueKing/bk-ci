@@ -49,22 +49,22 @@ enum class BcsBuilderStatusEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsBuilderStatus", reusePrefixFlag = false)
     val message: String
 ) {
-    INIT("init", "init"),// 构建机初始化状态，等待创建
-    CREATING("creating", "creating"),// 构建机创建中
-    ERROR("error", "error"),// 构建机创建失败，一般意味着输入的描述文件有错误
-    CREATE_FAILED("createFailed", "createFailed"),// 构建机创建失败，比如资源不够等
-    START_FAILED("startFailed", "startFailed"),// 构建机启动失败
-    READY_TO_RUN("readyToRun", "readyToRun"),// 具备了启动条件
-    STARTING("starting", "starting"),// 构建机启动中
-    RUNNING("running", "running"),// 构建机运行中
-    STOPPING("stopping", "stopping"),// 构建机停止中
-    STOP_FAILED("stopFailed", "stopFailed"),// 构建机停止失败，比如资源释放失败
-    DELETING("deleting", "deleting"),// 构建机删除中
-    DELETED("deleted", "deleted"),// 构建机删除成功
-    DELETE_FAILED("deleteFailed", "deleteFailed"),// 构建机删除失败，比如资源释放失败
-    ABNORMAL_AFTER_READY("abnormalAfterReady", "abnormalAfterReady"),// 构建机创建成功后，进入异常状态，一般意味着相关资源状态异常
-    ABNORMAL_AFTER_RUNNING("abnormalAfterRunning", "abnormalAfterRunning"),// 构建机运行时，进入异常状态，一般意味着相关资源状态异常
-    UNKNOWN("unknown", "unknown"),// 构建机状态未知
+    INIT("init", "init"), // 构建机初始化状态，等待创建
+    CREATING("creating", "creating"), // 构建机创建中
+    ERROR("error", "error"), // 构建机创建失败，一般意味着输入的描述文件有错误
+    CREATE_FAILED("createFailed", "createFailed"), // 构建机创建失败，比如资源不够等
+    START_FAILED("startFailed", "startFailed"), // 构建机启动失败
+    READY_TO_RUN("readyToRun", "readyToRun"), // 具备了启动条件
+    STARTING("starting", "starting"), // 构建机启动中
+    RUNNING("running", "running"), // 构建机运行中
+    STOPPING("stopping", "stopping"), // 构建机停止中
+    STOP_FAILED("stopFailed", "stopFailed"), // 构建机停止失败，比如资源释放失败
+    DELETING("deleting", "deleting"), // 构建机删除中
+    DELETED("deleted", "deleted"), // 构建机删除成功
+    DELETE_FAILED("deleteFailed", "deleteFailed"), // 构建机删除失败，比如资源释放失败
+    ABNORMAL_AFTER_READY("abnormalAfterReady", "abnormalAfterReady"), // 构建机创建成功后，进入异常状态，一般意味着相关资源状态异常
+    ABNORMAL_AFTER_RUNNING("abnormalAfterRunning", "abnormalAfterRunning"), // 构建机运行时，进入异常状态，一般意味着相关资源状态异常
+    UNKNOWN("unknown", "unknown"), // 构建机状态未知
 }
 
 fun BcsBuilderStatus.readyToStart(): Boolean {
@@ -113,7 +113,7 @@ enum class BcsBuilderContainerStatusEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsBuilderContainerStatus", reusePrefixFlag = false)
     val message: String
 ) {
-    WAITING("Waiting", "waiting"),// 容器拉起中
-    RUNNING("Running", "running"),// 容器运行中
-    TERMINATED("Terminated", "terminated"),// 容器已经执行完
+    WAITING("Waiting", "waiting"), // 容器拉起中
+    RUNNING("Running", "running"), // 容器运行中
+    TERMINATED("Terminated", "terminated"), // 容器已经执行完
 }
