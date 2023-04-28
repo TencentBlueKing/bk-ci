@@ -22,7 +22,7 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
-    @ApiOperation("提供给START云桌面校验用户登录是否有效")
+    @ApiOperation("提供给START云桌面校验用户登录是否有效", tags = ["v4_app_ticket_validate", "v4_user_ticket_validate"])
     @GET
     @Path("/ticket/validate")
     fun validateUserTicket(
