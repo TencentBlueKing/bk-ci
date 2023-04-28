@@ -43,9 +43,9 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -58,7 +58,10 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(projectService.getByEnglishName(userId, projectId, accessToken)
-            ?: throw OperationException(MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))))
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+            )
+        )
     }
 
     override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {

@@ -114,7 +114,11 @@ fun BcsBuilderStatus.isStarting(): Boolean {
 
 enum class BcsBuilderContainerStatusEnum(
     val realName: String,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsBuilderContainerStatus", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "bcsBuilderContainerStatus",
+        reusePrefixFlag = false
+    )
     val message: String
 ) {
     WAITING("Waiting", "waiting"), // 容器拉起中

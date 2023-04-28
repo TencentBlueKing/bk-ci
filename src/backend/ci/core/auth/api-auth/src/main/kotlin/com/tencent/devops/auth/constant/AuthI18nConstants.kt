@@ -10,6 +10,7 @@ object AuthI18nConstants {
     const val BK_APPROVER_REFUSE_RENEW = "bkApproverRefuseRenew" // 审批人拒绝了您的权限续期
     const val BK_ADMINISTRATOR_NOT_EXPIRED = "bkAdministratorNotExpired" // 权限还未过期，不需要操作！
     const val BK_AUTHORIZATION_SUCCEEDED = "bkAuthorizationSucceeded" // 授权成功, 获取管理员权限120分钟
-    const val BK_CANCELLED_AUTHORIZATION_SUCCEEDED = "bkCancelledAuthorizationSucceeded" // 取消授权成功, 缓存在5分钟后完全失效
+    const val BK_CANCELLED_AUTHORIZATION_SUCCEEDED = "bkCancelledAuthorizationSucceeded"
+    // 取消授权成功, 缓存在5分钟后完全失效
     const val BK_FAILED_CALL_CALLBACK_API = "bkFailedCallCallbackApi" // 调用回调接口失败
 }
