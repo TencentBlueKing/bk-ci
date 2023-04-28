@@ -47,5 +47,5 @@ enum class ErrorCodeEnum(
     VM_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126007, "2126007"), // 第三方服务-BCS 异常，异常信息 - 获取构建机详情接口异常
     CREATE_IMAGE_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126008, "2126008"), // 第三方服务-BCS 异常，异常信息 - 创建镜像接口异常
     TASK_STATUS_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126009, "2126009"), // 第三方服务-BCS 异常，异常信息 - 获取TASK状态接口异常
-    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126010, "2126010");//第三方服务-BCS 异常，异常信息 - 获取websocket接口异常
+    WEBSOCKET_URL_INTERFACE_ERROR(ErrorType.THIRD_PARTY, 2126010, "2126010"); // 第三方服务-BCS 异常，异常信息 - 获取websocket接口异常
 }

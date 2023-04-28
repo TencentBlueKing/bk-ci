@@ -45,5 +45,5 @@ enum class ErrorCodeEnum(
     STOP_VM_ERROR(ErrorType.THIRD_PARTY, 2126028, "2126028"), // 第三方服务异常，异常信息 - 构建机休眠失败
     DELETE_VM_ERROR(ErrorType.THIRD_PARTY, 2126029, "2126029"), // 第三方服务异常，异常信息 - 构建机销毁失败
     INTERFACE_TIMEOUT(ErrorType.THIRD_PARTY, 2126030, "2126030"), // 第三方服务异常，异常信息 - 接口请求超时
-    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2126031, "2126031");// 已超过dispatch base创建Job容器上限.
+    CREATE_JOB_LIMIT_ERROR(ErrorType.USER, 2126031, "2126031"); // 已超过dispatch base创建Job容器上限.
 }

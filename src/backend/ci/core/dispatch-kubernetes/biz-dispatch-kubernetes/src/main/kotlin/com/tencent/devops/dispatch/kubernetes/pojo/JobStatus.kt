@@ -48,7 +48,7 @@ enum class JobStatusEnum(
     RUNNING("running", "running"), // job正在运行
     FAILED("failed", "failed"), // job失败
     SUCCEEDED("succeeded", "succeeded"), // job成功
-    UNKNOWN("unknown", "unknown");// 状态位置
+    UNKNOWN("unknown", "unknown"); // 状态位置
 
     companion object {
         fun realNameOf(realName: String?): JobStatusEnum? {

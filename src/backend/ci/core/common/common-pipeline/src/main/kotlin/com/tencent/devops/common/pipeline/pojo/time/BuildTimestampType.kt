@@ -43,7 +43,7 @@ enum class BuildTimestampType(
     JOB_THIRD_PARTY_QUEUE("jobThirdPartyQueue"), // job第三方构建机资源排队
     JOB_CONTAINER_STARTUP("jobContainerStartup"), // job构建机启动（包含了第三方构建机资源等待）
     JOB_CONTAINER_SHUTDOWN("jobContainerShutdown"), // job构建机关闭
-    TASK_REVIEW_PAUSE_WAITING("taskReviewPauseWaiting");// task等待（包括插件暂停、人工审核、质量红线审核）
+    TASK_REVIEW_PAUSE_WAITING("taskReviewPauseWaiting"); // task等待（包括插件暂停、人工审核、质量红线审核）
 
     /*使插件处于等待的类型*/
     fun taskCheckWait() = this == TASK_REVIEW_PAUSE_WAITING

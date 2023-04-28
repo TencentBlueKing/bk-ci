@@ -41,7 +41,7 @@ enum class BcsTaskStatusEnum(
     SUCCEEDED("succeeded", "succeeded"), // 任务执行成功
     UNKNOWN("unknown", "unknown"), // 未知状态
     // 下面的为自定义状态，非bcs返回
-    TIME_OUT("time_out", "timeOut");// 超时
+    TIME_OUT("time_out", "timeOut"); // 超时
 
     companion object {
         fun realNameOf(realName: String?): BcsTaskStatusEnum? {

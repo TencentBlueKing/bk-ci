@@ -42,7 +42,7 @@ enum class TaskStatusEnum(
     UNKNOWN("unknown", "unknown"), // 未知状态
 
     // 下面的为自定义状态，非返回
-    TIME_OUT("time_out", "timeOut");// 超时
+    TIME_OUT("time_out", "timeOut"); // 超时
 
     companion object {
         fun realNameOf(realName: String?): TaskStatusEnum? {

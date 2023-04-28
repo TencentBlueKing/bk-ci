@@ -77,7 +77,7 @@ enum class ErrorCodeEnum(
     MANUAL_TRIGGER_YAML_NULL(ErrorType.USER, 2129025, "2129025"), // 分支上没有此流水线，或者流水线未允许手动触发
     MANUAL_TRIGGER_YAML_INVALID(ErrorType.USER, 2129026, "2129026"), // 手动触发YAML SCHEMA校验错误
     GET_COMMIT_INFO_ERROR(ErrorType.THIRD_PARTY, 2129027, "2129027"), // 获取提交信息失败
-    GET_USER_INFO_ERROR(ErrorType.THIRD_PARTY, 2129028, "2129028");// Load user info failed. Git api error: %s
+    GET_USER_INFO_ERROR(ErrorType.THIRD_PARTY, 2129028, "2129028"); // Load user info failed. Git api error: %s
 
     fun getErrorMessage(): String {
         return I18nUtil.getCodeLanMessage(this.formatErrorMessage)
