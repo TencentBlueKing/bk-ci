@@ -37,7 +37,6 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL
@@ -54,10 +53,10 @@ import com.tencent.devops.notify.tencentcloud.pojo.EmailResponse
 import com.tencent.devops.notify.tencentcloud.pojo.EmailSignatureConfig
 import com.tencent.devops.notify.tencentcloud.pojo.Template
 import com.tencent.devops.notify.tencentcloud.utils.TencentCloudSignatureUtil
+import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.stream.Collectors
 
 @Suppress("ALL")
 class TencentCloudEmailServiceImpl @Autowired constructor(

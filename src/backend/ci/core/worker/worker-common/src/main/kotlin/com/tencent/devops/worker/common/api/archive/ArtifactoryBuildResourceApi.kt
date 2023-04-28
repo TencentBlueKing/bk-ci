@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.api.archive
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_BUILD_BASE_INFO_FAIL
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi

@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.docker
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest

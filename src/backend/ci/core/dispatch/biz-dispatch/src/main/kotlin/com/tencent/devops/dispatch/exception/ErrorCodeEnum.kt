@@ -48,5 +48,5 @@ enum class ErrorCodeEnum(
     VM_NODE_NULL(ErrorType.USER, 2103007, "2103007"), // 第三方构建机环境的节点为空
     GET_VM_ENV_ERROR(ErrorType.USER, 2103008, "2103008"), // 获取第三方构建机环境失败
     GET_VM_ERROR(ErrorType.USER, 2103009, "2103009"), // 获取第三方构建机失败
-    JOB_QUOTA_EXCESS(ErrorType.USER, 2103010, "2103010")// JOB配额超限
+    JOB_QUOTA_EXCESS(ErrorType.USER, 2103010, "2103010") // JOB配额超限
 }

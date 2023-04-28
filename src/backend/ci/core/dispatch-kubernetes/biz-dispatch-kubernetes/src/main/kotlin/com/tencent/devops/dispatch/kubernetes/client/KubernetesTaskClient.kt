@@ -44,10 +44,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
+import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesTaskClient @Autowired constructor(
@@ -82,7 +82,7 @@ class KubernetesTaskClient @Autowired constructor(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DispatchK8sMessageCode.KUBERNETES_TASK_STATUS_API_EXCEPTION,
                         params = arrayOf(taskId)
-                    )+ "：http response code: ${response.code}"
+                    ) + "：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {

@@ -28,12 +28,11 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
@@ -61,11 +60,11 @@ import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisOperationDao
 import com.tencent.devops.quality.exception.QualityOpConfigException
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.pojo.enum.RunElementType
+import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("NestedBlockDepth")

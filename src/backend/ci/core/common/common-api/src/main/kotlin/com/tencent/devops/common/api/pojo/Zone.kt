@@ -39,5 +39,5 @@ enum class Zone(
     CHENGDU("chengdu"), // 成都
     TIANJIN("tianjin"), // 天津
     GITHUB("github"), // GitHub
-    EXTERNAL("external")// 外网
+    EXTERNAL("external") // 外网
 }

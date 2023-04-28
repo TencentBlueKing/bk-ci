@@ -29,17 +29,16 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_CLIENT_REST_ERROR
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.jmx.exception.JmxExceptions
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.slf4j.LoggerFactory
 import javax.ws.rs.NotAllowedException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class NotAllowedExceptionMapper : ExceptionMapper<NotAllowedException> {

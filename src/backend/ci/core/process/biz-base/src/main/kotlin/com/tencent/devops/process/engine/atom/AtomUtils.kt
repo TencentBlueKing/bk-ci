@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
@@ -109,7 +108,7 @@ object AtomUtils {
                     errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID.toInt(),
                     errorMsg = I18nUtil.getCodeLanMessage(
                         messageCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                        params = arrayOf(element.name),
+                        params = arrayOf(element.name)
                     ),
                     pipelineId = task.pipelineId,
                     buildId = task.buildId,

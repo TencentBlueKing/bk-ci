@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil

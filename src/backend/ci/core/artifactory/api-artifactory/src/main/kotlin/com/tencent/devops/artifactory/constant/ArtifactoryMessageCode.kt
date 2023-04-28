@@ -79,7 +79,6 @@ object ArtifactoryMessageCode {
     const val METADATA_NOT_EXIST = "2102038" // 元数据({0})不存在
     const val BUILD_NOT_EXIST = "2102039" // 构建不存在({0})
     const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" // 用户({0})在工程({1})下没有流水线{2}权限
-    //artifactory
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
     const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
     const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime" // {0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
