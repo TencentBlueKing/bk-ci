@@ -45,7 +45,6 @@ import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.util.*
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -111,7 +110,7 @@ object CommonUtils {
     }
 
     private fun parseIp(
-        allNetInterfaces: Enumeration<NetworkInterface>,
+        allNetInterfaces: io.prometheus.client.Enumeration<NetworkInterface>,
         allIp: HashMap<String, String>
     ) {
         val netInterface = allNetInterfaces.nextElement()
