@@ -49,12 +49,12 @@ import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.MACHINE_INTERFACE_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import java.net.SocketTimeoutException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class BcsBuilderClient @Autowired constructor(
@@ -171,7 +171,8 @@ class BcsBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
-                    val errorMsg = I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage)
+                    val errorMsg =
+                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage)
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
