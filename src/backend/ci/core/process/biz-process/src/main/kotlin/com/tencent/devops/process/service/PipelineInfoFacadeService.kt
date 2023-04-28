@@ -316,7 +316,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     throw OperationException(
                         validateRet.message ?: MessageUtil.getMessageByLocale(
                             ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
-                            I18nUtil.getLanguage(userId),
+                            I18nUtil.getLanguage(userId)
                         )
                     )
                 }
