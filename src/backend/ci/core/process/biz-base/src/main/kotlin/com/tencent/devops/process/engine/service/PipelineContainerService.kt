@@ -884,7 +884,9 @@ class PipelineContainerService @Autowired constructor(
 
             if (needAddCurrentBuildNo || needUpdateBuildNoRecord || context.currentBuildNo == null) {
                 PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = context.pipelineId).use { lock ->
+                    context.watcher.start("${stage.id}.currentBuildNo_lock")
                     lock.lock()
+                    context.watcher.stop()
                     if (context.currentBuildNo == null) { // 兼容buildNo为空的情况
 
                         context.currentBuildNo = pipelineBuildSummaryDao.getBuildNo(

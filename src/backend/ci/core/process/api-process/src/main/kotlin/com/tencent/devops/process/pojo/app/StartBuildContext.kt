@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.app
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -121,6 +122,7 @@ data class StartBuildContext(
     // 注意：该字段在 PipelineContainerService.setUpTriggerContainer 中可能会被修改
     var currentBuildNo: Int? = null
 ) {
+    val watcher: Watcher = Watcher("startBuild-$buildId")
 
     /**
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过

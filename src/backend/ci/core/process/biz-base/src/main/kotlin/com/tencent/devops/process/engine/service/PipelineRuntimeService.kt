@@ -63,6 +63,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -649,13 +650,13 @@ class PipelineRuntimeService @Autowired constructor(
         buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
-
+        context.watcher.start("read_old_data")
         val lastTimeBuildTasks = pipelineTaskService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildContainers = pipelineContainerService.listByBuildId(context.projectId, context.buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(context.projectId, context.buildId)
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, context.projectId, context.buildId)
-
+        context.watcher.stop()
         // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
         val buildContainersWithDetail = mutableListOf<Pair<PipelineBuildContainer, Container>>()
@@ -907,10 +908,6 @@ class PipelineRuntimeService @Autowired constructor(
             context.genBuildNumAlias()
         }
 
-        context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
-            key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
-        )
-
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             if (buildHistoryRecord != null) {
@@ -925,6 +922,7 @@ class PipelineRuntimeService @Autowired constructor(
                     cancelUser = ""
                 )
             } else {
+                context.watcher.start("updateBuildNum")
                 // 构建号递增
                 context.buildNum = pipelineBuildSummaryDao.updateBuildNum(
                     dslContext = transactionContext,
@@ -932,6 +930,7 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineId = context.pipelineId,
                     buildNumAlias = context.buildNumAlias
                 )
+                context.watcher.stop()
                 // 创建构建记录
                 pipelineBuildDao.create(dslContext = transactionContext, startBuildContext = context)
 
@@ -948,14 +947,19 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             }
 
-            buildVariableService.batchSetVariable(
+            context.pipelineParamMap[PIPELINE_BUILD_NUM] = BuildParameters(
+                key = PIPELINE_BUILD_NUM, value = context.buildNum.toString(), readOnly = true
+            )
+
+            context.watcher.start("startBuildBatchSaveWithoutThreadSafety")
+            buildVariableService.startBuildBatchSaveWithoutThreadSafety(
                 dslContext = transactionContext,
                 projectId = context.projectId,
                 pipelineId = context.pipelineId,
                 buildId = context.buildId,
                 variables = context.pipelineParamMap
             )
-
+            context.watcher.start("saveBuildRuntimeRecord")
             saveBuildRuntimeRecord(
                 transactionContext = transactionContext,
                 context = context,
@@ -969,6 +973,7 @@ class PipelineRuntimeService @Autowired constructor(
                 containerBuildRecords = containerBuildRecords,
                 taskBuildRecords = taskBuildRecords
             )
+            context.watcher.start("updateQueueCount")
             // 排队计数+1
             pipelineBuildSummaryDao.updateQueueCount(
                 dslContext = transactionContext,
@@ -976,6 +981,7 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = context.pipelineId,
                 queueIncrement = 1
             )
+            context.watcher.stop()
         }
 
         // 如果不需要触发审核则直接开始发送开始事件
@@ -997,6 +1003,7 @@ class PipelineRuntimeService @Autowired constructor(
                 tag = TAG, jobId = JOB_ID, executeCount = 1
             )
         }
+        LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
         return context.buildId
     }
 
@@ -1006,7 +1013,9 @@ class PipelineRuntimeService @Autowired constructor(
             PipelineBuildNumAliasLock(redisOperation = redisOperation, pipelineId = pipelineId)
         else null
             )?.use { pipelineBuildNumAliasLock ->
+                watcher.start("genBuildNumAlias_lock")
                 pipelineBuildNumAliasLock.lock()
+                watcher.start("parsePipelineRule")
                 buildNumAlias = pipelineRuleService.parsePipelineRule(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -1020,13 +1029,14 @@ class PipelineRuntimeService @Autowired constructor(
                     pipelineParamMap[PIPELINE_BUILD_NUM_ALIAS] =
                         BuildParameters(PIPELINE_BUILD_NUM_ALIAS, value = buildNumAlias!!, readOnly = true)
                 }
-
+                watcher.start("setCurrentDayBuildCount")
                 // 设置流水线每日构建次数
                 pipelineSettingService.setCurrentDayBuildCount(
                     transactionContext = dslContext,
                     projectId = projectId,
                     pipelineId = pipelineId
                 )
+                watcher.stop()
             }
     }
 
