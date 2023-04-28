@@ -84,7 +84,7 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    @Suppress("LongMethod", "ReturnCount")
+    @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     fun v3ToRbacAuth(projectCode: String): Boolean {
         logger.info("Start migrate $projectCode from v3 to rbac")
         val startEpoch = System.currentTimeMillis()
