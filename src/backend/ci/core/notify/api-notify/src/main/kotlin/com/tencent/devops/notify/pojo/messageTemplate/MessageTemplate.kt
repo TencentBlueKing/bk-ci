@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("消息通知模板配置")
-data class MessageTemplate (
+data class MessageTemplate(
     @ApiModelProperty("配置序号", required = true)
     val index: Int,
     @ApiModelProperty("公共模板ID", required = true)

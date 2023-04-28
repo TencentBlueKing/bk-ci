@@ -46,14 +46,14 @@ import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.utils.JobQuotaProjectLock
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class JobQuotaBusinessService @Autowired constructor(
@@ -238,7 +238,7 @@ class JobQuotaBusinessService @Autowired constructor(
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
-                        messageCode = JOB_NUM_EXCEED_ALARM_THRESHOLD ,
+                        messageCode = JOB_NUM_EXCEED_ALARM_THRESHOLD,
                         params = arrayOf(
                             vmType.displayName,
                             "$runningJobCount",

@@ -182,7 +182,7 @@ class ApiAspect(
             logger.info("openapi check parameters error| error info:${ignored.message}")
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL)+ " ${ignored.message}"
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL) + " ${ignored.message}"
             )
         } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传

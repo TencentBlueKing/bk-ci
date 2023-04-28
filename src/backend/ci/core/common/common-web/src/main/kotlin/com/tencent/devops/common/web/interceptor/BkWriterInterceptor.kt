@@ -14,17 +14,17 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
+import javax.ws.rs.container.ResourceInfo
+import javax.ws.rs.core.Context
+import javax.ws.rs.ext.Provider
+import javax.ws.rs.ext.WriterInterceptor
+import javax.ws.rs.ext.WriterInterceptorContext
 import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.core.annotation.AnnotationUtils
 import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.ws.rs.container.ResourceInfo
-import javax.ws.rs.core.Context
-import javax.ws.rs.ext.Provider
-import javax.ws.rs.ext.WriterInterceptor
-import javax.ws.rs.ext.WriterInterceptorContext
 
 @Provider
 @BkInterfaceI18n
@@ -231,7 +231,7 @@ class BkWriterInterceptor : WriterInterceptor {
         val i18nKeys = dbI18ndbKeyMap.values.toList()
         // 切割国际化key列表，分批获取key的国际化信息
         ListUtils.partition(i18nKeys, SIZE).forEach { rids ->
-            var i18nMessages:List<I18nMessage>? = null
+            var i18nMessages: List<I18nMessage>? = null
             try {
                 i18nMessages = client.get(ServiceI18nMessageResource::class).getI18nMessages(
                     keys = rids,
@@ -309,7 +309,6 @@ class BkWriterInterceptor : WriterInterceptor {
         }
         return moduleCode
     }
-
 
     /**
      * 获取前缀名称对应的值

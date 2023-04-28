@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_NOT_RUNNING
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_STATUS_ERROR
 import com.tencent.devops.common.log.utils.BuildLogPrinter

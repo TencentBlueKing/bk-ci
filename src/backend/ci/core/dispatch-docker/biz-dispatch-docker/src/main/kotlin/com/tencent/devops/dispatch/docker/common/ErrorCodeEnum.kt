@@ -52,5 +52,5 @@ enum class ErrorCodeEnum(
     GET_CREDENTIAL_FAIL(ErrorType.USER, 2131011, "2131011"), // Get credential failed
     IMAGE_ILLEGAL_EXCEPTION(ErrorType.USER, 2131012, "2131012"), // User Image illegal, not found or credential error
     IMAGE_CHECK_LEGITIMATE_OR_RETRY(ErrorType.USER, 2131013, "2131013"), // 登录调试失败,请检查镜像是否合法或重试。
-    DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY(ErrorType.SYSTEM, 2131014, "2131014")// 登录调试失败，调试容器异常关闭，请重试。
+    DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY(ErrorType.SYSTEM, 2131014, "2131014") // 登录调试失败，调试容器异常关闭，请重试。
 }

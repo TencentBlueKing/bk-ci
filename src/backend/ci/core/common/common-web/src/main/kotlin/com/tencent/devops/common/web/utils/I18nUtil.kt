@@ -158,7 +158,6 @@ object I18nUtil {
         }
     }
 
-
     /**
      * 生成请求响应对象
      * @param messageCode 状态码

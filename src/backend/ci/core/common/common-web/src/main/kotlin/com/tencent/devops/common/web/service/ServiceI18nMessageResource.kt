@@ -118,7 +118,6 @@ interface ServiceI18nMessageResource {
         language: String
     ): Result<List<I18nMessage>?>
 
-
     @ApiOperation("根据key的前缀批量获取国际化信息")
     @GET
     @Path("/listByKeyPrefix")
