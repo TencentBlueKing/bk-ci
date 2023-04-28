@@ -110,21 +110,20 @@ class BkTicketService @Autowired constructor(
 
     // 调用蓝盾统一登录接口校验用户的登录信息是否合法
     fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String, retryTime: Int = 3): Boolean {
-        logger.info("updateBkTicket|userId|$userId|isOffshore|$isOffshore|ticket|$ticket")
+        logger.info("validateUserTicket|userId|$userId|isOffshore|$isOffshore|ticket|$ticket")
         if (ticket.isBlank()) {
             return false
         }
         val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
                     else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
-            .header("Content-Type", "application/json")
+            .url(url)
             .get()
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val data = response.body!!.string()
-                logger.info("updateBkTicket|response code|${response.code}|content|$data")
+                logger.info("validateUserTicket|response code|${response.code}|content|$data")
                 if (!response.isSuccessful && retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
                     return validateUserTicket(userId, isOffshore, ticket, retryTimeLocal)
