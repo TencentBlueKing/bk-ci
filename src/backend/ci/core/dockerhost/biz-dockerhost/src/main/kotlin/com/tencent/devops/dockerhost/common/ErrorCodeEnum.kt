@@ -45,7 +45,8 @@ enum class ErrorCodeEnum(
     IMAGE_NOT_EXIST_ERROR(ErrorType.USER, 2104005, "2104005"), // 镜像不存在
     DOCKER_INIT_DOWNLOAD_ERROR(ErrorType.SYSTEM, 2104006, "2104006"), // docker_init下载失败
     DOCKER_JAR_DOWNLOAD_ERROR(ErrorType.SYSTEM, 2104007, "2104007"), // docker.jar下载失败
-    DOCKER_INIT_CURL_ERROR(ErrorType.SYSTEM, 2104008, "2104008"), // 镜像curl命令异常，导致下载初始脚本出错
+    DOCKER_INIT_CURL_ERROR(ErrorType.SYSTEM, 2104008, "2104008"),
+    // 镜像curl命令异常，导致下载初始脚本出错
     DOCKER_INIT_JDK_ERROR(ErrorType.SYSTEM, 2104009, "2104009"), // 镜像内JDK安装路径不存在
     DOCKER_INIT_ERROR(ErrorType.SYSTEM, 2104010, "2104010"), // 初始化脚本执行失败
 }

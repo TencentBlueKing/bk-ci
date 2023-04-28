@@ -26,13 +26,17 @@
  */
 package com.tencent.devops.common.pipeline.pojo.time
 
-import io.swagger.annotations.ApiModel
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import io.swagger.annotations.ApiModel
 
 @ApiModel("构建详情记录-时间戳类型（勿随意删除）")
 enum class BuildTimestampType(
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "buildTimestampType", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "buildTimestampType",
+        reusePrefixFlag = false
+    )
     val action: String
 ) {
     BUILD_REVIEW_WAITING("buildReviewWaiting"), // 流水线触发审核等待

@@ -132,7 +132,8 @@ object CommonMessageCode {
     const val BK_OPERATING = "bkOperating" // 操作
     const val BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM = "bkPushFromBlueShieldDevopsPlatform" // 来自蓝盾DevOps平台的推送
     const val BK_TABLE_CONTENTS = "bkTableContents" // 表格内容
-    const val BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT = "bkPleaseFeelToContactBlueShieldAssistant" // 如有任何问题，可随时联系蓝盾助手
+    const val BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT = "bkPleaseFeelToContactBlueShieldAssistant"
+    // 如有任何问题，可随时联系蓝盾助手
     const val BK_ETH1_NETWORK_CARD_IP_EMPTY = "bkEth1NetworkCardIpEmpty" // eth1 网卡Ip为空，因此，获取eth0的网卡ip
     const val BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY = "bkLoopbackAddressOrNicEmpty" // loopback地址或网卡名称为空
     const val BK_FAILED_GET_NETWORK_CARD = "bkFailedGetNetworkCard" // 获取网卡失败

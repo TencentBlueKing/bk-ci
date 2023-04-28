@@ -44,7 +44,11 @@ data class KubernetesBuilderStatus(
 
 enum class KubernetesBuilderStatusEnum(
     val realName: String,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "kubernetesBuilderStatus", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "kubernetesBuilderStatus",
+        reusePrefixFlag = false
+    )
     val message: String
 ) {
     READY_TO_RUN("readyToRun", "readyToRun"), // 构建机初始化状态，等待创建

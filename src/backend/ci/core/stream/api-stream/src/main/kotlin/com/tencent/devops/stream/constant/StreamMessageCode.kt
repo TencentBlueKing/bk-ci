@@ -52,7 +52,8 @@ object StreamMessageCode {
     const val NOT_AUTHORIZED_BY_OAUTH = "2129031" // 用户[{0}]尚未进行OAUTH授权，请先授权。
     const val STARTUP_CONFIG_MISSING = "2129032" // 启动配置缺少 {0}
     const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2129033" // ci开启人{0} 无当前项目执行权限, 请重新授权
-    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129034" // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
+    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129034"
+    // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
     const val TIMER_PARAM_TOO_LONG = "2129035" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
     const val PARAM_INCORRECT = "2129036" // 蓝盾项目ID {0} 不正确
     const val PROJECT_CANNOT_QUERIED = "2129037" // 项目未开启Stream，无法查询
