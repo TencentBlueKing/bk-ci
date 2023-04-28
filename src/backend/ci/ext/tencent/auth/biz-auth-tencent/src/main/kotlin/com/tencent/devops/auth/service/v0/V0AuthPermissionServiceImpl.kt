@@ -150,7 +150,7 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
                 action = action,
                 projectCode = projectCode,
                 resourceCode = resourceCode,
-                resourceType =  resourceType,
+                resourceType = resourceType,
                 relationResourceType = null
             )
         }

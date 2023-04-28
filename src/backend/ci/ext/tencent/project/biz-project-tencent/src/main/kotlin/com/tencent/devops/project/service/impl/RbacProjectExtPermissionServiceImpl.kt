@@ -42,7 +42,8 @@ class RbacProjectExtPermissionServiceImpl : ProjectExtPermissionService {
         createUser: String,
         userIds: List<String>,
         projectCode: String,
-        roleId: Int?, roleName: String?,
+        roleId: Int?,
+        roleName: String?,
         checkManager: Boolean
     ): Boolean {
         return true

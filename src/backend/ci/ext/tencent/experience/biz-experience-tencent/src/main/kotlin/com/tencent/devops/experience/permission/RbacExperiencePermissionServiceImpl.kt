@@ -19,7 +19,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val experienceDao: ExperienceDao,
-    val tokenService: ClientTokenService,
+    val tokenService: ClientTokenService
 ) : ExperiencePermissionService {
     override fun validateTaskPermission(
         user: String,

@@ -80,7 +80,7 @@ class BSAuthPermissionApi @Autowired constructor(
             projectCode = projectCode,
             resourceCode = resource.resourceCode,
             permission = permission,
-            relationResourceType = null,
+            relationResourceType = null
         )
     }
 

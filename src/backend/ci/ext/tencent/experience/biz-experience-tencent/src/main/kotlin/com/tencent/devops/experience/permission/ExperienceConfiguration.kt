@@ -92,5 +92,4 @@ class ExperienceConfiguration {
     ) = RbacExperiencePermissionServiceImpl(
         client, dslContext, experienceDao, tokenService
     )
-
 }

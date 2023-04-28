@@ -169,9 +169,9 @@ class TxProjectServiceImpl @Autowired constructor(
             return projectVO
         }
         // 若该项目是该用户创建，并且还未创建成功，并不需要鉴权，直接返回项目详情
-        val isNotCreateSuccess = projectVO.creator == userId
-            && (projectVO.approvalStatus == ProjectApproveStatus.CREATE_PENDING.status
-            || projectVO.approvalStatus == ProjectApproveStatus.CREATE_REJECT.status)
+        val isNotCreateSuccess = projectVO.creator == userId &&
+            (projectVO.approvalStatus == ProjectApproveStatus.CREATE_PENDING.status ||
+                projectVO.approvalStatus == ProjectApproveStatus.CREATE_REJECT.status)
         if (isNotCreateSuccess)
             return projectVO
         val englishNames = getProjectFromAuth(userId, accessToken)
