@@ -87,5 +87,10 @@ enum class ErrorCodeEnum(
         errorType = ErrorType.USER,
         errorCode = "2130016",
         formatErrorMessage = "Workspace is not currently running."
+    ),
+    CHECK_USER_TICKET_FAIL(
+        errorType = ErrorType.USER,
+        errorCode = "2130017",
+        formatErrorMessage = "check user login ticket fail."
     )
 }

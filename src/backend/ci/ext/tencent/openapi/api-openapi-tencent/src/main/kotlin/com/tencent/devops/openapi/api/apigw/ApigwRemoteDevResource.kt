@@ -9,6 +9,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -22,10 +23,10 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwRemoteDevResource {
-    @ApiOperation("更新client对应环境的稳定版本")
-    @PUT
-    @Path("/updateClientVersion")
-    fun updateClientVersion(
+    @ApiOperation("提供给START云桌面校验用户登录是否有效")
+    @GET
+    @Path("/ticket/validate")
+    fun validateUserTicket(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
@@ -35,11 +36,11 @@ interface ApigwRemoteDevResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("env", required = true)
-        @QueryParam("env")
-        env: String,
-        @ApiParam("version", required = true)
-        @QueryParam("version")
-        version: String
+        @ApiParam("区分是否离岸外包场景", required = true)
+        @QueryParam("is_offshore")
+        isOffshore: Boolean,
+        @ApiParam("登录Ticket，内网传BkTicket，离岸登录传BkToken", required = true)
+        @QueryParam("ticket")
+        ticket: String
     ): Result<Boolean>
 }

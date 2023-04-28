@@ -36,6 +36,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.SocketTimeoutException
 import javax.ws.rs.core.Response
@@ -45,6 +46,11 @@ import javax.ws.rs.core.Response
 class BkTicketService @Autowired constructor(
     private val commonService: CommonService
 ) {
+    @Value("\${remoteDev.bkTicketCheckUrl:}")
+    private val bkTicketCheckUrl: String = ""
+
+    @Value("\${remoteDev.bkTokenCheckUrl:}")
+    private val bkTokenCheckUrl: String = ""
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkTicketService::class.java)
@@ -101,4 +107,63 @@ class BkTicketService @Autowired constructor(
             }
         }
     }
+
+    // 调用蓝盾统一登录接口校验用户的登录信息是否合法
+    fun validateUserTicket(userId: String, isOffshore: Boolean, ticket: String, retryTime: Int = 3): Boolean {
+        logger.info("updateBkTicket|userId|$userId|isOffshore|$isOffshore|ticket|$ticket")
+        if (ticket.isBlank()) {
+            return false
+        }
+        val url = if(isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
+                    else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
+        val request = Request.Builder()
+            .url(commonService.getProxyUrl(url))
+            .header("Content-Type", "application/json")
+            .get()
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val data = response.body!!.string()
+                logger.info("updateBkTicket|response code|${response.code}|content|$data")
+                if (!response.isSuccessful && retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return validateUserTicket(userId, isOffshore, ticket, retryTimeLocal)
+                }
+                // 重试结束抛出异常
+                if (!response.isSuccessful && retryTime <= 0) {
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                        errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
+                        defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                    )
+                }
+
+                val dataMap = JsonUtil.toMap(data)
+                val status = dataMap["ret"]
+                return (status == 0)
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info("check user $userId ticket. retry: $retryTime")
+                return validateUserTicket(userId, isOffshore, ticket, retryTime - 1)
+            } else {
+                logger.error("check user $userId ticket failed.", e)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
+                )
+            }
+        }
+
+
+
+
+
+
+
+
+    }
+
 }
