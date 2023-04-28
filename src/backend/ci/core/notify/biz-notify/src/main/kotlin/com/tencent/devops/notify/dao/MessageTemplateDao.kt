@@ -28,15 +28,11 @@ package com.tencent.devops.notify.dao
 
 import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
-import com.tencent.devops.model.notify.tables.TMoaNotifyMessageTemplate
-import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkGroupNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
-import com.tencent.devops.model.notify.tables.records.TMoaNotifyMessageTemplateRecord
-import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
@@ -53,19 +49,6 @@ class MessageTemplateDao {
                 .set(template)
                 .onDuplicateKeyUpdate()
                 .set(TEMPLATE_NAME, template.templateName)
-                .execute()
-        }
-    }
-
-    fun crateMoaNotifyMessageTemplate(dslContext: DSLContext, template: TMoaNotifyMessageTemplateRecord) {
-        with(TMoaNotifyMessageTemplate.T_MOA_NOTIFY_MESSAGE_TEMPLATE) {
-            dslContext.insertInto(this)
-                .set(template)
-                .onDuplicateKeyUpdate()
-                .set(TITLE, template.title)
-                .set(BODY, template.body)
-                .set(MODIFIOR, template.modifior)
-                .set(UPDATE_TIME, template.updateTime)
                 .execute()
         }
     }
@@ -88,19 +71,6 @@ class MessageTemplateDao {
         template: TWeworkGroupNotifyMessageTemplateRecord
     ) {
         with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
-            dslContext.insertInto(this)
-                .set(template)
-                .onDuplicateKeyUpdate()
-                .set(TITLE, template.title)
-                .set(BODY, template.body)
-                .set(MODIFIOR, template.modifior)
-                .set(UPDATE_TIME, template.updateTime)
-                .execute()
-        }
-    }
-
-    fun crateRtxNotifyMessageTemplate(dslContext: DSLContext, template: TRtxNotifyMessageTemplateRecord) {
-        with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(this)
                 .set(template)
                 .onDuplicateKeyUpdate()
