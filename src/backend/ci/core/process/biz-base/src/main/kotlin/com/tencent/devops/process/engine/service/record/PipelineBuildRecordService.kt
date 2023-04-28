@@ -192,7 +192,7 @@ class PipelineBuildRecordService @Autowired constructor(
         } else {
             null
         } ?: run {
-            logger.info(
+            logger.warn(
                 "RECORD|turn to detail($buildId)|executeCount=$executeCount|" +
                     "fixedExecuteCount=$fixedExecuteCount"
             )
@@ -206,10 +206,6 @@ class PipelineBuildRecordService @Autowired constructor(
         ) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
-        logger.info(
-            "RECORD|turn to detail($buildId)|buildInfoExecuteCount=${buildInfo.executeCount}" +
-                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount"
-        )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
@@ -490,6 +486,11 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     container.status = buildStatus.name
+                    val containerName = container.containerVar[Container::name.name] as String?
+                    if (!containerName.isNullOrBlank()) {
+                        container.containerVar[Container::name.name] =
+                            ContainerUtils.getClearedQueueContainerName(containerName)
+                    }
                     // 第3层循环：刷新stage下运行中的container状态
                     val recordTasks = recordTaskDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount,
