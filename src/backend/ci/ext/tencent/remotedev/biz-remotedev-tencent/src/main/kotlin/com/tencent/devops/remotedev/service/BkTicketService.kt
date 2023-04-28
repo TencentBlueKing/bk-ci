@@ -137,10 +137,10 @@ class BkTicketService @Autowired constructor(
                     )
                 }
                 val contentMap = JsonUtil.toMap(content)
-                val dataMap = JsonUtil.to(contentMap["data"].toString(), Map::class.java)
+                val dataMap = contentMap["data"] as Map<*, *>
                 logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
                 val status = contentMap["ret"]
-                return (status == 0) && (dataMap["username"] == userId)
+                return (status == 0) && (dataMap["username"].toString() == userId)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
