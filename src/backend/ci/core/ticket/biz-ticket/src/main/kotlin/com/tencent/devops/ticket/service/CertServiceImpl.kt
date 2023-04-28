@@ -252,7 +252,7 @@ class CertServiceImpl @Autowired constructor(
         )
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(NAME_NO_EXISTS,  I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 

@@ -99,7 +99,7 @@ object RepositoryMessageCode {
     const val USER_CREATE_PEM_ERROR = "2115052" // 用户{0}在工程{1}下没有代码库创建权限
     const val GIT_INTERFACE_NOT_EXIST = "2115053" // {0}平台没有{1}的接口
     const val GIT_CANNOT_OPERATION = "2115054" // {0}平台{1}操作不能进行
-    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2115055"//unlock webhooklock失败,请确认token是否已经配置
+    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2115055" // unlock webhooklock失败,请确认token是否已经配置
     const val COMMIT_CHECK_ADD_FAIL = "2115056" // Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
     const val ADD_MR_COMMENTS_FAIL = "2115057" // 添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
     const val WEBHOOK_ADD_FAIL = "2115058" // Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限

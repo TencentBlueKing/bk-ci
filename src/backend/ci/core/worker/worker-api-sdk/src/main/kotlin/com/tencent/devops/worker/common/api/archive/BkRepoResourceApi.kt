@@ -67,7 +67,8 @@ import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 import java.net.URLEncoder
-import java.util.*
+import java.util.Locale
+import java.util.Base64
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody

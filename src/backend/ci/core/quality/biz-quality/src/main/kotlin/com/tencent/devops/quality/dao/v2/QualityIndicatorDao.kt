@@ -234,7 +234,7 @@ class QualityIndicatorDao {
     fun batchCrateQualityIndicator(dslContext: DSLContext, qualityIndicatorPOs: List<QualityIndicatorPO>) {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             dslContext.batch(
-                qualityIndicatorPOs.map {qualityIndicatorPO ->
+                qualityIndicatorPOs.map { qualityIndicatorPO ->
                     dslContext.insertInto(this)
                         .set(dslContext.newRecord(this, qualityIndicatorPO))
                         .onDuplicateKeyUpdate()
