@@ -48,7 +48,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.SensitiveValueService
-import java.util.*
+import java.util.Base64
 import org.slf4j.LoggerFactory
 
 /**

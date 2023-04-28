@@ -278,7 +278,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message =  I18nUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}"
                     )
                 )

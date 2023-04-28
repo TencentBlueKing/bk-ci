@@ -153,5 +153,4 @@ object StoreMessageCode {
     const val BK_HISTORYDATA_DATA = "bkHistorydataData" // historyData数据迁移自动通过
     const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
     const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
-
 }
