@@ -108,7 +108,12 @@ class TxQualityPermissionService @Autowired constructor(
         }
     }
 
-    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!validateGroupPermission(
                 userId = userId,
                 projectId = projectId,

@@ -55,7 +55,12 @@ class TxV3QualityPermissionService @Autowired constructor(
         ).data ?: false
     }
 
-    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!validateGroupPermission(
                 userId = userId,
                 projectId = projectId,
@@ -150,15 +155,16 @@ class TxV3QualityPermissionService @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId),
-            action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
-            relationResourceType = null
-        ).data ?: false
+        val checkPermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(null)!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(ruleId),
+                action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
+                resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+                relationResourceType = null
+            ).data ?: false
         if (!checkPermission) {
             throw PermissionForbiddenException(message)
         }

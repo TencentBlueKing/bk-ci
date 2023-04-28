@@ -84,6 +84,7 @@ class BSAuthPermissionApi @Autowired constructor(
         )
     }
 
+    @Suppress("NestedBlockDepth")
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
