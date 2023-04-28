@@ -40,17 +40,17 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
-import org.springframework.context.i18n.LocaleContextHolder
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 import java.io.File
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
-import java.util.Enumeration
+import java.util.*
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
+import org.springframework.context.i18n.LocaleContextHolder
+import org.springframework.web.context.request.RequestContextHolder
+import org.springframework.web.context.request.ServletRequestAttributes
 
 object CommonUtils {
 
@@ -111,7 +111,7 @@ object CommonUtils {
     }
 
     private fun parseIp(
-        allNetInterfaces: io.prometheus.client.Enumeration<NetworkInterface>,
+        allNetInterfaces: Enumeration<NetworkInterface>,
         allIp: HashMap<String, String>
     ) {
         val netInterface = allNetInterfaces.nextElement()
