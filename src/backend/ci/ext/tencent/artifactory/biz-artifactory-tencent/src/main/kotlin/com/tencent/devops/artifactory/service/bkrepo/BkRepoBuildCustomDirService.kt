@@ -99,20 +99,24 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         if (combinationPath.srcPaths.size > 1) {
             val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
-                throw OperationException(I18nUtil.getCodeLanMessage(
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
                     messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ))
+                    )
+                )
             }
         }
 
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = PathUtils.normalize(srcPath)
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                throw BadRequestException(I18nUtil.getCodeLanMessage(
+                throw BadRequestException(
+                    I18nUtil.getCodeLanMessage(
                     messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
                     language = I18nUtil.getDefaultLocaleLanguage()
-                ))
+                    )
+                )
             }
 
             bkRepoClient.copy(

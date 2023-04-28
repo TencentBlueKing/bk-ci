@@ -328,7 +328,8 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage =
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = GET_STATUS_TIMED_OUT
                     ) + ", url: $url")
@@ -371,7 +372,8 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage =
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -391,7 +393,8 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage,
+                    formatErrorMessage =
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -420,7 +423,8 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage =
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -439,7 +443,8 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage,
+                    formatErrorMessage =
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(

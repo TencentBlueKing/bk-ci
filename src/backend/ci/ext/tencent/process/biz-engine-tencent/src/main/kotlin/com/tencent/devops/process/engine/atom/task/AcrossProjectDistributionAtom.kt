@@ -94,8 +94,10 @@ class AcrossProjectDistributionAtom @Autowired constructor(
         } else {
             buildLogPrinter.addRedLine(
                 buildId,
-                I18nUtil.getCodeLanMessage(messageCode = BK_SUCCESSFULLY_FAILED)
-                        + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$result", task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,

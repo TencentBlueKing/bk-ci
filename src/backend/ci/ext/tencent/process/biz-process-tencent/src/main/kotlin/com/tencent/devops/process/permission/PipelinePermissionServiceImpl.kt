@@ -134,10 +134,7 @@ class PipelinePermissionServiceImpl @Autowired constructor(
                     resourceType = resourceType,
                     authPermission = permission
                 )) {
-                val permissionMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                    defaultMessage = permission.alias
-                )
+                val permissionMsg = permission.getI18n(I18nUtil.getLanguage(userId))
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,

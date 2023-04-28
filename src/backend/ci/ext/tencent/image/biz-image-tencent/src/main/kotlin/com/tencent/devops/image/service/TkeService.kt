@@ -49,6 +49,9 @@ import com.tencent.devops.image.constant.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Executors
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -57,9 +60,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.UUID
-import java.util.concurrent.Executors
 
 /**
  * 腾讯内部TKE接口(乱)
@@ -155,7 +155,8 @@ class TkeService @Autowired constructor(
             buildId = pushImageParam.buildId,
             message = I18nUtil.getCodeLanMessage(
                 messageCode = BK_SOURCE_IMAGE,
-                params = arrayOf(fromImage)
+                params = arrayOf(fromImage),
+                language = I18nUtil.getDefaultLocaleLanguage()
             ),
             tag = pushImageParam.taskId,
             jobId = pushImageParam.containerId,
@@ -175,7 +176,8 @@ class TkeService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = I18nUtil.getCodeLanMessage(
                     messageCode = BK_TARGET_IMAGE,
-                    params = arrayOf(toImageRepo, pushImageParam.targetImageTag)
+                    params = arrayOf(toImageRepo, pushImageParam.targetImageTag),
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ),
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
@@ -270,7 +272,8 @@ class TkeService @Autowired constructor(
                     buildLogPrinter.addLine(
                         buildId = pushImageParam.buildId,
                         message = I18nUtil.getCodeLanMessage(
-                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE
+                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
@@ -282,7 +285,8 @@ class TkeService @Autowired constructor(
                     buildLogPrinter.addRedLine(
                         buildId = pushImageParam.buildId,
                         message = I18nUtil.getCodeLanMessage(
-                            messageCode = BK_FAILED_REGISTER_IMAGE
+                            messageCode = BK_FAILED_REGISTER_IMAGE,
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ) + "$msg",
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
@@ -295,7 +299,8 @@ class TkeService @Autowired constructor(
             buildLogPrinter.addRedLine(
                 buildId = pushImageParam.buildId,
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = BK_FAILED_REGISTER_IMAGE
+                    messageCode = BK_FAILED_REGISTER_IMAGE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "${e.message}",
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,

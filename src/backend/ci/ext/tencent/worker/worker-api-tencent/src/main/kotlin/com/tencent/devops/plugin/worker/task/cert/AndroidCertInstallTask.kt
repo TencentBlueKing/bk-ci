@@ -45,7 +45,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import java.io.File
-import java.util.Base64
+import java.util.*
 
 @TaskClassType(classTypes = [AndroidCertInstallElement.classType])
 class AndroidCertInstallTask : ITask() {
@@ -62,9 +62,8 @@ class AndroidCertInstallTask : ITask() {
 
         if (certId.isBlank()) {
             throw TaskExecuteException(
-                errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode = CERTIFICATE_ID_EMPTY,
-                    language = I18nUtil.getDefaultLocaleLanguage()
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = CERTIFICATE_ID_EMPTY
                 ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD

@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_OPERATING
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
 import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TABLE_CONTENTS
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
@@ -41,7 +40,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NAME
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 object EmailUtil {
 
@@ -63,9 +62,8 @@ object EmailUtil {
     }
 
     private fun getShareEmailTitle(userId: String, name: String, version: String): String {
-        return MessageUtil.getMessageByLocale(
+        return I18nUtil.getCodeLanMessage(
             messageCode = BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION,
-            language = I18nUtil.getLanguage(userId),
             params = arrayOf(userId, name, version)
         )
     }
@@ -88,25 +86,21 @@ object EmailUtil {
         stringBuffer.append(SHARE_EMAIL_HTML_SUFFIX)
         val template = stringBuffer.toString()
         return template.replace(BODY_TITLE_TEMPLATE,
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = BK_INVITES_YOU_EXPERIENCE,
-                language = I18nUtil.getLanguage(userId),
                 params = arrayOf(name, version)
             ))
             .replace(TABLE_COLUMN1_TITLE,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                 messageCode = BK_NAME,
-                language = I18nUtil.getLanguage(userId),
             ))
             .replace(TABLE_COLUMN2_TITLE,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_BELONG_TO_THE_PROJECT,
-                    language = I18nUtil.getLanguage(userId),
                 ))
             .replace(TABLE_COLUMN3_TITLE,
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = BK_OPERATING,
-                    language = I18nUtil.getLanguage(userId),
                 ))
             .replace(HEADER_TITLE_TEMPLATE, title)
             .replace(BODY_DATE_TEMPLATE, date)
@@ -116,9 +110,7 @@ object EmailUtil {
         return "                                                                            <tr>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+I18nUtil.getCodeLanMessage(
-            messageCode = BK_VIEW
-            )+"</a></td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+I18nUtil.getCodeLanMessage(messageCode = BK_VIEW)+"</a></td>\n" +
             "                                                                            </tr>\n"
     }
 
@@ -166,9 +158,8 @@ object EmailUtil {
             messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
         ) + "</td>\n" +
             "                                                </tr>\n" +
-            "                                                <!-- " + I18nUtil.getCodeLanMessage(
-            messageCode = BK_TABLE_CONTENTS
-        ) + " -->\n" +
+            "                                                <!-- " + I18nUtil.getCodeLanMessage(messageCode = BK_TABLE_CONTENTS) +
+                " -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
             "                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +

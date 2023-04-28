@@ -182,10 +182,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 userId = userId,
                 bkTicket = "",
                 userCache = false
-            ) ?: throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = "user $userId level office",
-                language = I18nUtil.getLanguage(userId)
-            ))
+            ) ?: throw OperationException("user $userId level office")
             if (isUserInfoChange(
                     tofDeptInfo = deptInfo,
                     dbUserRecord = userInfo

@@ -50,11 +50,12 @@ class SlaMonitorResourceImpl @Autowired constructor(
     override fun codeccQuery(bgId: String, startTime: Long, endTime: Long): Result<SlaCodeccResponseData> {
         if (startTime > System.currentTimeMillis() || startTime > endTime) {
             logger.error("wrong timestamp , startTime:$startTime , endTime:$endTime")
-            return Result(-1,
+            return Result(
+                -1,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_ILLEGAL_TIMESTAMP_RANGE
                 )
-                )
+            )
         }
 
         if (!NumberUtils.isParsable(bgId)) {

@@ -29,6 +29,7 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_TAG
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -39,7 +40,6 @@ import com.tencent.devops.external.constant.ExternalMessageCode.ACCOUNT_NOT_PERM
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_ADD_DETECTION_TASK
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_LIST_OF_BRANCHES
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_BRANCH
-import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_TAG
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_TAG_LIST
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_WAREHOUSE_LIST
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_UPDATE_DETECTION_TASK
@@ -57,6 +57,9 @@ import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.exception.GithubApiException
+import java.time.ZoneId
+import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -64,9 +67,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.ZoneId
-import java.time.ZonedDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 @Suppress("ALL")
@@ -111,7 +111,11 @@ class GithubService @Autowired constructor(
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPost(token, "repos/$projectName/check-runs", body)
 
-        return callMethod(OPERATION_ADD_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        return callMethod(
+            I18nUtil.getCodeLanMessage(messageCode = BK_ADD_DETECTION_TASK),
+            request,
+            GithubCheckRunsResponse::class.java
+        )
     }
 
     fun updateCheckRuns(
@@ -130,7 +134,13 @@ class GithubService @Autowired constructor(
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
 
-        callMethod(OPERATION_UPDATE_CHECK_RUNS, request, GithubCheckRunsResponse::class.java)
+        callMethod(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_UPDATE_DETECTION_TASK
+            ),
+            request,
+            GithubCheckRunsResponse::class.java
+        )
     }
 
     fun getRepositories(token: String): List<GithubRepository> {
@@ -141,7 +151,12 @@ class GithubService @Autowired constructor(
             while (page < 100) {
                 page++
                 val request = buildGet(token, "user/repos?page=$page&per_page=$perPage")
-                val body = getBody(OPERATION_GET_REPOS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_WAREHOUSE_LIST
+                    ),
+                    request
+                )
                 val repos = objectMapper.readValue<List<GithubRepo>>(body)
                 githubRepos.addAll(repos)
 
@@ -186,7 +201,12 @@ class GithubService @Autowired constructor(
                 val sBranch = branch ?: "master"
                 val path = "repos/$projectName/branches/$sBranch"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_BRANCH, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_SPECIFIED_BRANCH
+                    ),
+                    request
+                )
                 return objectMapper.readValue(body)
             }
         }, 1, 500)
@@ -220,7 +240,12 @@ class GithubService @Autowired constructor(
             override fun execute(): List<String> {
                 val path = "repos/$projectName/branches?page=1&per_page=100"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_BRANCHS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GET_LIST_OF_BRANCHES
+                    ),
+                    request
+                )
                 return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
             }
         }, 3, 500)
@@ -237,7 +262,12 @@ class GithubService @Autowired constructor(
             override fun execute(): List<String> {
                 val path = "repos/$projectName/tags?page=1&per_page=100"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_LIST_TAGS, request)
+                val body = getBody(
+                    I18nUtil.getCodeLanMessage(
+                    messageCode = BK_GET_TAG_LIST
+                ),
+                    request
+                )
                 return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
             }
         }, 3, 500)
@@ -332,28 +362,6 @@ class GithubService @Autowired constructor(
                 )
         }
     }
-
-    private val OPERATION_ADD_CHECK_RUNS = I18nUtil.getCodeLanMessage(
-        messageCode = BK_ADD_DETECTION_TASK
-    )
-    private val OPERATION_UPDATE_CHECK_RUNS = I18nUtil.getCodeLanMessage(
-        messageCode = BK_UPDATE_DETECTION_TASK
-    )
-    private val OPERATION_GET_REPOS =  I18nUtil.getCodeLanMessage(
-        messageCode = BK_GET_WAREHOUSE_LIST
-    )
-    private val OPERATION_GET_BRANCH =  I18nUtil.getCodeLanMessage(
-        messageCode = BK_GET_SPECIFIED_BRANCH
-    )
-    private val OPERATION_GET_TAG =  I18nUtil.getCodeLanMessage(
-        messageCode = BK_GET_SPECIFIED_TAG
-    )
-    private val OPERATION_LIST_BRANCHS =  I18nUtil.getCodeLanMessage(
-        messageCode = BK_GET_LIST_OF_BRANCHES
-    )
-    private val OPERATION_LIST_TAGS =  I18nUtil.getCodeLanMessage(
-        messageCode = BK_GET_TAG_LIST
-    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)

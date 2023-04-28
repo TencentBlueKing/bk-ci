@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -62,12 +61,12 @@ import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
 import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 class PreBuildV2Service @Autowired constructor(
@@ -228,11 +227,12 @@ class PreBuildV2Service @Autowired constructor(
         param: GetTemplateParam<Any?>
     ): String {
         if (param.targetRepo == null) {
-            throw CustomException(Response.Status.BAD_REQUEST,
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
                 I18nUtil.getCodeLanMessage(
                     messageCode = PRECI_SUPPORTS_REMOTE_TEMPLATES
                 )
-                )
+            )
         }
 
         if (param.targetRepo?.repository.isNullOrBlank() || param.targetRepo?.name.isNullOrBlank()

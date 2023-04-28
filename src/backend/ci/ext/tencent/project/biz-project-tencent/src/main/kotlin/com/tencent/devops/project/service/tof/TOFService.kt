@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode.SUCCESS
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -44,7 +43,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
-import com.tencent.devops.project.constant.ProjectMessageCode.USER_RESIGNED
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -60,6 +58,7 @@ import com.tencent.devops.project.pojo.tof.StaffInfoResponse
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
+import java.util.concurrent.TimeUnit
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -67,7 +66,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 /**
  * API
@@ -110,13 +108,10 @@ class TOFService @Autowired constructor(
             detail = getDeftFromCache(userId) ?: getDeptFromTof(operator, userId, bkTicket)
             if (detail == null) {
                 logger.info("user $userId is level office")
-                throw OperationException(I18nUtil.getCodeLanMessage(
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
-                    defaultMessage = MessageUtil.getMessageByLocale(
-                        messageCode = USER_RESIGNED,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId)
-                    ),
+                    defaultMessage = "用户$userId 已离职",
                     params = arrayOf(userId),
                     language = I18nUtil.getLanguage(userId)
                 ))
@@ -151,11 +146,13 @@ class TOFService @Autowired constructor(
             val path = "get_dept_info"
             val startTime = System.currentTimeMillis()
             val responseContent = request(
-                path, DeptInfoRequest(
+                path,
+                DeptInfoRequest(
                     tofAppCode!!,
                     tofAppSecret!!,
                     id.toString()
-                ), I18nUtil.getCodeLanMessage(
+                ),
+                I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_DEPARTMENT_FAIL,
                     language = I18nUtil.getLanguage(userId))
             )

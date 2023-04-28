@@ -1349,26 +1349,57 @@ abstract class ExtServiceBaseService @Autowired constructor() {
 
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = TEST_ENV_PREPARE), TEST_ENV_PREPARE, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = TEST), TEST, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = EDIT), COMMIT, NUM_FOUR, UNDO))
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(messageCode = BEGIN, language = I18nUtil.getDefaultLocaleLanguage())
+                , BEGIN, NUM_ONE, SUCCESS
+            )
+        )
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = TEST_ENV_PREPARE,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                TEST_ENV_PREPARE, NUM_TWO, UNDO)
+        )
+        processInfo.add(ReleaseProcessItem(
+            I18nUtil.getCodeLanMessage(
+            messageCode = TEST, language = I18nUtil.getDefaultLocaleLanguage()),
+            TEST, NUM_THREE, UNDO)
+        )
+        processInfo.add(
+            ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(messageCode = EDIT, language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                COMMIT, NUM_FOUR, UNDO)
+        )
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = ONLINE), ONLINE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END), END, NUM_SIX, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(messageCode = ONLINE, language = I18nUtil.getDefaultLocaleLanguage()),
+                    ONLINE, NUM_FIVE, UNDO)
+            )
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(messageCode = END, language = I18nUtil.getDefaultLocaleLanguage()),
+                    END, NUM_SIX, UNDO)
+            )
         } else {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = ONLINE), ONLINE, NUM_SIX, UNDO))
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END), END, NUM_SEVEN, UNDO))
+            processInfo.add(ReleaseProcessItem(
+                I18nUtil.getCodeLanMessage(messageCode = APPROVE, language = I18nUtil.getDefaultLocaleLanguage()),
+                APPROVE, NUM_FIVE, UNDO)
+            )
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(messageCode = ONLINE, language = I18nUtil.getDefaultLocaleLanguage()),
+                    ONLINE, NUM_SIX, UNDO)
+            )
+            processInfo.add(
+                ReleaseProcessItem(
+                    I18nUtil.getCodeLanMessage(messageCode = END, language = I18nUtil.getDefaultLocaleLanguage()),
+                    END, NUM_SEVEN, UNDO)
+            )
         }
         return processInfo
     }
