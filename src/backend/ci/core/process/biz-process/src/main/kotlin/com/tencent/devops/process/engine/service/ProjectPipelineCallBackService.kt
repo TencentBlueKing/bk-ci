@@ -210,19 +210,23 @@ class ProjectPipelineCallBackService @Autowired constructor(
     }
 
     fun disable(callBack: ProjectPipelineCallBack) {
+        // 通知用户接口被禁用
+        val disableNotifySuccess = sendDisableNotifyMessage(callBack)
+        // 修改接口状态
         projectPipelineCallbackDao.disable(
             dslContext = dslContext,
             projectId = callBack.projectId,
-            id = callBack.id!!
+            id = callBack.id!!,
+            disableNotifySuccess = disableNotifySuccess
         )
-        // 通知用户接口被禁用
-        sendDisableNotifyMessage(callBack)
     }
 
     /**
      *  发送回调禁用通知
      */
-    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack) {
+    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack): Boolean {
+        // 是否通知到位
+        var notifySuccess = true
         try {
             val callbackRecord = projectPipelineCallbackDao.get(
                 dslContext = dslContext,
@@ -231,6 +235,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
             )
             callbackRecord?.run {
                 with(callbackRecord) {
+                    // 若已通知则无需重复通知
+                    if (disableNotifySuccess) {
+                        return true
+                    }
                     // 项目信息
                     val projectInfo = client.get(ServiceProjectResource::class).get(
                         englishName = projectId
@@ -258,11 +266,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
+            notifySuccess = false
             logger.warn(
                 "Failure to send disable notify message for " +
-                    "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
+                        "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
             )
         }
+        return notifySuccess
     }
 
     /**

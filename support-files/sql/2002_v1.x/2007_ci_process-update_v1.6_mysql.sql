@@ -37,6 +37,14 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PROJECT_PIPELINE_CALLBACK'
+                        AND COLUMN_NAME = 'DISABLE_NOTIFY_SUCCESS') THEN
+        ALTER TABLE T_PROJECT_PIPELINE_CALLBACK ADD COLUMN `DISABLE_NOTIFY_SUCCESS` bit(1) NOT NULL DEFAULT b'0' COMMENT '回调被禁用是否通知成功';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
               FROM information_schema.COLUMNS
               WHERE TABLE_SCHEMA = db
                   AND TABLE_NAME = 'T_PIPELINE_INFO'

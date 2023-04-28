@@ -157,10 +157,15 @@ class ProjectPipelineCallbackDao {
     fun disable(
         dslContext: DSLContext,
         projectId: String,
-        id: Long
+        id: Long,
+        disableNotifySuccess: Boolean
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.update(this).set(ENABLE, false).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
+            dslContext.update(this)
+                .set(ENABLE, false)
+                .set(DISABLE_NOTIFY_SUCCESS, disableNotifySuccess)
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
+                .execute()
         }
     }
 
