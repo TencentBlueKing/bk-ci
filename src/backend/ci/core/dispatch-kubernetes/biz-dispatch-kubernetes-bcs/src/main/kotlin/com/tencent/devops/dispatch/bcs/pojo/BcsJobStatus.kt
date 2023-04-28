@@ -45,9 +45,9 @@ enum class BcsJobStatusEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsJobStatus", reusePrefixFlag = false)
     val message: String
 ) {
-    PENDING("pending", "pending"),// job正在创建
-    RUNNING("running", "running"),// job正在运行
-    FAILED("failed", "failed"),// job失败
+    PENDING("pending", "pending"), // job正在创建
+    RUNNING("running", "running"), // job正在运行
+    FAILED("failed", "failed"), // job失败
     SUCCEEDED("succeeded", "succeeded");// job成功
 
     companion object {

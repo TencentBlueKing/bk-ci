@@ -36,20 +36,20 @@ enum class NodeStatus(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "nodeStatus", reusePrefixFlag = false)
     val statusName: String
 ) {
-    NORMAL("normal"),//正常
-    ABNORMAL("abnormal"),//异常
-    DELETED("deleted"),//已删除
-    LOST("lost"),//失联
-    CREATING("creating"),//正在创建中
-    RUNNING("running"),//安装Agent
-    STARTING("starting"),//正在开机中
-    STOPPING("stopping"),//正在关机中
-    STOPPED("stopped"),//已关机
-    RESTARTING("restarting"),//正在重启中
-    DELETING("deleting"),//正在销毁中
-    BUILDING_IMAGE("buildingImage"),//正在制作镜像中
-    BUILD_IMAGE_SUCCESS("buildImageSuccess"),//制作镜像成功
-    BUILD_IMAGE_FAILED("buildImageFailed"),//制作镜像失败
+    NORMAL("normal"), // 正常
+    ABNORMAL("abnormal"), // 异常
+    DELETED("deleted"), // 已删除
+    LOST("lost"), // 失联
+    CREATING("creating"), // 正在创建中
+    RUNNING("running"), // 安装Agent
+    STARTING("starting"), // 正在开机中
+    STOPPING("stopping"), // 正在关机中
+    STOPPED("stopped"), // 已关机
+    RESTARTING("restarting"), // 正在重启中
+    DELETING("deleting"), // 正在销毁中
+    BUILDING_IMAGE("buildingImage"), // 正在制作镜像中
+    BUILD_IMAGE_SUCCESS("buildImageSuccess"), // 制作镜像成功
+    BUILD_IMAGE_FAILED("buildImageFailed"), // 制作镜像失败
     UNKNOWN("unknown");// 未知
 
     companion object {

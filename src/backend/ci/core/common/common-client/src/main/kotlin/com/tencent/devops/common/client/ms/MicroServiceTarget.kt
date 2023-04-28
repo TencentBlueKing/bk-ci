@@ -63,7 +63,6 @@ class MicroServiceTarget<T> constructor(
                 }
             })
 
-
     private val errorInfo = Result(
         ERROR_SERVICE_NO_FOUND.toInt(),
         MessageUtil.getMessageByLocale(

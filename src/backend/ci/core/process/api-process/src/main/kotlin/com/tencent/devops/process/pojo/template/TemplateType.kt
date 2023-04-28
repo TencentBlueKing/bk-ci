@@ -38,8 +38,8 @@ enum class TemplateType(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "templateType", reusePrefixFlag = false)
     val value: String
 ) {
-    CUSTOMIZE("customize"),// 自定义模板
-    CONSTRAINT("constraint"),// 来自商店
+    CUSTOMIZE("customize"), // 自定义模板
+    CONSTRAINT("constraint"), // 来自商店
     PUBLIC("public");// 公共模版
 
     companion object {
