@@ -114,7 +114,7 @@ class BkTicketService @Autowired constructor(
         if (ticket.isBlank()) {
             return false
         }
-        val url = if(isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
+        val url = if (isOffshore) bkTokenCheckUrl.plus("?bk_ticket=$ticket")
                     else bkTicketCheckUrl.plus("?bk_ticket=$ticket")
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
@@ -156,14 +156,5 @@ class BkTicketService @Autowired constructor(
                 )
             }
         }
-
-
-
-
-
-
-
-
     }
-
 }
