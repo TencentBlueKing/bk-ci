@@ -48,30 +48,34 @@ package com.tencent.devops.stream.constant
 
 object StreamMessageCode {
     const val PIPELINE_NOT_FOUND_OR_DELETED = "2129029" // 该流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val STARTUP_CONFIG_MISSING = "2129030" // 启动配置缺少 {0}
-    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2129031" // ci开启人{0} 无当前项目执行权限, 请重新授权
-    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129032" // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
-    const val TIMER_PARAM_TOO_LONG = "2129033" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
-    const val PARAM_INCORRECT = "2129034" // 蓝盾项目ID {0} 不正确
-    const val PROJECT_ALREADY_EXISTS = "2129035" //项目已存在
-    const val NOT_AUTHORIZED_BY_OAUTH = "2129036" //用户[{0}]尚未进行OAUTH授权，请先授权。
-    const val PROJECT_STREAM_NOT_ENABLED = "2129037" //工蜂项目{0}未开启Stream
-    const val NO_RECORD_MIRROR_VERSION = "2129038" //没有此镜像版本记录
-    const val MIRROR_VERSION_NOT_AVAILABLE = "2129039" //镜像版本不可用
-    const val VARIABLE_NAME = "2129040" //变量名称必须是英文字母、数字或下划线(_)
-    const val MUST_HAVE_ONE = "2129041" //stages, jobs, steps, extends 必须存在一个
-    const val STARTUP_CONFIGURATION_MISSING = "2129042" //启动配置缺少 rtx.v2GitUrl
-    const val GIT_CI_NO_RECOR = "2129043" //Git CI没有此镜像版本记录
-    const val PROJECT_CANNOT_OPEN_STREAM = "2129044" //项目无法开启Stream，请联系蓝盾助手
-    const val PROJECT_CANNOT_QUERIED = "2129045" //项目未开启Stream，无法查询
-    const val PIPELINE_NOT_EXIST_OR_DELETED = "2129046" //流水线不存在或已删除，如有疑问请联系蓝盾助手
-    const val BUILD_TASK_NOT_EXIST = "2129047" //构建任务不存在，无法重试
-    const val USER_NOT_PERMISSION_FOR_WORKER_BEE = "2129048" //用户没有工蜂项目权限，无法获取下载链接
-    const val INCORRECT_ID_BLUE_SHIELD_PROJECT = "2129049" //蓝盾项目ID不正确
+    const val BUILD_TASK_NOT_EXIST = "2129030" // 构建任务不存在，无法重试
+    const val NOT_AUTHORIZED_BY_OAUTH = "2129031" // 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val STARTUP_CONFIG_MISSING = "2129032" // 启动配置缺少 {0}
+    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2129033" // ci开启人{0} 无当前项目执行权限, 请重新授权
+    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2129034"
+    // 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
+    const val TIMER_PARAM_TOO_LONG = "2129035" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val PARAM_INCORRECT = "2129036" // 蓝盾项目ID {0} 不正确
+    const val PROJECT_CANNOT_QUERIED = "2129037" // 项目未开启Stream，无法查询
+    const val PROJECT_ALREADY_EXISTS = "2129038" // 项目已存在
+
+    const val PROJECT_STREAM_NOT_ENABLED = "2129039" // 工蜂项目{0}未开启Stream
+    const val NO_RECORD_MIRROR_VERSION = "2129040" // 没有此镜像版本记录
+    const val MIRROR_VERSION_NOT_AVAILABLE = "2129041" // 镜像版本不可用
+    const val VARIABLE_NAME = "2129042" // 变量名称必须是英文字母、数字或下划线(_)
+    const val MUST_HAVE_ONE = "2129043" // stages, jobs, steps, extends 必须存在一个
+    const val STARTUP_CONFIGURATION_MISSING = "2129044" // 启动配置缺少 rtx.v2GitUrl
+    const val GIT_CI_NO_RECOR = "2129045" // Git CI没有此镜像版本记录
+    const val PROJECT_CANNOT_OPEN_STREAM = "2129046" // 项目无法开启Stream，请联系蓝盾助手
+
+    const val PIPELINE_NOT_EXIST_OR_DELETED = "2129047" // 流水线不存在或已删除，如有疑问请联系蓝盾助手
+
+    const val USER_NOT_PERMISSION_FOR_WORKER_BEE = "2129048" // 用户没有工蜂项目权限，无法获取下载链接
+    const val INCORRECT_ID_BLUE_SHIELD_PROJECT = "2129049" // 蓝盾项目ID不正确
     const val BRANCH_INFO_ACCESS_DENIED = "2129050" // 无权限获取分支信息
 
-    const val BK_FAILED_VERIFY_AUTHORITY = "bkFailedVerifyAuthority" //授权人权限校验失败
-    const val BK_STREAM_MESSAGE_NOTIFICATION = "bkStreamMessageNotification" //@Stream消息通知
-    const val BK_NEED_SUPPLEMEN = "bkNeedSupplemen" //对接其他Git平台时需要补充
-    const val BK_PULL_CODE = "bkPullCode" //拉代码
+    const val BK_FAILED_VERIFY_AUTHORITY = "bkFailedVerifyAuthority" // 授权人权限校验失败
+    const val BK_STREAM_MESSAGE_NOTIFICATION = "bkStreamMessageNotification" // @Stream消息通知
+    const val BK_NEED_SUPPLEMEN = "bkNeedSupplemen" // 对接其他Git平台时需要补充
+    const val BK_PULL_CODE = "bkPullCode" // 拉代码
 }

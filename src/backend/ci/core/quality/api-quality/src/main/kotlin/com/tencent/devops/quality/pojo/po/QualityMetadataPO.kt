@@ -60,4 +60,3 @@ data class QualityMetadataPO(
     @ApiModelProperty("更新时间")
     val updateTime: LocalDateTime?
 )
-

@@ -68,7 +68,6 @@ object WorkerMessageCode {
     const val LOGS_REPORT_FAILED = "2130014" // 上报日志失败
     const val LOG_STORAGE_STATUS_FAILED = "2130015" // 上报日志存储状态失败
 
-
     // scm-软件配置管理
     const val ADD_CODE_BASE_COMMIT_INFO_FAIL = "2130016" // 添加代码库commit信息失败
     const val GET_LAST_CODE_BASE_COMMIT_INFO_FAIL = "2130017" // 获取最后一次代码commit信息失败
@@ -82,7 +81,6 @@ object WorkerMessageCode {
     const val DOWNLOAD_CODECC_TOOL_FAIL = "2130023" // 下载Codecc的 {0} 工具失败
     const val DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL = "2130024" // 下载codecc的coverity的执行脚本失败
     const val DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL = "2130025" // 下载codecc的多工具执行脚本失败
-
 
     // process-流水线
     const val NOTIFY_SERVER_START_BUILD_FAILED = "2130026" // 通知服务端启动构建失败
@@ -119,7 +117,7 @@ object WorkerMessageCode {
     const val START_BUILD_IMAGE_NAME = "2130052" // 启动构建镜像，镜像名称：
 
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
-    const val BK_ARCHIVE_PLUGIN_FILE= "bkArchivePluginFile" // 归档插件文件
+    const val BK_ARCHIVE_PLUGIN_FILE = "bkArchivePluginFile" // 归档插件文件
     const val BK_NO_FILES_TO_ARCHIVE = "bkNoFilesToArchive" // 脚本执行失败之后没有匹配到任何待归档文件
     const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero" // 每行命令运行返回值非零时，继续执行脚本
 }

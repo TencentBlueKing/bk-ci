@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -113,7 +112,7 @@ class ReasonServiceImpl @Autowired constructor(
             return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_UNINSTALL_REASON_USED,
                 params = arrayOf(reasonContent),
-                language = I18nUtil.getLanguage(userId),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         reasonDao.delete(dslContext, id)

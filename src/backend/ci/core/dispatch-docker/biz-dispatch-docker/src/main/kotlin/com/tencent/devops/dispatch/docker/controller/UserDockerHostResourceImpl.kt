@@ -238,7 +238,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         permission.getI18n(I18nUtil.getLanguage(userId)),
                         pipelineId
                     )
-                ),
+                )
             )
         }
     }

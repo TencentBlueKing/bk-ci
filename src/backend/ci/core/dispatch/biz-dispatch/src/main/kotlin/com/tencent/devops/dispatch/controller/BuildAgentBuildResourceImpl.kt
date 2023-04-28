@@ -128,7 +128,7 @@ class BuildAgentBuildResourceImpl constructor(
                     ERROR_INVALID_PARAM_,
                     I18nUtil.getLanguage(),
                     arrayOf("agentId")
-                ),
+                )
             )
         }
         if (secretKey.isBlank()) {

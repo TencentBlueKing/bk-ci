@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("消息通知模板配置")
-data class MessageTemplate (
+data class MessageTemplate(
     @ApiModelProperty("配置序号", required = true)
     val index: Int,
     @ApiModelProperty("公共模板ID", required = true)
@@ -49,14 +49,10 @@ data class MessageTemplate (
     val source: EnumNotifySource,
     @ApiModelProperty("email通知模板", required = false)
     var emailTemplate: EmailMessageTemplate? = null,
-    @ApiModelProperty("moa通知模板", required = false)
-    var moaTemplate: MoaMessageTemplate? = null,
     @ApiModelProperty("企业微信通知模板", required = false)
     var weworkTemplate: WeworkMessageTemplate? = null,
     @ApiModelProperty("微信通知模板", required = false)
     var wechatTemplate: WechatMessageTemplate? = null,
-    @ApiModelProperty("rtx模板", required = false)
-    var rtxTemplate: RtxMessageTemplate? = null,
     @ApiModelProperty("微信群模板", required = false)
     var weworkGroupTemplate: WeworkGroupMessageTemplate? = null,
     @ApiModelProperty("创建人", required = true)

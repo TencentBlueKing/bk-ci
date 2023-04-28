@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -39,6 +38,10 @@ import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.service.common.StoreLogoService
+import java.io.File
+import java.io.InputStream
+import java.nio.file.Files
+import javax.imageio.ImageIO
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -46,10 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.io.File
-import java.io.InputStream
-import java.nio.file.Files
-import javax.imageio.ImageIO
 
 /**
  * store商店logo逻辑类

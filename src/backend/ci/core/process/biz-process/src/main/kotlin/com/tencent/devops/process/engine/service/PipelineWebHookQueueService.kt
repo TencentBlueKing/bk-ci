@@ -165,7 +165,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                                 "be canceled because of $buildId")
                             buildLogPrinter.addYellowLine(
                                 buildId = queue.buildId,
-                                message =  I18nUtil.getCodeLanMessage(BK_TRIGGERED_BY_GIT_EVENT_PLUGIN) +
+                                message = I18nUtil.getCodeLanMessage(BK_TRIGGERED_BY_GIT_EVENT_PLUGIN) +
                                         "[<a target='_blank' href='" + // #4796 日志展示去掉链接上的域名前缀
                                     "/console/pipeline/$projectId/$pipelineId/detail/$buildId'>$buildId</a>]overlay",
                                 tag = "",

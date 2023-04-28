@@ -39,14 +39,19 @@ enum class ErrorCodeEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, reusePrefixFlag = false)
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2103001, "2103001"),// Dispatcher系统错误
-    START_VM_FAIL(ErrorType.SYSTEM, 2103002, "2103002"),// Fail to start up after 3 retries
-    VM_STATUS_ERROR(ErrorType.USER, 2103003, "2103003"),// 第三方构建机状态异常/Bad build agent status
-    GET_BUILD_AGENT_ERROR(ErrorType.SYSTEM, 2103004, "2103004"),// 获取第三方构建机失败/Fail to get build agent
-    FOUND_AGENT_ERROR(ErrorType.SYSTEM, 2103005, "2103005"),// 获取第三方构建机失败/Can not found agent by type
-    LOAD_BUILD_AGENT_FAIL(ErrorType.USER, 2103006, "2103006"),// 获取第三方构建机失败/Load build agent fail
-    VM_NODE_NULL(ErrorType.USER, 2103007, "2103007"),// 第三方构建机环境的节点为空
-    GET_VM_ENV_ERROR(ErrorType.USER, 2103008, "2103008"),// 获取第三方构建机环境失败
-    GET_VM_ERROR(ErrorType.USER, 2103009, "2103009"),// 获取第三方构建机失败
-    JOB_QUOTA_EXCESS(ErrorType.USER, 2103010, "2103010")// JOB配额超限
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2103001, "2103001"), // Dispatcher系统错误
+    START_VM_FAIL(ErrorType.SYSTEM, 2103002, "2103002"),
+    // Fail to start up after 3 retries
+    VM_STATUS_ERROR(ErrorType.USER, 2103003, "2103003"),
+    // 第三方构建机状态异常/Bad build agent status
+    GET_BUILD_AGENT_ERROR(ErrorType.SYSTEM, 2103004, "2103004"),
+    // 获取第三方构建机失败/Fail to get build agent
+    FOUND_AGENT_ERROR(ErrorType.SYSTEM, 2103005, "2103005"),
+    // 获取第三方构建机失败/Can not found agent by type
+    LOAD_BUILD_AGENT_FAIL(ErrorType.USER, 2103006, "2103006"),
+    // 获取第三方构建机失败/Load build agent fail
+    VM_NODE_NULL(ErrorType.USER, 2103007, "2103007"), // 第三方构建机环境的节点为空
+    GET_VM_ENV_ERROR(ErrorType.USER, 2103008, "2103008"), // 获取第三方构建机环境失败
+    GET_VM_ERROR(ErrorType.USER, 2103009, "2103009"), // 获取第三方构建机失败
+    JOB_QUOTA_EXCESS(ErrorType.USER, 2103010, "2103010") // JOB配额超限
 }

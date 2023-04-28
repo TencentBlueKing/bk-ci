@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
@@ -39,7 +38,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_FINISH_REQUEST_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_TIMEOUT_END_REQUEST_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.HEARTBEAT_FAIL
@@ -48,7 +46,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.RECEIVE_BUIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_START_ERROR_INFO_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_TASK_FINISH_FAILURE
 import com.tencent.devops.worker.common.env.AgentEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 @Suppress("UNUSED", "TooManyFunctions")

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.plugin.worker.task.scm.git
 
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ScmException
@@ -43,8 +42,8 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.OauthSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GIT_CREDENTIAL_ILLEGAL
 import com.tencent.devops.worker.common.env.AgentEnv
-import org.slf4j.LoggerFactory
 import java.io.File
+import org.slf4j.LoggerFactory
 
 open class CodeGitPullCodeSetting(
     override val pipelineId: String,

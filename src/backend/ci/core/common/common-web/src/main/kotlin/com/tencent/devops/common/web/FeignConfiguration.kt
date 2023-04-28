@@ -58,6 +58,7 @@ class FeignConfiguration @Autowired constructor(
      */
     @Bean
     @Primary
+    @Suppress("ComplexMethod")
     fun requestInterceptor(@Autowired jwtManager: JwtManager): RequestInterceptor {
         return RequestInterceptor { requestTemplate ->
             requestTemplate.decodeSlash(false)

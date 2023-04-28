@@ -44,7 +44,6 @@ import org.springframework.web.context.request.ServletRequestAttributes
 
 object I18nUtil {
 
-
     /**
      * 从redis缓存获取用户的国际化语言信息
      * @param userId 用户ID
@@ -158,7 +157,6 @@ object I18nUtil {
             i18nMessage
         }
     }
-
 
     /**
      * 生成请求响应对象

@@ -163,7 +163,7 @@ class InspectImageService @Autowired constructor(
                             BK_PULLING_IMAGE,
                             I18nUtil.getLanguage(userId),
                             arrayOf("$lays", "$currentProgress")
-                        ),
+                        )
                     )
                     step[lays] = currentProgress
                 }

@@ -37,7 +37,11 @@ import com.tencent.devops.common.api.util.MessageUtil
  */
 enum class DefaultGroupType(
     val value: String,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "defaultGroupType", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "defaultGroupType",
+        reusePrefixFlag = false
+    )
     val displayName: String
 ) {
     MANAGER("manager", "manager"), // CI管理员

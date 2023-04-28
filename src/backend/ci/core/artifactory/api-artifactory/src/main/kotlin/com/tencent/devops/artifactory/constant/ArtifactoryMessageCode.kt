@@ -46,46 +46,46 @@ package com.tencent.devops.artifactory.constant
  *
  */
 object ArtifactoryMessageCode {
-    const val UPLOAD_FILE_TYPE_IS_NOT_SUPPORT = "2102001"// {0}类型文件不支持上传，您可以上传{1}类型文件
-    const val UPLOAD_FILE_IS_TOO_LARGE = "2102002"// 上传的文件不能超过{0}
-    const val FILE_SIZE_EXCEEDS_LIMIT = "2102003"// 文件大小不能超过{0}
-    const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004"// 非法自定义仓库路径
-    const val SHORT_URL_EXPIRED = "2102005"// 短链接已过期
-    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006"// 用户{0}没有项目{1}下载权限
-    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007"// 用户{0}在项目{1}下没有流水线{2}下载构件权限
-    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008"// 流水线最后修改人{0}没有项目{1}下载权限
-    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009"// 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
-    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010"// 用户{0}在项目{1}下没有流水线{2}分享构件权限
-    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011"// 获取下载链接请求出错
-    const val UPLOAD_CUSTOM_FILE_FAILED = "2102012"// 上传自定义文件失败
-    const val UPLOAD_PIPELINE_FILE_FAILED = "2102013"// 上传流水线文件失败
-    const val UPLOAD_FILE_FAILED = "2102014"// 上传文件失败
+    const val UPLOAD_FILE_TYPE_IS_NOT_SUPPORT = "2102001" // {0}类型文件不支持上传，您可以上传{1}类型文件
+    const val UPLOAD_FILE_IS_TOO_LARGE = "2102002" // 上传的文件不能超过{0}
+    const val FILE_SIZE_EXCEEDS_LIMIT = "2102003" // 文件大小不能超过{0}
+    const val INVALID_CUSTOM_ARTIFACTORY_PATH = "2102004" // 非法自定义仓库路径
+    const val SHORT_URL_EXPIRED = "2102005" // 短链接已过期
+    const val USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102006" // 用户{0}没有项目{1}下载权限
+    const val USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102007" // 用户{0}在项目{1}下没有流水线{2}下载构件权限
+    const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
+    const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
+    const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
+    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011" // 获取下载链接请求出错
+    const val UPLOAD_CUSTOM_FILE_FAILED = "2102012" // 上传自定义文件失败
+    const val UPLOAD_PIPELINE_FILE_FAILED = "2102013" // 上传流水线文件失败
+    const val UPLOAD_FILE_FAILED = "2102014" // 上传文件失败
 
-    const val GET_CREDENTIAL_INFO_FAILED = "2102023"// 获取凭证信息失败
-    const val GET_BUILD_BASE_INFO_FAIL = "2102024"// 获取构建机基本信息失败
-    const val GET_PLUGIN_ENV_INFO_FAILED = "2102025"// 获取插件执行环境信息失败
-    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102026"// 更新插件执行环境信息失败
-    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102027"// 获取插件敏感信息失败
-    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102028"// 归档插件文件失败
-    const val GRANT_DOWNLOAD_PERMISSION = "2102029" //请联系流水线负责人授予下载构件权限
-    const val GRANT_PIPELINE_PERMISSION = "2102030" //访问件构请联系流水线负责人：\n{0} 授予流水线权限。
-    const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" //元数据({0})不存在，请通过共享下载文件
-    const val NO_EXPERIENCE_PERMISSION = "2102032" //您没有该体验的权限
-    const val FILE_NOT_EXIST = "2102033" //文件{0}不存在
-    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102034" //目标路径应为文件夹
-    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102035" //不能在拷贝到当前目录
-    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102036" //不能移动到当前目录
-    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102037" //不能将父目录移动到子目录
-    const val METADATA_NOT_EXIST = "2102038" //元数据({0})不存在
-    const val BUILD_NOT_EXIST = "2102039" //构建不存在({0})
-    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" //用户({0})在工程({1})下没有流水线{2}权限
-
-
-    //artifactory
-    const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}文件
-    const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou" //【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
-    const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime" //{0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
-    const val BK_DOWNLOAD = "bkDownload" //下载
-    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkbkReceivedThisEmailBecauseYouFollowedProject" //你收到此邮件，是因为你关注了 {0} 项目，或其它人@了你
-    const val BK_ILLEGAL_PATH = "bkIllegalPath" //非法路径
+    const val GET_CREDENTIAL_INFO_FAILED = "2102023" // 获取凭证信息失败
+    const val GET_BUILD_BASE_INFO_FAIL = "2102024" // 获取构建机基本信息失败
+    const val GET_PLUGIN_ENV_INFO_FAILED = "2102025" // 获取插件执行环境信息失败
+    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102026" // 更新插件执行环境信息失败
+    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102027" // 获取插件敏感信息失败
+    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102028" // 归档插件文件失败
+    const val GRANT_DOWNLOAD_PERMISSION = "2102029" // 请联系流水线负责人授予下载构件权限
+    const val GRANT_PIPELINE_PERMISSION = "2102030" // 访问件构请联系流水线负责人：\n{0} 授予流水线权限。
+    const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" // 元数据({0})不存在，请通过共享下载文件
+    const val NO_EXPERIENCE_PERMISSION = "2102032" // 您没有该体验的权限
+    const val FILE_NOT_EXIST = "2102033" // 文件{0}不存在
+    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102034" // 目标路径应为文件夹
+    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102035" // 不能在拷贝到当前目录
+    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102036" // 不能移动到当前目录
+    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102037" // 不能将父目录移动到子目录
+    const val METADATA_NOT_EXIST = "2102038" // 元数据({0})不存在
+    const val BUILD_NOT_EXIST = "2102039" // 构建不存在({0})
+    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" // 用户({0})在工程({1})下没有流水线{2}权限
+    const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
+    const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"
+    // 【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件
+    const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime"
+    // {0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
+    const val BK_DOWNLOAD = "bkDownload" // 下载
+    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkbkReceivedThisEmailBecauseYouFollowedProject"
+    // 你收到此邮件，是因为你关注了 {0} 项目，或其它人@了你
+    const val BK_ILLEGAL_PATH = "bkIllegalPath" // 非法路径
 }
