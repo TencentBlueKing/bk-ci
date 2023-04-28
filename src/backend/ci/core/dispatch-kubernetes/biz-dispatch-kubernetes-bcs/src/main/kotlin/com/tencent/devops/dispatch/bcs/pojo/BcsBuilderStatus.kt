@@ -46,7 +46,11 @@ data class BcsBuilderStatus(
 
 enum class BcsBuilderStatusEnum(
     val realName: String,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsBuilderStatus", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "bcsBuilderStatus",
+        reusePrefixFlag = false
+    )
     val message: String
 ) {
     INIT("init", "init"), // 构建机初始化状态，等待创建

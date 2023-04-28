@@ -451,7 +451,8 @@ class PipelineRepositoryService constructor(
         if (option == null) throw DependNotFoundException("matrix option not found")
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "matrix maxConcurrency number(${option.maxConcurrency}) exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                "matrix maxConcurrency number(${option.maxConcurrency}) " +
+                        "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
                         "matrix maxConcurrency(${option.maxConcurrency}) " +
                         "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )

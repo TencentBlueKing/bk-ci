@@ -83,7 +83,8 @@ class QualityTemplateService @Autowired constructor(
                     )
                     val inputStream = classPathResource.inputStream
                     val json = inputStream.bufferedReader(Charsets.UTF_8).use { it.readText() }
-                    val qualityRuleTemplatePOs = JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
+                    val qualityRuleTemplatePOs =
+                        JsonUtil.to(json, object : TypeReference<List<QualityRuleTemplatePO>>() {})
                     ruleTemplateDao.batchCrateQualityRuleTemplate(dslContext, qualityRuleTemplatePOs)
                     logger.info("init quality rule template end")
                 } finally {
