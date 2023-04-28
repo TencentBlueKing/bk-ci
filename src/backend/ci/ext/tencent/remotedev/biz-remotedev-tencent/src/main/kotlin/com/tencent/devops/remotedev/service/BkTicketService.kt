@@ -122,8 +122,8 @@ class BkTicketService @Autowired constructor(
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body!!.string()
-                logger.info("validateUserTicket|response code|${response.code}|content|$data")
+                val content = response.body!!.string()
+                logger.info("validateUserTicket|response code|${response.code}|content|$content")
                 if (!response.isSuccessful && retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
                     return validateUserTicket(userId, isOffshore, ticket, retryTimeLocal)
@@ -136,10 +136,11 @@ class BkTicketService @Autowired constructor(
                         defaultMessage = ErrorCodeEnum.CHECK_USER_TICKET_FAIL.formatErrorMessage
                     )
                 }
-
-                val dataMap = JsonUtil.toMap(data)
-                val status = dataMap["ret"]
-                return (status == 0)
+                val contentMap = JsonUtil.toMap(content)
+                val dataMap = JsonUtil.to(contentMap["data"].toString(), Map::class.java)
+                logger.info("validateUserTicket|contentMap|$contentMap|dataMap|$dataMap")
+                val status = contentMap["ret"]
+                return (status == 0) && (dataMap["username"] == userId)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
