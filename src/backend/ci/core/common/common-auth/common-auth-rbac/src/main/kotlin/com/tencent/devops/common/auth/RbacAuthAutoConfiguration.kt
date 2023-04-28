@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
@@ -95,7 +96,7 @@ class RbacAuthAutoConfiguration {
     ) = TokenServiceImpl(iamConfiguration, apigwHttpClientServiceImpl)
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnMissingBean(AuthTokenApi::class)
     fun authTokenApi(
         redisOperation: RedisOperation,
         iamTokenService: TokenServiceImpl

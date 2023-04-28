@@ -74,7 +74,7 @@ class RbacPermissionApplyService @Autowired constructor(
         projectId: String,
         searchGroupInfo: SearchGroupInfo
     ): ManagerRoleGroupVO {
-        logger.info("RbacPermissionApplyService|listGroups: searchGroupInfo=$searchGroupInfo")
+        logger.info("RbacPermissionApplyService|listGroups:searchGroupInfo=$searchGroupInfo")
         verifyProjectRouterTag(projectId)
 
         val projectInfo = authResourceService.get(
