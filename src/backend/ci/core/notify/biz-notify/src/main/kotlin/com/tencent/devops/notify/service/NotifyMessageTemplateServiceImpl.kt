@@ -48,8 +48,6 @@ import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
-import com.tencent.devops.model.notify.tables.records.TMoaNotifyMessageTemplateRecord
-import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
@@ -144,21 +142,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 dslContext,
                 tCommonNotifyMessageTemplateRecord
             )
-            val tMoaNotifyMessageTemplateRecord = template.moaTemplate?.let {
-                val moaTemplate = template.moaTemplate!!
-                TMoaNotifyMessageTemplateRecord().apply {
-                    this.id = moaTemplate.id
-                    this.commonTemplateId = template.id
-                    this.body = moaTemplate.body
-                    this.title = moaTemplate.title
-                    this.callbackUrl = moaTemplate.callbackUrl
-                    this.processName = moaTemplate.processName
-                    this.creator = template.creator
-                    this.modifior = template.modifier
-                    this.createTime = LocalDateTime.now()
-                    this.updateTime = LocalDateTime.now()
-                }
-            }
             val tWechatNotifyMessageTemplateRecord = template.wechatTemplate?.let {
                 val wechatTemplate = template.wechatTemplate!!
                 TWechatNotifyMessageTemplateRecord().apply {
@@ -180,20 +163,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     this.commonTemplateId = template.id
                     this.body = weworkGroupTemplate.body
                     this.title = weworkGroupTemplate.title
-                    this.creator = template.creator
-                    this.modifior = template.modifier
-                    this.createTime = LocalDateTime.now()
-                    this.updateTime = LocalDateTime.now()
-                }
-            }
-            val tRtxNotifyMessageTemplateRecord = template.rtxTemplate?.let {
-                val rtxTemplate = template.rtxTemplate!!
-                TRtxNotifyMessageTemplateRecord().apply {
-                    this.id = rtxTemplate.id
-                    this.commonTemplateId = template.id
-                    this.body = rtxTemplate.body
-                    this.title = rtxTemplate.title
-                    this.sender = rtxTemplate.sender
                     this.creator = template.creator
                     this.modifior = template.modifier
                     this.createTime = LocalDateTime.now()
@@ -236,12 +205,6 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     transactionContext,
                     tCommonNotifyMessageTemplateRecord
                 )
-                tMoaNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateMoaNotifyMessageTemplate(transactionContext, record)
-                }
-                tRtxNotifyMessageTemplateRecord?.let { record ->
-                    messageTemplateDao.crateRtxNotifyMessageTemplate(transactionContext, record)
-                }
                 tWechatNotifyMessageTemplateRecord?.let { record ->
                     messageTemplateDao.crateWechatNotifyMessageTemplate(transactionContext, record)
                 }
