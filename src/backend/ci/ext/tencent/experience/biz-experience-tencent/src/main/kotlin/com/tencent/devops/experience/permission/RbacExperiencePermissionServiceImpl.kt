@@ -70,7 +70,8 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
     override fun createTaskResource(
         user: String,
         projectId: String,
-        experienceId: Long, experienceName: String
+        experienceId: Long,
+        experienceName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = user,
