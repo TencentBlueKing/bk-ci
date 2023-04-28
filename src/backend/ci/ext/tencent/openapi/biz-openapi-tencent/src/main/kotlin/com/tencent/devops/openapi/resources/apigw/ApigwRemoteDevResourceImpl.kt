@@ -15,7 +15,13 @@ class ApigwRemoteDevResourceImpl @Autowired constructor(private val client: Clie
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceImpl::class.java)
     }
-    override fun validateUserTicket(appCode: String?, apigwType: String?, userId: String, isOffshore: Boolean, ticket: String): Result<Boolean> {
+    override fun validateUserTicket(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        isOffshore: Boolean,
+        ticket: String
+    ): Result<Boolean> {
         logger.info("Get  projects info by group ,userId:$userId,isOffshore:$isOffshore,ticket:$ticket")
         return client.get(ServiceRemoteDevResource::class).validateUserTicket(
             userId = userId,
