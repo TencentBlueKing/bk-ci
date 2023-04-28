@@ -214,7 +214,7 @@
             }),
             ...mapState(['fetchError']),
             execFormatStartTime () {
-                return convertTime(this.execDetail?.startTime)
+                return convertTime(this.execDetail?.queueTime)
             },
             panels () {
                 return [
