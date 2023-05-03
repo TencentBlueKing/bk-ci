@@ -118,10 +118,6 @@ object I18nUtil {
         }
     }
 
-    fun getMessageByLocale(chinese: String, english: String?): String {
-        return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english ?: chinese
-    }
-
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识

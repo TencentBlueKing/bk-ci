@@ -77,7 +77,9 @@ class BcsTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    I18nUtil.getCodeLanMessage(
+                        ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                    ),
                     MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_STATUS_ERROR, I18nUtil.getLanguage(userId)) +
                     "：http response code: ${response.code}"
                 )
@@ -92,7 +94,9 @@ class BcsTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage = I18nUtil.getCodeLanMessage(
+                        ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                    ),
                     errorMessage = MessageUtil.getMessageByLocale(
                         BK_GET_BCS_TASK_STATUS_TIMEOUT,
                         I18nUtil.getLanguage(userId)

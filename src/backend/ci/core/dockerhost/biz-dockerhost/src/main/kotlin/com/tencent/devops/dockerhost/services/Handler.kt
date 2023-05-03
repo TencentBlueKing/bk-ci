@@ -137,8 +137,7 @@ abstract class Handler<T : HandlerContext> constructor(
                         red = false,
                         message = I18nUtil.getCodeLanMessage(
                             messageCode = BK_PULLING_IMAGE,
-                            params = arrayOf("$lays", "$currentProgress"),
-                            language = I18nUtil.getDefaultLocaleLanguage()
+                            params = arrayOf("$lays", "$currentProgress")
                         ),
                         tag = startTaskId,
                         jobId = containerHashId

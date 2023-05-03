@@ -72,12 +72,12 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 /**
  *
@@ -189,7 +189,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getLanguage()
+                    I18nUtil.getDefaultLocaleLanguage()
                 ),
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -205,7 +205,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getDefaultLocaleLanguage(),
                     arrayOf(vmNames)
                 ),
                 pipelineId = pipelineId,

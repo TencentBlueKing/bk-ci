@@ -100,9 +100,11 @@ class BcsContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
     override fun getLog() = DispatchBuildLog(
-        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getLanguage()),
-        startContainerError = I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getLanguage()),
-        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getLanguage())
+        readyStartLog =
+        I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
+        startContainerError =
+        I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getDefaultLocaleLanguage())
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -246,7 +248,7 @@ class BcsContainerService @Autowired constructor(
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_ERROR.errorCode.toString()),
                     I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
                             I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
                     ":${failedMsg ?: taskStatus.message}"

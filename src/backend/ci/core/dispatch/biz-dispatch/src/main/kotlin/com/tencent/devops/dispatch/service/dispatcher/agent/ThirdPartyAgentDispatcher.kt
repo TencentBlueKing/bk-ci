@@ -61,10 +61,10 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 @Suppress("ALL")
@@ -158,7 +158,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}") +
+                errorMsg = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
                         "(System Error) - ${agentResult.message}"
             )
             return
@@ -182,9 +182,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = I18nUtil.getCodeLanMessage(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
-                ) + "(System Error) - $dispatchType agent is null"
+                errorMsg = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
+                        "(System Error) - $dispatchType agent is null"
             )
             return
         }
@@ -240,7 +239,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                         event,
                         I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_MACHINE_UPGRADE_IN_PROGRESS,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ) + " - ${agent.hostname}/${agent.ip}"
                     )
                     return false
@@ -368,7 +367,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorMsg = if (e is RemoteServiceException) {
                     e.errorMessage
                 } else {
-                    e.message ?: "${ErrorCodeEnum.GET_VM_ERROR.formatErrorMessage}(${dispatchType.envName})"
+                    e.message ?: (
+                            I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_VM_ERROR.errorCode}")
+                                    + "(${dispatchType.envName})"
+                            )
                 }
             )
             return
@@ -401,9 +403,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = I18nUtil.getCodeLanMessage(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
-                ) + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
+                errorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
+                        "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
@@ -418,9 +419,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = I18nUtil.getCodeLanMessage(
-                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}"
-                ) + "System Error) - ${dispatchType.envName}: agent is null"
+                errorMessage = ErrorCodeEnum.GET_BUILD_AGENT_ERROR.getErrorMessage() +
+                        "System Error) - ${dispatchType.envName}: agent is null"
             )
             return
         }
