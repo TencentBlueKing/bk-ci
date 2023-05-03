@@ -88,7 +88,8 @@ class AcrossProjectDistributionAtom @Autowired constructor(
             buildLogPrinter.addLine(buildId,
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_SUCCESSFULLY_DISTRIBUTED,
-                    params = arrayOf(result.data.toString())
+                    params = arrayOf(result.data.toString()),
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), task.taskId, task.containerHashId, task.executeCount ?: 1)
             AtomResponse(BuildStatus.SUCCEED)
         } else {
@@ -102,7 +103,10 @@ class AcrossProjectDistributionAtom @Autowired constructor(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = I18nUtil.getCodeLanMessage(messageCode = BK_SUCCESSFULLY_FAILED) + "$result"
+                errorMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SUCCESSFULLY_FAILED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$result"
             )
         }
     }

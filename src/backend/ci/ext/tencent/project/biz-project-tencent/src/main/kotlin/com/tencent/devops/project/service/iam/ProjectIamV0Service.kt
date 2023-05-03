@@ -91,10 +91,12 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                language = I18nUtil.getLanguage(userId)
-            ))
+            ?: throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
 
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)

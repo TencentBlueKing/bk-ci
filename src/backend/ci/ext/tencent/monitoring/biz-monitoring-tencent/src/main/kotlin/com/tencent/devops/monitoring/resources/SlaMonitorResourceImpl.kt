@@ -64,7 +64,7 @@ class SlaMonitorResourceImpl @Autowired constructor(
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_ILLEGAL_ENTERPRISE_GROUP_ID
                 )
-                )
+            )
         }
 
         return Result(slaMonitorService.codeccQuery(bgId, startTime, endTime))

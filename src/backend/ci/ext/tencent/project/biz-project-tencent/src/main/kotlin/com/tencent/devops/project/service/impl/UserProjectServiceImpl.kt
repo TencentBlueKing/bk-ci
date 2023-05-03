@@ -34,6 +34,8 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode.BK_CONTAINER_SERVICE
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_TYPE_PREFIX
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -41,6 +43,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.service.ServiceListVO
 import com.tencent.devops.project.pojo.service.ServiceVO
 import com.tencent.devops.project.service.tof.TOFService
+import javax.servlet.http.HttpServletRequest
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -49,7 +52,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.servlet.http.HttpServletRequest
 
 @Suppress("UNUSED", "LongParameterList", "LongMethod")
 @Service
@@ -94,7 +96,7 @@ class UserProjectServiceImpl @Autowired constructor(
             val replaceMap = getReplaceMapByRequest()
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = I18nUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
+                val typeName = I18nUtil.getCodeLanMessage(T_SERVICE_TYPE_PREFIX + serviceType.englishTitle)
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
@@ -111,7 +113,7 @@ class UserProjectServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = I18nUtil.getMessageByLocale(it.name, it.englishName),
+                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName),
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,

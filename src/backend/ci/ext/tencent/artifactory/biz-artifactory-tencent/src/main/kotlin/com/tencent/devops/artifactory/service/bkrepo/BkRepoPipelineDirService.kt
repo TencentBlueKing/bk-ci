@@ -41,12 +41,12 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class BkRepoPipelineDirService @Autowired constructor(
@@ -85,7 +85,7 @@ class BkRepoPipelineDirService @Autowired constructor(
                         MessageUtil.getMessageByLocale(
                             messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
                             language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, projectId, authPermission.alias)
+                            params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
                         )
                    )
                 getPipelinePathList(projectId, normalizedPath, fileList)
@@ -96,7 +96,7 @@ class BkRepoPipelineDirService @Autowired constructor(
                         MessageUtil.getMessageByLocale(
                             messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
                             language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, projectId, authPermission.alias)
+                            params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
                         ))
                 getBuildPathList(projectId, normalizedPath, fileList)
             }

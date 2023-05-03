@@ -949,10 +949,10 @@ class GitService @Autowired constructor(
                         message = "fail to get git file content with: ${it.code}): ${it.message}"
                     )
                 }
-                return it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg =
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_FILE_CANNOT_EXCEED
-                ))
+                return it.stringLimit(
+                    readLimit = MAX_FILE_SIZE,
+                    errorMsg = I18nUtil.getCodeLanMessage(messageCode = BK_FILE_CANNOT_EXCEED)
+                )
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")

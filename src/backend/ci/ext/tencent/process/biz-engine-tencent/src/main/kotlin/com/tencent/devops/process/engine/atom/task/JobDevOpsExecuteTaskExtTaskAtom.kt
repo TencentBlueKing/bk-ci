@@ -159,7 +159,7 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
         buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
             messageCode = BK_VIEW_RESULT,
             language = I18nUtil.getDefaultLocaleLanguage()
-        ) + "${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        ) + jobClient.getDetailUrl(projectId, taskInstanceId), task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

@@ -29,7 +29,6 @@ package com.tencent.devops.stream.v1.components
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -49,13 +48,13 @@ import com.tencent.devops.stream.v1.pojo.V1StreamTriggerContext
 import com.tencent.devops.stream.v1.service.V1GitCIEventService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import com.tencent.devops.stream.v1.utils.V1GitCIWebHookMatcher
+import java.io.BufferedReader
+import java.io.StringReader
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.StringReader
-import javax.ws.rs.core.Response
 
 @Component
 class V1YamlTrigger @Autowired constructor(
@@ -229,9 +228,11 @@ class V1YamlTrigger @Autowired constructor(
                         ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, I18nUtil.getCodeLanMessage(
-                        messageCode = MIRROR_VERSION_NOT_AVAILABLE
-                    ) + ". ${it.image}")
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = MIRROR_VERSION_NOT_AVAILABLE
+                        ) + ". ${it.image}")
                 }
             }
         }

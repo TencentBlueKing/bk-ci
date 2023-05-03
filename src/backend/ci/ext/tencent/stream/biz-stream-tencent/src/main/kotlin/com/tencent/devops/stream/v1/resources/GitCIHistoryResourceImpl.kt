@@ -40,8 +40,8 @@ import com.tencent.devops.stream.v1.pojo.V1GitCIBuildBranch
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.service.V1GitCIHistoryService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class GitCIHistoryResourceImpl @Autowired constructor(
@@ -62,11 +62,13 @@ class GitCIHistoryResourceImpl @Autowired constructor(
     ): Result<Page<V1GitCIBuildHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN,
+            throw CustomException(
+                Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
                     messageCode = PROJECT_CANNOT_OPEN_STREAM,
                     language = I18nUtil.getLanguage(userId)
-                ))
+                )
+            )
         }
         return Result(
             gitCIHistoryService.getHistoryBuildList(
@@ -93,11 +95,13 @@ class GitCIHistoryResourceImpl @Autowired constructor(
     ): Result<Page<V1GitCIBuildBranch>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN,
+            throw CustomException(
+                Response.Status.FORBIDDEN,
                 MessageUtil.getMessageByLocale(
                     messageCode = PROJECT_CANNOT_OPEN_STREAM,
                     language = I18nUtil.getLanguage(userId)
-                ))
+                )
+            )
         }
         return Result(
             gitCIHistoryService.getAllBuildBranchList(

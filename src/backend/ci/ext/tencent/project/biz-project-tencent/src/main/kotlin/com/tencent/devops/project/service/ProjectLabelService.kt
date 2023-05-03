@@ -28,17 +28,16 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectLabelRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectLabelDao
 import com.tencent.devops.project.pojo.label.ProjectLabel
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class ProjectLabelService @Autowired constructor(
@@ -104,11 +103,14 @@ class ProjectLabelService @Autowired constructor(
         if (nameCount > 0) {
             val projectLabel = projectLabelDao.getProjectLabel(dslContext, id)
             if (null != projectLabel && !labelName.equals(projectLabel.labelName)) {
-                throw CustomException(Response.Status.BAD_REQUEST,
-                        I18nUtil.generateResponseDataObject<String>(
-                            messageCode = ProjectMessageCode.LABLE_NAME_EXSIT,
-                            params = arrayOf(labelName),
-                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())).message!!) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = ProjectMessageCode.LABLE_NAME_EXSIT,
+                        params = arrayOf(labelName),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                ) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
             }
         }
         projectLabelDao.update(dslContext, id, labelName)

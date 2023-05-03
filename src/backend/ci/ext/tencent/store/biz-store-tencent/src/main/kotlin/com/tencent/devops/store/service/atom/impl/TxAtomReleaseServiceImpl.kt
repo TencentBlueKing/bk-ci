@@ -532,7 +532,8 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean, codeccFlag: Boolean?): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN,
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
+            messageCode = BEGIN,
             language = I18nUtil.getDefaultLocaleLanguage()), BEGIN, NUM_ONE, SUCCESS))
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
             messageCode = COMMIT,

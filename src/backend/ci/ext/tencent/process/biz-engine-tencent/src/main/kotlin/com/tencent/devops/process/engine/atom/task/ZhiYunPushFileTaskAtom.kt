@@ -144,7 +144,7 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
             buildId = buildId,
             message = MessageUtil.getMessageByLocale(
                 messageCode = BK_UPLOAD_CORRESPONDING_FILE,
-                language = I18nUtil.getLanguage(userId)
+                language = I18nUtil.getDefaultLocaleLanguage()
             ),
             tag = task.taskId,
             jobId = task.containerHashId,

@@ -28,7 +28,7 @@ object PreBuildMessageCode {
     const val ALPHABET_NUMBER_UNDERSCORE = "2125009" //变量名称必须是英文字母、数字或下划线(_)
     const val STAGES_JOBS_STEPS = "2125010" //stages, jobs, steps, extends 必须存在一个
     const val PRECI_SUPPORTS_REMOTE_TEMPLATES = "2125011" //PreCI仅支持远程模板
-    const val REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY = "2125012" //远程仓关键字不能为空: repository, name
+    const val REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY = "2125012" //远程仓库关键字不能为空: repository, name
     const val CODE_CHECKOUT_NOT_SUPPORTED = "2125013" //不支持checkout关键字进行代码检出
 
     const val BK_AGENT_NOT_INSTALLED = "bkAgentNotInstalled" //Agent未安装，请安装Agent.

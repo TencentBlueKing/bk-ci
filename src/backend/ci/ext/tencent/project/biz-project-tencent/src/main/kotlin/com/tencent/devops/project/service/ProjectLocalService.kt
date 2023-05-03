@@ -37,7 +37,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -45,6 +44,7 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -520,7 +520,7 @@ class ProjectLocalService @Autowired constructor(
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
             .map {
                 // 因历史原因,前端是通过roleName==manager 来判断是否为管理员,故此处需兼容
-                if (it.displayName == DefaultGroupType.MANAGER.displayName) {
+                if (it.displayName == DefaultGroupType.MANAGER.getDisplayName(I18nUtil.getLanguage(userId))) {
                     UserRole(it.displayName, it.roleId, DefaultGroupType.MANAGER.value, it.type)
                 } else {
                     UserRole(it.displayName, it.roleId, it.roleName, it.type)

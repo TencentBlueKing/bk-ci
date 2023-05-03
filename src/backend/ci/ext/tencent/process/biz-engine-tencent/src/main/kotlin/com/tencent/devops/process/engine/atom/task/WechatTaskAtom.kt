@@ -71,8 +71,11 @@ class WechatTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val buildId = task.buildId
         if (param.receivers.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId, I18nUtil.getCodeLanMessage(
-                messageCode = BK_INVALID_NOTIFICATION_RECIPIENT
+            buildLogPrinter.addRedLine(
+                buildId,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_INVALID_NOTIFICATION_RECIPIENT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
             ) + "[${param.receivers}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -85,7 +88,8 @@ class WechatTaskAtom @Autowired constructor(
         }
         if (param.body.isBlank()) {
             buildLogPrinter.addRedLine(buildId, I18nUtil.getCodeLanMessage(
-                messageCode = BK_WECOM_NOTICE
+                messageCode = BK_WECOM_NOTICE,
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + "[${param.body}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -119,7 +123,8 @@ class WechatTaskAtom @Autowired constructor(
         buildLogPrinter.addLine(buildId,
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_SEND_WECOM_CONTENT,
-                params = arrayOf(message.body, receiversStr)
+                params = arrayOf(message.body, receiversStr),
+                language = I18nUtil.getDefaultLocaleLanguage()
             ), taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(receiversStr.split(",").toSet())
@@ -132,14 +137,16 @@ class WechatTaskAtom @Autowired constructor(
                         buildLogPrinter.addLine(buildId,
                             I18nUtil.getCodeLanMessage(
                                 messageCode = BK_SEND_WECOM_CONTENT_SUCCESSFULLY,
-                                params = arrayOf(message.body, receiversStr)
+                                params = arrayOf(message.body, receiversStr),
+                                language = I18nUtil.getDefaultLocaleLanguage()
                             ), taskId, task.containerHashId, task.executeCount ?: 1)
                         return true
                     }
                 }
                 buildLogPrinter.addRedLine(buildId, I18nUtil.getCodeLanMessage(
                     messageCode = BK_SEND_WECOM_CONTENT_FAILED,
-                    params = arrayOf(message.body, receiversStr)
+                    params = arrayOf(message.body, receiversStr),
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "${resp.message}", taskId, task.containerHashId, task.executeCount ?: 1)
                 return false
             }

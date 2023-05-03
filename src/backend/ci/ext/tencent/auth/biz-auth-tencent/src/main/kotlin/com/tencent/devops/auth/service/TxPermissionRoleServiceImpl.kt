@@ -37,10 +37,12 @@ import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.IamPermissionRoleExtService
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
-import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class TxPermissionRoleServiceImpl @Autowired constructor(
@@ -88,11 +90,12 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
         val defaultGroups = mutableListOf<DefaultGroup>()
         val allDefaultGroup = DefaultGroupType.getAll()
         allDefaultGroup.forEach {
+            val name = it.getDisplayName(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
             defaultGroups.add(
                 DefaultGroup(
                     code = it.value,
-                    name = it.displayName,
-                    displayName = it.displayName
+                    name = name,
+                    displayName = name
                 )
             )
         }

@@ -140,10 +140,12 @@ class BkRepoBuildCustomDirService @Autowired constructor(
 
             if (normalizedSrcPath == normalizedDestPath ||
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                throw BadRequestException(I18nUtil.getCodeLanMessage(
-                    messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ))
+                throw BadRequestException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {

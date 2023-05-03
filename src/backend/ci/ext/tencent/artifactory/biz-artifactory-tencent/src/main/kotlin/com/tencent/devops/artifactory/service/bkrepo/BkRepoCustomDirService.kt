@@ -46,13 +46,13 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.io.InputStream
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.InputStream
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoCustomDirService @Autowired constructor(
@@ -123,20 +123,24 @@ class BkRepoCustomDirService @Autowired constructor(
         if (combinationPath.srcPaths.size > 1) {
             val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
-                throw OperationException(MessageUtil.getMessageByLocale(
-                    messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
         }
 
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = PathUtils.normalize(srcPath)
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                throw BadRequestException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
 
             bkRepoClient.copy(
@@ -160,17 +164,21 @@ class BkRepoCustomDirService @Autowired constructor(
 
             if (normalizedSrcPath == normalizedDestPath ||
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                throw BadRequestException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
-                throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                throw BadRequestException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
 
             bkRepoClient.move(

@@ -125,10 +125,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.io.BufferedReader
 import java.io.StringReader
 import java.net.URLEncoder
@@ -136,6 +132,10 @@ import java.time.LocalDateTime
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 /**
  *
@@ -650,7 +650,8 @@ class TXPipelineService @Autowired constructor(
                         messageCode = BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE,
                         language = I18nUtil.getLanguage(userId)
                     ) +
-                            "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】 " +
+                            "【${dispatchType.buildType().getI18n(I18nUtil.getLanguage(userId))}" +
+                            "(${dispatchType.buildType().name})】 " +
                             MessageUtil.getMessageByLocale(
                                 messageCode = BK_EXPORT,
                                 language = I18nUtil.getLanguage(userId)
@@ -717,7 +718,7 @@ class TXPipelineService @Autowired constructor(
                                 messageCode = BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED,
                                 language = I18nUtil.getLanguage(userId)
                             ) +
-                                    "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】" +
+                                    "【${dispatchType.buildType().getI18n(userId)}(${dispatchType.buildType().name})】" +
                                     MessageUtil.getMessageByLocale(
                                         messageCode = BK_EXPORT,
                                         language = I18nUtil.getLanguage(userId)
@@ -742,7 +743,12 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_NOT_EXIST_UNDER_NEW_BUSINESS,
-                params = arrayOf(BuildType.THIRD_PARTY_AGENT_ENV.value, dispatchType.value)
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_AGENT_ENV.getI18n(
+                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                    ),
+                    dispatchType.value
+                )
             ) + I18nUtil.getCodeLanMessage(
                         messageCode = BK_CHECK_OPERATING_SYSTEM_CORRECT
                     ) + "! \n"
@@ -805,7 +811,12 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS,
-                params = arrayOf(BuildType.THIRD_PARTY_AGENT_ID.value, dispatchType.value)
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_AGENT_ID.getI18n(
+                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                    ),
+                    dispatchType.value
+                )
             ) + I18nUtil.getCodeLanMessage(
                 messageCode = BK_PLEASE_MANUALLY_MODIFY
             ) + "！ \n"
@@ -865,7 +876,11 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_ONLY_VISIBLE_PCG_BUSINESS,
-                params = arrayOf(BuildType.THIRD_PARTY_PCG.value)
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_PCG.getI18n(
+                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             ))
         return if (dispatchType is PCGDispatchType) {
             Pool(

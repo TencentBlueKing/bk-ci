@@ -38,12 +38,12 @@ import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 @RefreshScope
@@ -113,8 +113,11 @@ class GrafanaWebhookService @Autowired constructor(
             return client.get(ServiceNotifyMessageTemplateResource::class)
                 .sendNotifyMessageByTemplate(sendMessage.copy(bodyParams = notifyMessage))
         }
-        return Result(data = false, message = I18nUtil.getCodeLanMessage(
+        return Result(
+            data = false,
+            message = I18nUtil.getCodeLanMessage(
             messageCode = BK_SEND_MONITORING_MESSAGES
-        ))
+            )
+        )
     }
 }

@@ -41,6 +41,8 @@ import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubToken
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -49,8 +51,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.UriBuilder
 
 @Service
 class GithubOauthService @Autowired constructor(
@@ -125,10 +125,9 @@ class GithubOauthService @Autowired constructor(
             val data = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code}) and response($data)")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
-                    I18nUtil.getCodeLanMessage(
-                    messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN,
-                )
+                throw CustomException(
+                    Response.Status.INTERNAL_SERVER_ERROR,
+                    I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN,)
                 )
             }
             return objectMapper.readValue(data)

@@ -46,9 +46,9 @@ import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
+import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 @Suppress("LongParameterList")
@@ -70,14 +70,8 @@ class UserIpaResourceImpl @Autowired constructor(
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         if (!checkParams(ipaSignInfo, userId)) {
-            logger.warn(
-                MessageUtil.getMessageByLocale(
-                messageCode = IOS_ENTERPRISE_RESIGNATURE,
-                language = I18nUtil.getLanguage(userId),
-                params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
-            )
-
-            )
+            logger.warn("User ($userId) does not have permission to initiate iOS enterprise resignature in " +
+                    "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId}).")
             throw PermissionForbiddenException(
                 message = MessageUtil.getMessageByLocale(
                     messageCode = IOS_ENTERPRISE_RESIGNATURE,

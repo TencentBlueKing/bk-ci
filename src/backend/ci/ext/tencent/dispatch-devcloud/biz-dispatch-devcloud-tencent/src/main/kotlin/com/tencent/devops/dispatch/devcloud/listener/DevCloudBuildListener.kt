@@ -21,7 +21,7 @@ import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_START_DEVCLOUD
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_INTERFACE_REQUEST_TIMEOUT
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_NO_FREE_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
 import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START
@@ -168,7 +168,13 @@ class DevCloudBuildListener @Autowired constructor(
 
     private fun startUp(dispatchMessage: DispatchMessage) {
         logger.info("On start up - ($dispatchMessage)")
-        printLogs(dispatchMessage, "准备创建腾讯自研云（云devnet资源)构建机...")
+        printLogs(
+            dispatchMessage,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
+        )
 
         val buildContainerPoolNo = buildContainerPoolNoDao.getDevCloudBuildLastPoolNo(
             dslContext,
@@ -241,7 +247,7 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorCode,
-                    ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.formatErrorMessage,
+                    ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -252,7 +258,7 @@ class DevCloudBuildListener @Autowired constructor(
             onFailure(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
+                ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
                 I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_CREATE_BUILD_MACHINE) +
                         ":${e.message}. \n" +
                         I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_EXCEPTIONS) +
@@ -406,7 +412,7 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     createResult.third.errorType,
                     createResult.third.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.CREATE_VM_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -532,7 +538,7 @@ class DevCloudBuildListener @Autowired constructor(
                 onFailure(
                     startResult.third.errorType,
                     startResult.third.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -799,8 +805,8 @@ class DevCloudBuildListener @Autowired constructor(
             throw BuildFailureException(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
-                I18nUtil.getCodeLanMessage(messageCode = BK_NO_FREE_BUILD_MACHINE)
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
             )
         } finally {
             lock.unlock()

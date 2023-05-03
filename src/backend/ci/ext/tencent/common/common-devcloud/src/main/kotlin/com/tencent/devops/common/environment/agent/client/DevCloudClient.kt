@@ -133,7 +133,7 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage =
-                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage),
+                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.getErrorMessage()),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -153,7 +153,7 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage =
-                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage),
+                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage()),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -170,7 +170,7 @@ class DevCloudClient {
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage =
-                I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage),
+                I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage()),
                 errorMessage = I18nUtil.getCodeLanMessage(
                     messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                 ) + I18nUtil.getCodeLanMessage(
@@ -213,7 +213,7 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage =
-                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage),
+                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.getErrorMessage()),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -233,7 +233,7 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                         formatErrorMessage =
-                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage),
+                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage()),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -248,7 +248,7 @@ class DevCloudClient {
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
                 formatErrorMessage =
-                I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage),
+                I18nUtil.getCodeLanMessage(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage()),
                 errorMessage = I18nUtil.getCodeLanMessage(
                     messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                 ) + I18nUtil.getCodeLanMessage(
@@ -308,7 +308,7 @@ class DevCloudClient {
                         errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                         formatErrorMessage =
-                        I18nUtil.getCodeLanMessage(ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage),
+                        I18nUtil.getCodeLanMessage("${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -329,7 +329,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage("${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = GET_STATUS_TIMED_OUT
                     ) + ", url: $url")
@@ -373,7 +373,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -394,7 +394,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -424,7 +424,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -444,7 +444,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -480,7 +480,7 @@ class DevCloudClient {
                                 errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                                 errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                                 formatErrorMessage =
-                                I18nUtil.getCodeLanMessage(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage),
+                                I18nUtil.getCodeLanMessage(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage()),
                                 errorMessage = I18nUtil.getCodeLanMessage(
                                     messageCode = TASK_STATUS_INTERFACE_EXCEPTION,
                                     language = I18nUtil.getDefaultLocaleLanguage()
@@ -506,7 +506,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = TASK_STATUS_TIMED_OUT
                     ) + ", url: $url")
@@ -531,7 +531,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -586,7 +586,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
@@ -615,7 +615,7 @@ class DevCloudClient {
                     errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage =
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage),
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(

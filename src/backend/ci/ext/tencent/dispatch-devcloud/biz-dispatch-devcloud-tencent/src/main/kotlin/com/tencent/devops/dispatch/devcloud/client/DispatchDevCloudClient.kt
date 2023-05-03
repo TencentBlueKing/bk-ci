@@ -3,11 +3,17 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.GET_STATUS_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.OPERATION_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.TASK_STATUS_INTERFACE_EXCEPTION
+import com.tencent.devops.common.api.constant.CommonMessageCode.TASK_STATUS_TIMED_OUT
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
@@ -19,6 +25,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
+import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -28,7 +35,6 @@ import org.json.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class DispatchDevCloudClient {
@@ -81,8 +87,8 @@ class DispatchDevCloudClient {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口异常: Fail to createContainer, " +
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        "${ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.getErrorMessage()}: Fail to createContainer, " +
                             "http response code: ${response.code}"
                     )
                 }
@@ -97,8 +103,8 @@ class DispatchDevCloudClient {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口返回失败: $msg"
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        "${ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage()}: $msg"
                     )
                 }
             }
@@ -110,8 +116,8 @@ class DispatchDevCloudClient {
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口超时, url: $url"
+                formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                errorMessage = "${I18nUtil.getCodeLanMessage(CREATE_CONTAINER_TIMED_OUT)}, url: $url"
             )
         }
     }
@@ -158,8 +164,8 @@ class DispatchDevCloudClient {
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口异常（Fail to $action docker, " +
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.getErrorMessage(),
+                        "${ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.getErrorMessage()}（Fail to $action docker, " +
                             "http response code: ${response.code}"
                     )
                 }
@@ -174,8 +180,8 @@ class DispatchDevCloudClient {
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口返回失败：$msg"
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        "${ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage()}：$msg"
                     )
                 }
             }
@@ -184,8 +190,8 @@ class DispatchDevCloudClient {
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口超时, url: $url"
+                formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                errorMessage = "${I18nUtil.getCodeLanMessage(OPERATION_CONTAINER_TIMED_OUT)}, url: $url"
             )
         }
     }
@@ -235,8 +241,8 @@ class DispatchDevCloudClient {
                     throw BuildFailureException(
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取容器状态接口异常（Fail to get container" +
+                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                        "${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage()}（Fail to get container" +
                             " status, http response code: ${response.code}"
                     )
                 }
@@ -255,8 +261,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取容器状态接口超时, url: $url"
+                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorMessage = "${I18nUtil.getCodeLanMessage(GET_STATUS_TIMED_OUT)}, url: $url"
                 )
             }
         }
@@ -321,8 +327,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口异常（Fail to createImage, " +
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.getErrorMessage(),
+                    "${ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.getErrorMessage()}（Fail to createImage, " +
                         "http response code: ${response.code}"
                 )
             }
@@ -338,8 +344,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
                     ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
-                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口返回失败：$msg"
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.getErrorMessage(),
+                    "${ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.getErrorMessage()}：$msg"
                 )
             }
         }
@@ -376,8 +382,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口异常（Fail to createImageVersions, " +
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.getErrorMessage(),
+                    "${ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.getErrorMessage()}（Fail to createImageVersions, " +
                         "http response code: ${response.code}"
                 )
             }
@@ -392,8 +398,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
                     ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
-                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口返回失败：$msg"
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.getErrorMessage(),
+                    "${ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.getErrorMessage()}：$msg"
                 )
             }
         }
@@ -437,8 +443,8 @@ class DispatchDevCloudClient {
                         throw BuildFailureException(
                             ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                             ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                            ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                            "获取TASK状态接口异常：http response code: ${response.code}"
+                            ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                            "${I18nUtil.getCodeLanMessage(TASK_STATUS_INTERFACE_EXCEPTION)}：http response code: ${response.code}"
                         )
                     }
                 }
@@ -455,8 +461,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    errorMessage = "获取TASK状态接口超时, url: $url"
+                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorMessage = "${I18nUtil.getCodeLanMessage(TASK_STATUS_TIMED_OUT)}, url: $url"
                 )
             }
         }
@@ -490,8 +496,8 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, " +
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
+                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
                         "http response code: ${response.code}"
                 )
             }
@@ -561,7 +567,7 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
                     "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, " +
                         "http response code: ${response.code}"
                 )
@@ -598,7 +604,7 @@ class DispatchDevCloudClient {
                 throw BuildFailureException(
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
                     "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, " +
                         "http response code: ${response.code}"
                 )
