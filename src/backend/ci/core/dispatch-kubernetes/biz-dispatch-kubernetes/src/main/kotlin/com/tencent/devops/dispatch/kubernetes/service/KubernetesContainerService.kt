@@ -358,7 +358,7 @@ class KubernetesContainerService @Autowired constructor(
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
                 errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.formatErrorMessage,
+                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.getErrorMessage(),
                 errorMessage = "webConsoleProxy is empty"
             )
         }

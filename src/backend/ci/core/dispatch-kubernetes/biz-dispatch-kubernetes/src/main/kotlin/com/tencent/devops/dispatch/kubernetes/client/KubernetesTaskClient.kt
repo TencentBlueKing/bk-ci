@@ -78,7 +78,7 @@ class KubernetesTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
                         messageCode = DispatchK8sMessageCode.KUBERNETES_TASK_STATUS_API_EXCEPTION,
                         params = arrayOf(taskId)
@@ -95,7 +95,7 @@ class KubernetesTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = "${I18nUtil.getCodeLanMessage(KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
                 )
             }

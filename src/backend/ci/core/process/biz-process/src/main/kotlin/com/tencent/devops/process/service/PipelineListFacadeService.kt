@@ -1675,7 +1675,6 @@ class PipelineListFacadeService @Autowired constructor(
                 permission = permission
             )
         ) {
-            val language = I18nUtil.getLanguage(userId)
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,

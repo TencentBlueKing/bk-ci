@@ -108,7 +108,7 @@ object CommonUtils {
         return BuildFailureException(
             errorCodeEnum.errorType,
             errorCodeEnum.errorCode,
-            errorCodeEnum.formatErrorMessage,
+            errorCodeEnum.getErrorMessage(),
             message
         )
     }

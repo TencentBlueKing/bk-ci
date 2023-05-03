@@ -130,16 +130,16 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.LocalDateTime
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
-import java.util.Calendar
 
 @Suppress("ALL")
 abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomService {
@@ -399,7 +399,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val futureList = mutableListOf<Future<MarketAtomResp>>()
         val labelInfoList = mutableListOf<MarketMainItemLabel>()
         labelInfoList.add(
-            MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST, language = I18nUtil.getLanguage(userId)))
+            MarketMainItemLabel(LATEST, I18nUtil.getCodeLanMessage(LATEST))
         )
         futureList.add(
             doList(
@@ -423,7 +423,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         labelInfoList.add(
             MarketMainItemLabel(
                 HOTTEST,
-                I18nUtil.getCodeLanMessage(HOTTEST, language = I18nUtil.getLanguage(userId))
+                I18nUtil.getCodeLanMessage(HOTTEST)
             )
         )
         futureList.add(
@@ -767,8 +767,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             val classifyLanName = if (classifyCode != null) {
                 I18nUtil.getCodeLanMessage(
                     messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
-                    defaultMessage = classifyName,
-                    language = I18nUtil.getLanguage(userId)
+                    defaultMessage = classifyName
                 )
             } else classifyName
             val releaseType = if (record[tAtomVersionLog.RELEASE_TYPE] != null) {
@@ -1328,10 +1327,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else if (!desc?.toString().isNullOrBlank()) {
                     desc.toString()
                 } else {
-                    I18nUtil.getCodeLanMessage(
-                        NO_LABEL,
-                        language = I18nUtil.getLanguage(userId)
-                    )
+                    I18nUtil.getCodeLanMessage(NO_LABEL)
                 }
                 val type = paramValueMap["type"]
                 val required = null != paramValueMap["required"] &&
@@ -1343,13 +1339,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 } else {
                     false
                 }
-                val requiredName = I18nUtil.getCodeLanMessage(REQUIRED, language = I18nUtil.getLanguage(userId))
-                val defaultName = I18nUtil.getCodeLanMessage(DEFAULT, language = I18nUtil.getLanguage(userId))
-                val optionsName = I18nUtil.getCodeLanMessage(OPTIONS, language = I18nUtil.getLanguage(userId))
+                val requiredName = I18nUtil.getCodeLanMessage(REQUIRED)
+                val defaultName = I18nUtil.getCodeLanMessage(DEFAULT)
+                val optionsName = I18nUtil.getCodeLanMessage(OPTIONS)
                 val multipleName =
-                    I18nUtil.getCodeLanMessage(MULTIPLE_SELECTOR, language = I18nUtil.getLanguage(userId))
+                    I18nUtil.getCodeLanMessage(MULTIPLE_SELECTOR)
                 val singleName =
-                    I18nUtil.getCodeLanMessage(SINGLE_SELECTOR, language = I18nUtil.getLanguage(userId))
+                    I18nUtil.getCodeLanMessage(SINGLE_SELECTOR)
                 try {
                     if ((type == "selector" && multiple) ||
                         type in listOf("atom-checkbox-list", "staff-input", "company-staff-input", "parameter")
@@ -1496,12 +1492,11 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     }
 
     private fun parseRely(builder: StringBuilder, rely: Map<String, Any>) {
-        val userId = I18nUtil.getRequestUserId()
-        val dang = I18nUtil.getCodeLanMessage(messageCode = DANG, language = I18nUtil.getLanguage(userId))
-        val and = I18nUtil.getCodeLanMessage(messageCode = AND, language = I18nUtil.getLanguage(userId))
-        val or = I18nUtil.getCodeLanMessage(messageCode = OR, language = I18nUtil.getLanguage(userId))
+        val dang = I18nUtil.getCodeLanMessage(messageCode = DANG)
+        val and = I18nUtil.getCodeLanMessage(messageCode = AND)
+        val or = I18nUtil.getCodeLanMessage(messageCode = OR)
         val timeToSelect =
-            I18nUtil.getCodeLanMessage(messageCode = TIMETOSELECT, language = I18nUtil.getLanguage(userId))
+            I18nUtil.getCodeLanMessage(messageCode = TIMETOSELECT)
         try {
             if (null != rely["expression"]) {
                 val expression = rely["expression"] as List<Map<String, Any>>

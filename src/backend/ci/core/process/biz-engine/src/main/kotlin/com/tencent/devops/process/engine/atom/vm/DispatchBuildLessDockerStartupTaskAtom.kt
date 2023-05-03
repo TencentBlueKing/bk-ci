@@ -145,7 +145,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-            errorMsg = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_NOT_EXISTS),
+            errorMsg =
+            I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId

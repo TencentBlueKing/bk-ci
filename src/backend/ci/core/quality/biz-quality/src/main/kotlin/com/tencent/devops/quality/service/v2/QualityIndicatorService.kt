@@ -59,7 +59,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -306,7 +306,8 @@ class QualityIndicatorService @Autowired constructor(
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
             return Msg(
                 0,
-                I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_SUCCESS,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_CREATE_SUCCESS,
                     language = I18nUtil.getLanguage(userId)),
                 true
             )

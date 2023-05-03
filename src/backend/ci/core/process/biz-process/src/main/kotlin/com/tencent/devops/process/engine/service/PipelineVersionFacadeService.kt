@@ -67,7 +67,7 @@ class PipelineVersionFacadeService @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        permission.getI18n(language),
                         pipelineId
                     )
                 )

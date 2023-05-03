@@ -61,7 +61,7 @@ import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -232,10 +232,12 @@ class StreamTriggerRequestService @Autowired constructor(
         ) ?: throw StreamTriggerException(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf(I18nUtil.getCodeLanMessage(
+            reasonParams = listOf(
+                I18nUtil.getCodeLanMessage(
                 messageCode = CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
                 params = arrayOf(action.data.setting.enableUser)
-            ))
+                )
+            )
         )
 
         action.data.context.defaultBranch = projectInfo.defaultBranch
