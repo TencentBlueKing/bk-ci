@@ -30,14 +30,32 @@ package com.tencent.devops.store.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.ServiceArchiveStoreFileResource
-import com.tencent.devops.common.api.constant.*
+import com.tencent.devops.common.api.constant.APPROVE
+import com.tencent.devops.common.api.constant.BEGIN
+import com.tencent.devops.common.api.constant.COMMIT
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DOING
+import com.tencent.devops.common.api.constant.EDIT
+import com.tencent.devops.common.api.constant.END
+import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.NUM_FIVE
+import com.tencent.devops.common.api.constant.NUM_FOUR
+import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.constant.NUM_SEVEN
+import com.tencent.devops.common.api.constant.NUM_SIX
+import com.tencent.devops.common.api.constant.NUM_THREE
+import com.tencent.devops.common.api.constant.NUM_TWO
+import com.tencent.devops.common.api.constant.ONLINE
+import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.constant.TEST
+import com.tencent.devops.common.api.constant.TEST_ENV_PREPARE
+import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.config.BkRepoConfig
@@ -111,6 +129,8 @@ import com.tencent.devops.store.service.common.StoreMediaService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
+import java.util.regex.Pattern
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -118,8 +138,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
-import java.time.LocalDateTime
-import java.util.regex.Pattern
 
 @Service
 abstract class ExtServiceBaseService @Autowired constructor() {
@@ -1350,56 +1368,21 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
         processInfo.add(
-            ReleaseProcessItem(
-                I18nUtil.getCodeLanMessage(messageCode = BEGIN, language = I18nUtil.getDefaultLocaleLanguage())
-                , BEGIN, NUM_ONE, SUCCESS
-            )
+            ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS)
         )
         processInfo.add(
             ReleaseProcessItem(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = TEST_ENV_PREPARE,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),
-                TEST_ENV_PREPARE, NUM_TWO, UNDO)
+                I18nUtil.getCodeLanMessage(TEST_ENV_PREPARE), TEST_ENV_PREPARE, NUM_TWO, UNDO)
         )
-        processInfo.add(ReleaseProcessItem(
-            I18nUtil.getCodeLanMessage(
-            messageCode = TEST, language = I18nUtil.getDefaultLocaleLanguage()),
-            TEST, NUM_THREE, UNDO)
-        )
-        processInfo.add(
-            ReleaseProcessItem(
-                I18nUtil.getCodeLanMessage(messageCode = EDIT, language = I18nUtil.getDefaultLocaleLanguage()
-                ),
-                COMMIT, NUM_FOUR, UNDO)
-        )
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(TEST), TEST, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(EDIT), COMMIT, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(
-                ReleaseProcessItem(
-                    I18nUtil.getCodeLanMessage(messageCode = ONLINE, language = I18nUtil.getDefaultLocaleLanguage()),
-                    ONLINE, NUM_FIVE, UNDO)
-            )
-            processInfo.add(
-                ReleaseProcessItem(
-                    I18nUtil.getCodeLanMessage(messageCode = END, language = I18nUtil.getDefaultLocaleLanguage()),
-                    END, NUM_SIX, UNDO)
-            )
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(
-                I18nUtil.getCodeLanMessage(messageCode = APPROVE, language = I18nUtil.getDefaultLocaleLanguage()),
-                APPROVE, NUM_FIVE, UNDO)
-            )
-            processInfo.add(
-                ReleaseProcessItem(
-                    I18nUtil.getCodeLanMessage(messageCode = ONLINE, language = I18nUtil.getDefaultLocaleLanguage()),
-                    ONLINE, NUM_SIX, UNDO)
-            )
-            processInfo.add(
-                ReleaseProcessItem(
-                    I18nUtil.getCodeLanMessage(messageCode = END, language = I18nUtil.getDefaultLocaleLanguage()),
-                    END, NUM_SEVEN, UNDO)
-            )
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(ONLINE), ONLINE, NUM_SIX, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(END), END, NUM_SEVEN, UNDO))
         }
         return processInfo
     }

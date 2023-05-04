@@ -158,11 +158,14 @@ class RtxTaskAtom @Autowired constructor(
             val detailOuterUrl = detailOuterUrl(projectId, pipelineId, buildId)
 
             val bodyStrOrigin = parseVariable(param.body, runVariables)
+
+            val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
+            val receivers = getReceivers(receiversStr)
             // 企业微信通知是否加上详情
             val bodyStr = if (sendDetailFlag) {
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_COMPUTER_VIEW_DETAILS,//{0}\n\n电脑查看详情：{1}\n手机查看详情：{2}
-                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    language = I18nUtil.getLanguage(receivers.last()),
                     params = arrayOf(bodyStrOrigin, detailUrl, detailOuterUrl)
                 )
             } else {
@@ -175,7 +178,6 @@ class RtxTaskAtom @Autowired constructor(
                 title = titleStr
             }
 
-            val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
             buildLogPrinter.addLine(
                 buildId = buildId,
                 message = MessageUtil.getMessageByLocale(
@@ -188,7 +190,7 @@ class RtxTaskAtom @Autowired constructor(
                 executeCount = task.executeCount ?: 1
             )
 
-            message.addAllReceivers(getReceivers(receiversStr))
+            message.addAllReceivers(receivers)
             client.get(ServiceNotifyResource::class).sendRtxNotify(message)
 
             // 发送企业微信群消息

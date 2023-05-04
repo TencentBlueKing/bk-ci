@@ -465,13 +465,16 @@ class DevCloudBuildListener @Autowired constructor(
 
             logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                             "start container, taskId:($devCloudTaskId)")
-            printLogs(this, MessageUtil.getMessageByLocale(
+            printLogs(
+                this,
+                MessageUtil.getMessageByLocale(
                 messageCode = BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY,
                 language = I18nUtil.getDefaultLocaleLanguage()
             ) + "，containerName: $containerName " + MessageUtil.getMessageByLocale(
                 messageCode = BK_WAITING_MACHINE_START,
                 language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+                )
+            )
             buildContainerPoolNoDao.setDevCloudBuildLastContainer(
                 dslContext = dslContext,
                 buildId = buildId,

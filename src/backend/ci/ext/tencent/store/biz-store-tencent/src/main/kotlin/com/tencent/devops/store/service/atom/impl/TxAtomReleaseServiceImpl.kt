@@ -27,7 +27,39 @@
 
 package com.tencent.devops.store.service.atom.impl
 
-import com.tencent.devops.common.api.constant.*
+import com.tencent.devops.common.api.constant.APPROVE
+import com.tencent.devops.common.api.constant.BEGIN
+import com.tencent.devops.common.api.constant.BUILD
+import com.tencent.devops.common.api.constant.CODECC
+import com.tencent.devops.common.api.constant.COMMIT
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DOING
+import com.tencent.devops.common.api.constant.END
+import com.tencent.devops.common.api.constant.FAIL
+import com.tencent.devops.common.api.constant.HTTP_404
+import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.KEY_BRANCH
+import com.tencent.devops.common.api.constant.KEY_COMMIT_ID
+import com.tencent.devops.common.api.constant.KEY_INVALID_OS_INFO
+import com.tencent.devops.common.api.constant.KEY_OS_ARCH
+import com.tencent.devops.common.api.constant.KEY_OS_NAME
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_ARCH_FLAG
+import com.tencent.devops.common.api.constant.KEY_VALID_OS_NAME_FLAG
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.constant.MASTER
+import com.tencent.devops.common.api.constant.NUM_FIVE
+import com.tencent.devops.common.api.constant.NUM_FOUR
+import com.tencent.devops.common.api.constant.NUM_ONE
+import com.tencent.devops.common.api.constant.NUM_SEVEN
+import com.tencent.devops.common.api.constant.NUM_SIX
+import com.tencent.devops.common.api.constant.NUM_THREE
+import com.tencent.devops.common.api.constant.NUM_TWO
+import com.tencent.devops.common.api.constant.SUCCESS
+import com.tencent.devops.common.api.constant.TEST
+import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -79,7 +111,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
-import java.util.Date
+import java.util.*
 import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
@@ -532,37 +564,24 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean, codeccFlag: Boolean?): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = BEGIN,
-            language = I18nUtil.getDefaultLocaleLanguage()), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = COMMIT,
-            language = I18nUtil.getDefaultLocaleLanguage()), COMMIT, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = BUILD,
-            language = I18nUtil.getDefaultLocaleLanguage()), BUILD, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-            messageCode = TEST,
-            language = I18nUtil.getDefaultLocaleLanguage()), TEST, NUM_FOUR, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = BUILD), BUILD, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = TEST), TEST, NUM_FOUR, UNDO))
         val flag = codeccFlag == null || !codeccFlag
         if (!flag) {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = CODECC,
-                language = I18nUtil.getDefaultLocaleLanguage()), CODECC, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = CODECC), CODECC, NUM_FIVE, UNDO))
         }
         if (isNormalUpgrade) {
             val endStep = if (flag) NUM_FIVE else NUM_SIX
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = END,
-                language = I18nUtil.getDefaultLocaleLanguage()), END, endStep, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, endStep, UNDO))
         } else {
             val approveStep = if (flag) NUM_FIVE else NUM_SIX
             val endStep = if (flag) NUM_SIX else NUM_SEVEN
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(
-                messageCode = APPROVE,
-                language = I18nUtil.getDefaultLocaleLanguage()), APPROVE, approveStep, UNDO))
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END,
-                language = I18nUtil.getDefaultLocaleLanguage()), END, endStep, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, approveStep, UNDO)
+            )
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, endStep, UNDO))
         }
         return processInfo
     }

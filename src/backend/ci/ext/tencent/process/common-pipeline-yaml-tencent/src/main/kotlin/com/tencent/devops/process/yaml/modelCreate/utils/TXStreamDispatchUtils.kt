@@ -269,7 +269,7 @@ object TXStreamDispatchUtils {
             throw CustomException(Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
                     messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
-                    language = I18nUtil.getDefaultLocaleLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ))
         }
     }

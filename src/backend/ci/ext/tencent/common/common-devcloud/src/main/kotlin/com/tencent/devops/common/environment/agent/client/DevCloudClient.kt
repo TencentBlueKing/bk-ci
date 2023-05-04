@@ -482,8 +482,7 @@ class DevCloudClient {
                                 formatErrorMessage =
                                 I18nUtil.getCodeLanMessage(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage()),
                                 errorMessage = I18nUtil.getCodeLanMessage(
-                                    messageCode = TASK_STATUS_INTERFACE_EXCEPTION,
-                                    language = I18nUtil.getDefaultLocaleLanguage()
+                                    messageCode = TASK_STATUS_INTERFACE_EXCEPTION
                                 ) + "：http response code: ${response.code}"
                             )
                         }

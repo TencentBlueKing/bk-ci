@@ -745,7 +745,7 @@ class TXPipelineService @Autowired constructor(
                 messageCode = BK_NOT_EXIST_UNDER_NEW_BUSINESS,
                 params = arrayOf(
                     BuildType.THIRD_PARTY_AGENT_ENV.getI18n(
-                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     dispatchType.value
                 )
@@ -813,7 +813,7 @@ class TXPipelineService @Autowired constructor(
                 messageCode = BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS,
                 params = arrayOf(
                     BuildType.THIRD_PARTY_AGENT_ID.getI18n(
-                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ),
                     dispatchType.value
                 )
@@ -878,7 +878,7 @@ class TXPipelineService @Autowired constructor(
                 messageCode = BK_ONLY_VISIBLE_PCG_BUSINESS,
                 params = arrayOf(
                     BuildType.THIRD_PARTY_PCG.getI18n(
-                        I18nUtil.getRequestUserId() ?: I18nUtil.getDefaultLocaleLanguage()
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             ))
