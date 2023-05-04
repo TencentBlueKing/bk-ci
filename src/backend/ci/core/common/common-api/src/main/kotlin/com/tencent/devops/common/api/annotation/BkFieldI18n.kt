@@ -30,7 +30,7 @@ package com.tencent.devops.common.api.annotation
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
-@Target(AnnotationTarget.FIELD, AnnotationTarget.PROPERTY, AnnotationTarget.VALUE_PARAMETER)
+@Target(AnnotationTarget.FIELD)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class BkFieldI18n(
     val source: I18nSourceEnum = I18nSourceEnum.PROPERTIES, // 翻译信息来源（默认来源于资源文件）
