@@ -59,7 +59,7 @@ enum class NodeStatus(
                     return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${it.name}")
                 }
             }
-            return UNKNOWN.statusName
+            return return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${UNKNOWN.name}")
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
