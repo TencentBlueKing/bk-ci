@@ -83,7 +83,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
