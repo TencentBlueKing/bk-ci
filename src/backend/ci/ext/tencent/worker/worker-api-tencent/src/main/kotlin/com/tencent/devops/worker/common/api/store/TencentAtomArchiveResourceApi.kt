@@ -39,7 +39,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
@@ -48,23 +47,23 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUG_FILES
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_ADD_INFORMATION
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_PLUG
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ARCHIVE_PLUG_FILES
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_ADD_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_PLUG
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
-import java.io.File
 
 @ApiPriority(priority = 9)
 class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
@@ -100,7 +99,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_PLUG,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -124,8 +123,9 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_UPDATE_PLUG,
-                language = I18nUtil.getDefaultLocaleLanguage()
-            ))
+                language = AgentEnv.getLocaleLanguage()
+            )
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -139,7 +139,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_SENSITIVE_INFORMATION,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -158,7 +158,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -177,7 +177,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_ADD_INFORMATION,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ))
         return objectMapper.readValue(responseContent)
     }
@@ -209,7 +209,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ARCHIVE_PLUG_FILES,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ) + " >>> ${file.name}")
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(

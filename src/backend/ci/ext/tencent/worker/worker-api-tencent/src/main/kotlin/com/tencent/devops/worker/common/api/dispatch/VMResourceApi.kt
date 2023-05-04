@@ -30,10 +30,10 @@ package com.tencent.devops.worker.common.api.dispatch
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.VM
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_BUILDER_INFORMATION
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_BUILDER_INFORMATION
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class VMResourceApi : AbstractBuildResourceApi() {
 
@@ -44,7 +44,7 @@ class VMResourceApi : AbstractBuildResourceApi() {
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_FAILED_GET_BUILDER_INFORMATION,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ))
         return objectMapper.readValue(response)
     }

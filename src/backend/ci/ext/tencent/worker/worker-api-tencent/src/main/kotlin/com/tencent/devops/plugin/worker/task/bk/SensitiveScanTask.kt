@@ -33,16 +33,16 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.element.SensitiveScanElement
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_SENSITIVE_INFORMATION
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_CANNING_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_SENSITIVE_INFORMATION
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -111,8 +111,8 @@ class SensitiveScanTask : ITask() {
         logger.info("Start to scan the sensitive information.excludePath: $excludePath")
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
-            messageCode = BK_CANNING_SENSITIVE_INFORMATION,
-            language = I18nUtil.getDefaultLocaleLanguage()
+                messageCode = BK_CANNING_SENSITIVE_INFORMATION,
+                language = AgentEnv.getLocaleLanguage()
         ) + "：$excludePath")
 
         command.execute(buildId, script, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
@@ -121,7 +121,7 @@ class SensitiveScanTask : ITask() {
         val indexFileParam = "detect_ssd.html"
         val reportNameParam = MessageUtil.getMessageByLocale(
             messageCode = BK_SENSITIVE_INFORMATION,
-            language = I18nUtil.getDefaultLocaleLanguage()
+            language = AgentEnv.getLocaleLanguage()
         )
 
         val fileDir = getFile(workspace, fileDirParam)
@@ -129,7 +129,7 @@ class SensitiveScanTask : ITask() {
             throw TaskExecuteException(
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = FOLDER_NOT_EXIST,
-                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    language = AgentEnv.getLocaleLanguage(),
                     params = arrayOf(fileDirParam)
                 ),
                 errorType = ErrorType.USER,
@@ -142,7 +142,7 @@ class SensitiveScanTask : ITask() {
             LoggerService.addNormalLine(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_NO_SENSITIVE_INFORMATION,
-                    language = I18nUtil.getDefaultLocaleLanguage()
+                    language = AgentEnv.getLocaleLanguage()
                 )
             )
             return

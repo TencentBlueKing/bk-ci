@@ -37,10 +37,11 @@ import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_CERTIFICATE_ID_EMPTY
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_RELATIVE_PATH_KEYSTORE
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -62,8 +63,9 @@ class AndroidCertInstallTask : ITask() {
 
         if (certId.isBlank()) {
             throw TaskExecuteException(
-                errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = BK_CERTIFICATE_ID_EMPTY
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_CERTIFICATE_ID_EMPTY,
+                    language = AgentEnv.getLocaleLanguage()
                 ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD
@@ -73,10 +75,10 @@ class AndroidCertInstallTask : ITask() {
         val filename = "${destPath.removeSuffix("/")}/$certId.keystore"
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
-            messageCode = BK_RELATIVE_PATH_KEYSTORE,
-            language = I18nUtil.getDefaultLocaleLanguage()
-        ) + "：$filename")
-
+                messageCode = BK_RELATIVE_PATH_KEYSTORE,
+                language = AgentEnv.getLocaleLanguage()
+            ) + "：$filename"
+        )
         val pairKey = DHUtil.initKey()
         val privateKey = pairKey.privateKey
         val publicKey = String(Base64.getEncoder().encode(pairKey.publicKey))
@@ -91,7 +93,7 @@ class AndroidCertInstallTask : ITask() {
         LoggerService.addNormalLine(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_KEYSTORE_INSTALLED_SUCCESSFULLY,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             )
         )
     }

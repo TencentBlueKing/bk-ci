@@ -29,15 +29,14 @@ package com.tencent.devops.plugin.worker.api.sgin
 
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ENTERPRISE_SIGNATURE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ENTERPRISE_SIGNATURE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import java.io.File
 
 /**
  * deng
@@ -61,7 +60,7 @@ class IOSSignApi : AbstractBuildResourceApi() {
             request,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ENTERPRISE_SIGNATURE_FAILED,
-                language = I18nUtil.getDefaultLocaleLanguage()
+                language = AgentEnv.getLocaleLanguage()
             ), 100, timeout * 60, timeout * 60)
         LoggerService.addErrorLine("response:$response")
         if (response.trim() != "success") {
