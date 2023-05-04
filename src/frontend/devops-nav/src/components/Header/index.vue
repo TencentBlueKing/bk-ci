@@ -27,7 +27,7 @@
                     :list="selectProjectList"
                     id-key="projectCode"
                     display-key="projectName"
-                    :popover-width="345"
+                    :popover-width="250"
                 >
                     <bk-option
                         v-for="item in selectProjectList"
@@ -35,6 +35,26 @@
                         :id="item.projectCode"
                         :name="item.projectName"
                     >
+                        <template>
+                            <div
+                                class="option-item">
+                                <div class="project-name">
+                                    {{ item.projectName }}
+                                </div>
+                                <span
+                                    v-if="item.showUserManageIcon"
+                                    :class="{
+                                        'user-manaeg-icon': true,
+                                        'is-selected': projectId === item.projectCode,
+                                        'is-disabled': !item.managePermission
+                                    }"
+                                    v-bk-tooltips="$t('userManage')"
+                                    @click.stop.prevent="goToUserManage(item)">
+                                    <img v-if="item.managePermission" src="../../assets/scss/logo/user-manage.svg" alt="">
+                                    <img v-else src="../../assets/scss/logo/user-manage-disabled.svg" alt="">
+                                </span>
+                            </div>
+                        </template>
                     </bk-option>
                     <template slot="extension">
                         <div class="extension-wrapper">
@@ -52,14 +72,6 @@
                             >
                                 <icon name="icon-apply" size="14" class="mr5" />
                                 <span class="text">{{ $t('joinProject') }}</span>
-                            </span>
-                            <span class="extension-line" />
-                            <span
-                                class="bk-selector-create-item"
-                                @click.stop.prevent="goToPm"
-                            >
-                                <i class="devops-icon icon-apps mr5" />
-                                <span class="text">{{ $t('manageProject') }}</span>
                             </span>
                         </div>
                     </template>
@@ -230,6 +242,12 @@
             }
         }
 
+        goToUserManage (payload): void {
+            if (payload.managePermission) {
+                this.to(`/console/manage/${payload.projectCode}/group`)
+            }
+        }
+
         goHomeById (projectId: string, reload: boolean = false): void {
             const hasProjectId = this.currentPage.show_project_list
             let path = urlJoin('/console', this.currentPage.link_new)
@@ -352,14 +370,14 @@
                     color: white !important;
                     box-shadow: none;
                 }
-                .bk-select-angle {
+                ::v-deep .bk-select-angle {
                     color: white;
                     top: 7px;
                 }
-                .bk-tooltip-ref {
+                ::v-deep .bk-tooltip-ref {
                     outline: none;
                 }
-                .bk-select-dropdown .bk-select-name {
+                ::v-deep .bk-select-dropdown .bk-select-name {
                     color: $fontLigtherColor;
                     height: 36px;
                     line-height: 36px;
@@ -367,7 +385,6 @@
                     outline: none;
                 }
             }
-
             .service-title {
                 display: flex;
                 align-items: center;
@@ -422,6 +439,40 @@
             > .user-info {
                 margin: 0 10px;
             }
+        }
+    }
+
+    .option-item {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        &:hover {
+            .user-manaeg-icon {
+                display: block !important;
+            }
+            .is-selected {
+                display: block !important;
+            }
+        }
+        .project-name {
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .user-manaeg-icon {
+            width: 20px;
+            display: none;
+            cursor: pointer;
+            position: relative;
+            top: 5px;
+        }
+        
+        .is-selected {
+            display: block;
+        }
+        .is-disabled {
+            cursor: not-allowed;
         }
     }
     .bk-selector-create-item{

@@ -39,6 +39,7 @@ const timeFilters = ref({
 const formRef = ref();
 const isLoading = ref(false);
 const scrollLoading = ref(false);
+const selectVueKey = ref('');
 const pageInfo = ref({
   page: 1,
   pageSize: 30,
@@ -69,9 +70,6 @@ const rules = {
 watch(() => formData.value.projectCode, (val) => {
   groupList.value = [];
   curProject.value = projectList.value.find(i => i.englishName === val)
-  if (curProject.value) {
-    isDisabled.value = !curProject.value.permission
-  }
 }, {
   deep: true,
 })
@@ -196,11 +194,9 @@ const getProjectByName = async () => {
   };
   await http.getAllProjectList(params).then(res => {
     if (res.records.length) {
-      res.records.forEach(i => {
-        i.hide = true;
-      });
       projectList.value = [...res.records, ...projectList.value];
       curProject.value = res.records[0];
+      selectVueKey.value = curProject.value.englishName
       isDisabled.value = curProject.value.permission;
     } else {
       formData.value.projectCode = ''
@@ -252,6 +248,7 @@ onMounted(async () => {
               :scroll-loading="scrollLoading"
               @scroll-end="getAllProjectList"
               :remote-method="handleSearchProject"
+              :key="selectVueKey"
             >
               <div v-for="(project, index) in projectList"
                 :key="index">
