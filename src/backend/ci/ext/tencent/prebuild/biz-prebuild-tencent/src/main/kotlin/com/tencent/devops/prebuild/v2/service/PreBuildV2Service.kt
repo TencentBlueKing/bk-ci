@@ -156,6 +156,7 @@ class PreBuildV2Service @Autowired constructor(
         val modelCreateEvent = ModelCreateEvent(
             userId = userId,
             projectCode = projectId,
+            elementInstallUserId = userId,
             pipelineInfo = PipelineInfo(pipelineId),
             preCIData = preCIData,
             gitData = null,
