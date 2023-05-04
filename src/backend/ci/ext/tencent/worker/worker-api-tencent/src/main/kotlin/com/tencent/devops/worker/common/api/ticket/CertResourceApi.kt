@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.pojo.CertAndroid
 import com.tencent.devops.ticket.pojo.CertIOS
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_ANDROID_CERTIFICATE
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_IOS_CERTIFICATE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_ANDROID_CERTIFICATE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_IOS_CERTIFICATE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class CertResourceApi : AbstractBuildResourceApi() {

@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.VM
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_GET_BUILDER_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_BUILDER_INFORMATION
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class VMResourceApi : AbstractBuildResourceApi() {

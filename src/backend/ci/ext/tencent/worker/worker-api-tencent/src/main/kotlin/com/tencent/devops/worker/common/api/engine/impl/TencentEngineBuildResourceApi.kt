@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_GET_WORKER_BEE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_GET_WORKER_BEE
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv

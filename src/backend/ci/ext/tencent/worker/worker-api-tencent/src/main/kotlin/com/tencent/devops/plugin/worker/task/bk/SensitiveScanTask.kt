@@ -37,24 +37,24 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_CANNING_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_NO_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_SENSITIVE_INFORMATION
-import com.tencent.devops.worker.common.WorkerMessageCode.FOLDER_NOT_EXIST
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_SENSITIVE_INFORMATION
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.report.ReportSDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_CANNING_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.FOLDER_NOT_EXIST
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
 import com.tencent.devops.worker.common.utils.BkRepoUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.eclipse.jgit.api.Git
-import org.eclipse.jgit.lib.TextProgressMonitor
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.Writer
 import java.nio.file.Paths
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.lib.TextProgressMonitor
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务

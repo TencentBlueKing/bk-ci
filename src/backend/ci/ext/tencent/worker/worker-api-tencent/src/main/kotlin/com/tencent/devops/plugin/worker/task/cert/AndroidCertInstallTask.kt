@@ -37,10 +37,10 @@ import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_RELATIVE_PATH_KEYSTORE
-import com.tencent.devops.worker.common.WorkerMessageCode.CERTIFICATE_ID_EMPTY
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_CERTIFICATE_ID_EMPTY
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -63,7 +63,7 @@ class AndroidCertInstallTask : ITask() {
         if (certId.isBlank()) {
             throw TaskExecuteException(
                 errorMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = CERTIFICATE_ID_EMPTY
+                    messageCode = BK_CERTIFICATE_ID_EMPTY
                 ),
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD

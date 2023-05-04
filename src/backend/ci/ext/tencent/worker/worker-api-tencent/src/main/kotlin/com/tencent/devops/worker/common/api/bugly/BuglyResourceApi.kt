@@ -30,7 +30,7 @@ package com.tencent.devops.worker.common.api.bugly
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.worker.common.WorkerMessageCode.BK_FAILED_UPLOAD_BUGLY_FILE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPLOAD_BUGLY_FILE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import java.io.File
 import java.net.URLEncoder
