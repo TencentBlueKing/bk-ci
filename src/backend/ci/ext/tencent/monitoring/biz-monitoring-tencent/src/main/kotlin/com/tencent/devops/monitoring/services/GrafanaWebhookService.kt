@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_MONITORING_OBJEC
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_MONITORING_OBJECT
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_SEND_MONITORING_MESSAGES
 import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_WARNING_MESSAGE_FROM_GRAFANA
 import com.tencent.devops.monitoring.pojo.GrafanaMessage
@@ -103,7 +103,7 @@ class GrafanaWebhookService @Autowired constructor(
                     val metricName = it.metric
                     val metricValue = it.value
                     notifyMessage["data"] += I18nUtil.getCodeLanMessage(
-                        messageCode = BK_MONITORING_OBJEC,
+                        messageCode = BK_MONITORING_OBJECT,
                         params = arrayOf(metricName, metricValue)
                     )
                     busiDataList.add(NocNoticeBusData(metricName, metricValue))
