@@ -78,6 +78,17 @@ object ArtifactoryMessageCode {
     const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102037" // 不能将父目录移动到子目录
     const val METADATA_NOT_EXIST = "2102038" // 元数据({0})不存在
     const val BUILD_NOT_EXIST = "2102039" // 构建不存在({0})
+
+    // PUSH
+    const val FUSH_FILE_VALIDATE_FAIL = "2102041" // 用户无操作下载权限
+    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102042" // 目标机器不能为空
+    const val ENV_NAME_MACHINE_NOT_EXITS = "2102043" // 输入环境名不存在{0},请导入机器至项目
+    const val ENV_MACHINE_NOT_AUTH = "2102044" // 用户没有操作这些环境的权限！环境ID{0}
+    const val NODE_NAME_MACHINE_NOT_EXITS = "2102045" // 输入节点名不存在{0},请导入机器至项目
+    const val FILE_NOT_EXITS = "2102046" // 未匹配到文件{0}
+    const val GET_FILE_FAIL = "2102047" // 构建分发获取文件失败
+    const val JOB_EXECUTE_FAIL = "2102048" // JOB执行失败,msg{0}
+
     const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" // 用户({0})在工程({1})下没有流水线{2}权限
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
     const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"

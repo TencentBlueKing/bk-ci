@@ -28,8 +28,6 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.util.MessageUtil
 
 /**
@@ -37,11 +35,6 @@ import com.tencent.devops.common.api.util.MessageUtil
  */
 enum class DefaultGroupType(
     val value: String,
-    @BkFieldI18n(
-        translateType = I18nTranslateTypeEnum.VALUE,
-        keyPrefixName = "DEFAULT_GROUP_TYPE",
-        reusePrefixFlag = false
-    )
     val displayName: String
 ) {
     MANAGER("manager", "CI管理员"), // CI管理员
@@ -86,7 +79,7 @@ enum class DefaultGroupType(
 
         fun DefaultGroupType.getDisplayName(language: String): String {
             return MessageUtil.getMessageByLocale(
-                messageCode = "DEFAULT_GROUP_TYPE." + this.name,
+                messageCode = "DEFAULT_GROUP_TYPE_" + this.name,
                 language = language
             )
         }

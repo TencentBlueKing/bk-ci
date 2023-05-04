@@ -46,7 +46,6 @@ package com.tencent.devops.artifactory.constant
  *
  */
 object PushMessageCode {
-    // 2102901起
     const val FUSH_FILE_VALIDATE_FAIL = "2102041" // 用户无操作下载权限
     const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102042" // 目标机器不能为空
     const val ENV_NAME_MACHINE_NOT_EXITS = "2102043" // 输入环境名不存在{0},请导入机器至项目
