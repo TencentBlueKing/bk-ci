@@ -133,10 +133,10 @@
 </template>
 
 <script>
-    import empty from '@/components/common/empty'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import Selector from '@/components/atomFormField/Selector'
+    import empty from '@/components/common/empty'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
 

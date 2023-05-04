@@ -64,7 +64,8 @@ class PreBuildAgentMgrService @Autowired constructor(
         projectId: String,
         os: OS,
         zoneName: String?,
-        initIp: String?
+        initIp: String?,
+        nodeStingId: String?
     ): ThirdPartyAgentStaticInfo {
         val gateway = slaveGatewayService.getGateway(zoneName)?.removePrefix("http://")
         val secretKey = generateSecretKey()
@@ -86,13 +87,13 @@ class PreBuildAgentMgrService @Autowired constructor(
                 userId = userId
             )
 
-            val nodeStringId = "BUILD_${HashUtil.encodeLongId(nodeId)}_$initIp"
-            logger.info("nodeStringId: $nodeStringId")
+            val realNodeStringId = nodeStingId ?: "BUILD_${HashUtil.encodeLongId(nodeId)}_$initIp"
+            logger.info("nodeStringId: $realNodeStringId")
             nodeDao.insertNodeStringIdAndDisplayName(
                 dslContext = context,
                 id = nodeId,
-                nodeStringId = nodeStringId,
-                displayName = nodeStringId,
+                nodeStringId = realNodeStringId,
+                displayName = realNodeStringId,
                 userId = userId
             )
 
@@ -131,7 +132,7 @@ class PreBuildAgentMgrService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 nodeId = nodeId,
-                nodeName = "$nodeStringId(${agentRecord.ip})"
+                nodeName = "$realNodeStringId(${agentRecord.ip})"
             )
         }
         return result!!

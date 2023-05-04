@@ -1705,8 +1705,16 @@ class GitService @Autowired constructor(
                     throw IllegalArgumentException("Git Token为空")
                 }
                 gitOauthApi.addCommitCheck(
-                    "$gitCIUrl/api/v3",
-                    token!!, projectName, commitId, state, targetUrl, context, description, block
+                    host = "$gitCIUrl/api/v3",
+                    token = token!!,
+                    projectName = projectName,
+                    commitId = commitId,
+                    state = state,
+                    detailUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block,
+                    targetBranch = request.targetBranch
                 )
             }
         } catch (e: ScmException) {

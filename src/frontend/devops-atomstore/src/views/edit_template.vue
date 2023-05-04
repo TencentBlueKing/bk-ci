@@ -155,8 +155,8 @@
 </template>
 
 <script>
-    import selectLogo from '@/components/common/selectLogo'
     import breadCrumbs from '@/components/bread-crumbs.vue'
+    import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
 
     export default {

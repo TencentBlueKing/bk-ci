@@ -266,11 +266,11 @@
 </template>
 
 <script>
+    import api from '@/api'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+    import bkFileUpload from '@/components/common/file-upload'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
-    import api from '@/api'
     
     export default {
         components: {

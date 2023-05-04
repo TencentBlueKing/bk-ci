@@ -91,6 +91,11 @@
             <button class="detail-install" @click="goToInstall" v-else> {{ $t('store.安装') }} </button>
 
             <section class="click-area">
+                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic, 'click-button': true }" v-if="!isEnterprise">
+                    <icon class="detail-img mr4" name="gray-git-code" size="14" />
+                    <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
+                </h5>
+                <span class="gap"></span>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }, 'click-button']" @click="cooperation">
                         <icon class="detail-img mr4" name="cooperation" size="16" />
@@ -548,6 +553,20 @@
                 cursor: auto;
                 background: none;
                 color: #9e9e9e;
+            }
+        }
+        .gap {
+            display: inline-block;
+            flex: 1;
+            position: relative;
+            height: 16px;
+            &:before {
+                content: '';
+                position: absolute;
+                background: #dcdee5;
+                height: 16px;
+                width: 1px;
+                right: 50%;
             }
         }
         .mr4 {

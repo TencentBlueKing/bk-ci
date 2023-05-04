@@ -6,6 +6,7 @@
     "@commitlint/config-conventional": "^16.2.4",
     "@typescript-eslint/parser": "^1.9.0",
     "chalk": "^4.0.0",
+    "cross-env": "^7.0.3",
     "del": "6.1.1",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
@@ -45,10 +46,14 @@
       "devops-atomstore",
       "devops-ticket",
       "devops-pipeline",
+      "devops-experience",
       "devops-quality",
       "devops-nav",
       "devops-turbo",
-      "bk-pipeline"
+      "devops-vs",
+      "bk-pipeline",
+      "devops-stream",
+      "devops-metrics"
     ],
     "nohoist": [
       "bkui-pipeline",
@@ -63,7 +68,6 @@
     "@webpack-cli/serve": "^1.7.0",
     "babel-plugin-istanbul": "6.1.1",
     "core-js": "3.26.0",
-    "cross-env": "^7.0.3",
     "css-loader": "6.0.0",
     "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",

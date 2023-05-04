@@ -125,6 +125,9 @@
                 }
             })
         },
+        beforeDestroy () {
+            this.editor?.dispose?.()
+        },
         methods: {
             getLang (lang) {
                 const langMap = {

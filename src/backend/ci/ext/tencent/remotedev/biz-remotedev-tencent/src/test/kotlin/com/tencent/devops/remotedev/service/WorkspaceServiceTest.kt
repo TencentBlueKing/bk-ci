@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
@@ -15,6 +16,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import io.mockk.every
@@ -41,6 +43,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val webSocketDispatcher: WebSocketDispatcher = mockk()
     private val remoteDevBillingDao: RemoteDevBillingDao = mockk()
     private val commonService: CommonService = mockk()
+    private val profile: Profile = mockk()
+    private val redisCache: RedisCacheService = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -58,7 +62,9 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             webSocketDispatcher = webSocketDispatcher,
             redisHeartBeat = redisHeartBeat,
             remoteDevBillingDao = remoteDevBillingDao,
-            commonService = commonService
+            commonService = commonService,
+            redisCache = redisCache,
+            profile = profile
         ),
         recordPrivateCalls = true
     )
