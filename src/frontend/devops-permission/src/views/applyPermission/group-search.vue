@@ -8,7 +8,6 @@ import {
   h,
   ref,
   watch,
-  onMounted,
   computed,
   resolveDirective,
   withDirectives,
@@ -117,6 +116,11 @@ watch(() => props.groupList, () => {
   immediate: true,
   deep: true,
 });
+
+watch(() => props.curProject, (val) => {
+  const resourceType = route.query?.resourceType || '';
+  if (val && !resourceType) fetchGroupList();
+})
 
 watch(() => userGroupList.value, () => {
   const query = JSON.parse(sessionStorage.getItem('group-apply-query'));

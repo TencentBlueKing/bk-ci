@@ -70,9 +70,6 @@ const rules = {
 watch(() => formData.value.projectCode, (val) => {
   groupList.value = [];
   curProject.value = projectList.value.find(i => i.englishName === val)
-  if (curProject.value) {
-    isDisabled.value = !curProject.value.permission
-  }
 }, {
   deep: true,
 })
