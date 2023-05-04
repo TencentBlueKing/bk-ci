@@ -28,7 +28,8 @@
 package com.tencent.devops.artifactory.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXITS
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_FILE_FAIL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -81,7 +82,7 @@ class FileServiceExt @Autowired constructor(
         if (count == 0) {
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                messageCode = PushMessageCode.FILE_NOT_EXITS,
+                messageCode = FILE_NOT_EXITS,
                 params = arrayOf(fileName),
                 language = I18nUtil.getLanguage(userId)
                 )
@@ -137,7 +138,7 @@ class FileServiceExt @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn("get jfrog files($url) fail:\n $responseBody")
                 throw RuntimeException(
-                    I18nUtil.getCodeLanMessage(messageCode = PushMessageCode.GET_FILE_FAIL)
+                    I18nUtil.getCodeLanMessage(messageCode = GET_FILE_FAIL)
                 )
             }
             try {
@@ -145,7 +146,7 @@ class FileServiceExt @Autowired constructor(
             } catch (e: Exception) {
                 logger.warn("get jfrog files($url) fail\n$responseBody")
                 throw RuntimeException(
-                    I18nUtil.getCodeLanMessage(messageCode = PushMessageCode.GET_FILE_FAIL)
+                    I18nUtil.getCodeLanMessage(messageCode = GET_FILE_FAIL)
                 )
             }
         }
