@@ -79,7 +79,7 @@ enum class DefaultGroupType(
 
         fun DefaultGroupType.getDisplayName(language: String): String {
             return MessageUtil.getMessageByLocale(
-                messageCode = "DEFAULT_GROUP_TYPE." + this.name,
+                messageCode = "DEFAULT_GROUP_TYPE_" + this.name,
                 language = language
             )
         }
