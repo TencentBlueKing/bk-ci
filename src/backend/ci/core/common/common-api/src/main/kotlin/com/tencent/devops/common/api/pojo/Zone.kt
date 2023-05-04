@@ -27,14 +27,10 @@
 
 package com.tencent.devops.common.api.pojo
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-
 /**
  * 构建机地域
  */
 enum class Zone(
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "zone", reusePrefixFlag = false)
     name: String
 ) {
     DEFAULT("default"), // 默认
