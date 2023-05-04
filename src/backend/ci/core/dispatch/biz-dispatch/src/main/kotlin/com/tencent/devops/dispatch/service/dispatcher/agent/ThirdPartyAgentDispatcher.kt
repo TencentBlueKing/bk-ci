@@ -368,8 +368,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     e.errorMessage
                 } else {
                     e.message ?: (
-                            I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_VM_ERROR.errorCode}")
-                                    + "(${dispatchType.envName})"
+                            I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_VM_ERROR.errorCode}") +
+                                    "(${dispatchType.envName})"
                             )
                 }
             )

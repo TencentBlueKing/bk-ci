@@ -28,7 +28,6 @@
 package com.tencent.devops.buildless.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.web.utils.I18nUtil
 
