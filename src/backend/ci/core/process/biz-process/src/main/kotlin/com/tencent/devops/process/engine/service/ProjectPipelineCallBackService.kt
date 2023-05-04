@@ -43,6 +43,8 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -80,7 +82,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService
+    private val pipelinePermissionService: PipelinePermissionService,
+    private val redisOperation: RedisOperation,
 ) {
 
     companion object {
@@ -227,7 +230,13 @@ class ProjectPipelineCallBackService @Autowired constructor(
     fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack): Boolean {
         // 是否通知到位
         var notifySuccess = true
+        val redisLock = RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "process.build.callback.notify.lock.${callBack.id}",
+            expiredTimeInSeconds = 10L
+        )
         try {
+            redisLock.lock()
             val callbackRecord = projectPipelineCallbackDao.get(
                 dslContext = dslContext,
                 projectId = callBack.projectId,
@@ -271,6 +280,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 "Failure to send disable notify message for " +
                         "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
             )
+        } finally {
+            redisLock.unlock()
         }
         return notifySuccess
     }
