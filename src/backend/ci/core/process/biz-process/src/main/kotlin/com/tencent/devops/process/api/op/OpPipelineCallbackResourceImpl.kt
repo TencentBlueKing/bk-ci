@@ -41,7 +41,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
     private val projectPipelineCallBackService: ProjectPipelineCallBackService
 ) : OpPipelineCallbackResource {
 
-    override fun sendDisableNotify(projectId: String?) {
+    override fun sendDisableNotify() {
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -54,7 +54,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         threadPoolExecutor.submit {
             logger.info("OpPipelineCallbackResource:begin sendDisableNotify-----------")
             try {
-                batchSendDisableNotify(projectId)
+                batchSendDisableNotify()
             } catch (e: Exception) {
                 logger.warn("OpPipelineCallbackResource：sendDisableNotify failed | $e ")
             } finally {
@@ -63,18 +63,17 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         }
     }
 
-    fun batchSendDisableNotify(projectId: String?) {
+    fun batchSendDisableNotify() {
         val limit = 1000
         var offset = 0
         do {
             val enableCallbackList = projectPipelineCallBackService.getEnableCallbackList(
-                projectId = projectId,
                 limit = limit,
                 offset = offset
             )
             val pageSize = enableCallbackList.size
             enableCallbackList.forEach {
-                projectPipelineCallBackService.sendDisableNotifyMessage(callBack = it)
+                projectPipelineCallBackService.disable(it)
             }
             offset += limit
             // 一秒休眠时间

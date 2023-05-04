@@ -19,9 +19,5 @@ interface OpPipelineCallbackResource {
     @ApiOperation("发送接口禁用通知")
     @PUT
     @Path("/sendDisableNotify")
-    fun sendDisableNotify(
-        @ApiParam("蓝盾项目Id(项目英文名)", required = false)
-        @QueryParam("projectId")
-        projectId: String?
-    )
+    fun sendDisableNotify()
 }

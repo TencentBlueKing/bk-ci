@@ -290,13 +290,11 @@ class ProjectPipelineCallBackService @Autowired constructor(
      * 获取已被禁用的callback信息
      */
     fun getEnableCallbackList(
-        projectId: String?,
         offset: Int,
         limit: Int
     ): List<ProjectPipelineCallBack> {
         return projectPipelineCallbackDao.getDisableCallbackList(
             dslContext = dslContext,
-            projectId = projectId,
             limit = limit,
             offset = offset
         ).map {
