@@ -116,8 +116,27 @@ object WorkerMessageCode {
     const val ARCHIVE_ATOM_FILE_FAIL = "2130051" // 归档插件文件失败
     const val START_BUILD_IMAGE_NAME = "2130052" // 启动构建镜像，镜像名称：
 
+    const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" //证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
     const val BK_ARCHIVE_PLUGIN_FILE = "bkArchivePluginFile" // 归档插件文件
     const val BK_NO_FILES_TO_ARCHIVE = "bkNoFilesToArchive" // 脚本执行失败之后没有匹配到任何待归档文件
-    const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero" // 每行命令运行返回值非零时，继续执行脚本
+    // 每行命令运行返回值非零时，继续执行脚本
+    const val BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO = "bkCommandLineReturnValueNonZero"
+    const val BK_CANNING_SENSITIVE_INFORMATION = "bkCanningSensitiveInformation" //开始敏感信息扫描，待排除目录
+    const val BK_SENSITIVE_INFORMATION = "bkSensitiveInformation" //敏感信息扫描报告
+    const val BK_NO_SENSITIVE_INFORMATION = "bkNoSensitiveInformation" //无敏感信息，无需生成报告
+    const val BK_RELATIVE_PATH_KEYSTORE = "bkRelativePathKeystore" //keystore安装相对路径
+    const val BK_KEYSTORE_INSTALLED_SUCCESSFULLY = "bkKeystoreInstalledSuccessfully" //Keystore安装成功
+    const val BK_FAILED_UPLOAD_BUGLY_FILE = "bkFailedUploadBuglyFile" //上传bugly文件失败
+    const val BK_FAILED_GET_BUILDER_INFORMATION = "bkFailedGetBuilderInformation" //获取构建机基本信息失败
+    const val BK_FAILED_GET_WORKER_BEE = "bkFailedGetWorkerBee" //获取工蜂CI项目Token失败！
+    const val BK_FAILED_GET_PLUG = "bkFailedGetPlug" //获取插件执行环境信息失败
+    const val BK_FAILED_UPDATE_PLUG = "bkFailedUpdatePlug" //更新插件执行环境信息失败
+    const val BK_FAILED_SENSITIVE_INFORMATION = "bkFailedSensitiveInformation" //获取插件敏感信息失败
+    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = " " //获取插件开发语言相关的环境变量信息失败
+    const val BK_FAILED_ADD_INFORMATION = "bkFailedAddInformation" //添加插件对接平台信息失败
+    const val BK_ARCHIVE_PLUG_FILES = "bkArchivePlugFiles" //归档插件文件
+    const val BK_FAILED_IOS_CERTIFICATE = "bkFailedIosCertificate" //获取IOS证书失败
+    const val BK_FAILED_ANDROID_CERTIFICATE = "bkFailedAndroidCertificate" //获取Android证书失败
+    const val BK_ENTERPRISE_SIGNATURE_FAILED = "bkEnterpriseSignatureFailed" //企业签名失败
 }
