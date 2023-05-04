@@ -27,16 +27,17 @@
 
 package com.tencent.devops.common.pipeline.init
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.web.utils.I18nUtil
 
 class BuildTypeEnumModifier : EnumModifier {
 
     override fun modified() {
-        val language = I18nUtil.getDefaultLocaleLanguage()
+        val language = System.getProperty(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
