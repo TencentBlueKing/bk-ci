@@ -285,7 +285,7 @@ class AuthManagerApprovalService @Autowired constructor(
             message = MessageUtil.getMessageByLocale(
                 BK_WEWORK_ROBOT_NOTIFY_MESSAGE,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, authName, authDetail, expiredTime)
+                arrayOf(manager, authName, authDetail, expiredTime)
             ),
             attachments = WeworkMarkdownAttachment(
                 callbackId = "renewal",

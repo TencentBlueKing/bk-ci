@@ -54,6 +54,8 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_RESULT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_AUDIT_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OVERRULE
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_POLLING_WAIT_FOR_QUALITY_RESULT
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUALITY_CHECK_INTERCEPTED
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUALITY_CHECK_RESULT
@@ -593,7 +595,7 @@ class PipelineBuildQualityService(
                             buildId = buildId,
                             message = I18nUtil.getCodeLanMessage(
                                 messageCode = BK_AUDIT_RESULT,
-                                params = arrayOf("Continue", actionUser),
+                                params = arrayOf(I18nUtil.getCodeLanMessage(BK_CONTINUE), actionUser),
                                 language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,
@@ -607,7 +609,7 @@ class PipelineBuildQualityService(
                             buildId = buildId,
                             message = I18nUtil.getCodeLanMessage(
                                 messageCode = BK_AUDIT_RESULT,
-                                params = arrayOf("Overrule", actionUser),
+                                params = arrayOf(I18nUtil.getCodeLanMessage(BK_OVERRULE), actionUser),
                                 language = I18nUtil.getDefaultLocaleLanguage()
                             ),
                             tag = taskId,

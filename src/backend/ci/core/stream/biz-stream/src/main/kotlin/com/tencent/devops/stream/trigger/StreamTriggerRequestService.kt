@@ -232,10 +232,12 @@ class StreamTriggerRequestService @Autowired constructor(
         ) ?: throw StreamTriggerException(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
-            reasonParams = listOf(I18nUtil.getCodeLanMessage(
+            reasonParams = listOf(
+                I18nUtil.getCodeLanMessage(
                 messageCode = CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
                 params = arrayOf(action.data.setting.enableUser)
-            ))
+                )
+            )
         )
 
         action.data.context.defaultBranch = projectInfo.defaultBranch

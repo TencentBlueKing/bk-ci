@@ -110,7 +110,7 @@ class CodeGitRepositoryService @Autowired constructor(
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
                     messageCode = RepositoryMessageCode.GIT_INVALID,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

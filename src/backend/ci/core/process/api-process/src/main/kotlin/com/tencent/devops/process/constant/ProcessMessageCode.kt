@@ -65,24 +65,22 @@ object ProcessMessageCode {
     const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult" // 检测红线结果
     const val BK_AUDIT_TIMEOUT = "bkAuditTimeout" // 审核超时
     const val BK_AUDIT_RESULT = "bkAuditResult" // 步骤审核结束，审核结果：[{0}]，审核人：{1}
-    const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait"
-    // 正在处理当前上报的任务, 请稍等。。。
+    const val BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT = "bkProcessingCurrentReportedTaskPleaseWait" // 正在处理当前上报的任务, 请稍等。。。
     const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
-    const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether"
-    // <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
-    const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin"
-    // 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
+    const val BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER = "bkViewIdAndNameCannotBeEmptyTogether" // <viewId>和<viewName>不能同时为空, 填<viewName>时需同时填写参数<isProject>
+    const val BK_TRIGGERED_BY_GIT_EVENT_PLUGIN = "bkTriggeredByGitEventPlugin" // 因【Git事件触发】插件中，MR Request Hook勾选了【MR为同源同目标分支时，等待队列只保留最新触发的任务】配置，该次构建已被新触发的构建
     const val BK_BUILD_IN_REVIEW_STATUS = "bkBuildInReviewStatus" // 项目【{0}】下的流水线【{1}】#{2} 构建处于待审核状态
     const val BK_PROJECT_NO_PIPELINE = "bkProjectNoPipeline" // 项目下无流水线
     const val BK_NO_MATCHING_STARTED_PIPELINE = "bkNoMatchingStartedPipeline" // 未匹配到启用流水线
-    const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions"
-    // 用户（{0}) 没有流水线({1})的执行权限
+    const val BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS = "bkUserNoPipelineExecutePermissions" // 用户（{0}) 没有流水线({1})的执行权限
     const val BK_REMOTE_CALL_SOURCE_IP = "bkRemoteCallSourceIp" // 本次远程调用的来源IP是[$sourceIp]
     const val BK_OPERATE_PIPELINE_FAIL = "bkOperatePipelineFail" // {0}流水线失败
     const val BK_PIPELINE_NAME = "bkPipelineName" // 流水线名称
     const val BK_CREATOR = "bkCreator" // 创建人
     const val BK_TCLS_ENVIRONMENT_MESSAGE = "bkTclsEnvironmentMessage" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
     const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val BK_CONTINUE = "bkContinue" // 继续
+    const val BK_OVERRULE = "bkOverrule" // 驳回
 
     const val OK = 0
 
@@ -154,8 +152,7 @@ object ProcessMessageCode {
     const val ERROR_NORMAL_STAGE_JOB_CONDITION = "2101066" // 流水线: 普通stage下的[{0}]Job运行条件配置错误: {0}
     const val ERROR_EMPTY_JOB = "2101067" // 流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件
     const val ERROR_PIPELINE_MODEL_TOO_LARGE = "2101068" // 流水线: 流水线模型超限，阈值为[{0}]个字符，请联系发布者
-    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069"
-    // 流水线: 流水线下[{0}]的[{1}]数量超限，阈值为[{2}]个，请联系发布者
+    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069" // 流水线: 流水线下[{0}]的[{1}]数量超限，阈值为[{2}]个，请联系发布者
     const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值超限，阈值为[{2}]个字符，请联系发布者
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER = "2101072" // Stage[{0}]的审核组[{1}]没有未配置可执行人
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
@@ -170,10 +167,8 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
     const val ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD = "2101083" // 流水线版本还存在构建记录，不允许删除
     const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
-    const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085"
-    // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
-    const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086"
-    // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2101087" // {0} 中的step必须包含uses或run或checkout!
     const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2101088" // "{0} job.id 超过长度限制64 {1}}"
     const val ERROR_YAML_FORMAT_EXCEPTION = "2101089" // {0} 中 {1} 格式有误,应为 {2}, error message:${3}
@@ -181,15 +176,13 @@ object ProcessMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2101091" // 请核对Stage标签是否正确
     const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2101092" // STREAM Service镜像格式非法
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093" // {0}配置Env数量超过100限制!
-    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"
-    // {0}Env单变量{1}长度超过{2}字符!({3})
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094" // {0}Env单变量{1}长度超过{2}字符!({3})
     const val ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095" // 添加流水线的定时触发器保存失败！可能是定时器参数过长！
     const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "2101096" // 变量名称必须是英文字母、数字或下划线(_)
     const val ERROR_JOB_MATRIX_YAML_CONFIG_ERROR = "2101097" // Job[{0]的矩阵YAML配置错误:
     const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101098" // {0} 非 {1} 流水线
     const val ERROR_NO_MATCHING_PIPELINE = "2101099" // 没有找到对应的流水线
-    const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101100"
-    // 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
+    const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101100" // 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
     const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
@@ -211,8 +204,7 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ENV_ID_IS_NULL = "2101120" // EnvId 不是 init
     const val ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS = "2101121" // 以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames
     const val ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI = "2101122" // 用户没有操作这些环境的权限！环境：$noExistsEnvNames
-    const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = "2101123"
-    // "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+    const val ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS = "2101123" // "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
     const val ERROR_BUILD_TASK_TARGETENV_TYPE_IS_NULL = "2101124" // 支持 目标环境类型: {0}
     const val ERROR_BUILD_TASK_CDN_FAIL = "2101125" // "分发CDN失败
     const val ERROR_BUILD_TASK_IDX_FILE_NOT_EXITS = "2101126" // 索引文件不存在
@@ -333,8 +325,7 @@ object ProcessMessageCode {
     const val BK_EXPERIENCE_PATH_EMPTY = "bkExperiencePathEmpty" // 体验路径为空
     const val BK_INCORRECT_NOTIFICATION_METHOD = "bkIncorrectNotificationMethod" // 通知方式不正确
     const val BK_FILE_NOT_EXIST = "bkFileNotExist" // 文件({0})不存在
-    const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "bkVersionExperienceCreatedSuccessfully"
-    // 版本体验({0})创建成功
+    const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "bkVersionExperienceCreatedSuccessfully" // 版本体验({0})创建成功
     const val BK_VIEW_RESULT = "bkViewResult" // 查看结果:
     const val BK_RECEIVER_EMPTY = "bkReceiverEmpty" // Message Receivers is empty(接收人为空)
     const val BK_MESSAGE_CONTENT_EMPTY = "bkMessageContentEmpty" // Message Body is empty(消息内容为空)
@@ -351,7 +342,6 @@ object ProcessMessageCode {
     const val BK_UPLOAD_CORRESPONDING_FILE = "bkUploadCorrespondingFile" // 上传对应文件到织云成功!
     const val BK_START_UPLOADING_CORRESPONDING_FILES = "bkStartUploadingCorrespondingFiles" // 开始上传对应文件到织云...
     const val BK_PULL_GIT_WAREHOUSE_CODE = "bkPullGitWarehouseCode" // 拉取Git仓库代码
-    // ### 该环境不支持自动导出，请参考 ... 手动配置 ###
     const val BK_AUTOMATIC_EXPORT_NOT_SUPPORTED = "bkAutomaticExportNotSupported"
     // ### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。
     const val BK_BUILD_CLUSTERS_THROUGH = "bkBuildClustersThrough"
@@ -359,13 +349,11 @@ object ProcessMessageCode {
     const val BK_NOTE_DEFAULT_XCODE_VERSION = "bkNoteDefaultXcodeVersion"
     const val BK_PLEASE_USE_STAGE_AUDIT = "bkPleaseUseStageAudit" // 人工审核插件请改用Stage审核 ###
     const val BK_PLUG_NOT_SUPPORTED = "bkPlugNotSupported" // # 注意：不支持插件【{0}({1})】的导出
-    const val BK_FIND_RECOMMENDED_REPLACEMENT_PLUG = "bkFindRecommendedReplacementPlug"
-    // 请在蓝盾研发商店查找推荐的替换插件！
+    const val BK_FIND_RECOMMENDED_REPLACEMENT_PLUG = "bkFindRecommendedReplacementPlug" // 请在蓝盾研发商店查找推荐的替换插件！
     const val BK_OLD_PLUG_NOT_SUPPORT = "bkOldPlugNotSupport" // 内置老插件不支持导出，请使用市场插件 ###
     const val BK_NO_RIGHT_EXPORT_PIPELINE = "bkNoRightExportPipeline" // 用户({0})无权限在工程({1})下导出流水线
     const val BK_PIPELINED_ID = "bkPipelinedId" // # 流水线ID:
     const val BK_EXPORT_TIME = "bkExportTime" // # 导出时间:
-    // # 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：... ！ \n
     const val BK_EXPORT_SYSTEM_CREDENTIALS = "bkExportSystemCredentials"
     // # 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n
     const val BK_SENSITIVE_INFORMATION_IN_PARAMETERS = "bkSensitiveInformationInParameters"
@@ -375,7 +363,6 @@ object ProcessMessageCode {
     const val BK_PARAMETERS_BE_EXPORTED = "bkParametersBeExported"
     const val BK_IDENTIFIED_SENSITIVE_INFORMATION = "bkIdentifiedSensitiveInformation" // # ①识别出为敏感信息，不支持导出\n
     const val BK_UNKNOWN_CONTEXT_EXISTS = "bkUnknownContextExists" // # ②部分字段校验格式时存在未知上下文，不支持导出\n
-    // ### 该镜像暂不支持自动导出，请参考 ... 手动配置 ###
     const val BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE = "bkAutomaticExportNotSupportedImage"
     // ###请直接填入镜像(TLinux2.2公共镜像)的URL地址，若存在鉴权请增加 credentials 字段###
     const val BK_ENTER_URL_ADDRESS_IMAGE = "bkEnterUrlAddressImage"
@@ -403,6 +390,11 @@ object ProcessMessageCode {
     const val BK_ONLY_VISIBLE_PCG_BUSINESS = "bkOnlyVisiblePcgBusiness"
     // # 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），
     const val BK_WORKER_BEE_CI_NOT_SUPPORT = "bkWorkerBeeCiNotSupport"
-    // 请联系插件开发者改造插件，改造指引：... \n
     const val BK_MODIFICATION_GUIDELINES = "bkModificationGuidelines"
+    const val BK_BUILD_INFO = "bkBuildInfo" // 构建信息
+    const val BK_DETAIL = "bkDetail" // 详情
+    const val BK_BUILD_STATUS = "bkBuildStatus" // 构建状态
+    const val BK_BUILD_VARIABLES = "bkBuildVariables" // 构建变量
+    const val BK_BUILD_VARIABLES_VALUE = "bkBuildVariablesValue" // 构建变量的值
+    const val BK_BUILD_HISTORY = "bkBuildHistory" // 构建历史
 }

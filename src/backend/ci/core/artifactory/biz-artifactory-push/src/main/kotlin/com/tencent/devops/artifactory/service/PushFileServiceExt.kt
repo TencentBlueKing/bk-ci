@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FUSH_FILE_VALIDATE_FAIL
 import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.FastPushFileRequest
 import com.tencent.devops.artifactory.pojo.FileResourceInfo
@@ -42,11 +42,11 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
+import java.io.File
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Service@Suppress("ALL")
 class PushFileServiceExt @Autowired constructor(
@@ -82,7 +82,7 @@ class PushFileServiceExt @Autowired constructor(
         if (!validatePermission) {
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = PushMessageCode.FUSH_FILE_VALIDATE_FAIL,
+                    messageCode = FUSH_FILE_VALIDATE_FAIL,
                     params = null,
                     language = I18nUtil.getLanguage(userId)
                 )

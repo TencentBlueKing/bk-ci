@@ -139,7 +139,7 @@ class KubernetesJobClient @Autowired constructor(
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
-                        formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                        formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.getErrorMessage(),
                         I18nUtil.getCodeLanMessage(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION) +
                                 "（Fail to build image, http response code: ${response.code}"
                     )

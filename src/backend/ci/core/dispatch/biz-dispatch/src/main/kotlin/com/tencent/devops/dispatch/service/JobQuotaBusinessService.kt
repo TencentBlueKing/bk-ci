@@ -225,7 +225,8 @@ class JobQuotaBusinessService @Autowired constructor(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = JOB_NUM_REACHED_MAX_QUOTA,
-                        params = arrayOf(vmType.displayName, "$runningJobCount", "$jobQuota")
+                        params = arrayOf(vmType.displayName, "$runningJobCount", "$jobQuota"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
@@ -245,7 +246,8 @@ class JobQuotaBusinessService @Autowired constructor(
                             "$jobQuota",
                             normalizePercentage(jobThreshold.toDouble()),
                             normalizePercentage(runningJobCount * 100.0 / jobQuota)
-                        )
+                        ),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,

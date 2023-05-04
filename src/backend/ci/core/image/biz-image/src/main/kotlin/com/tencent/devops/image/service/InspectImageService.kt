@@ -31,12 +31,7 @@ import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
-import com.tencent.devops.common.api.constant.BK_PULLING_IMAGE
-import com.tencent.devops.common.api.constant.BK_START_PULL_IMAGE
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
-import com.tencent.devops.image.constants.ImageMessageCode.PULL_IMAGE_SUCCESS
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.utils.CommonUtils
@@ -76,14 +71,10 @@ class InspectImageService @Autowired constructor(
                     registryUser = it.registryUser,
                     registryPwd = it.registryPwd
                 )
-                logger.info(
-                    MessageUtil.getMessageByLocale(BK_START_PULL_IMAGE, I18nUtil.getLanguage(userId)) + imageName
-                )
+                logger.info("Start pulling the image, image name：$imageName")
                 dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(userId)).awaitCompletion()
-                logger.info(
-                    MessageUtil.getMessageByLocale(PULL_IMAGE_SUCCESS, I18nUtil.getLanguage(userId)) + imageName
-                )
+                logger.info("The image was pulled successfully. Image name：$imageName")
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of userId $userId", t)
                 imageInspectList.add(
@@ -158,13 +149,7 @@ class InspectImageService @Autowired constructor(
                 }
 
                 if (currentProgress >= step[lays]?.plus(25) ?: 5) {
-                    logger.info(
-                        userId + MessageUtil.getMessageByLocale(
-                            BK_PULLING_IMAGE,
-                            I18nUtil.getLanguage(userId),
-                            arrayOf("$lays", "$currentProgress")
-                        )
-                    )
+                    logger.info("$userId pulling images, $lays layer, progress: $currentProgress%")
                     step[lays] = currentProgress
                 }
             }

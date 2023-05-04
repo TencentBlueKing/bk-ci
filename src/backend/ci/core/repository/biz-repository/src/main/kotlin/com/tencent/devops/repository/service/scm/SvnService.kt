@@ -29,9 +29,7 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_LOCAL_REPO_CREATION_FAILED
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
@@ -39,6 +37,7 @@ import com.tencent.devops.scm.pojo.SvnFileInfo
 import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
+import java.io.ByteArrayOutputStream
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.SVNAuthenticationException
@@ -52,7 +51,6 @@ import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
 import org.tmatesoft.svn.core.io.SVNRepository
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
-import java.io.ByteArrayOutputStream
 
 @Service
 @Suppress("ALL")
@@ -210,10 +208,7 @@ class SvnService : ISvnService {
         try {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
-            logger.error(
-                MessageUtil.getMessageByLocale(BK_LOCAL_REPO_CREATION_FAILED, I18nUtil.getDefaultLocaleLanguage()),
-                e
-            )
+            logger.error("project($url)Failed to create local warehouse", e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name

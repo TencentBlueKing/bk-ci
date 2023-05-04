@@ -86,7 +86,9 @@ class QueueInterceptor @Autowired constructor(
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
                 Response(
-                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt()
+                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
+                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_SUMMARY_NOT_FOUND)
+
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(

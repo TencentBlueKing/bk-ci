@@ -117,7 +117,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_INVALID_PARAM_,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getDefaultLocaleLanguage(),
                     arrayOf("projectId")
                 )
             )
@@ -126,7 +126,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_INVALID_PARAM_,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getDefaultLocaleLanguage(),
                     arrayOf("agentId")
                 )
             )
@@ -135,7 +135,7 @@ class BuildAgentBuildResourceImpl constructor(
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
                     ERROR_NEED_PARAM_,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getDefaultLocaleLanguage(),
                     arrayOf("secretKey")
                 )
             )

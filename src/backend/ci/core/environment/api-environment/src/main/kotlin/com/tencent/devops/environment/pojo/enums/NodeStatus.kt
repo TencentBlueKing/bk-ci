@@ -29,10 +29,11 @@ package com.tencent.devops.environment.pojo.enums
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
 
 @Suppress("UNUSED")
 enum class NodeStatus(
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "nodeStatus", reusePrefixFlag = false)
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "ENV_NODE_STATUS", reusePrefixFlag = false)
     val statusName: String
 ) {
     NORMAL("normal"), // 正常
@@ -55,10 +56,10 @@ enum class NodeStatus(
         fun getStatusName(status: String): String {
             values().forEach {
                 if (it.name == status) {
-                    return it.statusName
+                    return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${it.name}")
                 }
             }
-            return UNKNOWN.statusName
+            return return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${UNKNOWN.name}")
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
