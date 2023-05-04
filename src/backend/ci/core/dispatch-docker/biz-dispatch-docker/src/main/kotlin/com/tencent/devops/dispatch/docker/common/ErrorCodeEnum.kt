@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import com.tencent.devops.common.api.pojo.ErrorType
 
 @Suppress("ALL")

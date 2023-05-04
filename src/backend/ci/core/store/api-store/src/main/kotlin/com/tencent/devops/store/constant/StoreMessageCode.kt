@@ -89,7 +89,6 @@ object StoreMessageCode {
     const val GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED = "2120038" // 获取插件开发语言相关的环境变量信息失败
     const val ADD_PLUGIN_PLATFORM_INFO_FAILED = "2120039" // 添加插件对接平台信息失败
 
-
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120040" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试
     const val USER_TEMPLATE_RELEASE_STEPS_ERROR = "2120041" // 研发商店：模板发布流程状态变更顺序不正确
