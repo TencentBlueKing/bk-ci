@@ -33,7 +33,11 @@ import com.tencent.devops.common.web.utils.I18nUtil
 
 @Suppress("UNUSED")
 enum class NodeStatus(
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "ENV_NODE_STATUS", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "ENV_NODE_STATUS",
+        reusePrefixFlag = false
+    )
     val statusName: String
 ) {
     NORMAL("normal"), // 正常
