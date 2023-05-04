@@ -5,6 +5,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.process.Tables.T_PIPELINE_INFO
 import com.tencent.devops.model.process.Tables.T_PIPELINE_VIEW
@@ -33,13 +35,16 @@ import io.mockk.justRun
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.spyk
+import java.time.LocalDateTime
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
 
+@SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewService: PipelineViewService = mockk()
     private val pipelinePermissionService: PipelinePermissionService = mockk()
@@ -48,6 +53,9 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineViewTopDao: PipelineViewTopDao = mockk()
     private val pipelineInfoDao: PipelineInfoDao = mockk()
     private val clientTokenService: ClientTokenService = mockk()
+
+    @Autowired
+    lateinit var springContextUtil: SpringContextUtil
 
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
