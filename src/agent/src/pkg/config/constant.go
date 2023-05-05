@@ -72,7 +72,7 @@ const (
 	DockerInitFile = "agent_docker_init.sh"
 )
 
-const DEFAULT_LANGUAGE_TYPE = "zh-CN"
+const DEFAULT_LANGUAGE_TYPE = "zh_CN"
 
 // Auth Header
 
