@@ -67,6 +67,7 @@
             font-size: 12px;
             scale: 83%;
             width: 69%;
+            text-align: center;
             &.is-big {
                 scale: 100%;
                 bottom: 6%;

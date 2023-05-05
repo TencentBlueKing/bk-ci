@@ -37,6 +37,7 @@
         width: 100%;
         height: 100%;
         position: relative;
+        min-width: 68px;
         .img-wrapper {
             position: absolute;
             top: 2%;

@@ -182,6 +182,7 @@
             position: absolute;
             top: 12px;
             right: 12px;
+            color: #737987;
         }
         .ml4 {
             margin-left: 4px;
