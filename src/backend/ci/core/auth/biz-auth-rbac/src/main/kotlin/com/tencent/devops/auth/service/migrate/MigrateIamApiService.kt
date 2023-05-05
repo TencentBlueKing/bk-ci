@@ -51,7 +51,7 @@ class MigrateIamApiService {
         // 启动iam v3迁移任务
         private const val V3_IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/task/"
         // 启动iam v0迁移任务
-        private const val V0_IAM_MIGRATE_TASK = "aapi/v2/open/migration/bkci/legacy_task/"
+        private const val V0_IAM_MIGRATE_TASK = "api/v2/open/migration/bkci/legacy_task/"
         // 获取iam迁移数据
         private const val IAM_GET_MIGRATE_DATA = "api/v2/open/migration/bkci/data/"
         // 迁移成功状态
