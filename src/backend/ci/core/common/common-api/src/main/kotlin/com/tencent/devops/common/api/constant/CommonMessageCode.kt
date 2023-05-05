@@ -105,7 +105,7 @@ object CommonMessageCode {
     const val FAILED_TO_GET_CMDB_LIST = "2100052" // 获取CMDB列表失败
     const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100053" // stages和steps不能并列存在!
 
-    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线({3})
+    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线{3}
     const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100055" // 用户 {0}无项目{1}权限
     const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100056" // 无法获取流水线JOB状态，构建停止
     const val JOB_BUILD_STOPS = "2100057" // 流水线JOB已经不再运行，构建停止
