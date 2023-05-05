@@ -142,7 +142,7 @@ class ExperienceBaseService @Autowired constructor(
         val now = LocalDateTime.now()
         val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
             .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
-        val getRedPoint = records.size < 1000 // 避免查询太多次
+        val getRedPoint = records.size < 3000 // 避免查询太多次
 
         val result = records.map {
             AppExperience(
