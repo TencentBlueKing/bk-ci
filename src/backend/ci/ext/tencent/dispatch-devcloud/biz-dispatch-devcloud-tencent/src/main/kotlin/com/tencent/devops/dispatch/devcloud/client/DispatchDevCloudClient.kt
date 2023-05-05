@@ -3,6 +3,8 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CONTAINER_TIMED_OUT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CREATION_FAILED_EXCEPTION_INFORMATION
 import com.tencent.devops.common.api.constant.CommonMessageCode.CREATE_CONTAINER_TIMED_OUT
 import com.tencent.devops.common.api.constant.CommonMessageCode.GET_STATUS_TIMED_OUT
 import com.tencent.devops.common.api.constant.CommonMessageCode.OPERATION_CONTAINER_TIMED_OUT
@@ -568,7 +570,7 @@ class DispatchDevCloudClient {
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, " +
+                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
                         "http response code: ${response.code}"
                 )
             }
@@ -605,7 +607,7 @@ class DispatchDevCloudClient {
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, " +
+                    "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage()}（Fail to getWebsocket, " +
                         "http response code: ${response.code}"
                 )
             }
@@ -627,7 +629,11 @@ class DispatchDevCloudClient {
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatus.TIMEOUT, "创建容器超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
+                return Triple(
+                    TaskStatus.TIMEOUT,
+                    "${I18nUtil.getCodeLanMessage(BK_CONTAINER_TIMED_OUT)}（10min）",
+                    ErrorCodeEnum.CREATE_VM_ERROR
+                )
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
@@ -698,7 +704,11 @@ class DispatchDevCloudClient {
             }
         } catch (e: Exception) {
             logger.error("Get dev cloud task error, taskId: $taskId", e)
-            return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
+            return TaskResult(
+                isFinish = true,
+                success = false,
+                msg = "${I18nUtil.getCodeLanMessage(BK_CREATION_FAILED_EXCEPTION_INFORMATION)}:${e.message}"
+            )
         }
     }
 

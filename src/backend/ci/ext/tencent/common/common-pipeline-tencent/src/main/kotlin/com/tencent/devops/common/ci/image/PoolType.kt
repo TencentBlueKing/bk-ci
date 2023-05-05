@@ -63,7 +63,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                ) + "pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
                     ))
             }
@@ -86,7 +86,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                    ) + "pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
                     )
                 )
@@ -109,7 +109,7 @@ enum class PoolType {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = DANG
-                ) + "pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
                     messageCode = PARAMETER_IS_EMPTY
                 ))
             }
@@ -128,7 +128,7 @@ enum class PoolType {
                 logger.error("validatePool, {}, container is null", this)
                 throw OperationException(I18nUtil.getCodeLanMessage(
                     messageCode = DANG
-                ) + "pool.type=$this, container" + I18nUtil.getCodeLanMessage(
+                ) + "If pool.type=$this, container" + I18nUtil.getCodeLanMessage(
                     messageCode = PARAMETER_IS_EMPTY
                 ))
             }
@@ -150,7 +150,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                    ) + "pool.type=$this, macOS" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, macOS" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
                     ))
             }
@@ -159,7 +159,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                    ) + "pool.type=$this, macOS.systemVersion" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, macOS.systemVersion" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
                     ))
             }
@@ -168,7 +168,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                    ) + "pool.type=$this, macOS.xcodeVersion" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, macOS.xcodeVersion" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_IS_EMPTY
                     ))
             }
@@ -236,7 +236,7 @@ enum class PoolType {
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
                         messageCode = DANG
-                    ) + "pool.type=$this, agentName/agentId/envId/envName" + I18nUtil.getCodeLanMessage(
+                    ) + "If pool.type=$this, agentName/agentId/envId/envName" + I18nUtil.getCodeLanMessage(
                         messageCode = PARAMETER_CANNOT_EMPTY_ALL
                     ))
             }

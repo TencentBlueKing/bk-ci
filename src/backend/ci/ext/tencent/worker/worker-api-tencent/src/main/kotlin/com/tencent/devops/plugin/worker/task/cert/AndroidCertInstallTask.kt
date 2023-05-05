@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
@@ -46,7 +45,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import java.io.File
-import java.util.Base64
+import java.util.*
 
 @TaskClassType(classTypes = [AndroidCertInstallElement.classType])
 class AndroidCertInstallTask : ITask() {

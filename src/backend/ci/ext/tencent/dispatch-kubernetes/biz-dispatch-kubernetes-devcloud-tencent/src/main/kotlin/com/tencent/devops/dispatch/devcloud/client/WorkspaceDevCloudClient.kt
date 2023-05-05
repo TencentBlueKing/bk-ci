@@ -85,21 +85,23 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 if (HttpStatus.OK.value == environmentOpRsp.code) {
                     return environmentOpRsp.data
                 } else {
+                    val message = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口返回失败: ${environmentOpRsp.message}"
+                        message,
+                        "$message: ${environmentOpRsp.message}"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId create environment get SocketTimeoutException", e)
+            val message = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage(),
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口超时, url: $url"
+                formatErrorMessage = message,
+                errorMessage = "$message, url: $url"
             )
         }
     }
@@ -133,11 +135,12 @@ class WorkspaceDevCloudClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
+                    val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口异常：${response.code}"
+                        message,
+                        "$message：${response.code}"
                     )
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
@@ -154,21 +157,23 @@ class WorkspaceDevCloudClient @Autowired constructor(
 
                     return environmentOpRsp.data
                 } else {
+                    val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentOpRsp.message}"
+                        message,
+                        "$message：${environmentOpRsp.message}"
                     )
                 }
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId ${environmentAction.getValue()} environment get SocketTimeoutException.", e)
+            val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
-                formatErrorMessage = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage(),
-                errorMessage = "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口超时, url: $url"
+                formatErrorMessage = message,
+                errorMessage = "$message, url: $url"
             )
         }
     }
@@ -207,11 +212,12 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 if (!response.isSuccessful && retryTime <= 0) {
+                    val message = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境状态接口异常: ${response.code}"
+                        message,
+                        "$message: ${response.code}"
                     )
                 }
 
@@ -219,11 +225,12 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 if (HttpStatus.OK.value == environmentStatusRsp.code) {
                     return environmentStatusRsp.data
                 } else {
+                    val message = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentStatusRsp.message}"
+                        message,
+                        "$message：${environmentStatusRsp.message}"
                     )
                 }
             }
@@ -277,11 +284,12 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 if (!response.isSuccessful && retryTime <= 0) {
+                    val message = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境列表接口异常: ${response.code}"
+                        message,
+                        "$message: ${response.code}"
                     )
                 }
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
