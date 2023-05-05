@@ -926,10 +926,7 @@ class PipelineBuildFacadeService(
         }
         val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
-            pipelineRuntimeService.approveTriggerReview(
-                userId = userId, buildId = buildId, pipelineId = pipelineId, projectId = projectId,
-                resourceVersion = buildInfo.version, executeCount = executeCount
-            )
+            pipelineRuntimeService.approveTriggerReview(userId = userId, buildInfo = buildInfo)
         } else {
             pipelineRuntimeService.disapproveTriggerReview(
                 userId = userId, buildId = buildId, pipelineId = pipelineId,
