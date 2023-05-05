@@ -28,10 +28,9 @@
 package com.tencent.devops.dispatch.service.dispatcher.agent
 
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -67,7 +66,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter,
     private val thirdPartyAgentBuildRedisUtils: ThirdPartyAgentBuildRedisUtils,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val thirdPartyAgentBuildService: ThirdPartyAgentService,
     private val dispatchService: DispatchService
 ) : Dispatcher {
@@ -102,7 +101,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
 
             else -> {
-                throw InvalidParamException("Unknown agent type - ${event.dispatchType}")
+                logger.warn("Unknown agent type - ${event.dispatchType}")
             }
         }
     }
@@ -589,7 +588,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
     override fun retry(
         client: Client,
         buildLogPrinter: BuildLogPrinter,
-        pipelineEventDispatcher: MQRoutableEventDispatcher,
+        pipelineEventDispatcher: SampleEventDispatcher,
         event: PipelineAgentStartupEvent,
         errorCodeEnum: ErrorCodeEnum?,
         errorMessage: String?

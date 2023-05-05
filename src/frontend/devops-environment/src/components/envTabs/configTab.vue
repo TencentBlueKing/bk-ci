@@ -69,18 +69,16 @@
                 </div>
             </div>
         </div>
-
-        <bk-empty v-else></bk-empty>
+        <bk-exception
+            v-else
+            class="exception-wrap-item exception-part" type="empty" scene="part"
+        />
     </div>
 </template>
 
 <script>
-    import empty from '@/components/common/empty'
     export default {
         name: 'config-tab',
-        components: {
-            'bk-empty': empty
-        },
         props: {
             projectId: {
                 type: String,

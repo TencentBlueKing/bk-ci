@@ -88,14 +88,14 @@ class PipelineSettingService @Autowired constructor(
         }
     }
 
-    fun setCurrentDayBuildCount(transactionContext: DSLContext, projectId: String, pipelineId: String): Int {
+    fun setCurrentDayBuildCount(transactionContext: DSLContext?, projectId: String, pipelineId: String): Int {
         val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
         // 判断缓存中是否有值，没有值则从db中实时查
         if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("setCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
             getCurrentDayBuildCountFromDb(
-                transactionContext = transactionContext,
+                transactionContext = transactionContext ?: dslContext,
                 projectId = projectId,
                 currentDayStr = currentDayStr,
                 pipelineId = pipelineId

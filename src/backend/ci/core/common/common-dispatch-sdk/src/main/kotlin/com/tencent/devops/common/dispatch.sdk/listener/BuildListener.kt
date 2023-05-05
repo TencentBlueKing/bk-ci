@@ -35,10 +35,9 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
@@ -60,21 +59,20 @@ interface BuildListener {
 
     fun getShutdownQueue(): String
 
-    fun onPipelineStartup(event: PipelineBuildStartBroadCastEvent) {
-        // logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline start up")
-    }
-
-    fun onPipelineShutdown(event: PipelineBuildFinishBroadCastEvent) {
-        // logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}] The pipeline shutdown")
-    }
-
     fun onStartup(dispatchMessage: DispatchMessage)
 
     fun onStartupDemote(dispatchMessage: DispatchMessage)
 
     fun onShutdown(event: PipelineAgentShutdownEvent)
 
+    fun consumerFilter(dispatchType: DispatchType): Boolean
+
     fun handleShutdownMessage(event: PipelineAgentShutdownEvent) {
+        // 根据dispatchType筛选消息消费
+        if (!consumerFilter(event.dispatchType)) {
+            return
+        }
+
         try {
             logger.info("Start to handle the shutdown message ($event)")
             try {
@@ -220,6 +218,11 @@ interface BuildListener {
 
     @BkTimed
     fun handleStartup(event: PipelineAgentStartupEvent) {
+        // 根据dispatchType筛选消息消费
+        if (!consumerFilter(event.dispatchType)) {
+            return
+        }
+
         DispatcherContext.setEvent(event)
         val dispatchService = getDispatchService()
 

@@ -370,7 +370,7 @@ class StreamTriggerRequestService @Autowired constructor(
     }
 
     @Suppress("ProtectedMemberInFinalClass")
-    private fun trigger(
+    protected fun trigger(
         action: BaseAction,
         trigger: String?
     ) = when (streamGitConfig.getScmType()) {

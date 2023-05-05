@@ -1,6 +1,6 @@
 package com.tencent.devops.process.engine.listener.run
 
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.trace.TraceTag
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 class PipelineNotifyQueueListener(
     private val pipelineNotifyService: PipelineNotifyService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun execute(event: PipelineBuildFinishBroadCastEvent) {
         try {

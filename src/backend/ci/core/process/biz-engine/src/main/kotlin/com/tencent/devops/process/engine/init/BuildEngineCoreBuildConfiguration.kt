@@ -27,13 +27,10 @@
 
 package com.tencent.devops.process.engine.init
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.process.engine.control.BuildCancelControl
 import com.tencent.devops.process.engine.control.BuildEndControl
@@ -61,12 +58,6 @@ import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import org.jooq.DSLContext
-import org.slf4j.MDC
-import org.springframework.amqp.core.MessagePostProcessor
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -83,39 +74,6 @@ class BuildEngineCoreBuildConfiguration {
     companion object {
         private const val STREAM_CONSUMER_GROUP = "engine-service"
     }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) =
-        Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
-    fun rabbitAdmin(
-        connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        objectMapper: ObjectMapper
-    ): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter(objectMapper)
-        rabbitTemplate.addBeforePublishPostProcessors(MessagePostProcessor { message ->
-            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
-            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
-            message
-        })
-        return rabbitTemplate
-    }
-
-    @Bean
-    fun routableEventDispatcher(
-        @Autowired rabbitTemplate: RabbitTemplate
-    ) = MQRoutableEventDispatcher(
-        rabbitTemplate = rabbitTemplate
-    )
 
     /**
      * 入口：整个构建开始队列---- 并发一般

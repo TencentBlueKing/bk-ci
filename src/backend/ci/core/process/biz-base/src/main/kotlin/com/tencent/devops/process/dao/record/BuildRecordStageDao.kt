@@ -41,6 +41,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -50,26 +51,40 @@ class BuildRecordStageDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordStage>) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
-            records.forEach { record ->
-                dslContext.insertInto(this)
-                    .set(BUILD_ID, record.buildId)
-                    .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.pipelineId)
-                    .set(RESOURCE_VERSION, record.resourceVersion)
-                    .set(STAGE_ID, record.stageId)
-                    .set(EXECUTE_COUNT, record.executeCount)
-                    .set(SEQ, record.stageSeq)
-                    .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
-                    .set(STATUS, record.status)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .onDuplicateKeyUpdate()
-                    .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
-                    .set(STATUS, record.status)
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .execute()
-            }
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                RESOURCE_VERSION,
+                STAGE_ID,
+                EXECUTE_COUNT,
+                SEQ,
+                STAGE_VAR,
+                STATUS,
+                TIMESTAMPS
+            ).also { insertSetStep ->
+                records.forEach { record ->
+                    insertSetStep.values(
+                        record.buildId,
+                        record.projectId,
+                        record.pipelineId,
+                        record.resourceVersion,
+                        record.stageId,
+                        record.executeCount,
+                        record.stageSeq,
+                        JsonUtil.toJson(record.stageVar, false),
+                        record.status,
+                        JsonUtil.toJson(record.timestamps, false)
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
+                .set(STAGE_VAR, MySQLDSL.values(STAGE_VAR))
+                .execute()
         }
     }
 
@@ -145,7 +160,7 @@ class BuildRecordStageDao {
             ).from(this).join(max).on(
                 STAGE_ID.eq(max.field(KEY_STAGE_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
-            ).where(conditions).orderBy(STAGE_ID.asc())
+            ).where(conditions).orderBy(SEQ.asc())
                 .fetch()
             return result.map { record ->
                 BuildRecordStage(

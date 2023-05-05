@@ -35,18 +35,14 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.dispatch.api.ServiceDispatchJobResource
 import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
@@ -90,7 +86,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchTypeParser: DispatchTypeParser,
     private val pipelineAsCodeService: PipelineAsCodeService,
@@ -246,18 +242,14 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 taskName = param.name,
                 os = param.baseOS.name,
                 vmNames = vmNames,
-                startTime = System.currentTimeMillis(),
                 channelCode = pipelineInfo.channelCode.name,
                 dispatchType = dispatchType,
-                zone = getBuildZone(container),
                 atoms = atoms,
                 executeCount = task.executeCount,
-                routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
-                stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
+                routeKeySuffix = dispatchType.routeKeySuffix?.routeKeySuffix,
                 queueTimeoutMinutes = param.jobControlOption?.prepareTimeout,
-                containerType = task.containerType,
                 customBuildEnv = param.customBuildEnv
             )
         )
@@ -293,7 +285,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 val res = client.get(ServiceContainerAppResource::class).getBuildEnv(
                     name = env.key,
                     version = version,
-                    os = param.baseOS.name.toLowerCase()
+                    os = param.baseOS.name.lowercase()
                 ).data
                 if (res == null) {
                     buildLogPrinter.addRedLine(
@@ -308,59 +300,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             }
         }
         return true
-    }
-
-    private fun getDispatchType(task: PipelineBuildTask, param: VMBuildContainer): DispatchType {
-
-        val dispatchType: DispatchType
-        /**
-         * 新版的构建环境直接传入指定的构建机方式
-         */
-        if (param.dispatchType != null) {
-            dispatchType = param.dispatchType!!
-        } else {
-            // 第三方构建机ID
-            val agentId = param.thirdPartyAgentId ?: ""
-            // 构建环境ID
-            val envId = param.thirdPartyAgentEnvId ?: ""
-            val workspace = param.thirdPartyWorkspace ?: ""
-            dispatchType = if (agentId.isNotBlank()) {
-                ThirdPartyAgentIDDispatchType(
-                    displayName = agentId,
-                    workspace = workspace,
-                    agentType = AgentType.ID,
-                    dockerInfo = null
-                )
-            } else if (envId.isNotBlank()) {
-                ThirdPartyAgentEnvDispatchType(
-                    envName = envId,
-                    envProjectId = null,
-                    workspace = workspace,
-                    agentType = AgentType.ID,
-                    dockerInfo = null
-                )
-            } // docker建机指定版本(旧)
-            else if (!param.dockerBuildVersion.isNullOrBlank()) {
-                DockerDispatchType(param.dockerBuildVersion!!)
-            } else {
-                ESXiDispatchType()
-            }
-        }
-
-        // 处理dispatchType中的BKSTORE镜像信息
-        dispatchTypeParser.parse(
-            userId = task.starter, projectId = task.projectId,
-            pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
-        )
-
-        dispatchType.replaceVariable(
-            buildVariableService.getAllVariable(
-                projectId = task.projectId,
-                pipelineId = task.pipelineId,
-                buildId = task.buildId
-            )
-        )
-        return dispatchType
     }
 
     private fun getBuildZone(container: Container): Zone? {
@@ -396,7 +335,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         vmSeqId = task.containerId,
                         buildResult = false, // #5046 强制终止为失败
-                        routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        dispatchType = getDispatchType(task, param),
                         executeCount = task.executeCount
                     )
                 )
@@ -407,7 +346,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             if (param.dispatchType is ThirdPartyAgentEnvDispatchType ||
                 param.dispatchType is ThirdPartyAgentIDDispatchType
             ) {
-                thirdPartyAgentMnitorPrint(task)
+                thirdPartyAgentMonitorPrint(task)
             }
 
             AtomResponse(
@@ -419,7 +358,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
     }
 
-    private fun thirdPartyAgentMnitorPrint(task: PipelineBuildTask) {
+    private fun thirdPartyAgentMonitorPrint(task: PipelineBuildTask) {
         // #5806 超过10秒，开始查询调度情况，并Log出来
         val timePasses = System.currentTimeMillis() - (task.startTime?.timestampmilli() ?: 0L)
         val modSeconds = TimeUnit.MILLISECONDS.toSeconds(timePasses) % 20

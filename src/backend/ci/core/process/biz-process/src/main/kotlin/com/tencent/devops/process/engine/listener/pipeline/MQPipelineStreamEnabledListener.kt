@@ -1,7 +1,7 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.control.CallBackControl
@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component
 class MQPipelineStreamEnabledListener @Autowired constructor(
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineStreamEnabledEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineStreamEnabledEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineStreamEnabledEvent) {
         val watcher = Watcher(id = "${event.traceId}|StreamEnabled#${event.pipelineId}|${event.userId}")

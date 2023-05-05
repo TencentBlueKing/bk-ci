@@ -29,7 +29,7 @@ package com.tencent.devops.process.notify
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -45,7 +45,7 @@ class PipelineBuildNotifyListener @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean,
     private val projectCacheService: ProjectCacheService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineBuildNotifyEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildNotifyEvent) {
         when (val notifyTemplateEnumType = PipelineNotifyTemplateEnum.parse(event.notifyTemplateEnum)) {

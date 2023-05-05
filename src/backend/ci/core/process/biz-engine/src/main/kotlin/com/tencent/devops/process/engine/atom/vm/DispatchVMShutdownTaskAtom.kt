@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.atom.vm
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.event.dispatcher.mq.MQRoutableEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -54,7 +54,7 @@ import java.time.LocalDateTime
 class DispatchVMShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val containerBuildRecordService: ContainerBuildRecordService,
-    private val pipelineEventDispatcher: MQRoutableEventDispatcher,
+    private val pipelineEventDispatcher: SampleEventDispatcher,
     private val buildingHeartBeatUtils: BuildingHeartBeatUtils
 ) : IAtomTask<VMBuildContainer> {
     override fun getParamElement(task: PipelineBuildTask): VMBuildContainer {
@@ -86,6 +86,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                 vmSeqId = vmSeqId,
                 buildResult = true,
                 routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                dispatchType = getDispatchType(task, param),
                 executeCount = task.executeCount
             )
         )
@@ -139,6 +140,7 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
                         vmSeqId = task.containerId,
                         buildResult = true,
                         routeKeySuffix = param.dispatchType?.routeKeySuffix?.routeKeySuffix,
+                        dispatchType = getDispatchType(task, param),
                         executeCount = task.executeCount
                     )
                 )

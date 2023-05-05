@@ -23,6 +23,7 @@ const (
 	DockerContainerDoneStatusError
 	DockerChmodInitshError
 	DockerCredGetError
+	DockerDockerOptions
 )
 
 type ErrorTypes string
@@ -83,6 +84,11 @@ var (
 		Type:    User,
 		Code:    DockerMakeTmpDirError,
 		Message: "创建Docker构建临时目录失败",
+	}
+	DockerDockerOptionsErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerDockerOptions,
+		Message: "添加Docker options错误",
 	}
 	DockerMountCreateErrorEnum = &ErrorEnum{
 		Type:    User,

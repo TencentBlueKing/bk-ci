@@ -28,7 +28,7 @@
 package com.tencent.devops.process.engine.listener.pipeline
 
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.engine.control.CallBackControl
@@ -49,7 +49,7 @@ class MQPipelineRestoreListener @Autowired constructor(
     private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineRestoreEvent) {
         val watcher = Watcher(id = "${event.traceId}|RestorePipeline#${event.pipelineId}|${event.userId}")

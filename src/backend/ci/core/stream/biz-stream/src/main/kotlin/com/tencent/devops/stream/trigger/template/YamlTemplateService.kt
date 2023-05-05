@@ -128,12 +128,8 @@ class YamlTemplateService @Autowired constructor(
         param: GetTemplateParam<BaseAction>
     ): String {
         with(param) {
-            val (isTicket, key) = getKey(targetRepo?.credentials?.personalAccessToken!!)
-            val personToken = if (isTicket) {
-                getTicket(param, key)
-            } else {
-                key
-            }
+            val key = targetRepo?.credentials?.personalAccessToken!!
+            val personToken = kotlin.runCatching { getTicket(param, key) }.getOrDefault(key)
             val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = targetRepo?.repository!!,
                 action = extraParameters,
@@ -142,7 +138,7 @@ class YamlTemplateService @Autowired constructor(
             )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
-                gitProjectId = extraParameters.getGitProjectIdOrName(),
+                gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                 fileName = templateDirectory + path,
                 ref = ref,
                 retry = ApiRequestRetryInfo(true)

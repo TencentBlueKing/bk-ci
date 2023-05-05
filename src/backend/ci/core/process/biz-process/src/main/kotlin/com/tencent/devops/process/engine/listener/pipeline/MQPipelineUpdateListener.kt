@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.listener.pipeline
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.listener.pipeline.PipelineEventListener
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
@@ -53,7 +53,7 @@ class MQPipelineUpdateListener @Autowired constructor(
     private val agentPipelineRefService: AgentPipelineRefService,
     private val pipelineWebhookService: PipelineWebhookService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
+) : PipelineEventListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
         val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")

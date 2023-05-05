@@ -30,7 +30,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions/setup-go@v3
       with:
-        go-version: 1.17.11
+        go-version: 1.19.6
     - run: make BUILD_OUT_TAG=out clean all
       working-directory: src/agent/
     - uses: actions/upload-artifact@v1
@@ -196,6 +196,16 @@ jobs:
       with:
         name: bkci-chart
         path: ./
+    - name: get change log file
+      id: get_version_file
+      run: |
+        version=${{ github.ref_name }}
+        version=$(echo ${version:1})
+        version=`echo $version | sed 's/-/./g'`
+        major=`echo $version | cut -d. -f1`
+        minor=`echo $version | cut -d. -f2`
+        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md"
+        echo "version_file=CHANGELOG/CHANGELOG-$major.$minor.md" >> $GITHUB_OUTPUT
     - name: Create Release
       ## 创建release
       id: create_release
@@ -205,4 +215,5 @@ jobs:
         draft: true
         prerelease: true
         token: ${{ secrets.GITHUB_TOKEN }}
+        body: "See <a href='https://github.com/TencentBlueKing/bk-ci/blob/master/${{steps.get_version_file.outputs.version_file}}'>the CHANGELOG</a> for more details."
         artifacts: "bkci-slim.tar.gz,bk-ci-charts.tgz"
