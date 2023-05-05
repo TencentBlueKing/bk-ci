@@ -138,12 +138,13 @@ abstract class AbMigratePolicyService(
     ): Int {
         var page = 1
         var totalCount = 0
+        val pageSize = PageUtil.MAX_PAGE_SIZE
         do {
             val taskDataResp = migrateIamApiService.getMigrateData(
                 projectCode = projectCode,
                 migrateType = migrateType,
                 page = page,
-                pageSize = PageUtil.MAX_PAGE_SIZE
+                pageSize = pageSize
             )
             migrateGroup(
                 projectCode = projectCode,
@@ -154,7 +155,7 @@ abstract class AbMigratePolicyService(
             )
             page++
             totalCount += taskDataResp.count
-        } while (taskDataResp.count > 0)
+        } while (taskDataResp.count == pageSize)
         return totalCount
     }
 
@@ -264,12 +265,13 @@ abstract class AbMigratePolicyService(
     ): Int {
         var page = 0
         var totalCount = 0
+        val pageSize = PageUtil.MAX_PAGE_SIZE
         do {
             val taskDataResp = migrateIamApiService.getMigrateData(
                 projectCode = projectCode,
                 migrateType = USER_CUSTOM_POLICY,
                 page = page,
-                pageSize = PageUtil.MAX_PAGE_SIZE
+                pageSize = pageSize
             )
             migrateUserCustom(
                 projectCode = projectCode,
@@ -278,7 +280,7 @@ abstract class AbMigratePolicyService(
             )
             page++
             totalCount += taskDataResp.count
-        } while (taskDataResp.count > 0)
+        } while (taskDataResp.count == pageSize)
         return totalCount
     }
 
