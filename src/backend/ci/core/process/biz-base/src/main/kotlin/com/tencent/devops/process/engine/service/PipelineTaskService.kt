@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -193,7 +194,9 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun batchUpdate(transactionContext: DSLContext?, taskList: List<PipelineBuildTask>) {
-        return pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
+        }
     }
 
     fun deletePipelineBuildTasks(transactionContext: DSLContext?, projectId: String, pipelineId: String) {
@@ -251,13 +254,15 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun updateTaskParamWithElement(projectId: String, buildId: String, taskId: String, newElement: Element) {
-        pipelineBuildTaskDao.updateTaskParam(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskParam = JsonUtil.toJson(newElement, false)
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskParam(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                taskParam = JsonUtil.toJson(newElement, false)
+            )
+        }
     }
 
     fun updateTaskParam(
@@ -267,13 +272,15 @@ class PipelineTaskService @Autowired constructor(
         taskId: String,
         taskParam: String
     ): Int {
-        return pipelineBuildTaskDao.updateTaskParam(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            taskParam = taskParam
-        )
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskParam(
+                dslContext = transactionContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                taskParam = taskParam
+            )
+        }
     }
 
     fun listContainerBuildTasks(
@@ -307,14 +314,16 @@ class PipelineTaskService @Autowired constructor(
         subBuildId: String,
         subProjectId: String
     ): Int {
-        return pipelineBuildTaskDao.updateSubBuildId(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            subBuildId = subBuildId,
-            subProjectId = subProjectId
-        )
+        return JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateSubBuildId(
+                dslContext = dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                subBuildId = subBuildId,
+                subProjectId = subProjectId
+            )
+        }
     }
 
     fun setTaskErrorInfo(
@@ -326,15 +335,17 @@ class PipelineTaskService @Autowired constructor(
         errorCode: Int,
         errorMsg: String
     ) {
-        pipelineBuildTaskDao.setTaskErrorInfo(
-            dslContext = transactionContext ?: dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId,
-            errorType = errorType,
-            errorCode = errorCode,
-            errorMsg = errorMsg
-        )
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.setTaskErrorInfo(
+                dslContext = transactionContext ?: dslContext,
+                projectId = projectId,
+                buildId = buildId,
+                taskId = taskId,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
+        }
     }
 
     fun updateTaskStatusInfo(userId: String? = null, task: PipelineBuildTask?, updateTaskInfo: UpdateTaskInfo) {
@@ -371,7 +382,10 @@ class PipelineTaskService @Autowired constructor(
                 }
             }
         }
-        pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
+
+        JooqUtils.retryWhenDeadLock {
+            pipelineBuildTaskDao.updateTaskInfo(dslContext = dslContext, updateTaskInfo = updateTaskInfo)
+        }
     }
 
     /**
