@@ -215,6 +215,7 @@ data class StartBuildContext(
     companion object {
         private val logger = LoggerFactory.getLogger(StartBuildContext::class.java)
         private const val MAX_LENGTH = 255
+        private const val DELTA = 16
 
         fun init(
             projectId: String,
@@ -375,10 +376,10 @@ data class StartBuildContext(
             pipelineParamMap: MutableMap<String, BuildParameters>
         ): ArrayList<BuildParameters> {
 
-            val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + 4)
+            val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + DELTA)
 
             // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
-            val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size)
+            val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, loadFactor = 1F)
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
