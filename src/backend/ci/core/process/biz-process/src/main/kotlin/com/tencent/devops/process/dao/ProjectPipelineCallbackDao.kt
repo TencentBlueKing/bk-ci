@@ -177,6 +177,7 @@ class ProjectPipelineCallbackDao {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             dslContext.update(this)
                 .set(ENABLE, true)
+                .set(DISABLE_NOTIFY_SUCCESS, false)
                 .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
                 .execute()
         }
