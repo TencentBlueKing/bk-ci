@@ -33,7 +33,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
@@ -279,7 +278,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message =  I18nUtil.getCodeLanMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}"
                     )
                 )

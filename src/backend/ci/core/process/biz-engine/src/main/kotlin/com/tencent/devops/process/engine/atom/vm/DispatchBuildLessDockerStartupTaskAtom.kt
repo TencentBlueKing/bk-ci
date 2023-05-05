@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -146,10 +145,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-            errorMsg = MessageUtil.getMessageByLocale(
-                ERROR_PIPELINE_NOT_EXISTS,
-                I18nUtil.getLanguage()
-            ),
+            errorMsg =
+            I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId
@@ -159,10 +156,9 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-            errorMsg = MessageUtil.getMessageByLocale(
-                ERROR_PIPELINE_NOT_EXISTS,
-                I18nUtil.getLanguage(),
-                arrayOf(vmSeqId)
+            errorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(vmSeqId)
             ),
             pipelineId = pipelineId,
             buildId = buildId,

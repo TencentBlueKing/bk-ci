@@ -42,43 +42,25 @@ object BuildMsgUtils {
     private fun getDefaultValue(startType: StartType, channelCode: ChannelCode?): String {
         return when (startType) {
             StartType.MANUAL ->
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_MSG_MANUAL,
-                    defaultMessage = "手动触发"
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_MANUAL)
             StartType.TIME_TRIGGER ->
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_MSG_TIME,
-                    defaultMessage = "定时触发"
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_TIME)
             StartType.WEB_HOOK ->
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_MSG_WEBHOOK,
-                    defaultMessage = "webhook触发"
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_WEBHOOK)
             StartType.REMOTE ->
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_MSG_REMOTE,
-                    defaultMessage = "远程触发"
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_REMOTE)
             StartType.SERVICE ->
                 if (channelCode != null) {
                     if (channelCode == ChannelCode.BS) {
-                        "OpenAPI触发"
+                        "OpenAPI trigger"
                     } else {
-                        channelCode.name + "触发"
+                        channelCode.name + " trigger"
                     }
                 } else {
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BUILD_MSG_SERVICE,
-                        defaultMessage = "服务触发"
-                    )
+                    I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)
                 }
             StartType.PIPELINE ->
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BUILD_MSG_PIPELINE,
-                    defaultMessage = "流水线调用触发"
-                )
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_PIPELINE)
         }
     }
 

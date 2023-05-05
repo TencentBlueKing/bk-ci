@@ -25,13 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.services.container
+package com.tencent.devops.quality.pojo.po
 
-const val BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START = "bkSelfDevelopedPublicImageLocalStart"// 自研公共镜像，不从仓库拉取，直接从本地启动...
-const val BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL = "bkNoPermissionPullImageCheckPathOrCredential"// 无权限拉取镜像:{0}，请检查镜像路径或凭证是否正确
-const val BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL = "bkImageNotExistCheckPathOrCredential"// 镜像不存在：{0}，请检查镜像路径或凭证是否正确；
-const val BK_PULL_IMAGE_FAILED_ERROR_MESSAGE = "bkPullImageFailedErrorMessage"// 拉取镜像失败，错误信息：
-const val BK_TRY_LOCAL_IMAGE_START = "bkTryLocalImageStart"// 尝试使用本地镜像启动...
-const val BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV = "bkPullImageSuccessReadyStartBuildEnv"// 拉取镜像成功，准备启动构建环境...
-const val BK_PUSH_IMAGE = "BkPushImage"// 正在推送镜像,第{0}层，进度：{1}
-const val BK_BUILD_IMAGE_NOT_EXIST = "bkBuildImageNotExist"// 构建镜像不存在
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
+
+@ApiModel("质量红线控制点PO")
+data class ControlPointPO(
+    @ApiModelProperty("ID")
+    val id: Long,
+    @ApiModelProperty("原子的ClassType")
+    val elementType: String,
+    @ApiModelProperty("控制点名称(原子名称)")
+    var name: String,
+    @ApiModelProperty("研发阶段")
+    var stage: String,
+    @ApiModelProperty("支持红线位置(准入-BEFORE, 准出-AFTER)")
+    val availablePosition: String,
+    @ApiModelProperty("默认红线位置")
+    val defaultPosition: String,
+    @ApiModelProperty("是否启用")
+    val enable: Boolean,
+    @ApiModelProperty("创建用户")
+    val createUser: String,
+    @ApiModelProperty("更新用户")
+    val updateUser: String,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("更新时间")
+    val atomVersion: String = "1.0.0",
+    @ApiModelProperty("更新时间")
+    val testProject: String = "",
+    @ApiModelProperty("更新时间")
+    val tag: String? = null,
+    @ApiModelProperty("更新时间")
+    val controlPointHashId: String? = null
+)

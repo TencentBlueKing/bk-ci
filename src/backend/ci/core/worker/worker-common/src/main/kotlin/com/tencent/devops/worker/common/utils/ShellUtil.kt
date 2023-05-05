@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -36,6 +35,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.constants.WorkerMessageCode
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
@@ -159,7 +159,7 @@ object ShellUtil {
                     LoggerService.addErrorLine(
                         MessageUtil.getMessageByLocale(
                             WorkerMessageCode.ENV_VARIABLE_PATH_NOT_EXIST,
-                            System.getProperty(LOCALE_LANGUAGE),
+                            AgentEnv.getLocaleLanguage(),
                             arrayOf(home.absolutePath)
                         )
                     )
@@ -169,7 +169,7 @@ object ShellUtil {
                     LoggerService.addErrorLine(
                         MessageUtil.getMessageByLocale(
                             WorkerMessageCode.ENV_VARIABLE_PATH_NOT_EXIST,
-                            System.getProperty(LOCALE_LANGUAGE),
+                            AgentEnv.getLocaleLanguage(),
                             arrayOf(envFile.absolutePath)
                         )
                     )
@@ -199,7 +199,7 @@ object ShellUtil {
         } else {
             LoggerService.addNormalLine(MessageUtil.getMessageByLocale(
                 WorkerMessageCode.BK_COMMAND_LINE_RETURN_VALUE_NON_ZERO,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             ))
             command.append("set +e\n")
         }

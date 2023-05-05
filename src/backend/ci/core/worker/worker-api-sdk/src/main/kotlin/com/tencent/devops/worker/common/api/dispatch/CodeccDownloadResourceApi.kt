@@ -37,6 +37,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_TOOL_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.Protocol
 import okhttp3.Response
 
@@ -59,7 +60,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_TOOL_FAIL,
-                    System.getProperty(LOCALE_LANGUAGE),
+                    AgentEnv.getLocaleLanguage(),
                     arrayOf(tool)
                 )
             )
@@ -83,7 +84,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL,
-                    System.getProperty(LOCALE_LANGUAGE)
+                    AgentEnv.getLocaleLanguage()
                 )
             )
         }
@@ -107,7 +108,7 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL,
-                    System.getProperty(LOCALE_LANGUAGE)
+                    AgentEnv.getLocaleLanguage()
                 )
             )
         }

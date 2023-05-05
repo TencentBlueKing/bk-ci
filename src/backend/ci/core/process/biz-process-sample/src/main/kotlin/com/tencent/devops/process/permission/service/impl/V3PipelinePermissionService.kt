@@ -38,12 +38,13 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.Response
 
 class V3PipelinePermissionService constructor(
     private val client: Client,

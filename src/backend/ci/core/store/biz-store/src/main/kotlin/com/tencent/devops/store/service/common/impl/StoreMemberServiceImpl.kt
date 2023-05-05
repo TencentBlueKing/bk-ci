@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.DEVOPS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreMemberRecord
@@ -49,11 +48,11 @@ import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreNotifyService
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 abstract class StoreMemberServiceImpl : StoreMemberService {

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType

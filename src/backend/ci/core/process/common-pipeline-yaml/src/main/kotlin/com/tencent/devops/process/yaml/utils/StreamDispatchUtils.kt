@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType

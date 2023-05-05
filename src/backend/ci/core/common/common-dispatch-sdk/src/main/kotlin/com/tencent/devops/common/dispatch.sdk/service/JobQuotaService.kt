@@ -91,7 +91,8 @@ class JobQuotaService constructor(
                     buildId = buildId,
                     message = I18nUtil.getCodeLanMessage(
                         messageCode = BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY,
-                        params = arrayOf(vmType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}")
+                        params = arrayOf(vmType.displayName, "${RETRY_DELTA / 1000}", "${startupEvent.retryTime}"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,

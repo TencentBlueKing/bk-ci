@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.util.KeyReplacement
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
@@ -90,7 +89,7 @@ object WorkspaceUtils {
                                     ?: throw IllegalArgumentException(
                                         MessageUtil.getMessageByLocale(
                                             WorkerMessageCode.UNDEFINED_VARIABLE,
-                                            System.getProperty(LOCALE_LANGUAGE)
+                                            AgentEnv.getLocaleLanguage()
                                         ) + " $workspace"
                                     )
                             }
@@ -108,7 +107,7 @@ object WorkspaceUtils {
                     throw FileNotFoundException(
                         MessageUtil.getMessageByLocale(
                             WorkerMessageCode.ILLEGAL_WORKSPACE,
-                            System.getProperty(LOCALE_LANGUAGE)
+                            AgentEnv.getLocaleLanguage()
                         ) + " [$workspaceDir]"
                     )
                 }
@@ -121,7 +120,7 @@ object WorkspaceUtils {
                 throw IllegalArgumentException(
                     MessageUtil.getMessageByLocale(
                         WorkerMessageCode.UNBEKNOWN_BUILD_TYPE,
-                        System.getProperty(LOCALE_LANGUAGE)
+                        AgentEnv.getLocaleLanguage()
                     ) + " $buildType"
                 )
             }

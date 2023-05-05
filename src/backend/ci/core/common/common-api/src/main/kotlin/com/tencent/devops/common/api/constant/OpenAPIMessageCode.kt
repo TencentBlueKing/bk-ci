@@ -25,33 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.common.api.constant
 
 /**
- * 流水线微服务模块请求返回状态码
+ * 环境管理微服务模块请求返回状态码
  * 返回码制定规则（0代表成功，为了兼容历史接口的成功状态都是返回0）：
  * 1、返回码总长度为7位，
- * 2、前2位数字代表系统名称（如21代表平台）
+ * 2、前2位数字代表系统名称（如21代表蓝盾平台）
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
- *    05:environment-环境 06：experience-版本体验 07：image-镜像 08：log-日志 09：measure-度量 10：monitoring-监控 11：notify-通知
- *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
- *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker）
+ *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
+ *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
- *
- * @since: 2023-3-20
+ * @since: 2019-03-05
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object PushMessageCode {
-    // 2102901起
-    const val FUSH_FILE_VALIDATE_FAIL = "2102901" // 用户无操作下载权限
-    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102902" // 目标机器不能为空
-    const val ENV_NAME_MACHINE_NOT_EXITS = "2102903" // 输入环境名不存在{0},请导入机器至项目
-    const val ENV_MACHINE_NOT_AUTH = "2102904" // 用户没有操作这些环境的权限！环境ID{0}
-    const val NODE_NAME_MACHINE_NOT_EXITS = "2102905" // 输入节点名不存在{0},请导入机器至项目
-    const val FILE_NOT_EXITS = "2102906" // 未匹配到文件{0}
-    const val GET_FILE_FAIL = "2102907" // 构建分发获取文件失败
-    const val JOB_EXECUTE_FAIL = "2102908" // JOB执行失败,msg{0}
+object OpenAPIMessageCode {
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2112001" // OpenAPI：API Gateway公钥文件未设置
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2112002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2112003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2112004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
+    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2112005" // OpenAPI：JWT解析失败
+    const val ERROR_OPENAPI_INNER_SERVICE_FAIL = "2112006" // OpenAPI：内部服务调用失败：{0}
+    const val USER_CHECK_FAIL = "2112007" // OpenAPI：用户校验失败
+    const val ERROR_USER_EXIST = "2112008" // OpenAPI：重复添加
+    const val PARAM_VERIFY_FAIL = "2112009" // 参数校验失败:{0}
+    const val ILLEGAL_USER = "2112010" // 非法用户
 }

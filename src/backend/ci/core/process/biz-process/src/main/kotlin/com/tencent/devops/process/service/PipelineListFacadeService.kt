@@ -105,6 +105,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_RECENT_USE
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
@@ -113,7 +114,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -185,11 +185,7 @@ class PipelineListFacadeService @Autowired constructor(
                 permission = permission
             )
             if (!hasViewPermission) {
-                val permissionMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                    defaultMessage = permission.alias,
-                    language = I18nUtil.getLanguage(userId)
-                )
+                val permissionMsg = permission.getI18n(I18nUtil.getLanguage(userId))
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
@@ -1679,7 +1675,6 @@ class PipelineListFacadeService @Autowired constructor(
                 permission = permission
             )
         ) {
-            val language = I18nUtil.getLanguage(userId)
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,

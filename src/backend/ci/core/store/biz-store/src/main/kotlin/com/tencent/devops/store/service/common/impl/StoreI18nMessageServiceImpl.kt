@@ -46,8 +46,8 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 import java.util.Properties
+import java.util.concurrent.Executors
 
 @Service
 @Suppress("LongParameterList")
@@ -86,35 +86,43 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
         val jsonLocaleLanguage = jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] ?: DEFAULT_LOCALE_LANGUAGE
         logger.info("parseJsonMapI18nInfo:[$devopsDefaultLocaleLanguage|$jsonLocaleLanguage]")
-        if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
+        // 获取蓝盾默认语言的资源文件
+        val fileName = MESSAGE_NAME_TEMPLATE.format(devopsDefaultLocaleLanguage)
+        val defaultProperties = getMessageProperties(
+            projectCode = projectCode,
+            fileDir = fileDir,
+            fileName = fileName,
+            repositoryHashId = repositoryHashId,
+            language = devopsDefaultLocaleLanguage
+        )
+        val fieldLocaleInfos = if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
-            return jsonMap
+            defaultProperties.map {
+                val fieldName = if (!propertiesKeyPrefix.isNullOrBlank()) {
+                    // 如果字段key前缀不为空，需为key加上前缀
+                    "$propertiesKeyPrefix.${it.key}"
+                } else {
+                    it.key.toString()
+                }
+                FieldLocaleInfo(fieldName, it.value.toString())
+            }.toMutableList()
         } else {
-            // 获取蓝盾默认语言的资源文件
-            val fileName = MESSAGE_NAME_TEMPLATE.format(devopsDefaultLocaleLanguage)
-            val defaultProperties = getMessageProperties(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                fileName = fileName,
-                repositoryHashId = repositoryHashId,
-                language = devopsDefaultLocaleLanguage
-            )
-            // 遍历map集合获取字段列表
-            val fieldLocaleInfos = MessageUtil.traverseMap(
+            // 遍历map集合替换国际化字段值为默认语言值并获取国际化字段列表
+            MessageUtil.traverseMap(
                 dataMap = jsonMap,
                 keyPrefix = propertiesKeyPrefix,
                 properties = defaultProperties
             )
-            // 异步解析处理国际化资源文件信息
-            asyncHandleI18nMessage(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                repositoryHashId = repositoryHashId,
-                fieldLocaleInfos = fieldLocaleInfos,
-                dbKeyPrefix = dbKeyPrefix,
-                userId = userId
-            )
         }
+        // 异步解析处理国际化资源文件信息
+        asyncHandleI18nMessage(
+            projectCode = projectCode,
+            fileDir = fileDir,
+            repositoryHashId = repositoryHashId,
+            fieldLocaleInfos = fieldLocaleInfos,
+            dbKeyPrefix = dbKeyPrefix,
+            userId = userId
+        )
         return jsonMap
     }
 

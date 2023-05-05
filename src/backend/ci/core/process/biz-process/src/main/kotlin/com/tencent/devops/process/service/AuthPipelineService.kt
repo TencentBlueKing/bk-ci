@@ -33,14 +33,10 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_NO_MATCHING_STARTED_PIPELINE
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROJECT_NO_PIPELINE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -106,7 +102,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_PROJECT_NO_PIPELINE, I18nUtil.getLanguage())}")
+            logger.info("project $projectId no pipeline")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -140,10 +136,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
-                BK_PROJECT_NO_PIPELINE, 
-                I18nUtil.getDefaultLocaleLanguage()
-            )}")
+            logger.info("$projectId There is no assembly line under the project")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -182,12 +175,7 @@ class AuthPipelineService @Autowired constructor(
         val result = FetchInstanceInfo()
 
         if (pipelineInfos.isEmpty()) {
-            logger.info(
-                "$ids ${MessageUtil.getMessageByLocale(
-                    BK_NO_MATCHING_STARTED_PIPELINE,
-                    I18nUtil.getDefaultLocaleLanguage()
-                )}"
-            )
+            logger.info("$ids does not match to the enable pipeline")
             return result.buildFetchInstanceFailResult()
         }
 

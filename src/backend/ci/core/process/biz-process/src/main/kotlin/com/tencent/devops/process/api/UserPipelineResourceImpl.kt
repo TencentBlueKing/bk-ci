@@ -76,8 +76,8 @@ import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import io.micrometer.core.annotation.Timed
-import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
@@ -374,7 +374,7 @@ class UserPipelineResourceImpl @Autowired constructor(
                 arrayOf(
                     userId,
                     projectId,
-                    AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                    AuthPermission.EDIT.getI18n(language),
                     pipelineId
                 )
             )

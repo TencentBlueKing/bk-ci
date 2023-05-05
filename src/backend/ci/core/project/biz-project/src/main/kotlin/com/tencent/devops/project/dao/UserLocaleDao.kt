@@ -39,7 +39,7 @@ class UserLocaleDao {
             dslContext.insertInto(
                 this,
                 USER_ID,
-                LANGUAGE,
+                LANGUAGE
             )
                 .values(
                     userId,

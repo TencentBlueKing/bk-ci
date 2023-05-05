@@ -28,12 +28,12 @@
 package com.tencent.devops.worker.common.api.scm
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_OAUTH_INFO_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class OauthResourceApi : AbstractBuildResourceApi(), OauthSDKApi {
 
@@ -42,7 +42,7 @@ class OauthResourceApi : AbstractBuildResourceApi(), OauthSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(GET_OAUTH_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+            MessageUtil.getMessageByLocale(GET_OAUTH_INFO_FAIL, AgentEnv.getLocaleLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

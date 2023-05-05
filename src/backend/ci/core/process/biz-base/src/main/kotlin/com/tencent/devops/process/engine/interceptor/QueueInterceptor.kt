@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.interceptor
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -47,10 +46,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.util.TaskUtils
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 
 /**
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
@@ -87,7 +86,9 @@ class QueueInterceptor @Autowired constructor(
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
                 Response(
-                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt()
+                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
+                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_SUMMARY_NOT_FOUND)
+
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(

@@ -30,14 +30,10 @@ package com.tencent.devops.ticket.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.ticket.constant.TicketMessageCode.BK_NO_CERT
-import com.tencent.devops.ticket.constant.TicketMessageCode.BK_NO_CREDENTIAL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,7 +49,7 @@ class AuthCertService @Autowired constructor(
         val certInfos = certService.list(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
+            logger.info("$projectId no credential")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -72,7 +68,7 @@ class AuthCertService @Autowired constructor(
         val certInfos = certService.getCertByIds(ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (certInfos == null || certInfos.isEmpty()) {
-            logger.info("$ids ${I18nUtil.getCodeLanMessage(BK_NO_CREDENTIAL)}")
+            logger.info("$ids no credential")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -102,7 +98,7 @@ class AuthCertService @Autowired constructor(
             certId = keyword)
         val result = SearchInstanceInfo()
         if (certInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(BK_NO_CERT)}")
+            logger.info("$projectId no cert")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

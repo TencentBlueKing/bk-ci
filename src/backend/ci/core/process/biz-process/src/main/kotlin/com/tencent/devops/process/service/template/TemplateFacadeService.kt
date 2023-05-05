@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -59,12 +60,13 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -121,6 +123,10 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -131,10 +137,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -654,7 +656,7 @@ class TemplateFacadeService @Autowired constructor(
 
             if (templateRecord == null) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS,
                     defaultMessage = "模板不存在"
                 )
             } else {
@@ -982,8 +984,12 @@ class TemplateFacadeService @Autowired constructor(
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
                 // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-                templateResult.tips = message ?: ignored.defaultMessage
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = ignored.errorCode,
+                    params = ignored.params,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                templateResult.tips = message
             }
         }
         val latestVersion = TemplateVersion(
@@ -1064,7 +1070,11 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateCompareModelResult {
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
-            ?: throw NotFoundException("流水线模板不存在")
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                language = userId
+            ))
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
@@ -1323,7 +1333,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[instance.pipelineName] = "duplicate!"
             } catch (exception: ErrorCodeException) {
                 logger.warn("TemplateCreateInstanceErrorCode|$projectId|$instance|$userId|${exception.message}")
-                messages[instance.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                messages[instance.pipelineName] = I18nUtil.generateResponseDataObject(
                     messageCode = exception.errorCode,
                     params = exception.params,
                     data = null,
@@ -1402,7 +1412,7 @@ class TemplateFacadeService @Autowired constructor(
                 messages[it.pipelineName] = " exist!"
             } catch (exception: ErrorCodeException) {
                 logger.warn("updateTemplateInstancesErrorCode|$projectId|$it|$userId|${exception.message}")
-                messages[it.pipelineName] = MessageCodeUtil.generateResponseDataObject(
+                messages[it.pipelineName] = I18nUtil.generateResponseDataObject(
                     messageCode = exception.errorCode,
                     params = exception.params,
                     data = null,
@@ -1541,7 +1551,7 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelines.add(templateInstanceUpdate.pipelineName)
                 } catch (exception: ErrorCodeException) {
                     logger.info("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|${exception.message}")
-                    val message = MessageCodeUtil.generateResponseDataObject(
+                    val message = I18nUtil.generateResponseDataObject(
                         messageCode = exception.errorCode,
                         params = exception.params,
                         data = null,

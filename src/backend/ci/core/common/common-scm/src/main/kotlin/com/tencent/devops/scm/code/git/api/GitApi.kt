@@ -38,8 +38,27 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_O
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.ADD_MR_COMMENTS_FAIL
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.COMMIT_CHECK_ADD_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.CREATE_BRANCH
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.DELETE_BRANCH
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.GET_PROJECT_INFO
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_CANNOT_OPERATION
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_INTERFACE_NOT_EXIST
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_ADD_COMMIT_CHECK
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_ADD_MR_COMMENT
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_ADD_WEBHOOK
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_BRANCH
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_COMMIT
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_COMMIT_DIFF
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_CHANGE_FILE_LIST
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_MR_COMMIT_LIST
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_LIST_WEBHOOK
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_MR_CHANGE
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_MR_INFO
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_PROJECT_USER_INFO
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_TAG
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_TAPD_WORKITEMS
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_UNLOCK_HOOK_LOCK
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_UPDATE_WEBHOOK
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_ADD_FAIL
@@ -83,31 +102,12 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
-        private const val OPERATION_BRANCH = "bkOperationBranch"
-        private const val OPERATION_TAG = "bkOperationTag"
-        private const val OPERATION_ADD_WEBHOOK = "bkOperationAddWebhook"
-        private const val OPERATION_UPDATE_WEBHOOK = "bkOperationUpdateWebhook"
-        private const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook"
-        private const val OPERATION_ADD_COMMIT_CHECK = "oBkperationAddCommitCheck"
-        private const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment"
-        private const val CREATE_BRANCH = "bkCreateBranch"
-        private const val DELETE_BRANCH = "bkDeleteBranch"
-        private const val OPERATION_COMMIT = "bkOperationCommit"
-        private const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff"
-        private const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock"
-        private const val OPERATION_MR_CHANGE = "bkOperationMrChange"
-        private const val OPERATION_MR_INFO = "bkOperationMrInfo"
-        private const val OPERATION_MR_REVIEW = "bkOperationMrReview"
-        private const val OPERATION_GET_CHANGE_FILE_LIST = "bkOperationGetChangeFileList"
-        private const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList"
-        private const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo"
-        private const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems"
-        private const val GET_PROJECT_INFO = "bkGetProjectInfo"// 获取项目详情
     }
 
     private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
         return I18nUtil.getCodeLanMessage(
-            messageCode = messageCode
+            messageCode = messageCode,
+            params = params
         )
     }
 

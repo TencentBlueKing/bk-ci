@@ -27,8 +27,8 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_AUTHORIZATION_SUCCEEDED
-import com.tencent.devops.auth.common.AuthI18nConstants.BK_CANCELLED_AUTHORIZATION_SUCCEEDED
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AUTHORIZATION_SUCCEEDED
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CANCELLED_AUTHORIZATION_SUCCEEDED
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.dao.ManagerUserHistoryDao

@@ -89,13 +89,13 @@ import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.utils.PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.atomic.AtomicInteger
+import javax.ws.rs.core.Response
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.atomic.AtomicInteger
-import javax.ws.rs.core.Response
 
 @Suppress(
     "LongParameterList",
@@ -451,7 +451,8 @@ class PipelineRepositoryService constructor(
         if (option == null) throw DependNotFoundException("matrix option not found")
         if ((option.maxConcurrency ?: 0) > PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX) {
             throw InvalidParamException(
-                "matrix maxConcurrency number(${option.maxConcurrency}) exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
+                "matrix maxConcurrency number(${option.maxConcurrency}) " +
+                        "exceed $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX /" +
                         "matrix maxConcurrency(${option.maxConcurrency}) " +
                         "is larger than $PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX"
             )
@@ -824,7 +825,8 @@ class PipelineRepositoryService constructor(
 
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                defaultMessage = "要删除的流水线不存在"
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
@@ -955,7 +957,10 @@ class PipelineRepositoryService constructor(
 
         if (existPipelines.contains(pipelineId)) {
             logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
-            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL)
+            throw ErrorCodeException(
+                defaultMessage = "子流水线不允许循环调用",
+                errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
+            )
         }
         existPipelines.add(pipelineId)
         val pipeline = getPipelineInfo(projectId, pipelineId)
@@ -1070,7 +1075,8 @@ class PipelineRepositoryService constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                defaultMessage = "流水线名称已被使用"
             )
         }
 
@@ -1174,7 +1180,8 @@ class PipelineRepositoryService constructor(
     ): Model {
         val existModel = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            defaultMessage = "流水线编排不存在"
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1188,7 +1195,8 @@ class PipelineRepositoryService constructor(
                 days = days
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
+                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
+                defaultMessage = "要还原的流水线不存在，可能已经被删除或还原了"
             )
 
             existModel.name = pipeline.pipelineName
@@ -1197,11 +1205,8 @@ class PipelineRepositoryService constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    params = arrayOf(
-                        "(编辑/edit)",
-                        pipeline.channel,
-                        "$channelCode"
-                    )
+                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channel}不符合$channelCode",
+                    params = arrayOf(pipeline.channel)
                 )
             }
 

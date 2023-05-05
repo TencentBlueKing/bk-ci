@@ -44,16 +44,20 @@ data class KubernetesBuilderStatus(
 
 enum class KubernetesBuilderStatusEnum(
     val realName: String,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "kubernetesBuilderStatus", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "kubernetesBuilderStatus",
+        reusePrefixFlag = false
+    )
     val message: String
 ) {
-    READY_TO_RUN("readyToRun", "readyToRun"),// 构建机初始化状态，等待创建
-    NOT_EXIST("notExist", "notExist"),// 构建机不存在，可能已被删除或者未创建
-    PENDING("pending", "pending"),// 等待运行中
-    RUNNING("running", "running"),// 运行中
-    SUCCEEDED("succeeded", "succeeded"),// 容器运行成功退出
-    FAILED("failed", "failed"),// 运行失败，容器以非0退出
-    UNKNOWN("unknown", "unknown"),// 构建机状态未知
+    READY_TO_RUN("readyToRun", "readyToRun"), // 构建机初始化状态，等待创建
+    NOT_EXIST("notExist", "notExist"), // 构建机不存在，可能已被删除或者未创建
+    PENDING("pending", "pending"), // 等待运行中
+    RUNNING("running", "running"), // 运行中
+    SUCCEEDED("succeeded", "succeeded"), // 容器运行成功退出
+    FAILED("failed", "failed"), // 运行失败，容器以非0退出
+    UNKNOWN("unknown", "unknown"), // 构建机状态未知
 }
 
 fun KubernetesBuilderStatus.readyToStart(): Boolean {

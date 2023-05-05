@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
@@ -109,7 +108,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = logoFile,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                language = I18nUtil.getLanguage(userId)
+            )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -145,7 +150,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
             throw PermissionForbiddenException(
                 I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PEM_CHECK_FAIL,
+                    messageCode = ProjectMessageCode.PEM_CHECK_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 )
             )

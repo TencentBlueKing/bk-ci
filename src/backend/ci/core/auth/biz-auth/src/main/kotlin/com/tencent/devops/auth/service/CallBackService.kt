@@ -32,7 +32,6 @@ import com.tencent.devops.auth.dao.AuthIamCallBackDao
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -123,12 +122,7 @@ class CallBackService @Autowired constructor(
                 val relatedResourceRecord = iamCallBackDao.get(dslContext, it)
                 if (relatedResourceRecord == null) {
                     logger.warn("resource[$it] related not exist")
-                    throw ErrorCodeException(
-                        errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL,
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            messageCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL
-                        )
-                    )
+                    throw ErrorCodeException(errorCode = AuthMessageCode.RELATED_RESOURCE_CHECK_FAIL)
                 }
             }
         }

@@ -105,7 +105,7 @@ class DispatchBuildService @Autowired constructor(
         val dockerRoutingType = DockerRoutingType.valueOf(dispatchMessage.dockerRoutingType!!)
         logsPrinter.printLogs(
             dispatchMessage = dispatchMessage,
-            message = containerServiceFactory.load(dispatchMessage.projectId).log.readyStartLog
+            message = containerServiceFactory.load(dispatchMessage.projectId).getLog().readyStartLog
         )
 
         val buildBuilderPoolNo = builderPoolNoDao.getBaseBuildLastPoolNo(
@@ -174,7 +174,7 @@ class DispatchBuildService @Autowired constructor(
                 errorType = e.errorType,
                 errorCode = e.errorCode,
                 formatErrorMessage = e.formatErrorMessage,
-                errorMessage = (e.message ?: dispatchBuild.log.startContainerError)
+                errorMessage = (e.message ?: dispatchBuild.getLog().startContainerError)
             )
         } catch (e: Exception) {
             logger.error(
@@ -185,14 +185,14 @@ class DispatchBuildService @Autowired constructor(
                 throw BuildFailureException(
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorCode,
-                    ErrorCodeEnum.INTERFACE_TIMEOUT.formatErrorMessage,
-                    dispatchBuild.log.troubleShooting + I18nUtil.getCodeLanMessage(BK_INTERFACE_REQUEST_TIMEOUT)
+                    ErrorCodeEnum.INTERFACE_TIMEOUT.getErrorMessage(),
+                    dispatchBuild.getLog().troubleShooting + I18nUtil.getCodeLanMessage(BK_INTERFACE_REQUEST_TIMEOUT)
                 )
             }
             throw BuildFailureException(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
+                ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE,
                     params = arrayOf("${e.message}", "${dispatchBuild.helpUrl}")
@@ -336,8 +336,8 @@ class DispatchBuildService @Autowired constructor(
             throw BuildFailureException(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.formatErrorMessage
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
             )
         } finally {
             lock.unlock()
@@ -480,10 +480,10 @@ class DispatchBuildService @Autowired constructor(
             throw BuildFailureException(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                dispatchBuild.log.troubleShooting + MessageUtil.getMessageByLocale(
+                ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                dispatchBuild.getLog().troubleShooting + MessageUtil.getMessageByLocale(
                             BK_BUILD_MACHINE_STARTUP_FAILED,
-                            I18nUtil.getLanguage(userId),
+                            I18nUtil.getLanguage(),
                             arrayOf(failedMsg ?: "")
                 )
             )

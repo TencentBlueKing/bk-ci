@@ -64,6 +64,11 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_HISTORY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_STATUS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BUILD_VARIABLES_VALUE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_DETAIL
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.engine.common.Timeout
@@ -119,12 +124,12 @@ import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_SKIP_FAILED_TASK
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.UriBuilder
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
 /**
  *
@@ -264,16 +269,8 @@ class PipelineBuildFacadeService(
                 containerType = null,
                 glob = null,
                 properties = null,
-                label = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_LABEL,
-                    defaultMessage = "构建信息",
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                placeholder = I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_MSG_MANUAL,
-                    defaultMessage = "手动触发",
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                label = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_LABEL),
+                placeholder = I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_MSG_MANUAL),
                 propertyType = BuildPropertyType.BUILD.name
             )
         )
@@ -983,10 +980,7 @@ class PipelineBuildFacadeService(
         }
         val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
-            pipelineRuntimeService.approveTriggerReview(
-                userId = userId, buildId = buildId, pipelineId = pipelineId, projectId = projectId,
-                resourceVersion = buildInfo.version, executeCount = executeCount
-            )
+            pipelineRuntimeService.approveTriggerReview(userId = userId, buildInfo = buildInfo)
         } else {
             pipelineRuntimeService.disapproveTriggerReview(
                 userId = userId, buildId = buildId, pipelineId = pipelineId,
@@ -1311,7 +1305,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "detail")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
                 )
             )
         }
@@ -1365,7 +1359,7 @@ class PipelineBuildFacadeService(
             message = MessageUtil.getMessageByLocale(
                 ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "detail")
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
             )
         )
         val buildId = pipelineRuntimeService.getBuildIdbyBuildNo(projectId, pipelineId, buildNo)
@@ -1461,7 +1455,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "detail")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
                 )
             )
         }
@@ -1492,7 +1486,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "build status")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_STATUS))
                 )
             )
         }
@@ -1579,7 +1573,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "build variables")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_VARIABLES))
                 )
             )
         }
@@ -1626,7 +1620,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "build the value of the variable")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_VARIABLES_VALUE))
                 )
             )
         }
@@ -1709,7 +1703,7 @@ class PipelineBuildFacadeService(
                     message = MessageUtil.getMessageByLocale(
                         ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                         I18nUtil.getLanguage(userId),
-                        arrayOf(userId, pipelineId, "history build")
+                        arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
                     )
                 )
             }
@@ -1806,7 +1800,7 @@ class PipelineBuildFacadeService(
                     message = MessageUtil.getMessageByLocale(
                         ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                         I18nUtil.getLanguage(userId),
-                        arrayOf(userId, pipelineId, "History build")
+                        arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
                     )
                 )
             }
@@ -1913,7 +1907,7 @@ class PipelineBuildFacadeService(
             message = MessageUtil.getMessageByLocale(
                 ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "history build")
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
         val result = mutableListOf<IdValue>()
@@ -1932,7 +1926,7 @@ class PipelineBuildFacadeService(
             message = MessageUtil.getMessageByLocale(
                 ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "history build")
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
         return StartType.getStartTypeMap()
@@ -1947,7 +1941,7 @@ class PipelineBuildFacadeService(
             message = MessageUtil.getMessageByLocale(
                 ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "history build")
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
         return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId)
@@ -1967,7 +1961,7 @@ class PipelineBuildFacadeService(
             message = MessageUtil.getMessageByLocale(
                 ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
-                arrayOf(userId, pipelineId, "history build")
+                arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
         return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias)
@@ -2193,9 +2187,7 @@ class PipelineBuildFacadeService(
                 taskId = VMUtils.genStartVMTaskId(vmSeqId)
             )
             if (startUpVMTask?.status?.isRunning() == true) {
-                msg = "$msg| ${I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
-                    )
+                msg = "$msg| ${I18nUtil.getCodeLanMessage(messageCode = ProcessMessageCode.BUILD_WORKER_DEAD_ERROR)
                 }"
             } else {
                 logger.info("[$buildId]|Job#$vmSeqId| worker had been exit. msg=$msg")
@@ -2298,7 +2290,7 @@ class PipelineBuildFacadeService(
                 message = MessageUtil.getMessageByLocale(
                     ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
-                    arrayOf(userId, pipelineId, "detail")
+                    arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_DETAIL))
                 )
             )
         }

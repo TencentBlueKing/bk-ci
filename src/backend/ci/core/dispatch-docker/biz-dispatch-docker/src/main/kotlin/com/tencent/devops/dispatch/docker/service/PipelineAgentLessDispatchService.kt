@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_NOT_RUNNING
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.PIPELINE_STATUS_ERROR
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -143,7 +142,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             LOG.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
             val message = MessageUtil.getMessageByLocale(
-                "$PIPELINE_STATUS_ERROR",
+                PIPELINE_STATUS_ERROR.toString(),
                 I18nUtil.getLanguage(event.userId)
             )
             throw BuildFailureException(
@@ -157,7 +156,7 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         if (!statusResult.data!!.isRunning()) {
             LOG.warn("The build event($event) is not running")
             val message = MessageUtil.getMessageByLocale(
-                "$PIPELINE_NOT_RUNNING",
+                PIPELINE_NOT_RUNNING.toString(),
                 I18nUtil.getLanguage(event.userId)
             )
             throw BuildFailureException(

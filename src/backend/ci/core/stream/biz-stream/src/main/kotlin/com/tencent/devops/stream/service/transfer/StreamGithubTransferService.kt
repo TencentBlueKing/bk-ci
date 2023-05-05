@@ -53,6 +53,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.stream.constant.StreamMessageCode.NOT_AUTHORIZED_BY_OAUTH
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -65,11 +66,11 @@ import com.tencent.devops.stream.pojo.enums.StreamBranchesOrder
 import com.tencent.devops.stream.pojo.enums.StreamProjectsOrder
 import com.tencent.devops.stream.pojo.enums.StreamSortAscOrDesc
 import com.tencent.devops.stream.service.StreamGitTransferService
+import java.util.Base64
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.Base64
 
 class StreamGithubTransferService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -349,7 +350,7 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String
     ): GithubToken {
         return client.get(ServiceGithubResource::class).getAccessToken(userId).data ?: throw OauthForbiddenException(
-            message = MessageUtil.getMessageByLocale(USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
+            message = MessageUtil.getMessageByLocale(NOT_AUTHORIZED_BY_OAUTH, I18nUtil.getLanguage(userId))
         )
     }
 }

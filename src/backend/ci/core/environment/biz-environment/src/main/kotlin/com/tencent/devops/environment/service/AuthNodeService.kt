@@ -30,13 +30,10 @@ package com.tencent.devops.environment.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.constant.BK_PROJECT_NO_NODE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -72,10 +69,7 @@ class AuthNodeService @Autowired constructor(
         val nodeInfos = nodeService.listByPage(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${I18nUtil.getCodeLanMessage(
-                BK_PROJECT_NO_NODE,
-                I18nUtil.getDefaultLocaleLanguage()
-            )}")
+            logger.info("project $projectId no node")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -104,10 +98,7 @@ class AuthNodeService @Autowired constructor(
             displayName = keyword)
         val result = SearchInstanceInfo()
         if (nodeInfos?.records == null) {
-            logger.info("$projectId ${MessageUtil.getMessageByLocale(
-                BK_PROJECT_NO_NODE,
-                I18nUtil.getDefaultLocaleLanguage()
-            )}")
+            logger.info("$projectId There are no nodes under the project")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

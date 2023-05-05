@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -50,7 +49,6 @@ import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.constant.ProjectMessageCode.BK_AUTH_CENTER_CREATE_PROJECT_INFO
 import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
@@ -184,15 +182,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn(
-                MessageUtil.getMessageByLocale(BK_AUTH_CENTER_CREATE_PROJECT_INFO, I18nUtil.getLanguage(userId)) +
-                "$projectCreateInfo",
-                e
-            )
+            logger.warn("Permission Center to create project information： $projectCreateInfo", e)
             throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PEM_CREATE_FAIL, language = I18nUtil.getLanguage(userId)
-                )
+                I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL)
             )
         }
         if (projectId.isNullOrEmpty()) {
@@ -241,11 +233,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (createExtInfo.needAuth) {
                 deleteAuth(projectId, accessToken)
             }
-            throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PROJECT_NAME_EXIST,
-                    language = I18nUtil.getLanguage(userId))
-            )
+            throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
         } catch (ignored: Throwable) {
             logger.warn(
                 "Fail to create the project ($projectCreateInfo)",
@@ -271,9 +259,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PROJECT_NAME_EXIST, language = I18nUtil.getLanguage(userId)
-                )
+                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST)
             )
         }
         val projectCreateExtInfo = ProjectCreateExtInfo(
@@ -326,8 +312,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         dslContext = dslContext,
                         englishName = englishName
                     )?.projectId ?: throw NotFoundException(
-                        "-$englishName" +
-                                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+                        "-$englishName" + I18nUtil.getCodeLanMessage(PROJECT_NOT_EXIST)
                     )
                     projectDao.update(
                         dslContext = context,
@@ -353,11 +338,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 success = true
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectUpdateInfo", e)
-                throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        ProjectMessageCode.PROJECT_NAME_EXIST,
-                        language = I18nUtil.getLanguage(userId))
-                )
+                throw OperationException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
             }
         } finally {
             projectJmxApi.execute(ProjectJmxApi.PROJECT_UPDATE, System.currentTimeMillis() - startEpoch, success)
@@ -593,19 +574,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             } catch (e: Exception) {
                 logger.warn("fail update projectLogo", e)
                 throw OperationException(
-                    I18nUtil.getCodeLanMessage(
-                        ProjectMessageCode.UPDATE_LOGO_FAIL,
-                        language = I18nUtil.getLanguage(userId)
-                    )
+                    I18nUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL)
                 )
             } finally {
                 logoFile?.delete()
             }
         } else {
             throw OperationException(
-                I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.QUERY_PROJECT_FAIL, language = I18nUtil.getLanguage(userId)
-                )
+                I18nUtil.getCodeLanMessage(ProjectMessageCode.QUERY_PROJECT_FAIL)
             )
         }
     }
@@ -614,9 +590,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.NAME_TOO_LONG,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.NAME_TOO_LONG, language = I18nUtil.getLanguage(userId)
-                )
+                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG)
             )
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectId)) {

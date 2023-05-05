@@ -27,10 +27,8 @@
 
 package com.tencent.devops.quality.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -61,14 +59,9 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
             )) {
-            val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias,
-                language = I18nUtil.getLanguage(userId)
-            )
             throw PermissionForbiddenException(
                 message = message,
-                params = arrayOf(permissionMsg))
+                params = arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId))))
         }
     }
 
@@ -151,14 +144,9 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 projectCode = projectId,
                 permission = authPermission
             )) {
-            val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias,
-                language = I18nUtil.getLanguage(userId)
-            )
             throw PermissionForbiddenException(
                 message = message,
-                params = arrayOf(permissionMsg)
+                params = arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
     }
@@ -177,14 +165,9 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(ruleId),
                 permission = authPermission)) {
-            val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias,
-                language = I18nUtil.getLanguage(userId)
-            )
             throw PermissionForbiddenException(
                 message = message,
-                params = arrayOf(permissionMsg)
+                params = arrayOf(authPermission.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
     }

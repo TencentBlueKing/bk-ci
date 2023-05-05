@@ -34,14 +34,13 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_BUILD_BASE_INFO_FAIL
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_FILE_FAILED
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
 import com.tencent.bkrepo.repository.pojo.token.TokenType
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_BUILD_BASE_INFO_FAIL
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_FILE_FAILED
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -63,18 +62,19 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
+import java.io.File
+import java.net.URLEncoder
+import java.util.Locale
+import java.util.Base64
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.net.URLEncoder
-import java.util.Base64
-import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
 
@@ -84,7 +84,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val request = buildGet(path)
             val response = request(
                 request,
-                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, System.getProperty(LOCALE_LANGUAGE))
+                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, AgentEnv.getLocaleLanguage())
             )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
@@ -164,7 +164,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {
@@ -276,7 +276,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val message = MessageUtil.getMessageByLocale(
             UPLOAD_FILE_FAILED,
-            System.getProperty(LOCALE_LANGUAGE)
+            AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)
         try {

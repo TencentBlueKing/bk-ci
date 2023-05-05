@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -54,16 +53,16 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")

@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
@@ -51,12 +50,12 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("LongParameterList", "ThrowsCount")

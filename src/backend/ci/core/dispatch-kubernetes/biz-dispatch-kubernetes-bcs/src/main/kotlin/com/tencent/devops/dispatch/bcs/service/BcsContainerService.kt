@@ -99,10 +99,12 @@ class BcsContainerService @Autowired constructor(
 
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
-        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getLanguage()),
-        startContainerError = I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getLanguage()),
-        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getLanguage())
+    override fun getLog() = DispatchBuildLog(
+        readyStartLog =
+        I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
+        startContainerError =
+        I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getDefaultLocaleLanguage())
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -219,8 +221,10 @@ class BcsContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                I18nUtil.getCodeLanMessage(BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS) +
-                        " builderName: $builderName "
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + " builderName: $builderName "
             )
 
             val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
@@ -235,25 +239,23 @@ class BcsContainerService @Autowired constructor(
                     this,
                     I18nUtil.getCodeLanMessage(
                         BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
-                    I18nUtil.getDefaultLocaleLanguage()
-                ))
+                        I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName)
                 throw BuildFailureException(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    combinationI18nMessage(TROUBLE_SHOOTING, BK_BUILD_MACHINE_CREATION_FAILED) +
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_ERROR.errorCode.toString()),
+                    I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
                     ":${failedMsg ?: taskStatus.message}"
                 )
             }
             return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)
         }
-    }
-
-    private fun combinationI18nMessage(message: String, errorMessage: String): String {
-        return I18nUtil.getCodeLanMessage(message) + I18nUtil.getCodeLanMessage(errorMessage)
     }
 
     override fun startBuilder(

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.worker.common.task.script
 
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -51,9 +50,9 @@ import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -126,7 +125,7 @@ open class ScriptTask : ITask() {
                 LoggerService.addErrorLine(
                     MessageUtil.getMessageByLocale(
                         SCRIPT_EXECUTION_FAIL,
-                        System.getProperty(LOCALE_LANGUAGE),
+                        AgentEnv.getLocaleLanguage(),
                         arrayOf(archiveFileIfExecFail)
                     )
                 )
@@ -146,7 +145,7 @@ open class ScriptTask : ITask() {
                 )
                 if (count == 0) {
                     LoggerService.addErrorLine(
-                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, System.getProperty(LOCALE_LANGUAGE))
+                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, AgentEnv.getLocaleLanguage())
                     )
                 }
             }

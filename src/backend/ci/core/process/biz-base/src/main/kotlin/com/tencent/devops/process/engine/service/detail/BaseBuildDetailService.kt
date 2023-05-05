@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
 import com.tencent.devops.common.api.constant.BUILD_STAGE_SUCCESS
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
@@ -180,9 +179,7 @@ open class BaseBuildDetailService constructor(
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
                 showMsg = if (stage.id == TRIGGER_STAGE) {
-                    I18nUtil.getCodeLanMessage(
-                        statusMessage
-                    ) + (reason?.let { ": $reason" } ?: "")
+                    I18nUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
         }

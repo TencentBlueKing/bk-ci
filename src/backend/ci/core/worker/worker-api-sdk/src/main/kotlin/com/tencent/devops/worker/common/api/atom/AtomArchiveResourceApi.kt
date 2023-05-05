@@ -37,12 +37,10 @@ import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -62,12 +60,13 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_ATOM_FILE_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import java.io.File
-import java.net.URLEncoder
 
 class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
 
@@ -99,7 +98,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             request,
             MessageUtil.getMessageByLocale(
                 GET_PLUGIN_ENV_INFO_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             )
         )
         return objectMapper.readValue(responseContent)
@@ -124,7 +123,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
                 request,
                 MessageUtil.getMessageByLocale(
                     UPDATE_PLUGIN_ENV_INFO_FAILED,
-                    System.getProperty(LOCALE_LANGUAGE)
+                    AgentEnv.getLocaleLanguage()
                 )
             )
         return objectMapper.readValue(responseContent)
@@ -140,7 +139,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             request,
             MessageUtil.getMessageByLocale(
                 GET_PLUGIN_SENSITIVE_INFO_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             )
         )
         return objectMapper.readValue(responseContent)
@@ -179,7 +178,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         LoggerService.addNormalLine("${
             MessageUtil.getMessageByLocale(
                 ARCHIVE_PLUGIN_FILE_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             )
         }>>> ${file.name}")
 
@@ -194,7 +193,10 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         val request = buildPut(url.toString(), RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
-        val responseContent = request(request, I18nUtil.getCodeLanMessage(ARCHIVE_ATOM_FILE_FAIL))
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(ARCHIVE_ATOM_FILE_FAIL, language = AgentEnv.getLocaleLanguage())
+        )
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("${obj["code"]}")
@@ -275,7 +277,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             request,
             MessageUtil.getMessageByLocale(
                 GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             )
         )
         return objectMapper.readValue(responseContent)
@@ -295,7 +297,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
             request,
             MessageUtil.getMessageByLocale(
                 ADD_PLUGIN_PLATFORM_INFO_FAILED,
-                System.getProperty(LOCALE_LANGUAGE)
+                AgentEnv.getLocaleLanguage()
             )
         )
         return objectMapper.readValue(responseContent)

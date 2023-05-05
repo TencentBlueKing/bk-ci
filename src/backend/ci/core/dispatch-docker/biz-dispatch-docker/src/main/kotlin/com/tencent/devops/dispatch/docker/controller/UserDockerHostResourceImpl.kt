@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -236,10 +235,10 @@ class UserDockerHostResourceImpl @Autowired constructor(
                     arrayOf(
                         userId,
                         projectId,
-                        permission.getI18n(I18nUtil.getLanguage(userId)),
+                        permission.getI18n(language),
                         pipelineId
                     )
-                ),
+                )
             )
         }
     }
@@ -262,7 +261,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             )
         ) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                messageCode = permission.getI18n(I18nUtil.getLanguage(userId)),
                 defaultMessage = permission.alias,
                 language = I18nUtil.getLanguage(userId)
             )

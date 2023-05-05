@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.rule
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
@@ -52,14 +53,12 @@ class PipelineRuleService @Autowired constructor(
 ) {
 
     companion object {
+        private const val MAX_BUILD_NUM_ALIAS_LENGTH = 256
         private const val PIPELINE_RULE_PROCESSOR_KEY_PREFIX = "PIPELINE_RULE_PROCESSOR_KEY"
         private val logger = LoggerFactory.getLogger(PipelineRuleService::class.java)
     }
 
-    fun savePipelineRule(
-        userId: String,
-        pipelineRule: PipelineRule
-    ): Boolean {
+    fun savePipelineRule(userId: String, pipelineRule: PipelineRule): Boolean {
         logger.info("savePipelineRule userId:$userId,pipelineRule:$pipelineRule")
         val ruleName = pipelineRule.ruleName
         val busCode = pipelineRule.busCode
@@ -80,11 +79,7 @@ class PipelineRuleService @Autowired constructor(
         return true
     }
 
-    fun updatePipelineRule(
-        userId: String,
-        ruleId: String,
-        pipelineRule: PipelineRule
-    ): Boolean {
+    fun updatePipelineRule(userId: String, ruleId: String, pipelineRule: PipelineRule): Boolean {
         logger.info("savePipelineRule userId:$userId,ruleId:$ruleId,pipelineRule:$pipelineRule")
         val ruleName = pipelineRule.ruleName
         val busCode = pipelineRule.busCode
@@ -126,10 +121,7 @@ class PipelineRuleService @Autowired constructor(
         return true
     }
 
-    fun getPipelineRule(
-        userId: String,
-        ruleId: String
-    ): PipelineRule? {
+    fun getPipelineRule(userId: String, ruleId: String): PipelineRule? {
         val pipelineRuleRecord = pipelineRuleDao.getPipelineRuleById(dslContext, ruleId)
         return if (pipelineRuleRecord != null) {
             PipelineRule(
@@ -142,10 +134,7 @@ class PipelineRuleService @Autowired constructor(
         }
     }
 
-    fun getPipelineRuleProcessor(
-        busCode: String,
-        ruleName: String
-    ): String? {
+    fun getPipelineRuleProcessor(busCode: String, ruleName: String): String? {
         var processor = redisOperation.hget(getPipelineRuleProcessorKey(busCode), ruleName)
         if (processor.isNullOrEmpty()) {
             val pipelineRuleRecord = pipelineRuleDao.getPipelineRuleByName(dslContext, ruleName, busCode)
@@ -210,10 +199,7 @@ class PipelineRuleService @Autowired constructor(
         return generateReplaceRuleStr(ruleStr, validRuleValueMap)
     }
 
-    fun validateRuleStr(
-        ruleStr: String,
-        busCode: String
-    ): MutableMap<String, String> {
+    fun validateRuleStr(ruleStr: String, busCode: String): MutableMap<String, String> {
         val ruleNameList = getRuleNameList(ruleStr)
         val validRuleProcessorMap = mutableMapOf<String, String>()
         ruleNameList.forEach { ruleName ->
@@ -266,16 +252,13 @@ class PipelineRuleService @Autowired constructor(
         }
     }
 
-    fun generateReplaceRuleStr(
-        ruleStr: String,
-        validRuleValueMap: MutableMap<String, String>
-    ): String {
+    fun generateReplaceRuleStr(ruleStr: String, validRuleValueMap: MutableMap<String, String>): String {
         var replaceRuleStr = ruleStr
         validRuleValueMap.forEach { (ruleName, ruleValue) ->
             // 占位符替换
             replaceRuleStr = replaceRuleStr.replace("\${{$ruleName}}", ruleValue)
         }
-        return replaceRuleStr
+        return replaceRuleStr.coerceAtMaxLength(MAX_BUILD_NUM_ALIAS_LENGTH)
     }
 
     fun getRuleNameList(ruleStr: String): MutableList<String> {

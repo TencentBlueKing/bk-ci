@@ -29,7 +29,6 @@ package com.tencent.devops.process.engine.utils
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -42,9 +41,9 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
-import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
 
 object PipelineUtils {
 
@@ -112,6 +111,7 @@ object PipelineUtils {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH,
+                defaultMessage = "Stage审核参数 $key 超出4000长度限制",
                 params = arrayOf(key)
             )
         }

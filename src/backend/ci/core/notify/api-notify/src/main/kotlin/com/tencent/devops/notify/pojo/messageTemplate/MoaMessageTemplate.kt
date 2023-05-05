@@ -24,20 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.notify.pojo.messageTemplate
 
-package com.tencent.devops.process.engine.control.lock
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-
-class PipelineBuildHistoryLock(redisOperation: RedisOperation, pipelineId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "process:build:history:lock:$pipelineId",
-        expiredTimeInSeconds = 10L
-    ) {
-    override fun decorateKey(key: String): String {
-        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
-        return key
-    }
-}
+@ApiModel("模板配置信息")
+data class MoaMessageTemplate(
+    @ApiModelProperty("模板ID", required = true)
+    val id: String,
+    @ApiModelProperty("标题", required = false)
+    var title: String?,
+    @ApiModelProperty("内容", required = true)
+    var body: String,
+    @ApiModelProperty("回调地址", required = false)
+    val callbackUrl: String?,
+    @ApiModelProperty("流程名称: 单据所属的业务流程名称，由业务传入", required = true)
+    val processName: String
+)

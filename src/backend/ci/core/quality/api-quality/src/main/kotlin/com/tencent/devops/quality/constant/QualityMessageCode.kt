@@ -43,7 +43,7 @@ package com.tencent.devops.quality.constant
  *
  */
 object QualityMessageCode {
-    const val NEED_USER_GROUP_X_PERMISSION = "2114001" // 用户没有用户组的{2}权限
+    const val NEED_USER_GROUP_X_PERMISSION = "2114001" // 用户没有用户组的{0}权限
     const val USER_GROUP_NOT_EXISTS = "2114002" // 用户组({0})不存在
     const val USER_GROUP_IS_EXISTS = "2114003" // 用户组({0})已存在
     const val QUALITY_INDICATOR_ENGLISH_NAME_EXISTS = "2114004" // 英文名({0})的指标已存在

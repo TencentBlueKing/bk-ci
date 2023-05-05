@@ -31,13 +31,12 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
-import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
+import com.tencent.devops.common.api.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.service.OpenapiPermissionService
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -183,7 +182,7 @@ class ApiAspect(
             logger.info("openapi check parameters error| error info:${ignored.message}")
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL)+ " ${ignored.message}"
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_VERIFY_FAIL) + " ${ignored.message}"
             )
         } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传

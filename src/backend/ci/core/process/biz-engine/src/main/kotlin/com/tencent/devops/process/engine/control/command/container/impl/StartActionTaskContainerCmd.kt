@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control.command.container.impl
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.expression.ExpressionParseException

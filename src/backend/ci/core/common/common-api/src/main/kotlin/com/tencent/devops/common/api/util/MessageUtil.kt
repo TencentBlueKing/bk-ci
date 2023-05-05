@@ -239,9 +239,7 @@ object MessageUtil {
             is Set<*> -> {
                 // entity如果是set集合，为了保证字段有序，需先将其转换为有序的list集合然后遍历集合中的对象收集国际化字段信息
                 entity.toList().sortedBy {
-                    it?.let {
-                        ShaUtils.sha1InputStream(JsonUtil.toJson(it, false).byteInputStream())
-                    }
+                    it?.let { ShaUtils.sha1InputStream(JsonUtil.toJson(it, false).byteInputStream()) }
                 }.forEachIndexed { index, itemEntity ->
                     handleItemEntityI18nInfo(
                         fieldPath = fieldPath,
@@ -268,9 +266,7 @@ object MessageUtil {
                         dataField.annotations.firstOrNull { it is BkFieldI18n } as? BkFieldI18n ?: return@forEach
                     // 获取字段的值，如果字段的值为空则无需进行国际化替换
                     val dataFieldValue = getFieldValue(dataField, entity)
-                    if (dataFieldValue?.toString().isNullOrBlank()) {
-                        return@forEach
-                    }
+                    if (dataFieldValue?.toString().isNullOrBlank()) { return@forEach }
                     if (ReflectUtil.isNativeType(dataFieldValue!!) || dataFieldValue is String ||
                         dataFieldValue is Enum<*>
                     ) {

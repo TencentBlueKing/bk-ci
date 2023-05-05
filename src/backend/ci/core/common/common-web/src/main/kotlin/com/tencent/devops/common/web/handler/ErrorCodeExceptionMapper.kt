@@ -28,13 +28,12 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.utils.I18nUtil
-import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
     class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
