@@ -50,7 +50,7 @@ import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 import java.util.concurrent.Executors
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request

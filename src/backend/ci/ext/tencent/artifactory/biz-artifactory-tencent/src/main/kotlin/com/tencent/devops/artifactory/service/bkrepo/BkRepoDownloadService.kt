@@ -176,23 +176,20 @@ open class BkRepoDownloadService @Autowired constructor(
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException(
-                        MessageUtil.getMessageByLocale(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = FILE_NOT_EXIST,
-                            language = I18nUtil.getLanguage(userId),
                             params = arrayOf(argPath)
                         )
                 )
         val properties = fileInfo.metadata
         properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = METADATA_NOT_EXIST,
-                language = I18nUtil.getLanguage(userId),
                 params = arrayOf("pipelineId")
             ))
         properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
-                MessageUtil.getMessageByLocale(
+                I18nUtil.getCodeLanMessage(
                     messageCode = METADATA_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId),
                     params = arrayOf("buildId")
                 ))
         val shortUrl = shortUrlService.createShortUrl(
@@ -225,10 +222,9 @@ open class BkRepoDownloadService @Autowired constructor(
                 pipelineService.validatePermission(
                     userId,
                     projectId,
-                    message = MessageUtil.getMessageByLocale(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        params = arrayOf(userId, projectId),
-                        language = I18nUtil.getLanguage(userId)
+                        params = arrayOf(userId, projectId)
                     )
                 )
             }
@@ -240,10 +236,9 @@ open class BkRepoDownloadService @Autowired constructor(
                     projectId,
                     pipelineId,
                     AuthPermission.SHARE,
-                    MessageUtil.getMessageByLocale(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = ArtifactoryMessageCode.USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN,
-                        params = arrayOf(userId, projectId, pipelineId),
-                        language = I18nUtil.getLanguage(userId)
+                        params = arrayOf(userId, projectId, pipelineId)
                     )
                 )
             }
@@ -260,9 +255,8 @@ open class BkRepoDownloadService @Autowired constructor(
             RepoUtils.getRepoByType(artifactoryType),
             path
         ) ?: throw BadRequestException(
-            MessageUtil.getMessageByLocale(
+            I18nUtil.getCodeLanMessage(
                 messageCode = FILE_NOT_EXIST,
-                language = I18nUtil.getLanguage(userId),
                 params = arrayOf(path)
             )
         )
@@ -320,9 +314,8 @@ open class BkRepoDownloadService @Autowired constructor(
                     ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
-                        MessageUtil.getMessageByLocale(
+                        I18nUtil.getCodeLanMessage(
                             messageCode = BUILD_NOT_EXIST,
-                            language = I18nUtil.getLanguage(userId),
                             params = arrayOf(crossBuildNo)
                         )
                 )).id
@@ -334,29 +327,24 @@ open class BkRepoDownloadService @Autowired constructor(
         val pipelineDownloadErrorMsg: String?
         if (!userId.isNullOrBlank()) {
             accessUserId = userId
-            projectDownloadErrorMsg = MessageUtil.getMessageByLocale(
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(accessUserId, targetProjectId),
-                language = I18nUtil.getLanguage(userId)
-
+                params = arrayOf(accessUserId, targetProjectId)
             )
-            pipelineDownloadErrorMsg = MessageUtil.getMessageByLocale(
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(accessUserId, targetProjectId, targetPipelineId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
             )
         } else {
             accessUserId = client.get(ServicePipelineResource::class)
                 .getPipelineInfo(projectId, pipelineId, null).data!!.lastModifyUser
-            projectDownloadErrorMsg = MessageUtil.getMessageByLocale(
+            projectDownloadErrorMsg = I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(accessUserId, targetProjectId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(accessUserId, targetProjectId)
             )
-            pipelineDownloadErrorMsg = MessageUtil.getMessageByLocale(
+            pipelineDownloadErrorMsg = I18nUtil.getCodeLanMessage(
                 messageCode = ArtifactoryMessageCode.LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                params = arrayOf(accessUserId, targetProjectId, targetPipelineId),
-                language = I18nUtil.getLanguage(userId)
+                params = arrayOf(accessUserId, targetProjectId, targetPipelineId)
             )
         }
         logger.info(

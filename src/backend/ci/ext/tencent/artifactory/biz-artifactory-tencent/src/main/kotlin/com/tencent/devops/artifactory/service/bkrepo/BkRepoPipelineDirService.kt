@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -36,7 +35,7 @@ import com.tencent.devops.artifactory.service.PipelineDirService
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
-import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -81,23 +80,30 @@ class BkRepoPipelineDirService @Autowired constructor(
             }
             isPipelineDir -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                            language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
-                        )
-                   )
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = authPermission,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                        params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
+                    )
+                )
                 getPipelinePathList(projectId, normalizedPath, fileList)
             }
             else -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
-                pipelineService.validatePermission(userId, projectId, pipelineId, authPermission,
-                        MessageUtil.getMessageByLocale(
-                            messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                            language = I18nUtil.getLanguage(userId),
-                            params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
-                        ))
+                pipelineService.validatePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = authPermission,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                        params = arrayOf(userId, projectId, authPermission.getI18n(I18nUtil.getLanguage(userId)))
+                    )
+                )
                 getBuildPathList(projectId, normalizedPath, fileList)
             }
         }
@@ -191,10 +197,8 @@ class BkRepoPipelineDirService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.PIPELINE_REPO, normalizedPath)
-            ?: throw NotFoundException( MessageUtil.getMessageByLocale(
-                    messageCode = FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId)
-                )
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_EXIST)
             )
         return RepoUtils.toFileDetail(fileDetail)
     }
