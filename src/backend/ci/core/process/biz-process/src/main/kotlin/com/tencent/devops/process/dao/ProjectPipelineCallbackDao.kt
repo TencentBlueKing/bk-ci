@@ -191,10 +191,10 @@ class ProjectPipelineCallbackDao {
     ): Result<TProjectPipelineCallbackRecord> {
         return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             val conditions = mutableListOf(ENABLE.eq(false))
-            if (!projectId.isNullOrEmpty()){
+            if (!projectId.isNullOrEmpty()) {
                 conditions.add(PROJECT_ID.eq(projectId))
             }
-            if (!events.isNullOrEmpty()){
+            if (!events.isNullOrEmpty()) {
                 val eventList = events.split(",")
                 conditions.add(EVENTS.`in`(eventList))
             }

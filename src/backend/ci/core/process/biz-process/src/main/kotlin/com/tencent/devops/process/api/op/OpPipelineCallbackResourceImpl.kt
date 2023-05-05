@@ -43,7 +43,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
 ) : OpPipelineCallbackResource {
 
     override fun enableCallback(projectId: String, events: String?) {
-        if (projectId.isEmpty()){
+        if (projectId.isEmpty()) {
             throw ParamBlankException("Invalid projectId")
         }
         val threadPoolExecutor = ThreadPoolExecutor(

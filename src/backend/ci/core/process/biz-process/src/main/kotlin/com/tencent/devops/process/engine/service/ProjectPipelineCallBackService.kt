@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -280,7 +279,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
         return notifySuccess
     }
 
-    fun enable(callBack: ProjectPipelineCallBack){
+    fun enable(callBack: ProjectPipelineCallBack) {
         // 启用接口
         projectPipelineCallbackDao.enable(
             dslContext = dslContext,
