@@ -232,7 +232,6 @@ class MigrateV3PolicyService constructor(
         return rbacManagerResources
     }
 
-
     override fun matchResourceGroup(
         userId: String,
         projectCode: String,

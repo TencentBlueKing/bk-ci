@@ -270,7 +270,6 @@ class RbacPermissionMigrateService constructor(
         }
     }
 
-
     private fun createGradeManager(
         projectCode: String,
         projectInfo: ProjectVO

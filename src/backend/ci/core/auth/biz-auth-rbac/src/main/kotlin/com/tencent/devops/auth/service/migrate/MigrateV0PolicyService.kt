@@ -91,7 +91,7 @@ class MigrateV0PolicyService constructor(
 
             "quality_gate_group_delete" to "quality_group_delete",
             "quality_gate_group_edit" to "quality_group_edit",
-            "quality_gate_group_create" to "quality_group_create",
+            "quality_gate_group_create" to "quality_group_create"
         )
 
         // v0有的action，但是在rbac没有,需要跳过

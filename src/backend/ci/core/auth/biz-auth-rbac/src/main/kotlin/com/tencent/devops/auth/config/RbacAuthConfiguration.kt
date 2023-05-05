@@ -309,7 +309,7 @@ class RbacAuthConfiguration {
     fun migrateResultService(
         permissionService: PermissionService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
-        authVerifyRecordService: AuthVerifyRecordService,
+        authVerifyRecordService: AuthVerifyRecordService
     ) = MigrateResultService(
         permissionService = permissionService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,

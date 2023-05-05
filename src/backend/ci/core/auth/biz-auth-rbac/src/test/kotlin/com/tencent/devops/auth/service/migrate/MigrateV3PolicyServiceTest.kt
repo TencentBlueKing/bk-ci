@@ -40,7 +40,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 
-class MigrateV3PolicyServiceTest: AbMigratePolicyServiceTest() {
+class MigrateV3PolicyServiceTest : AbMigratePolicyServiceTest() {
 
     private val projectCode = "bkdevops"
     private val self: MigrateV3PolicyService = spyk(
@@ -85,7 +85,7 @@ class MigrateV3PolicyServiceTest: AbMigratePolicyServiceTest() {
                 result = taskDataResult
             )
 
-           Assertions.assertTrue(rbacAuthorizationScopeList.isEmpty())
+            Assertions.assertTrue(rbacAuthorizationScopeList.isEmpty())
         }
 
         @Test

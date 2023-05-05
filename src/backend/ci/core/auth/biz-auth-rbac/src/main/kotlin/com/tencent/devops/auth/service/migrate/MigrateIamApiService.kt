@@ -74,7 +74,6 @@ class MigrateIamApiService {
     @Value("\${auth.url:}")
     private val iamBaseUrl = ""
 
-
     /**
      * 启动v3迁移任务
      *
