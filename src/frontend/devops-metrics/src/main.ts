@@ -3,6 +3,8 @@ import { createPinia } from 'pinia';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
+import zhCn from 'bkui-vue/dist/locale/zh-cn.esm'
+import en from 'bkui-vue/dist/locale/en.esm'
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';
@@ -29,6 +31,8 @@ const i18n = createI18n({
 createApp(App)
   .use(router)
   .use(createPinia())
-  .use(bkui)
+  .use(bkui, {
+    locale: ['en', 'en-us', 'en_us'].includes(i18nLocale.toLowerCase()) ? en : zhCn
+  })
   .use(i18n)
   .mount('.app');

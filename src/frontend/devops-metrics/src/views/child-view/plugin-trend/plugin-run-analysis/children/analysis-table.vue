@@ -196,6 +196,7 @@ watch(
       :data="tableData"
       remote-pagination
       settings
+      :empty-text="t('noData')"
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
