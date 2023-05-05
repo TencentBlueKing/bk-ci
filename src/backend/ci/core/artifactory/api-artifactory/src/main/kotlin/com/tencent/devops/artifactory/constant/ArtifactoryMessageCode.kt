@@ -71,13 +71,12 @@ object ArtifactoryMessageCode {
     const val GRANT_PIPELINE_PERMISSION = "2102030" // 访问件构请联系流水线负责人：\n{0} 授予流水线权限。
     const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" // 元数据({0})不存在，请通过共享下载文件
     const val NO_EXPERIENCE_PERMISSION = "2102032" // 您没有该体验的权限
-    const val FILE_NOT_EXIST = "2102033" // 文件{0}不存在
-    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102034" // 目标路径应为文件夹
-    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102035" // 不能在拷贝到当前目录
-    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102036" // 不能移动到当前目录
-    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102037" // 不能将父目录移动到子目录
-    const val METADATA_NOT_EXIST = "2102038" // 元数据({0})不存在
-    const val BUILD_NOT_EXIST = "2102039" // 构建不存在({0})
+    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102033" // 目标路径应为文件夹
+    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102034" // 不能在拷贝到当前目录
+    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102035" // 不能移动到当前目录
+    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102036" // 不能将父目录移动到子目录
+    const val METADATA_NOT_EXIST = "2102037" // 元数据({0})不存在
+    const val BUILD_NOT_EXIST = "2102038" // 构建不存在({0})
 
     // PUSH
     const val FUSH_FILE_VALIDATE_FAIL = "2102041" // 用户无操作下载权限

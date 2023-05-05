@@ -113,6 +113,8 @@ object CommonMessageCode {
     const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100059" // 内部依赖服务异常
     const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2100060" // 公共构建资源池不存在，请检查yml配置.
     const val ERROR_LANGUAGE_IS_NOT_SUPPORT = "2100061" // 该语言蓝盾目前不支持，蓝盾目前支持的语言标识为：{0}
+    const val INIT_SERVICE_LIST_ERROR = "2100062" // 初始化服务列表异常问题
+    const val FILE_NOT_EXIST = "2100063" // 文件{0}不存在
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
