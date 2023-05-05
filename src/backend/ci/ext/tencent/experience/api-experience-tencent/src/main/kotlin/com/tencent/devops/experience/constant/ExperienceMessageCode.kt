@@ -111,5 +111,4 @@ object ExperienceMessageCode {
     const val BK_PC_EXPERIENCE_ADDRESS = "bkPcExperienceAddress" //\nPC体验地址
     const val BK_MOBILE_EXPERIENCE_ADDRESS = "bkMobileExperienceAddress" //\n手机体验地址
     const val BK_LATEST_EXPERIENCE_VERSION_INFO = "bkLatestExperienceVersionInfo" //【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。\nPC体验地址：{3}\n手机体验地址：{4}
-
 }

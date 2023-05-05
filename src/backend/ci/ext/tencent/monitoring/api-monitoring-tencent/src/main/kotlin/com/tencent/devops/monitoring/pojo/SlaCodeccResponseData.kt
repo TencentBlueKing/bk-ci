@@ -27,8 +27,6 @@
 
 package com.tencent.devops.monitoring.pojo
 
-import com.tencent.devops.common.api.annotation.BkFieldI18n
-import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

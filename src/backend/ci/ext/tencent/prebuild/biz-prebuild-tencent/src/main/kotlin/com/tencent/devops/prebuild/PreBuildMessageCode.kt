@@ -34,6 +34,6 @@ object PreBuildMessageCode {
     const val BK_AGENT_NOT_INSTALLED = "bkAgentNotInstalled" //Agent未安装，请安装Agent.
     const val BK_ILLEGAL_YAML = "bkIllegalYaml" //YAML非法:
     const val BK_NO_COMPILATION_ENVIRONMENT = "bkNoCompilationEnvironment" //无编译环境
-    const val BK_TBUILD_ENVIRONMENT_LINUX = "bkTbuildEnvironmentLinux" //构建环境-LINUX
+    const val BK_BUILD_ENVIRONMENT_LINUX = "bkTbuildEnvironmentLinux" //构建环境-LINUX
     const val BK_SYNCHRONIZE_LOCAL_CODE = "bkSynchronizeLocalCode" //同步本地代码
 }

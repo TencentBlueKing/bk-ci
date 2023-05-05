@@ -56,7 +56,7 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.prebuild.PreBuildMessageCode.BK_TBUILD_ENVIRONMENT_LINUX
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_BUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
 import com.tencent.devops.prebuild.pojo.DevcloudUserRes
@@ -370,7 +370,7 @@ class WebIDEService @Autowired constructor(
         val vmContainer = VMBuildContainer(
                 id = "1",
                 name = MessageUtil.getMessageByLocale(
-                    messageCode = BK_TBUILD_ENVIRONMENT_LINUX,
+                    messageCode = BK_BUILD_ENVIRONMENT_LINUX,
                     language = I18nUtil.getLanguage(userId)
                 ),
                 elements = elementList,
