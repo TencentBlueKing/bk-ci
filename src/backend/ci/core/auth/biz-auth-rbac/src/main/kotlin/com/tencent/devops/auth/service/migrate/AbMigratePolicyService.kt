@@ -263,7 +263,7 @@ abstract class AbMigratePolicyService(
         projectCode: String,
         managerGroupId: Int
     ): Int {
-        var page = 0
+        var page = 1
         var totalCount = 0
         val pageSize = PageUtil.MAX_PAGE_SIZE
         do {
