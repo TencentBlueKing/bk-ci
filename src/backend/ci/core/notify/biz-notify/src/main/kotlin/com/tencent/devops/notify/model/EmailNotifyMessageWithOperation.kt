@@ -26,8 +26,11 @@
  */
 package com.tencent.devops.notify.model
 
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 
+@Event(QUEUE_NOTIFY_EMAIL)
 class EmailNotifyMessageWithOperation(
     override var delayMills: Int = 0,
     override var retryTime: Int = 0
