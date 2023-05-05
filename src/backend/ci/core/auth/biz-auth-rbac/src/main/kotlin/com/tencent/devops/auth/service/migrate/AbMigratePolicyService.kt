@@ -136,7 +136,7 @@ abstract class AbMigratePolicyService(
         gradeManagerId: Int,
         managerGroupId: Int
     ): Int {
-        var page = 0
+        var page = 1
         var totalCount = 0
         do {
             val taskDataResp = migrateIamApiService.getMigrateData(
