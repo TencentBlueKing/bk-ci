@@ -334,7 +334,6 @@ object ProcessMessageCode {
     const val BK_MESSAGE_SUBJECT_EMPTY = "bkMessageSubjectEmpty" // 邮件主题为空
     const val BK_EXPERIENCE_PATH_EMPTY = "bkExperiencePathEmpty" // 体验路径为空
     const val BK_INCORRECT_NOTIFICATION_METHOD = "bkIncorrectNotificationMethod" // 通知方式不正确
-    const val BK_FILE_NOT_EXIST = "bkFileNotExist" // 文件({0})不存在
     // 版本体验({0})创建成功
     const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "bkVersionExperienceCreatedSuccessfully"
     const val BK_VIEW_RESULT = "bkViewResult" // 查看结果:
