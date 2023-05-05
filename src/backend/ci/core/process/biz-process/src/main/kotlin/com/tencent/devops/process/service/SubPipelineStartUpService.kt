@@ -44,7 +44,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -65,7 +64,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
 import javax.ws.rs.core.Response
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -89,12 +87,6 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
     @Autowired
     lateinit var pipelineRuntimeService: PipelineRuntimeService
-
-    @Autowired
-    lateinit var pipelineBuildTaskDao: PipelineBuildTaskDao
-
-    @Autowired
-    lateinit var dslContext: DSLContext
 
     @Autowired
     lateinit var subPipelineStatusService: SubPipelineStatusService
@@ -188,8 +180,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
             parameters = startParams,
             triggerUser = triggerUser
         )
-        pipelineBuildTaskDao.updateSubBuildId(
-            dslContext = dslContext,
+        pipelineTaskService.updateSubBuildId(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
@@ -460,7 +451,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
-        val task = pipelineBuildTaskDao.get(dslContext, projectId = projectId, buildId = buildId, taskId = taskId)
+        val task = pipelineTaskService.getByTaskId(projectId = projectId, buildId = buildId, taskId = taskId)
             ?: return Result(emptyMap())
 
         logger.info("getSubVar sub build :${task.subBuildId}|${task.subProjectId}")

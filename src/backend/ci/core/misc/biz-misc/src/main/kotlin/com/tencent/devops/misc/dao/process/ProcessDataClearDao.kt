@@ -301,10 +301,16 @@ class ProcessDataClearDao {
         }
     }
 
-    fun deletePipelineBuildTemplateAcrossInfo(dslContext: DSLContext, projectId: String, buildId: String) {
+    fun deletePipelineBuildTemplateAcrossInfo(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
         with(TPipelineBuildTemplateAcrossInfo.T_PIPELINE_BUILD_TEMPLATE_ACROSS_INFO) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .execute()
         }

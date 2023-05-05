@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service
 
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -37,47 +39,67 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
 
+/**
+ * StageTag为后台插入，更新由平台OP控制，基本不会更新，只需要缓存在内存即可。即使出错也不影响正常逻辑，暂不引入redis
+ */
 @Service
 class StageTagService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineStageTagDao: PipelineStageTagDao
 ) {
-    private val logger = LoggerFactory.getLogger(StageTagService::class.java)
+    companion object {
+        private const val ALL = "ALL"
+        private const val DEFAULT = "DEFAULT"
+        private val logger = LoggerFactory.getLogger(StageTagService::class.java)
+    }
+
+    // StageTag为后台插入，更新由平台OP控制，不会经常更新，所以只需要缓存在内存即可。即使出错也不影响正常逻辑，暂不引入redis
+    private val defaultTagCache: LoadingCache<String, PipelineStageTag> = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofMinutes(1))
+        .maximumSize(1)
+        .build { pipelineStageTagDao.getDefaultStageTag(dslContext) }
+
+    // StageTag为后台插入，更新由平台OP控制，不会经常更新，所以只需要缓存在内存即可。即使出错也不影响正常逻辑，暂不引入redis
+    private val allTagCache: LoadingCache<String, List<PipelineStageTag>> = Caffeine.newBuilder()
+        .expireAfterWrite(Duration.ofMinutes(1))
+        .maximumSize(1)
+        .build {
+            val pipelineStageTagList = mutableListOf<PipelineStageTag>()
+            pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, record ->
+                pipelineStageTagList.add(pipelineStageTagDao.convert(record = record, defaultFlag = index == 0))
+            }
+            pipelineStageTagList
+        }
 
     /**
      * 获取所有阶段标签信息
      */
     fun getAllStageTag(): Result<List<PipelineStageTag>> {
-        val pipelineStageTagList = mutableListOf<PipelineStageTag>()
-        pipelineStageTagDao.getAllStageTag(dslContext).forEachIndexed { index, record ->
-            pipelineStageTagList.add(
-                pipelineStageTagDao.convert(record, index == 0)
-            )
-        }
-        return Result(pipelineStageTagList)
+        return Result(data = allTagCache.get(ALL) ?: emptyList())
     }
 
     /**
      * 获取默认标签
      */
     fun getDefaultStageTag(): Result<PipelineStageTag?> {
-        return Result(pipelineStageTagDao.getDefaultStageTag(dslContext))
+        return Result(data = defaultTagCache.get(DEFAULT))
     }
 
     /**
      * 根据id获取阶段标签信息
      */
     fun getStageTag(id: String): Result<PipelineStageTag?> {
-        val pipelineStageTagRecord = pipelineStageTagDao.getStageTag(dslContext, id)
-        logger.info("the pipelineStageTagRecord is :$pipelineStageTagRecord")
-        return Result(
-            if (pipelineStageTagRecord == null) {
-                null
-            } else {
-                pipelineStageTagDao.convert(pipelineStageTagRecord, false)
-            }
-        )
+        val all = allTagCache.getIfPresent(ALL)?.filter { it.id == id }
+        val data = if (all.isNullOrEmpty()) {
+            val pipelineStageTagRecord = pipelineStageTagDao.getStageTag(dslContext, id)
+            logger.info("the pipelineStageTagRecord is :$pipelineStageTagRecord")
+            pipelineStageTagRecord?.let { pipelineStageTagDao.convert(pipelineStageTagRecord, defaultFlag = false) }
+        } else {
+            all[0]
+        }
+        return Result(data = data)
     }
 
     /**
@@ -98,6 +120,8 @@ class StageTagService @Autowired constructor(
         }
         val id = UUIDUtil.generate()
         pipelineStageTagDao.add(dslContext, id, stageTag, weight)
+        defaultTagCache.invalidateAll()
+        allTagCache.invalidateAll()
         return Result(true)
     }
 
@@ -121,7 +145,8 @@ class StageTagService @Autowired constructor(
             }
         }
         pipelineStageTagDao.update(dslContext, id, stageTagName, weight)
-
+        defaultTagCache.invalidateAll()
+        allTagCache.invalidateAll()
         return Result(true)
     }
 
@@ -131,6 +156,8 @@ class StageTagService @Autowired constructor(
     fun deleteStageTag(id: String): Result<Boolean> {
         logger.info("the delete id is :{}", id)
         pipelineStageTagDao.delete(dslContext, id)
+        defaultTagCache.invalidateAll()
+        allTagCache.invalidateAll()
         return Result(true)
     }
 
