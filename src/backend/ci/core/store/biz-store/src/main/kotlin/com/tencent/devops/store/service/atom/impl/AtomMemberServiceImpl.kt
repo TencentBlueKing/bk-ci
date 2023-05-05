@@ -29,7 +29,6 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.common.StoreMemberReq

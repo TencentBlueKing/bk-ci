@@ -35,6 +35,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.SERVICE_ADD_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_PREFIX
+import com.tencent.devops.project.constant.ProjectMessageCode.T_SERVICE_TYPE_PREFIX
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -66,7 +68,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             return Result(
                 ServiceVO(
                     id = tServiceRecord.id ?: 0,
-                    name = I18nUtil.getMessageByLocale(tServiceRecord.name, tServiceRecord.englishName),
+                    name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + tServiceRecord.englishName),
                     link = tServiceRecord.link,
                     linkNew = tServiceRecord.linkNew,
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
@@ -212,7 +214,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
 
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = I18nUtil.getMessageByLocale(serviceType.title, serviceType.englishTitle)
+                val typeName = I18nUtil.getCodeLanMessage(T_SERVICE_TYPE_PREFIX + serviceType.englishTitle)
                 val services = ArrayList<ServiceVO>()
                 val s = groupService[typeId]
 
@@ -222,7 +224,7 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = I18nUtil.getMessageByLocale(it.name, it.englishName),
+                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName),
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,

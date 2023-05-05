@@ -29,5 +29,5 @@ package com.tencent.devops.environment.constant
 
 const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
 const val DEFAULT_SYTEM_USER = "devops"
-const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment"// 项目下无环境
-const val BK_PROJECT_NO_NODE = "BkProjectNoNode"// 项目下无节点
+const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment" // 项目下无环境
+const val BK_PROJECT_NO_NODE = "BkProjectNoNode" // 项目下无节点

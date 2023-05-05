@@ -35,26 +35,26 @@ import java.time.LocalDateTime
 data class QualityRuleTemplatePO(
     @ApiModelProperty("ID")
     val id: Long,
-   @ApiModelProperty("模板名称")
+    @ApiModelProperty("模板名称")
     var name: String?,
-   @ApiModelProperty("模板类型(指标集, 模板)")
+    @ApiModelProperty("模板类型(指标集, 模板)")
     val type: String?,
-   @ApiModelProperty("描述")
+    @ApiModelProperty("描述")
     var desc: String?,
-   @ApiModelProperty("研发环节")
+    @ApiModelProperty("研发环节")
     var stage: String?,
-   @ApiModelProperty("控制点原子类型")
+    @ApiModelProperty("控制点原子类型")
     val controlPoint: String?,
-   @ApiModelProperty("控制点红线位置")
+    @ApiModelProperty("控制点红线位置")
     val controlPointPosition: String?,
-   @ApiModelProperty("创建用户")
+    @ApiModelProperty("创建用户")
     val createUser: String?,
-   @ApiModelProperty("更新用户")
+    @ApiModelProperty("更新用户")
     val updateUser: String?,
-   @ApiModelProperty("创建时间")
+    @ApiModelProperty("创建时间")
     val createTime: LocalDateTime?,
-   @ApiModelProperty("更新时间")
+    @ApiModelProperty("更新时间")
     val updateTime: LocalDateTime?,
-   @ApiModelProperty("是否可用")
+    @ApiModelProperty("是否可用")
     val enable: Boolean
 )

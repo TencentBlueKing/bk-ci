@@ -2,7 +2,6 @@ package com.tencent.devops.buildless
 
 import com.tencent.devops.buildless.common.ErrorCodeEnum
 import com.tencent.devops.buildless.config.BuildLessConfig
-import com.tencent.devops.buildless.exception.BuildLessException
 import com.tencent.devops.buildless.pojo.BuildLessPoolInfo
 import com.tencent.devops.buildless.pojo.BuildLessStartInfo
 import com.tencent.devops.buildless.pojo.BuildLessTask
@@ -12,11 +11,11 @@ import com.tencent.devops.buildless.service.BuildLessContainerService
 import com.tencent.devops.buildless.utils.CommonUtils
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.locks.ReentrantLock
 
 @Component
 class ContainerPoolExecutor @Autowired constructor(

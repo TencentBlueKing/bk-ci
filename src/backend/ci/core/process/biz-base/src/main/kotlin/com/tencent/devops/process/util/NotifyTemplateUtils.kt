@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.util
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
@@ -37,9 +36,11 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 
 object NotifyTemplateUtils {
 
-    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "CommonShutdownSuccessContent"// 【${0}】- 【${1}】#${2} 执行成功，耗时${3}, 触发人：${4}。
+    private const val COMMON_SHUTDOWN_SUCCESS_CONTENT = "CommonShutdownSuccessContent"
+    // 【${0}】- 【${1}】#${2} 执行成功，耗时${3}, 触发人：${4}。
 
-    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "CommonShutdownFailureContent"// 【${0}】- 【${1}】#${2} 执行失败，耗时${3}, 触发人：${4}。
+    private const val COMMON_SHUTDOWN_FAILURE_CONTENT = "CommonShutdownFailureContent"
+    // 【${0}】- 【${1}】#${2} 执行失败，耗时${3}, 触发人：${4}。
 
     fun getCommonShutdownSuccessContent(): String {
         return I18nUtil.getCodeLanMessage(

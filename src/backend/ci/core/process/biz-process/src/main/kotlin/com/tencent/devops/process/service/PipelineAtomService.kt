@@ -67,6 +67,10 @@ import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -74,10 +78,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 @Service
 @RefreshScope
@@ -353,12 +353,12 @@ class PipelineAtomService @Autowired constructor(
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
         val headers = arrayOf(
-            I18nUtil.getCodeLanMessage(PIPELINE_URL, language = I18nUtil.getLanguage(userId)),
-            I18nUtil.getCodeLanMessage(VERSION, language = I18nUtil.getLanguage(userId)),
-            I18nUtil.getCodeLanMessage(LATEST_MODIFIER, language = I18nUtil.getLanguage(userId)),
-            I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME, language = I18nUtil.getLanguage(userId)),
-            I18nUtil.getCodeLanMessage(LATEST_EXECUTOR, language = I18nUtil.getLanguage(userId)),
-            I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME, language = I18nUtil.getLanguage(userId))
+            I18nUtil.getCodeLanMessage(PIPELINE_URL),
+            I18nUtil.getCodeLanMessage(VERSION),
+            I18nUtil.getCodeLanMessage(LATEST_MODIFIER),
+            I18nUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTOR),
+            I18nUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
         )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)

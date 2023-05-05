@@ -215,7 +215,7 @@ class QualityMetadataDao {
     fun batchCrateQualityMetadata(dslContext: DSLContext, qualityMetadataPOs: List<QualityMetadataPO>) {
         with(TQualityMetadata.T_QUALITY_METADATA) {
             dslContext.batch(
-                qualityMetadataPOs.map {qualityMetadataPO ->
+                qualityMetadataPOs.map { qualityMetadataPO ->
                     dslContext.insertInto(this)
                         .set(dslContext.newRecord(this, qualityMetadataPO))
                         .onDuplicateKeyUpdate()

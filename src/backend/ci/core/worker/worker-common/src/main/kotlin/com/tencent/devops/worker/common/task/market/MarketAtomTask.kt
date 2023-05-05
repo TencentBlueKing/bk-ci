@@ -100,10 +100,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务

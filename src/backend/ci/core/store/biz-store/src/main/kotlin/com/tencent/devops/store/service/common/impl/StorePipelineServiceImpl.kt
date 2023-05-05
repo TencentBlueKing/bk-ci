@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.constant.KEY_SCRIPT
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
@@ -62,12 +61,12 @@ import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StorePipelineService
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service

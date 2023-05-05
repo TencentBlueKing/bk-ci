@@ -29,7 +29,6 @@ package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -40,13 +39,13 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.util.GitCommonUtils
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
 @Service
 class StreamLogService @Autowired constructor(

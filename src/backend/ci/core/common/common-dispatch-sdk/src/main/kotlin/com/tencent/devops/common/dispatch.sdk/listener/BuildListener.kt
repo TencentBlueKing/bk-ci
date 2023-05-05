@@ -28,7 +28,6 @@
 package com.tencent.devops.common.dispatch.sdk.listener
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
@@ -50,9 +49,9 @@ import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component@Suppress("ALL")
 interface BuildListener {

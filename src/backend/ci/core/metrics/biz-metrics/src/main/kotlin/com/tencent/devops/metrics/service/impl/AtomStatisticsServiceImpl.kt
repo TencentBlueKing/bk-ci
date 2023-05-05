@@ -29,7 +29,6 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.metrics.config.MetricsConfig
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
@@ -71,12 +70,12 @@ import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.toMinutes
+import java.math.BigDecimal
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
-import java.time.LocalDateTime
 
 @Service
 class AtomStatisticsServiceImpl @Autowired constructor(

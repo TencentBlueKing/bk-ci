@@ -28,7 +28,6 @@
 package com.tencent.devops.plugin.worker.task.archive
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode

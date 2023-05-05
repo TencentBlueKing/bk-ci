@@ -44,10 +44,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isFailed
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
+import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class KubernetesTaskClient @Autowired constructor(
@@ -78,11 +78,11 @@ class KubernetesTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
                         messageCode = DispatchK8sMessageCode.KUBERNETES_TASK_STATUS_API_EXCEPTION,
                         params = arrayOf(taskId)
-                    )+ "：http response code: ${response.code}"
+                    ) + "：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -95,7 +95,7 @@ class KubernetesTaskClient @Autowired constructor(
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = "${I18nUtil.getCodeLanMessage(KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
                 )
             }

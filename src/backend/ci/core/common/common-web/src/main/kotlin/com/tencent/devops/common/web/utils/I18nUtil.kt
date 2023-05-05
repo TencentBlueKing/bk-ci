@@ -44,7 +44,6 @@ import org.springframework.web.context.request.ServletRequestAttributes
 
 object I18nUtil {
 
-
     /**
      * 从redis缓存获取用户的国际化语言信息
      * @param userId 用户ID
@@ -119,10 +118,6 @@ object I18nUtil {
         }
     }
 
-    fun getMessageByLocale(chinese: String, english: String?): String {
-        return if (getLanguage(getRequestUserId()) == "zh_CN") chinese else english ?: chinese
-    }
-
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
@@ -158,7 +153,6 @@ object I18nUtil {
             i18nMessage
         }
     }
-
 
     /**
      * 生成请求响应对象

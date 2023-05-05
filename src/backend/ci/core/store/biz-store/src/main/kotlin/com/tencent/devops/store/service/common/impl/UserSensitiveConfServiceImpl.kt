@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.AESUtil
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil

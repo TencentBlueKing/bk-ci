@@ -316,7 +316,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                     throw OperationException(
                         validateRet.message ?: MessageUtil.getMessageByLocale(
                             ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
-                            I18nUtil.getLanguage(userId),
+                            I18nUtil.getLanguage(userId)
                         )
                     )
                 }
@@ -540,7 +540,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
-        val language = I18nUtil.getLanguage(userId)
         if (checkPermission) {
             val permission = AuthPermission.EDIT
             pipelinePermissionService.validPipelinePermission(
@@ -591,7 +590,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定编辑的流水线渠道来源${pipeline.channelCode.name}不符合$channelCode",
                 params = arrayOf(pipeline.channelCode.name)
             )
         }
@@ -676,7 +674,6 @@ class PipelineInfoFacadeService @Autowired constructor(
 
         try {
             if (checkPermission) {
-                val language = I18nUtil.getLanguage(userId)
                 val permission = AuthPermission.EDIT
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
@@ -722,7 +719,6 @@ class PipelineInfoFacadeService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channelCode.name}不符合$channelCode",
                     params = arrayOf(pipeline.channelCode.name)
                 )
             }
@@ -730,8 +726,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                    defaultMessage = "指定要复制的流水线-模型不存在"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
             // 对已经存在的模型做处理
             val param = BeforeDeleteParam(
@@ -821,7 +816,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkPermission: Boolean = true
     ): Model {
         if (checkPermission) {
-            val language = I18nUtil.getLanguage(userId)
             val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -924,7 +918,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         try {
             if (checkPermission) {
                 watcher.start("perm_v_perm")
-                val language = I18nUtil.getLanguage(userId)
                 val permission = AuthPermission.DELETE
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,

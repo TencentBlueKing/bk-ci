@@ -46,12 +46,17 @@ package com.tencent.devops.dispatch.constants
  *
  */
 object DispatchMassageCode {
-    const val CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "2103011"// 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试.
-    const val THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "2103012"// 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
-    const val BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "2103013"// 构建机升级中，重新调度(Agent is upgrading)
-    const val BUILD_MACHINE_BUSY = "2103014"// 构建机正忙,重新调度(Agent is busy) - {0}/{1}
-    const val BUILD_NODE_IS_EMPTY= "2103015"// 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
-    const val BUILD_ENV_PREPARATION = "2103016"// 构建环境准备中...
-    const val JOB_NUM_REACHED_MAX_QUOTA = "2103017"// "当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，正在执行JOB数量：{1}, 配额: ${2}"
-    const val JOB_NUM_EXCEED_ALARM_THRESHOLD = "2103018"// "当前项目下正在执行的【{0}】JOB数量已经超过告警阈值，正在执行JOB数量：{1}，配额：{2}，告警阈值：{3}%，当前已经使用：{4}%"
+    // 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试.
+    const val CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "2103011"
+    // 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
+    const val THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "2103012"
+    const val BUILD_MACHINE_UPGRADE_IN_PROGRESS = "2103013" // 构建机升级中，重新调度(Agent is upgrading)
+    const val BUILD_MACHINE_BUSY = "2103014" // 构建机正忙,重新调度(Agent is busy) - {0}/{1}
+    // 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
+    const val BUILD_NODE_IS_EMPTY = "2103015"
+    const val BUILD_ENV_PREPARATION = "2103016" // 构建环境准备中...
+    // "当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，正在执行JOB数量：{1}, 配额: ${2}"
+    const val JOB_NUM_REACHED_MAX_QUOTA = "2103017"
+    // "当前项目下正在执行的【{0}】JOB数量已经超过告警阈值，正在执行JOB数量：{1}，配额：{2}，告警阈值：{3}%，当前已经使用：{4}%"
+    const val JOB_NUM_EXCEED_ALARM_THRESHOLD = "2103018"
 }

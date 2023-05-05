@@ -52,5 +52,5 @@ object DispatchSdkErrorCode {
     const val PIPELINE_NOT_RUNNING = 2103021 // 流水线已经不再运行
     const val RETRY_STARTUP_FAIL = 2103022 // Fail to start up the job after $retryTimes times
     const val JOB_QUOTA_EXCESS = 2103023 // JOB配额超限
-    const val FAILED_START_BUILD_MACHINE = 2103024// 启动构建机失败
+    const val FAILED_START_BUILD_MACHINE = 2103024 // 启动构建机失败
 }

@@ -32,7 +32,6 @@ import com.tencent.devops.auth.dao.AuthIamCallBackDao
 import com.tencent.devops.auth.pojo.IamCallBackInfo
 import com.tencent.devops.auth.pojo.IamCallBackInterfaceDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

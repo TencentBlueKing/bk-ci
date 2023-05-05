@@ -113,45 +113,44 @@ object StoreMessageCode {
     const val USER_IMAGE_PROJECT_IS_INVALID = "2120060" // 研发商店：容器镜像[{0}]在项目[{1}]下不可用，请联系镜像发布者调整可见范围，调整后手动安装镜像
 
     // 扩展服务相关的错误提示
-    const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120401" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
-    const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120402" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除
-    const val USER_SERVICE_VERSION_IS_INVALID = "2120403" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
-    const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120404" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
-    const val USER_SERVICE_CODE_DIFF = "2120405" // 研发商店：扩展编码与extension.json文件内编码不一致
-    const val USER_SERVICE_RELEASE_STEPS_ERROR = "2120406" // 研发商店：扩展服务发布流程状态变更顺序不正确
-    const val USER_SERVICE_PROJECT_UNENABLE = "2120407" // 研发商店：选中调试项目已被禁用
-    const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120408" // 研发商店：选中调试项目无创建流水线权限
-    const val USER_SERVICE_NOT_EXIST = "2120409" // 研发商店：扩展服务不存在{0}
-    const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120410" // 研发商店：扩展点下还有可用的扩展服务，不能删除
+    const val USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE = "2120061" // 研发商店：扩展服务{0}已发布到商店，请先下架再删除
+    const val USER_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120062" // 研发商店：扩展服务{0}已安装到其他项目下使用，请勿移除
+    const val USER_SERVICE_VERSION_IS_INVALID = "2120063" // 研发商店：扩展服务升级的版本号{0}错误，应为{1}
+    const val USER_SERVICE_VERSION_IS_NOT_FINISH = "2120064" // 研发商店：扩展服务{0}的{1}版本发布未结束，请稍后再试
+    const val USER_SERVICE_CODE_DIFF = "2120065" // 研发商店：扩展编码与extension.json文件内编码不一致
+    const val USER_SERVICE_RELEASE_STEPS_ERROR = "2120066" // 研发商店：扩展服务发布流程状态变更顺序不正确
+    const val USER_SERVICE_PROJECT_UNENABLE = "2120067" // 研发商店：选中调试项目已被禁用
+    const val USER_SERVICE_PROJECT_NOT_PERMISSION = "2120068" // 研发商店：选中调试项目无创建流水线权限
+    const val USER_SERVICE_NOT_EXIST = "2120069" // 研发商店：扩展服务不存在{0}
+    const val USER_ITEM_SERVICE_USED_IS_NOT_ALLOW_DELETE = "2120070" // 研发商店：扩展点下还有可用的扩展服务，不能删除
 
     // store公共业务相关的错误提示
-    const val USER_PRAISE_IS_INVALID = "2120061" // 研发商店：你已点赞过
-    const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120062" // 研发商店：你没有权限将组件安装到项目：{0}
-    const val USER_COMMENT_IS_INVALID = "2120063" // 研发商店：你已评论过，无法继续添加评论。但可以修改原有评论
-    const val USER_CLASSIFY_IS_NOT_ALLOW_DELETE = "2120064" // 研发商店：该分类下还有正在使用的组件，不允许直接删除
-    const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120065" // 研发商店：你已有处于待审批或审批通过的申请单，请勿重复申请
-    const val USER_UPLOAD_PACKAGE_INVALID = "2120066" // 研发商店：请确认上传的包是否正确
-    const val USER_SENSITIVE_CONF_EXIST = "2120067" // 研发商店：字段名{0}已存在
-    const val USER_START_CODECC_TASK_FAIL = "2120068" // 研发商店：启动代码扫描任务失败
-    const val USER_CHANGE_TEST_PROJECT_FAIL = "2120069" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
-    const val SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL = "2120070" // 研发商店：敏感API已经审批通过不能取消
-    const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120071" // 研发商店：敏感API已经取消不能审批
-    const val SENSITIVE_API_NOT_EXIST = "2120072" // 研发商店：敏感API[{0}]不存在
-    const val USER_HIS_VERSION_UPGRADE_INVALID = "2120073" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
-    const val USER_UPLOAD_FILE_PATH_ERROR = "2120074" // 研发商店：文件路径[{0}]错误
-    const val USER_ERROR_CODE_INVALID = "2120075" // 研发商店：错误码{0}格式错误
-    const val USER_LOCALE_FILE_NOT_EXIST = "2120076" // 研发商店：未提供系统[{0}]语言的配置文件
+    const val USER_PRAISE_IS_INVALID = "2120071" // 研发商店：你已点赞过
+    const val USER_PROJECT_IS_NOT_ALLOW_INSTALL = "2120072" // 研发商店：你没有权限将组件安装到项目：{0}
+    const val USER_COMMENT_IS_INVALID = "2120073" // 研发商店：你已评论过，无法继续添加评论。但可以修改原有评论
+    const val USER_CLASSIFY_IS_NOT_ALLOW_DELETE = "2120074" // 研发商店：该分类下还有正在使用的组件，不允许直接删除
+    const val USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY = "2120075" // 研发商店：你已有处于待审批或审批通过的申请单，请勿重复申请
+    const val USER_UPLOAD_PACKAGE_INVALID = "2120076" // 研发商店：请确认上传的包是否正确
+    const val USER_SENSITIVE_CONF_EXIST = "2120077" // 研发商店：字段名{0}已存在
+    const val USER_START_CODECC_TASK_FAIL = "2120078" // 研发商店：启动代码扫描任务失败
+    const val USER_CHANGE_TEST_PROJECT_FAIL = "2120079" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
+    const val SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL = "2120080" // 研发商店：敏感API已经审批通过不能取消
+    const val SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS = "2120081" // 研发商店：敏感API已经取消不能审批
+    const val SENSITIVE_API_NOT_EXIST = "2120082" // 研发商店：敏感API[{0}]不存在
+    const val USER_HIS_VERSION_UPGRADE_INVALID = "2120083" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
+    const val USER_UPLOAD_FILE_PATH_ERROR = "2120084" // 研发商店：文件路径[{0}]错误
+    const val USER_ERROR_CODE_INVALID = "2120085" // 研发商店：错误码{0}格式错误
+    const val USER_LOCALE_FILE_NOT_EXIST = "2120086" // 研发商店：未提供系统[{0}]语言的配置文件
 
-    const val BK_OTHER = "bkOther" //其他
-    const val BK_PIPELINED_JOB = "bkPipelinedJob" //流水线Job
-    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" //容器镜像商店上线，历史镜像数据自动生成
-    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" //旧版的构建镜像，通过拷贝为构建镜像入口生成
-    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" //已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
-    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" //旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
-    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" //容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
-    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" //项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
-    const val BK_HISTORYDATA_DATA = "bkHistorydataData" //historyData数据迁移自动通过
-    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" //工蜂项目信息不存在，请检查链接
-    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" //工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
-
+    const val BK_OTHER = "bkOther" // 其他
+    const val BK_PIPELINED_JOB = "bkPipelinedJob" // 流水线Job
+    const val BK_IMAGE_STORE_ONLINE = "bkImageStoreOnline" // 容器镜像商店上线，历史镜像数据自动生成
+    const val BK_OLD_VERSION_BUILD_IMAGE = "bkOldVersionBuildImage" // 旧版的构建镜像，通过拷贝为构建镜像入口生成
+    const val BK_AUTOMATICALLY_CONVERTED = "bkAutomaticallyConverted" // 已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。
+    const val BK_COPY_FOR_BUILD_IMAGE = "bkCopyForBuildImage" // 旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。
+    const val BK_AFTER_IMAGE_STORE_ONLINE = "bkAfterImageStoreOnline" // 容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。
+    const val BK_PROJECT_MANAGER_CAN_OPERATION = "bkProjectManagerCanOperation" // 项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。
+    const val BK_HISTORYDATA_DATA = "bkHistorydataData" // historyData数据迁移自动通过
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled" // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
 }

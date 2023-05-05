@@ -72,7 +72,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -252,7 +252,7 @@ class CertServiceImpl @Autowired constructor(
         )
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(NAME_NO_EXISTS,  I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 

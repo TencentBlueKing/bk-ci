@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.api.process
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -39,7 +38,6 @@ import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_FINISH_REQUEST_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.BUILD_TIMEOUT_END_REQUEST_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_BUILD_TASK_DETAILS_FAILURE
@@ -49,7 +47,7 @@ import com.tencent.devops.worker.common.constants.WorkerMessageCode.NOTIFY_SERVE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.RECEIVE_BUILD_MACHINE_TASK_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.REPORT_TASK_FINISH_FAILURE
 import com.tencent.devops.worker.common.env.AgentEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {

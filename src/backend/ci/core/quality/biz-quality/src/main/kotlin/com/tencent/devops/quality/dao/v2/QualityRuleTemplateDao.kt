@@ -133,7 +133,7 @@ class QualityRuleTemplateDao {
     fun batchCrateQualityRuleTemplate(dslContext: DSLContext, qualityRuleTemplatePOs: List<QualityRuleTemplatePO>) {
         with(TQualityRuleTemplate.T_QUALITY_RULE_TEMPLATE) {
             dslContext.batch(
-                qualityRuleTemplatePOs.map {qualityRuleTemplatePO ->
+                qualityRuleTemplatePOs.map { qualityRuleTemplatePO ->
                     dslContext.insertInto(this)
                         .set(dslContext.newRecord(this, qualityRuleTemplatePO))
                         .onDuplicateKeyUpdate()

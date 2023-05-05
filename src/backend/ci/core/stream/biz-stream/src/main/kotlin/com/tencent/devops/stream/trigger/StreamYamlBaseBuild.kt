@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCommitFinishEvent
@@ -53,7 +52,6 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao

@@ -33,11 +33,11 @@ package com.tencent.devops.common.api.pojo
 enum class Zone(
     name: String
 ) {
-    DEFAULT("default"),// 默认
-    SHENZHEN("shenzhen"),// 深圳
-    SHANGHAI("shanghai"),// 上海
-    CHENGDU("chengdu"),// 成都
-    TIANJIN("tianjin"),// 天津
-    GITHUB("github"),// GitHub
-    EXTERNAL("external")// 外网
+    DEFAULT("default"), // 默认
+    SHENZHEN("shenzhen"), // 深圳
+    SHANGHAI("shanghai"), // 上海
+    CHENGDU("chengdu"), // 成都
+    TIANJIN("tianjin"), // 天津
+    GITHUB("github"), // GitHub
+    EXTERNAL("external") // 外网
 }

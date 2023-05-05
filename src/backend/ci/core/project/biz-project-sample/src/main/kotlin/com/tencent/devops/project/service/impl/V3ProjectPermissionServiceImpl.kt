@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
