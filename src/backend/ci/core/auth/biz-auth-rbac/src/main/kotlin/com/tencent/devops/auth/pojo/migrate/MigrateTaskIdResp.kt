@@ -26,16 +26,11 @@
  *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.auth.pojo.migrate
 
-import com.tencent.devops.auth.service.iam.PermissionMigrateService
-
-class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
-        return true
-    }
-}
+/**
+ * 迁移任务Id
+ */
+data class MigrateTaskIdResp(
+    val id: Int
+)

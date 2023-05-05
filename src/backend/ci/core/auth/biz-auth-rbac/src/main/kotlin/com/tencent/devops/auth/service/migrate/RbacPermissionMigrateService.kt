@@ -54,6 +54,8 @@ class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
+    private val migrateV0PolicyService: MigrateV0PolicyService,
+    private val migrateResultService: MigrateResultService,
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
@@ -62,6 +64,8 @@ class RbacPermissionMigrateService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
+        private const val V0_AUTH_TYPE = "v0"
+        private const val V3_AUTH_TYPE = "v3"
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -80,13 +84,36 @@ class RbacPermissionMigrateService constructor(
             v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         )
         return projectCodes.map { projectCode ->
-            v3ToRbacAuth(projectCode)
+            migrateToRbacAuth(
+                projectCode = projectCode,
+                migrateTaskId = 0,
+                authType = V3_AUTH_TYPE
+            )
         }.all { it }
     }
 
-    @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
-    fun v3ToRbacAuth(projectCode: String): Boolean {
-        logger.info("Start migrate $projectCode from v3 to rbac")
+    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
+        logger.info("migrate $projectCodes auth from v0 to rbac")
+        // 1. 启动迁移任务
+        val migrateTaskId = migrateV0PolicyService.startMigrateTask(
+            projectCodes = projectCodes
+        )
+        return projectCodes.map { projectCode ->
+            migrateToRbacAuth(
+                projectCode = projectCode,
+                migrateTaskId = migrateTaskId,
+                authType = V0_AUTH_TYPE
+            )
+        }.all { it }
+    }
+
+    @Suppress("LongMethod", "ReturnCount")
+    private fun migrateToRbacAuth(
+        projectCode: String,
+        migrateTaskId: Int,
+        authType: String
+    ): Boolean {
+        logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
         val watcher = Watcher("v3ToRbacAuth|$projectCode")
         try {
@@ -128,25 +155,27 @@ class RbacPermissionMigrateService constructor(
             migrateResourceService.migrateResource(
                 projectCode = projectCode
             )
-            // 迁移v3用户组
-            watcher.start("migrateGroupPolicy")
-            migrateV3PolicyService.migrateGroupPolicy(
-                projectCode = projectCode,
-                projectName = projectInfo.projectName,
-                gradeManagerId = gradeManagerId
-            )
-            // 迁移用户自定义权限
-            watcher.start("migrateUserCustomPolicy")
-            migrateV3PolicyService.migrateUserCustomPolicy(
-                projectCode = projectCode
-            )
-            // 对比迁移结果
-            watcher.start("comparePolicy")
-            val compareResult = migrateV3PolicyService.comparePolicy(projectCode = projectCode)
-            if (!compareResult) {
-                logger.warn("Failed to compare $projectCode policy")
-                return false
+
+            when (authType) {
+                V0_AUTH_TYPE -> {
+                    migrateV0Auth(
+                        projectCode = projectCode,
+                        projectName = projectInfo.projectName,
+                        migrateTaskId = migrateTaskId,
+                        gradeManagerId = gradeManagerId,
+                        watcher = watcher
+                    )
+                }
+                V3_AUTH_TYPE -> {
+                    migrateV3Auth(
+                        projectCode = projectCode,
+                        projectName = projectInfo.projectName,
+                        gradeManagerId = gradeManagerId,
+                        watcher = watcher
+                    )
+                }
             }
+
             // 设置项目路由tag
             if (migrateProjectTag.isNotBlank()) {
                 client.get(ServiceProjectTagResource::class).updateProjectRouteTag(
@@ -162,7 +191,7 @@ class RbacPermissionMigrateService constructor(
             )
             return true
         } catch (ignore: Exception) {
-            logger.error("Failed to migrate $projectCode from v3 to rbac", ignore)
+            logger.error("Failed to migrate $projectCode from $authType to rbac", ignore)
             authMigrationDao.updateStatus(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -175,6 +204,72 @@ class RbacPermissionMigrateService constructor(
             logger.info("watcher migrate $projectCode|$watcher")
         }
     }
+
+    private fun migrateV3Auth(
+        projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
+        watcher: Watcher
+    ) {
+        // 轮询任务状态
+        migrateV3PolicyService.loopTaskStatus(projectCode = projectCode)
+        // 迁移v3用户组
+        watcher.start("migrateGroupPolicy")
+        migrateV3PolicyService.migrateGroupPolicy(
+            projectCode = projectCode,
+            projectName = projectName,
+            gradeManagerId = gradeManagerId
+        )
+        // 迁移用户自定义权限
+        watcher.start("migrateUserCustomPolicy")
+        migrateV3PolicyService.migrateUserCustomPolicy(
+            projectCode = projectCode
+        )
+        // 对比迁移结果
+        watcher.start("comparePolicy")
+        val compareResult = migrateResultService.compare(projectCode = projectCode)
+        if (!compareResult) {
+            logger.warn("Failed to compare $projectCode policy")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+                params = arrayOf(projectCode)
+            )
+        }
+    }
+
+    private fun migrateV0Auth(
+        projectCode: String,
+        projectName: String,
+        migrateTaskId: Int,
+        gradeManagerId: Int,
+        watcher: Watcher
+    ) {
+        // 轮询任务状态
+        migrateV0PolicyService.loopTaskStatus(migrateTaskId = migrateTaskId)
+        // 迁移v0用户组
+        watcher.start("migrateGroupPolicy")
+        migrateV0PolicyService.migrateGroupPolicy(
+            projectCode = projectCode,
+            projectName = projectName,
+            gradeManagerId = gradeManagerId
+        )
+        // 迁移用户自定义权限
+        watcher.start("migrateUserCustomPolicy")
+        migrateV0PolicyService.migrateUserCustomPolicy(
+            projectCode = projectCode
+        )
+        // 对比迁移结果
+        watcher.start("comparePolicy")
+        val compareResult = migrateResultService.compare(projectCode = projectCode)
+        if (!compareResult) {
+            logger.warn("Failed to compare $projectCode policy")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+                params = arrayOf(projectCode)
+            )
+        }
+    }
+
 
     private fun createGradeManager(
         projectCode: String,

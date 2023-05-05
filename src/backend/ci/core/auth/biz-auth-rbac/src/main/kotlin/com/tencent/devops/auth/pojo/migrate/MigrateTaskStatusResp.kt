@@ -29,8 +29,8 @@
 package com.tencent.devops.auth.pojo.migrate
 
 /**
- * iam启动任务返回
+ * iam启动任务状态返回
  */
-data class MigrateTaskResp(
+data class MigrateTaskStatusResp(
     val status: String
 )

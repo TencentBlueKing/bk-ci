@@ -147,9 +147,9 @@ class MigrateResourceService @Autowired constructor(
                 JsonUtil.to(JsonUtil.toJson(it), InstanceInfoDTO::class.java)
             }.forEach {
                 val resourceCode =
-                    migrateResourceCodeConverter.v3ToRbacResourceCode(
+                    migrateResourceCodeConverter.getRbacResourceCode(
                         resourceType = resourceType,
-                        resourceCode = it.id
+                        migrateResourceCode = it.id
                     ) ?: return@forEach
                 logger.info("MigrateResourceService|resourceCode:$resourceCode")
                 authResourceService.getOrNull(

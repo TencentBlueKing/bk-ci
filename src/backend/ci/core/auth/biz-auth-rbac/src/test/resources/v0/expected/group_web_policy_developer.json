@@ -1,0 +1,91 @@
+[ {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "pipeline_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "pipeline",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "credential_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "credential",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "cert_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "cert",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "repertory_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "repertory",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "environment_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "environment",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "env_node_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "env_node",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+} ]
