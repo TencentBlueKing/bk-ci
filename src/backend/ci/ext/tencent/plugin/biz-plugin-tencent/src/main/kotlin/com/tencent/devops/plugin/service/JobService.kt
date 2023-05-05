@@ -37,8 +37,8 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
-import com.tencent.devops.plugin.constant.PluginMessageCode.BK_BUILDID_NOT_FOUND
-import com.tencent.devops.plugin.constant.PluginMessageCode.BK_PIPELINEID_NOT_FOUND
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_BUILD_ID_NOT_FOUND
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_PIPELINE_ID_NOT_FOUND
 import com.tencent.devops.process.api.builds.BuildHistoryBuildResource
 import com.tencent.devops.process.api.service.ServiceOperationResource
 import org.slf4j.LoggerFactory
@@ -69,7 +69,7 @@ class JobService @Autowired constructor(
     fun listUsableServerEnvs(projectId: String, buildId: String): Result<List<EnvWithPermission>> {
         logger.info("listUsableServerEnvs(projectId=$projectId,buildId=$buildId)=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
-            messageCode = BK_BUILDID_NOT_FOUND,
+            messageCode = BK_BUILD_ID_NOT_FOUND,
             language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
@@ -82,7 +82,7 @@ class JobService @Autowired constructor(
     fun listUsableServerNodes(projectId: String, buildId: String): Result<List<NodeWithPermission>> {
         logger.info("listUsableServerNodes(projectId=$projectId,buildId=$buildId)=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
-            messageCode = BK_BUILDID_NOT_FOUND,
+            messageCode = BK_BUILD_ID_NOT_FOUND,
             language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
@@ -95,7 +95,7 @@ class JobService @Autowired constructor(
     fun listRawByEnvHashIds(projectId: String, buildId: String, envHashIds: List<String>): Result<List<EnvWithPermission>> {
         logger.info("listRawByEnvHashIds(projectId=$projectId,buildId=$buildId,envHashIds=${envHashIds.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
-            messageCode = BK_BUILDID_NOT_FOUND,
+            messageCode = BK_BUILD_ID_NOT_FOUND,
             language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
@@ -107,7 +107,7 @@ class JobService @Autowired constructor(
     fun listRawByEnvNames(projectId: String, buildId: String, envNames: List<String>): Result<List<EnvWithPermission>> {
         logger.info("listRawByEnvNames(projectId=$projectId,buildId=$buildId,envNames=${envNames.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
-            messageCode = BK_BUILDID_NOT_FOUND,
+            messageCode = BK_BUILD_ID_NOT_FOUND,
             language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
@@ -119,7 +119,7 @@ class JobService @Autowired constructor(
     fun listRawNodesByHashIds(projectId: String, buildId: String, nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
         logger.info("listRawNodesByHashIds(projectId=$projectId,buildId=$buildId,nodeHashIds=${nodeHashIds.reduce{s1,s2 -> "[$s1,$s2]"}})=")
         val userId = getUserId(buildId) ?: return Result(500, MessageUtil.getMessageByLocale(
-            messageCode = BK_BUILDID_NOT_FOUND,
+            messageCode = BK_BUILD_ID_NOT_FOUND,
             language = I18nUtil.getDefaultLocaleLanguage(),
             params = arrayOf(buildId)
         ))
@@ -132,7 +132,7 @@ class JobService @Autowired constructor(
         logger.info("listUsableServerEnvsByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
         val userId = getLastUpdateUserId(projectId, pipelineId)
             ?: return Result(500, MessageUtil.getMessageByLocale(
-                messageCode = BK_PIPELINEID_NOT_FOUND,
+                messageCode = BK_PIPELINE_ID_NOT_FOUND,
                 language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(pipelineId)
             ))
@@ -146,7 +146,7 @@ class JobService @Autowired constructor(
         logger.info("listUsableServerNodesByLastUpdateUser(projectId=$projectId, pipelineId=$pipelineId")
         val userId = getLastUpdateUserId(projectId, pipelineId)
             ?: return Result(500, MessageUtil.getMessageByLocale(
-                messageCode = BK_PIPELINEID_NOT_FOUND,
+                messageCode = BK_PIPELINE_ID_NOT_FOUND,
                 language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(pipelineId)
             ))

@@ -54,8 +54,8 @@ object PluginMessageCode {
     const val URL_CODING_ERROR = "2113006" //url编码错误, err:
 
     const val BK_APP_SCAN_COMPLETED = "bkAppScanCompleted" //金刚app扫描完成
-    const val BK_BUILDID_NOT_FOUND = "bkBuildidNotFound" //服务端内部异常，buildId={0}的构建未查到
-    const val BK_PIPELINEID_NOT_FOUND = "bkPipelineidNotFound" //服务端内部异常，pipelineId={0}的构建未查到
+    const val BK_BUILD_ID_NOT_FOUND = "bkBuildIdNotFound" //服务端内部异常，buildId={0}的构建未查到
+    const val BK_PIPELINE_ID_NOT_FOUND = "bkPipelineIdNotFound" //服务端内部异常，pipelineId={0}的构建未查到
     const val BK_PROJECT_MANAGER = "bkProjectManager" //项目管理员
 
 }
