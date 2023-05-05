@@ -45,8 +45,6 @@ import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.auth.service.migrate.MigrateIamApiService.Companion.SLEEP_LOOP_IAM_GET_MIGRATE_TASK
-import com.tencent.devops.auth.service.migrate.MigrateIamApiService.Companion.SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -117,12 +115,12 @@ class MigrateV3PolicyService constructor(
     fun loopTaskStatus(projectCode: String) {
         logger.info("loop $projectCode migrate v3 task status")
         val migrateTaskStatus = migrateIamApiService.getV3MigrateTaskStatus()
-        if (migrateTaskStatus != SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS) {
+        if (migrateTaskStatus != MigrateIamApiService.SUCCESSFUL_IAM_MIGRATE_TASK_SUCCESS) {
             logger.info(
                 "$projectCode migrate task status $migrateTaskStatus not success, " +
-                    "sleep $SLEEP_LOOP_IAM_GET_MIGRATE_TASK(s)"
+                    "sleep ${MigrateIamApiService.SLEEP_LOOP_IAM_GET_MIGRATE_TASK}(s)"
             )
-            Thread.sleep(SLEEP_LOOP_IAM_GET_MIGRATE_TASK)
+            Thread.sleep(MigrateIamApiService.SLEEP_LOOP_IAM_GET_MIGRATE_TASK)
             loopTaskStatus(projectCode)
         }
     }

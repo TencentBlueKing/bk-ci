@@ -42,4 +42,8 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     override fun v3ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
         return Result(permissionMigrateService.v3ToRbacAuth(projectCodes = projectCodes))
     }
+
+    override fun v0ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
+        return Result(permissionMigrateService.v0ToRbacAuth(projectCodes = projectCodes))
+    }
 }

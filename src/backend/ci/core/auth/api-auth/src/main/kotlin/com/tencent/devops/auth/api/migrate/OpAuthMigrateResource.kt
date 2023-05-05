@@ -51,4 +51,12 @@ interface OpAuthMigrateResource {
         @ApiParam("项目Code", required = true)
         projectCodes: List<String>
     ): Result<Boolean>
+
+    @POST
+    @Path("/v0ToRbac")
+    @ApiOperation("v0权限升级到rbac权限")
+    fun v0ToRbacAuth(
+        @ApiParam("项目Code", required = true)
+        projectCodes: List<String>
+    ): Result<Boolean>
 }
