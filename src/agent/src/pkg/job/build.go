@@ -274,7 +274,6 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		"PROJECT_ID":            buildInfo.ProjectId,           //deprecated
 		"BUILD_ID":              buildInfo.BuildId,             //deprecated
 		"VM_SEQ_ID":             buildInfo.VmSeqId,             //deprecated
-		"BK_CI_LOCALE_LANGUAGE": config.GAgentConfig.Language,
 	}
 	if config.GEnvVars != nil {
 		for k, v := range config.GEnvVars {
@@ -298,6 +297,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			"-Ddevops.agent.error.file=" + errorMsgFile,
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
+			"-DBK_CI_LOCALE_LANGUAGE=" + config.GAgentConfig.Language,
 			"-Xmx2g", // #5806 兼容性问题，必须独立一行
 			"-jar",
 			config.BuildAgentJarPath(),
@@ -366,10 +366,10 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		fmt.Sprintf("cd %s", systemutil.GetWorkDir()),
 		fmt.Sprintf("%s -Ddevops.slave.agent.start.file=%s -Ddevops.slave.agent.prepare.start.file=%s "+
 			"-Ddevops.agent.error.file=%s "+
-			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
+			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -DBK_CI_LOCALE_LANGUAGE=%s -jar %s %s",
 			config.GetJava(), scriptFile, prepareScriptFile,
 			errorMsgFile,
-			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
+			agentLogPrefix, tmpDir, config.GAgentConfig.Language, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
 
