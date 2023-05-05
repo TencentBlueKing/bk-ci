@@ -41,7 +41,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
     private val projectPipelineCallBackService: ProjectPipelineCallBackService
 ) : OpPipelineCallbackResource {
 
-    override fun sendDisableNotify() {
+    override fun enableCallback(projectId: String?, events: String?) {
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
@@ -52,34 +52,36 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
             ThreadPoolExecutor.AbortPolicy()
         )
         threadPoolExecutor.submit {
-            logger.info("OpPipelineCallbackResource:begin sendDisableNotify-----------")
+            logger.info("OpPipelineCallbackResource:begin enableCallback-----------")
             try {
-                batchSendDisableNotify()
+                batchEnableCallback(projectId = projectId, events = events)
             } catch (e: Exception) {
-                logger.warn("OpPipelineCallbackResource：sendDisableNotify failed | $e ")
+                logger.warn("OpPipelineCallbackResource：enableCallback failed | $e ")
             } finally {
                 threadPoolExecutor.shutdown()
             }
         }
     }
 
-    fun batchSendDisableNotify() {
+    fun batchEnableCallback(projectId: String?, events: String?) {
         val limit = 1000
         var offset = 0
         do {
-            val enableCallbackList = projectPipelineCallBackService.getEnableCallbackList(
+            val disableCallbackList = projectPipelineCallBackService.getDisableCallbackList(
                 limit = limit,
-                offset = offset
+                offset = offset,
+                projectId = projectId,
+                events = events
             )
-            val pageSize = enableCallbackList.size
-            enableCallbackList.forEach {
-                projectPipelineCallBackService.disable(it)
+            val pageSize = disableCallbackList.size
+            disableCallbackList.forEach {
+                projectPipelineCallBackService.enable(it)
             }
             offset += limit
             // 一秒休眠时间
             Thread.sleep(1 * 1000)
         } while (pageSize == limit)
-        logger.info("OpPipelineCallbackResource:end sendDisableNotify-----------")
+        logger.info("OpPipelineCallbackResource:end enableCallback-----------")
     }
 
     companion object {
