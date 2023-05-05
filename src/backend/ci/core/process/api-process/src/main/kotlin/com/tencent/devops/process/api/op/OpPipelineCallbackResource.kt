@@ -20,10 +20,10 @@ interface OpPipelineCallbackResource {
     @PUT
     @Path("/enableCallback")
     fun enableCallback(
-        @ApiParam("蓝盾项目Id(项目英文名)", required = false)
+        @ApiParam("蓝盾项目Id(项目英文名)", required = true)
         @QueryParam("projectId")
-        projectId: String?,
-        @ApiParam("事件类型", required = false)
+        projectId: String,
+        @ApiParam("事件类型,不传则恢复所有回调", required = false)
         @QueryParam("events")
         events: String?
     )

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import org.slf4j.LoggerFactory
@@ -41,7 +42,10 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
     private val projectPipelineCallBackService: ProjectPipelineCallBackService
 ) : OpPipelineCallbackResource {
 
-    override fun enableCallback(projectId: String?, events: String?) {
+    override fun enableCallback(projectId: String, events: String?) {
+        if (projectId.isEmpty()){
+            throw ParamBlankException("Invalid projectId")
+        }
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
             1,
