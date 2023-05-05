@@ -88,6 +88,12 @@ object PathMatchUtils {
      */
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
         logger.info("PathMatchUtils|isPathMatch|fullPath|$fullPath|prefixPath|$prefixPath")
+        if (prefixPath.endsWith("*")) {
+            logger.info(
+                "PathStreamFilter|path_end_with_*|" +
+                    "$fullPath|$prefixPath"
+            )
+        }
         val fullPathList = fullPath.removePrefix("/").split("/")
         val prefixPathList = prefixPath.removePrefix("/").split("/")
         if (fullPathList.size < prefixPathList.size) {

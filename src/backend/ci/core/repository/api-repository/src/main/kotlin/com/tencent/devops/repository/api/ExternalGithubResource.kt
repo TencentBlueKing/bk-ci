@@ -63,10 +63,22 @@ interface ExternalGithubResource {
         body: String
     ): Result<Boolean>
 
-    @ApiOperation("Github Oauth回调")
+    @ApiOperation("Github apps 回调")
     @GET
     @Path("/oauth/callback")
     fun oauthCallback(
+        @ApiParam(value = "code")
+        @QueryParam("code")
+        code: String,
+        @ApiParam(value = "state")
+        @QueryParam("state")
+        state: String
+    ): Response
+
+    @ApiOperation("Oauth apps 回调")
+    @GET
+    @Path("/oauthApp/callback")
+    fun oauthAppCallback(
         @ApiParam(value = "code")
         @QueryParam("code")
         code: String,

@@ -115,7 +115,19 @@ func DoPollAndBuild() {
 		// 在接取任务先获取锁，防止与其他操作产生干扰
 		BuildTotalManager.Lock.Lock()
 
-		buildInfo, err := getBuild()
+		// 根据可以执行的类型接取任务防止出现其他类型任务的干扰
+		var buildInfo *api.ThirdPartyBuildInfo
+		if dockerCanRun && normalCanRun {
+			logs.Info("all job can run")
+			buildInfo, err = getBuild(api.AllBuildType)
+		} else if normalCanRun {
+			logs.Info("binary job can run")
+			buildInfo, err = getBuild(api.BinaryBuildType)
+		} else {
+			logs.Info("docker job can run")
+			buildInfo, err = getBuild(api.DockerBuildType)
+		}
+
 		if err != nil {
 			logs.Error("get build failed, retry, err", err.Error())
 			BuildTotalManager.Lock.Unlock()
@@ -163,10 +175,7 @@ func DoPollAndBuild() {
 func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
-	// 临时方案，避免一直丢弃二进制任务，没有开docker的先不接受docker任务
-	if !config.GAgentConfig.EnableDockerBuild {
-		dockerCanRun = false
-	} else if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
+	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
 		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
 			"maxJob config: %d, instance count: %d",
 			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
@@ -190,9 +199,9 @@ func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 }
 
 // getBuild 从服务器认领要构建的信息
-func getBuild() (*api.ThirdPartyBuildInfo, error) {
+func getBuild(buildType api.BuildJobType) (*api.ThirdPartyBuildInfo, error) {
 	logs.Info("get build")
-	result, err := api.GetBuild()
+	result, err := api.GetBuild(buildType)
 	if err != nil {
 		return nil, err
 	}
@@ -217,6 +226,10 @@ func getBuild() (*api.ThirdPartyBuildInfo, error) {
 
 // runBuild 启动构建
 func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
+	defer func() {
+		// 防止因为某种场景无法进入构建时也要删除预构建任务，防止产生干扰
+		GBuildManager.DeletePreInstance(buildInfo.BuildId)
+	}()
 
 	workDir := systemutil.GetWorkDir()
 	agentJarPath := config.BuildAgentJarPath()
@@ -474,7 +487,7 @@ func removeFileThan7Days(dir string, f fs.DirEntry) {
 		logs.Error("removeFileThan7Days|read file info error ", "file: ", f.Name(), " error: ", err)
 		return
 	}
-	if (time.Now().Sub(info.ModTime())) > 7*24*time.Hour {
+	if (time.Since(info.ModTime())) > 7*24*time.Hour {
 		err = os.Remove(dir + "/" + f.Name())
 		if err != nil {
 			logs.Error("removeFileThan7Days|remove file error ", "file: ", f.Name(), " error: ", err)

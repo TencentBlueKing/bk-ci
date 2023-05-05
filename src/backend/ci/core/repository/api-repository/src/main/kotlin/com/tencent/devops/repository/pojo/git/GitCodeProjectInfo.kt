@@ -187,7 +187,7 @@ data class GitCodeProjectInfo(
     val lastActivityAt: String?,
     @JsonProperty("creator_id")
     @ApiModelProperty(name = "creator_id")
-    val creatorId: Long?,
+    val creatorId: String?,
     @JsonProperty("avatar_url")
     @ApiModelProperty(name = "avatar_url")
     val avatarUrl: String?,

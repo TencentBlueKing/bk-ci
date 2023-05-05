@@ -171,7 +171,8 @@ class CheckPauseReviewStageCmd(
         commandContext.cmdFlowState = CmdFlowState.FINALLY
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 
@@ -185,7 +186,8 @@ class CheckPauseReviewStageCmd(
         commandContext.cmdFlowState = CmdFlowState.BREAK
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 
@@ -198,7 +200,8 @@ class CheckPauseReviewStageCmd(
         commandContext.latestSummary = "s(${commandContext.stage.stageId}) passed with QUALITY_CHECK_IN"
         pipelineStageService.refreshCheckStageStatus(
             userId = commandContext.event.userId,
-            buildStage = commandContext.stage
+            buildStage = commandContext.stage,
+            inOrOut = true
         )
     }
 

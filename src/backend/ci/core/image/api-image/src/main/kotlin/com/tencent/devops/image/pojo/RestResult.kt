@@ -36,6 +36,6 @@ data class RestResult<out T>(
     val data: T? = null,
     val code: String = "00"
 ) {
-    constructor(data: T?): this(true, "success", data, "00")
-    constructor(success: Boolean, message: String?): this(success, message, null, if (success) "00" else "01")
+    constructor(data: T?) : this(true, "success", data, "00")
+    constructor(success: Boolean, message: String?) : this(success, message, null, if (success) "00" else "01")
 }

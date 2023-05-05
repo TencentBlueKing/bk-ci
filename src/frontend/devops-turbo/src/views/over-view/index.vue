@@ -75,7 +75,7 @@
                         digit: 2
                     },
                     savingRate: {
-                        label: this.$t('turbo.节省耗时(h)'),
+                        label: this.$t('turbo.节省率(%)'),
                         num: 0,
                         icon: 'save-time',
                         digit: 2

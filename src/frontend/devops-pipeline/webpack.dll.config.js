@@ -31,6 +31,7 @@ module.exports = (env = {}, argv) => {
             'moment'
         ],
         output: {
+            publicPath: 'auto',
             filename: '[name].dll.js',
             library: 'lib',
             path: path.join(__dirname, 'dist')

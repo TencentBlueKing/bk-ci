@@ -51,11 +51,12 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
@@ -76,7 +77,8 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
@@ -125,11 +127,13 @@ class BuildCancelControl @Autowired constructor(
             cancelAllPendingTask(event = event, model = model)
             if (event.actionType == ActionType.TERMINATE) {
                 // 修改detail model
-                pipelineBuildDetailService.buildCancel(
+                pipelineBuildRecordService.buildCancel(
                     projectId = event.projectId,
+                    pipelineId = event.pipelineId,
                     buildId = event.buildId,
                     buildStatus = event.status,
-                    cancelUser = event.userId
+                    cancelUser = event.userId,
+                    executeCount = buildInfo.executeCount ?: 1
                 )
             }
 
@@ -270,6 +274,7 @@ class BuildCancelControl @Autowired constructor(
         executeCount: Int
     ) {
         val projectId = event.projectId
+        val pipelineId = event.pipelineId
         val buildId = event.buildId
         val containerId = container.id ?: return
         val containerIdLock = ContainerIdLock(redisOperation, buildId, containerId)
@@ -305,16 +310,18 @@ class BuildCancelControl @Autowired constructor(
                     endTime = LocalDateTime.now(),
                     buildStatus = switchedStatus
                 )
-                containerBuildDetailService.updateContainerStatus(
+                containerBuildRecordService.updateContainerStatus(
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     containerId = containerId,
                     buildStatus = switchedStatus,
-                    executeCount = executeCount
+                    executeCount = executeCount,
+                    operation = "cancelContainerPendingTask#${container.containerId}"
                 )
                 // 释放互斥锁
                 unlockMutexGroup(
-                    variables = variables, container = container,
+                    variables = variables, container = container, pipelineId = event.pipelineId,
                     buildId = event.buildId, projectId = event.projectId, stageId = stageId
                 )
                 // 构建机关机
@@ -391,6 +398,7 @@ class BuildCancelControl @Autowired constructor(
     private fun unlockMutexGroup(
         container: Container,
         buildId: String,
+        pipelineId: String,
         projectId: String,
         stageId: String,
         variables: Map<String, String>
@@ -405,6 +413,7 @@ class BuildCancelControl @Autowired constructor(
         if (mutexGroup?.enable == true && !mutexGroup.mutexGroupName.isNullOrBlank()) {
             mutexControl.releaseContainerMutex(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = container.id!!,

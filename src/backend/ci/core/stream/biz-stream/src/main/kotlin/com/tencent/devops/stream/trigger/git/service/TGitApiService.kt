@@ -44,6 +44,7 @@ import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitChangeFileInfo
+import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitDiffInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCommitInfo
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitFileInfo
@@ -277,7 +278,7 @@ class TGitApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileTree(
-                gitProjectId = gitProjectId.toLong(),
+                gitProjectId = gitProjectId,
                 path = path ?: "",
                 token = cred.toToken(),
                 ref = ref,
@@ -372,7 +373,9 @@ class TGitApiService @Autowired constructor(
                 description = it.description,
                 avatarUrl = it.avatarUrl,
                 pathWithNamespace = it.pathWithNamespace,
-                nameWithNamespace = it.nameWithNamespace ?: ""
+                nameWithNamespace = it.nameWithNamespace ?: "",
+                repoCreatorId = it.creatorId ?: "",
+                repoCreatedTime = it.createdAt ?: ""
             )
         }
     }
@@ -420,6 +423,51 @@ class TGitApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_LATEST_REVISION_ERROR
         ) {
             client.get(ServiceScmOauthResource::class).addCommitCheck(request)
+        }
+    }
+
+    override fun getCommitDiff(
+        cred: StreamGitCred,
+        gitProjectId: String,
+        sha: String
+    ): List<TGitCommitDiffInfo> {
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(),
+            log = "get commit diff [$sha] fail",
+            apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getCommitDiff(
+                accessToken = cred.toToken(),
+                tokenType = cred.toTokenType(),
+                gitProjectId = gitProjectId,
+                sha = sha,
+                path = null,
+                ignoreWhiteSpace = true
+            ).data!!.map {
+                TGitCommitDiffInfo(
+                    oldPath = it.old_path,
+                    newPath = it.new_path
+                )
+            }
+        }
+    }
+
+    fun getUserInfoById(
+        cred: TGitCred,
+        userId: String
+    ): TGitUserInfo {
+        return doRetryFun(
+            logger = logger,
+            retry = ApiRequestRetryInfo(true, 1),
+            log = "get user info by id fail",
+            apiErrorCode = ErrorCodeEnum.GET_USER_INFO_ERROR
+        ) {
+            client.get(ServiceGitResource::class).getUserInfoById(
+                userId,
+                cred.toToken(),
+                cred.toTokenType()
+            ).data!!.let { TGitUserInfo(id = it.id.toString(), username = it.username!!) }
         }
     }
 

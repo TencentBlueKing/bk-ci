@@ -94,7 +94,7 @@
 
         data () {
             return {
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/docker-build.md`,
+                docsLink: this.BKCI_DOCS.IMAGE_GUIDE_DOC,
                 isLoading: false,
                 isTestLoading: false,
                 progressStatus: [],

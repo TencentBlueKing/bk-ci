@@ -61,6 +61,7 @@
                     :external-link="false"
                     :box-shadow="false"
                     preview-background="#fff"
+                    :language="mavenLang"
                     @imgAdd="addImage"
                 />
             </bk-form-item>
@@ -114,6 +115,11 @@
                     message: this.$t('store.由汉字、英文字母、数字、连字符(-)组成，长度小于20个字符'),
                     trigger: 'blur'
                 }
+            }
+        },
+        computed: {
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

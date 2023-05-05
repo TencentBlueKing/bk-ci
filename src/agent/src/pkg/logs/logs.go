@@ -76,7 +76,7 @@ func (m *MyFormatter) Format(entry *logrus.Entry) ([]byte, error) {
 }
 
 func parseLevel(l logrus.Level) (string, error) {
-	switch strings.ToLower(fmt.Sprintf("%s", l)) {
+	switch strings.ToLower(l.String()) {
 	case "panic":
 		return "P", nil
 	case "fatal":
@@ -100,6 +100,10 @@ func Info(f interface{}, v ...interface{}) {
 	logs.Info(formatLog(f, v...))
 }
 
+func Infof(format string, args ...interface{}) {
+	logs.Infof(format, args...)
+}
+
 func Warn(f interface{}, v ...interface{}) {
 	logs.Warn(formatLog(f, v...))
 }
@@ -112,6 +116,10 @@ func Error(f interface{}, v ...interface{}) {
 	logs.Error(formatLog(f, v...))
 }
 
+func Errorf(format string, args ...interface{}) {
+	logs.Errorf(format, args...)
+}
+
 func Debug(args ...interface{}) {
 	logs.Debug(args...)
 }
@@ -122,9 +130,9 @@ func Debugf(format string, args ...interface{}) {
 
 func formatLog(f interface{}, v ...interface{}) string {
 	var msg string
-	switch f.(type) {
+	switch f := f.(type) {
 	case string:
-		msg = f.(string)
+		msg = f
 		if len(v) == 0 {
 			return msg
 		}

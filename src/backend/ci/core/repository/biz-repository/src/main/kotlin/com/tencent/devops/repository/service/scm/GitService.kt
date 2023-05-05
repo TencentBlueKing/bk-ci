@@ -77,6 +77,7 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -438,6 +439,10 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
         }
+    }
+
+    override fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum): GitUserInfo {
+        return getGitUserInfo(userId, token, tokenType).data!!
     }
 
     @BkTimed(extraTags = ["operation", "RedirectUrl"], value = "bk_tgit_api_time")
@@ -1636,7 +1641,7 @@ class GitService @Autowired constructor(
 
     @BkTimed(extraTags = ["operation", "git_file_tree"], value = "bk_tgit_api_time")
     override fun getGitFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
@@ -1891,6 +1896,29 @@ class GitService @Autowired constructor(
                 id = gitProjectId,
                 type = type,
                 iid = iid
+            )
+        )
+    }
+
+    override fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        val gitApi = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi()
+        } else {
+            GitApi()
+        }
+        return Result(
+            gitApi.getCommitDiff(
+                host = gitConfig.gitApiUrl,
+                sha = sha,
+                token = accessToken,
+                projectName = gitProjectId
             )
         )
     }

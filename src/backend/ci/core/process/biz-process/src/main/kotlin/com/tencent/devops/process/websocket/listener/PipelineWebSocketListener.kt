@@ -86,5 +86,19 @@ class PipelineWebSocketListener @Autowired constructor(
                 )
             )
         }
+
+        if (event.refreshTypes and RefreshType.RECORD.binary == RefreshType.RECORD.binary) {
+            event.executeCount?.let { executeCount ->
+                webSocketDispatcher.dispatch(
+                    pipelineWebsocketService.buildRecordMessage(
+                        buildId = event.buildId,
+                        projectId = event.projectId,
+                        pipelineId = event.pipelineId,
+                        userId = event.userId,
+                        executeCount = executeCount
+                    )
+                )
+            }
+        }
     }
 }

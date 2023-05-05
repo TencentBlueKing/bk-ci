@@ -106,6 +106,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
@@ -141,6 +142,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.versionContent"
                                 >
@@ -185,7 +187,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-task.md`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -248,6 +250,9 @@
                     { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

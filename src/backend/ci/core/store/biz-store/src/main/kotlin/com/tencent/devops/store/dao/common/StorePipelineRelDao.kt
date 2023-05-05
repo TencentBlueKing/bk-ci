@@ -30,6 +30,7 @@ package com.tencent.devops.store.dao.common
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.records.TStorePipelineRelRecord
+import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -37,19 +38,28 @@ import org.springframework.stereotype.Repository
 @Repository
 class StorePipelineRelDao {
 
-    fun add(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum, pipelineId: String) {
+    fun add(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        pipelineId: String,
+        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD
+    ) {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
-            dslContext.insertInto(this,
+            dslContext.insertInto(
+                this,
                 ID,
                 STORE_CODE,
                 STORE_TYPE,
-                PIPELINE_ID
+                PIPELINE_ID,
+                BUS_TYPE
             )
                 .values(
                     UUIDUtil.generate(),
                     storeCode,
                     storeType.type.toByte(),
-                    pipelineId
+                    pipelineId,
+                    busType.name
                 ).execute()
         }
     }
@@ -57,12 +67,14 @@ class StorePipelineRelDao {
     fun getStorePipelineRel(
         dslContext: DSLContext,
         storeCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        busType: StorePipelineBusTypeEnum = StorePipelineBusTypeEnum.BUILD
     ): TStorePipelineRelRecord? {
         with(TStorePipelineRel.T_STORE_PIPELINE_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(BUS_TYPE.eq(busType.name))
                 .fetchOne()
         }
     }

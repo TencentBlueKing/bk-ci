@@ -41,4 +41,5 @@ dependencies {
     testImplementation(project(":core:common:common-test"))
     api("net.coobird:thumbnailator")
     api("org.springframework.boot:spring-boot-starter-aop")
+    api(project(":core:metrics:api-metrics"))
 }

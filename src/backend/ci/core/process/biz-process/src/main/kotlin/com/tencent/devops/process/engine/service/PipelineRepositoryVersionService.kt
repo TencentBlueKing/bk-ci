@@ -27,7 +27,12 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
+import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.DSLContext
@@ -39,10 +44,30 @@ import org.springframework.stereotype.Service
 class PipelineRepositoryVersionService constructor(
     private val dslContext: DSLContext,
     private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val redisOperation: RedisOperation
 ) {
 
     fun deletePipelineVer(projectId: String, pipelineId: String, version: Int) {
+        // 判断该流水线版本是否还有关联的构建记录，没有记录才能删除
+        val pipelineVersionLock = PipelineVersionLock(redisOperation, pipelineId, version)
+        try {
+            pipelineVersionLock.lock()
+            val count = pipelineBuildDao.countBuildNumByVersion(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            )
+            if (count > 0) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_CAN_NOT_DELETE_WHEN_HAVE_BUILD_RECORD
+                )
+            }
+        } finally {
+            pipelineVersionLock.unlock()
+        }
         dslContext.transaction { t ->
             val transactionContext = DSL.using(t)
             pipelineResVersionDao.deleteByVer(transactionContext, projectId, pipelineId, version)

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
 
 data class BuildInfo(
@@ -54,9 +55,14 @@ data class BuildInfo(
     val channelCode: ChannelCode,
     val buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
+    @Deprecated("后续只用executeCount做判断")
     val retryFlag: Boolean? = null,
+    val executeCount: Int? = 1,
     val concurrencyGroup: String? = null,
     val webhookInfo: WebhookInfo? = null,
+    val buildMsg: String? = null,
+    val material: List<PipelineBuildMaterial>? = null,
+    val remark: String? = null,
     val errorType: Int? = null,
     val errorCode: Int? = null,
     val errorMsg: String? = null

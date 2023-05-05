@@ -97,7 +97,26 @@ interface ApigwRepositoryResourceV4 {
         @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "代码库模型", required = true)
+        @ApiParam(
+            value = "代码库模型", required = true, examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "user00通过OAUTH认证给项目关联 Tencent/bk-ci 的github代码库",
+                        value = """
+                    {
+                      "@type": "github",
+                      "aliasName": "Tencent/bk-ci",
+                      "credentialId": "",
+                      "projectName": "Tencent/bk-ci",
+                      "url": "https://github.com/Tencent/bk-ci.git",
+                      "authType": "OAUTH",
+                      "userName": "user00"
+                    }
+                """
+                    )
+                ]
+            )
+        )
         repository: Repository
     ): Result<RepositoryId>
 

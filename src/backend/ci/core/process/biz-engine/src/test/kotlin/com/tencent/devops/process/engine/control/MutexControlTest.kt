@@ -31,8 +31,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
+import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Disabled
@@ -67,13 +69,14 @@ class MutexControlTest {
         containerType = "vmBuild",
         seq = containerId.toInt(),
         status = BuildStatus.RUNNING,
-        controlOption = null,
+        controlOption = PipelineBuildContainerControlOption(jobControlOption = JobControlOption()),
         matrixGroupId = null,
         matrixGroupFlag = false
     )
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
+        containerBuildRecordService = mockk(),
         pipelineUrlBean = mockk(),
         pipelineContainerService = mockk()
     )
@@ -110,6 +113,7 @@ class MutexControlTest {
         )
         mutexControl.releaseContainerMutex(
             projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,

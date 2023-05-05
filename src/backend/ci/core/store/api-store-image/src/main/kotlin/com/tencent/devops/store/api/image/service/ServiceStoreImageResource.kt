@@ -89,4 +89,16 @@ interface ServiceStoreImageResource {
     @GET
     @Path("/image/self_develop/public_images")
     fun getSelfDevelopPublicImages(): Result<List<ImageRepoInfo>>
+
+    @ApiOperation("根据code和版本号查询镜像状态")
+    @GET
+    @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}/imageStatus")
+    fun getImageStatusByCodeAndVersion(
+        @ApiParam("镜像标识", required = true)
+        @PathParam("imageCode")
+        imageCode: String,
+        @ApiParam("镜像版本", required = false)
+        @PathParam("imageVersion")
+        imageVersion: String
+    ): Result<String>
 }
