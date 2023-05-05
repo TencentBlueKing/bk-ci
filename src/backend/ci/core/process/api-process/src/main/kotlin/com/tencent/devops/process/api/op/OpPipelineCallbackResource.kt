@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpPipelineCallbackResource {
 
-    @ApiOperation("发送接口禁用通知")
+    @ApiOperation("恢复回调接口")
     @PUT
     @Path("/enableCallback")
     fun enableCallback(
