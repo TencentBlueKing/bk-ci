@@ -59,7 +59,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -304,13 +304,7 @@ class QualityIndicatorService @Autowired constructor(
     fun opCreate(userId: String, indicatorUpdate: IndicatorUpdate): Msg {
         checkSystemIndicatorExist(indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         if (indicatorDao.create(userId, indicatorUpdate, dslContext) > 0) {
-            return Msg(
-                0,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_CREATE_SUCCESS,
-                    language = I18nUtil.getLanguage(userId)),
-                true
-            )
+            return Msg(0, I18nUtil.getCodeLanMessage(BK_CREATE_SUCCESS), true)
         }
         return Msg(-1, I18nUtil.getCodeLanMessage(messageCode = BK_CREATE_FAIL, language = userId), false)
     }
@@ -339,11 +333,7 @@ class QualityIndicatorService @Autowired constructor(
         checkSystemIndicatorExcludeExist(id, indicatorUpdate.enName ?: "", indicatorUpdate.cnName ?: "")
         logger.info("user($userId) update the indicator($id): $indicatorUpdate")
         if (indicatorDao.update(userId, id, indicatorUpdate, dslContext) > 0) {
-            return Msg(
-                0,
-                I18nUtil.getCodeLanMessage(messageCode = BK_METRIC_DATA_UPDATE_SUCCESS),
-                true
-            )
+            return Msg(0, I18nUtil.getCodeLanMessage(BK_METRIC_DATA_UPDATE_SUCCESS), true)
         }
         return Msg(
             code = -1,
