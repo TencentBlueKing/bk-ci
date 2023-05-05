@@ -64,7 +64,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum

@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_COP
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_TO_CURRENT_DIRECTORY
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.DESTINATION_PATH_SHOULD_BE_FOLDER
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -40,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.BuildCustomDirService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.web.utils.I18nUtil

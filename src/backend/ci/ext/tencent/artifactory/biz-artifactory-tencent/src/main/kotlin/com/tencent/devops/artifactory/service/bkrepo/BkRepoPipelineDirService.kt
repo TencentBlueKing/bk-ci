@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo

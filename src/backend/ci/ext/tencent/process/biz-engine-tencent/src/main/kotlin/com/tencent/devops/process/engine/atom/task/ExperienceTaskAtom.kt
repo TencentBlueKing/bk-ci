@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -45,19 +46,18 @@ import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_EXPERIENCE_PATH_EMPTY
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_FILE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_INCORRECT_NOTIFICATION_METHOD
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import java.io.File
+import java.time.LocalDateTime
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.config.ConfigurableBeanFactory
 import org.springframework.context.annotation.Scope
 import org.springframework.stereotype.Component
-import java.io.File
-import java.time.LocalDateTime
 
 @Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -154,7 +154,7 @@ class ExperienceTaskAtom @Autowired constructor(
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, realPath).data!!) {
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_FILE_NOT_EXIST,
+                    messageCode = FILE_NOT_EXIST,
                     language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(path)
                 ), taskId, containerId, task.executeCount ?: 1)
@@ -163,7 +163,7 @@ class ExperienceTaskAtom @Autowired constructor(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode = BK_FILE_NOT_EXIST,
+                    messageCode = FILE_NOT_EXIST,
                     language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(path)
                 )
