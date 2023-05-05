@@ -25,15 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.common.db.utils
 
+import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
 import org.jooq.DatePart
 import org.jooq.Field
+import org.jooq.exception.DataAccessException
 import org.jooq.impl.DSL
 import java.math.BigDecimal
 import java.sql.Timestamp
 
 object JooqUtils {
+
+    const val JooqDeadLockMessage = "Deadlock found when trying to get lock; try restarting transaction"
+
+    fun <T> retryWhenDeadLock(action: () -> T): T {
+        return try {
+            action()
+        } catch (dae: DataAccessException) {
+            if (dae.isDeadLock()) action() else throw dae
+        }
+    }
+
+    private fun DataAccessException.isDeadLock(): Boolean =
+        message?.contains(JooqDeadLockMessage) == true || this.cause is MySQLTransactionRollbackException
 
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
         return DSL.field(

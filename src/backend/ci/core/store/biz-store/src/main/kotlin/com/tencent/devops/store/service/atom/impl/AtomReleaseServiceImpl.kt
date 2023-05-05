@@ -191,8 +191,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (codeCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomCode)
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val atomName = marketAtomCreateRequest.name
@@ -201,8 +202,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (nameCount > 0) {
             // 抛出错误提示
             return I18nUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomName)
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(atomName),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return null
@@ -308,7 +310,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 判断插件是不是首次创建版本
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 1) {
-            return I18nUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val releaseType = marketAtomUpdateRequest.releaseType
@@ -330,8 +336,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         )
         if (getAtomConfResult.errorCode != "0") {
             return I18nUtil.generateResponseDataObject(
-                getAtomConfResult.errorCode,
-                getAtomConfResult.errorParams
+                messageCode = getAtomConfResult.errorCode,
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 把传入的请求报文参数做国际化
@@ -418,13 +425,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             logger.info("quality.json not found , skip...")
         } else if (getAtomQualityResult.errorCode != "0") {
             return I18nUtil.generateResponseDataObject(
-                getAtomQualityResult.errorCode,
-                getAtomQualityResult.errorParams
+                messageCode = getAtomQualityResult.errorCode,
+                params = getAtomQualityResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
             )
         }
 
         val atomEnvRequests = getAtomConfResult.atomEnvRequests ?: return I18nUtil.generateResponseDataObject(
-            StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf(KEY_EXECUTION)
+            messageCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+            params = arrayOf(KEY_EXECUTION),
+            language = I18nUtil.getLanguage(userId)
         )
         val propsMap = mutableMapOf<String, Any?>()
         propsMap[KEY_INPUT_GROUPS] = taskDataMap[KEY_INPUT_GROUPS]
@@ -923,7 +933,11 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         logger.info("getProcessInfo userId is $userId,atomId is $atomId")
         val record = marketAtomDao.getAtomRecordById(dslContext, atomId)
         return if (null == record) {
-            I18nUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
+            I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             val atomCode = record.atomCode
             // 判断用户是否有查询权限
@@ -1011,12 +1025,13 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
      */
     @BkTimed(extraTags = ["publish", "passTest"], value = "store_publish_pipeline_atom")
     override fun passTest(userId: String, atomId: String): Result<Boolean> {
-        logger.info("passTest, userId=$userId, atomId=$atomId")
+        val info = logger.info("passTest, userId=$userId, atomId=$atomId")
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomId),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         val atomCode = atomRecord.atomCode
         // 查看当前版本之前的版本是否有已发布的，如果有已发布的版本则只是普通的升级操作而不需要审核

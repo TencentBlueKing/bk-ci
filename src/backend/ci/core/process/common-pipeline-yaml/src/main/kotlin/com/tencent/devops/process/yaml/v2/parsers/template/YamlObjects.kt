@@ -186,7 +186,12 @@ object YamlObjects {
         )
 
         if (preStep.uses == null && preStep.run == null && preStep.checkout == null) {
-            throw YamlFormatException("$fromPath 中的step必须包含uses或run或checkout!")
+            throw YamlFormatException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM,
+                    params = arrayOf(fromPath)
+                )
+            )
         }
 
         // 检测step env合法性
