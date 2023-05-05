@@ -379,7 +379,7 @@ data class StartBuildContext(
             val originStartParams = ArrayList<BuildParameters>(realStartParamKeys.size + DELTA)
 
             // 将用户定义的变量增加上下文前缀的版本，与原变量相互独立
-            val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, loadFactor = 1F)
+            val originStartContexts = HashMap<String, BuildParameters>(realStartParamKeys.size, /* loadFactor */ 1F)
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
