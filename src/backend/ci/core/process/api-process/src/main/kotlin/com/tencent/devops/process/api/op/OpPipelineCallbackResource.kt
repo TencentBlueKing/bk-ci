@@ -1,5 +1,6 @@
 package com.tencent.devops.process.api.op
 
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -26,5 +27,5 @@ interface OpPipelineCallbackResource {
         @ApiParam("事件类型,不传则恢复所有回调", required = false)
         @QueryParam("events")
         events: String?
-    )
+    ): Result<Boolean>
 }
