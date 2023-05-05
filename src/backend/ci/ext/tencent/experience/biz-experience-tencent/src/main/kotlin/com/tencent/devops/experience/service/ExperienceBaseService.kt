@@ -140,9 +140,9 @@ class ExperienceBaseService @Autowired constructor(
     ): List<AppExperience> {
         val lastDownloadMap = getLastDownloadMap(userId)
         val now = LocalDateTime.now()
-        val redPointIds = redisOperation.getSetMembers(ExperienceConstant.redPointKey(userId)) ?: emptySet()
         val subscribeSet = experiencePushSubscribeDao.listByUserId(dslContext, userId, 1000)
             .map { "${it.projectId}-${it.bundleIdentifier}-${it.platform}" }.toSet()
+        val getRedPoint = records.size < 1000 // 避免查询太多次
 
         val result = records.map {
             AppExperience(
@@ -165,7 +165,10 @@ class ExperienceBaseService @Autowired constructor(
                 expired = now.isAfter(it.endDate),
                 subscribe = subscribeSet.contains("${it.projectId}-${it.bundleIdentifier}-${it.platform}") ||
                         userId == it.creator,
-                redPointEnabled = redPointIds.contains(it.id.toString())
+                redPointEnabled = if (getRedPoint) redisOperation.isMember(
+                    ExperienceConstant.redPointKey(userId),
+                    it.id.toString()
+                ) else false
             )
         }
         return result
