@@ -250,6 +250,6 @@ object AgentEnv {
      * @return 国际化语言信息
      */
     fun getLocaleLanguage(): String {
-        return System.getProperty(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
+        return System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE
     }
 }

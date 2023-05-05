@@ -33,7 +33,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.LABEL
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.PATH
