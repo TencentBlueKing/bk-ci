@@ -25,8 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.common.db.utils
 
+import com.mysql.cj.jdbc.exceptions.MySQLTransactionRollbackException
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.exception.DataAccessException
@@ -46,7 +47,8 @@ object JooqUtils {
         }
     }
 
-    private fun DataAccessException.isDeadLock(): Boolean = message?.contains(JooqDeadLockMessage) == true
+    private fun DataAccessException.isDeadLock(): Boolean =
+        message?.contains(JooqDeadLockMessage) == true || this.cause is MySQLTransactionRollbackException
 
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>, t2: Field<Timestamp>): Field<Long> {
         return DSL.field(

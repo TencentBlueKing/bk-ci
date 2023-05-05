@@ -1,4 +1,4 @@
-package com.tencent.devops.common.service.utils
+package com.tencent.devops.common.db.utils
 
 import org.jooq.exception.DataAccessException
 import org.junit.jupiter.api.Assertions
