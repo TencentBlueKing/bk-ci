@@ -122,12 +122,13 @@ class PipelineLayout private constructor(
      */
     private fun generateStages(): List<Stage> {
         val stageList = mutableListOf<Stage>()
+        val name = I18nUtil.getCodeLanMessage(messageCode = BK_BUILD_TRIGGER)
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement(
             I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER), "T-1-1-1")
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = I18nUtil.getCodeLanMessage(messageCode = BK_BUILD_TRIGGER),
+            name = name.ifBlank { "构建触发" },
             elements = listOf(manualTriggerElement),
             params = makeBuildProperties()
         )
@@ -264,7 +265,7 @@ class PipelineLayout private constructor(
                 val normalContainer = NormalContainer(
                     containerId = null,
                     id = job.id,
-                    name = I18nUtil.getCodeLanMessage(messageCode = BK_NO_COMPILATION_ENVIRONMENT),
+                    name = I18nUtil.getCodeLanMessage(BK_NO_COMPILATION_ENVIRONMENT).ifBlank { "无编译环境" },
                     elements = elementList,
                     status = null,
                     startEpoch = null,
