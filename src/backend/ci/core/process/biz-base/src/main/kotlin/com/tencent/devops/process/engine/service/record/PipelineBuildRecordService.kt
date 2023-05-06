@@ -470,9 +470,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 return@transaction
             }
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
-            // 刷新运行中stage状态
+            // 刷新运行中stage状态，取出所有stage记录还需用于耗时计算
             val recordStages = recordStageDao.getRecords(
-                context, projectId, pipelineId, buildId, executeCount, runningStatusSet
+                context, projectId, pipelineId, buildId, executeCount
             )
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
