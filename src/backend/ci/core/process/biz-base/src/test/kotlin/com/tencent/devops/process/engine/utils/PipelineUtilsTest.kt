@@ -40,7 +40,6 @@ import org.springframework.boot.test.context.SpringBootTest
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineUtilsTest {
 
-
     @Test
     fun checkPipelineNameLength() {
         val name = "1234567890123456789012345678901234567890123456789012345678901234"
