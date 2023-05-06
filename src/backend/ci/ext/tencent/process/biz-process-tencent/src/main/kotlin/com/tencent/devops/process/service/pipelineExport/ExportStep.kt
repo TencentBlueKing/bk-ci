@@ -1,6 +1,5 @@
 package com.tencent.devops.process.service.pipelineExport
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement

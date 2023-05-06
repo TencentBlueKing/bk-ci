@@ -19,7 +19,7 @@ object ExportStepCheckout {
 
     private val logger = LoggerFactory.getLogger(ExportStepCheckout::class.java)
 
-    private const val LIMIT_MESSAGE = "LimitMessage" //"[该字段限制导出，请手动填写]"
+    private const val LIMIT_MESSAGE = "LimitMessage" // "[该字段限制导出，请手动填写]"
     private val checkoutAtomCodeSet = listOf(
         "gitCodeRepo",
         "gitCodeRepoCommon",
