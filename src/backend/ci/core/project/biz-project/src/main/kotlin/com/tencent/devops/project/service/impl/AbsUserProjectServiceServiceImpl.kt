@@ -65,10 +65,11 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
     override fun getService(userId: String, serviceId: Long): Result<ServiceVO> {
         val tServiceRecord = serviceDao.select(dslContext, serviceId)
         if (tServiceRecord != null) {
+            val name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + tServiceRecord.englishName)
             return Result(
                 ServiceVO(
                     id = tServiceRecord.id ?: 0,
-                    name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + tServiceRecord.englishName),
+                    name = name.ifBlank { tServiceRecord.name },
                     link = tServiceRecord.link,
                     linkNew = tServiceRecord.linkNew,
                     status = tServiceRecord.status, injectType = tServiceRecord.injectType,
@@ -211,10 +212,11 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
             val groupService = serviceDao.getServiceList(dslContext).groupBy { it.serviceTypeId }
 
             val favorServices = favoriteDao.list(dslContext, userId).map { it.serviceId }.toList()
-
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
-                val typeName = I18nUtil.getCodeLanMessage(T_SERVICE_TYPE_PREFIX + serviceType.englishTitle)
+                val typeName = I18nUtil.getCodeLanMessage(
+                    T_SERVICE_TYPE_PREFIX + serviceType.englishTitle
+                ).ifBlank { serviceType.title }
                 val services = ArrayList<ServiceVO>()
                 val s = groupService[typeId]
 

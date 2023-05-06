@@ -59,4 +59,9 @@ object DispatchK8sMessageCode {
     const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126021" // 获取kubernetes task({0})状态接口异常
     const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126022" // 获取kubernetes task状态接口超时
     const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126023" // 获取kubernetes任务执行超时
+    const val CREATE_WORKSPACE_ERROR = "2126068" // 创建工作空间异常
+    const val CREATE_WORKSPACE_API_FAIL = "2126069" // 创建工作空间接口返回失败
+    const val CREATE_BUILD_MACHINE_TIMEOUT = "2126070" // 创建构建机接口超时
+    const val GET_WORKSPACE_URL_ERROR = "2126071" // 获取工作空间url接口异常
+    const val GET_WORKSPACE_LINK_TIMEOUT = "2126072" // 获取工作空间链接接口超时
 }

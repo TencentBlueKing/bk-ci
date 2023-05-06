@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 enum class NodeStatus(
     @BkFieldI18n(
         translateType = I18nTranslateTypeEnum.VALUE,
-        keyPrefixName = "ENV_NODE_STATUS",
+        keyPrefixName = "envNodeStatus",
         reusePrefixFlag = false
     )
     val statusName: String
@@ -60,10 +60,10 @@ enum class NodeStatus(
         fun getStatusName(status: String): String {
             values().forEach {
                 if (it.name == status) {
-                    return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${it.name}")
+                    return I18nUtil.getCodeLanMessage("envNodeStatus.${it.name}")
                 }
             }
-            return return I18nUtil.getCodeLanMessage("ENV_NODE_STATUS_${UNKNOWN.name}")
+            return return I18nUtil.getCodeLanMessage("envNodeStatus.${UNKNOWN.name}")
 //            return when (status) {
 //                NORMAL.name -> NORMAL.statusName
 //                ABNORMAL.name -> ABNORMAL.statusName
