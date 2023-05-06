@@ -177,7 +177,7 @@ class ProjectApprovalService @Autowired constructor(
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            if (projectInfo.projectId != authProjectId) {
+            if (authProjectId.isNotEmpty() && projectInfo.projectId != authProjectId) {
                 projectDao.updateAuthProjectId(
                     dslContext = context,
                     englishName = projectId,

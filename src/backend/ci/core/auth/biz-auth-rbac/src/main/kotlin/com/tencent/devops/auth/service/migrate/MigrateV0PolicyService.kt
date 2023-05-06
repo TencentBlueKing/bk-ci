@@ -290,7 +290,7 @@ class MigrateV0PolicyService constructor(
             logger.info("resource paths is empty,skip|$projectCode|$resourceType|$userActions")
             return null
         }
-        val v0ResourceCode = resource.paths[0][1].id
+        val v0ResourceCode = resource.paths[0][0].id
         return v0MatchMinResourceGroup(
             userId = userId,
             projectCode = projectCode,
