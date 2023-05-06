@@ -11,8 +11,6 @@
   }, {
     "id" : "pipeline_share"
   }, {
-    "id" : "pipeline_create"
-  }, {
     "id" : "pipeline_list"
   }, {
     "id" : "pipeline_edit"
@@ -59,8 +57,6 @@
   }, {
     "id" : "credential_use"
   }, {
-    "id" : "credential_create"
-  }, {
     "id" : "credential_list"
   }, {
     "id" : "credential_edit"
@@ -83,8 +79,6 @@
     "id" : "cert_view"
   }, {
     "id" : "cert_use"
-  }, {
-    "id" : "cert_create"
   }, {
     "id" : "cert_list"
   }, {
@@ -109,8 +103,6 @@
   }, {
     "id" : "repertory_use"
   }, {
-    "id" : "repertory_create"
-  }, {
     "id" : "repertory_list"
   }, {
     "id" : "repertory_edit"
@@ -134,8 +126,6 @@
   }, {
     "id" : "environment_use"
   }, {
-    "id" : "environment_create"
-  }, {
     "id" : "environment_list"
   }, {
     "id" : "environment_edit"
@@ -158,8 +148,6 @@
     "id" : "env_node_view"
   }, {
     "id" : "env_node_use"
-  }, {
-    "id" : "env_node_create"
   }, {
     "id" : "env_node_list"
   }, {
@@ -217,8 +205,6 @@
     "id" : "rule_enable"
   }, {
     "id" : "rule_edit"
-  }, {
-    "id" : "rule_create"
   } ],
   "resources" : [ {
     "system" : "bk_ci_rbac",
@@ -236,12 +222,39 @@
     "id" : "quality_group_delete"
   }, {
     "id" : "quality_group_edit"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "quality_group",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+}, {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "pipeline_create"
+  }, {
+    "id" : "credential_create"
+  }, {
+    "id" : "cert_create"
+  }, {
+    "id" : "repertory_create"
+  }, {
+    "id" : "environment_create"
+  }, {
+    "id" : "env_node_create"
+  }, {
+    "id" : "rule_create"
   }, {
     "id" : "quality_group_create"
   } ],
   "resources" : [ {
     "system" : "bk_ci_rbac",
-    "type" : "quality_group",
+    "type" : "project",
     "paths" : [ [ {
       "system" : "bk_ci_rbac",
       "type" : "project",

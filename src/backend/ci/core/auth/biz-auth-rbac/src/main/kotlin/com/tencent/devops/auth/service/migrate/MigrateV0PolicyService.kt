@@ -44,12 +44,13 @@ import com.tencent.devops.auth.pojo.migrate.MigrateTaskDataResult
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-@Suppress("LongParameterList", "NestedBlockDepth")
+@Suppress("LongParameterList", "NestedBlockDepth", "TooManyFunctions")
 class MigrateV0PolicyService constructor(
     private val v2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
@@ -130,11 +131,15 @@ class MigrateV0PolicyService constructor(
         result: MigrateTaskDataResult
     ): List<AuthorizationScopes> {
         val rbacAuthorizationScopes = mutableListOf<AuthorizationScopes>()
+        val projectActions = mutableListOf<Action>()
         result.permissions.forEach permission@{ permission ->
-            val rbacActions = buildRbacActions(
+            val (resourceCreateActions, resourceActions) = buildRbacActions(
                 permission = permission
             )
-            if (rbacActions.isEmpty()) {
+            if (resourceCreateActions.isNotEmpty()) {
+                projectActions.addAll(resourceCreateActions)
+            }
+            if (resourceActions.isEmpty()) {
                 return@permission
             }
             val rbacResources = buildRbacManagerResources(
@@ -145,16 +150,40 @@ class MigrateV0PolicyService constructor(
             rbacAuthorizationScopes.add(
                 AuthorizationScopes.builder()
                     .system(iamConfiguration.systemId)
-                    .actions(rbacActions)
+                    .actions(resourceActions)
                     .resources(rbacResources)
+                    .build()
+            )
+        }
+        // 添加项目resource
+        if (projectActions.isNotEmpty()) {
+            val projectResource = buildProjectManagerResources(
+                projectCode = projectCode,
+                projectName = projectName
+            )
+            rbacAuthorizationScopes.add(
+                AuthorizationScopes.builder()
+                    .system(iamConfiguration.systemId)
+                    .actions(projectActions)
+                    .resources(listOf(projectResource))
                     .build()
             )
         }
         return rbacAuthorizationScopes
     }
 
-    private fun buildRbacActions(permission: AuthorizationScopes): List<Action> {
-        return replaceOrRemoveAction(permission.actions.map { it.id }).map { Action(it) }
+    private fun buildRbacActions(permission: AuthorizationScopes): Pair<List<Action>, List<Action>> {
+        val resourceCreateActions = mutableListOf<Action>()
+        val resourceActions = mutableListOf<Action>()
+        replaceOrRemoveAction(permission.actions.map { it.id }).forEach { action ->
+            // 创建的action,需要关联在项目下
+            if (action.contains(AuthPermission.CREATE.value)) {
+                resourceCreateActions.add(Action(action))
+            } else {
+                resourceActions.add(Action(action))
+            }
+        }
+        return Pair(resourceCreateActions, resourceActions)
     }
 
     @Suppress("NestedBlockDepth", "ReturnCount")
@@ -223,6 +252,27 @@ class MigrateV0PolicyService constructor(
             )
         }
         return rbacManagerResources
+    }
+
+    fun buildProjectManagerResources(
+        projectCode: String,
+        projectName: String
+    ): ManagerResources {
+        val rbacPaths = mutableListOf<List<ManagerPath>>()
+        val rbacManagerPaths = mutableListOf<ManagerPath>()
+        val rbacProjectManagerPath = ManagerPath().apply {
+            system = iamConfiguration.systemId
+            id = projectCode
+            name = projectName
+            type = AuthResourceType.PROJECT.value
+        }
+        rbacManagerPaths.add(rbacProjectManagerPath)
+        rbacPaths.add(rbacManagerPaths)
+        return ManagerResources.builder()
+            .system(iamConfiguration.systemId)
+            .type(AuthResourceType.PROJECT.value)
+            .paths(rbacPaths)
+            .build()
     }
 
     override fun matchResourceGroup(
