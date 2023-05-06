@@ -90,16 +90,13 @@ class PipelineViewGroupDao {
 
     fun listByViewId(
         dslContext: DSLContext,
-        projectId: String? = null,
-        viewId: Long,
-        offset: Int? = null,
-        limit: Int? = null
+        projectId: String,
+        viewId: Long
     ): List<TPipelineViewGroupRecord> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.selectFrom(this)
-                .where(VIEW_ID.eq(viewId))
-                .let { if (projectId == null) it else it.and(PROJECT_ID.eq(projectId)) }
-                .let { if (offset != null && limit != null) it.offset(offset).limit(limit) else it }
+                .where(PROJECT_ID.eq(projectId))
+                .and(VIEW_ID.eq(viewId))
                 .fetch()
         }
     }
