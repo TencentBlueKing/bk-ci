@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.BK_MANUAL_TRIGGE
 import com.tencent.devops.common.api.constant.CommonMessageCode.PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
@@ -86,9 +85,9 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
 
@@ -125,16 +124,10 @@ class PipelineLayout private constructor(
         val stageList = mutableListOf<Stage>()
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement(
-            MessageUtil.getMessageByLocale(
-                messageCode = BK_MANUAL_TRIGGER,
-                language = I18nUtil.getLanguage(userId)
-            ), "T-1-1-1")
+            I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER), "T-1-1-1")
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = MessageUtil.getMessageByLocale(
-                messageCode = BK_BUILD_TRIGGER,
-                language = I18nUtil.getLanguage(userId)
-            ),
+            name = I18nUtil.getCodeLanMessage(messageCode = BK_BUILD_TRIGGER),
             elements = listOf(manualTriggerElement),
             params = makeBuildProperties()
         )
@@ -212,9 +205,8 @@ class PipelineLayout private constructor(
         job.steps?.forEach { step ->
             if (step.run != null && JobRunsOnType.AGENT_LESS.type == job.runsOn.poolName) {
                 throw CustomException(
-                    Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                        messageCode = CHECK_YML_CONFIGURATION,
-                        language = I18nUtil.getLanguage(userId)
+                    Response.Status.NOT_FOUND, I18nUtil.getCodeLanMessage(
+                        messageCode = CHECK_YML_CONFIGURATION
                     )
                 )
             }
@@ -272,10 +264,7 @@ class PipelineLayout private constructor(
                 val normalContainer = NormalContainer(
                     containerId = null,
                     id = job.id,
-                    name = MessageUtil.getMessageByLocale(
-                        messageCode = BK_NO_COMPILATION_ENVIRONMENT,
-                        language = I18nUtil.getLanguage(userId)
-                    ),
+                    name = I18nUtil.getCodeLanMessage(messageCode = BK_NO_COMPILATION_ENVIRONMENT),
                     elements = elementList,
                     status = null,
                     startEpoch = null,
@@ -401,10 +390,7 @@ class PipelineLayout private constructor(
             data["input"] = input
 
             return MarketBuildAtomElement(
-                name = step.name ?: MessageUtil.getMessageByLocale(
-                    messageCode = BK_SYNCHRONIZE_LOCAL_CODE,
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                name = step.name ?: I18nUtil.getCodeLanMessage(messageCode = BK_SYNCHRONIZE_LOCAL_CODE),
                 id = null,
                 atomCode = "syncAgentCode",
                 version = "3.*",
@@ -583,9 +569,8 @@ class PipelineLayout private constructor(
                 PoolType.DockerOnVm.toDispatchType(containerPool)
             }
             else -> {
-                throw CustomException(Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                    messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId)
+                throw CustomException(Response.Status.NOT_FOUND, I18nUtil.getCodeLanMessage(
+                    messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
                 ))
             }
         }
@@ -768,13 +753,10 @@ class PipelineLayout private constructor(
             val stageList = mutableListOf<Stage>()
             val triggerContainer = TriggerContainer(
                 id = "0",
-                name = I18nUtil.getCodeLanMessage(
-                    messageCode = BK_BUILD_TRIGGER
-                ),
+                name = I18nUtil.getCodeLanMessage(messageCode = BK_BUILD_TRIGGER),
                 elements = listOf(ManualTriggerElement(
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = BK_MANUAL_TRIGGER
-                ), "T-1-1-1")),
+                    I18nUtil.getCodeLanMessage(messageCode = BK_MANUAL_TRIGGER), "T-1-1-1")
+                ),
                 params = emptyList()
             )
             stageList.add(Stage(listOf(triggerContainer), "stage-1"))
@@ -788,16 +770,17 @@ class PipelineLayout private constructor(
          */
         fun build(): Model {
             if (pipelineName.isBlank() || creator.isBlank()) {
-                throw CustomException(Response.Status.BAD_REQUEST, I18nUtil.getCodeLanMessage(
-                    messageCode = PIPELINE_NAME_CREATOR_CANNOT_EMPTY
-                ))
+                throw CustomException(
+                    Response.Status.BAD_REQUEST,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = PIPELINE_NAME_CREATOR_CANNOT_EMPTY
+                    )
+                )
             }
 
             if (stages.isEmpty()) {
                 throw CustomException(Response.Status.BAD_REQUEST,
-                    I18nUtil.getCodeLanMessage(
-                        messageCode = PIPELINE_MUST_AT_LEAST_ONE
-                    ))
+                    I18nUtil.getCodeLanMessage(messageCode = PIPELINE_MUST_AT_LEAST_ONE))
             }
 
             return Model(

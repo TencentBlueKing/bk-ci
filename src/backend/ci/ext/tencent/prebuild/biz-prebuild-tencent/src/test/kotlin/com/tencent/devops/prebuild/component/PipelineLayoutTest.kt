@@ -39,9 +39,11 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.InjectMocks
 import org.mockito.Mock
 import org.mockito.junit.jupiter.MockitoExtension
+import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
 
 @ExtendWith(MockitoExtension::class)
+@SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineLayoutTest : ServiceBaseTest() {
     @InjectMocks
     lateinit var preCIYAMLValidator: PreCIYAMLValidatorV2
