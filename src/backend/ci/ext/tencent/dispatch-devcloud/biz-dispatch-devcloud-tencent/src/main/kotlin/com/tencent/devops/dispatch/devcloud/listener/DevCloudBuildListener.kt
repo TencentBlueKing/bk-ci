@@ -11,7 +11,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
@@ -23,6 +23,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
 import com.tencent.devops.dispatch.devcloud.pojo.Credential
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
@@ -36,6 +37,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
@@ -61,6 +63,7 @@ class DevCloudBuildListener @Autowired constructor(
     private val buildContainerPoolNoDao: BuildContainerPoolNoDao,
     private val objectMapper: ObjectMapper,
     private val buildLogPrinter: BuildLogPrinter,
+    private val commonConfig: CommonConfig,
     private val devCloudJobRedisUtils: DevCloudJobRedisUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : BuildListener {
@@ -508,7 +511,8 @@ class DevCloudBuildListener @Autowired constructor(
                 ENV_KEY_GATEWAY to gateway,
                 "TERM" to "xterm-256color",
                 SLAVE_ENVIRONMENT to "DevCloud",
-                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name)
+                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
+                ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
             ))
 
             return envs
