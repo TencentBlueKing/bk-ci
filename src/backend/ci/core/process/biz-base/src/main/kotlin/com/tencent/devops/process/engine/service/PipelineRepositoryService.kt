@@ -275,14 +275,12 @@ class PipelineRepositoryService constructor(
             )
         }
         val c = (
-                stage.containers.getOrNull(0)
-                    ?: throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                        params = arrayOf(
-                            MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId))
-                        )
-                    )
-                ) as TriggerContainer
+            stage.containers.getOrNull(0)
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                    defaultMessage = "第一阶段的环境不能为空"
+                )
+            ) as TriggerContainer
 
         // #4518 各个容器ID的初始化
         c.id = containerSeqId.get().toString()
