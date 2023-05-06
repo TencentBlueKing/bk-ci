@@ -157,6 +157,9 @@
                         </opt-menu>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="emptyType" @clear="resetFilter" />
+                </template>
             </bk-table>
             <bk-pagination small
                 :current.sync="compactPaging.current"
@@ -296,6 +299,7 @@
     import '@blueking/bkui-form/dist/bkui-form.css'
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
+    import EmptyTableStatus from '@/components/empty-table-status'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
@@ -307,7 +311,8 @@
         components: {
             optMenu,
             codeSection,
-            BkUiForm
+            BkUiForm,
+            EmptyTableStatus
         },
 
         filters: {
@@ -420,6 +425,19 @@
 
             defaultBranch () {
                 return this.projectInfo.default_branch || ''
+            },
+
+            emptyType () {
+                return (
+                    this.filterData.commitMsg
+                    || this.filterData.triggerUser
+                    || this.filterData.branch.length
+                    || this.filterData.event.length
+                    || this.filterData.status.length
+                    || this.filterData.pipelineIds.length
+                )
+                ? 'search-empty'
+                : 'empty'
             }
         },
 
@@ -456,6 +474,7 @@
             },
 
             handleStatusChange (val, id) {
+                window.changeFlag = true
                 const filter = this.filterList.find(filter => filter.id === id)
                 const options = filter.data.filter(data => val.includes(data.id))
                 this.filterData[id] = options.map(opstion => opstion.val).flat()
@@ -463,6 +482,7 @@
             },
 
             handleFilterChange () {
+                window.changeFlag = true
                 this.initBuildData()
                 const query = { page: 1 }
                 Object.keys(this.filterData).forEach(key => {
