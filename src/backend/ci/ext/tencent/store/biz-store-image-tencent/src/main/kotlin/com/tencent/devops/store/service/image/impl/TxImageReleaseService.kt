@@ -104,7 +104,9 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
         if (isNormalUpgrade) {
             processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_FIVE, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO)
+            )
             processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SIX, UNDO))
         }
         return processInfo
