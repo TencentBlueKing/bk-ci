@@ -127,7 +127,7 @@ class GithubOauthService @Autowired constructor(
                 logger.info("Github get code(${response.code}) and response($data)")
                 throw CustomException(
                     Response.Status.INTERNAL_SERVER_ERROR,
-                    I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN,)
+                    I18nUtil.getCodeLanMessage(messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN)
                 )
             }
             return objectMapper.readValue(data)

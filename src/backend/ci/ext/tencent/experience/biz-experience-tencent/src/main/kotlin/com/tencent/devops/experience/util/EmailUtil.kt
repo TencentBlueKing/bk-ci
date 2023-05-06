@@ -40,7 +40,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NAME
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 object EmailUtil {
 
@@ -90,18 +90,9 @@ object EmailUtil {
                 messageCode = BK_INVITES_YOU_EXPERIENCE,
                 params = arrayOf(name, version)
             ))
-            .replace(TABLE_COLUMN1_TITLE,
-                I18nUtil.getCodeLanMessage(
-                messageCode = BK_NAME,
-            ))
-            .replace(TABLE_COLUMN2_TITLE,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_BELONG_TO_THE_PROJECT,
-                ))
-            .replace(TABLE_COLUMN3_TITLE,
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_OPERATING,
-                ))
+            .replace(TABLE_COLUMN1_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_NAME))
+            .replace(TABLE_COLUMN2_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_BELONG_TO_THE_PROJECT))
+            .replace(TABLE_COLUMN3_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_OPERATING))
             .replace(HEADER_TITLE_TEMPLATE, title)
             .replace(BODY_DATE_TEMPLATE, date)
     }
