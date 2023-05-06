@@ -599,7 +599,7 @@ class ProjectLocalService @Autowired constructor(
     fun getProjectRole(projectId: String): List<BKAuthProjectRolesResources> {
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         return authProjectApi.getProjectRoles(
             bsPipelineAuthServiceCode,

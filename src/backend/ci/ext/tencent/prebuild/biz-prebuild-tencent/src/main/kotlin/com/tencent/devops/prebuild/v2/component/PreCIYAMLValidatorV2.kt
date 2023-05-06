@@ -5,21 +5,20 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.prebuild.PreBuildMessageCode.ALPHABET_NUMBER_UNDERSCORE
 import com.tencent.devops.prebuild.PreBuildMessageCode.STAGES_JOBS_STEPS
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
-import org.slf4j.LoggerFactory
-import org.springframework.core.io.ClassPathResource
-import org.springframework.stereotype.Component
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentHashMap
+import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Component
+import org.yaml.snakeyaml.Yaml
 
 @Component
 class PreCIYAMLValidatorV2 {

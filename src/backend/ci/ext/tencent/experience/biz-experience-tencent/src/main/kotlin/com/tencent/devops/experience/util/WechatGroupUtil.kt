@@ -68,7 +68,7 @@ object WechatGroupUtil {
             RichtextView(
                 RichtextViewLink(
                     I18nUtil.getCodeLanMessage(
-                    messageCode = BK_PC_EXPERIENCE_ADDRESS,
+                    messageCode = BK_PC_EXPERIENCE_ADDRESS
                 ),
                 innerUrl,
                 1

@@ -269,7 +269,8 @@ class WechatWorkCallbackService @Autowired constructor(
             richtextContentList.add(RichtextText(RichtextTextText("\n")))
         }
 
-        richtextContentList.add(RichtextText(RichtextTextText("${nickName}" +
+        richtextContentList.add(RichtextText(RichtextTextText(
+            nickName +
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_CAN_DO_FOLLOWING,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -570,7 +571,8 @@ class WechatWorkCallbackService @Autowired constructor(
 
         if (projectList.isEmpty()) {
             // 没有可以查看的项目
-            richtextContentList.add(RichtextText(RichtextTextText("${nickName}"+
+            richtextContentList.add(RichtextText(RichtextTextText(
+                nickName +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_THERE_NO_ITEMS_VIEW,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
@@ -696,11 +698,11 @@ class WechatWorkCallbackService @Autowired constructor(
                 if (hasPermission && canManualStartup) {
                     // 拥有权限的可以执行
                     richtextContentList.add(RichtextText(RichtextTextText("  $pipelineName")))
-                    richtextContentList.add(RichtextClick(RichtextClickLink("  "+
+                    richtextContentList.add(RichtextClick(RichtextClickLink("  " +
                             MessageUtil.getMessageByLocale(
                                 messageCode = BK_EXECUTION,
                                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
-                            ) +" ", startKey)))
+                            ) + " ", startKey)))
                     richtextContentList.add(RichtextText(RichtextTextText("\n")))
                 } else {
                     // 暂时去掉没有执行权限的流水线

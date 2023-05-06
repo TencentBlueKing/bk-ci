@@ -45,18 +45,18 @@ package com.tencent.devops.external.constant
  *
  */
 object ExternalMessageCode {
-    const val PARAMETER_ERROR = "2124001" //参数错误
-    const val GITHUB_AUTHENTICATION_FAILED = "2124002" //GitHub认证失败
-    const val ACCOUNT_NOT_PERMISSIO = "2124003" //账户没有{0}的权限
-    const val GITHUB_WAREHOUSE_NOT_EXIST = "2124004" //GitHub仓库不存在或者是账户没有该项目{0}的权限
-    const val GITHUB_PLATFORM_FAILED = "2124005" //GitHub平台{0}失败
+    const val PARAMETER_ERROR = "2124001" // 参数错误
+    const val GITHUB_AUTHENTICATION_FAILED = "2124002" // GitHub认证失败
+    const val ACCOUNT_NOT_PERMISSIO = "2124003" // 账户没有{0}的权限
+    const val GITHUB_WAREHOUSE_NOT_EXIST = "2124004" // GitHub仓库不存在或者是账户没有该项目{0}的权限
+    const val GITHUB_PLATFORM_FAILED = "2124005" // GitHub平台{0}失败
 
-    const val BK_FAILED_GET_GITHUB_ACCESS_TOKEN = "bkFailedGetGithubAccessToken" //获取Github access_token失败
-    const val BK_ADD_DETECTION_TASK = "bkAddDetectionTask" //添加检测任务
-    const val BK_UPDATE_DETECTION_TASK = "bkUpdateDetectionTask" //更新检测任务
-    const val BK_GET_WAREHOUSE_LIST = "bkGetWarehouseList" //获取仓库列表
-    const val BK_GET_SPECIFIED_BRANCH = "bkGetSpecifiedBranch" //获取指定分支
-    const val BK_GET_SPECIFIED_TAG = "bkGetSpecifiedTag" //获取指定Tag
-    const val BK_GET_LIST_OF_BRANCHES = "bkGetListOfBranches" //获取分支列表
-    const val BK_GET_TAG_LIST = "bkGetTagList" //获取Tag列表
+    const val BK_FAILED_GET_GITHUB_ACCESS_TOKEN = "bkFailedGetGithubAccessToken" // 获取Github access_token失败
+    const val BK_ADD_DETECTION_TASK = "bkAddDetectionTask" // 添加检测任务
+    const val BK_UPDATE_DETECTION_TASK = "bkUpdateDetectionTask" // 更新检测任务
+    const val BK_GET_WAREHOUSE_LIST = "bkGetWarehouseList" // 获取仓库列表
+    const val BK_GET_SPECIFIED_BRANCH = "bkGetSpecifiedBranch" // 获取指定分支
+    const val BK_GET_SPECIFIED_TAG = "bkGetSpecifiedTag" // 获取指定Tag
+    const val BK_GET_LIST_OF_BRANCHES = "bkGetListOfBranches" // 获取分支列表
+    const val BK_GET_TAG_LIST = "bkGetTagList" // 获取Tag列表
 }

@@ -49,6 +49,5 @@ object LambdaMessageCode {
     const val ERROR_LAMBDA_OFFSET_LESS_THAN_ZERO = "2128002" // Lambda：offset不可小于0,当前offset={0}
     const val ERROR_LAMBDA_ORIGIN_TOO_MANY = "2128003" // Lambda：origin数量不可超过100,当前limitOrigin={0}
     const val ERROR_LAMBDA_START_DATE_AFTER_END_DATE = "2128004" // Lambda：起始时间不可晚于结束时间，startDate={0},endDate={1}
-    const val STARTUP_CONFIGURATION_MISSING = "2128005"//启动配置缺少 {0}
-
+    const val STARTUP_CONFIGURATION_MISSING = "2128005" // 启动配置缺少 {0}
 }
