@@ -107,7 +107,7 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    @Suppress("LongMethod", "ReturnCount")
+    @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         projectCode: String,
         migrateTaskId: Int,

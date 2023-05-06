@@ -58,6 +58,7 @@ class MigrateResultService constructor(
                 )
                 verifyRecordList.forEach {
                     with(it) {
+                        if (resourceCode == "*") return@forEach
                         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                             resourceType = resourceType,
                             migrateResourceCode = resourceCode
