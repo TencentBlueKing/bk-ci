@@ -7,8 +7,8 @@ enum class WindowsJobStatus(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "windowsJobStatus", reusePrefixFlag = false)
     val title: String
     ) {
-    Running("running"),//执行中
-    Done("done"),//完成
-    Failure("failure"),//失败
-    ShutDownError("shutDownError");//关闭失败
+    Running("running"), // 执行中
+    Done("done"), // 完成
+    Failure("failure"), // 失败
+    ShutDownError("shutDownError"); // 关闭失败
 }
