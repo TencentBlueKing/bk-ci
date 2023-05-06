@@ -195,7 +195,7 @@ object EmailUtil {
             "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
                     messageCode = BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT,
                     params = arrayOf(BODY_PROJECT_TEMPLATE)
-                )+ "</td>\n" +
+            ) + "</td>\n" +
             "                                    </tr>\n" +
             "                                </table>\n" +
             "                            </td>\n" +
