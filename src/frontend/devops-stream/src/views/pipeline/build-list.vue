@@ -78,7 +78,7 @@
                 </bk-select>
                 <bk-select
                     v-for="filter in filterList"
-                    :key="filter.id"
+                    :key="filter.key"
                     :placeholder="filter.placeholder"
                     class="filter-item"
                     multiple
@@ -162,6 +162,9 @@
                         </opt-menu>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="emptyType" @clear="resetFilter" />
+                </template>
             </bk-table>
             <bk-pagination small
                 :current.sync="compactPaging.current"
@@ -302,6 +305,7 @@
     import UiTips from '@/components/ui-form/tips.vue'
     import UiSelector from '@/components/ui-form/selector.vue'
     import UiCompanyStaff from '@/components/ui-form/company-staff.vue'
+    import EmptyTableStatus from '@/components/empty-table-status'
     const BkUiForm = createForm({
         components: {
             tips: UiTips,
@@ -314,7 +318,8 @@
         components: {
             optMenu,
             codeSection,
-            BkUiForm
+            BkUiForm,
+            EmptyTableStatus
         },
 
         filters: {
@@ -352,6 +357,7 @@
                 filterList: [
                     {
                         id: 'status',
+                        key: new Date().getSeconds(),
                         placeholder: this.$t('status'),
                         data: [
                             { name: this.$t('pipeline.succeed'), val: ['SUCCEED'], id: 'succeed' },
@@ -427,6 +433,19 @@
 
             defaultBranch () {
                 return this.projectInfo.default_branch || ''
+            },
+
+            emptyType () {
+                return (
+                    this.filterData.commitMsg
+                    || this.filterData.triggerUser
+                    || this.filterData.branch.length
+                    || this.filterData.event.length
+                    || this.filterData.status.length
+                    || this.filterData.pipelineIds.length
+                )
+                ? 'search-empty'
+                : 'empty'
             }
         },
 
@@ -857,6 +876,7 @@
                     status: [],
                     pipelineIds: []
                 }
+                this.filterList[0].key = new Date().getSeconds()
                 this.handleFilterChange()
             },
 
