@@ -10,7 +10,7 @@ enum class OpHistoryCopyWriting(
         reusePrefixFlag = false
     )
     val default: String
-    ) {
+) {
     CREATE("create"), // 基于%s的%s分支创建了一个开发环境
     FIRST_START("firstStart"), // 激活了本环境
     NOT_FIRST_START("notFirstStart"), // 重新激活了本环境

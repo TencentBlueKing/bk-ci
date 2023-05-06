@@ -40,7 +40,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NAME
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 object EmailUtil {
 
@@ -101,7 +101,7 @@ object EmailUtil {
         return "                                                                            <tr>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+I18nUtil.getCodeLanMessage(messageCode = BK_VIEW)+"</a></td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_VIEW)+"</a></td>\n" +
             "                                                                            </tr>\n"
     }
 
@@ -145,7 +145,7 @@ object EmailUtil {
             "                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "                                                <tr>\n" +
-            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">"+I18nUtil.getCodeLanMessage(
+            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
         ) + "</td>\n" +
             "                                                </tr>\n" +
@@ -179,9 +179,9 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">"+I18nUtil.getCodeLanMessage(
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
             messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
-        )+"</td>\n" +
+        ) + "</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +
             "                                                    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
