@@ -53,8 +53,8 @@ object ImageMessageCode {
     const val MIRROR_FILE_SAVE_FAILED = "2107005" // 镜像文件保存失败
     const val PARSE_MIRROR_FILE_FAILED = "2107006" // 解析镜像文件失败
     const val FILE_NOT_FOUND_CHECK_PATH = "2107007" // 未找到 {0} 文件，请检查路径是否正确:
-    const val BK_SOURCE_IMAGE = "bkSourceImage" //源镜像：{0}
-    const val BK_TARGET_IMAGE = "bkTargetImage" //目标镜像：{0}:{1}
-    const val BK_SUCCESSFUL_REGISTRATION_IMAGE = "bkSuccessfulRegistrationImage" //注册镜像成功
-    const val BK_FAILED_REGISTER_IMAGE = "bkFailedRegisterImage" //注册镜像失败，错误信息：
+    const val BK_SOURCE_IMAGE = "bkSourceImage" // 源镜像：{0}
+    const val BK_TARGET_IMAGE = "bkTargetImage" // 目标镜像：{0}:{1}
+    const val BK_SUCCESSFUL_REGISTRATION_IMAGE = "bkSuccessfulRegistrationImage" // 注册镜像成功
+    const val BK_FAILED_REGISTER_IMAGE = "bkFailedRegisterImage" // 注册镜像失败，错误信息：
 }
