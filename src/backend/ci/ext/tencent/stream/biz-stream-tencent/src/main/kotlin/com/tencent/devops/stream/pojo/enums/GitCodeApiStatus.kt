@@ -38,7 +38,7 @@ enum class GitCodeApiStatus(
     val status: Int,
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "gitCodeApiStatus", reusePrefixFlag = false)
     val content: String
-    ) {
+) {
     OK(200, "ok"), // 操作成功
     CREATED(201, "created"), // 创建成功
     BAD_REQUEST(400, "badRequest"), // 参数错误，或是参数格式错误
