@@ -11,9 +11,6 @@ enum class GroupScopeEnum(
     @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "groupScopeEnum", reusePrefixFlag = false)
     val mean: String
 ) {
-    PUBLIC(0, "public"),//公开体验
-
-    PRIVATE(1, "private"),//内部体验
-
-    ;
+    PUBLIC(0, "public"), // 公开体验
+    PRIVATE(1, "private"), // 内部体验;
 }

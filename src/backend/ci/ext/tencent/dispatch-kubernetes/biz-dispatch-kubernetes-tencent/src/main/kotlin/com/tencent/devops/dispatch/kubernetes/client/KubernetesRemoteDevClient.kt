@@ -206,7 +206,7 @@ class KubernetesRemoteDevClient @Autowired constructor(
                 errorType = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                 formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.getErrorMessage(),
-                errorMessage = "${GET_WORKSPACE_LINK_TIMEOUT}, url: $url, ${e.message}"
+                errorMessage = "$GET_WORKSPACE_LINK_TIMEOUT, url: $url, ${e.message}"
             )
         }
     }

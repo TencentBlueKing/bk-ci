@@ -42,7 +42,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
@@ -71,7 +70,6 @@ import org.jooq.impl.DSL.timestamp
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
-import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
