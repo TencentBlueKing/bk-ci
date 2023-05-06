@@ -51,7 +51,12 @@ abstract class AbstractService(
 
     abstract fun getServiceParamNameSpace(): String
 
-    abstract fun getServiceInput(repoUrl: String, repoUsername: String, repoPwd: String, env: String): ServiceJobDevCloudInput
+    abstract fun getServiceInput(
+        repoUrl: String,
+        repoUsername: String,
+        repoPwd: String,
+        env: String
+    ): ServiceJobDevCloudInput
 
     fun parseImage(): Pair<String, String> {
         val list = image.split(":")

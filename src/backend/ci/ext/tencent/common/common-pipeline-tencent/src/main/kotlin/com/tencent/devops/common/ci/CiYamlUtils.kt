@@ -244,7 +244,15 @@ object CiYamlUtils {
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
-        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, checkYaml(originYaml), null)
+        return CIBuildYaml(
+            originYaml.name,
+            null,
+            null,
+            originYaml.variables,
+            null,
+            checkYaml(originYaml),
+            null
+        )
     }
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {

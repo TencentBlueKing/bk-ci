@@ -446,7 +446,8 @@ class DispatchDevCloudClient {
                             ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                             ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                             ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                            "${I18nUtil.getCodeLanMessage(TASK_STATUS_INTERFACE_EXCEPTION)}：http response code: ${response.code}"
+                            "${I18nUtil.getCodeLanMessage(TASK_STATUS_INTERFACE_EXCEPTION)}：" +
+                                    "http response code: ${response.code}"
                         )
                     }
                 }

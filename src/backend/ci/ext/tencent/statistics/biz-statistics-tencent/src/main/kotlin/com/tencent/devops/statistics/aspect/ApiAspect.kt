@@ -95,11 +95,20 @@ class ApiAspect(
         }
         logger.info("request class apigwType[$apigwType],appCode[$appCode],project[$projectId]")
         if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
-            logger.info("judge！！！！request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]permission.")
+            logger.info(
+                "judge！！！！request class apigwType[$apigwType]," +
+                        "appCode[$appCode],Is there a project[$projectId]permission."
+            )
             if (appCodeService.validAppCode(appCode, projectId)) {
-                logger.info("request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]Permissions [Verification Passed]")
+                logger.info(
+                    "request class apigwType[$apigwType],appCode[$appCode]," +
+                            "Is there a project[$projectId]Permissions [Verification Passed]"
+                )
             } else {
-                val message = "request class apigwType[$apigwType],appCode[$appCode],Is there a project[$projectId]Permissions【verification failed】"
+                val message = "" +
+                        "request class apigwType[$apigwType],appCode[$appCode]," +
+                        "Is there a project[$projectId]Permissions【verification failed】" +
+                        ""
                 throw PermissionForbiddenException(
                     message = message
                 )
