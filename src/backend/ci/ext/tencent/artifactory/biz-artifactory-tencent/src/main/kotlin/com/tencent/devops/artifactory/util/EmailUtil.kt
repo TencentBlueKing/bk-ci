@@ -43,11 +43,11 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.*
 
 object EmailUtil {
     fun getShareEmailTitle(userId: String, fileName: String, size: Int): String {
-        return if (size == 1)  {
+        return if (size == 1) {
             I18nUtil.getCodeLanMessage(
                 messageCode = BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU,
                 params = arrayOf(userId, fileName)
