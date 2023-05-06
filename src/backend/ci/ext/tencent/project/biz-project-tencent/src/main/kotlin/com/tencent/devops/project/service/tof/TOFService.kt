@@ -42,7 +42,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_USER_INFORM
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_PAR_DEPARTMENT_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
-import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.pojo.DeptInfo
 import com.tencent.devops.project.pojo.OrganizationInfo
 import com.tencent.devops.project.pojo.enums.OrganizationType
@@ -110,7 +109,7 @@ class TOFService @Autowired constructor(
                 logger.info("user $userId is level office")
                 throw OperationException(
                     I18nUtil.getCodeLanMessage(
-                    messageCode = QUERY_USER_INFO_FAIL,
+                    messageCode = FAILED_USER_INFORMATION,
                     defaultMessage = "用户$userId 已离职",
                     params = arrayOf(userId),
                     language = I18nUtil.getLanguage(userId)
@@ -283,7 +282,7 @@ class TOFService @Autowired constructor(
                         requestTime = startTime,
                         statusCode = response.code,
                         statusMessage = response.message,
-                        errorCode = QUERY_USER_INFO_FAIL,
+                        errorCode = FAILED_USER_INFORMATION,
                         errorMessage =  I18nUtil.getCodeLanMessage(
                                 messageCode = FAILED_USER_INFORMATION,
                                 language = I18nUtil.getLanguage(userId),
