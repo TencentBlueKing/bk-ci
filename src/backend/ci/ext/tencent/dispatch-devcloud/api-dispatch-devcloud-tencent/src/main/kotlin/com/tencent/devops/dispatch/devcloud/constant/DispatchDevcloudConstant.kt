@@ -39,5 +39,5 @@ object DispatchDevcloudConstant {
     const val BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY = "bkSendRequestStartBuilderSuccessfully" // 下发启动构建机请求成功
     const val BK_BUILD_MACHINE_FAILS_START = "bkBuildMachineFailsStart" // 构建机启动失败，错误信息
     // 准备创建腾讯自研云（云devnet资源)构建机...
-    const val BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE= "bkPrepareCreateTencentBuildMachine"
+    const val BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE = "bkPrepareCreateTencentBuildMachine"
 }

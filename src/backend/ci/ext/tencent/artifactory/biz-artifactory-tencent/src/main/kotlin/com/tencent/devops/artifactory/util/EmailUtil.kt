@@ -43,7 +43,7 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
 
 object EmailUtil {
     fun getShareEmailTitle(userId: String, fileName: String, size: Int): String {
