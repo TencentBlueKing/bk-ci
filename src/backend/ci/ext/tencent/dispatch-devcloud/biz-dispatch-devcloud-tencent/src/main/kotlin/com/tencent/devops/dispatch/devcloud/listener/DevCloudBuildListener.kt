@@ -12,7 +12,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
@@ -58,6 +57,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import com.tencent.devops.common.web.utils.I18nUtil
 
 /**
  * deng
