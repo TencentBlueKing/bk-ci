@@ -54,9 +54,6 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
     private val pipelineInfoDao: PipelineInfoDao = mockk()
     private val clientTokenService: ClientTokenService = mockk()
 
-    @Autowired
-    lateinit var springContextUtil: SpringContextUtil
-
     private val self: PipelineViewGroupService = spyk(
         PipelineViewGroupService(
             pipelineViewService = pipelineViewService,
