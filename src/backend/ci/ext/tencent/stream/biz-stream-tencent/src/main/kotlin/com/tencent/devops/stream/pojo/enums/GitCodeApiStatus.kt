@@ -36,7 +36,11 @@ import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
 enum class GitCodeApiStatus(
     val status: Int,
-    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "gitCodeApiStatus", reusePrefixFlag = false)
+    @BkFieldI18n(
+        translateType = I18nTranslateTypeEnum.VALUE,
+        keyPrefixName = "gitCodeApiStatus",
+        reusePrefixFlag = false
+    )
     val content: String
 ) {
     OK(200, "ok"), // 操作成功

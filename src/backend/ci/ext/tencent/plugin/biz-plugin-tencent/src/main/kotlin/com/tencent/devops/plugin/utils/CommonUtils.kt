@@ -46,9 +46,7 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URLEncoder
 import java.security.NoSuchAlgorithmException
-import java.util.Arrays
-import java.util.Base64
-import java.util.TreeMap
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import okhttp3.Request
@@ -61,17 +59,17 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
-    private val getKeyHost = "http://wetest.apigw.o.oa.com/prod/api"
-    private val GET_API_KEY = "/v3/get_api_key"
-    private val HMAC_SHA1 = "HmacSHA1"
-    private val METHOD_GET = "GET"
+    private const val getKeyHost = "http://wetest.apigw.o.oa.com/prod/api"
+    private const val GET_API_KEY = "/v3/get_api_key"
+    private const val HMAC_SHA1 = "HmacSHA1"
+    private const val METHOD_GET = "GET"
 //    private val okclient = OkhttpUtils.okHttpClient
     // esb校验
-    private val APP_CODE = "bkci"
-    private val APP_SECRET = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
+    private const val APP_CODE = "bkci"
+    private const val APP_SECRET = "XybK7-.L*(o5lU~N?^)93H3nbV1=l>b,(3jvIAXH!7LolD&Zv<"
     // wetest校验,通过用户名获取凭证所用
-    private val APP_ID = 30005
-    private val APP_KEY = "vnPcswYIlxk5SZZkYG0R"
+    private const val APP_ID = 30005
+    private const val APP_KEY = "vnPcswYIlxk5SZZkYG0R"
 
     fun getInnerIP(): String {
         val ipMap = getMachineIP()

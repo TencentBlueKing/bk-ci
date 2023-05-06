@@ -91,7 +91,7 @@ class ProjectLabelService @Autowired constructor(
                     I18nUtil.generateResponseDataObject<String>(
                         messageCode = ProjectMessageCode.LABLE_NAME_EXSIT,
                         params = arrayOf(labelName),
-                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())).message!!) // 前面定义的错误码处理规则写在另外一个分支上，暂时未上线，上线后再统一优化
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())).message!!)
         }
         projectLabelDao.add(dslContext, labelName)
         return true
