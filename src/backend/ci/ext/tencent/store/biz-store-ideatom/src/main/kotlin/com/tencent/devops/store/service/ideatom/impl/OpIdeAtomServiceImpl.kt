@@ -124,7 +124,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
             ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId),language = I18nUtil.getLanguage(userId)
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
             )
         val atomCode = atomRecord.atomCode
         val atomName = ideAtomUpdateRequest.atomName

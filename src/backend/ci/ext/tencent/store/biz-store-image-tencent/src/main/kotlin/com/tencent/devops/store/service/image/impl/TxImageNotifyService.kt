@@ -27,7 +27,6 @@
 
 package com.tencent.devops.store.service.image.impl
 
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource

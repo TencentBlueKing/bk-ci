@@ -283,7 +283,7 @@ class TOFService @Autowired constructor(
                         statusCode = response.code,
                         statusMessage = response.message,
                         errorCode = FAILED_USER_INFORMATION,
-                        errorMessage =  I18nUtil.getCodeLanMessage(
+                        errorMessage = I18nUtil.getCodeLanMessage(
                                 messageCode = FAILED_USER_INFORMATION,
                                 language = I18nUtil.getLanguage(userId),
                                 params = arrayOf(userId)

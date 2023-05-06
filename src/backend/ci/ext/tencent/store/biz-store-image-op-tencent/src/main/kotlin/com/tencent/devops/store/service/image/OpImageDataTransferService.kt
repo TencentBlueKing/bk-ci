@@ -62,13 +62,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class OpImageDataTransferService @Autowired constructor(
@@ -164,14 +164,14 @@ class OpImageDataTransferService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Int {
         logger.info("$interfaceName:initClassifyAndCategory:Input($classifyCode,$classifyName,$categoryCode,$categoryName)")
-        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName ?:
-        MessageUtil.getMessageByLocale(
+        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName
+            ?: MessageUtil.getMessageByLocale(
             messageCode = BK_OTHER,
             language = I18nUtil.getLanguage(userId)
         ))
         logger.info("$interfaceName:initClassifyAndCategory:Inner:createSystemInitClassify end,begin to createSystemInitCategory")
-        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName ?:
-        MessageUtil.getMessageByLocale(
+        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName
+            ?: MessageUtil.getMessageByLocale(
             messageCode = BK_PIPELINED_JOB,
             language = I18nUtil.getLanguage(userId)
         ))

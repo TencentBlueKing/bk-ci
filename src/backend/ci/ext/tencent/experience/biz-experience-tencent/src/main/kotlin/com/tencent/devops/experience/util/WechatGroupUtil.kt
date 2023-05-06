@@ -75,14 +75,15 @@ object WechatGroupUtil {
         )
             )
         )
-        richtextContentList.add(RichtextView(RichtextViewLink(
-                I18nUtil.getCodeLanMessage(
-                    messageCode = BK_MOBILE_EXPERIENCE_ADDRESS,
-                ),
-                outerUrl,
-                1
-        )))
-
+        richtextContentList.add(
+            RichtextView(
+                RichtextViewLink(
+                    I18nUtil.getCodeLanMessage(messageCode = BK_MOBILE_EXPERIENCE_ADDRESS),
+                    outerUrl,
+                    1
+                )
+            )
+        )
         return RichtextMessage(receiver, richtextContentList)
     }
 }

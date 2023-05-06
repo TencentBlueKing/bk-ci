@@ -9,8 +9,7 @@ enum class OpHistoryCopyWriting(
         keyPrefixName = "opHistoryCopyWriting",
         reusePrefixFlag = false
     )
-    val default: String
-    ) {
+    val default: String) {
     CREATE("create"), // 基于%s的%s分支创建了一个开发环境
     FIRST_START("firstStart"), // 激活了本环境
     NOT_FIRST_START("notFirstStart"), // 重新激活了本环境
@@ -19,5 +18,5 @@ enum class OpHistoryCopyWriting(
     MANUAL_STOP("manualStop"), // 主动关闭了工作空间
     DELETE("delete"), // 删除了本环境
     SHARE("share"), // 给%s共享了此环境
-    ACTION_CHANGE("actionChange")//状态变更: %s -> %s
+    ACTION_CHANGE("actionChange") // 状态变更: %s -> %s
 }
