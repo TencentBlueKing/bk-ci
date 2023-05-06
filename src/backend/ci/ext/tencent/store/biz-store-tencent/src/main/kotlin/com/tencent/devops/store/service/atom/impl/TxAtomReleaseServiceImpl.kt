@@ -111,6 +111,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
+import com.tencent.devops.store.utils.StoreUtils
 import java.util.Date
 import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
@@ -491,7 +492,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val taskDataMap = getAtomConfResult.taskDataMap
+        val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
+            userId = userId,
+            projectCode = projectCode,
+            jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
+            fileDir = "$atomCode/$atomVersion",
+            dbKeyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, atomVersion),
+            repositoryHashId = repoId
+        )
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
         // 校验插件发布类型
@@ -570,7 +578,14 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = TEST), TEST, NUM_FOUR, UNDO))
         val flag = codeccFlag == null || !codeccFlag
         if (!flag) {
-            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = CODECC), CODECC, NUM_FIVE, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(
+                    name = I18nUtil.getCodeLanMessage(messageCode = CODECC),
+                    code = CODECC,
+                    step = NUM_FIVE,
+                    status = UNDO
+                )
+            )
         }
         if (isNormalUpgrade) {
             val endStep = if (flag) NUM_FIVE else NUM_SIX
@@ -650,7 +665,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         }
         val invalidOsInfos = getInvalidOsInfos(osNames, osArchs, validOsInfos)
         if (osNames.isEmpty()) {
-            osNames.add(OSType.LINUX.name.toLowerCase())
+            osNames.add(OSType.LINUX.name.lowercase())
         }
         if (osArchs.isEmpty()) {
             osArchs.add("amd64")
