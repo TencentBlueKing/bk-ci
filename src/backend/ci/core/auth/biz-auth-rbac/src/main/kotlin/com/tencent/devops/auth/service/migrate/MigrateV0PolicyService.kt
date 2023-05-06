@@ -186,7 +186,7 @@ class MigrateV0PolicyService constructor(
         return Pair(resourceCreateActions, resourceActions)
     }
 
-    @Suppress("NestedBlockDepth", "ReturnCount")
+    @Suppress("NestedBlockDepth", "ReturnCount", "LongMethod")
     private fun buildRbacManagerResources(
         projectCode: String,
         projectName: String,
@@ -220,17 +220,18 @@ class MigrateV0PolicyService constructor(
                     managerPaths.forEach managerPath@{ managerPath ->
                         val pathResourceType =
                             oldResourceTypeMappingNewResourceType[managerPath.type] ?: managerPath.type
-                        // 先将v3资源code转换成rbac资源code
+                        val v0ResourceCode = managerPath.id
+                        // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
                         val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                             resourceType = pathResourceType,
-                            migrateResourceCode = managerPath.id
-                        ) ?: return@resource
+                            migrateResourceCode = v0ResourceCode
+                        ) ?: v0ResourceCode
                         // 获取rbac资源code对应的iam资源code
                         val iamResourceCode = authResourceCodeConverter.code2IamCode(
                             projectCode = projectCode,
                             resourceType = pathResourceType,
                             resourceCode = rbacResourceCode
-                        )
+                        ) ?: rbacResourceCode
                         val rbacManagerPath = ManagerPath().apply {
                             system = iamConfiguration.systemId
                             id = iamResourceCode
@@ -254,7 +255,7 @@ class MigrateV0PolicyService constructor(
         return rbacManagerResources
     }
 
-    fun buildProjectManagerResources(
+    private fun buildProjectManagerResources(
         projectCode: String,
         projectName: String
     ): ManagerResources {

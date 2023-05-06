@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import io.mockk.every
 import io.mockk.spyk
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -80,6 +81,24 @@ class MigrateV0PolicyServiceTest : AbMigratePolicyServiceTest() {
         @Test
         @DisplayName("迁移用户自定义组")
         fun test_3() {
+            buildRbacAuthorizationScopeListTest(
+                self = self,
+                projectCode = projectCode,
+                actualFilePath = "v0/group_web_policy_custom.json",
+                expectedFilePath = "v0/expected/group_web_policy_custom.json"
+            )
+        }
+
+        @Test
+        @DisplayName("迁移用户自定义组-资源转换为空")
+        fun test_4() {
+            every {
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = "pipeline",
+                    resourceCode = "p-665e332fa3bf4df29037de2de0a29f81"
+                )
+            } returns null
             buildRbacAuthorizationScopeListTest(
                 self = self,
                 projectCode = projectCode,

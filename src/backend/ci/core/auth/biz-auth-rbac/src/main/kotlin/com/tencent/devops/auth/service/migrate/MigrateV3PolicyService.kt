@@ -195,20 +195,21 @@ class MigrateV3PolicyService constructor(
             resource.paths.forEach paths@{ managerPaths ->
                 val rbacManagerPaths = mutableListOf<ManagerPath>()
                 managerPaths.forEach managerPath@{ managerPath ->
-                    if (managerPath.id == "*") {
+                    val v3ResourceCode = managerPath.id
+                    if (v3ResourceCode == "*") {
                         return@managerPath
                     }
-                    // 先将v3资源code转换成rbac资源code
-                    val resourceCode = migrateResourceCodeConverter.getRbacResourceCode(
+                    // 先将v3资源code转换成rbac资源code,可能存在为空的情况,ci已经删除但是iam没有删除,直接用iam数据填充
+                    val rbacResourceCode = migrateResourceCodeConverter.getRbacResourceCode(
                         resourceType = managerPath.type,
-                        migrateResourceCode = managerPath.id
-                    ) ?: return@resource
+                        migrateResourceCode = v3ResourceCode
+                    ) ?: v3ResourceCode
                     // 获取rbac资源code对应的iam资源code
                     val iamResourceCode = authResourceCodeConverter.code2IamCode(
                         projectCode = projectCode,
                         resourceType = managerPath.type,
-                        resourceCode = resourceCode
-                    )
+                        resourceCode = rbacResourceCode
+                    ) ?: rbacResourceCode
                     val rbacManagerPath = ManagerPath().apply {
                         system = iamConfiguration.systemId
                         id = iamResourceCode
