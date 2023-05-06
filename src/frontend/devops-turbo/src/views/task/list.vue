@@ -54,12 +54,13 @@
                         :header-cell-style="{ background: '#f5f6fa' }"
                         :pagination="task.pagination"
                         v-bkloading="{ isLoading: task.loading }"
+                        :empty-text="$t('turbo.暂无数据')"
                         @page-change="(page) => pageChanged(page, task)"
                         @page-limit-change="(currentLimit) => pageLimitChange(currentLimit, task)"
                         @sort-change="(sort) => sortChange(sort, task)"
                         @row-click="(row) => rowClick(row, task)"
                     >
-                        <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable>
+                        <bk-table-column :label="$t('turbo.流水线/构建机')" prop="pipeline_name" sortable show-overflow-tooltip>
                             <template slot-scope="props">
                                 <span v-if="props.row.pipelineName">
                                     {{ props.row.pipelineName }}

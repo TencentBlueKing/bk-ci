@@ -68,7 +68,24 @@
             },
 
             cancel () {
-                this.$router.back()
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        confirmFn: () => {
+                            window.changeFlag = false
+                            this.$router.back()
+                        }
+                    })
+                } else {
+                    this.$router.back()
+                }
             }
         }
     }
