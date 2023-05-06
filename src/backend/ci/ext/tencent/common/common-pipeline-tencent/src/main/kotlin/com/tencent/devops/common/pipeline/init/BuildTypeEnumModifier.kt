@@ -38,8 +38,8 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 class BuildTypeEnumModifier : EnumModifier {
 
     override fun modified() {
-        val language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE) ?:
-        SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+        val language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE)
+        ?: SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
