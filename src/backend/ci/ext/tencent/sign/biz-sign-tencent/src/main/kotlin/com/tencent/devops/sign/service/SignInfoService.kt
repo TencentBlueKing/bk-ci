@@ -31,9 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.sign.api.constant.SignMessageCode
-import com.tencent.devops.sign.api.constant.SignMessageCode.ERROR_ENCODE_SIGN_INFO
 import com.tencent.devops.sign.api.constant.SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo

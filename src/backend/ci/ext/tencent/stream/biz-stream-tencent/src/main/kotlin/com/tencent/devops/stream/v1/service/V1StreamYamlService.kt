@@ -28,7 +28,6 @@
 package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
@@ -41,13 +40,13 @@ import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
 import com.tencent.devops.stream.v1.dao.V1StreamBasicSettingDao
 import com.tencent.devops.stream.v1.pojo.V1EnvironmentVariables
+import java.io.BufferedReader
+import java.io.StringReader
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.BufferedReader
-import java.io.StringReader
-import javax.ws.rs.core.Response
 
 @Service
 class V1StreamYamlService @Autowired constructor(

@@ -30,7 +30,6 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -55,12 +54,12 @@ import com.tencent.devops.store.pojo.dto.ExtServiceImageInfoDTO
 import com.tencent.devops.store.pojo.dto.InitExtServiceDTO
 import com.tencent.devops.store.pojo.enums.ExtServicePackageSourceTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class TxExtServiceBaseService : ExtServiceBaseService() {
@@ -149,8 +148,8 @@ class TxExtServiceBaseService : ExtServiceBaseService() {
         } catch (ignored: Throwable) {
             logger.error("service[$serviceCode] createGitCodeRepository fail!", ignored)
             return I18nUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL
-            ,language = I18nUtil.getLanguage(userId))
+                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
+                language = I18nUtil.getLanguage(userId))
         }
         if (null == repositoryInfo) {
             return I18nUtil.generateResponseDataObject(

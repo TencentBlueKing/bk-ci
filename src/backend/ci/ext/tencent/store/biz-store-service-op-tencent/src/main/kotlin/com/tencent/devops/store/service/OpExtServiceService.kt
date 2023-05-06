@@ -30,7 +30,6 @@ package com.tencent.devops.store.service
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -48,12 +47,12 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceInfoResp
 import com.tencent.devops.store.pojo.vo.ExtensionServiceVO
+import java.time.LocalDateTime
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultDSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class OpExtServiceService @Autowired constructor(
@@ -342,7 +341,7 @@ class OpExtServiceService @Autowired constructor(
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
             return I18nUtil.generateResponseDataObject(
-               messageCode = StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
+                messageCode = StoreMessageCode.USER_SERVICE_RELEASED_IS_NOT_ALLOW_DELETE,
                 params = arrayOf(serviceCode),
                 language = I18nUtil.getLanguage(userId)
             )

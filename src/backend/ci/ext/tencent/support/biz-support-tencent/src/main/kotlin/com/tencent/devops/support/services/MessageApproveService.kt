@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.support.model.approval.CompleteMoaWorkItemRequest
@@ -40,6 +39,7 @@ import com.tencent.devops.support.model.approval.CreateEsbMoaCompleteParam
 import com.tencent.devops.support.model.approval.CreateEsbMoaWorkItem
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
+import java.util.Date
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.Date
 
 @Service
 class MessageApproveService @Autowired constructor() {

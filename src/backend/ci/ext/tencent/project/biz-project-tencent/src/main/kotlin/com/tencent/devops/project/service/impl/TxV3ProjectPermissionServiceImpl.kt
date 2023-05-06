@@ -166,7 +166,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             MessageUtil.getMessageByLocale(
                 messageCode = CALL_PEM_FAIL,
                 language = I18nUtil.getLanguage(userId)
-            ) )
+            )
+        )
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the project of response $responseContent")
