@@ -46,7 +46,9 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URLEncoder
 import java.security.NoSuchAlgorithmException
-import java.util.*
+import java.util.Arrays
+import java.util.Base64
+import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import okhttp3.Request
