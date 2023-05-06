@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.event.annotation
 
+import java.lang.annotation.Inherited
+
 /**
  * Stream事件注解
  * @param destination 发送目标绑定，用于指定RabbitMQ的Exchange，Kafka和Pulsar的Topic
@@ -34,6 +36,7 @@ package com.tencent.devops.common.event.annotation
  */
 @Target(AnnotationTarget.CLASS)
 @Retention(AnnotationRetention.RUNTIME)
+@Inherited
 annotation class Event(
     val destination: String,
     val delayMills: Int = 0
