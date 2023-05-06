@@ -79,7 +79,7 @@ class MigrateV0PolicyService constructor(
         private val logger = LoggerFactory.getLogger(MigrateV0PolicyService::class.java)
 
         // v0默认用户组过期时间 2038-01-01
-        private const val V0_DEFAULT_GROUP_EXPIRED_AT = 2145888000000L
+        private const val V0_DEFAULT_GROUP_EXPIRED_AT = 2145888000L
         // v0用户自定义组默认360天
         private const val V0_CUSTOM_GROUP_EXPIRED_DAY = 360L
 
