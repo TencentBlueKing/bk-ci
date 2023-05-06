@@ -30,7 +30,7 @@ package com.tencent.devops.auth.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
@@ -61,14 +61,14 @@ class RbacServiceConfiguration {
         dslContext: DSLContext,
         authResourceTypeDao: AuthResourceTypeDao,
         authActionDao: AuthActionDao,
-        authHelper: AuthHelper,
+        iamV2PolicyService: PolicyService,
         iamConfiguration: IamConfiguration,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = RbacCacheService(
         dslContext = dslContext,
         authResourceTypeDao = authResourceTypeDao,
         authActionDao = authActionDao,
-        authHelper = authHelper,
+        policyService = iamV2PolicyService,
         iamConfiguration = iamConfiguration,
         authResourceGroupConfigDao = authResourceGroupConfigDao
     )
