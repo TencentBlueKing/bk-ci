@@ -34,10 +34,10 @@ import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryReso
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
@@ -57,10 +57,15 @@ import com.tencent.devops.common.client.consul.ConsulConstants
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -94,17 +99,17 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildPermissionResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import org.apache.commons.lang3.StringUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.util.concurrent.Executors
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList", "LargeClass", "TooManyFunctions", "LongMethod", "TooGenericExceptionThrown")
@@ -144,7 +149,6 @@ class ExperienceService @Autowired constructor(
             if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
                 throw ErrorCodeException(
                     statusCode = 404,
-                    defaultMessage = "文件不存在",
                     errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
                 )
             }
@@ -157,7 +161,6 @@ class ExperienceService @Autowired constructor(
             }
             if (!propertyMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
                 throw ErrorCodeException(
-                    defaultMessage = "体验未与流水线绑定",
                     errorCode = ExperienceMessageCode.EXP_META_DATA_PIPELINE_ID_NOT_EXISTS
                 )
             }
@@ -301,7 +304,6 @@ class ExperienceService @Autowired constructor(
                 if (!serviceCheck(it)) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
-                        defaultMessage = "体验组($it)不存在",
                         errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
                         params = arrayOf(it)
                     )
@@ -329,10 +331,20 @@ class ExperienceService @Autowired constructor(
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
-            throw RuntimeException("元数据bundleIdentifier不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("bundleIdentifier")
+                    ))
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
-            throw RuntimeException("元数据appVersion不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("appVersion")
+                    ))
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
@@ -637,13 +649,16 @@ class ExperienceService @Autowired constructor(
             projectId = projectId,
             experienceId = experienceId,
             authPermission = AuthPermission.EDIT,
-            message = "用户在项目($projectId)下没有体验($experienceHashId)的编辑权限"
+            message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_EDIT_PERMISSION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(projectId, experienceHashId)
+                )
         )
         return experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "体验($experienceHashId)不存在",
-                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                errorCode = EXPERIENCE_NOT_EXIST,
                 params = arrayOf(experienceHashId)
             )
     }
@@ -664,7 +679,6 @@ class ExperienceService @Autowired constructor(
         if (!experienceBaseService.userCanExperience(userId, experienceId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "用户($userId)不在体验用户名单中",
                 errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
                 params = arrayOf(userId)
             )
@@ -686,17 +700,32 @@ class ExperienceService @Autowired constructor(
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
-            throw RuntimeException("文件($path)不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = FILE_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(path)
+                    )
+            )
         }
 
         val propertyMap = getArtifactoryPropertiesMap(userId, projectId, artifactoryType, path)
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
-            throw RuntimeException("元数据buildNo不存在")
+            throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("buildNo")
+                    ))
         }
 
         val remark = if (experience.description.isNullOrBlank()) {
-            "构建号#${propertyMap[ARCHIVE_PROPS_BUILD_NO]!!}"
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CONSTRUCTION_NUMBER,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(propertyMap[ARCHIVE_PROPS_BUILD_NO]!!)
+                )
         } else experience.description
 
         val experienceCreate = ExperienceCreate(
@@ -740,12 +769,12 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ) {
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
-                defaultMessage = AuthPermission.EXECUTE.alias
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
+                defaultMessage = AuthPermission.EXECUTE.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 params = arrayOf(permissionMsg)
             )
@@ -1015,7 +1044,6 @@ class ExperienceService @Autowired constructor(
                 .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
         ) {
             throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
             )
         }

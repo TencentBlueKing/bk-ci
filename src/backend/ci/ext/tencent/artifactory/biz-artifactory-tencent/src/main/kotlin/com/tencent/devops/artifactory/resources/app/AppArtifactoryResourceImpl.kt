@@ -28,6 +28,8 @@
 package com.tencent.devops.artifactory.resources.app
 
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -42,7 +44,6 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -58,11 +59,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
@@ -205,7 +206,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                errorCode = GRANT_DOWNLOAD_PERMISSION,
                 defaultMessage = "请联系流水线负责人授予下载构件权限。"
             )
         }
@@ -221,7 +222,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                errorCode = GRANT_PIPELINE_PERMISSION,
+                params = arrayOf(pipelineInfo?.creator ?: ""),
                 defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
             )
         }

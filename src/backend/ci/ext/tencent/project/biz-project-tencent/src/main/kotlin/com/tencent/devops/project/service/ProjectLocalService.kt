@@ -44,11 +44,12 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -499,7 +500,9 @@ class ProjectLocalService @Autowired constructor(
         val validateFlag = projectPermissionService.verifyUserProjectPermission(accessToken, projectCode, userId)
         logger.info("getProjectUsers validateResult is :$validateFlag")
         if (!validateFlag) {
-            val messageResult = MessageCodeUtil.generateResponseDataObject<String>(CommonMessageCode.PERMISSION_DENIED)
+            val messageResult = I18nUtil.generateResponseDataObject<String>(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId))
             return Result(messageResult.status, messageResult.message, null)
         }
         val projectUserList = authProjectApi.getProjectUsers(bsPipelineAuthServiceCode, projectCode)
@@ -517,7 +520,7 @@ class ProjectLocalService @Autowired constructor(
         return groupAndUsersList.filter { it.userIdList.contains(userId) }
             .map {
                 // 因历史原因,前端是通过roleName==manager 来判断是否为管理员,故此处需兼容
-                if (it.displayName == DefaultGroupType.MANAGER.displayName) {
+                if (it.displayName == DefaultGroupType.MANAGER.getDisplayName(I18nUtil.getLanguage(userId))) {
                     UserRole(it.displayName, it.roleId, DefaultGroupType.MANAGER.value, it.type)
                 } else {
                     UserRole(it.displayName, it.roleId, it.roleName, it.type)
@@ -597,7 +600,6 @@ class ProjectLocalService @Autowired constructor(
         logger.info("[getProjectRole] $projectId")
         val queryProject = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
             errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST)
         )
         return authProjectApi.getProjectRoles(
             bsPipelineAuthServiceCode,
@@ -625,9 +627,10 @@ class ProjectLocalService @Autowired constructor(
             if (!authProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectId)) {
                 logger.warn("$userId is not manager for project[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.NOT_MANAGER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }
@@ -643,9 +646,10 @@ class ProjectLocalService @Autowired constructor(
             ) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
-                    (MessageCodeUtil.getCodeLanMessage(
+                    (I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.USER_NOT_PROJECT_USER,
-                        params = arrayOf(userId, projectId)
+                        params = arrayOf(userId, projectId),
+                        language = I18nUtil.getLanguage(userId)
                     ))
                 )
             }

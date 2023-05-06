@@ -4,7 +4,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceTXPipelineResource
 import org.slf4j.LoggerFactory
@@ -29,7 +29,7 @@ class AuthPipelineIdService @Autowired constructor(
             val pipelineInfo = client.get(ServicePipelineResource::class)
                 .getPipelineInfoByPipelineId(resourceCode)?.data
                 ?: throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PERMISSION_DENIED,
                         params = arrayOf(resourceCode))
                 )
@@ -48,7 +48,7 @@ class AuthPipelineIdService @Autowired constructor(
                 val pipelineInfo = client.get(ServiceTXPipelineResource::class)
                     .getPipelineInfobyId(resourceCode.toInt()).data
                     ?: throw PermissionForbiddenException(
-                        message = MessageCodeUtil.getCodeMessage(
+                        message = I18nUtil.getCodeLanMessage(
                             messageCode = CommonMessageCode.PERMISSION_DENIED,
                             params = arrayOf(resourceCode))
                     )
@@ -60,9 +60,10 @@ class AuthPipelineIdService @Autowired constructor(
             val pipelineInfo = client.get(ServicePipelineResource::class)
                 .getPipelineInfoByPipelineId(resourceCode)?.data
                 ?: throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeMessage(
+                    message = I18nUtil.getCodeLanMessage(
                         messageCode = CommonMessageCode.PERMISSION_DENIED,
-                        params = arrayOf(resourceCode))
+                        params = arrayOf(resourceCode)
+                    )
                 )
             Pair(pipelineInfo.id.toString(), pipelineInfo.pipelineName)
         }

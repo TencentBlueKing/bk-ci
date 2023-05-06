@@ -417,7 +417,7 @@ class BuildLogQueryService @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, AuthPermission.EDIT.getI18n(language))
+                    arrayOf(userId, projectId, AuthPermission.EDIT.getI18n(language), pipelineId)
                 )
             )
         }

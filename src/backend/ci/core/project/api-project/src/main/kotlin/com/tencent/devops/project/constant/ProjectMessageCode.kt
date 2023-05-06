@@ -98,7 +98,7 @@ object ProjectMessageCode {
 
     const val BK_AUTH_CENTER_CREATE_PROJECT_INFO = "bkAuthCenterCreateProjectInfo" // 权限中心创建项目信息：
 
-    const val T_SERVICE_PREFIX = "T_SERVICE_"
-    const val T_SERVICE_TYPE_PREFIX = "T_SERVICE_TYPE_"
-    const val T_ACTIVITY_PREFIX = "T_ACTIVITY_"
+    const val T_SERVICE_PREFIX = "service."
+    const val T_SERVICE_TYPE_PREFIX = "serviceType."
+    const val T_ACTIVITY_PREFIX = "activity."
 }

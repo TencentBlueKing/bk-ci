@@ -71,25 +71,24 @@ object ArtifactoryMessageCode {
     const val GRANT_PIPELINE_PERMISSION = "2102030" // 访问件构请联系流水线负责人：\n{0} 授予流水线权限。
     const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102031" // 元数据({0})不存在，请通过共享下载文件
     const val NO_EXPERIENCE_PERMISSION = "2102032" // 您没有该体验的权限
-    const val FILE_NOT_EXIST = "2102033" // 文件{0}不存在
-    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102034" // 目标路径应为文件夹
-    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102035" // 不能在拷贝到当前目录
-    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102036" // 不能移动到当前目录
-    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102037" // 不能将父目录移动到子目录
-    const val METADATA_NOT_EXIST = "2102038" // 元数据({0})不存在
-    const val BUILD_NOT_EXIST = "2102039" // 构建不存在({0})
+    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102033" // 目标路径应为文件夹
+    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102034" // 不能在拷贝到当前目录
+    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102035" // 不能移动到当前目录
+    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102036" // 不能将父目录移动到子目录
+    const val METADATA_NOT_EXIST = "2102037" // 元数据({0})不存在
+    const val BUILD_NOT_EXIST = "2102038" // 构建不存在({0})
+    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102039" // 用户({0})在工程({1})下没有流水线{2}权限
 
     // PUSH
-    const val FUSH_FILE_VALIDATE_FAIL = "2102041" // 用户无操作下载权限
-    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102042" // 目标机器不能为空
-    const val ENV_NAME_MACHINE_NOT_EXITS = "2102043" // 输入环境名不存在{0},请导入机器至项目
-    const val ENV_MACHINE_NOT_AUTH = "2102044" // 用户没有操作这些环境的权限！环境ID{0}
-    const val NODE_NAME_MACHINE_NOT_EXITS = "2102045" // 输入节点名不存在{0},请导入机器至项目
-    const val FILE_NOT_EXITS = "2102046" // 未匹配到文件{0}
-    const val GET_FILE_FAIL = "2102047" // 构建分发获取文件失败
-    const val JOB_EXECUTE_FAIL = "2102048" // JOB执行失败,msg{0}
+    const val FUSH_FILE_VALIDATE_FAIL = "2102040" // 用户无操作下载权限
+    const val FUSH_FILE_REMOTE_MACHINE_EMPTY = "2102041" // 目标机器不能为空
+    const val ENV_NAME_MACHINE_NOT_EXITS = "2102042" // 输入环境名不存在{0},请导入机器至项目
+    const val ENV_MACHINE_NOT_AUTH = "2102043" // 用户没有操作这些环境的权限！环境ID{0}
+    const val NODE_NAME_MACHINE_NOT_EXITS = "2102044" // 输入节点名不存在{0},请导入机器至项目
+    const val FILE_NOT_EXITS = "2102045" // 未匹配到文件{0}
+    const val GET_FILE_FAIL = "2102046" // 构建分发获取文件失败
+    const val JOB_EXECUTE_FAIL = "2102047" // JOB执行失败,msg{0}
 
-    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102040" // 用户({0})在工程({1})下没有流水线{2}权限
     const val BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU = "bkBlueShieldShareFilesWithYou" // 【蓝盾版本仓库通知】{0}与你共享{1}文件
     const val BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU = "bkBlueShieldShareAndOtherFilesWithYou"
     // 【蓝盾版本仓库通知】{0}与你共享{1}等{2}个文件

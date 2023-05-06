@@ -3,12 +3,13 @@ package com.tencent.devops.experience.permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.service.ExperiencePermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +40,7 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias
             )
@@ -104,9 +105,10 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
+                defaultMessage = authPermission.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,

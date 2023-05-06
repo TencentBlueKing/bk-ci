@@ -29,27 +29,27 @@ package com.tencent.devops.scm.services
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.jmx.JMX
 import com.tencent.devops.scm.pojo.SvnFileInfo
 import com.tencent.devops.scm.pojo.SvnRevisionInfo
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
+import java.io.ByteArrayOutputStream
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import org.tmatesoft.svn.core.SVNURL
-import org.tmatesoft.svn.core.SVNProperties
-import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNAuthenticationException
+import org.tmatesoft.svn.core.SVNDirEntry
 import org.tmatesoft.svn.core.SVNException
 import org.tmatesoft.svn.core.SVNLogEntry
+import org.tmatesoft.svn.core.SVNProperties
+import org.tmatesoft.svn.core.SVNURL
 import org.tmatesoft.svn.core.auth.BasicAuthenticationManager
 import org.tmatesoft.svn.core.auth.SVNPasswordAuthentication
 import org.tmatesoft.svn.core.auth.SVNSSHAuthentication
 import org.tmatesoft.svn.core.io.SVNRepository
 import org.tmatesoft.svn.core.io.SVNRepositoryFactory
-import java.io.ByteArrayOutputStream
 
 @Service
 class SvnService {
@@ -203,9 +203,10 @@ class SvnService {
         try {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
-            logger.error("工程($url)本地仓库创建失败", e)
+            logger.error("project($url)Failed to create local warehouse", e)
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -221,7 +222,8 @@ class SvnService {
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -270,7 +272,8 @@ class SvnService {
             return result
         } catch (e: SVNException) {
             throw ScmException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }

@@ -28,19 +28,21 @@
 package com.tencent.devops.artifactory.service
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXITS
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_FILE_FAIL
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import java.io.File
+import java.nio.file.FileSystems
+import java.nio.file.Paths
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
-import java.nio.file.FileSystems
-import java.nio.file.Paths
 
 @Service
 class FileServiceExt @Autowired constructor(
@@ -78,7 +80,13 @@ class FileServiceExt @Autowired constructor(
             }
         }
         if (count == 0) {
-            throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.FILE_NOT_EXITS, arrayOf(fileName)))
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                messageCode = FILE_NOT_EXITS,
+                params = arrayOf(fileName),
+                language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         return downloadFiles
     }
@@ -129,13 +137,17 @@ class FileServiceExt @Autowired constructor(
             val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get jfrog files($url) fail:\n $responseBody")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.GET_FILE_FAIL, null))
+                throw RuntimeException(
+                    I18nUtil.getCodeLanMessage(messageCode = GET_FILE_FAIL)
+                )
             }
             try {
                 return JsonUtil.getObjectMapper().readValue(responseBody, JfrogFilesData::class.java)
             } catch (e: Exception) {
                 logger.warn("get jfrog files($url) fail\n$responseBody")
-                throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.GET_FILE_FAIL, null))
+                throw RuntimeException(
+                    I18nUtil.getCodeLanMessage(messageCode = GET_FILE_FAIL)
+                )
             }
         }
     }

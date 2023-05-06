@@ -28,17 +28,21 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_ALREADY_EXISTS
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitProjectConfDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.stream.pojo.GitProjectConf
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GitProjectConfService @Autowired constructor(
@@ -56,7 +60,11 @@ class GitProjectConfService @Autowired constructor(
         logger.info("GitProjectConfService|Create|id|$gitProjectId|name|$name|url|$url|enable|$enable")
         val record = gitProjectConfDao.get(dslContext, gitProjectId)
         if (null != record) {
-            throw CustomException(Response.Status.BAD_REQUEST, "项目已存在")
+            throw CustomException(Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    messageCode = PROJECT_ALREADY_EXISTS,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ))
         }
         gitProjectConfDao.create(dslContext, gitProjectId, name, url, enable)
         return true
@@ -64,7 +72,11 @@ class GitProjectConfService @Autowired constructor(
 
     fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Boolean {
         logger.info("GitProjectConfService|update|id|$gitProjectId|name|$name|url|$url|enable|$enable")
-        gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST, "项目不存在")
+        gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST,
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ))
         gitProjectConfDao.update(dslContext, gitProjectId, name, url, enable)
         return true
     }

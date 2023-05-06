@@ -27,6 +27,8 @@
 
 package com.tencent.devops.monitoring.constant
 
+import com.tencent.devops.common.web.utils.I18nUtil
+
 enum class SlaPluginError(
     private val code: String,
     private val mean: String
@@ -37,17 +39,16 @@ enum class SlaPluginError(
     EXEC_FAILED("2199004", "用户任务执行失败"),
     TIMEOUT("2199005", "用户任务执行超时失败（自行限制）"),
     GITCI_ERROR("2199006", "工蜂服务异常"),
-    LOW_QUALITY("2199007", "触碰质量红线"),
-    ;
+    LOW_QUALITY("2199007", "触碰质量红线");
 
     companion object {
         fun getMean(code: String?): String {
             values().forEach {
                 if (code == it.code) {
-                    return it.mean
+                    return I18nUtil.getCodeLanMessage(it.code)
                 }
             }
-            return DEFAULT_ERROR.mean
+            return I18nUtil.getCodeLanMessage(DEFAULT_ERROR.code)
         }
     }
 }

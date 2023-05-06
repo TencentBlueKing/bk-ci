@@ -36,23 +36,26 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
+import com.tencent.devops.common.api.constant.CommonMessageCode.ILLEGAL_JOB_TYPE
+import com.tencent.devops.common.api.constant.CommonMessageCode.STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.ci.yaml.Trigger
+import com.tencent.devops.common.ci.yaml.Job
+import com.tencent.devops.common.ci.yaml.JobDetail
 import com.tencent.devops.common.ci.yaml.MatchRule
 import com.tencent.devops.common.ci.yaml.MergeRequest
-import com.tencent.devops.common.ci.yaml.JobDetail
-import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.yaml.Stage
-import com.tencent.devops.common.ci.yaml.Job
-import org.slf4j.LoggerFactory
-import org.yaml.snakeyaml.Yaml
+import com.tencent.devops.common.ci.yaml.Trigger
+import com.tencent.devops.common.web.utils.I18nUtil
 import java.io.BufferedReader
 import java.io.StringReader
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
+import org.yaml.snakeyaml.Yaml
 
 object CiYamlUtils {
 
@@ -161,7 +164,10 @@ object CiYamlUtils {
     fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
         if (originYaml.stages != null && originYaml.steps != null) {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(messageCode = STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE)
+            )
         }
 
         val stages = originYaml.stages ?: listOf(
@@ -188,7 +194,10 @@ object CiYamlUtils {
                 run {
                     val type = job.job.type
                     if (type != null && type != "" && type != VM_JOB && type != NORMAL_JOB) {
-                        throw CustomException(Response.Status.BAD_REQUEST, "非法的job类型")
+                        throw CustomException(
+                            Response.Status.BAD_REQUEST,
+                            I18nUtil.getCodeLanMessage(messageCode = ILLEGAL_JOB_TYPE)
+                        )
                     }
                 }
             }

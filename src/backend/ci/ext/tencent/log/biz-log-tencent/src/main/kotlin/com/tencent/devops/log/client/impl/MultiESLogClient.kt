@@ -33,9 +33,22 @@ import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.log.LogMessageCode.BK_CLUSTER_NAME
+import com.tencent.devops.log.LogMessageCode.BK_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.log.LogMessageCode.BK_EMPTY_DATA
+import com.tencent.devops.log.LogMessageCode.BK_ES_CLUSTER_RECOVERY
+import com.tencent.devops.log.LogMessageCode.BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION
+import com.tencent.devops.log.LogMessageCode.BK_FAILED_INSERT_DATA
+import com.tencent.devops.log.LogMessageCode.BK_FAILURE
+import com.tencent.devops.log.LogMessageCode.BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
+import com.tencent.devops.log.LogMessageCode.BK_LOOK_FORWARD_IT
+import com.tencent.devops.log.LogMessageCode.BK_NOTIFICATION_PUSH_FROM_BKDEVOP
+import com.tencent.devops.log.LogMessageCode.BK_RECOVERY
+import com.tencent.devops.log.LogMessageCode.BK_STATUS
 import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.dao.IndexDao
+import com.tencent.devops.log.dao.TencentIndexDao
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
@@ -46,7 +59,6 @@ import java.util.Date
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
-import kotlin.collections.HashSet
 import kotlin.math.abs
 
 class MultiESLogClient constructor(
@@ -262,13 +274,21 @@ class MultiESLogClient constructor(
                 return
             }
             val t = if (inactive) {
-                "蓝盾ES集群插入数据失败"
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILED_INSERT_DATA
+                )
             } else {
-                "蓝盾ES集群恢复"
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ES_CLUSTER_RECOVERY
+                )
             }
             val map = mapOf(
                 "esName" to esName,
-                "status" to if (inactive) "失效" else "恢复"
+                "status" to if (inactive) I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FAILURE
+                ) else I18nUtil.getCodeLanMessage(
+                    messageCode = BK_RECOVERY
+                )
             )
             val message = parseMessageTemplate(getEmailBody(), map)
             val emailMessage = EmailNotifyMessage().apply {
@@ -313,13 +333,17 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t<td valign=\"top\" align=\"center\" style=\"padding: 24px;\" bgcolor=\"#f9f8f6\">\n" +
             "\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6;\">\n" +
             "\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">【ES集群状态告警通知】</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION
+        ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t<tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t<td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自BKDevOps/蓝盾DevOps平台的通知推送</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_NOTIFICATION_PUSH_FROM_BKDEVOP
+        ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"table-info\">\n" +
@@ -332,8 +356,12 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt; border: 1px solid #e6e6e6; border-collapse: collapse;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<thead style=\"background: #f6f8f8;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"color: #333C48;\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">集群名称</th>\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">状态</th>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_CLUSTER_NAME
+        ) + "</th>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_STATUS
+        ) + "</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tbody style=\"color: #707070;\">\n" +
@@ -349,13 +377,19 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t\t\t\t</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- 空数据 -->\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t<!-- " + I18nUtil.getCodeLanMessage(
+            messageCode = BK_EMPTY_DATA
+        ) + " -->\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<!-- <tr class=\"no-data\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">敬请期待！</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_LOOK_FORWARD_IT
+        ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr> -->\n" +
             "\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_CONTACT_BLUE_SHIELD_ASSISTANT
+        ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
@@ -366,7 +400,9 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t</td>\n" +
             "\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n" +
-            "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你是蓝盾日志管理负责人</td>\n" +
+            "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
+        ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t</table>\n" +
             "\t\t\t\t\t\t\t</td>\n" +

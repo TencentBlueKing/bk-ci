@@ -30,10 +30,13 @@ package com.tencent.devops.dispatch.devcloud.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
@@ -65,10 +68,16 @@ class DevcloudContainerService @Autowired constructor(
 
     override val shutdownLockBaseKey = "workspace_devcloud_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
-        readyStartLog = "准备创建devcloud开发环境...",
-        startContainerError = "启动devcloud开发环境失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "Devcloud构建异常，请联系蓝盾助手排查，异常信息 - "
+    override fun getLog() = DispatchBuildLog(
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE),
+        startContainerError = I18nUtil.getCodeLanMessage(
+            messageCode = DispatchK8sMessageCode.START_BUILD_CONTAINER_FAIL,
+            params = arrayOf("devcloud")
+        ),
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            messageCode = DispatchK8sMessageCode.CONTAINER_BUILD_ERROR,
+            params = arrayOf("devcloud")
+        )
     )
 
     @Value("\${devCloud.resources.builder.cpu}")

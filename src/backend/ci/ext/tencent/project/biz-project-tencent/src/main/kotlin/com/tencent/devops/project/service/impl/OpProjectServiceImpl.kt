@@ -28,15 +28,17 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dao.ProjectLocalDao
@@ -88,7 +90,12 @@ class OpProjectServiceImpl @Autowired constructor(
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
             logger.warn("The project $projectId is not exist")
-            throw OperationException("项目不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = PROJECT_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // 判断项目是不是审核的情况
         var flag = false
@@ -108,7 +115,12 @@ class OpProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", e)
-                throw OperationException("项目名或英文名重复")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = PROJECT_NAME_EXIST,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)
@@ -165,7 +177,7 @@ class OpProjectServiceImpl @Autowired constructor(
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode)
         if (projectInfo == null) {
             logger.warn("syn project $projectCode is not exist")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            throw OperationException(I18nUtil.getCodeLanMessage(messageCode = PROJECT_NOT_EXIST))
         }
         var isSyn = false
         val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)

@@ -27,8 +27,9 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.store.dao.atom.AtomDao
@@ -90,8 +91,8 @@ class TxAtomNotifyServiceImpl @Autowired constructor() : AtomNotifyService {
             "name" to atomName,
             "version" to atom.version,
             "publisher" to atom.publisher,
-            "releaseType" to if (releaseType != null) MessageCodeUtil.getCodeLanMessage(
-                "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
+            "releaseType" to if (releaseType != null) I18nUtil.getCodeLanMessage(
+                messageCode = "RELEASE_TYPE_" + ReleaseTypeEnum.getReleaseType(releaseType.toInt())
             ) else "",
             "versionDesc" to (atomVersionLog.content ?: ""),
             "nameInBody" to atomName,

@@ -33,15 +33,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.statistics.pojo.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.statistics.util.openapi.ApiGatewayPubFile
 import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
-import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.openssl.PEMParser
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
-import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
 import java.security.Security
@@ -50,6 +45,11 @@ import javax.ws.rs.container.ContainerRequestFilter
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
+import org.bouncycastle.jce.provider.BouncyCastleProvider
+import org.bouncycastle.openssl.PEMParser
+import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import org.slf4j.LoggerFactory
 
 @Provider
 @PreMatching

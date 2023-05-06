@@ -1,11 +1,17 @@
 package com.tencent.devops.process.service.pipelineExport
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_OLD_PLUG_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLEASE_USE_STAGE_AUDIT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLUG_NOT_SUPPORTED
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
@@ -256,7 +262,9 @@ object ExportStep {
                             name = null,
                             id = step.stepId,
                             ifFiled = null,
-                            uses = "### [${step.name}] 人工审核插件请改用Stage审核 ###",
+                            uses = "### [${step.name}] " + I18nUtil.getCodeLanMessage(
+                                messageCode = BK_PLEASE_USE_STAGE_AUDIT
+                            ),
                             with = null,
                             timeoutMinutes = null,
                             continueOnError = null,
@@ -271,15 +279,21 @@ object ExportStep {
                 else -> {
                     logger.info("Not support plugin:${element.getClassType()}, skip...")
                     context.yamlSb.append(
-                        "# 注意：不支持插件【${element.name}(${element.getClassType()})】的导出，" +
-                            "请在蓝盾研发商店查找推荐的替换插件！\n"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_PLUG_NOT_SUPPORTED,
+                            params = arrayOf(element.name, element.getClassType())
+                        ) + "," + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
+                        ) + "\n"
                     )
                     stepList.add(
                         PreStep(
                             name = null,
                             id = element.stepId,
                             ifFiled = null,
-                            uses = "### [${element.name}] 内置老插件不支持导出，请使用市场插件 ###",
+                            uses = "### [${element.name}] " + I18nUtil.getCodeLanMessage(
+                                messageCode = BK_OLD_PLUG_NOT_SUPPORT
+                            ),
                             with = null,
                             timeoutMinutes = null,
                             continueOnError = null,

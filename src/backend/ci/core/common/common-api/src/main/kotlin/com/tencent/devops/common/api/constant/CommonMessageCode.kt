@@ -105,7 +105,7 @@ object CommonMessageCode {
     const val FAILED_TO_GET_CMDB_LIST = "2100052" // 获取CMDB列表失败
     const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100053" // stages和steps不能并列存在!
 
-    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线({3})
+    const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100054" // 用户({0})无权限在工程({1})下{2}流水线{3}
     const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100055" // 用户 {0}无项目{1}权限
     const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100056" // 无法获取流水线JOB状态，构建停止
     const val JOB_BUILD_STOPS = "2100057" // 流水线JOB已经不再运行，构建停止
@@ -113,6 +113,8 @@ object CommonMessageCode {
     const val INTERNAL_DEPENDENCY_SERVICE_EXCEPTION = "2100059" // 内部依赖服务异常
     const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2100060" // 公共构建资源池不存在，请检查yml配置.
     const val ERROR_LANGUAGE_IS_NOT_SUPPORT = "2100061" // 该语言蓝盾目前不支持，蓝盾目前支持的语言标识为：{0}
+    const val INIT_SERVICE_LIST_ERROR = "2100062" // 初始化服务列表异常问题
+    const val FILE_NOT_EXIST = "2100063" // 文件{0}不存在
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
