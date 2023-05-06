@@ -101,7 +101,7 @@ object EmailUtil {
         return "                                                                            <tr>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_VIEW)+"</a></td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_VIEW) + "</a></td>\n" +
             "                                                                            </tr>\n"
     }
 
