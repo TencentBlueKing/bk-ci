@@ -424,8 +424,8 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.status = status.name
                 if (retryFlag) taskBuildRecords.add(
                     BuildRecordTask(
-                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                        stageId = stage.id!!, containerId = container.containerId!!,
+                        projectId = context.projectId, pipelineId = context.pipelineId,
+                        buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
                         taskId = atomElement.id!!, classType = atomElement.getClassType(),
                         atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
                         resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
