@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.api.constant
+package com.tencent.devops.openapi.constant
 
 /**
  * 环境管理微服务模块请求返回状态码
