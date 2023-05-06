@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.Record15
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -51,29 +52,46 @@ class BuildRecordContainerDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordContainer>) {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
-            records.forEach { record ->
-                dslContext.insertInto(this)
-                    .set(BUILD_ID, record.buildId)
-                    .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.pipelineId)
-                    .set(RESOURCE_VERSION, record.resourceVersion)
-                    .set(STAGE_ID, record.stageId)
-                    .set(CONTAINER_ID, record.containerId)
-                    .set(EXECUTE_COUNT, record.executeCount)
-                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
-                    .set(CONTAINER_TYPE, record.containerType)
-                    .set(MATRIX_GROUP_FLAG, record.matrixGroupFlag)
-                    .set(MATRIX_GROUP_ID, record.matrixGroupId)
-                    .set(STATUS, record.status)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .onDuplicateKeyUpdate()
-                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
-                    .set(STATUS, record.status)
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .execute()
-            }
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                RESOURCE_VERSION,
+                STAGE_ID,
+                CONTAINER_ID,
+                EXECUTE_COUNT,
+                CONTAINER_VAR,
+                CONTAINER_TYPE,
+                MATRIX_GROUP_FLAG,
+                MATRIX_GROUP_ID,
+                STATUS,
+                TIMESTAMPS
+            ).also { insert ->
+                records.forEach { record ->
+                    insert.values(
+                        record.buildId,
+                        record.projectId,
+                        record.pipelineId,
+                        record.resourceVersion,
+                        record.stageId,
+                        record.containerId,
+                        record.executeCount,
+                        JsonUtil.toJson(record.containerVar, false),
+                        record.containerType,
+                        record.matrixGroupFlag,
+                        record.matrixGroupId,
+                        record.status,
+                        JsonUtil.toJson(record.timestamps, false)
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
+                .set(CONTAINER_VAR, MySQLDSL.values(CONTAINER_VAR))
+                .execute()
         }
     }
 

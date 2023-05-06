@@ -37,17 +37,48 @@ import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineRepositoryVersionService constructor(
+class PipelineRepositoryVersionService(
     private val dslContext: DSLContext,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val pipelineBuildDao: PipelineBuildDao,
     private val redisOperation: RedisOperation
 ) {
+
+    fun addVerRef(projectId: String, pipelineId: String, resourceVersion: Int) {
+        PipelineVersionLock(redisOperation, pipelineId, resourceVersion).use { versionLock ->
+            versionLock.lock()
+            // 查询流水线版本记录
+            val pipelineVersionInfo = pipelineResVersionDao.getPipelineVersionSimple(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = resourceVersion
+            )
+            val referFlag = pipelineVersionInfo?.referFlag ?: true
+            val referCount = pipelineVersionInfo?.referCount?.let { self -> self + 1 }
+            // 兼容老数据缺少关联构建记录的情况，全量统计关联数据数量
+                ?: pipelineBuildDao.countBuildNumByVersion(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    version = resourceVersion
+                )
+
+            // 更新流水线版本关联构建记录信息
+            pipelineResVersionDao.updatePipelineVersionReferInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = resourceVersion,
+                referCount = referCount,
+                referFlag = referFlag
+            )
+        }
+    }
 
     fun deletePipelineVer(projectId: String, pipelineId: String, version: Int) {
         // 判断该流水线版本是否还有关联的构建记录，没有记录才能删除
@@ -97,18 +128,15 @@ class PipelineRepositoryVersionService constructor(
         val list = mutableListOf<PipelineInfo>()
 
         result.forEach {
-            list.add(pipelineInfo.copy(
-                createTime = it.createTime,
-                creator = it.creator,
-                version = it.version,
-                versionName = it.versionName)
+            list.add(
+                pipelineInfo.copy(
+                    createTime = it.createTime,
+                    creator = it.creator,
+                    version = it.version,
+                    versionName = it.versionName
+                )
             )
         }
         return count to list
-    }
-
-    companion object {
-        private const val MAX_LEN_FOR_NAME = 255
-        private val logger = LoggerFactory.getLogger(PipelineRepositoryVersionService::class.java)
     }
 }
