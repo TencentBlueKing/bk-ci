@@ -30,7 +30,7 @@ object LogMessageCode {
     const val BK_FAILURE = "bkFailure" // 失效
     const val BK_RECOVERY = "bkRecovery" // 恢复
     const val BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION = "bkEsClusterStatusAlarmNotification" // 【ES集群状态告警通知】
-    const val BK_NOTIFICATION_PUSH_FROM_BKDEVOP = "bkNotificationPushFrombkdevop" // 来自bkDevOps/蓝盾DevOps平台的通知推送
+    const val BK_NOTIFICATION_PUSH_FROM_BKDEVOPS = "bkNotificationPushFromBkdevops" // 来自bkDevOps/蓝盾DevOps平台的通知推送
     const val BK_CLUSTER_NAME = "bkClusterName" // 集群名称
     const val BK_STATUS = "bkStatus" // 状态
     const val BK_EMPTY_DATA = "bkEmptyData" // 空数据

@@ -43,7 +43,7 @@ import com.tencent.devops.log.LogMessageCode.BK_FAILED_INSERT_DATA
 import com.tencent.devops.log.LogMessageCode.BK_FAILURE
 import com.tencent.devops.log.LogMessageCode.BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
 import com.tencent.devops.log.LogMessageCode.BK_LOOK_FORWARD_IT
-import com.tencent.devops.log.LogMessageCode.BK_NOTIFICATION_PUSH_FROM_BKDEVOP
+import com.tencent.devops.log.LogMessageCode.BK_NOTIFICATION_PUSH_FROM_BKDEVOPS
 import com.tencent.devops.log.LogMessageCode.BK_RECOVERY
 import com.tencent.devops.log.LogMessageCode.BK_STATUS
 import com.tencent.devops.log.client.LogClient
@@ -342,7 +342,7 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t\t<table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
-            messageCode = BK_NOTIFICATION_PUSH_FROM_BKDEVOP
+            messageCode = BK_NOTIFICATION_PUSH_FROM_BKDEVOPS
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
