@@ -20,7 +20,6 @@ class RedisCacheService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RedisCacheService::class.java)
-        const val CACHE_EXPIRE_TIME = 1800L
     }
 
     private val redisCache = Caffeine.newBuilder()
@@ -44,8 +43,7 @@ class RedisCacheService @Autowired constructor(
         logger.info("save workspace detail from redis|$workspaceName|$cache")
         redisOperation.set(
             key = "$WORKSPACE_CACHE_KEY_PREFIX$workspaceName",
-            value = JsonUtil.toJson(cache),
-            expiredInSecond = CACHE_EXPIRE_TIME
+            value = JsonUtil.toJson(cache)
         )
     }
 
