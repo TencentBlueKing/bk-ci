@@ -43,9 +43,26 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
     private val projectPipelineCallBackService: ProjectPipelineCallBackService
 ) : OpPipelineCallbackResource {
 
-    override fun enableCallback(projectId: String, events: String?): Result<Boolean> {
+    override fun enableCallbackByIds(projectId: String, callbackIds: String): Result<Boolean> {
         if (projectId.isEmpty()) {
             throw ParamBlankException("Invalid projectId")
+        }
+        if (callbackIds.isEmpty()) {
+            throw ParamBlankException("Invalid callbackIds")
+        }
+        projectPipelineCallBackService.enableByIds(
+            projectId = projectId,
+            callbackIds = callbackIds
+        )
+        return Result(true)
+    }
+
+    override fun enableCallbackByUrl(projectId: String, url: String): Result<Boolean> {
+        if (projectId.isEmpty()) {
+            throw ParamBlankException("Invalid projectId")
+        }
+        if (url.isEmpty()) {
+            throw ParamBlankException("Invalid url")
         }
         val threadPoolExecutor = ThreadPoolExecutor(
             1,
@@ -59,7 +76,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         threadPoolExecutor.submit {
             logger.info("OpPipelineCallbackResource:begin enableCallback-----------")
             try {
-                batchEnableCallback(projectId = projectId, events = events)
+                batchEnableCallback(projectId = projectId, url = url)
             } catch (e: Exception) {
                 logger.warn("OpPipelineCallbackResource：enableCallback failed | $e ")
             } finally {
@@ -69,7 +86,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    fun batchEnableCallback(projectId: String?, events: String?) {
+    fun batchEnableCallback(projectId: String?, url: String) {
         val limit = 1000
         var offset = 0
         do {
@@ -77,7 +94,7 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
                 limit = limit,
                 offset = offset,
                 projectId = projectId,
-                events = events
+                url = url
             )
             val pageSize = disableCallbackList.size
             disableCallbackList.forEach {

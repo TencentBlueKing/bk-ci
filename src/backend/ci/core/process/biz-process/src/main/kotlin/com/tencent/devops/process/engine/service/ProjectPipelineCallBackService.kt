@@ -43,8 +43,6 @@ import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -82,8 +80,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
     private val projectPipelineCallBackUrlGenerator: ProjectPipelineCallBackUrlGenerator,
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val pipelinePermissionService: PipelinePermissionService,
-    private val redisOperation: RedisOperation
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     companion object {
@@ -215,30 +212,21 @@ class ProjectPipelineCallBackService @Autowired constructor(
     }
 
     fun disable(callBack: ProjectPipelineCallBack) {
-        // 通知用户接口被禁用
-        val disableNotifySuccess = sendDisableNotifyMessage(callBack)
         // 修改接口状态
         projectPipelineCallbackDao.disable(
             dslContext = dslContext,
             projectId = callBack.projectId,
-            id = callBack.id!!,
-            disableNotifySuccess = disableNotifySuccess
+            id = callBack.id!!
         )
+        // 通知用户接口被禁用
+        sendDisableNotifyMessage(callBack)
     }
 
     /**
      *  发送回调禁用通知
      */
-    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack): Boolean {
-        // 是否通知到位
-        var notifySuccess = true
-        val redisLock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "process.build.callback.notify.lock.${callBack.id}",
-            expiredTimeInSeconds = 10L
-        )
+    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack) {
         try {
-            redisLock.lock()
             val callbackRecord = projectPipelineCallbackDao.get(
                 dslContext = dslContext,
                 projectId = callBack.projectId,
@@ -246,10 +234,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
             )
             callbackRecord?.run {
                 with(callbackRecord) {
-                    // 若已通知则无需重复通知
-                    if (disableNotifySuccess) {
-                        return true
-                    }
                     // 项目信息
                     val projectInfo = client.get(ServiceProjectResource::class).get(
                         englishName = projectId
@@ -277,15 +261,11 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            notifySuccess = false
             logger.warn(
                 "Failure to send disable notify message for " +
                         "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
             )
-        } finally {
-            redisLock.unlock()
         }
-        return notifySuccess
     }
 
     fun enable(callBack: ProjectPipelineCallBack) {
@@ -297,6 +277,20 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
+    fun enableByIds(
+        projectId: String,
+        callbackIds: String
+    ) {
+        val ids = callbackIds.split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.toInt() }
+        projectPipelineCallbackDao.enableByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            ids = ids
+        )
+    }
+
     /**
      * 获取已被禁用的callback信息
      */
@@ -304,12 +298,12 @@ class ProjectPipelineCallBackService @Autowired constructor(
         offset: Int,
         limit: Int,
         projectId: String?,
-        events: String?
+        url: String?
     ): List<ProjectPipelineCallBack> {
         return projectPipelineCallbackDao.getDisableCallbackList(
             dslContext = dslContext,
             projectId = projectId,
-            events = events,
+            url = url,
             limit = limit,
             offset = offset
         ).map {
