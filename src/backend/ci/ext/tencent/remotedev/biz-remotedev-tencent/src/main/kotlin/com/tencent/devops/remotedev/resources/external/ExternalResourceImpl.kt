@@ -27,37 +27,18 @@
 
 package com.tencent.devops.remotedev.resources.external
 
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
 import com.tencent.devops.remotedev.service.WorkspaceService
-import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    private val redisHeartBeat: RedisHeartBeat,
     private val workspaceService: WorkspaceService
 ) : ExternalResource {
-
-    @Value("\${remoteDev.callBackSignSecret:}")
-    private val signSecret: String = ""
-
-    private fun checkSignature(signature: String, workspaceName: String, timestamp: String): Boolean {
-        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
-        logger.info("signature($signature) and generate signature ($genSignature)")
-        if (!ShaUtils.isEqual(signature, genSignature)) {
-            logger.warn("signature($signature) and generate signature ($genSignature) not match")
-            return false
-        }
-
-        return true
-    }
 
     override fun getDevfile(): Response {
         val result = workspaceService.getDevfile()
@@ -70,9 +51,5 @@ class ExternalResourceImpl @Autowired constructor(
         )
             .header("content-disposition", "attachment; filename = devfile")
             .build()
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
     }
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.api.remotedev
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import io.swagger.annotations.Api
@@ -98,4 +99,19 @@ interface RemoteDevResource {
         @QueryParam("timestamp")
         timestamp: String
     ): Result<WorkspaceProxyDetail>
+
+    @ApiOperation("获取工作空间镜像信息")
+    @GET
+    @Path("/workspace/image/spec")
+    fun getWorkspaceImageSpec(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String
+    ): Result<ImageSpec?>
 }

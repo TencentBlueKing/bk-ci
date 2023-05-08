@@ -198,6 +198,25 @@ class BuildVariableService @Autowired constructor(
         }
     }
 
+    /**
+     * 注意：该方法没做并发保护，仅用于在刚启动构建时使用，其他并发场景请使用[batchSetVariable]
+     */
+    fun startBuildBatchSaveWithoutThreadSafety(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variables: Map<String, BuildParameters>
+    ) {
+        pipelineBuildVarDao.batchSave(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variables = variables.map { it.value }
+        )
+    }
+
     fun batchSetVariable(
         dslContext: DSLContext,
         projectId: String,

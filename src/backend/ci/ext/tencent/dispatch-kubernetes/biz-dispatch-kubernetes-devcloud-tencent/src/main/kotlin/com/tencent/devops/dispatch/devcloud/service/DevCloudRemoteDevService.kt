@@ -85,6 +85,9 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.workspace.backendHost:}")
     val backendHost: String = ""
 
+    @Value("\${devCloud.workspace.turboInstallUrl:}")
+    val turboInstallUrl: String = ""
+
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
 
@@ -263,6 +266,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
+                EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
                 EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
                 EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
                 EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
@@ -296,6 +300,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
         private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
         private const val DEVOPS_REMOTING_PRECI_DOWN_URL = "DEVOPS_REMOTING_PRECI_DOWN_URL"
+        private const val DEVOPS_REMOTING_TURBO_DOWN_URL = "DEVOPS_REMOTING_TURBO_DOWN_URL"
         private const val DEVOPS_REMOTING_PRECI_GATEWAY_URL = "DEVOPS_REMOTING_PRECI_GATEWAY_URL"
         private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
         private const val BK_PRE_BUILD_GATEWAY = "BK_PRE_BUILD_GATEWAY"

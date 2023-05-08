@@ -87,9 +87,10 @@ class ClearTimeoutCron(
         for (bucket in 0..WebsocketKeys.REDIS_MO) {
             val redisData = redisOperation.get(WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket)
             if (!redisData.isNullOrBlank()) {
-                logger.info("websocket timer $bucket, data:$redisData")
-                var newRedisData = LinkedList<String>()
-                redisData.split(",").forEach {
+                val redisDataArray = redisData.split(",")
+                logger.info("websocket timer $bucket, data size:${redisDataArray.size}")
+                val newRedisData = LinkedList<String>()
+                redisDataArray.forEach {
                     try {
                         val timeout: Long = it.substringAfter("&").toLong()
                         val userId = it.substringAfter("#").substringBefore("&")
@@ -118,8 +119,8 @@ class ClearTimeoutCron(
                         logger.warn("fail msg: ${e.message}")
                     }
                 }
-                if (newRedisData != null) {
-                    logger.info("websocket timer reset $bucket, data: $newRedisData")
+                if (newRedisData.isNotEmpty()) {
+                    logger.info("websocket timer reset $bucket, data size: ${newRedisData.size}")
                     redisOperation.set(
                         WebsocketKeys.HASH_USER_TIMEOUT_REDIS_KEY + bucket,
                         newRedisData.joinToString(","),

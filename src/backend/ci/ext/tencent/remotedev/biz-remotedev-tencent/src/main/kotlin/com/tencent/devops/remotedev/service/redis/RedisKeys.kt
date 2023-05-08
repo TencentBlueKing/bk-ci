@@ -3,9 +3,10 @@ package com.tencent.devops.remotedev.service.redis
 object RedisKeys {
     const val REDIS_CALL_LIMIT_KEY_PREFIX = "remotedev:callLimit"
     const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
+    const val WORKSPACE_CACHE_KEY_PREFIX = "remotedev:workspaceCache:"
 
     // redis 选填项
-    const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime" // 10560
+    const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime" // 10000
     const val REDIS_DEFAULT_MAX_RUNNING_COUNT = "remotedev:defaultMaxRunningCount" // 1
     const val REDIS_DEFAULT_MAX_HAVING_COUNT = "remotedev:defaultMaxHavingCount" // 3
     const val REDIS_REMOTEDEV_GRAY_VERSION = "remotedev:gray:version"

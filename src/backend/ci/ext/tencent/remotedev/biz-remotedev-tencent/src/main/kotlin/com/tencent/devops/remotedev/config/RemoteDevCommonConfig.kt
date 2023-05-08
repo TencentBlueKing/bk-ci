@@ -25,19 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.lock
+package com.tencent.devops.remotedev.config
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-class PipelineBuildHistoryLock(redisOperation: RedisOperation, pipelineId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "process:build:history:lock:$pipelineId",
-        expiredTimeInSeconds = 10L
-    ) {
-    override fun decorateKey(key: String): String {
-        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
-        return key
-    }
+@Component
+class RemoteDevCommonConfig {
+
+    // 用户工作空间镜像registry地址
+    @Value("\${workspace.image.registryHost:#{null}}")
+    val workspaceImageRegistryHost: String? = null
 }

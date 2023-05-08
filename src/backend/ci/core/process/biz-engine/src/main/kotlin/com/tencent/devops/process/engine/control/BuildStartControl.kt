@@ -55,7 +55,10 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_CONCURRENCY
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_SINGLE
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -69,6 +72,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRepositoryVersionService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
@@ -105,6 +109,7 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineStageService: PipelineStageService,
+    private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildDetailService: PipelineBuildDetailService,
     private val pipelineRecordService: PipelineBuildRecordService,
@@ -298,7 +303,16 @@ class BuildStartControl @Autowired constructor(
             LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|${concurrencyGroupRunning.count()}")
             if (concurrencyGroupRunning.isNotEmpty()) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId,
+                    buildId = buildId,
+                    oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_CONCURRENCY,
+                        defaultMessage = "QUEUE: concurrency for group($concurrencyGroup)",
+                        params = arrayOf(concurrencyGroup)
+                    )
+                )
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                     projectCode = projectId,
                     pipelineId = concurrencyGroupRunning.first().first,
@@ -335,7 +349,13 @@ class BuildStartControl @Autowired constructor(
 
             if (buildSummaryRecord!!.runningCount > 0) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_SINGLE,
+                        defaultMessage = "QUEUE: The current build is queued"
+                    )
+                )
 
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",
@@ -485,10 +505,11 @@ class BuildStartControl @Autowired constructor(
                 Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
             )
         )
+        val nowMills = now.timestampmilli()
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = max(0, System.currentTimeMillis() - buildInfo.queueTime)
+        stage.elapsed = max(0, nowMills - buildInfo.queueTime)
         container.status = BuildStatus.SUCCEED.name
-        container.startEpoch = now.timestampmilli()
+        container.startEpoch = nowMills
         container.systemElapsed = stage.elapsed // 修复可能导致负数的情况
         container.elementElapsed = 0
         container.executeCount = executeCount
@@ -497,7 +518,7 @@ class BuildStartControl @Autowired constructor(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
-                Container::startEpoch.name to now.timestampmilli(),
+                Container::startEpoch.name to nowMills,
                 Container::systemElapsed.name to (stage.elapsed ?: 0),
                 Container::elementElapsed.name to 0,
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
@@ -678,6 +699,8 @@ class BuildStartControl @Autowired constructor(
                 varName = PIPELINE_TIME_START,
                 varValue = System.currentTimeMillis().toString()
             )
+            // 增加Model版本引用计数
+            pipelineRepositoryVersionService.addVerRef(buildInfo.projectId, buildInfo.pipelineId, buildInfo.version)
         }
 
         val stages = model.stages
