@@ -120,7 +120,7 @@ class MigrateIamApiService {
 
     fun getV0MigrateTaskStatus(migrateTaskId: Int): String {
         val request = Request.Builder()
-            .url("$iamBaseUrl/${V0_IAM_MIGRATE_TASK}${migrateTaskId}/?token=$migrateIamToken")
+            .url("$iamBaseUrl/$V0_IAM_MIGRATE_TASK$migrateTaskId/?token=$migrateIamToken")
             .get()
             .build()
         return JsonUtil.to(
