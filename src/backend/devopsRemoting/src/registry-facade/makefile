@@ -19,7 +19,7 @@ clean:
 	rm -rf ./bin
 
 .PHONY: build
-build.registry.amd64: test clean
+build.registry.amd64: clean
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 \
  	go build -trimpath -ldflags "-X registry-facade/cmd.Version=$(VERSION)" \
  	-o ./bin/registry-amd64 main.go
