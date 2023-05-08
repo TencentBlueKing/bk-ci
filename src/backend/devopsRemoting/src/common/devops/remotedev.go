@@ -38,7 +38,6 @@ func (r *RemoteDevClient) setRemotedevHeader(request *http.Request, workspaceId,
 	// 加密
 	request.Header.Set("X-Signature", hmacsha1Encrypt(r.sha1key, sign))
 	// 项目，区分灰度
-	// TODO: 目前先写死，未来通过workspaceId区分
 	request.Header.Set("X-DEVOPS-PROJECT-ID", ParseWsId2UserProjectId(workspaceId))
 }
 
