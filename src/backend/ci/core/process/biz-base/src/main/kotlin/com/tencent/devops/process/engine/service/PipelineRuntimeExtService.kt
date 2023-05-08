@@ -121,7 +121,6 @@ class PipelineRuntimeExtService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildId = buildInfo.buildId,
-                startTime = LocalDateTime.now(), // 设置startTime解决在按天查询时查不出来的问题
                 oldBuildStatus = buildInfo.status,
                 newBuildStatus = buildStatus
             )
