@@ -35,14 +35,10 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 
 @SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineUtilsTest {
-
-    @Autowired
-    lateinit var springContextUtil: SpringContextUtil
 
     @Test
     fun checkPipelineNameLength() {
