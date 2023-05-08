@@ -104,8 +104,8 @@ class ContainerPoolExecutor @Autowired constructor(
         for (i in 1..index) {
             ThreadPoolUtils.getInstance().getThreadPool(ThreadPoolName.ADD_CONTAINER.name).submit {
                 buildLessContainerService.createContainer()
+                latch.countDown()
             }
-            latch.countDown()
         }
 
         latch.await()
