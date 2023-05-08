@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
@@ -52,6 +53,7 @@ import com.tencent.devops.dispatch.bcs.pojo.isSuccess
 import com.tencent.devops.dispatch.bcs.pojo.readyToStart
 import com.tencent.devops.dispatch.bcs.utils.BcsCommonUtils
 import com.tencent.devops.dispatch.kubernetes.common.BUILDER_NAME
+import com.tencent.devops.dispatch.kubernetes.common.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
@@ -90,7 +92,8 @@ import org.springframework.stereotype.Service
 class BcsContainerService @Autowired constructor(
     private val bcsBuilderClient: BcsBuilderClient,
     private val logsPrinter: LogsPrinter,
-    private val bcsTaskClient: BcsTaskClient
+    private val bcsTaskClient: BcsTaskClient,
+    private val commonConfig: CommonConfig
 ) : ContainerService {
 
     companion object {
@@ -210,7 +213,8 @@ class BcsContainerService @Autowired constructor(
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        BUILDER_NAME to builderName,
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
@@ -281,7 +285,8 @@ class BcsContainerService @Autowired constructor(
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Bcs",
                         ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_BCS.name),
-                        BUILDER_NAME to builderName
+                        BUILDER_NAME to builderName,
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )

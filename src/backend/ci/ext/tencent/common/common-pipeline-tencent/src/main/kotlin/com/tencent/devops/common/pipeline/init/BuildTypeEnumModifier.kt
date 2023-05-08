@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.init
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
@@ -38,8 +39,15 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 class BuildTypeEnumModifier : EnumModifier {
 
     override fun modified() {
-        val language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE)
-        ?: SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+        var language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE)
+        if (language.isNullOrBlank()) {
+            language = try {
+                SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+            } catch (ignored: Throwable) {
+                // 不是spring管理的工程则用工程代码中定义的默认语言
+                DEFAULT_LOCALE_LANGUAGE
+            }
+        }
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
