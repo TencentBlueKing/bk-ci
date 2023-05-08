@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
@@ -26,20 +25,20 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.api.user.UserPipelineViewResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
+import java.util.concurrent.Executors
+import java.util.concurrent.Future
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.util.concurrent.Executors
-import java.util.concurrent.Future
 
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
@@ -403,9 +402,8 @@ class RbacPermissionApplyService @Autowired constructor(
             )
         } else {
             if (isEnablePermission) {
-                authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
-                    val actions = JsonUtil.to(it.actions, object : TypeReference<List<String>>() {})
-                    if (actions.contains(action)) {
+                rbacCacheService.getGroupConfigAction(resourceType).forEach {
+                    if (it.actions.contains(action)) {
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
                             projectInfo = projectInfo,
@@ -426,7 +424,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     action = action,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    groupCode = "manager",
+                    groupCode = DefaultGroupType.MANAGER.value,
                     iamResourceCode = iamResourceCode
                 )
             }
