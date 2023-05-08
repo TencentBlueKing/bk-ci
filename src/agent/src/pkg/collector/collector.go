@@ -266,7 +266,7 @@ func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
 	}
 
 	logger.SetupLogging(logConfig)
-	return agent.NewAgent(c), nil
+	return agent.NewAgent(c)
 }
 
 func writeTelegrafConfig() {

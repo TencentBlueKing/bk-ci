@@ -488,6 +488,7 @@
                 flex-direction: column;
                 justify-content: space-between;
                 width: calc(100% - 143px);
+                max-width: 345px;
                 .atom-name {
                     display: flex;
                     align-items: center;

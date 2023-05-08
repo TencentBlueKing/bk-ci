@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -441,12 +442,12 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         projectCode: String,
         storeType: StoreTypeEnum
-    ): Result<Record1<String>>? {
+    ): Result<Record2<String, Byte>>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_CODE.eq(projectCode))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            return dslContext.select(STORE_CODE).from(this).where(conditions).groupBy(STORE_CODE).fetch()
+            return dslContext.select(STORE_CODE, TYPE).from(this).where(conditions).fetch()
         }
     }
 

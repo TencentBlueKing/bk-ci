@@ -40,7 +40,9 @@ import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
+import com.tencent.devops.remotedev.service.BkTicketService
 import com.tencent.devops.remotedev.service.PermissionService
+import com.tencent.devops.remotedev.service.RepositoryService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -54,15 +56,25 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
     private val redisHeartBeat: RedisHeartBeat,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val repositoryService: RepositoryService,
+    private val bkTicketService: BkTicketService
 ) : UserWorkspaceResource {
 
-    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<WorkspaceResponse> {
-        return Result(workspaceService.createWorkspace(userId, workspace))
+    override fun createWorkspace(
+        userId: String,
+        bkTicket: String,
+        workspace: WorkspaceCreate
+    ): Result<WorkspaceResponse> {
+        return Result(workspaceService.createWorkspace(userId, bkTicket, workspace))
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Result<WorkspaceResponse> {
-        return Result(workspaceService.startWorkspace(userId, workspaceName))
+    override fun startWorkspace(
+        userId: String,
+        bkTicket: String,
+        workspaceName: String
+    ): Result<WorkspaceResponse> {
+        return Result(workspaceService.startWorkspace(userId, bkTicket, workspaceName))
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
@@ -97,7 +109,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         gitType: RemoteDevGitType
     ): Result<List<RemoteDevRepository>> {
         return Result(
-            workspaceService.getAuthorizedGitRepository(
+            repositoryService.getAuthorizedGitRepository(
                 userId = userId,
                 search = search,
                 page = page,
@@ -113,7 +125,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         gitType: RemoteDevGitType
     ): Result<List<String>> {
         return Result(
-            workspaceService.getRepositoryBranch(
+            repositoryService.getRepositoryBranch(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
                 gitType = gitType
@@ -183,11 +195,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
-        workspaceService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
+        bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
         return Result(true)
-    }
-
-    override fun checkUpdate(userId: String): Result<String> {
-        return Result(workspaceService.checkUpdate(userId))
     }
 }

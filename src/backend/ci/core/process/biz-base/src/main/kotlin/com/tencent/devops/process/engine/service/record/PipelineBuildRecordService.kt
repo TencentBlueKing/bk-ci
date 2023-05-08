@@ -275,6 +275,7 @@ class PipelineBuildRecordService @Autowired constructor(
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
             errorInfoList = buildRecordModel?.errorInfoList,
+            stageStatus = buildInfo.stageStatus,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,

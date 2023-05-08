@@ -1,9 +1,13 @@
 package com.tencent.devops.remotedev.cron
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
@@ -16,7 +20,8 @@ import org.springframework.stereotype.Component
 class WorkspaceCheckJob @Autowired constructor(
     private val redisHeartBeat: RedisHeartBeat,
     private val redisOperation: RedisOperation,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val bkTag: BkTag
 ) {
 
     companion object {
@@ -32,11 +37,12 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0/5 * * * ?")
     fun stopInactiveWorkspace() {
         logger.info("=========>> Stop inactive workspace <<=========")
-        val redisLock = RedisLock(redisOperation, stopJobLockKey, 3600L)
+        val redisLock = RedisLock(redisOperation, stopJobLockKey + bkTag.getLocalTag(), 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
+                if (redisHeartBeat.autoHeartbeat()) return
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
@@ -50,8 +56,20 @@ class WorkspaceCheckJob @Autowired constructor(
                     )
                     kotlin.runCatching {
                         workspaceService.heartBeatStopWS(workspaceName)
-                    }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
+                    }.onFailure {
+                        logger.warn("heart beat stop ws $workspaceName fail, ${it.message}")
+                        // 针对已经休眠或销毁的容器，删除上报心跳记录。
+                        if (it is ErrorCodeException &&
+                            (
+                                it.errorCode == ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode ||
+                                    it.errorCode == ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode
+                                )
+                        ) {
+                            redisHeartBeat.deleteWorkspaceHeartbeat(ADMIN_NAME, workspaceName)
+                        }
+                    }
                 }
+                workspaceService.fixUnexpectedWorkspace()
             }
         } catch (e: Throwable) {
             logger.error("Stop inactive workspace failed", e)
@@ -66,7 +84,7 @@ class WorkspaceCheckJob @Autowired constructor(
     @Scheduled(cron = "0 0 2 * * ?")
     fun clearIdleWorkspace() {
         logger.info("=========>> Clear idle workspace <<=========")
-        val redisLock = RedisLock(redisOperation, deleteJobLockKey, 3600L)
+        val redisLock = RedisLock(redisOperation, deleteJobLockKey + bkTag.getLocalTag(), 3600L)
         try {
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {

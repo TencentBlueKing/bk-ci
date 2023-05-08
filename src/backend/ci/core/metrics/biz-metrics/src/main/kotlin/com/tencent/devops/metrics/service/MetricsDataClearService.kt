@@ -25,22 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.pojo.po
+package com.tencent.devops.metrics.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.jooq.DSLContext
 import java.time.LocalDateTime
 
-@ApiModel("保存错误码信息")
-data class UpdateErrorCodeInfoPO(
-    @ApiModelProperty("错误类型")
-    val errorType: Int,
-    @ApiModelProperty("错误码")
-    val errorCode: Int,
-    @ApiModelProperty("错误描述")
-    val errorMsg: String? = null,
-    @ApiModelProperty("修改人")
-    val modifier: String,
-    @ApiModelProperty("更新时间")
-    val updateTime: LocalDateTime
-)
+interface MetricsDataClearService {
+
+    /**
+     * metrics数据清理
+     * @param dslContext jooq上下文
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     * @param statisticsTime 统计时间
+     * @param buildId 构建ID
+     * @return 布尔值
+     */
+    fun metricsDataClear(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        statisticsTime: LocalDateTime,
+        buildId: String
+    ): Boolean
+}
