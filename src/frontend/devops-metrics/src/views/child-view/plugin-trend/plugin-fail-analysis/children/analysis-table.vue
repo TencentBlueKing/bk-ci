@@ -211,7 +211,9 @@ onMounted(getData);
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
-      <EmptyTableStatus :type="emptyType" @clear="handleClear" />
+      <template #empty>
+        <EmptyTableStatus :type="emptyType" @clear="handleClear" />
+      </template>
     </bk-table>
   </bk-loading>
 </template>
