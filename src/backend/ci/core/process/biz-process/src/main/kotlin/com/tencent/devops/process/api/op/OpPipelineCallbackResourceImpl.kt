@@ -33,10 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.Executors
-import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.ThreadPoolExecutor
-import java.util.concurrent.TimeUnit
 
 @RestResource
 class OpPipelineCallbackResourceImpl @Autowired constructor(
@@ -64,47 +60,30 @@ class OpPipelineCallbackResourceImpl @Autowired constructor(
         if (url.isEmpty()) {
             throw ParamBlankException("Invalid url")
         }
-        val threadPoolExecutor = ThreadPoolExecutor(
-            1,
-            1,
-            0,
-            TimeUnit.SECONDS,
-            LinkedBlockingQueue(1),
-            Executors.defaultThreadFactory(),
-            ThreadPoolExecutor.AbortPolicy()
-        )
-        threadPoolExecutor.submit {
-            logger.info("OpPipelineCallbackResource:begin enableCallback-----------")
-            try {
-                batchEnableCallback(projectId = projectId, url = url)
-            } catch (e: Exception) {
-                logger.warn("OpPipelineCallbackResource：enableCallback failed | $e ")
-            } finally {
-                threadPoolExecutor.shutdown()
-            }
+        logger.info("OpPipelineCallbackResource:begin enableCallback-----------")
+        try {
+            val limit = 1000
+            var offset = 0
+            do {
+                val disableCallbackList = projectPipelineCallBackService.getDisableCallbackList(
+                    limit = limit,
+                    offset = offset,
+                    projectId = projectId,
+                    url = url
+                )
+                val pageSize = disableCallbackList.size
+                disableCallbackList.forEach {
+                    projectPipelineCallBackService.enable(it)
+                }
+                offset += limit
+                // 一秒休眠时间
+                Thread.sleep(1 * 1000)
+            } while (pageSize == limit)
+        } catch (e: Exception) {
+            logger.warn("OpPipelineCallbackResource：enableCallback failed | $e ")
         }
-        return Result(true)
-    }
-
-    fun batchEnableCallback(projectId: String?, url: String) {
-        val limit = 1000
-        var offset = 0
-        do {
-            val disableCallbackList = projectPipelineCallBackService.getDisableCallbackList(
-                limit = limit,
-                offset = offset,
-                projectId = projectId,
-                url = url
-            )
-            val pageSize = disableCallbackList.size
-            disableCallbackList.forEach {
-                projectPipelineCallBackService.enable(it)
-            }
-            offset += limit
-            // 一秒休眠时间
-            Thread.sleep(1 * 1000)
-        } while (pageSize == limit)
         logger.info("OpPipelineCallbackResource:end enableCallback-----------")
+        return Result(true)
     }
 
     companion object {
