@@ -120,6 +120,7 @@ class P4ChangeTriggerHandler(
                                 repositoryType = repositoryConfig.repositoryType,
                                 change = event.change
                             )
+//                            eventCacheService.getChangeFileList()
                         }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
