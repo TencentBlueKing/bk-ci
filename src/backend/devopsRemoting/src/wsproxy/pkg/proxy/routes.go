@@ -335,6 +335,9 @@ func removeSensitiveCookies(cookies []*http.Cookie, domain string) []*http.Cooki
 func workspacePodResolver(config *config.ProxyConfig, infoProvider WorkspaceInfoProvider, req *http.Request) (url *url.URL, err error) {
 	coords := getWorkspaceCoords(req)
 	workspaceInfo := infoProvider.WorkspaceInfo(coords.ID)
+	if workspaceInfo == nil {
+		return nil, fmt.Errorf("not found workspace %s", coords.ID)
+	}
 	return buildWorkspacePodURL(workspaceInfo.IPAddress, fmt.Sprint(config.WorkspacePodConfig.VscodePort))
 }
 
@@ -342,6 +345,9 @@ func workspacePodResolver(config *config.ProxyConfig, infoProvider WorkspaceInfo
 func workspacePodPortResolver(_ *config.ProxyConfig, infoProvider WorkspaceInfoProvider, req *http.Request) (url *url.URL, err error) {
 	coords := getWorkspaceCoords(req)
 	workspaceInfo := infoProvider.WorkspaceInfo(coords.ID)
+	if workspaceInfo == nil {
+		return nil, fmt.Errorf("not found workspace %s", coords.ID)
+	}
 	return buildWorkspacePodURL(workspaceInfo.IPAddress, coords.Port)
 }
 
