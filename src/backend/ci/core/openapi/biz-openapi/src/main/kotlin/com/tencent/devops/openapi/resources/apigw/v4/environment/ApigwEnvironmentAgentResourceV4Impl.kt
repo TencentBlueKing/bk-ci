@@ -87,9 +87,15 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         nodeHashId: String?,
-        nodeName: String?
+        nodeName: String?,
+        agentHashId: String?
     ): Result<ThirdPartyAgentDetail?> {
-        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node detail|$projectId|$nodeHashId")
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node detail|$projectId|$nodeHashId|$agentHashId")
+        if (!agentHashId.isNullOrBlank()) {
+            return client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
+                userId = userId, projectId = projectId, agentHashId = agentHashId
+            )
+        }
         return client.get(ServiceThirdPartyAgentResource::class).getNodeDetail(
             userId = userId,
             projectId = projectId,
