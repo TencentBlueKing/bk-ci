@@ -63,7 +63,7 @@ object ProjectMessageCode {
     const val QUERY_USER_INFO_FAIL = "2119015" // 获取用户信息失败
     const val QUERY_ORG_FAIL = "2119016" // 获取公司组织架构信息失败
     const val QUERY_PAR_DEPARTMENT_FAIL = "2119017" // 获取父部门信息失败
-    const val LABLE_EXIST = "2119018" // lable已经存在，请换一个再试
+    const val LABLE_EXIST = "2119018" // label已经存在，请换一个再试
     const val PEM_CREATE_ID_INVALID = "2119019" // 权限中心创建的项目ID无效
     const val PEM_CHECK_FAIL = "2119020" // 没有该项目的操作权限
     const val PEM_QUERY_ERROR = "2119021" // 从权限中心获取用户的项目信息失败

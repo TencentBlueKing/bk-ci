@@ -120,7 +120,7 @@ object RepositoryMessageCode {
     const val OPERATION_ADD_WEBHOOK = "bkOperationAddWebhook" // 添加WEBHOOK
     const val OPERATION_UPDATE_WEBHOOK = "bkOperationUpdateWebhook" // 修改WEBHOOK
     const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook" // 查询WEBHOOK
-    const val OPERATION_ADD_COMMIT_CHECK = "bkperationAddCommitCheck" // 添加COMMIT CHECK
+    const val OPERATION_ADD_COMMIT_CHECK = "bkOperationAddCommitCheck" // 添加COMMIT CHECK
     const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment" // 添加MR COMMENT
     const val CREATE_BRANCH = "bkCreateBranch" // 创建分支
     const val DELETE_BRANCH = "bkDeleteBranch" // 删除分支
@@ -133,7 +133,7 @@ object RepositoryMessageCode {
     const val OPERATION_GET_CHANGE_FILE_LIST = "bkOperationGetChangeFileList" // 查询变更文件列表
     const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList" // 获取合并请求中的提交
     const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo" // 获取项目中成员信息
-    const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems" // 查看绑定的TAPD单
+    const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkItems" // 查看绑定的TAPD单
     const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
 
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

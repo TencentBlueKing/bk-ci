@@ -226,7 +226,9 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName),
+                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName).ifBlank {
+                                it.name
+                            },
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,

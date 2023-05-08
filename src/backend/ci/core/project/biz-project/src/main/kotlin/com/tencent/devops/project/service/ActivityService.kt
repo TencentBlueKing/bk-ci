@@ -51,7 +51,7 @@ class ActivityService @Autowired constructor(
     fun list(type: ActivityType): List<ActivityInfo> {
         return activityDao.list(dslContext, type, ActivityStatus.ACTIVITY).map {
             ActivityInfo(
-                name = I18nUtil.getCodeLanMessage(T_ACTIVITY_PREFIX + it.englishName),
+                name = I18nUtil.getCodeLanMessage(T_ACTIVITY_PREFIX + it.englishName).ifBlank { it.name },
                 link = it.link,
                 createTime = it.createTime.toLocalTime().toString()
             )
