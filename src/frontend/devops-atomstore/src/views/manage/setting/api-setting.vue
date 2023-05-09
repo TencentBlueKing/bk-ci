@@ -141,6 +141,7 @@
                                 textAlign: 'center'
                             }
                         }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
                         confirmFn: () => {
                             this.apiObj = {
                                 apiNameList: [],
