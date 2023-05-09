@@ -3,6 +3,7 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.remotedev.pojo.BKGPT
 import org.apache.http.client.methods.HttpPost
+import org.apache.http.entity.ContentType
 import org.apache.http.entity.StringEntity
 import org.apache.http.impl.client.HttpClients
 import org.glassfish.jersey.server.ChunkedOutput
@@ -50,8 +51,7 @@ class BKGPTService {
     fun streamCompletions(bkChat: BKGPT, out: ChunkedOutput<String>) {
         logger.info("start streamCompletions bkgpt $bkChat")
         val request = HttpPost(url)
-        request.entity = StringEntity(JsonUtil.toJson(bkChat, false))
-        request.addHeader("Content-Type", "application/json")
+        request.entity = StringEntity(JsonUtil.toJson(bkChat, false), ContentType.APPLICATION_JSON)
         HttpClients.createDefault().execute(request).entity.content.use { stream ->
             val scanner = Scanner(stream, "UTF-8")
             while (scanner.hasNextLine()) {
