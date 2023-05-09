@@ -45,6 +45,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -288,7 +289,8 @@ class RbacAuthConfiguration {
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
-        authMigrationDao: AuthMigrationDao
+        authMigrationDao: AuthMigrationDao,
+        deptService: DeptService
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
@@ -299,7 +301,8 @@ class RbacAuthConfiguration {
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
-        authMigrationDao = authMigrationDao
+        authMigrationDao = authMigrationDao,
+        deptService = deptService
     )
 
     @Bean
@@ -381,7 +384,8 @@ class RbacAuthConfiguration {
         permissionResourceService: PermissionResourceService,
         authResourceService: AuthResourceService,
         dslContext: DSLContext,
-        authMigrationDao: AuthMigrationDao
+        authMigrationDao: AuthMigrationDao,
+        deptService: DeptService
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
@@ -391,6 +395,7 @@ class RbacAuthConfiguration {
         permissionResourceService = permissionResourceService,
         authResourceService = authResourceService,
         dslContext = dslContext,
-        authMigrationDao = authMigrationDao
+        authMigrationDao = authMigrationDao,
+        deptService = deptService
     )
 }
