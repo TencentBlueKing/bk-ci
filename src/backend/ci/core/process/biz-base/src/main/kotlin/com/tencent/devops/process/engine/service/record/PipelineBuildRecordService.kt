@@ -294,7 +294,7 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         val queueTime = buildRecordModel?.queueTime?.timestampmilli() ?: buildInfo.queueTime
         val startTime = buildRecordModel?.startTime?.timestampmilli()
-        val endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime
+        val endTime = buildRecordModel?.endTime?.timestampmilli()
         val queueTimeCost = startTime?.let { it - queueTime } ?: endTime?.let { it - queueTime }
 
         return ModelRecord(
@@ -305,7 +305,7 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerUser = buildInfo.triggerUser,
             trigger = triggerInfo,
             queueTime = queueTime,
-            startTime = startTime ?: buildInfo.startTime,
+            startTime = startTime,
             queueTimeCost = queueTimeCost,
             endTime = endTime,
             status = buildRecordModel?.status ?: buildInfo.status.name,
@@ -317,7 +317,7 @@ class PipelineBuildRecordService @Autowired constructor(
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
-            executeTime = buildInfo.executeTime,
+            executeTime = buildInfo.executeTime, // 只为兼容接口，该字段不准确
             errorInfoList = buildRecordModel?.errorInfoList,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
