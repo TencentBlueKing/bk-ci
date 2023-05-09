@@ -130,14 +130,14 @@ class EventCacheService @Autowired constructor(
         projectId: String,
         repositoryId: String,
         repositoryType: RepositoryType?,
-    ): P4ServerInfo {
+    ): P4ServerInfo? {
         val eventCache = EventCacheUtil.getOrInitRepoCache(projectId = projectId, repo = repo)
         return eventCache?.serverInfo ?: run {
             client.get(ServiceP4Resource::class).getServerInfo(
                 projectId = projectId,
                 repositoryId = repositoryId,
                 repositoryType = repositoryType
-            ).data!!
+            ).data
         }
     }
 }
