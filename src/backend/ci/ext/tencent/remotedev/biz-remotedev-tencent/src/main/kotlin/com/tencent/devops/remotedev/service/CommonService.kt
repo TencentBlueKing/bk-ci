@@ -9,6 +9,7 @@ import java.net.URLEncoder
 class CommonService @Autowired constructor(
     private val commonConfig: CommonConfig
 ) {
+    // IDC调用devcloud接口，走一层proxy代理。
     fun getProxyUrl(realUrl: String): String {
         return "${commonConfig.devopsIdcProxyGateway}/proxy-devnet?" +
             "url=${URLEncoder.encode(realUrl, "UTF-8")}"

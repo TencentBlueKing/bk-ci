@@ -25,31 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.resources.external
+package com.tencent.devops.remotedev.config
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.remotedev.api.external.ExternalResource
-import com.tencent.devops.remotedev.service.WorkspaceService
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
-import javax.ws.rs.core.StreamingOutput
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@RestResource
-class ExternalResourceImpl @Autowired constructor(
-    private val workspaceService: WorkspaceService
-) : ExternalResource {
+@Component
+class RemoteDevCommonConfig {
 
-    override fun getDevfile(): Response {
-        val result = workspaceService.getDevfile()
-        return Response.ok(
-            StreamingOutput { output ->
-                output.write(result.toByteArray())
-                output.flush()
-            },
-            MediaType.APPLICATION_OCTET_STREAM_TYPE
-        )
-            .header("content-disposition", "attachment; filename = devfile")
-            .build()
-    }
+    // 用户工作空间镜像registry地址
+    @Value("\${workspace.image.registryHost:#{null}}")
+    val workspaceImageRegistryHost: String? = null
 }
