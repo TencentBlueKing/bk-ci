@@ -142,6 +142,7 @@ export default {
   },
   emits: ['update:show'],
   data() {
+    const self = this
     return {
       isLoading: false,
       pagination: {
@@ -156,10 +157,10 @@ export default {
       },
       currentActive: 2592000,
       timeFilters: {
-        2592000: t('1个月'),
-        7776000: t('3个月'),
-        15552000: t('6个月'),
-        31104000: t('12个月'),
+        2592000: self.t('1个月'),
+        7776000: self.t('3个月'),
+        15552000: self.t('6个月'),
+        31104000: self.t('12个月'),
       },
       rules: {
         expireTime: [
@@ -170,14 +171,14 @@ export default {
               }
               return this.currentActive !== 'custom';
             },
-            message: t('请选择申请期限'),
+            message: self.t('请选择申请期限'),
             trigger: 'blur',
           },
         ],
         reason: [
           {
             required: true,
-            message: t('请填写申请理由'),
+            message: self.t('请填写申请理由'),
             trigger: 'blur',
           },
         ],
@@ -277,7 +278,7 @@ export default {
           .then(() => {
             this.$bkMessage({
               theme: 'success',
-              message: t('申请成功，请等待审批'),
+              message: this.t('申请成功，请等待审批'),
             });
           })
           .catch((err) => {
@@ -303,7 +304,7 @@ export default {
         .then(() => {
           this.$bkMessage({
             theme: 'success',
-            message: t('申请成功，请等待审批'),
+            message: this.t('申请成功，请等待审批'),
           });
         })
         .catch((err) => {

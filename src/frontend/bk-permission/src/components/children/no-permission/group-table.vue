@@ -4,18 +4,18 @@
       v-bkloading="{ isLoading }"
       :data="memberList"
     >
-      <bk-table-column :label="$t('用户组')" prop="groupName"></bk-table-column>
-      <bk-table-column :label="$t('添加时间')" prop="createdTime">
+      <bk-table-column :label="t('用户组')" prop="groupName"></bk-table-column>
+      <bk-table-column :label="t('添加时间')" prop="createdTime">
         <template #default="{ row }">
           <span>{{ row.createdTime ? row.createdTime : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('有效期')" prop="expiredDisplay">
+      <bk-table-column :label="t('有效期')" prop="expiredDisplay">
         <template #default="{ row }">
           <span>{{ row.expiredDisplay ? row.expiredDisplay + t('天') : '--' }} </span>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('状态')" prop="status">
+      <bk-table-column :label="t('状态')" prop="status">
         <template #default="{ row }">
           <div class="status-content">
             <img :src="statusIcon(row.status)" class="status-icon">
@@ -23,7 +23,7 @@
           </div>
         </template>
       </bk-table-column>
-      <bk-table-column :label="$t('操作')">
+      <bk-table-column :label="t('操作')">
         <template #default="{ row }">
           <bk-button
             class="btn"
@@ -85,7 +85,7 @@
     </side-slider>
     <permission-dialog
       :is-show="logout.isShow"
-      :title="$t('确认退出用户组')"
+      :title="t('确认退出用户组')"
       :loading="logout.loading"
       @confirm="handleLogout"
       @cancel="handleCancelLogout"
@@ -213,9 +213,9 @@ export default {
 
     statusFormatter(status) {
       const map = {
-        NOT_JOINED: t('未加入'),
-        NORMAL: t('正常'),
-        EXPIRED: t('已过期'),
+        NOT_JOINED: this.t('未加入'),
+        NORMAL: this.t('正常'),
+        EXPIRED: this.t('已过期'),
       };
       return map[status];
     },
@@ -234,7 +234,7 @@ export default {
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
       this.apply.expiredDisplay = row.expiredDisplay;
-      this.apply.title = t('续期');
+      this.apply.title = this.t('续期');
       this.apply.type = 'renewal';
     },
 
@@ -242,7 +242,7 @@ export default {
       this.apply.isShow = true;
       this.apply.groupName = row.groupName;
       this.apply.groupId = row.groupId;
-      this.apply.title = t('申请加入');
+      this.apply.title = this.t('申请加入');
       this.apply.type = 'apply';
     },
 

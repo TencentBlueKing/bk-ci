@@ -60,8 +60,8 @@ export default {
   computed: {
     title() {
       const titleMap = {
-        pipeline: this.$t('尚未开启此流水线权限管理功能'),
-        pipeline_group: this.$t('尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限'),
+        pipeline: this.t('尚未开启此流水线权限管理功能'),
+        pipeline_group: this.t('尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限'),
       };
       return titleMap[this.resourceType];
     },
