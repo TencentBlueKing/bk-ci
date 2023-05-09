@@ -168,7 +168,7 @@ func (r *RemoteDevClient) SendHeartbeat(ctx context.Context, workspaceId string)
 	if err != nil {
 		return err
 	}
-	r.setRemotedevHeader(request, workspaceId, timestamp)
+	r.setRemotedevHeader(request, workspaceId, workspaceId+timestamp)
 
 	resp, err := r.client.Do(request)
 	if err != nil {
@@ -265,7 +265,7 @@ func (r *RemoteDevClient) ReportGitCloneDone(ctx context.Context, workspaceId st
 	if err != nil {
 		return err
 	}
-	r.setRemotedevHeader(request, workspaceId, timestamp)
+	r.setRemotedevHeader(request, workspaceId, workspaceId+timestamp)
 
 	resp, err := r.client.Do(request)
 	if err != nil {
