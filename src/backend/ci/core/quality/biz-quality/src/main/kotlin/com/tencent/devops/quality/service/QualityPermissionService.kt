@@ -64,6 +64,12 @@ interface QualityPermissionService {
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
 
+    fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long>
+
     fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean
 
     fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String)
@@ -87,4 +93,10 @@ interface QualityPermissionService {
         projectId: String,
         bkAuthPermissionSet: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
+
+    fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long>
 }
