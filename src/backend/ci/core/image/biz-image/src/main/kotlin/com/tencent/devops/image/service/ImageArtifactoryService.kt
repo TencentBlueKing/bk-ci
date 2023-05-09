@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
@@ -55,8 +57,13 @@ import org.springframework.stereotype.Service
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dockerConfig: DockerConfig,
+    private val commonConfig: CommonConfig,
     private val bkRepoClientConfig: BkRepoClientConfig
     ) {
+
+    private fun getGatewayUrl(): String {
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
+    }
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
@@ -373,7 +380,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "${bkRepoClientConfig.bkRepoApiUrl}/repository/api/package/page/template/docke-test"
+        val url = "${getGatewayUrl()}/repository/api/package/page/template/docke-test"
 
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
