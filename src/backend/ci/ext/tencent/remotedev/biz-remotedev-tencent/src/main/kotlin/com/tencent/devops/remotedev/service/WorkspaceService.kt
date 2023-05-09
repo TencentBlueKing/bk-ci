@@ -511,7 +511,7 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspaceName
                 )
 
-                val lastSleepTimeCost = if (lastHistory != null) {
+                val lastSleepTimeCost = if (lastHistory?.endTime != null) {
                     Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt().also {
                         workspaceDao.updateWorkspaceSleepingTime(
                             workspaceName = workspaceName,
@@ -891,7 +891,7 @@ class WorkspaceService @Autowired constructor(
                 var status = WorkspaceStatus.values()[it.status]
                 run {
                     if (status.notOk2doNextAction() && Duration.between(
-                            it.lastStatusUpdateTime,
+                            it.lastStatusUpdateTime ?: LocalDateTime.now(),
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
                     ) {
@@ -983,7 +983,7 @@ class WorkspaceService @Autowired constructor(
         val sleepingTime = workspaces.sumOf {
             it.sleepingTime + if (WorkspaceStatus.values()[it.status].checkSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
-                Duration.between(latestSleepHistory[it.name]?.endTime, now).seconds
+                Duration.between(latestSleepHistory[it.name]?.endTime ?: now, now).seconds
             } else 0
         }
 
@@ -1043,12 +1043,12 @@ class WorkspaceService @Autowired constructor(
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
-            Duration.between(lastHistory.startTime, now).seconds
+            Duration.between(lastHistory.startTime ?: now, now).seconds
         } else 0
 
         val sleepingTime = workspace.sleepingTime + if (workspaceStatus.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
-            Duration.between(lastHistory.endTime, now).seconds
+            Duration.between(lastHistory.endTime ?: now, now).seconds
         } else 0
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
@@ -1363,7 +1363,6 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.DELETED,
                     dslContext = transactionContext
                 )
-                updateLastHistory(transactionContext, workspaceName, operator)
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
@@ -1395,7 +1394,11 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
-        remoteDevBillingDao.endBilling(dslContext, workspaceName)
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            updateLastHistory(transactionContext, workspaceName, operator)
+            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+        }
         dispatchWebsocketPushEvent(
             userId = operator,
             workspaceName = workspaceName,
@@ -1428,7 +1431,6 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.SLEEP,
                     dslContext = transactionContext
                 )
-                updateLastHistory(transactionContext, workspaceName, operator)
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
@@ -1461,7 +1463,11 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
-        remoteDevBillingDao.endBilling(dslContext, workspaceName)
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            updateLastHistory(transactionContext, workspaceName, operator)
+            remoteDevBillingDao.endBilling(transactionContext, workspaceName)
+        }
 
         dispatchWebsocketPushEvent(
             userId = operator,
@@ -1483,7 +1489,7 @@ class WorkspaceService @Autowired constructor(
             dslContext = transactionContext,
             workspaceName = workspaceName
         )
-        if (lastHistory != null) {
+        if (lastHistory?.startTime != null) {
             workspaceDao.updateWorkspaceUsageTime(
                 workspaceName = workspaceName,
                 usageTime = Duration.between(
@@ -1535,7 +1541,7 @@ class WorkspaceService @Autowired constructor(
     private fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
         return (
             WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
-                workspace.lastStatusUpdateTime,
+                workspace.lastStatusUpdateTime ?: LocalDateTime.now(),
                 LocalDateTime.now()
             ).seconds < DEFAULT_WAIT_TIME
             ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
