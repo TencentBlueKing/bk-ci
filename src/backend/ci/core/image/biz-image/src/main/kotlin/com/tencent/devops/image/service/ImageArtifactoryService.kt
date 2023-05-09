@@ -404,7 +404,7 @@ class ImageArtifactoryService @Autowired constructor(
 
                 val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
-                return parseImages(responseBody!!)
+                return parseImages(responseBody)
             } catch (e: Exception) {
                 logger.error("aql search failed", e)
                 throw RuntimeException("aql search failed")
@@ -412,8 +412,8 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    private fun parseImages(dataStr: String): List<DockerTag> {
-        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr)
+    private fun parseImages(dataStr: String?): List<DockerTag> {
+        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
         val results = responseData["results"] as List<Map<String, Any>>
         val images = mutableListOf<DockerTag>()
         for (it in results) {
