@@ -114,7 +114,19 @@ class WorkspaceDevCloudClient @Autowired constructor(
         environmentAction: EnvironmentAction
     ): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/${environmentAction.getValue()}"
-        logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
+        val patchStr = Base64Utils.encodeToString(
+            (JsonUtil.toJson(
+                listOf(
+                    EnvironmentOpPatch(
+                        op = PatchOp.ADD.value,
+                        path = "/spec/containers/0/env/0/value",
+                        value = "false"
+                    )
+                )
+            ).toByteArray()
+                )
+        )
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, patchStr: $patchStr")
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
@@ -130,11 +142,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     "application/json; charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(UidReq(
                         uid = environmentUid,
-                        patch = Base64Utils.encodeToString((listOf(EnvironmentOpPatch(
-                            op = PatchOp.ADD.value,
-                            path = "/spec/containers/0/env/0/value",
-                            value = "false"
-                        )).toString()).toByteArray())
+                        patch = patchStr
                     ))
                 )
             )
