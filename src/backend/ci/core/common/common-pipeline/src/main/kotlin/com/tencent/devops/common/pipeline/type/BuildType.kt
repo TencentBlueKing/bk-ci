@@ -54,7 +54,7 @@ enum class BuildType(
 
     fun getI18n(language: String): String {
         return MessageUtil.getMessageByLocale(
-            messageCode = "MSG_CODE_BUILD_TYPE_PREFIX_${this.name}",
+            messageCode = "buildType.${this.name}",
             language = language
         )
     }
