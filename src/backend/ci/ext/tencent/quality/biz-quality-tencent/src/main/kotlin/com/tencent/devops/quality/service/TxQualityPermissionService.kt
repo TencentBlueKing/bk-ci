@@ -214,6 +214,12 @@ class TxQualityPermissionService @Autowired constructor(
         return map
     }
 
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
+
     override fun validateRulePermission(
         userId: String,
         projectId: String,
@@ -387,4 +393,10 @@ class TxQualityPermissionService @Autowired constructor(
         }
         return permissionRuleMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 }
