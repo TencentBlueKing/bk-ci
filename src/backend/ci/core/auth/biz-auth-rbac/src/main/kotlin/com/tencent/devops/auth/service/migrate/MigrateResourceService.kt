@@ -40,6 +40,7 @@ import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
@@ -69,11 +70,15 @@ class MigrateResourceService @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) {
 
     @Suppress("SpreadOperator")
-    fun migrateResource(projectCode: String) {
+    fun migrateResource(
+        projectCode: String,
+        projectCreator: String
+    ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
         try {
@@ -88,7 +93,11 @@ class MigrateResourceService @Autowired constructor(
                 CompletableFuture.supplyAsync(
                     {
                         MDC.put(TraceTag.BIZID, traceId)
-                        migrateResource(projectCode = projectCode, resourceType = resourceType)
+                        migrateResource(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            projectCreator = projectCreator
+                        )
                     },
                     executorService
                 )
@@ -109,12 +118,18 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun migrateResource(projectCode: String, resourceType: String) {
+    private fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        projectCreator: String
+    ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource|$projectCode|$resourceType")
         try {
             createRbacResource(
-                resourceType = resourceType, projectCode = projectCode
+                resourceType = resourceType,
+                projectCode = projectCode,
+                projectCreator = projectCreator
             )
         } finally {
             logger.info(
@@ -123,7 +138,11 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun createRbacResource(resourceType: String, projectCode: String) {
+    private fun createRbacResource(
+        resourceType: String,
+        projectCode: String,
+        projectCreator: String
+    ) {
         var offset = 0L
         val limit = 100L
         do {
@@ -157,8 +176,13 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
+                    val isResourceCreatorNotExist = deptService.getUserInfo(
+                        userId = "greysonfang",
+                        name = it.iamApprover[0]
+                    ) == null
+                    val iamApprover = if (isResourceCreatorNotExist) projectCreator else it.iamApprover[0]
                     rbacPermissionResourceService.resourceCreateRelation(
-                        userId = it.iamApprover[0],
+                        userId = iamApprover,
                         projectCode = projectCode,
                         resourceType = resourceType,
                         resourceCode = resourceCode,

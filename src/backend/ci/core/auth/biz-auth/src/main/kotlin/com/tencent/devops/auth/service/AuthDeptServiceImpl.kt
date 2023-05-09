@@ -119,7 +119,8 @@ class AuthDeptServiceImpl @Autowired constructor(
         name: String,
         accessToken: String?,
         userId: String,
-        type: ManagerScopesEnum
+        type: ManagerScopesEnum,
+        exactLookups: Boolean?
     ): List<UserAndDeptInfoVo?> {
         val deptSearch = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
@@ -127,8 +128,6 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = null,
             lookupField = NAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
@@ -137,10 +136,17 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = USERNAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
+        // 模糊搜索或者精准搜索方式
+        if (exactLookups == null || exactLookups == false) {
+            deptSearch.fuzzyLookups = name
+            userSearch.fuzzyLookups = name
+        } else {
+            deptSearch.exactLookups = name
+            userSearch.exactLookups = name
+        }
+
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
         when (type) {
             ManagerScopesEnum.USER -> {
@@ -241,6 +247,17 @@ class AuthDeptServiceImpl @Autowired constructor(
         val userDeptIds = getUserDeptTreeIds(deptFamilyInfo)
         userDeptCache.put(userId, userDeptIds)
         return userDeptIds
+    }
+
+    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
+        val userInfo = getUserAndDeptByName(
+            name = name,
+            accessToken = null,
+            userId = userId,
+            type = ManagerScopesEnum.USER,
+            exactLookups = true
+        )
+        return if (userId.isNotEmpty()) userInfo[0] else null
     }
 
     private fun getUserDeptFamily(userId: String): String {

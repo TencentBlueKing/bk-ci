@@ -32,6 +32,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -59,7 +60,8 @@ class RbacPermissionMigrateService constructor(
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) : PermissionMigrateService {
 
     companion object {
@@ -129,6 +131,15 @@ class RbacPermissionMigrateService constructor(
                 logger.warn("project $projectCode not exist")
                 return false
             }
+            // 判断项目的创建人是否离职，若离职，则直接结束。并发出通知
+            val isProjectCreatorNotExist = deptService.getUserInfo(
+                userId = "greysonfang",
+                name = projectInfo.creator!!
+            ) == null
+            if (isProjectCreatorNotExist) {
+                logger.error("project creator is not exist!|creator=${projectInfo.creator}")
+                return false
+            }
 
             authMigrationDao.create(
                 dslContext = dslContext,
@@ -153,7 +164,8 @@ class RbacPermissionMigrateService constructor(
             // 迁移资源
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
-                projectCode = projectCode
+                projectCode = projectCode,
+                projectCreator = projectInfo.creator!!
             )
 
             when (authType) {
