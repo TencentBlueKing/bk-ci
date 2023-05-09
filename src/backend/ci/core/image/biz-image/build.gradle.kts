@@ -43,4 +43,5 @@ dependencies {
     api("org.glassfish.jersey.core:jersey-server")
     api("org.glassfish.jersey.core:jersey-common")
     api("org.glassfish.jersey.containers:jersey-container-servlet")
+    implementation(project(mapOf("path" to ":core:common:common-archive")))
 }

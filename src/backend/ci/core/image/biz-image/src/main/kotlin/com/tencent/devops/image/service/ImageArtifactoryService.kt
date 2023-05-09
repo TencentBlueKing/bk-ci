@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
@@ -53,8 +54,9 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val dockerConfig: DockerConfig
-) {
+    private val dockerConfig: DockerConfig,
+    private val bkRepoClientConfig: BkRepoClientConfig
+    ) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
@@ -371,7 +373,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "${dockerConfig.registryUrl}/api/search/aql"
+        val url = "${bkRepoClientConfig.bkRepoApiUrl}/repository/api/package/page/template/docke-test"
 
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
