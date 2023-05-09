@@ -2,7 +2,7 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <bk-button theme="primary" @click="relateService"> {{ $t('store.新增微扩展') }} </bk-button>
+                <bk-button theme="primary" @click="relateService"> {{ $t('store.新增微扩展123') }} </bk-button>
             </div>
             <bk-input :placeholder="$t('store.请输入关键字搜索')"
                 class="search-input"
@@ -13,7 +13,6 @@
         </div>
         <main class="g-scroll-pagination-table">
             <bk-table style="margin-top: 15px;"
-                :empty-text="$t('store.暂时没有微扩展')"
                 :outer-border="false"
                 :header-border="false"
                 :header-cell-style="{ background: '#fff' }"
@@ -24,14 +23,14 @@
                 :show-overflow-tooltip="true"
                 v-bkloading="{ isLoading }"
             >
-                <bk-table-column :label="$t('store.微扩展名称')" width="180">
+                <bk-table-column :label="$t('store.微扩展名称')" width="180" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span class="atom-name" :title="props.row.serviceName" @click="goToServiceDetail(props.row.serviceCode)">{{ props.row.serviceName }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.微扩展标识')" prop="serviceCode"></bk-table-column>
-                <bk-table-column :label="$t('store.调试项目')" prop="projectName"></bk-table-column>
-                <bk-table-column :label="$t('store.扩展点')">
+                <bk-table-column :label="$t('store.微扩展标识')" prop="serviceCode" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.调试项目')" prop="projectName" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.扩展点')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span v-if="props.row.itemName.length <= 0">{{props.row.itemName.length}}</span>
                         <bk-popconfirm v-else trigger="click" ext-cls="custom-popconfirm" title="" confirm-text="" cancel-text="">
@@ -42,15 +41,15 @@
                         </bk-popconfirm>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.版本')" prop="version"></bk-table-column>
-                <bk-table-column :label="$t('store.状态')">
+                <bk-table-column :label="$t('store.版本')" prop="version" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.状态')" show-overflow-tooltip>
                     <template slot-scope="props">
                         <status :status="calcStatus(props.row.serviceStatus)"></status>
                         <span>{{ $t(serviceStatusList[props.row.serviceStatus]) }}</span>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('store.修改人')" prop="modifier"></bk-table-column>
-                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="160"></bk-table-column>
+                <bk-table-column :label="$t('store.修改人')" prop="modifier" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('store.修改时间')" prop="updateTime" width="160" show-overflow-tooltip></bk-table-column>
                 <bk-table-column :label="$t('store.操作')" width="250" class-name="handler-btn">
                     <template slot-scope="props">
                         <span class="shelf-btn"
@@ -76,14 +75,17 @@
                         > {{ $t('store.删除') }} </span>
                     </template>
                 </bk-table-column>
+                <template #empty>
+                    <EmptyTableStatus :type="searchName ? 'search-empty' : 'empty'" @clear="searchName = ''" />
+                </template>
             </bk-table>
         </main>
 
         <bk-sideslider :is-show.sync="relateServiceData.show"
-            @hidden="cancelRelateService"
             :title="relateServiceData.title"
             :quick-close="relateServiceData.quickClose"
-            :width="relateServiceData.width">
+            :width="relateServiceData.width"
+            :before-close="cancelRelateService">
             <template slot="content">
                 <bk-form ref="relateForm"
                     class="relate-form"
@@ -99,7 +101,7 @@
                         :rules="[requireRule, numMax, nameRule]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateServiceData.form.serviceName" :placeholder="$t('store.请输入微扩展名称，不超过20个字符')"></bk-input>
+                        <bk-input v-model="relateServiceData.form.serviceName" :placeholder="$t('store.请输入微扩展名称，不超过20个字符')" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.微扩展标识')"
                         :required="true"
@@ -108,7 +110,7 @@
                         :rules="[requireRule, alpRule, numMax]"
                         error-display-type="normal"
                     >
-                        <bk-input v-model="relateServiceData.form.serviceCode" :placeholder="$t('store.请输入微扩展标识，不超过20个字符')"></bk-input>
+                        <bk-input v-model="relateServiceData.form.serviceCode" :placeholder="$t('store.请输入微扩展标识，不超过20个字符')" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.扩展点')"
                         :required="true"
@@ -121,6 +123,7 @@
                             :scroll-height="300"
                             :clearable="true"
                             @toggle="getServiceList"
+                            @change="handleChangeForm"
                             :loading="isServiceListLoading"
                             searchable
                             multiple
@@ -154,6 +157,7 @@
                             searchable
                             :placeholder="$t('store.请选择项目')"
                             :enable-virtual-scroll="projectList && projectList.length > 3000"
+                            @change="handleChangeForm"
                             :list="projectList"
                             id-key="projectCode"
                             display-key="projectName"
@@ -175,7 +179,7 @@
                         :rules="[requireRule]"
                         error-display-type="normal"
                     >
-                        <bk-select v-model="relateServiceData.form.language" searchable @toggle="getServiceLanguage" :loading="isItemLoading">
+                        <bk-select v-model="relateServiceData.form.language" searchable @toggle="getServiceLanguage" :loading="isItemLoading" @change="handleChangeForm">
                             <bk-option v-for="option in languageList"
                                 :key="option"
                                 :id="option"
@@ -322,6 +326,7 @@
 
         watch: {
             searchName () {
+                this.isLoading = true
                 debounce(this.search)
             }
         },
@@ -475,7 +480,16 @@
                     if (val) {
                         this.relateServiceData.isLoading = true
                         this.$store.dispatch('store/requestAddService', this.relateServiceData.form).then(() => {
-                            this.cancelRelateService()
+                            this.relateServiceData.form = {
+                                serviceCode: '',
+                                projectCode: '',
+                                serviceName: '',
+                                extensionItemList: [],
+                                language: ''
+                            }
+                            setTimeout(() => {
+                                this.relateServiceData.show = false
+                            })
                             this.requestList()
                         }).catch((err) => {
                             this.$bkMessage({ message: err.message || err, theme: 'error' })
@@ -487,14 +501,44 @@
             },
 
             cancelRelateService () {
-                this.relateServiceData.show = false
-                this.relateServiceData.form = {
-                    serviceCode: '',
-                    projectCode: '',
-                    serviceName: '',
-                    extensionItemList: [],
-                    language: ''
+                if (window.changeFlag) {
+                    this.$bkInfo({
+                        title: this.$t('确认离开当前页？'),
+                        subHeader: this.$createElement('p', {
+                            style: {
+                                color: '#63656e',
+                                fontSize: '14px',
+                                textAlign: 'center'
+                            }
+                        }, this.$t('离开将会导致未保存信息丢失')),
+                        confirmFn: () => {
+                            this.relateServiceData.form = {
+                                serviceCode: '',
+                                projectCode: '',
+                                serviceName: '',
+                                extensionItemList: [],
+                                language: ''
+                            }
+                            setTimeout(() => {
+                                this.relateServiceData.show = false
+                            })
+                            return true
+                        }
+                    })
+                } else {
+                    this.relateServiceData.show = false
+                    this.relateServiceData.form = {
+                        serviceCode: '',
+                        projectCode: '',
+                        serviceName: '',
+                        extensionItemList: [],
+                        language: ''
+                    }
                 }
+            },
+
+            handleChangeForm () {
+                window.changeFlag = true
             },
 
             getProjectList () {
@@ -532,6 +576,7 @@
             },
 
             relateService () {
+                window.changeFlag = false
                 this.relateServiceData.show = true
                 this.relateServiceData.isLoading = true
                 Promise.all([this.getProjectList()]).catch((err) => {
