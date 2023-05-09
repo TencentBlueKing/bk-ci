@@ -312,6 +312,8 @@ object ProcessMessageCode {
     const val ERROR_UPDATE_FAILED = "2101210" // 更新失败: {0}
     const val ERROR_PERMISSION_NOT_PROJECT_MANAGER = "2101211" // {0}非项目{1}管理员
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101212" // 非项目成员
+    const val BUILD_QUEUE_FOR_CONCURRENCY = "2101213" // 排队中: 当前构建正在并发组({0})排队中
+    const val BUILD_QUEUE_FOR_SINGLE = "2101214" // 排队中: 当前构建正在排队中
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
