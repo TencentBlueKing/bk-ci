@@ -78,7 +78,7 @@
                 </bk-select>
                 <bk-select
                     v-for="filter in filterList"
-                    :key="filter.id"
+                    :key="filter.key"
                     :placeholder="filter.placeholder"
                     class="filter-item"
                     multiple
@@ -350,6 +350,7 @@
                 filterList: [
                     {
                         id: 'status',
+                        key: new Date().getSeconds(),
                         placeholder: this.$t('status'),
                         data: [
                             { name: this.$t('pipeline.succeed'), val: ['SUCCEED'], id: 'succeed' },
@@ -474,7 +475,6 @@
             },
 
             handleStatusChange (val, id) {
-                window.changeFlag = true
                 const filter = this.filterList.find(filter => filter.id === id)
                 const options = filter.data.filter(data => val.includes(data.id))
                 this.filterData[id] = options.map(opstion => opstion.val).flat()
@@ -482,7 +482,6 @@
             },
 
             handleFilterChange () {
-                window.changeFlag = true
                 this.initBuildData()
                 const query = { page: 1 }
                 Object.keys(this.filterData).forEach(key => {
@@ -871,6 +870,7 @@
                     status: [],
                     pipelineIds: []
                 }
+                this.filterList[0].key = new Date().getSeconds()
                 this.handleFilterChange()
             },
 
