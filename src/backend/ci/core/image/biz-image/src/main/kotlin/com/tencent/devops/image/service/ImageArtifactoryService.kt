@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
@@ -391,7 +390,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url)
-            .post(RequestBody.create(null, aql))
+            .get()
             .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
@@ -656,5 +655,6 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun makeCredential(): String =
-        Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
+        //Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
+        Credentials.basic("v_lidingli", "44200b0d8b3f3a10a99cb5c3ee31cea0")
 }
