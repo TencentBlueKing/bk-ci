@@ -67,7 +67,8 @@ abstract class AbsQualityPermissionServiceImpl constructor(
             )
             throw PermissionForbiddenException(
                 message = message,
-                params = arrayOf(permissionMsg))
+                params = arrayOf(permissionMsg)
+            )
         }
     }
 
@@ -164,6 +165,12 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         }
         return permissionGroupMap
     }
+
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         if (authPermission == AuthPermission.LIST)
@@ -282,6 +289,12 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         }
         return permissionRuleMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 
     abstract fun supplierForPermissionGroup(projectId: String): () -> MutableList<String>
 

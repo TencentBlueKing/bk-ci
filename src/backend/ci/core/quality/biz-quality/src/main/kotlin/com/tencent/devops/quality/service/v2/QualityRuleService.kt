@@ -504,18 +504,26 @@ class QualityRuleService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<QualityRuleSummaryWithPermission>> {
-        // RBAC得先校验是否有质量红线列表权限，如果没有，直接返回空
-        val isListPermission = qualityPermissionService.validateRulePermission(
+        val allRulesIds = qualityRuleDao.listIds(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.value1() }
+        val hasListPermissionRuleIds = qualityPermissionService.filterListPermissionRules(
             userId = userId,
             projectId = projectId,
-            authPermission = AuthPermission.LIST
+            allRulesIds = allRulesIds
         )
-        if (!isListPermission)
+        if (hasListPermissionRuleIds.isEmpty())
             return Pair(0, listOf())
-
-        val count = qualityRuleDao.count(dslContext, projectId)
-        val finalLimit = if (limit == -1) count.toInt() else limit
-        val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)
+        val count = hasListPermissionRuleIds.size
+        val finalLimit = if (limit == -1) count else limit
+        val ruleRecordList = qualityRuleDao.listByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            rulesId = hasListPermissionRuleIds,
+            offset = offset,
+            limit = finalLimit
+        )
         val permissionMap = qualityPermissionService.filterRules(
             userId = userId,
             projectId = projectId,
@@ -526,9 +534,9 @@ class QualityRuleService @Autowired constructor(
         qualityControlPointService.serviceList(projectId).forEach { controlPointMap[it.type] = it }
 
         // 获取rule的详细数据
-        val ruleIds = ruleRecordList?.map { it.id } ?: listOf()
-        logger.info("serviceList rule ids for project($projectId): $ruleIds")
-        val ruleDetailMap = ruleMapDao.batchGet(dslContext, ruleIds)?.map { it.ruleId to it }?.toMap() ?: mapOf()
+        logger.info("serviceList rule ids for project($projectId): $hasListPermissionRuleIds")
+        val ruleDetailMap = ruleMapDao.batchGet(dslContext, hasListPermissionRuleIds)?.map { it.ruleId to it }?.toMap()
+            ?: mapOf()
 
         // 批量获取流水线信息
         val pipelineIds = mutableSetOf<String>()
@@ -626,7 +634,7 @@ class QualityRuleService @Autowired constructor(
                 gatewayId = rule.gatewayId
             )
         } ?: listOf()
-        return Pair(count, list)
+        return Pair(count.toLong(), list)
     }
 
     private fun getRulePermission(
@@ -682,9 +690,9 @@ class QualityRuleService @Autowired constructor(
                 lackElements.add(controlPoint.type)
             }
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
-                name = info.pipelineName,
-                type = "PIPELINE",
-                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+                                                              name = info.pipelineName,
+                                                              type = "PIPELINE",
+                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
             )
         }
     }
@@ -713,9 +721,9 @@ class QualityRuleService @Autowired constructor(
                 lackElements.add(controlPoint.type)
             }
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
-                name = template.name,
-                type = "TEMPLATE",
-                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+                                                              name = template.name,
+                                                              type = "TEMPLATE",
+                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
             )
         }
     }
