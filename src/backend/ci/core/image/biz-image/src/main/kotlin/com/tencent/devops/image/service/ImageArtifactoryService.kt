@@ -380,7 +380,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "${getGatewayUrl()}/repository/api/package/page/template/docke-test"
+        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test"
 
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
