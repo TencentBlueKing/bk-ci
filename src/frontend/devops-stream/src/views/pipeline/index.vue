@@ -333,6 +333,7 @@
             },
 
             showAddYml () {
+                window.changeFlag = false
                 this.isShowAddYml = true
             },
 
