@@ -217,6 +217,7 @@ class ProjectPipelineCallbackDao {
             dslContext.update(this)
                 .set(ENABLE, true)
                 .where(conditions)
+                .execute()
         }
     }
 }
