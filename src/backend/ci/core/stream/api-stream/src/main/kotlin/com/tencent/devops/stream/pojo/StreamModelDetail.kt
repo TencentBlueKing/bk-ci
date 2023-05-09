@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.pojo
 
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -38,7 +38,7 @@ data class StreamModelDetail(
     @ApiModelProperty("stream Event事件", required = true)
     val gitRequestEvent: StreamGitRequestEventReq,
     @ApiModelProperty("构建详情-构建信息", required = true)
-    val modelDetail: ModelDetail,
+    val modelDetail: ModelRecord,
     @ApiModelProperty("构建历史-备注信息")
     val buildHistoryRemark: String? = null
 ) {

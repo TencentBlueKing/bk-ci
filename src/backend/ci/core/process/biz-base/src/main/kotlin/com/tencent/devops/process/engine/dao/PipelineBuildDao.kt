@@ -507,6 +507,9 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
+                stageStatus = kotlin.runCatching {
+                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                }.getOrNull(),
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },

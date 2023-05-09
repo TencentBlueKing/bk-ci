@@ -50,41 +50,17 @@ class LogStatusDao {
         finish: Boolean
     ) {
         with(TLogStatus.T_LOG_STATUS) {
-            val origin = dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(SUB_TAG.eq(subTags ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()
-            if (origin == null) {
-                dslContext.insertInto(
-                    this,
-                    BUILD_ID,
-                    TAG,
-                    SUB_TAG,
-                    JOB_ID,
-                    EXECUTE_COUNT,
-                    FINISHED,
-                    MODE
-                ).values(
-                    buildId,
-                    tag ?: "",
-                    subTags ?: "",
-                    jobId,
-                    executeCount ?: 1,
-                    finish,
-                    logStorageMode.name
-                ).execute()
-            } else {
-                dslContext.update(this)
-                    .set(FINISHED, finish)
-                    .set(MODE, logStorageMode.name)
-                    .where(BUILD_ID.eq(buildId))
-                    .and(TAG.eq(tag ?: ""))
-                    .and(SUB_TAG.eq(subTags ?: ""))
-                    .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                    .execute()
-            }
+            dslContext.insertInto(this)
+                .set(BUILD_ID, buildId)
+                .set(TAG, tag)
+                .set(SUB_TAG, subTags)
+                .set(EXECUTE_COUNT, executeCount)
+                .set(JOB_ID, jobId)
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode.name)
+                .onDuplicateKeyUpdate()
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode.name)
         }
     }
 

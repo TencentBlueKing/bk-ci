@@ -32,10 +32,12 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.common.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
@@ -94,6 +96,7 @@ import org.springframework.stereotype.Service
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient,
     private val kubernetesJobClient: KubernetesJobClient,
@@ -236,7 +239,8 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
@@ -282,7 +286,8 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )

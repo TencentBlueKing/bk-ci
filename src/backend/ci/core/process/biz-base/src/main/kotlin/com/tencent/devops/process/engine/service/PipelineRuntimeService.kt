@@ -1763,7 +1763,7 @@ class PipelineRuntimeService @Autowired constructor(
         )?.buildId
     }
 
-    fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus) {
+    fun updateBuildInfoStatus2Queue(projectId: String, buildId: String, oldStatus: BuildStatus, showMsg: String) {
         pipelineBuildDao.updateBuildStageStatus(
             dslContext = dslContext,
             projectId = projectId,
@@ -1772,7 +1772,8 @@ class PipelineRuntimeService @Autowired constructor(
                 BuildStageStatus(
                     stageId = TRIGGER_STAGE,
                     name = TRIGGER_STAGE,
-                    status = I18nUtil.getCodeLanMessage(BUILD_QUEUE)
+                    status = I18nUtil.getCodeLanMessage(BUILD_QUEUE),
+                    showMsg = showMsg
                 )
             ),
             oldBuildStatus = oldStatus,
