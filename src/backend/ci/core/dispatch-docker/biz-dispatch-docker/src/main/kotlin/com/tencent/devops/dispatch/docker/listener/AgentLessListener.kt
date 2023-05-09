@@ -65,7 +65,7 @@ class AgentLessListener @Autowired constructor(
 
             pipelineAgentLessDispatchService.startUpBuildLess(event)
         } catch (discard: Throwable) {
-            logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
+            logger.warn("[${event.buildId}|${event.vmSeqId}] BuildLess startup failure.", discard)
 
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
