@@ -52,6 +52,7 @@ import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -118,7 +119,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevBillingDao: RemoteDevBillingDao,
     private val redisCache: RedisCacheService,
     private val bkTicketServie: BkTicketService,
-    private val profile: Profile
+    private val profile: Profile,
+    private val commonConfig: RemoteDevCommonConfig
 ) {
 
     companion object {
@@ -166,7 +168,7 @@ class WorkspaceService @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -225,6 +227,14 @@ class WorkspaceService @Autowired constructor(
             dslContext = dslContext,
             userInfo = userInfo
         )
+
+        // 替换部分devfile内容，兼容使用老remoting的情况
+        if (devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-base-remoting") != true &&
+            devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-full-remoting") != true
+        ) {
+            devfile.runsOn?.container?.image =
+                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+        }
 
         // 发送给k8s
         dispatcher.dispatch(
@@ -448,6 +458,7 @@ class WorkspaceService @Autowired constructor(
                         defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR.formatErrorMessage
                     )
                 }
+
                 else -> {
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
@@ -470,7 +481,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -674,7 +685,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -816,7 +827,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -939,17 +950,20 @@ class WorkspaceService @Autowired constructor(
                 doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
             }
+
             workspaceInfo.status == EnvStatusEnum.deleted -> {
                 doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
+
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
             }
+
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -999,7 +1013,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1063,7 +1077,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1349,7 +1363,7 @@ class WorkspaceService @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
             // 清缓存

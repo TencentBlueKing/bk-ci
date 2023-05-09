@@ -25,22 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.image
+package com.tencent.devops.remotedev.config
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Credential(
-    var user: String?,
-    var password: String?,
-    val credentialId: String? = null,
-    val fromRemote: Remote? = null
-) {
-    data class Remote(
-        val targetProjectId: String,
-        val templateId: String,
-        val jobId: String
-    )
+@Component
+class RemoteDevCommonConfig {
+
+    // 用户工作空间镜像registry地址
+    @Value("\${workspace.image.registryHost:#{null}}")
+    val workspaceImageRegistryHost: String? = null
 }

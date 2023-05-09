@@ -32,9 +32,11 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.remotedev.RemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
+import com.tencent.devops.remotedev.service.WorkspaceImageService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
@@ -49,7 +51,8 @@ import java.util.Base64
 class RemoteDevResourceImpl @Autowired constructor(
     private val gitTransfer: RemoteDevGitTransfer,
     private val redisHeartBeat: RedisHeartBeat,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val workspaceImageService: WorkspaceImageService
 ) : RemoteDevResource {
 
     @Value("\${remoteDev.callBackSignSecret:}")
@@ -111,6 +114,18 @@ class RemoteDevResourceImpl @Autowired constructor(
         }
 
         return Result(workspaceService.getWorkspaceProxyDetail(workspaceName))
+    }
+
+    override fun getWorkspaceImageSpec(
+        signature: String,
+        workspaceName: String,
+        timestamp: String
+    ): Result<ImageSpec?> {
+        if (!checkSignature(signature, workspaceName, timestamp)) {
+            return Result(status = 403, message = "Forbidden request")
+        }
+
+        return Result(workspaceImageService.fetchWsImageSpec(workspaceName))
     }
 
     private fun checkSignature(signature: String, key: String, timestamp: String): Boolean {
