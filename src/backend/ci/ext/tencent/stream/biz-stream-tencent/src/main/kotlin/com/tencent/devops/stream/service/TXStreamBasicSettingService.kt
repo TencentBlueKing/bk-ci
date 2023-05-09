@@ -28,10 +28,8 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TGitBasicSettingRecord
 import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
@@ -41,7 +39,6 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
-import com.tencent.devops.stream.constant.StreamMessageCode.BK_NEED_SUPPLEMEN
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamBasicSetting
@@ -324,12 +321,7 @@ class TXStreamBasicSettingService @Autowired constructor(
                 logger.warn("TXStreamBasicSettingService|requestGitProjectInfo|error=${e.message}")
                 return null
             }
-            else -> TODO(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_NEED_SUPPLEMEN,
-                    language = I18nUtil.getLanguage(userId)
-                )
-            )
+            else -> TODO("对接其他Git平台时需要补充")
         }
     }
 
