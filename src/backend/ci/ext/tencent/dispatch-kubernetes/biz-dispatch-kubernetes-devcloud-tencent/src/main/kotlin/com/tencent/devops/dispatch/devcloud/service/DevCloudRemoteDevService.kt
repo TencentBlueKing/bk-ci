@@ -255,6 +255,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         val envVarList = mutableListOf<EnvVar>()
         envVarList.addAll(
             listOf(
+                // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
