@@ -1,5 +1,5 @@
 <template>
-    <bk-sideslider :is-show="show" :before-close="beforeClose" :quick-close="true" @update="hidden" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
+    <bk-sideslider :is-show="show" :before-close="hidden" :quick-close="true" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
         <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" :label-width="400">
             <bk-form-item :label="$t('setting.ticket.credentialType')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
                 <bk-select v-model="formData.credentialType" :clearable="false" @change="changeCredentialType" :disabled="isEdit">
@@ -266,29 +266,6 @@
                 window.changeFlag = true
             },
 
-            beforeClose () {
-                if (window.changeFlag) {
-                    this.$bkInfo({
-                        title: this.$t('确认离开当前页？'),
-                        subHeader: this.$createElement('p', {
-                            style: {
-                                color: '#63656e',
-                                fontSize: '14px',
-                                textAlign: 'center'
-                            }
-                        }, this.$t('离开将会导致未保存信息丢失')),
-                        confirmFn: () => {
-                            window.changeFlag = false
-                            this.$emit('hidden')
-                            return true
-                        }
-                    })
-                } else {
-                    this.$emit('hidden')
-                    return true
-                }
-            },
-
             hidden () {
                 if (window.changeFlag) {
                     this.$bkInfo({
@@ -300,6 +277,7 @@
                                 textAlign: 'center'
                             }
                         }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
                         confirmFn: () => {
                             window.changeFlag = false
                             this.$emit('hidden')

@@ -68,7 +68,7 @@
 
         <router-view class="pipelines-main" v-if="!isLoading"></router-view>
 
-        <bk-sideslider :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')" :before-close="beforeClose">
+        <bk-sideslider :is-show.sync="isShowAddYml" :quick-close="true" :width="622" :title="$t('pipeline.newPipeline')" :before-close="hidden">
             <bk-form :model="yamlData" ref="yamlForm" slot="content" class="yaml-form" form-type="vertical">
                 <bk-form-item :label="$t('pipeline.yamlName')" :rules="[requireRule($t('pipeline.yamlName')), nameRule]" :required="true" property="file_name" error-display-type="normal">
                     <bk-compose-form-item class="yaml-name-container">
@@ -336,29 +336,6 @@
                 this.isShowAddYml = true
             },
 
-            beforeClose () {
-                if (window.changeFlag) {
-                    this.$bkInfo({
-                        title: this.$t('确认离开当前页？'),
-                        subHeader: this.$createElement('p', {
-                            style: {
-                                color: '#63656e',
-                                fontSize: '14px',
-                                textAlign: 'center'
-                            }
-                        }, this.$t('离开将会导致未保存信息丢失')),
-                        confirmFn: () => {
-                            window.changeFlag = false
-                            this.hiddenFn()
-                            return true
-                        }
-                    })
-                } else {
-                    this.hiddenFn()
-                    return true
-                }
-            },
-
             hiddenFn () {
                 this.isShowAddYml = false
                 this.yamlData = {
@@ -380,6 +357,7 @@
                                 textAlign: 'center'
                             }
                         }, this.$t('离开将会导致未保存信息丢失')),
+                        okText: this.$t('离开'),
                         confirmFn: () => {
                             window.changeFlag = false
                             this.hiddenFn()
