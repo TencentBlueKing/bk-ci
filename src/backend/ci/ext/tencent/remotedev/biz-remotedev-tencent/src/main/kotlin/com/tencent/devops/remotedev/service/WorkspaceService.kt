@@ -27,13 +27,9 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.OauthForbiddenException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -54,7 +50,9 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
+import com.tencent.devops.remotedev.common.Constansts.ADMIN_NAME
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.config.RemoteDevCommonConfig
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -63,7 +61,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
-import com.tencent.devops.remotedev.pojo.RemoteDevRepository
+import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -85,29 +83,21 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RU
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_GRAY_VERSION
-import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_PROD_VERSION
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
-import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.SocketTimeoutException
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 @Suppress("LongMethod")
@@ -127,57 +117,23 @@ class WorkspaceService @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
     private val remoteDevBillingDao: RemoteDevBillingDao,
-    private val commonService: CommonService,
     private val redisCache: RedisCacheService,
-    private val profile: Profile
+    private val bkTicketServie: BkTicketService,
+    private val profile: Profile,
+    private val commonConfig: RemoteDevCommonConfig
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private const val ADMIN_NAME = "system"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
         private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
         private const val BLANK_TEMPLATE_ID = 1
+        private const val DISCOUNT_TIME = 10000
     }
 
-    fun getAuthorizedGitRepository(
-        userId: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
-        gitType: RemoteDevGitType
-    ): List<RemoteDevRepository> {
-        logger.info("$userId get user git repository|$search|$page|$pageSize")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
-        return checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getProjectList(
-                userId = userId,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search,
-                owned = false,
-                minAccessLevel = GitAccessLevelEnum.DEVELOPER
-            )
-        }
-    }
-
-    fun getRepositoryBranch(
-        userId: String,
-        pathWithNamespace: String,
-        gitType: RemoteDevGitType
-    ): List<String> {
-        logger.info("$userId get git repository branch list|$pathWithNamespace")
-        return checkOauthIllegal(userId) {
-            remoteDevGitTransfer.load(gitType).getProjectBranches(
-                userId = userId,
-                pathWithNamespace = pathWithNamespace
-            ) ?: emptyList()
-        }
-    }
-
+    // 处理创建工作空间逻辑
     fun createWorkspace(userId: String, bkTicket: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
         checkUserCreate(userId)
@@ -212,7 +168,7 @@ class WorkspaceService @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -272,6 +228,14 @@ class WorkspaceService @Autowired constructor(
             userInfo = userInfo
         )
 
+        // 替换部分devfile内容，兼容使用老remoting的情况
+        if (devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-base-remoting") != true &&
+            devfile.runsOn?.container?.image?.contains("mirrors.tencent.com/ci/remote-dev-full-remoting") != true
+        ) {
+            devfile.runsOn?.container?.image =
+                "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
+        }
+
         // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
@@ -289,28 +253,14 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 发送给用户
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_CREATE,
-                status = true,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.PREPARING
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(userId, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = userId,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = null,
+            type = WebSocketActionType.WORKSPACE_CREATE,
+            status = true,
+            action = WorkspaceAction.PREPARING
         )
 
         return WorkspaceResponse(
@@ -365,9 +315,10 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
+            getOrSaveWorkspaceDetail(event.workspaceName)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
-            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
 
             // websocket 通知成功
         } else {
@@ -377,30 +328,14 @@ class WorkspaceService @Autowired constructor(
             workspaceDao.deleteWorkspace(event.workspaceName, dslContext)
         }
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_CREATE,
-                status = event.status,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = event.environmentHost ?: "",
-                    workspaceName = event.workspaceName,
-                    status = WorkspaceAction.START,
-                    errorMsg = event.errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(event.userId, event.workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(event.workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(event.workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = event.userId,
+            workspaceName = event.workspaceName,
+            workspaceHost = event.environmentHost,
+            errorMsg = event.errorMsg,
+            type = WebSocketActionType.WORKSPACE_CREATE,
+            status = event.status,
+            action = WorkspaceAction.START
         )
     }
 
@@ -425,7 +360,7 @@ class WorkspaceService @Autowired constructor(
                 remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
-                updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
+                bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
@@ -492,30 +427,15 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_START,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.STARTING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_START,
+                status = true,
+                action = WorkspaceAction.STARTING
             )
-
             return WorkspaceResponse(
                 workspaceName = workspace.name,
                 workspaceHost = "",
@@ -538,6 +458,7 @@ class WorkspaceService @Autowired constructor(
                         defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR.formatErrorMessage
                     )
                 }
+
                 else -> {
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
@@ -558,15 +479,14 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
-        if (event.status) {
-            updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
-        }
-
         doStartWS(event.status, event.userId, event.workspaceName, event.environmentHost, event.errorMsg)
+        if (event.status) {
+            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+        }
     }
 
     private fun doStartWS(
@@ -628,6 +548,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
+            getOrSaveWorkspaceDetail(workspaceName)
             redisHeartBeat.refreshHeartbeat(workspaceName)
         } else {
             // 启动失败,记录为EXCEPTION
@@ -651,30 +572,15 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_START,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceHost = environmentHost ?: "",
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.START,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        // 分发到WS
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = environmentHost,
+            errorMsg = errorMsg,
+            type = WebSocketActionType.WORKSPACE_START,
+            status = status,
+            action = WorkspaceAction.START
         )
     }
 
@@ -755,30 +661,15 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_SLEEP,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.SLEEPING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_SLEEP,
+                status = true,
+                action = WorkspaceAction.SLEEPING
             )
-
             return true
         }
     }
@@ -792,7 +683,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -875,31 +766,54 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_DELETE,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.DELETING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(userId, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = userId,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_DELETE,
+                status = true,
+                action = WorkspaceAction.DELETING
             )
             return true
         }
+    }
+
+    // 封装统一分发WS的方法
+    fun dispatchWebsocketPushEvent(
+        userId: String,
+        workspaceName: String,
+        workspaceHost: String?,
+        errorMsg: String?,
+        type: WebSocketActionType,
+        status: Boolean?,
+        action: WorkspaceAction
+    ) {
+        webSocketDispatcher.dispatch(
+            WorkspaceWebsocketPush(
+                type = type,
+                status = status ?: true,
+                anyMessage = WorkspaceResponse(
+                    workspaceHost = workspaceHost ?: "",
+                    workspaceName = workspaceName,
+                    status = action,
+                    errorMsg = errorMsg
+                ),
+                projectId = "",
+                userIds = getWebSocketUsers(userId, workspaceName),
+                redisOperation = redisOperation,
+                page = WorkspacePageBuild.buildPage(workspaceName),
+                notifyPost = NotifyPost(
+                    module = "remotedev",
+                    level = NotityLevel.LOW_LEVEL.getLevel(),
+                    message = "",
+                    dealUrl = null,
+                    code = 200,
+                    webSocketType = "IFRAME",
+                    page = WorkspacePageBuild.buildPage(workspaceName)
+                )
+            )
+        )
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
@@ -911,7 +825,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                        "${event.workspaceName}|${workspaceInfo.status}"
+                            "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -1034,17 +948,20 @@ class WorkspaceService @Autowired constructor(
                 doStopWS(true, userId, workspaceName)
                 return WorkspaceStatus.SLEEP
             }
+
             workspaceInfo.status == EnvStatusEnum.deleted -> {
                 doDeleteWS(true, userId, workspaceName, workspaceInfo.environmentIP)
                 return WorkspaceStatus.DELETED
             }
+
             workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> {
                 doStartWS(true, userId, workspaceName, workspaceInfo.environmentHost)
                 return WorkspaceStatus.RUNNING
             }
+
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                    "$workspaceName|${workspaceInfo.status}"
+                        "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -1094,7 +1011,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1134,7 +1051,7 @@ class WorkspaceService @Autowired constructor(
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName) ?: return null
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
@@ -1158,7 +1075,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1200,19 +1117,42 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        val userSet = workspaceDao.fetchWorkspaceUser(
-            dslContext,
-            workspaceName
-        ).toSet()
-        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName)
-
-        return WorkspaceProxyDetail(
-            workspaceName = workspaceName,
-            podIp = workspaceInfo.data?.environmentIP ?: "",
-            sshKey = sshKey,
-            environmentHost = workspaceInfo.data?.environmentHost ?: ""
+        return redisCache.getWorkspaceDetail(workspaceName)?.let {
+            WorkspaceProxyDetail(
+                workspaceName = workspaceName,
+                podIp = it.environmentIP,
+                sshKey = it.sshKey,
+                environmentHost = it.environmentHost
+            )
+        } ?: throw ErrorCodeException(
+            errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+            defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.formatErrorMessage
         )
+    }
+
+    private fun getOrSaveWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo {
+        return redisCache.getWorkspaceDetail(workspaceName) ?: run {
+            val userSet = workspaceDao.fetchWorkspaceUser(
+                dslContext,
+                workspaceName
+            ).toSet()
+            val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+            val workspaceInfo =
+                client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
+            val cache = WorkSpaceCacheInfo(
+                sshKey,
+                workspaceInfo.environmentHost,
+                workspaceInfo.hostIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.environmentIP,
+                workspaceInfo.namespace
+            )
+            redisCache.saveWorkspaceDetail(
+                workspaceName,
+                cache
+            )
+            return cache
+        }
     }
 
     fun preCiAgent(agentId: String, workspaceName: String): Boolean {
@@ -1227,7 +1167,7 @@ class WorkspaceService @Autowired constructor(
         gitType: RemoteDevGitType
     ): List<String> {
         logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
-        return checkOauthIllegal(userId) {
+        return permissionService.checkOauthIllegal(userId) {
             remoteDevGitTransfer.load(gitType).getFileNameTree(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
@@ -1285,28 +1225,14 @@ class WorkspaceService @Autowired constructor(
             )
 
             // 发送给用户
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_SLEEP,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspaceName,
-                        status = WorkspaceAction.SLEEPING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(ADMIN_NAME, workspaceName),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspaceName),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspaceName)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = ADMIN_NAME,
+                workspaceName = workspaceName,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_SLEEP,
+                status = true,
+                action = WorkspaceAction.SLEEPING
             )
             return true
         }
@@ -1399,28 +1325,14 @@ class WorkspaceService @Autowired constructor(
                 )
             )
 
-            webSocketDispatcher.dispatch(
-                WorkspaceWebsocketPush(
-                    type = WebSocketActionType.WORKSPACE_DELETE,
-                    status = true,
-                    anyMessage = WorkspaceResponse(
-                        workspaceName = workspace.name,
-                        status = WorkspaceAction.DELETING
-                    ),
-                    projectId = "",
-                    userIds = getWebSocketUsers(ADMIN_NAME, workspace.name),
-                    redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workspace.name),
-                    notifyPost = NotifyPost(
-                        module = "remotedev",
-                        level = NotityLevel.LOW_LEVEL.getLevel(),
-                        message = "",
-                        dealUrl = null,
-                        code = 200,
-                        webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workspace.name)
-                    )
-                )
+            dispatchWebsocketPushEvent(
+                userId = ADMIN_NAME,
+                workspaceName = workspace.name,
+                workspaceHost = null,
+                errorMsg = null,
+                type = WebSocketActionType.WORKSPACE_DELETE,
+                status = true,
+                action = WorkspaceAction.DELETING
             )
             return true
         }
@@ -1449,9 +1361,11 @@ class WorkspaceService @Autowired constructor(
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                        "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                            "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
+            // 清缓存
+            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
@@ -1494,30 +1408,14 @@ class WorkspaceService @Autowired constructor(
             )
         }
         remoteDevBillingDao.endBilling(dslContext, workspaceName)
-
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_DELETE,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.DELETE,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = errorMsg,
+            type = WebSocketActionType.WORKSPACE_DELETE,
+            status = status,
+            action = WorkspaceAction.DELETE
         )
     }
 
@@ -1531,6 +1429,8 @@ class WorkspaceService @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
+            // 清缓存
+            redisCache.deleteWorkspaceDetail(workspaceName)
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
@@ -1575,29 +1475,14 @@ class WorkspaceService @Autowired constructor(
 
         remoteDevBillingDao.endBilling(dslContext, workspaceName)
 
-        webSocketDispatcher.dispatch(
-            WorkspaceWebsocketPush(
-                type = WebSocketActionType.WORKSPACE_SLEEP,
-                status = status,
-                anyMessage = WorkspaceResponse(
-                    workspaceName = workspaceName,
-                    status = WorkspaceAction.SLEEP,
-                    errorMsg = errorMsg
-                ),
-                projectId = "",
-                userIds = getWebSocketUsers(operator, workspaceName),
-                redisOperation = redisOperation,
-                page = WorkspacePageBuild.buildPage(workspaceName),
-                notifyPost = NotifyPost(
-                    module = "remotedev",
-                    level = NotityLevel.LOW_LEVEL.getLevel(),
-                    message = "",
-                    dealUrl = null,
-                    code = 200,
-                    webSocketType = "IFRAME",
-                    page = WorkspacePageBuild.buildPage(workspaceName)
-                )
-            )
+        dispatchWebsocketPushEvent(
+            userId = operator,
+            workspaceName = workspaceName,
+            workspaceHost = null,
+            errorMsg = errorMsg,
+            type = WebSocketActionType.WORKSPACE_SLEEP,
+            status = status,
+            action = WorkspaceAction.SLEEP
         )
     }
 
@@ -1631,7 +1516,7 @@ class WorkspaceService @Autowired constructor(
     fun initBilling(freeTime: Int? = null) {
         remoteDevBillingDao.monthlyInit(
             dslContext,
-            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560) * 60
+            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: DISCOUNT_TIME) * 60
         )
     }
 
@@ -1639,23 +1524,6 @@ class WorkspaceService @Autowired constructor(
         return if (operator == ADMIN_NAME) {
             workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
         } else setOf(operator)
-    }
-
-    /**
-     * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
-     */
-    private fun <T> checkOauthIllegal(userId: String, action: () -> T): T {
-        return kotlin.runCatching {
-            action()
-        }.onFailure {
-            if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
-                throw ErrorCodeException(
-                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode,
-                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
-                    params = arrayOf(userId)
-                )
-            }
-        }.getOrThrow()
     }
 
     private fun getOpHistory(key: OpHistoryCopyWriting) =
@@ -1678,11 +1546,11 @@ class WorkspaceService @Autowired constructor(
      */
     private fun notOk2doNextAction(workspace: TWorkspaceRecord): Boolean {
         return (
-            WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
-                workspace.lastStatusUpdateTime,
-                LocalDateTime.now()
-            ).seconds < DEFAULT_WAIT_TIME
-            ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
+                WorkspaceStatus.values()[workspace.status].notOk2doNextAction() && Duration.between(
+                    workspace.lastStatusUpdateTime,
+                    LocalDateTime.now()
+                ).seconds < DEFAULT_WAIT_TIME
+                ) || WorkspaceStatus.values()[workspace.status].checkDeleted()
     }
 
     fun getWorkspaceHost(workspaceName: String): String {
@@ -1731,85 +1599,5 @@ class WorkspaceService @Autowired constructor(
             }
         }
         return true
-    }
-
-    fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
-        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
-        if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {
-            return false
-        }
-        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
-        val params = mutableMapOf<String, Any?>()
-        params["ticket"] = bkTicket
-        params["user"] = userId
-        val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
-            .header("Cookie", "X-DEVOPS-BK-TICKET=$bkTicket")
-            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
-            .build()
-
-        try {
-            OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body!!.string()
-                logger.info("updateBkTicket|response code|${response.code}|content|$data")
-                if (!response.isSuccessful && retryTime > 0) {
-                    val retryTimeLocal = retryTime - 1
-                    return updateBkTicket(userId, bkTicket, hostName, retryTimeLocal)
-                }
-                if (!response.isSuccessful && retryTime <= 0) {
-                    throw ErrorCodeException(
-                        statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                        errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                        defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
-                    )
-                }
-
-                val dataMap = JsonUtil.toMap(data)
-                val status = dataMap["status"]
-                return (status == 0)
-            }
-        } catch (e: SocketTimeoutException) {
-            // 接口超时失败，重试三次
-            if (retryTime > 0) {
-                logger.info("User $userId updateBkTicket. retry: $retryTime")
-                return updateBkTicket(userId, bkTicket, hostName, retryTime - 1)
-            } else {
-                logger.error("User $userId updateBkTicket failed.", e)
-                throw ErrorCodeException(
-                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
-                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
-                )
-            }
-        }
-    }
-
-    // 校验是否有当前环境客户端的最新稳定版
-    fun checkUpdate(userId: String): String {
-        logger.info("checkUpdate|userId|$userId")
-        // 先查询该用户信息获取是否灰度用户标记
-        val grayFlag = remoteDevSettingDao.fetchAnyOpUserSetting(dslContext, userId)?.grayFlag ?: false
-        // 根据灰度标识读取不同redis key对应的版本
-        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
-        if (grayFlag) {
-            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
-        }
-        return redisCache.get(redisKey)?.ifBlank {
-            ""
-        } ?: ""
-    }
-
-    // 客户端版本升级后调用接口更新记录的版本信息
-    fun updateClientVersion(userId: String, env: String, version: String) {
-        logger.info("updateClientVersion|userId|$userId|env|$env|version|$version")
-        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
-        if (env == "gray") {
-            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
-        }
-        redisOperation.set(
-            key = redisKey,
-            value = version,
-            expired = false
-        )
     }
 }
