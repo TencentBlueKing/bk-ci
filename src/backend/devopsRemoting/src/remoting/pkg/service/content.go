@@ -169,6 +169,8 @@ func StartContentInit(
 
 		return nil
 	}()
+	// 不论成功还是失败拉完代码后都进行上报
+	thirdApi.Server.ReportGitCloneDone(ctx, cfg.WorkSpace.WorkspaceId)
 	if err != nil {
 		return
 	}

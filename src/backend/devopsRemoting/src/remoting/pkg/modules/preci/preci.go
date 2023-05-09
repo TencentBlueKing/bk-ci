@@ -43,8 +43,6 @@ func StartPreci(
 
 	tokenUpdate := tokenService.ObserveBkticket(ctx)
 
-	<-cstate.ContentReady()
-
 	for {
 		ticket := <-tokenUpdate
 
@@ -57,6 +55,10 @@ func StartPreci(
 		// TODO: 根据问题，看未来要不要加上重试机制
 		if err := preciStart(workDir, childProcessEnv); err != nil {
 			logs.WithError(err).Error("preciStart error")
+			continue
+		}
+
+		if !cstate.ContentSource() {
 			continue
 		}
 

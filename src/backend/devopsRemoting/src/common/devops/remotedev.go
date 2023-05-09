@@ -257,6 +257,25 @@ type DirectContentLayer struct {
 	Content []byte `json:"content,omitempty"`
 }
 
+// ReportGitCloneDone 上报拉代码完成
+func (r *RemoteDevClient) ReportGitCloneDone(ctx context.Context, workspaceId string) error {
+	timestamp := strconv.FormatInt(time.Now().UnixMilli(), 10)
+	url := fmt.Sprintf("%s/remotedev/api/remotedev/workspace/complete_pull_code?workspaceName=%s&timestamp=%s", r.host, workspaceId, timestamp)
+	request, err := http.NewRequestWithContext(ctx, "POST", url, nil)
+	if err != nil {
+		return err
+	}
+	r.setRemotedevHeader(request, workspaceId, timestamp)
+
+	resp, err := r.client.Do(request)
+	if err != nil {
+		return errors.Wrap(err, "requset remoting ReportGitCloneDone error")
+	}
+	defer resp.Body.Close()
+
+	return nil
+}
+
 func hmacsha1Encrypt(keyStr, content string) string {
 	key := []byte(keyStr)
 	mac := hmac.New(sha1.New, key)
