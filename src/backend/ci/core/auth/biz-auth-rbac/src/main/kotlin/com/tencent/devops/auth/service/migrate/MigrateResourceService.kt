@@ -176,13 +176,13 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    val isResourceCreatorNotExist = deptService.getUserInfo(
+                    /*val isResourceCreatorNotExist = deptService.getUserInfo(
                         userId = "greysonfang",
                         name = it.iamApprover[0]
                     ) == null
-                    val iamApprover = if (isResourceCreatorNotExist) projectCreator else it.iamApprover[0]
+                    val iamApprover = if (isResourceCreatorNotExist) projectCreator else it.iamApprover[0]*/
                     rbacPermissionResourceService.resourceCreateRelation(
-                        userId = iamApprover,
+                        userId = it.iamApprover[0],
                         projectCode = projectCode,
                         resourceType = resourceType,
                         resourceCode = resourceCode,
