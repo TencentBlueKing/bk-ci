@@ -76,6 +76,5 @@ object StreamMessageCode {
 
     const val BK_FAILED_VERIFY_AUTHORITY = "bkFailedVerifyAuthority" // 授权人权限校验失败
     const val BK_STREAM_MESSAGE_NOTIFICATION = "bkStreamMessageNotification" // @Stream消息通知
-    const val BK_NEED_SUPPLEMENT = "bkNeedSupplement" // 对接其他Git平台时需要补充
     const val BK_PULL_CODE = "bkPullCode" // 拉代码
 }
