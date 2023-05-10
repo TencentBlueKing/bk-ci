@@ -413,19 +413,23 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun parseImages(dataStr: String?): List<DockerTag> {
-        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
+        val responseData: Map<String, String> = jacksonObjectMapper().readValue(dataStr.toString())
         logger.info("responseData : $responseData")
-        val results = responseData["records"] as List<Map<String, Any>>
-        logger.info("results: $results")
+        val data: String = responseData["data"]!!
+        val results: Map<String, Any> = jacksonObjectMapper().readValue(data)
+        val records = results["records"] as List<Map<String, Any>>
+        logger.info("records: $records")
         val images = mutableListOf<DockerTag>()
-        for (it in results) {
+        for (it in records) {
             val dockerTag = DockerTag()
-            dockerTag.created = DateTime(it["created"] as String).toString("yyyy-MM-dd HH:mm:ss")
-            dockerTag.createdBy = it["created_by"] as String
-            dockerTag.modified = DateTime(it["modified"] as String).toString("yyyy-MM-dd HH:mm:ss")
-            dockerTag.modifiedBy = it["modified_by"] as String
-
-            val properties = it["properties"] as List<Map<String, Any>>
+            dockerTag.created = DateTime(it["createdDate"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.createdBy = it["createdBy"] as String
+            dockerTag.modified = DateTime(it["lastModifiedDate"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.modifiedBy = it["lastModifiedBy"] as String
+            dockerTag.desc = it["description"] as String
+            dockerTag.repo = it["repoName"] as String
+            dockerTag.tag = it[""] as String
+            /*val properties = it["properties"] as List<Map<String, Any>>
             for (item in properties) {
                 val key = item["key"] ?: ""
                 val value = item["value"] ?: ""
@@ -443,17 +447,18 @@ class ImageArtifactoryService @Autowired constructor(
                 if (key == "devops.desc") {
                     dockerTag.desc = value as String
                 }
-            }
+            }*/
 
             // 过滤掉路径跟repo匹配不上的镜像
-            val path = it["path"] as String
+            /*val path = it["path"] as String
             if (path.contains('/')) {
                 if (path.substring(0, path.lastIndexOf("/")) != dockerTag.repo) {
                     continue
                 }
-            }
-
+            }*/
+            logger.info("{dockerConfig.imagePrefix} :$${dockerConfig.imagePrefix}")
             dockerTag.image = "${dockerConfig.imagePrefix}/${dockerTag.repo}:${dockerTag.tag}"
+            logger.info("image: ${dockerTag.image}")
             images.add(dockerTag)
         }
         return images
