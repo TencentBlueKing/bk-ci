@@ -430,7 +430,7 @@ class ImageArtifactoryService @Autowired constructor(
             dockerTag.modified = DateTime(it["lastModifiedDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.modifiedBy = it["lastModifiedBy"] as String?
             dockerTag.desc = it["description"] as String?
-            dockerTag.repo = it["repoName"] as String?
+            dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"
             dockerTag.tag = it["latest"] as String?
             /*val properties = it["properties"] as List<Map<String, Any>>
             for (item in properties) {
