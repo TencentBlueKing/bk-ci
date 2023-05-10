@@ -177,7 +177,7 @@ class MigrateResourceService @Autowired constructor(
                     resourceCode = resourceCode
                 ) ?: run {
                     val isResourceCreatorNotExist = deptService.getUserInfo(
-                        userId = "greysonfang",
+                        userId = "admin",
                         name = it.iamApprover[0]
                     ) == null
                     val iamApprover = if (isResourceCreatorNotExist) projectCreator else it.iamApprover[0]
