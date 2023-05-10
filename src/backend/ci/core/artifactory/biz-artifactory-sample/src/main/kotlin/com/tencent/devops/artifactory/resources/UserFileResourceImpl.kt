@@ -103,7 +103,7 @@ class UserFileResourceImpl @Autowired constructor(
         downloadFile(userId, filePath, logo, response)
     }
 
-    override fun copy(userId: String, copyFileRequest: CopyFileRequest) {
+    override fun copy(userId: String, copyFileRequest: CopyFileRequest): Result<Boolean> {
         with(copyFileRequest) {
             if (dstArtifactoryType != ArtifactoryType.CUSTOM_DIR) {
                 throw IllegalArgumentException("invalid dstArtifactoryType")
@@ -122,5 +122,6 @@ class UserFileResourceImpl @Autowired constructor(
                 )
             }
         }
+        return Result(true)
     }
 }
