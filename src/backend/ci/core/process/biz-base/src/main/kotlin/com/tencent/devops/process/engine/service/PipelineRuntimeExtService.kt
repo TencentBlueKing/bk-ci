@@ -35,7 +35,6 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class PipelineRuntimeExtService @Autowired constructor(
@@ -121,7 +120,6 @@ class PipelineRuntimeExtService @Autowired constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 buildId = buildInfo.buildId,
-                startTime = LocalDateTime.now(), // 设置startTime解决在按天查询时查不出来的问题
                 oldBuildStatus = buildInfo.status,
                 newBuildStatus = buildStatus
             )
