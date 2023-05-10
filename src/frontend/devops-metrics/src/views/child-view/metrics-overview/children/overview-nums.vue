@@ -2,9 +2,13 @@
 import {
   ref,
   onMounted,
+  computed,
   watch,
   h,
 } from 'vue';
+import {
+  useRoute,
+} from 'vue-router';
 import {
   sharedProps,
 } from '../common/props-type';
@@ -17,6 +21,14 @@ import {
 import dayjs from 'dayjs';
 import duration from 'dayjs/plugin/duration';
 dayjs.extend(duration);
+
+const route = useRoute();
+const projectId = computed(() => route.params.projectId);
+watch(() => projectId, () => {
+  init();
+}, {
+  deep: true,
+});
 
 interface IShowTime {
   h?: number,
@@ -122,6 +134,7 @@ watch(
   () => props.status,
   init,
 );
+
 onMounted(init);
 </script>
 

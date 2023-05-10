@@ -5,8 +5,12 @@ import { sharedProps } from '../common/props-type';
 import useFilter from '@/composables/use-filter';
 import {
   ref,
-  watch
+  watch,
+  computed,
 } from 'vue';
+import {
+  useRoute,
+} from 'vue-router';
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 const emit = defineEmits(['change']);
@@ -16,6 +20,15 @@ const {
   handleChange,
   handleTimeChange,
 } = useFilter(emit);
+
+const route = useRoute();
+const projectId = computed(() => route.params.projectId)
+
+watch(() => projectId, () => {
+  clearStatus();
+}, {
+  deep: true
+})
 
 const clearStatus = () => {
   handleChange({

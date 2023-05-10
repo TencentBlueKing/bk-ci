@@ -4,7 +4,11 @@ import {
   ref,
   onMounted,
   watch,
+  computed,
 } from 'vue';
+import {
+  useRoute
+} from 'vue-router';
 import http from '@/http/api';
 import {
   sharedProps,
@@ -15,6 +19,15 @@ const { t } = useI18n();
 
 const emit = defineEmits(['change']);
 const props = defineProps(sharedProps);
+
+const route = useRoute();
+const projectId = computed(() => route.params.projectId)
+
+watch(() => projectId, () => {
+  getData();
+}, {
+  deep: true
+})
 
 const {
   handleChange,

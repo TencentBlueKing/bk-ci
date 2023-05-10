@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {
+  watch,
+  computed,
+} from 'vue';
+import {
+  useRoute,
+} from 'vue-router';
 import ScrollLoadSelect from '@/components/scroll-load-select';
 import http from '@/http/api';
 import { sharedProps } from '../common/props-type';
@@ -7,6 +14,15 @@ import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 const emit = defineEmits(['change']);
 defineProps(sharedProps);
+
+const route = useRoute();
+const projectId = computed(() => route.params.projectId)
+
+watch(() => projectId, () => {
+  clearStatus();
+}, {
+  deep: true
+})
 
 const {
   handleChange,

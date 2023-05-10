@@ -3,6 +3,7 @@ import {
   ref,
   onMounted,
   watch,
+  computed,
   h,
 } from 'vue';
 import http from '@/http/api';
@@ -10,6 +11,7 @@ import {
   sharedProps,
 } from '../common/props-type';
 import {
+  useRoute,
   useRouter
 } from 'vue-router';
 import { useI18n } from "vue-i18n";
@@ -17,6 +19,20 @@ import { useI18n } from "vue-i18n";
 import useFilter from '@/composables/use-filter';
 const emit = defineEmits(['change']);
 const { t } = useI18n();
+
+const route = useRoute();
+const projectId = computed(() => route.params.projectId)
+
+watch(() => projectId, () => {
+  pagination.value = {
+    current: 1,
+    count: 0,
+    limit: 10,
+  }
+  getData();
+}, {
+  deep: true
+})
 
 const {
   handleChange
