@@ -257,7 +257,7 @@ class AuthDeptServiceImpl @Autowired constructor(
             type = ManagerScopesEnum.USER,
             exactLookups = true
         )
-        return if (userId.isNotEmpty()) userInfo[0] else null
+        return if (userInfo.isNotEmpty()) userInfo[0] else null
     }
 
     private fun getUserDeptFamily(userId: String): String {
