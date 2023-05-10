@@ -146,7 +146,7 @@
                                     required: true,
                                     max: 20
                                 }"
-                                @change="handleChangeForm"
+                                @input="handleChangeForm"
                                 :class="{ 'is-danger': errors.has('templateName') }">
                             <p :class="errors.has('templateName') ? 'error-tips' : 'normal-tips'">{{ errors.first("templateName") }}</p>
                         </div>
