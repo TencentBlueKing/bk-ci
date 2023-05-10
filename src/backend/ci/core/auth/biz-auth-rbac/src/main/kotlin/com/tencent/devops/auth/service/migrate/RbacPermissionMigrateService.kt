@@ -201,7 +201,13 @@ class RbacPermissionMigrateService constructor(
             if (projectInfo.subjectScopes == null || projectInfo.subjectScopes!!.isEmpty()) {
                 client.get(ServiceProjectResource::class).updateProjectSubjectScopes(
                     projectId = projectCode,
-                    subjectScopes = listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+                    subjectScopes = listOf(
+                        SubjectScopeInfo(
+                            id = ALL_MEMBERS,
+                            type = ALL_MEMBERS,
+                            name = ALL_MEMBERS_NAME
+                        )
+                    )
                 )
             }
             // 设置项目路由tag
@@ -312,7 +318,7 @@ class RbacPermissionMigrateService constructor(
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName)
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
                 )
                 break
             } catch (iamException: IamException) {
