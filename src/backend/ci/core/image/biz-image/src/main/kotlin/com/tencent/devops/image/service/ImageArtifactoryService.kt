@@ -415,8 +415,7 @@ class ImageArtifactoryService @Autowired constructor(
     private fun parseImages(dataStr: String?): List<DockerTag> {
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
         logger.info("responseData : $responseData")
-        val data: String = responseData["data"] as String
-        val results: Map<String, Any> = jacksonObjectMapper().readValue(data)
+        val results: Map<String, Any> = responseData["data"] as Map<String, Any>
         val records = results["records"] as List<Map<String, Any>>
         logger.info("records: $records")
         val images = mutableListOf<DockerTag>()
