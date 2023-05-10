@@ -76,7 +76,6 @@ data class Stage(
     fun resetBuildOption(init: Boolean? = false) {
         if (init == true) {
             status = null
-            timeCost = null
             startEpoch = null
             elapsed = null
         }

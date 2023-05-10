@@ -20,94 +20,90 @@ import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 import java.io.File
 
+class MainActivity : FlutterActivity(), ITLoginAuthListener, ITLoginListener {
 
-class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
-
-    private val CHANNEL = "flutter.itlogin";
-    private var initUniLink: String? = null;
-    lateinit var methodChannel: MethodChannel;
-    lateinit var channelResult: MethodChannel.Result;
-    lateinit var appInstallReceiver: AppInstallReceiver;
-    lateinit var itloginInstance: ITLoginBaseActivityManager;
-    private var itloginInited: Boolean = false;
-
+    private val channel = "flutter.itlogin"
+    private var initUniLink: String? = null
+    lateinit var methodChannel: MethodChannel
+    lateinit var channelResult: MethodChannel.Result
+    lateinit var appInstallReceiver: AppInstallReceiver
+    lateinit var itloginInstance: ITLoginBaseActivityManager
+    private var itloginInited: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState);
-        
-        appInstallReceiver = AppInstallReceiver(methodChannel);
-        val filter = IntentFilter();
-        filter.addDataScheme("package");
-        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
-        filter.addAction(Intent.ACTION_PACKAGE_REMOVED);
-        filter.addAction(Intent.ACTION_PACKAGE_REPLACED);
+        super.onCreate(savedInstanceState)
 
-        this.registerReceiver(appInstallReceiver, filter);
-        initUniLink = intent?.data?.path;
+        appInstallReceiver = AppInstallReceiver(methodChannel)
+        val filter = IntentFilter()
+        filter.addDataScheme("package")
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED)
+        filter.addAction(Intent.ACTION_PACKAGE_REMOVED)
+        filter.addAction(Intent.ACTION_PACKAGE_REPLACED)
+
+        this.registerReceiver(appInstallReceiver, filter)
+        initUniLink = intent?.data?.path
     }
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         if (intent.action === Intent.ACTION_VIEW && methodChannel != null) {
             val action: String? = intent?.action
-            val data: String? = intent?.data?.path;
-            methodChannel.invokeMethod("uni_link", data, null);
+            val data: String? = intent?.data?.path
+            methodChannel.invokeMethod("uni_link", data, null)
         }
     }
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
-        
+
         super.configureFlutterEngine(flutterEngine)
         println("configureFlutterEngine main flutter")
-        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL)
+        methodChannel = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, channel)
         methodChannel.setMethodCallHandler {
             // Note: this method is invoked on the main thread.
             call, result ->
-            channelResult = result;
+            channelResult = result
             if (call.method == "checkITLogin") {
-                checkITLogin();
-                result.success("success");
+                checkITLogin()
+                result.success("success")
             } else if (call.method == "logout") {
-                ITLoginBaseActivityManager.getInstance().logout(this);
+                ITLoginBaseActivityManager.getInstance().logout(this)
             } else if (call.method == "getCkey") {
                 val credential: Credential = ITLoginSDK.getLoginInfo(this.applicationContext)
                 println("println(credential.key);")
-                println(credential.key);
-                result.success(credential.key);
+                println(credential.key)
+                result.success(credential.key)
             } else if (call.method == "installApk") {
-                installApk(call.arguments());
-                result.success("success");
+                installApk(call.arguments())
+                result.success("success")
             } else if (call.method == "initITLogin") {
-                initITLoginSDK();
+                initITLoginSDK()
                 // result.success("success");
             } else if (call.method == "getInitUniLink") {
                 if (initUniLink != null) {
-                    result.success(initUniLink);
-                    initUniLink = null;
+                    result.success(initUniLink)
+                    initUniLink = null
                 }
             } else {
-                result.notImplemented();
+                result.notImplemented()
             }
         }
-        println("intent?.data?.path");
-        println(initUniLink);
-        
+        println("intent?.data?.path")
+        println(initUniLink)
     }
 
     fun initITLoginSDK() {
         // println("itlogin on  init");
         if (!itloginInited) {
             // println("itlogin on  inited");
-            itloginInstance.onActivityResume(this);
-            itloginInited = true;
+            itloginInstance.onActivityResume(this)
+            itloginInited = true
         }
-        itloginInstance.logout(this);
-
+        itloginInstance.logout(this)
     }
 
     fun checkITLogin() {
         if (this::itloginInstance.isInitialized) {
-            itloginInstance.onActivityResume(this);
-            itloginInstance.validateLogin(this);
+            itloginInstance.onActivityResume(this)
+            itloginInstance.validateLogin(this)
         }
     }
 
@@ -123,7 +119,7 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
                     this.applicationContext,
                     this.packageName + ".fileprovider",
                     apkfile
-                );
+                )
                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 intent.setDataAndType(apkUri, "application/vnd.android.package-archive")
                 intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -142,13 +138,13 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
         // println("itlogin on  resume");
         if (!this::itloginInstance.isInitialized) {
             // println("itlogin on  resumeed");
-            ITLoginBaseActivityManager.getInstance().init(this);
-            ITLoginSDK.configITLogin(R.style.itloginpushstyle, "蓝盾登录", R.drawable.ic_itlogin_logo, 100);
-            itloginInstance = ITLoginBaseActivityManager.getInstance();
-            itloginInstance.itLoginAuthListener = this;
-            itloginInstance.itLoginListener = this;
-            itloginInstance.onActivityCreate(this);
-            itloginInstance.setLogLevel(3.toByte());
+            ITLoginBaseActivityManager.getInstance().init(this)
+            ITLoginSDK.configITLogin(R.style.itloginpushstyle, "蓝盾登录", R.drawable.ic_itlogin_logo, 100)
+            itloginInstance = ITLoginBaseActivityManager.getInstance()
+            itloginInstance.itLoginAuthListener = this
+            itloginInstance.itLoginListener = this
+            itloginInstance.onActivityCreate(this)
+            itloginInstance.setLogLevel(3.toByte())
         }
     }
 
@@ -163,20 +159,17 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
         super.onPause()
         if (this::itloginInstance.isInitialized && itloginInited) {
             // println("itlogin on  pause");
-            itloginInstance.onActivityPause();
-            itloginInited = false;
+            itloginInstance.onActivityPause()
+            itloginInited = false
         }
-
     }
 
     override fun onDestroy() {
         super.onDestroy()
         if (this::itloginInstance.isInitialized && itloginInited) {
             itloginInstance.onActivityFinish()
-
         }
         unregisterReceiver(appInstallReceiver)
-
     }
 
     override fun finish() {
@@ -189,51 +182,48 @@ class MainActivity: FlutterActivity(), ITLoginAuthListener, ITLoginListener {
     override fun onAuthSuccess() {
 //        TODO("Not yet implemented")
         println("auth success")
-        handleSuccess();
+        handleSuccess()
     }
 
-    fun handleSuccess () {
+    fun handleSuccess() {
         val credential: Credential = ITLoginSDK.getLoginInfo(this.applicationContext)
         val sharePrefs: SharedPreferences = this.getSharedPreferences("", Context.MODE_PRIVATE)
-        val editor: SharedPreferences.Editor = sharePrefs.edit();
-        editor.putString("flutter.cKey", credential.key);
-        editor.commit();
-        sendMessageToFlutter(credential.key);
+        val editor: SharedPreferences.Editor = sharePrefs.edit()
+        editor.putString("flutter.cKey", credential.key)
+        editor.commit()
+        sendMessageToFlutter(credential.key)
     }
 
     fun sendMessageToFlutter(cKey: String) {
         if (methodChannel != null) {
-            methodChannel.invokeMethod("loginResult", cKey, null);
+            methodChannel.invokeMethod("loginResult", cKey, null)
         }
     }
 
     override fun onAuthFailure(p0: ITLoginError?) {
 //        TODO("Not yet implemented")
-        println("auth fail");
+        println("auth fail")
     }
 
     override fun onLoginSuccess() {
 //        TODO("Not yet implemented")
         println("login success")
-        handleSuccess();
+        handleSuccess()
     }
 
     override fun onLoginFailure(p0: ITLoginError?) {
 //        TODO("Not yet implemented")
-        println("login failure");
-
+        println("login failure")
     }
 
     override fun onFinishLogout(p0: Boolean) {
 //        TODO("Not yet implemented")
         println("logout finish")
-        channelResult.success("logout success");
+        channelResult.success("logout success")
     }
 
     override fun onLoginCancel() {
 //        TODO("Not yet implemented")
         println("login cancel")
     }
-
-
 }
