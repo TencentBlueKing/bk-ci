@@ -25,12 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.exception
+package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 
-open class DockerServiceException(
-    open val errorType: ErrorType,
-    open val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+class BuildLessEndHandlerContext(
+    var buildLogKey: String = "",
+    val containerId: String = "",
+    var buildLessHost: String = "",
+    val event: PipelineBuildLessShutdownDispatchEvent,
+    override var grayEnv: Boolean = false,
+    override var agentId: String = "",
+    override var secretKey: String = "",
+) : HandlerContext(
+    grayEnv, agentId, secretKey
+)

@@ -34,8 +34,11 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.dispatch.docker.client.BuildLessEndHandlerContext
+import com.tencent.devops.dispatch.docker.client.BuildLessPrepareEndHandler
+import com.tencent.devops.dispatch.docker.client.BuildLessStartHandlerContext
+import com.tencent.devops.dispatch.docker.client.BuildLessSelectStartHandler
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
-import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
@@ -47,10 +50,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class AgentLessListener @Autowired constructor(
-    private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService
+    private val jobQuotaService: JobQuotaService,
+    private val buildLessStartHandler: BuildLessSelectStartHandler,
+    private val buildLessPrepareEndHandler: BuildLessPrepareEndHandler
 ) {
 
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
@@ -63,7 +67,7 @@ class AgentLessListener @Autowired constructor(
                 return
             }
 
-            pipelineAgentLessDispatchService.startUpBuildLess(event)
+            buildLessStartHandler.handlerRequest(BuildLessStartHandlerContext(event))
         } catch (discard: Throwable) {
             logger.warn("[${event.buildId}|${event.vmSeqId}] BuildLess startup failure.", discard)
 
@@ -101,19 +105,19 @@ class AgentLessListener @Autowired constructor(
         }
     }
 
-    fun listenAgentShutdownEvent(pipelineBuildLessDockerAgentShutdownEvent: PipelineBuildLessShutdownDispatchEvent) {
+    fun listenAgentShutdownEvent(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
-            pipelineAgentLessDispatchService.shutdown(pipelineBuildLessDockerAgentShutdownEvent)
+            buildLessPrepareEndHandler.handlerRequest(BuildLessEndHandlerContext(event = event))
         } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($pipelineBuildLessDockerAgentShutdownEvent)", ignored)
+            logger.error("Fail to start the pipe build($event)", ignored)
         } finally {
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
             jobQuotaService.removeRunningJob(
-                projectId = pipelineBuildLessDockerAgentShutdownEvent.projectId,
-                pipelineId = pipelineBuildLessDockerAgentShutdownEvent.pipelineId,
-                buildId = pipelineBuildLessDockerAgentShutdownEvent.buildId,
-                vmSeqId = pipelineBuildLessDockerAgentShutdownEvent.vmSeqId,
-                executeCount = pipelineBuildLessDockerAgentShutdownEvent.executeCount
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount
             )
         }
     }

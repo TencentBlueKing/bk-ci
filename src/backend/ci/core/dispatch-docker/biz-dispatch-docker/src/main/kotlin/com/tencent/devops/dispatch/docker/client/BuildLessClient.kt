@@ -37,12 +37,12 @@ import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.exception.NoAvailableHostException
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
@@ -52,6 +52,7 @@ import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -67,8 +68,7 @@ class BuildLessClient @Autowired constructor(
     private val dockerHostUtils: DockerHostUtils,
     private val dslContext: DSLContext,
     private val dockerHostProxyService: DockerHostProxyService,
-    private val redisUtils: RedisUtils,
-    private val gray: Gray
+    private val redisUtils: RedisUtils
 ) {
 
     companion object {
@@ -81,64 +81,27 @@ class BuildLessClient @Autowired constructor(
         event: PipelineBuildLessStartupDispatchEvent
     ) {
         with(event) {
-            val secretKey = ApiUtil.randomSecretKey()
+            val (agentId, secretKey) = saveBuildHistoryAndRedis(agentLessDockerIp, event)
 
-            val id = pipelineDockerBuildDao.saveBuildHistory(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = vmSeqId.toInt(),
-                secretKey = secretKey,
-                status = PipelineTaskStatus.RUNNING,
-                zone = if (null == event.zone) {
-                    Zone.SHENZHEN.name
-                } else {
-                    event.zone!!.name
-                },
-                dockerIp = agentLessDockerIp,
-                poolNo = 0
-            )
-
-            val agentId = HashUtil.encodeLongId(id)
-            redisUtils.setDockerBuild(
-                id = id, secretKey = secretKey,
-                redisBuild = RedisBuild(
-                    vmName = agentId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    channelCode = channelCode,
-                    zone = zone,
-                    atoms = atoms
-                )
-            )
-
-            LOG.info("$buildId|$vmSeqId BUILD_LESS| secretKey: $secretKey")
-            LOG.info("$buildId|$vmSeqId BUILD_LESS| agentId: $agentId")
-
-            val buildLessStartInfo = BuildLessStartInfo(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                vmSeqId = Integer.valueOf(vmSeqId),
-                executionCount = event.executeCount ?: 1,
-                agentId = agentId,
-                secretKey = secretKey,
-                rejectedExecutionType = RejectedExecutionType.ABORT_POLICY
-            )
-
-            val enableIpCount = pipelineDockerIPInfoDao.getEnableDockerIpCount(
-                dslContext = dslContext,
-                grayEnv = gray.isGray(),
-                clusterName = DockerHostClusterType.BUILD_LESS
-            )
+            // 封装可重试方法
             startBuildLess(
                 dockerIp = agentLessDockerIp,
                 dockerHostPort = agentLessDockerPort,
-                buildLessStartInfo = buildLessStartInfo,
-                retryMax = (enableIpCount / 2).toInt()
+                buildLessStartInfo = BuildLessStartInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = Integer.valueOf(vmSeqId),
+                    executionCount = event.executeCount ?: 1,
+                    agentId = agentId,
+                    secretKey = secretKey,
+                    rejectedExecutionType = RejectedExecutionType.ABORT_POLICY
+                ),
+                retryMax = (pipelineDockerIPInfoDao.getEnableDockerIpCount(
+                    dslContext = dslContext,
+                    grayEnv = dockerHostUtils.isGray(),
+                    clusterName = DockerHostClusterType.BUILD_LESS
+                ) / 2).toInt() + 1
             )
         }
     }
@@ -187,6 +150,52 @@ class BuildLessClient @Autowired constructor(
         }
     }
 
+    private fun saveBuildHistoryAndRedis(
+        agentLessDockerIp: String,
+        event: PipelineBuildLessStartupDispatchEvent
+    ): Pair<String, String> {
+        with(event) {
+            val secretKey = ApiUtil.randomSecretKey()
+
+            val id = pipelineDockerBuildDao.saveBuildHistory(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId.toInt(),
+                secretKey = secretKey,
+                status = PipelineTaskStatus.RUNNING,
+                zone = if (null == event.zone) {
+                    Zone.SHENZHEN.name
+                } else {
+                    event.zone!!.name
+                },
+                dockerIp = agentLessDockerIp,
+                poolNo = 0
+            )
+
+            val agentId = HashUtil.encodeLongId(id)
+            redisUtils.setDockerBuild(
+                id = id, secretKey = secretKey,
+                redisBuild = RedisBuild(
+                    vmName = agentId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    vmSeqId = vmSeqId,
+                    channelCode = channelCode,
+                    zone = zone,
+                    atoms = atoms
+                )
+            )
+
+            LOG.info("$buildId|$vmSeqId BUILD_LESS| secretKey: $secretKey")
+            LOG.info("$buildId|$vmSeqId BUILD_LESS| agentId: $agentId")
+
+            return Pair(agentId, secretKey)
+        }
+    }
+
     private fun startBuildLess(
         dockerIp: String,
         dockerHostPort: Int,
@@ -201,10 +210,8 @@ class BuildLessClient @Autowired constructor(
             dockerHostPort = dockerHostPort,
             clusterType = DockerHostClusterType.BUILD_LESS
         ).post(
-            RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                JsonUtil.toJson(buildLessStartInfo)
-            )
+            JsonUtil.toJson(buildLessStartInfo)
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         ).build()
 
         val buildLogKey = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime"
@@ -235,44 +242,44 @@ class BuildLessClient @Autowired constructor(
                     )
                 }
             }
-        } catch (e: SocketTimeoutException) {
-            // 对http连接超时重试
-            if (e.message == "connect timed out") {
-                doRetry(
-                    retryTime = retryTime,
-                    retryMax = retryMax,
-                    dockerIp = dockerIp,
-                    buildLessStartInfo = buildLessStartInfo,
-                    errorMessage = e.message,
-                    unAvailableIpList = unAvailableIpList
-                )
-            } else {
-                // read timeout, 不重试直接失败
-                doFail(
-                    dockerIp = dockerIp,
-                    event = buildLessStartInfo,
-                    errorMessage = e.message ?: "SocketTimeoutException: read time out"
-                )
+        } catch (e: Exception) {
+            when (e) {
+                is SocketTimeoutException -> {
+                    handleSocketTimeoutException(
+                        e = e,
+                        retryTime = retryTime,
+                        retryMax = retryMax,
+                        dockerIp = dockerIp,
+                        buildLessStartInfo = buildLessStartInfo,
+                        unAvailableIpList = unAvailableIpList
+                    )
+                }
+                is NoRouteToHostException, is ConnectException -> {
+                    doRetry(
+                        retryTime = retryTime,
+                        retryMax = retryMax,
+                        dockerIp = dockerIp,
+                        buildLessStartInfo = buildLessStartInfo,
+                        errorMessage = e.message,
+                        unAvailableIpList = unAvailableIpList
+                    )
+                }
             }
-        } catch (e: NoRouteToHostException) {
-            // 对Host unreachable场景重试
-            doRetry(
-                retryTime = retryTime,
-                retryMax = retryMax,
-                dockerIp = dockerIp,
-                buildLessStartInfo = buildLessStartInfo,
-                errorMessage = e.message,
-                unAvailableIpList = unAvailableIpList
-            )
-        } catch (e: ConnectException) {
-            doRetry(
-                retryTime = retryTime,
-                retryMax = retryMax,
-                dockerIp = dockerIp,
-                buildLessStartInfo = buildLessStartInfo,
-                errorMessage = e.message,
-                unAvailableIpList = unAvailableIpList
-            )
+        }
+    }
+
+    fun handleSocketTimeoutException(
+        e: SocketTimeoutException,
+        retryTime: Int,
+        retryMax: Int,
+        dockerIp: String,
+        buildLessStartInfo: BuildLessStartInfo,
+        unAvailableIpList: Set<String>?
+    ) {
+        if (e.message == "connect timed out") {
+            doRetry(retryTime, retryMax, dockerIp, buildLessStartInfo, e.message, unAvailableIpList)
+        } else {
+            doFail(dockerIp, buildLessStartInfo, e.message ?: "SocketTimeoutException: read time out")
         }
     }
 
@@ -324,29 +331,35 @@ class BuildLessClient @Autowired constructor(
         errorMessage: String?,
         unAvailableIpList: Set<String>?
     ) {
-        val buildLog = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime"
+        val buildLog = "${buildLessStartInfo.buildId}|${buildLessStartInfo.vmSeqId}|$retryTime|$retryMax"
         if (retryTime < retryMax) {
-            LOG.warn("$buildLog start build less failed in $dockerIp, retry. error: $errorMessage")
+            LOG.info("$buildLog start build less failed in $dockerIp, retry. error: $errorMessage")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
-            // 过滤重试前异常IP, 并重新获取可用ip
-            val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                projectId = buildLessStartInfo.projectId,
-                pipelineId = buildLessStartInfo.pipelineId,
-                vmSeqId = buildLessStartInfo.vmSeqId.toString(),
-                specialIpSet = emptySet(),
-                unAvailableIpList = unAvailableIpListLocal,
-                clusterName = DockerHostClusterType.BUILD_LESS
-            )
-            startBuildLess(
-                dockerIp = dockerIpLocalPair.first,
-                dockerHostPort = dockerIpLocalPair.second,
-                buildLessStartInfo = buildLessStartInfo,
-                retryTime = retryTimeLocal,
-                unAvailableIpList = unAvailableIpListLocal
-            )
-        } else {
-            LOG.warn("$$buildLog reached retry limit, switch FOLLOW policy.")
+            try {
+                // 过滤重试前异常IP, 并重新获取可用ip
+                val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+                    projectId = buildLessStartInfo.projectId,
+                    pipelineId = buildLessStartInfo.pipelineId,
+                    vmSeqId = buildLessStartInfo.vmSeqId.toString(),
+                    specialIpSet = emptySet(),
+                    unAvailableIpList = unAvailableIpListLocal,
+                    clusterName = DockerHostClusterType.BUILD_LESS
+                )
+
+                startBuildLess(
+                    dockerIp = dockerIpLocalPair.first,
+                    dockerHostPort = dockerIpLocalPair.second,
+                    buildLessStartInfo = buildLessStartInfo,
+                    retryTime = retryTimeLocal,
+                    unAvailableIpList = unAvailableIpListLocal
+                )
+            } catch (e: NoAvailableHostException) {
+                // 无可用节点时，主动强制下发
+                doRetry(retryMax, retryMax, dockerIp, buildLessStartInfo, errorMessage, unAvailableIpList)
+            }
+        } else if (retryTime == retryMax) {
+            LOG.info("$$buildLog reached retry limit, switch FOLLOW policy.")
             // 清空之前不可以记录, 并重新获取可用ip，强制调用
             val dockerIpLocalPair = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = buildLessStartInfo.projectId,
@@ -361,8 +374,15 @@ class BuildLessClient @Autowired constructor(
                 dockerHostPort = dockerIpLocalPair.second,
                 buildLessStartInfo = buildLessStartInfo
                     .copy(rejectedExecutionType = RejectedExecutionType.FOLLOW_POLICY),
-                retryTime = retryTime,
+                retryTime = retryTime + 1,
                 unAvailableIpList = emptySet()
+            )
+        } else {
+            LOG.error("$buildLog reached retry limit, FOLLOW policy still failed.")
+            doFail(
+                dockerIp = dockerIp,
+                event = buildLessStartInfo,
+                errorMessage = "Reached retry limit, FOLLOW policy still failed."
             )
         }
     }

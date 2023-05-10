@@ -25,12 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.exception
+package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.buildless.pojo.RejectedExecutionType
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 
-open class DockerServiceException(
-    open val errorType: ErrorType,
-    open val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+class BuildLessStartHandlerContext(
+    val event: PipelineBuildLessStartupDispatchEvent,
+    var buildLessHost: String = "",
+    var buildLessPort: Int = 80,
+    var retryTime: Int = 0,
+    var retryMaxTime: Int = 0,
+    var buildLogKey: String = "",
+    var rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+    var unAvailableIpList: Set<String>? = emptySet(),
+    override var grayEnv: Boolean = false,
+    override var agentId: String = "",
+    override var secretKey: String = ""
+) : HandlerContext(
+    grayEnv, agentId, secretKey
+)

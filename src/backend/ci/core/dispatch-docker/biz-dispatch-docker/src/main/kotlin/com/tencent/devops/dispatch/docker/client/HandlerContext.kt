@@ -25,12 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.exception
+package com.tencent.devops.dispatch.docker.client
 
-import com.tencent.devops.common.api.pojo.ErrorType
-
-open class DockerServiceException(
-    open val errorType: ErrorType,
-    open val errorCode: Int,
-    errorMsg: String
-) : Exception(errorMsg)
+open class HandlerContext(
+    open val grayEnv: Boolean,
+    open var agentId: String,
+    open var secretKey: String
+)
