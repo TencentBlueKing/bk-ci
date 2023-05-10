@@ -37,6 +37,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUM
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
+import com.tencent.devops.process.engine.control.lock.PipelineNextQueueLock
 import com.tencent.devops.process.engine.pojo.Response
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.service.PipelineRedisService
@@ -205,12 +206,15 @@ class QueueInterceptor @Autowired constructor(
         task: InterceptData
     ) {
         // 因为排队队列是流水线级别，所以是取消当前流水线下同一并发组最早排队的构建，不一定是项目级别下同一并发组最早的构建。
-        val buildInfo = pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
-            projectId = projectId,
-            concurrencyGroup = groupName,
-            pipelineId = pipelineId,
-            buildStatus = BuildStatus.UNEXEC
-        )
+        val buildInfo = PipelineNextQueueLock(redisOperation, pipelineId).use { pipelineLock ->
+            pipelineLock.lock()
+            pipelineRuntimeExtService.popNextConcurrencyGroupQueueCanPend2Start(
+                projectId = projectId,
+                concurrencyGroup = groupName,
+                pipelineId = pipelineId,
+                buildStatus = BuildStatus.UNEXEC
+            )
+        }
         if (buildInfo != null) {
             val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                 projectCode = projectId,

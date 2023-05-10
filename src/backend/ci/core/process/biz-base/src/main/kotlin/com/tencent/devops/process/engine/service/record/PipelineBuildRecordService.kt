@@ -192,7 +192,7 @@ class PipelineBuildRecordService @Autowired constructor(
         } else {
             null
         } ?: run {
-            logger.info(
+            logger.warn(
                 "RECORD|turn to detail($buildId)|executeCount=$executeCount|" +
                     "fixedExecuteCount=$fixedExecuteCount"
             )
@@ -206,10 +206,6 @@ class PipelineBuildRecordService @Autowired constructor(
         ) ?: return null
 
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
-        logger.info(
-            "RECORD|turn to detail($buildId)|buildInfoExecuteCount=${buildInfo.executeCount}" +
-                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount"
-        )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
@@ -298,7 +294,7 @@ class PipelineBuildRecordService @Autowired constructor(
         }
         val queueTime = buildRecordModel?.queueTime?.timestampmilli() ?: buildInfo.queueTime
         val startTime = buildRecordModel?.startTime?.timestampmilli()
-        val endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime
+        val endTime = buildRecordModel?.endTime?.timestampmilli()
         val queueTimeCost = startTime?.let { it - queueTime } ?: endTime?.let { it - queueTime }
 
         return ModelRecord(
@@ -309,7 +305,7 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerUser = buildInfo.triggerUser,
             trigger = triggerInfo,
             queueTime = queueTime,
-            startTime = startTime ?: buildInfo.startTime,
+            startTime = startTime,
             queueTimeCost = queueTimeCost,
             endTime = endTime,
             status = buildRecordModel?.status ?: buildInfo.status.name,
@@ -321,8 +317,9 @@ class PipelineBuildRecordService @Autowired constructor(
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
-            executeTime = buildInfo.executeTime,
+            executeTime = buildInfo.executeTime, // 只为兼容接口，该字段不准确
             errorInfoList = buildRecordModel?.errorInfoList,
+            stageStatus = buildInfo.stageStatus,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
@@ -474,34 +471,38 @@ class PipelineBuildRecordService @Autowired constructor(
                 return@transaction
             }
             val runningStatusSet = enumValues<BuildStatus>().filter { it.isRunning() }.toSet()
+            // 刷新运行中stage状态，取出所有stage记录还需用于耗时计算
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
-            // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
                 if (!BuildStatus.parse(stage.status).isRunning()) return@nextStage
                 stage.status = buildStatus.name
-                // 第2层循环：刷新stage下运行中的container状态
-                val recordContainers = recordContainerDao.getRecords(
-                    dslContext = context, projectId = projectId,
-                    pipelineId = pipelineId, buildId = buildId,
-                    executeCount = executeCount, stageId = stage.stageId,
-                    matrixGroupId = null, buildStatusSet = runningStatusSet
-                )
-                recordContainers.forEach nextContainer@{ container ->
-                    container.status = buildStatus.name
-                    // 第3层循环：刷新stage下运行中的container状态
-                    val recordTasks = recordTaskDao.getRecords(
-                        context, projectId, pipelineId, buildId, executeCount,
-                        container.containerId, runningStatusSet
-                    )
-                    recordTasks.forEach nextTask@{ task ->
-                        task.status = buildStatus.name
-                    }
-                    recordTaskDao.batchSave(context, recordTasks)
-                }
-                recordContainerDao.batchSave(context, recordContainers)
             }
+            // 刷新运行中的container状态
+            val recordContainers = recordContainerDao.getRecords(
+                dslContext = context, projectId = projectId,
+                pipelineId = pipelineId, buildId = buildId,
+                executeCount = executeCount, stageId = null,
+                matrixGroupId = null, buildStatusSet = runningStatusSet
+            )
+            recordContainers.forEach nextContainer@{ container ->
+                container.status = buildStatus.name
+                val containerName = container.containerVar[Container::name.name] as String?
+                if (!containerName.isNullOrBlank()) {
+                    container.containerVar[Container::name.name] =
+                        ContainerUtils.getClearedQueueContainerName(containerName)
+                }
+            }
+            // 刷新运行中的task状态
+            val recordTasks = recordTaskDao.getRecords(
+                context, projectId, pipelineId, buildId, executeCount, null, runningStatusSet
+            )
+            recordTasks.forEach nextTask@{ task ->
+                task.status = buildStatus.name
+            }
+            recordTaskDao.batchSave(context, recordTasks)
+            recordContainerDao.batchSave(context, recordContainers)
             recordStageDao.batchSave(context, recordStages)
 
 //            allStageStatus = fetchHistoryStageStatus(
