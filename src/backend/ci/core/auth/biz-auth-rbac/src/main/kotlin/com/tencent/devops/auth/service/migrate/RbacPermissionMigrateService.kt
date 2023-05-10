@@ -73,7 +73,10 @@ class RbacPermissionMigrateService constructor(
     @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
+    override fun v3ToRbacAuth(
+        projectCreator: String?,
+        projectCodes: List<String>
+    ): Boolean {
         logger.info("migrate $projectCodes auth from v3 to rbac")
         val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(projectCodes = projectCodes.toSet()).data
@@ -87,6 +90,7 @@ class RbacPermissionMigrateService constructor(
         )
         return projectCodes.map { projectCode ->
             migrateToRbacAuth(
+                projectCreator = projectCreator,
                 projectCode = projectCode,
                 migrateTaskId = 0,
                 authType = V3_AUTH_TYPE
@@ -94,7 +98,10 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Boolean {
+    override fun v0ToRbacAuth(
+        projectCreator: String?,
+        projectCodes: List<String>
+    ): Boolean {
         logger.info("migrate $projectCodes auth from v0 to rbac")
         // 1. 启动迁移任务
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
@@ -102,6 +109,7 @@ class RbacPermissionMigrateService constructor(
         )
         return projectCodes.map { projectCode ->
             migrateToRbacAuth(
+                projectCreator = projectCreator,
                 projectCode = projectCode,
                 migrateTaskId = migrateTaskId,
                 authType = V0_AUTH_TYPE
@@ -111,6 +119,7 @@ class RbacPermissionMigrateService constructor(
 
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
+        projectCreator: String?,
         projectCode: String,
         migrateTaskId: Int,
         authType: String
@@ -131,15 +140,11 @@ class RbacPermissionMigrateService constructor(
                 logger.warn("project $projectCode not exist")
                 return false
             }
-            // 判断项目的创建人是否离职，若离职，则直接结束。并发出通知
-            val isProjectCreatorNotExist = deptService.getUserInfo(
-                userId = "admin",
-                name = projectInfo.creator!!
-            ) == null
-            if (isProjectCreatorNotExist) {
-                logger.warn("project creator is not exist!|creator=${projectInfo.creator}")
-                return false
-            }
+            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
+            val resourceCreator = buildResourceCreator(
+                projectCreator = projectCreator,
+                dbProjectCreator = projectInfo.creator!!
+            ) ?: return false
 
             authMigrationDao.create(
                 dslContext = dslContext,
@@ -154,7 +159,11 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                createGradeManager(projectCode, projectInfo)
+                createGradeManager(
+                    projectCode = projectCode,
+                    projectInfo = projectInfo,
+                    resourceCreator = resourceCreator
+                )
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
@@ -165,7 +174,7 @@ class RbacPermissionMigrateService constructor(
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
                 projectCode = projectCode,
-                projectCreator = projectInfo.creator!!
+                resourceCreator = resourceCreator
             )
 
             when (authType) {
@@ -284,11 +293,12 @@ class RbacPermissionMigrateService constructor(
 
     private fun createGradeManager(
         projectCode: String,
-        projectInfo: ProjectVO
+        projectInfo: ProjectVO,
+        resourceCreator: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
         permissionResourceService.resourceCreateRelation(
-            userId = projectInfo.creator ?: "",
+            userId = resourceCreator,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
@@ -299,5 +309,20 @@ class RbacPermissionMigrateService constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         )?.relationId?.toInt()
+    }
+
+    private fun buildResourceCreator(
+        projectCreator: String?,
+        dbProjectCreator: String
+    ): String? {
+        val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
+            userId = "admin",
+            name = dbProjectCreator
+        ) == null
+        if (isDbProjectCreatorLeaveOffice && projectCreator == null) {
+            logger.warn("project creator is not exist!|creator=$dbProjectCreator")
+            return null
+        }
+        return projectCreator ?: dbProjectCreator
     }
 }

@@ -39,11 +39,27 @@ class OpAuthMigrateResourceImpl @Autowired constructor(
     private val permissionMigrateService: PermissionMigrateService
 ) : OpAuthMigrateResource {
 
-    override fun v3ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
-        return Result(permissionMigrateService.v3ToRbacAuth(projectCodes = projectCodes))
+    override fun v3ToRbacAuth(
+        projectCreator: String?,
+        projectCodes: List<String>
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService.v3ToRbacAuth(
+                projectCodes = projectCodes,
+                projectCreator = projectCreator
+            )
+        )
     }
 
-    override fun v0ToRbacAuth(projectCodes: List<String>): Result<Boolean> {
-        return Result(permissionMigrateService.v0ToRbacAuth(projectCodes = projectCodes))
+    override fun v0ToRbacAuth(
+        projectCreator: String?,
+        projectCodes: List<String>
+    ): Result<Boolean> {
+        return Result(
+            permissionMigrateService.v0ToRbacAuth(
+                projectCodes = projectCodes,
+                projectCreator = projectCreator
+            )
+        )
     }
 }

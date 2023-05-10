@@ -77,7 +77,7 @@ class MigrateResourceService @Autowired constructor(
     @Suppress("SpreadOperator")
     fun migrateResource(
         projectCode: String,
-        projectCreator: String
+        resourceCreator: String
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
@@ -96,7 +96,7 @@ class MigrateResourceService @Autowired constructor(
                         migrateResource(
                             projectCode = projectCode,
                             resourceType = resourceType,
-                            projectCreator = projectCreator
+                            resourceCreator = resourceCreator
                         )
                     },
                     executorService
@@ -121,7 +121,7 @@ class MigrateResourceService @Autowired constructor(
     private fun migrateResource(
         projectCode: String,
         resourceType: String,
-        projectCreator: String
+        resourceCreator: String
     ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource|$projectCode|$resourceType")
@@ -129,7 +129,7 @@ class MigrateResourceService @Autowired constructor(
             createRbacResource(
                 resourceType = resourceType,
                 projectCode = projectCode,
-                projectCreator = projectCreator
+                resourceCreator = resourceCreator
             )
         } finally {
             logger.info(
@@ -141,7 +141,7 @@ class MigrateResourceService @Autowired constructor(
     private fun createRbacResource(
         resourceType: String,
         projectCode: String,
-        projectCreator: String
+        resourceCreator: String
     ) {
         var offset = 0L
         val limit = 100L
@@ -180,7 +180,7 @@ class MigrateResourceService @Autowired constructor(
                         userId = "admin",
                         name = it.iamApprover[0]
                     ) == null
-                    val iamApprover = if (isResourceCreatorNotExist) projectCreator else it.iamApprover[0]
+                    val iamApprover = if (isResourceCreatorNotExist) resourceCreator else it.iamApprover[0]
                     rbacPermissionResourceService.resourceCreateRelation(
                         userId = iamApprover,
                         projectCode = projectCode,
