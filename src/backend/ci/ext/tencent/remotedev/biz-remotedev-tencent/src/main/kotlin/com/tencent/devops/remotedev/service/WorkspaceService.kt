@@ -168,7 +168,7 @@ class WorkspaceService @Autowired constructor(
         if (yaml.isBlank()) {
             logger.warn(
                 "create workspace get devfile blank,return." +
-                        "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
+                    "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
@@ -481,7 +481,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
                     "start workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -685,7 +685,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
                     "stop workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -727,6 +727,13 @@ class WorkspaceService @Autowired constructor(
                     params = arrayOf(workspace.name, "status is already $status, can't delete now")
                 )
             }
+            /*处理异常的情况，如果还异常，直接强制删除*/
+            var deleteImmediately = false
+            kotlin.runCatching { checkAndFixExceptionWS(status, userId, workspaceName) }.onFailure {
+                if (it is ErrorCodeException && it.errorCode == ErrorCodeEnum.WORKSPACE_ERROR.errorCode) {
+                    deleteImmediately = true
+                }
+            }.getOrThrow()
 
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -755,6 +762,10 @@ class WorkspaceService @Autowired constructor(
                         WorkspaceStatus.DELETING.name
                     )
                 )
+            }
+
+            if (deleteImmediately) {
+                doDeleteWS(true, userId, workspaceName, null)
             }
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -827,7 +838,7 @@ class WorkspaceService @Autowired constructor(
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
                     "delete workspace callback with error|" +
-                            "${event.workspaceName}|${workspaceInfo.status}"
+                        "${event.workspaceName}|${workspaceInfo.status}"
                 )
             }
         }
@@ -963,7 +974,7 @@ class WorkspaceService @Autowired constructor(
 
             else -> logger.warn(
                 "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                        "$workspaceName|${workspaceInfo.status}"
+                    "$workspaceName|${workspaceInfo.status}"
             )
         }
         return status
@@ -1013,7 +1024,7 @@ class WorkspaceService @Autowired constructor(
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
             chargeableTime = endBilling.second +
-                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1077,7 +1088,7 @@ class WorkspaceService @Autowired constructor(
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
-                        (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
@@ -1358,12 +1369,12 @@ class WorkspaceService @Autowired constructor(
         if (status) {
             // 删除环境管理第三方构建机记录
             val projectId = remoteDevSettingDao.fetchAnySetting(dslContext, workspace.creator).projectId
-            if (client.get(ServiceNodeResource::class)
-                    .deleteThirdPartyNode(workspace.creator, projectId, workspace.preciAgentId ?: "").data == false
+            if (!workspace.preciAgentId.isNullOrBlank() && client.get(ServiceNodeResource::class)
+                    .deleteThirdPartyNode(workspace.creator, projectId, workspace.preciAgentId).data == false
             ) {
                 logger.warn(
                     "delete workspace $workspaceName, but third party agent delete failed." +
-                            "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
+                        "|${workspace.creator}|$projectId|$nodeIp|${workspace.preciAgentId}"
                 )
             }
             // 清缓存
