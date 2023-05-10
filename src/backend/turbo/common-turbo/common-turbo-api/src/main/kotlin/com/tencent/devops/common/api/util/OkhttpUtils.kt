@@ -2,7 +2,6 @@ package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_THIRDPARTY_SYSTEM_FAIL
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
