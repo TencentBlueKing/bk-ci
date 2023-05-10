@@ -422,7 +422,7 @@ class ImageArtifactoryService @Autowired constructor(
         records.forEach {
             val dockerTag = DockerTag()
             logger.info("it in records")
-            logger.info("it[\"createdDate\"] :${it["createdDate"]}")
+            logger.info("it[\"createdDate\"] :${DateTime(it["createdDate"] as String).toString("yyyy-MM-dd HH:mm:ss")}")
             logger.info("it[\"createdBy\"] :${it["createdBy"]}")
             dockerTag.created = DateTime(it["createdDate"] as String).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.createdBy = it["createdBy"] as String
@@ -430,7 +430,7 @@ class ImageArtifactoryService @Autowired constructor(
             dockerTag.modifiedBy = it["lastModifiedBy"] as String
             dockerTag.desc = it["description"] as String
             dockerTag.repo = it["repoName"] as String
-            dockerTag.tag = it["latest"] as String
+            dockerTag.tag = it["latest"] as String?
             /*val properties = it["properties"] as List<Map<String, Any>>
             for (item in properties) {
                 val key = item["key"] ?: ""
