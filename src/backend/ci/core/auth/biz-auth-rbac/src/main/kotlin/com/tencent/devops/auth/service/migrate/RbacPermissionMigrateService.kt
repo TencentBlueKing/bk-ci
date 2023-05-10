@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service.migrate
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
@@ -73,13 +74,12 @@ class RbacPermissionMigrateService constructor(
     @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
-    override fun v3ToRbacAuth(
-        projectCreator: String?,
-        projectCodes: List<String>
-    ): Boolean {
-        logger.info("migrate $projectCodes auth from v3 to rbac")
+    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+        logger.info("migrate $migrateProjects auth from v3 to rbac")
         val projectVos =
-            client.get(ServiceProjectResource::class).listByProjectCode(projectCodes = projectCodes.toSet()).data
+            client.get(ServiceProjectResource::class).listByProjectCode(
+                projectCodes = migrateProjects.map { it.projectCode }.toSet()
+            ).data
                 ?: run {
                     logger.info("migrate project info is empty")
                     return false
@@ -88,29 +88,24 @@ class RbacPermissionMigrateService constructor(
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         )
-        return projectCodes.map { projectCode ->
+        return migrateProjects.map { migrateProject ->
             migrateToRbacAuth(
-                projectCreator = projectCreator,
-                projectCode = projectCode,
+                migrateProject = migrateProject,
                 migrateTaskId = 0,
                 authType = V3_AUTH_TYPE
             )
         }.all { it }
     }
 
-    override fun v0ToRbacAuth(
-        projectCreator: String?,
-        projectCodes: List<String>
-    ): Boolean {
-        logger.info("migrate $projectCodes auth from v0 to rbac")
+    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+        logger.info("migrate $migrateProjects auth from v0 to rbac")
         // 1. 启动迁移任务
         val migrateTaskId = migrateV0PolicyService.startMigrateTask(
-            projectCodes = projectCodes
+            projectCodes = migrateProjects.map { it.projectCode }
         )
-        return projectCodes.map { projectCode ->
+        return migrateProjects.map { migrateProject ->
             migrateToRbacAuth(
-                projectCreator = projectCreator,
-                projectCode = projectCode,
+                migrateProject = migrateProject,
                 migrateTaskId = migrateTaskId,
                 authType = V0_AUTH_TYPE
             )
@@ -119,14 +114,15 @@ class RbacPermissionMigrateService constructor(
 
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
-        projectCreator: String?,
-        projectCode: String,
+        migrateProject: MigrateProjectDTO,
         migrateTaskId: Int,
         authType: String
     ): Boolean {
+        val projectCode = migrateProject.projectCode
+        val projectCreator = migrateProject.projectCreator
         logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
-        val watcher = Watcher("v3ToRbacAuth|$projectCode")
+        val watcher = Watcher("migrateToRbacAuth|$projectCode")
         try {
             val authMigrationInfo = authMigrationDao.get(
                 dslContext = dslContext,

@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
+
 /**
  * 权限中心迁移服务
  */
@@ -36,16 +38,10 @@ interface PermissionMigrateService {
     /**
      * v3迁移到rbac
      */
-    fun v3ToRbacAuth(
-        projectCreator: String?,
-        projectCodes: List<String>
-    ): Boolean
+    fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
 
     /**
      * v0迁移到rbac
      */
-    fun v0ToRbacAuth(
-        projectCreator: String?,
-        projectCodes: List<String>
-    ): Boolean
+    fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
 }

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.migrate
 
+import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -36,7 +37,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
@@ -49,21 +49,15 @@ interface OpAuthMigrateResource {
     @Path("/v3ToRbac")
     @ApiOperation("v3权限升级到rbac权限")
     fun v3ToRbacAuth(
-        @QueryParam("projectCreator")
-        @ApiParam("指定项目创建人", required = false)
-        projectCreator: String?,
-        @ApiParam("项目Code", required = true)
-        projectCodes: List<String>
+        @ApiParam("迁移项目", required = true)
+        migrateProjects: List<MigrateProjectDTO>
     ): Result<Boolean>
 
     @POST
     @Path("/v0ToRbac")
     @ApiOperation("v0权限升级到rbac权限")
     fun v0ToRbacAuth(
-        @QueryParam("creator")
-        @ApiParam("指定项目创建人", required = false)
-        projectCreator: String?,
-        @ApiParam("项目Code", required = true)
-        projectCodes: List<String>
+        @ApiParam("迁移项目", required = true)
+        migrateProjects: List<MigrateProjectDTO>
     ): Result<Boolean>
 }
