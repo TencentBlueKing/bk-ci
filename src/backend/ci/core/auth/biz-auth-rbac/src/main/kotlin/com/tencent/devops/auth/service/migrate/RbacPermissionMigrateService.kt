@@ -132,14 +132,14 @@ class RbacPermissionMigrateService constructor(
                 return false
             }
             // 判断项目的创建人是否离职，若离职，则直接结束。并发出通知
-            /*val isProjectCreatorNotExist = deptService.getUserInfo(
+            val isProjectCreatorNotExist = deptService.getUserInfo(
                 userId = "greysonfang",
                 name = projectInfo.creator!!
             ) == null
             if (isProjectCreatorNotExist) {
-                logger.error("project creator is not exist!|creator=${projectInfo.creator}")
+                logger.warn("project creator is not exist!|creator=${projectInfo.creator}")
                 return false
-            }*/
+            }
 
             authMigrationDao.create(
                 dslContext = dslContext,
