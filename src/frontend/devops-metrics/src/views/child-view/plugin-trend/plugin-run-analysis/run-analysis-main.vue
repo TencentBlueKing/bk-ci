@@ -6,6 +6,8 @@ import AnalysisLines from './children/analysis-lines.vue';
 import AnalysisTable from './children/analysis-table.vue';
 import {
   onMounted,
+  computed,
+  watch,
   ref,
 } from 'vue';
 import http from '@/http/api';
@@ -15,8 +17,15 @@ import {
 } from 'vue-router';
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
-
 const route = useRoute();
+const projectId = computed(() => route.params.projectId)
+
+watch(() => projectId, () => {
+  getPluginList();
+}, {
+  deep: true
+})
+
 const status = ref({
   pipelineIds: <any[]>[route.query.pipelineId].filter(v => v),
   pipelineLabelIds: [],
