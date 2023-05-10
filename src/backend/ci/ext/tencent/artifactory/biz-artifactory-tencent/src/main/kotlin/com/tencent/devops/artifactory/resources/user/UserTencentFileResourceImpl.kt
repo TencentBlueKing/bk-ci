@@ -60,7 +60,7 @@ class UserTencentFileResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun copy(userId: String, copyFileRequest: CopyFileRequest) {
+    override fun copy(userId: String, copyFileRequest: CopyFileRequest): Result<Boolean> {
         with(copyFileRequest) {
             if (dstArtifactoryType != ArtifactoryType.CUSTOM_DIR) {
                 throw IllegalArgumentException("invalid dstArtifactoryType")
@@ -79,6 +79,7 @@ class UserTencentFileResourceImpl @Autowired constructor(
                 )
             }
         }
+        return Result(true)
     }
 
     private fun checkParam(userId: String, projectId: String, path: String) {
