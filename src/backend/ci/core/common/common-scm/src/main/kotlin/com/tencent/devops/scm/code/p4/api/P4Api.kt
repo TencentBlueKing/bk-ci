@@ -33,6 +33,7 @@ import com.perforce.p4java.core.file.FileSpecOpStatus
 import com.tencent.devops.scm.code.p4.P4Client
 import com.tencent.devops.scm.code.p4.P4Server
 import com.tencent.devops.scm.enums.P4TriggerType
+import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.p4.DepotInfo
 import com.tencent.devops.scm.pojo.p4.TriggerInfo
 import com.tencent.devops.scm.pojo.p4.Workspace
@@ -221,6 +222,7 @@ class P4Api(
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
+
             TriggerType.SHELVE_COMMIT,
             TriggerType.SHELVE_DELETE,
             TriggerType.SHELVE_SUBMIT
@@ -231,6 +233,7 @@ class P4Api(
                 )
                 Pair(eventScriptFileName, "\"$replaceCommand\"")
             }
+
             else -> {
                 val eventScriptFileName = "change.sh"
                 val replaceCommand = MessageFormat.format(
@@ -272,5 +275,15 @@ class P4Api(
 
         val result = p4Server.addTriggers(newTriggers)
         logger.info("add p4 triggers|$p4port|$eventType|$result")
+    }
+
+    fun getServerInfo(): P4ServerInfo {
+        return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.getServer().serverInfo.run {
+                P4ServerInfo(
+                    caseSensitive = this.isCaseSensitive
+                )
+            }
+        }
     }
 }

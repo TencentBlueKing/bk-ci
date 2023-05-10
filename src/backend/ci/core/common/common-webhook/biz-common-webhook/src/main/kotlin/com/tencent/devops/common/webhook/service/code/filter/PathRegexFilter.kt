@@ -33,7 +33,8 @@ class PathRegexFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
-    private val excludedPaths: List<String>
+    private val excludedPaths: List<String>,
+    private val caseSensitive: Boolean? = true
 ) : BasePathFilter(
     pipelineId = pipelineId,
     triggerOnPath = triggerOnPath,
@@ -43,6 +44,9 @@ class PathRegexFilter(
     private val matcher = AntPathMatcher()
 
     override fun isPathMatch(eventPath: String, userPath: String): Boolean {
+        if (caseSensitive != null) {
+            matcher.setCaseSensitive(caseSensitive)
+        }
         return matcher.match(userPath, eventPath)
     }
 }
