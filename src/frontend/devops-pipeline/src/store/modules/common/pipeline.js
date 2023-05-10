@@ -18,28 +18,28 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import request from '@/utils/request'
 import {
+    ARTIFACTORY_API_URL_PREFIX,
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     QUALITY_API_URL_PREFIX,
-    ARTIFACTORY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
     STORE_API_URL_PREFIX
 } from '@/store/constants'
+import request from '@/utils/request'
 
 import {
-    REPOSITORY_MUTATION,
-    TEMPLATE_CATEGORY_MUTATION,
-    PIPELINE_TEMPLATE_MUTATION,
-    STORE_TEMPLATE_MUTATION,
-    TEMPLATE_MUTATION,
-    UPDATE_PIPELINE_SETTING_MUNTATION,
-    RESET_PIPELINE_SETTING_MUNTATION,
-    REFRESH_QUALITY_LOADING_MUNTATION,
-    QUALITY_ATOM_MUTATION,
     INTERCEPT_ATOM_MUTATION,
-    INTERCEPT_TEMPLATE_MUTATION
+    INTERCEPT_TEMPLATE_MUTATION,
+    PIPELINE_TEMPLATE_MUTATION,
+    QUALITY_ATOM_MUTATION,
+    REFRESH_QUALITY_LOADING_MUNTATION,
+    REPOSITORY_MUTATION,
+    RESET_PIPELINE_SETTING_MUNTATION,
+    STORE_TEMPLATE_MUTATION,
+    TEMPLATE_CATEGORY_MUTATION,
+    TEMPLATE_MUTATION,
+    UPDATE_PIPELINE_SETTING_MUNTATION
 } from './constants'
 
 function rootCommit (commit, ACTION_CONST, payload) {
@@ -265,6 +265,11 @@ export const actions = {
     },
     requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildNo, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildNo}/copyToCustom`, params).then(response => {
+            return response.data
+        })
+    },
+    requestCopyArtifactories: async ({ commit }, params) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/file/copy`, params).then(response => {
             return response.data
         })
     },

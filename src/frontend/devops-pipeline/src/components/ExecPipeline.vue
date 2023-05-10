@@ -94,7 +94,6 @@
                     'exec-errors-popup': true,
                     visible: showErrors
                 }"
-                v-bk-clickoutside="hideErrorPopup"
             >
                 <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
                 >.....</bk-button
@@ -130,7 +129,7 @@
                         <bk-table
                             :data="errorList"
                             :border="false"
-                            @row-click="setAtomLocate"
+                            @row-click="(row) => setAtomLocate(row)"
                             highlight-current-row
                         >
                             <bk-table-column width="80">
@@ -168,6 +167,7 @@
                                         <bk-button
                                             class="build-error-see-more"
                                             theme="primary"
+                                            @click.stop="setAtomLocate(props.row, true)"
                                             text
                                         >
                                             {{$t('history.viewLog')}}
@@ -436,7 +436,7 @@
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
                 this.setAtomLocate(this.errorList[0])
-                this.setShowErrorPopup()
+                this.toggleErrorPopup()
             }
         },
         beforeDestroy () {
@@ -466,13 +466,13 @@
             },
             toggleErrorPopup () {
                 this.showErrors = !this.showErrors
+                this.$emit('show-error-popup', this.showErrors)
             },
             setShowErrorPopup () {
                 this.showErrors = true
+                // this.$emit('show-error-popup', true)
             },
-            hideErrorPopup () {
-                this.showErrors = false
-            },
+
             handlePiplineClick (args) {
                 this.togglePropertyPanel({
                     isShow: true,
@@ -631,37 +631,19 @@
                     this.skipTask = false
                 }
             },
-            async locateAtom (row, isLocate = true) {
+            locate (row, isLocate = true) {
                 try {
                     const { stageId, containerId, taskId, matrixFlag } = row
-                    let stageIndex, containerGroupIndex, containerIndex, elementIndex
-                    const stage = this.curPipeline.stages.find((stage, index) => {
-                        if (stage.id === stageId) {
-                            stageIndex = index
-                            return true
-                        }
-                        return false
-                    })
+                    let containerGroupIndex, containerIndex, matrixId
+                    const stageIndex = this.curPipeline.stages.findIndex(stage => stage.id === stageId)
+                    const stage = this.curPipeline.stages[stageIndex]
                     let container
                     if (matrixFlag) {
                         const numContainerId = parseInt(containerId, 10)
-                        const matrixId = Math.floor(numContainerId / 1000).toString()
-                        container = stage.containers
-                            .find((item, index) => {
-                                if (item.id === matrixId) {
-                                    containerIndex = index
-                                    return true
-                                }
-                                return false
-                            })?.groupContainers?.find?.((item, index) => {
-                                if (item.id === containerId) {
-                                    containerGroupIndex = index
-                                    return true
-                                }
-                                return false
-                            })
-                        console.log(stage.containers)
-                        await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
+                        matrixId = Math.floor(numContainerId / 1000).toString()
+                        containerIndex = stage.containers.findIndex(item => item.id === matrixId)
+                        containerGroupIndex = stage.containers[containerIndex]?.groupContainers?.findIndex?.(item => item.id === containerId)
+                        container = stage.containers[containerIndex].groupContainers[containerGroupIndex]
                     } else {
                         container = stage.containers.find((item, index) => {
                             if (item.id === containerId) {
@@ -672,38 +654,65 @@
                         })
                     }
 
-                    const element = container.elements.find((element, index) => {
-                        if (element.id === taskId) {
-                            elementIndex = index
-                            return true
+                    const elementIndex = container.elements.findIndex(element => element.id === taskId)
+                    return {
+                        matrixId,
+                        stageIndex: stageIndex > -1 ? stageIndex : undefined,
+                        containerIndex: containerIndex > -1 ? containerIndex : undefined,
+                        containerGroupIndex: containerGroupIndex > -1 ? containerGroupIndex : undefined,
+                        elementIndex: elementIndex > -1 ? elementIndex : undefined
+                    }
+                } catch (e) {
+                    console.log(e)
+                    return {}
+                }
+            },
+            async locateError (row, isLocate = true, showLog = false) {
+                try {
+                    const {
+                        stageIndex,
+                        containerIndex,
+                        containerGroupIndex,
+                        matrixId,
+                        elementIndex
+                    } = this.locate(row)
+                    const { stageId, containerId, matrixFlag } = row
+                    let container = this.curPipeline.stages[stageIndex].containers[containerIndex]
+                    if (matrixFlag) {
+                        container = container.groupContainers[containerGroupIndex]
+                        if (isLocate) {
+                            await this.$refs.bkPipeline.expandMatrix(stageId, matrixId, containerId)
                         }
-                        return false
-                    })
+                    }
+                    const element = container.elements[elementIndex]
                     if (element) {
                         this.$set(element, 'locateActive', isLocate)
                     } else {
                         this.$set(container, 'locateActive', isLocate)
                     }
 
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        editingElementPos: {
-                            stageIndex,
-                            containerGroupIndex,
-                            containerIndex,
-                            elementIndex
-                        }
-                    })
-                } catch (e) {
-                    console.log(e)
+                    if (this.isPropertyPanelVisible || (showLog && isLocate)) {
+                        this.togglePropertyPanel({
+                            isShow: true,
+                            editingElementPos: {
+                                stageIndex,
+                                containerIndex,
+                                containerGroupIndex,
+                                elementIndex
+                            }
+                        })
+                    }
+                } catch (error) {
+                    console.error(error)
                 }
             },
-            setAtomLocate (row) {
-                if (this.activeErrorAtom?.taskId === row.taskId) return
+            setAtomLocate (row, showLog = false) {
+                console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible')
+                if (this.activeErrorAtom?.taskId === row.taskId && !showLog) return
                 if (this.activeErrorAtom?.taskId) {
-                    this.locateAtom(this.activeErrorAtom, false)
+                    this.locateError(this.activeErrorAtom, false, showLog)
                 }
-                this.locateAtom(row)
+                this.locateError(row, true, showLog)
                 this.activeErrorAtom = row
             },
             handleExecuteCountChange (executeCount) {

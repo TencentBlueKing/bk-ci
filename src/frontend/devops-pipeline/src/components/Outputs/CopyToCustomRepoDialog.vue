@@ -78,7 +78,7 @@
         },
 
         methods: {
-            ...mapActions('common', ['requestCustomFolder', 'requestCopyArtifactory']),
+            ...mapActions('common', ['requestCustomFolder', 'requestCopyArtifactories']),
             show () {
                 this.isCopyDialogShow = true
             },
@@ -121,13 +121,16 @@
             async copyToCustom () {
                 let message, theme
                 try {
-                    const res = await this.requestCopyArtifactory({
-                        ...this.$route.params,
-                        params: {
-                            files: [this.artifact.fullPath],
-                            destPath: this.activeFolder,
-                            copyAll: false
-                        }
+                    console.log(this.artifact)
+                    const res = await this.requestCopyArtifactories({
+                        projectId: this.$route.params.projectId,
+                        srcArtifactoryType: this.artifact.artifactoryType,
+                        srcFileFullPaths: [
+                            this.artifact.fullPath
+                        ],
+                        dstArtifactoryType: 'CUSTOM_DIR',
+                        dstDirFullPath: this.activeFolder
+
                     })
                     if (res) {
                         message = this.$createElement('span', {}, [

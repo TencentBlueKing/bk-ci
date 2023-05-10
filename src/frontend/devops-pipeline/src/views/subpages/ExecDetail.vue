@@ -470,7 +470,7 @@
   overflow: auto;
 
   .exec-detail-summary-header {
-    padding: 18px 24px;
+    padding: 8px 24px;
     background: white;
     display: flex;
     justify-content: space-between;
@@ -531,7 +531,7 @@
     width: 100%;
     min-height: 2px;
     position: sticky;
-    top: 60px;
+    top: 40px;
     z-index: 8;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   }
@@ -542,7 +542,7 @@
     background: white;
     position: absolute;
     z-index: 9;
-    top: 60px;
+    top: 40px;
   }
 
   .exec-detail-main {

@@ -99,16 +99,17 @@
                     if (res && res.id) {
                         message = this.$t('subpage.rebuildSuc')
                         theme = 'success'
-                        if (goDetail) {
-                            this.$router.replace({
-                                name: 'pipelinesDetail',
-                                params: {
-                                    projectId,
-                                    pipelineId,
-                                    buildNo: res.id
-                                }
-                            })
-                        }
+                        this.$router.replace({
+                            name: 'pipelinesDetail',
+                            params: {
+                                ...this.$route.params,
+                                projectId,
+                                pipelineId,
+                                buildNo: res.id,
+                                type: 'executeDetail',
+                                executeCount: res.executeCount
+                            }
+                        })
                         this.$emit('update-table')
                     } else {
                         message = this.$t('subpage.rebuildFail')

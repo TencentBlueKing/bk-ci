@@ -16,7 +16,7 @@
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
-            <error-summary v-if="activeErorr" :error="activeErorr"></error-summary>
+            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
             <plugin-log :id="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"

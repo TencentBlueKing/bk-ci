@@ -14,7 +14,7 @@
             @click="handleDebug"
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
-            <error-summary v-if="activeErorr" :error="activeErorr"></error-summary>
+            <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
             <plugin-log :id="currentJob.containerHashId"
                 :build-id="execDetail.id"
                 :exec-detail="execDetail"
