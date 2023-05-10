@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
@@ -48,6 +49,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -176,22 +178,22 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    val isResourceCreatorNotExist = deptService.getUserInfo(
-                        userId = "admin",
-                        name = it.iamApprover[0]
-                    ) == null
-                    val iamApprover = if (isResourceCreatorNotExist) resourceCreator else it.iamApprover[0]
-                    try {
-                        rbacPermissionResourceService.resourceCreateRelation(
-                            userId = iamApprover,
-                            projectCode = projectCode,
-                            resourceType = resourceType,
-                            resourceCode = resourceCode,
-                            resourceName = it.displayName
-                        )
-                    } catch (exception: Exception) {
-                        logger.warn("create subset manager failed!reason:$exception")
-                        throw exception
+                    val iamApprover = buildIamApprover(it.iamApprover[0], resourceCreator)
+                    val resourceName = it.displayName
+                    for (suffix in 0..5) {
+                        try {
+                            rbacPermissionResourceService.resourceCreateRelation(
+                                userId = iamApprover,
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                            )
+                            break
+                        } catch (iamException: IamException) {
+                            if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR) throw iamException
+                            if (suffix == 5) throw iamException
+                        }
                     }
                 }
             }
@@ -266,6 +268,17 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
+    private fun buildIamApprover(
+        iamApprover: String,
+        resourceCreator: String
+    ): String {
+        val isResourceCreatorNotExist = deptService.getUserInfo(
+            userId = "admin",
+            name = iamApprover
+        ) == null
+        return if (isResourceCreatorNotExist) resourceCreator else iamApprover
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
         private val noNeedToMigrateResourceType = listOf(
@@ -279,5 +292,6 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.EXPERIENCE_GROUP_NEW.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
+        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
     }
 }

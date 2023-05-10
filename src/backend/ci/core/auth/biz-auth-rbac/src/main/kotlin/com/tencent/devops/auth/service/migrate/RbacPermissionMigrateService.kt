@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
@@ -40,6 +41,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -72,6 +74,7 @@ class RbacPermissionMigrateService constructor(
         private const val V3_AUTH_TYPE = "v3"
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val IAM_NAME_CONFLICT_ERROR = 1902409L
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -157,16 +160,11 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                try {
-                    createGradeManager(
-                        projectCode = projectCode,
-                        projectInfo = projectInfo,
-                        resourceCreator = resourceCreator
-                    )
-                } catch (exception: Exception) {
-                    logger.warn("create grade manager failed!reason:$exception")
-                    throw exception
-                }
+                createGradeManager(
+                    projectCode = projectCode,
+                    projectInfo = projectInfo,
+                    resourceCreator = resourceCreator
+                )
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
@@ -306,13 +304,22 @@ class RbacPermissionMigrateService constructor(
         resourceCreator: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        permissionResourceService.resourceCreateRelation(
-            userId = resourceCreator,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectInfo.projectName
-        )
+        val resourceName = projectInfo.projectName
+        for (suffix in 0..5) {
+            try {
+                permissionResourceService.resourceCreateRelation(
+                    userId = resourceCreator,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName)
+                )
+                break
+            } catch (iamException: IamException) {
+                if (iamException.errorCode != IAM_NAME_CONFLICT_ERROR) throw iamException
+                if (suffix == 5) throw iamException
+            }
+        }
         return authResourceService.getOrNull(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
