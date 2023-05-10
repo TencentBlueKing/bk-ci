@@ -49,12 +49,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.service.trace.TraceTag
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 
 /**
  * 将资源迁移到权限中心
@@ -181,13 +181,18 @@ class MigrateResourceService @Autowired constructor(
                         name = it.iamApprover[0]
                     ) == null
                     val iamApprover = if (isResourceCreatorNotExist) resourceCreator else it.iamApprover[0]
-                    rbacPermissionResourceService.resourceCreateRelation(
-                        userId = iamApprover,
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = it.displayName
-                    )
+                    try {
+                        rbacPermissionResourceService.resourceCreateRelation(
+                            userId = iamApprover,
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            resourceName = it.displayName
+                        )
+                    } catch (exception: Exception) {
+                        logger.warn("create subset manager failed!reason:$exception")
+                        throw exception
+                    }
                 }
             }
             offset += limit

@@ -157,11 +157,16 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                createGradeManager(
-                    projectCode = projectCode,
-                    projectInfo = projectInfo,
-                    resourceCreator = resourceCreator
-                )
+                try {
+                    createGradeManager(
+                        projectCode = projectCode,
+                        projectInfo = projectInfo,
+                        resourceCreator = resourceCreator
+                    )
+                } catch (exception: Exception) {
+                    logger.warn("create grade manager failed!reason:$exception")
+                    throw exception
+                }
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
