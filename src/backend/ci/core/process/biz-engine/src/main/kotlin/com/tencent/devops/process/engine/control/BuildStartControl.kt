@@ -52,10 +52,13 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_CONCURRENCY
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_SINGLE
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -300,7 +303,16 @@ class BuildStartControl @Autowired constructor(
             LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|${concurrencyGroupRunning.count()}")
             if (concurrencyGroupRunning.isNotEmpty()) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId,
+                    buildId = buildId,
+                    oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_CONCURRENCY,
+                        defaultMessage = "QUEUE: concurrency for group($concurrencyGroup)",
+                        params = arrayOf(concurrencyGroup)
+                    )
+                )
                 val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                     projectCode = projectId,
                     pipelineId = concurrencyGroupRunning.first().first,
@@ -337,7 +349,13 @@ class BuildStartControl @Autowired constructor(
 
             if (buildSummaryRecord!!.runningCount > 0) {
                 // 需要重新入队等待
-                pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                pipelineRuntimeService.updateBuildInfoStatus2Queue(
+                    projectId = projectId, buildId = buildId, oldStatus = BuildStatus.QUEUE_CACHE,
+                    showMsg = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = BUILD_QUEUE_FOR_SINGLE,
+                        defaultMessage = "QUEUE: The current build is queued"
+                    )
+                )
 
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}, queue: ${buildSummaryRecord.runningCount}",

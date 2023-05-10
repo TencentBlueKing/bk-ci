@@ -221,6 +221,7 @@ class PipelineRepositoryService constructor(
             s.id = VMUtils.genStageId(index + 1)
             // #4531 对存量的stage审核数据做兼容处理
             s.resetBuildOption(true)
+            s.timeCost = null
             if (index == 0) { // 在流程模型中初始化触发类容器
                 initTriggerContainer(
                     stage = s,
@@ -399,7 +400,7 @@ class PipelineRepositoryService constructor(
                 if (e.id.isNullOrBlank() || distIds.contains(e.id)) {
                     e.id = modelTaskIdGenerator.getNextId()
                 }
-                c.timeCost = null
+                e.timeCost = null
                 distIds.add(e.id!!)
                 when (e) {
                     is SubPipelineCallElement -> { // 子流水线循环依赖检查
