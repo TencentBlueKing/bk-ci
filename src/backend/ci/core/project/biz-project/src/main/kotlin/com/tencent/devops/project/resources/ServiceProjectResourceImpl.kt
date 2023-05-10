@@ -28,6 +28,7 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
@@ -183,11 +184,25 @@ class ServiceProjectResourceImpl @Autowired constructor(
     }
 
     override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
-        return Result(projectService.verifyUserProjectPermission(
-            accessToken = null,
-            userId = userId,
-            projectId = projectId,
-            permission = permission
-        ))
+        return Result(
+            projectService.verifyUserProjectPermission(
+                accessToken = null,
+                userId = userId,
+                projectId = projectId,
+                permission = permission
+            )
+        )
+    }
+
+    override fun updateProjectSubjectScopes(
+        projectId: String,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Result<Boolean> {
+        return Result(
+            projectService.updateProjectSubjectScopes(
+                projectId = projectId,
+                subjectScopes = subjectScopes
+            )
+        )
     }
 }

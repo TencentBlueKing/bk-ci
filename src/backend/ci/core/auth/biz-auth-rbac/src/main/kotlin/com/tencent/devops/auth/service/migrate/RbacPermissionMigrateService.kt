@@ -39,6 +39,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -69,6 +70,8 @@ class RbacPermissionMigrateService constructor(
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val V0_AUTH_TYPE = "v0"
         private const val V3_AUTH_TYPE = "v3"
+        private const val ALL_MEMBERS = "*"
+        private const val ALL_MEMBERS_NAME = "全体成员"
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -79,11 +82,10 @@ class RbacPermissionMigrateService constructor(
         val projectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(
                 projectCodes = migrateProjects.map { it.projectCode }.toSet()
-            ).data
-                ?: run {
-                    logger.info("migrate project info is empty")
-                    return false
-                }
+            ).data ?: run {
+                logger.info("migrate project info is empty")
+                return false
+            }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
@@ -192,7 +194,13 @@ class RbacPermissionMigrateService constructor(
                     )
                 }
             }
-
+            // 修改项目可授权人员范围
+            if (projectInfo.subjectScopes == null || projectInfo.subjectScopes!!.isEmpty()) {
+                client.get(ServiceProjectResource::class).updateProjectSubjectScopes(
+                    projectId = projectCode,
+                    subjectScopes = listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+                )
+            }
             // 设置项目路由tag
             if (migrateProjectTag.isNotBlank()) {
                 client.get(ServiceProjectTagResource::class).updateProjectRouteTag(

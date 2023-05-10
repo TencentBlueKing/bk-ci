@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -293,5 +294,16 @@ interface ServiceProjectResource {
         @ApiParam("权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}/updateProjectSubjectScopes")
+    @ApiOperation("修改项目最大可授权范围")
+    fun updateProjectSubjectScopes(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "ke", required = true)
+        subjectScopes: List<SubjectScopeInfo>
     ): Result<Boolean>
 }
