@@ -2,7 +2,7 @@
     <main>
         <div class="content-header">
             <div class="atom-total-row">
-                <bk-button theme="primary" @click="relateService"> {{ $t('store.新增微扩展123') }} </bk-button>
+                <bk-button theme="primary" @click="relateService"> {{ $t('store.新增微扩展') }} </bk-button>
             </div>
             <bk-input :placeholder="$t('store.请输入关键字搜索')"
                 class="search-input"
