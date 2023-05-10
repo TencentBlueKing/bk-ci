@@ -133,7 +133,7 @@ class RbacPermissionMigrateService constructor(
             }
             // 判断项目的创建人是否离职，若离职，则直接结束。并发出通知
             val isProjectCreatorNotExist = deptService.getUserInfo(
-                userId = "greysonfang",
+                userId = "admin",
                 name = projectInfo.creator!!
             ) == null
             if (isProjectCreatorNotExist) {
