@@ -131,5 +131,5 @@ interface UserFileResource {
         userId: String,
         @ApiParam("复制文件请求体", required = true)
         copyFileRequest: CopyFileRequest
-    )
+    ): Result<Boolean>
 }
