@@ -37,4 +37,4 @@ data class UserCountLogin(
     val userId: String,
     val os: OS,
     val ip: String
-): IEvent()
+) : IEvent()
