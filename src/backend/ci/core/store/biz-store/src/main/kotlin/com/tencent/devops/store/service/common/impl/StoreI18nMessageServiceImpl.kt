@@ -39,14 +39,13 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Properties
+import java.util.*
 import java.util.concurrent.Executors
 
 @Service
@@ -92,12 +91,11 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
             projectCode = projectCode,
             fileDir = fileDir,
             fileName = fileName,
-            repositoryHashId = repositoryHashId,
-            language = devopsDefaultLocaleLanguage
+            repositoryHashId = repositoryHashId
         )
         val fieldLocaleInfos = if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
-            defaultProperties.map {
+            defaultProperties?.map {
                 val fieldName = if (!propertiesKeyPrefix.isNullOrBlank()) {
                     // 如果字段key前缀不为空，需为key加上前缀
                     "$propertiesKeyPrefix.${it.key}"
@@ -105,24 +103,28 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     it.key.toString()
                 }
                 FieldLocaleInfo(fieldName, it.value.toString())
-            }.toMutableList()
+            }?.toMutableList()
         } else {
             // 遍历map集合替换国际化字段值为默认语言值并获取国际化字段列表
-            MessageUtil.traverseMap(
-                dataMap = jsonMap,
-                keyPrefix = propertiesKeyPrefix,
-                properties = defaultProperties
-            )
+            defaultProperties?.let {
+                MessageUtil.traverseMap(
+                    dataMap = jsonMap,
+                    keyPrefix = propertiesKeyPrefix,
+                    properties = defaultProperties
+                )
+            }
         }
         // 异步解析处理国际化资源文件信息
-        asyncHandleI18nMessage(
-            projectCode = projectCode,
-            fileDir = fileDir,
-            repositoryHashId = repositoryHashId,
-            fieldLocaleInfos = fieldLocaleInfos,
-            dbKeyPrefix = dbKeyPrefix,
-            userId = userId
-        )
+        fieldLocaleInfos?.let {
+            asyncHandleI18nMessage(
+                projectCode = projectCode,
+                fileDir = fileDir,
+                repositoryHashId = repositoryHashId,
+                fieldLocaleInfos = fieldLocaleInfos,
+                dbKeyPrefix = dbKeyPrefix,
+                userId = userId
+            )
+        }
         return jsonMap
     }
 
@@ -212,9 +214,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                     projectCode = projectCode,
                     fileDir = fileDir,
                     fileName = propertiesFileName,
-                    repositoryHashId = repositoryHashId,
-                    language = language
-                )
+                    repositoryHashId = repositoryHashId
+                ) ?: return@forEach
                 val i18nMessages = generateI18nMessages(
                     fieldLocaleInfos = fieldLocaleInfos,
                     fileProperties = fileProperties,
@@ -264,24 +265,19 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         projectCode: String,
         fileDir: String,
         fileName: String,
-        repositoryHashId: String?,
-        language: String
-    ): Properties {
+        repositoryHashId: String?
+    ): Properties? {
         val fileStr = getPropertiesFileStr(
             projectCode = projectCode,
             fileDir = fileDir,
             fileName = fileName,
             repositoryHashId = repositoryHashId
         )
-        logger.info("getMessageProperties:[$fileName|$fileStr]")
-        if (fileStr.isNullOrBlank()) {
-            // 如果用户的组件未提供系统默认语言的资源文件，则抛出错误提示
-            throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_LOCALE_FILE_NOT_EXIST,
-                params = arrayOf(language)
-            )
+        return if (fileStr.isNullOrBlank()) {
+            null
+        } else {
+            MessageUtil.getMessageProperties(fileStr)
         }
-        return MessageUtil.getMessageProperties(fileStr)
     }
 
     abstract fun getPropertiesFileStr(
