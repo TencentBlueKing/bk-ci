@@ -318,7 +318,7 @@ class WorkspaceService @Autowired constructor(
             getOrSaveWorkspaceDetail(event.workspaceName)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
-            bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost)
+            kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
 
             // websocket 通知成功
         } else {
