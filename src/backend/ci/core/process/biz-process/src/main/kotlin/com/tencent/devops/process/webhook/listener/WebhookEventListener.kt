@@ -49,6 +49,7 @@ import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ComplexMethod")
 class WebhookEventListener constructor(
     private val pipelineBuildService: PipelineBuildWebhookService,
     private val streamBridge: StreamBridge,

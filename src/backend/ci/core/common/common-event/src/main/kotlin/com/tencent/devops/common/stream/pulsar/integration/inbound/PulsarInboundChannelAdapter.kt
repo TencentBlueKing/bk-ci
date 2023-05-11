@@ -46,6 +46,7 @@ import org.springframework.retry.RetryListener
 import org.springframework.retry.support.RetryTemplate
 import org.springframework.util.Assert
 
+@Suppress("EmptyClassBlock")
 class PulsarInboundChannelAdapter(
     private val destination: String,
     private val group: String? = null,

@@ -41,6 +41,7 @@ import java.util.Objects
  * jackson header mapper for Pulsar. Header types are added to a special header
  * {@link #JSON_TYPES}.
  */
+@Suppress("ComplexMethod")
 class JacksonPulsarHeaderMapper(
     private val objectMapper: ObjectMapper,
     serialization: Serialization = Serialization.BYTE
