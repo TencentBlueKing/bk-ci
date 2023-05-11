@@ -1,0 +1,34 @@
+registry:
+  image: 
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi 
+  remoteSpecProvider:
+    addr: 
+    sha1key: 
+  # cat ~/.docker/config.json | base64 -w0   
+  dockerAuth:
+  # 用来挂载wsproxy配置的参数，不同环境wsproxy名字可能不同
+  wsproxyName: wsproxy
+  # 填写后添加固定镜像，方便测试
+  fixedSpec:
+  # 存活检查
+  readinessProbeAddr: 
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent  
+
+service:
+  # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+  serviceType: ClusterIP
+  # 部署的service的annotations:
+  serviceAnnotations:
+  # 部署的service对外暴露的端口
+  registryPort: 9000
+  # nodeport模式下nodeport的端口
+  registryNodePort: 31590

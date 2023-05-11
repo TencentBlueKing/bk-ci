@@ -70,8 +70,16 @@ class ServiceItemService @Autowired constructor(
     @PostConstruct
     fun init() {
         // 初始化projectServiceMap
-        getServiceList()
-        logger.info("projectServiceMap: $projectServiceMap")
+        try {
+            getServiceList()
+            logger.info("projectServiceMap: $projectServiceMap")
+        } catch (t: Exception) {
+            logger.warn("init ServiceList fail", t)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.INIT_SERVICE_LIST_ERROR,
+                defaultMessage = t.toString()
+            )
+        }
     }
 
     fun getServiceList(itemStatusList: List<ServiceItemStatusEnum>? = null): List<ExtItemDTO> {
@@ -80,7 +88,7 @@ class ServiceItemService @Autowired constructor(
         val allItemMap = mutableMapOf<String, ServiceItem>()
         val itemList = mutableListOf<ExtItemDTO>()
         val parentIndexMap = mutableMapOf<String, MutableList<String>>()
-        allItemData.forEach { it ->
+        allItemData.forEach {
             allItemMap[it.id] = ServiceItem(
                 itemId = it.id,
                 itemCode = it.itemCode,
@@ -99,7 +107,7 @@ class ServiceItemService @Autowired constructor(
         }
 
         parentIndexMap.forEach { (parentId, list) ->
-            val parentInfo = getProjectService(parentId)
+            val parentInfo = getProjectService(parentId) ?: return@forEach
             val childList = mutableListOf<ExtServiceEntity>()
             list.forEach {
                 val itemInfo = allItemMap[it]
@@ -271,17 +279,22 @@ class ServiceItemService @Autowired constructor(
         return result
     }
 
-    fun getProjectService(serviceId: String): ExtServiceEntity {
+    fun getProjectService(serviceId: String): ExtServiceEntity? {
         return if (!projectServiceMap.containsKey(serviceId)) {
             val serviceRecord = projectServiceDao.select(dslContext, serviceId.toLong())
-            val serviceEntity = ExtServiceEntity(
-                id = serviceRecord!!.id.toString(),
-                name = serviceRecord.name.substringBefore("("),
-                code = serviceRecord.englishName
-            )
-            projectServiceMap[serviceId] = serviceEntity
-            logger.info("set bkServiceId to map: servcieId[$serviceId], entity[$serviceEntity]")
-            serviceEntity
+            if (serviceRecord == null) {
+                logger.warn("getProjectService : Service ($serviceId) is not exist")
+                null
+            } else {
+                val serviceEntity = ExtServiceEntity(
+                    id = serviceRecord!!.id.toString(),
+                    name = serviceRecord.name.substringBefore("("),
+                    code = serviceRecord.englishName
+                )
+                projectServiceMap[serviceId] = serviceEntity
+                logger.info("set bkServiceId to map: servcieId[$serviceId], entity[$serviceEntity]")
+                serviceEntity
+            }
         } else {
             projectServiceMap[serviceId]!!
         }
@@ -325,7 +338,6 @@ class ServiceItemService @Autowired constructor(
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
         }
         validArgs(itemInfo)
-
         val createInfo = ItemCreateInfo(
             itemCode = itemInfo.itemCode,
             itemName = itemInfo.itemName,
@@ -347,7 +359,8 @@ class ServiceItemService @Autowired constructor(
 
     fun updateItem(userId: String, itemId: String, itemInfo: ItemInfoResponse): Result<Boolean> {
         val itemCode = itemInfo.itemCode
-        val itemRecord = serviceItemDao.getItemById(dslContext, itemId) ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(itemCode))
+        val itemRecord = serviceItemDao.getItemById(dslContext, itemId)
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(itemCode))
         val itemName = itemInfo.itemName
         val itemNameCount = serviceItemDao.countByHtmlPath(dslContext, itemName)
         if (itemNameCount > 0 && itemName != itemRecord.itemName) {
