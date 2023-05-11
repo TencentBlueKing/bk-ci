@@ -366,6 +366,7 @@ class StartActionTaskContainerCmd(
                     buildId = buildId,
                     containerId = containerId,
                     taskId = taskId,
+                    executeCount = executeCount ?: 1,
                     buildStatus = taskStatus
                 )
                 val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)

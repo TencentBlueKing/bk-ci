@@ -375,7 +375,7 @@ class MutexControl @Autowired constructor(
             containerVar = emptyMap(), buildStatus = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_MUTEX_QUEUE to
-                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             )
         )
     }
