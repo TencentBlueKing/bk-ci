@@ -709,3 +709,4 @@ REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESS
 
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('d6601d48ebdc4482841f65d3c1ba4c8e','2119041','19','审批中的项目${0}不能修改', '審批中的項目${0}不能修改', 'Projects(${0}) in approval cannot be modified');
 REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES('95ebe397a2c84c098bc18a05042e36e9','2121625','21','用户组{0}升级于{1}', '用戶組{0}升級於{1}', 'Usergroup {0} upgraded at {1}');
+REPLACE INTO `T_MESSAGE_CODE_DETAIL` (`ID`, `MESSAGE_CODE`, `MODULE_CODE`, `MESSAGE_DETAIL_ZH_CN`, `MESSAGE_DETAIL_ZH_TW`, `MESSAGE_DETAIL_EN`) VALUES ('cc76cc5205234149aa493256cf063c0e', '2121626', '21', '迁移项目{0}失败,权限策略对比失败', '遷移項目{0}失敗,權限策略對比失敗', 'Migration project {0} failed, permission policy comparison failed');

@@ -132,6 +132,7 @@ class ProjectApprovalService @Autowired constructor(
         return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
     }
 
+    @Suppress("ComplexMethod")
     fun createApproved(projectId: String, applicant: String, approver: String) {
         logger.info("project create approved|$projectId|$applicant|$approver")
         val projectInfo =
@@ -177,7 +178,7 @@ class ProjectApprovalService @Autowired constructor(
                 approver = approver,
                 approvalStatus = ProjectApproveStatus.APPROVED.status
             )
-            if (projectInfo.projectId != authProjectId) {
+            if (authProjectId.isNotEmpty() && projectInfo.projectId != authProjectId) {
                 projectDao.updateAuthProjectId(
                     dslContext = context,
                     englishName = projectId,

@@ -1089,6 +1089,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 
+    override fun updateProjectSubjectScopes(
+        projectId: String,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Boolean {
+        projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = projectId
+        ) ?: throw NotFoundException("project - $projectId is not exist!")
+        val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
+        projectDao.updateSubjectScopes(
+            dslContext = dslContext,
+            englishName = projectId,
+            subjectScopesStr = subjectScopesStr
+        )
+        return true
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail

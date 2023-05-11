@@ -792,6 +792,19 @@ class ProjectDao {
         }
     }
 
+    fun updateSubjectScopes(
+        dslContext: DSLContext,
+        englishName: String,
+        subjectScopesStr: String
+    ) {
+        with(TProject.T_PROJECT) {
+            dslContext.update(this)
+                .set(SUBJECT_SCOPES, subjectScopesStr)
+                .where(ENGLISH_NAME.eq(englishName))
+                .execute()
+        }
+    }
+
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
             ProjectApproveStatus.CREATE_PENDING.status,

@@ -28,15 +28,20 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -54,41 +59,76 @@ class RbacPermissionMigrateService constructor(
     private val client: Client,
     private val migrateResourceService: MigrateResourceService,
     private val migrateV3PolicyService: MigrateV3PolicyService,
+    private val migrateV0PolicyService: MigrateV0PolicyService,
+    private val migrateResultService: MigrateResultService,
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
     private val dslContext: DSLContext,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) : PermissionMigrateService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
+        private const val V0_AUTH_TYPE = "v0"
+        private const val V3_AUTH_TYPE = "v3"
+        private const val ALL_MEMBERS = "*"
+        private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val MAX_RETRY_TIMES = 3
+        private const val IAM_NAME_CONFLICT_ERROR = 1902409L
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
     private val migrateProjectTag: String = ""
 
-    override fun v3ToRbacAuth(projectCodes: List<String>): Boolean {
-        logger.info("migrate $projectCodes auth from v3 to rbac")
+    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+        logger.info("migrate $migrateProjects auth from v3 to rbac")
         val projectVos =
-            client.get(ServiceProjectResource::class).listByProjectCode(projectCodes = projectCodes.toSet()).data
-                ?: run {
-                    logger.info("migrate project info is empty")
-                    return false
-                }
+            client.get(ServiceProjectResource::class).listByProjectCode(
+                projectCodes = migrateProjects.map { it.projectCode }.toSet()
+            ).data ?: run {
+                logger.info("migrate project info is empty")
+                return false
+            }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
             v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         )
-        return projectCodes.map { projectCode ->
-            v3ToRbacAuth(projectCode)
+        return migrateProjects.map { migrateProject ->
+            migrateToRbacAuth(
+                migrateProject = migrateProject,
+                migrateTaskId = 0,
+                authType = V3_AUTH_TYPE
+            )
         }.all { it }
     }
 
-    @Suppress("LongMethod", "ReturnCount")
-    fun v3ToRbacAuth(projectCode: String): Boolean {
-        logger.info("Start migrate $projectCode from v3 to rbac")
+    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+        logger.info("migrate $migrateProjects auth from v0 to rbac")
+        // 1. 启动迁移任务
+        val migrateTaskId = migrateV0PolicyService.startMigrateTask(
+            projectCodes = migrateProjects.map { it.projectCode }
+        )
+        return migrateProjects.map { migrateProject ->
+            migrateToRbacAuth(
+                migrateProject = migrateProject,
+                migrateTaskId = migrateTaskId,
+                authType = V0_AUTH_TYPE
+            )
+        }.all { it }
+    }
+
+    @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
+    private fun migrateToRbacAuth(
+        migrateProject: MigrateProjectDTO,
+        migrateTaskId: Int,
+        authType: String
+    ): Boolean {
+        val projectCode = migrateProject.projectCode
+        val projectCreator = migrateProject.projectCreator
+        logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
-        val watcher = Watcher("v3ToRbacAuth|$projectCode")
+        val watcher = Watcher("migrateToRbacAuth|$projectCode")
         try {
             val authMigrationInfo = authMigrationDao.get(
                 dslContext = dslContext,
@@ -102,6 +142,11 @@ class RbacPermissionMigrateService constructor(
                 logger.warn("project $projectCode not exist")
                 return false
             }
+            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
+            val resourceCreator = buildResourceCreator(
+                projectCreator = projectCreator,
+                dbProjectCreator = projectInfo.creator!!
+            ) ?: return false
 
             authMigrationDao.create(
                 dslContext = dslContext,
@@ -116,36 +161,56 @@ class RbacPermissionMigrateService constructor(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )?.relationId?.toInt() ?: run {
-                createGradeManager(projectCode, projectInfo)
+                createGradeManager(
+                    projectCode = projectCode,
+                    projectInfo = projectInfo,
+                    resourceCreator = resourceCreator
+                )
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION
+                    errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION,
+                    defaultMessage = "project $projectCode gradle manager not found"
                 )
             }
             // 迁移资源
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
-                projectCode = projectCode
-            )
-            // 迁移v3用户组
-            watcher.start("migrateGroupPolicy")
-            migrateV3PolicyService.migrateGroupPolicy(
                 projectCode = projectCode,
-                projectName = projectInfo.projectName,
-                gradeManagerId = gradeManagerId
+                resourceCreator = resourceCreator
             )
-            // 迁移用户自定义权限
-            watcher.start("migrateUserCustomPolicy")
-            migrateV3PolicyService.migrateUserCustomPolicy(
-                projectCode = projectCode
-            )
-            // 对比迁移结果
-            watcher.start("comparePolicy")
-            val compareResult = migrateV3PolicyService.comparePolicy(projectCode = projectCode)
-            if (!compareResult) {
-                logger.warn("Failed to compare $projectCode policy")
-                return false
+
+            when (authType) {
+                V0_AUTH_TYPE -> {
+                    migrateV0Auth(
+                        projectCode = projectCode,
+                        projectName = projectInfo.projectName,
+                        migrateTaskId = migrateTaskId,
+                        gradeManagerId = gradeManagerId,
+                        watcher = watcher
+                    )
+                }
+                V3_AUTH_TYPE -> {
+                    migrateV3Auth(
+                        projectCode = projectCode,
+                        projectName = projectInfo.projectName,
+                        gradeManagerId = gradeManagerId,
+                        watcher = watcher
+                    )
+                }
+            }
+            // 修改项目可授权人员范围
+            if (projectInfo.subjectScopes == null || projectInfo.subjectScopes!!.isEmpty()) {
+                client.get(ServiceProjectResource::class).updateProjectSubjectScopes(
+                    projectId = projectCode,
+                    subjectScopes = listOf(
+                        SubjectScopeInfo(
+                            id = ALL_MEMBERS,
+                            type = ALL_MEMBERS,
+                            name = ALL_MEMBERS_NAME
+                        )
+                    )
+                )
             }
             // 设置项目路由tag
             if (migrateProjectTag.isNotBlank()) {
@@ -161,13 +226,11 @@ class RbacPermissionMigrateService constructor(
                 totalTime = System.currentTimeMillis() - startEpoch
             )
             return true
-        } catch (ignore: Exception) {
-            logger.error("Failed to migrate $projectCode from v3 to rbac", ignore)
-            authMigrationDao.updateStatus(
-                dslContext = dslContext,
+        } catch (exception: Exception) {
+            handleException(
+                exception = exception,
                 projectCode = projectCode,
-                status = AuthMigrateStatus.FAILED.value,
-                totalTime = null
+                authType = authType
             )
             return false
         } finally {
@@ -176,22 +239,124 @@ class RbacPermissionMigrateService constructor(
         }
     }
 
+    private fun migrateV3Auth(
+        projectCode: String,
+        projectName: String,
+        gradeManagerId: Int,
+        watcher: Watcher
+    ) {
+        // 轮询任务状态
+        migrateV3PolicyService.loopTaskStatus(projectCode = projectCode)
+        // 迁移v3用户组
+        watcher.start("migrateGroupPolicy")
+        migrateV3PolicyService.migrateGroupPolicy(
+            projectCode = projectCode,
+            projectName = projectName,
+            gradeManagerId = gradeManagerId
+        )
+        // 迁移用户自定义权限
+        watcher.start("migrateUserCustomPolicy")
+        migrateV3PolicyService.migrateUserCustomPolicy(
+            projectCode = projectCode
+        )
+        // 对比迁移结果
+        watcher.start("comparePolicy")
+        migrateResultService.compare(projectCode = projectCode)
+    }
+
+    private fun migrateV0Auth(
+        projectCode: String,
+        projectName: String,
+        migrateTaskId: Int,
+        gradeManagerId: Int,
+        watcher: Watcher
+    ) {
+        // 轮询任务状态
+        migrateV0PolicyService.loopTaskStatus(migrateTaskId = migrateTaskId)
+        // 迁移v0用户组
+        watcher.start("migrateGroupPolicy")
+        migrateV0PolicyService.migrateGroupPolicy(
+            projectCode = projectCode,
+            projectName = projectName,
+            gradeManagerId = gradeManagerId
+        )
+        // 迁移用户自定义权限
+        watcher.start("migrateUserCustomPolicy")
+        migrateV0PolicyService.migrateUserCustomPolicy(
+            projectCode = projectCode
+        )
+        // 对比迁移结果
+        watcher.start("comparePolicy")
+        migrateResultService.compare(projectCode = projectCode)
+    }
+
     private fun createGradeManager(
         projectCode: String,
-        projectInfo: ProjectVO
+        projectInfo: ProjectVO,
+        resourceCreator: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
-        permissionResourceService.resourceCreateRelation(
-            userId = projectInfo.creator ?: "",
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode,
-            resourceName = projectInfo.projectName
-        )
+        val resourceName = projectInfo.projectName
+        for (suffix in 0..MAX_RETRY_TIMES) {
+            try {
+                permissionResourceService.resourceCreateRelation(
+                    userId = resourceCreator,
+                    projectCode = projectCode,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                )
+                break
+            } catch (iamException: IamException) {
+                if (iamException.errorCode != IAM_NAME_CONFLICT_ERROR) throw iamException
+                if (suffix == MAX_RETRY_TIMES) throw iamException
+            }
+        }
         return authResourceService.getOrNull(
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode
         )?.relationId?.toInt()
+    }
+
+    private fun buildResourceCreator(
+        projectCreator: String?,
+        dbProjectCreator: String
+    ): String? {
+        val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
+            userId = "admin",
+            name = dbProjectCreator
+        ) == null
+        if (isDbProjectCreatorLeaveOffice && projectCreator == null) {
+            logger.warn("project creator is not exist!|creator=$dbProjectCreator")
+            return null
+        }
+        return projectCreator ?: dbProjectCreator
+    }
+
+    private fun handleException(
+        exception: Exception,
+        projectCode: String,
+        authType: String
+    ) {
+        val errorMessage = when (exception) {
+            is IamException -> {
+                exception.errorMsg
+            }
+            is ErrorCodeException -> {
+                exception.defaultMessage
+            }
+            else -> {
+                exception.message
+            }
+        }
+        logger.error("Failed to migrate $projectCode from $authType to rbac", errorMessage)
+        authMigrationDao.updateStatus(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            status = AuthMigrateStatus.FAILED.value,
+            errorMessage = errorMessage,
+            totalTime = null
+        )
     }
 }

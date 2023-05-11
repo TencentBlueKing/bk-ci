@@ -40,17 +40,17 @@ class MigrateResourceCodeConverter constructor(
     private val client: Client
 ) {
 
-    fun v3ToRbacResourceCode(resourceType: String, resourceCode: String): String? {
+    fun getRbacResourceCode(resourceType: String, migrateResourceCode: String): String? {
         return when (resourceType) {
             // v3流水线使用的是流水线自增Id，rbac需获取具体的pipelineId
             AuthResourceType.PIPELINE_DEFAULT.value -> {
-                getPipelineId(resourceCode = resourceCode)
+                getPipelineId(resourceCode = migrateResourceCode)
             }
             // v3代码库使用的是代码库自增ID，rbac使用的是hashId
             AuthResourceType.CODE_REPERTORY.value -> {
-                HashUtil.encodeOtherLongId(resourceCode.toLong())
+                HashUtil.encodeOtherLongId(migrateResourceCode.toLong())
             }
-            else -> resourceCode
+            else -> migrateResourceCode
         }
     }
 

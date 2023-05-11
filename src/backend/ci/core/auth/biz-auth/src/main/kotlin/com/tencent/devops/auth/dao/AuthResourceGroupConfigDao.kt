@@ -55,8 +55,9 @@ class AuthResourceGroupConfigDao {
         resourceType: String
     ): Result<TAuthResourceGroupConfigRecord> {
         return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
-            dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType))
-                .orderBy(ID.desc()).fetch()
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .fetch()
         }
     }
 

@@ -97,6 +97,7 @@ class AuthMigrationDao {
         dslContext: DSLContext,
         projectCode: String,
         status: Int,
+        errorMessage: String? = null,
         totalTime: Long?
     ) {
         with(TAuthMigration.T_AUTH_MIGRATION) {
@@ -106,6 +107,8 @@ class AuthMigrationDao {
             if (totalTime != null) {
                 update.set(TOTAL_TIME, totalTime)
             }
+            if (errorMessage != null)
+                update.set(ERROR_MESSAGE, errorMessage)
             update.where(PROJECT_CODE.eq(projectCode)).execute()
         }
     }

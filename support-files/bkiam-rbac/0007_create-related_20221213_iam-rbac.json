@@ -37,10 +37,6 @@
                 "required": false
               },
               {
-                "id": "codecc_task_list",
-                "required": false
-              },
-              {
                 "id": "codecc_rule_set_create",
                 "required": false
               },
@@ -77,19 +73,11 @@
                 "required": false
               },
               {
-                "id": "rule_list",
-                "required": false
-              },
-              {
                 "id": "pipeline_create",
                 "required": false
               },
               {
                 "id": "quality_group_create",
-                "required": false
-              },
-              {
-                "id": "quality_group_list",
                 "required": false
               },
               {
@@ -272,6 +260,10 @@
                 "id": "quality_group",
                 "actions": [
                   {
+                    "id": "quality_group_list",
+                    "required": false
+                  },
+                  {
                     "id": "quality_group_delete",
                     "required": false
                   },
@@ -284,6 +276,10 @@
               {
                 "id": "rule",
                 "actions": [
+                  {
+                    "id": "rule_list",
+                    "required": false
+                  },
                   {
                     "id": "rule_delete",
                     "required": false
@@ -345,6 +341,10 @@
                 "actions": [
                   {
                     "id": "codecc_task_analyze",
+                    "required": false
+                  },
+                  {
+                    "id": "codecc_task_list",
                     "required": false
                   },
                   {

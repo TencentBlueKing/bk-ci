@@ -36,10 +36,12 @@ import com.tencent.bk.sdk.iam.dto.callback.request.FilterDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
@@ -47,6 +49,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -69,11 +72,15 @@ class MigrateResourceService @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authMigrationDao: AuthMigrationDao
+    private val authMigrationDao: AuthMigrationDao,
+    private val deptService: DeptService
 ) {
 
     @Suppress("SpreadOperator")
-    fun migrateResource(projectCode: String) {
+    fun migrateResource(
+        projectCode: String,
+        resourceCreator: String
+    ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource:$projectCode")
         try {
@@ -88,7 +95,11 @@ class MigrateResourceService @Autowired constructor(
                 CompletableFuture.supplyAsync(
                     {
                         MDC.put(TraceTag.BIZID, traceId)
-                        migrateResource(projectCode = projectCode, resourceType = resourceType)
+                        migrateResource(
+                            projectCode = projectCode,
+                            resourceType = resourceType,
+                            resourceCreator = resourceCreator
+                        )
                     },
                     executorService
                 )
@@ -109,12 +120,18 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun migrateResource(projectCode: String, resourceType: String) {
+    private fun migrateResource(
+        projectCode: String,
+        resourceType: String,
+        resourceCreator: String
+    ) {
         val startEpoch = System.currentTimeMillis()
         logger.info("start to migrate resource|$projectCode|$resourceType")
         try {
             createRbacResource(
-                resourceType = resourceType, projectCode = projectCode
+                resourceType = resourceType,
+                projectCode = projectCode,
+                resourceCreator = resourceCreator
             )
         } finally {
             logger.info(
@@ -123,7 +140,12 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    private fun createRbacResource(resourceType: String, projectCode: String) {
+    @Suppress("ALL")
+    private fun createRbacResource(
+        resourceType: String,
+        projectCode: String,
+        resourceCreator: String
+    ) {
         var offset = 0L
         val limit = 100L
         do {
@@ -147,9 +169,9 @@ class MigrateResourceService @Autowired constructor(
                 JsonUtil.to(JsonUtil.toJson(it), InstanceInfoDTO::class.java)
             }.forEach {
                 val resourceCode =
-                    migrateResourceCodeConverter.v3ToRbacResourceCode(
+                    migrateResourceCodeConverter.getRbacResourceCode(
                         resourceType = resourceType,
-                        resourceCode = it.id
+                        migrateResourceCode = it.id
                     ) ?: return@forEach
                 logger.info("MigrateResourceService|resourceCode:$resourceCode")
                 authResourceService.getOrNull(
@@ -157,13 +179,23 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    rbacPermissionResourceService.resourceCreateRelation(
-                        userId = it.iamApprover[0],
-                        projectCode = projectCode,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = it.displayName
-                    )
+                    val iamApprover = buildIamApprover(it.iamApprover[0], resourceCreator)
+                    val resourceName = it.displayName
+                    for (suffix in 0..MAX_RETRY_TIMES) {
+                        try {
+                            rbacPermissionResourceService.resourceCreateRelation(
+                                userId = iamApprover,
+                                projectCode = projectCode,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                            )
+                            break
+                        } catch (iamException: IamException) {
+                            if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR) throw iamException
+                            if (suffix == MAX_RETRY_TIMES) throw iamException
+                        }
+                    }
                 }
             }
             offset += limit
@@ -237,6 +269,17 @@ class MigrateResourceService @Autowired constructor(
         )
     }
 
+    private fun buildIamApprover(
+        iamApprover: String,
+        resourceCreator: String
+    ): String {
+        val isResourceCreatorNotExist = deptService.getUserInfo(
+            userId = "admin",
+            name = iamApprover
+        ) == null
+        return if (isResourceCreatorNotExist) resourceCreator else iamApprover
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
         private val noNeedToMigrateResourceType = listOf(
@@ -250,5 +293,7 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.EXPERIENCE_GROUP_NEW.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
+        private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
+        private const val MAX_RETRY_TIMES = 3
     }
 }

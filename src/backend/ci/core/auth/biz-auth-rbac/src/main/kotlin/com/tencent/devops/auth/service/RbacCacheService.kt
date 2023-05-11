@@ -3,8 +3,12 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
-import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.SubjectDTO
+import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
+import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -17,16 +21,16 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
-@Suppress("MagicNumber")
+@Suppress("MagicNumber", "LongParameterList")
 class RbacCacheService constructor(
     private val dslContext: DSLContext,
     private val authResourceTypeDao: AuthResourceTypeDao,
     private val authActionDao: AuthActionDao,
-    private val authHelper: AuthHelper,
+    private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
@@ -168,16 +172,28 @@ class RbacCacheService constructor(
         logger.info("[rbac] validate user project permission|userId = $userId|permission=$permission")
         val startEpoch = System.currentTimeMillis()
         try {
-            val action = RbacAuthUtils.buildAction(permission, authResourceType = AuthResourceType.PROJECT)
-            val instanceDTO = InstanceDTO()
-            instanceDTO.system = iamConfiguration.systemId
-            instanceDTO.id = projectCode
-            instanceDTO.type = AuthResourceType.PROJECT.value
-            return authHelper.isAllowed(
-                userId,
-                action,
-                instanceDTO
+            val actionDTO = ActionDTO()
+            actionDTO.id = RbacAuthUtils.buildAction(
+                authPermission = permission,
+                authResourceType = AuthResourceType.PROJECT
             )
+
+            val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
+                .type(AuthResourceType.PROJECT.value)
+                .id(projectCode)
+                .build()
+
+            val subject = SubjectDTO.builder()
+                .id(userId)
+                .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+                .build()
+            val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
+                .subject(subject)
+                .action(actionDTO)
+                .resources(listOf(resourceNode))
+                .build()
+
+            return policyService.verifyPermissions(queryPolicyDTO)
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to validate user project permission"
