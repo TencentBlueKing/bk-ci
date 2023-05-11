@@ -435,14 +435,20 @@
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
-                this.setAtomLocate(this.errorList[0])
-                this.toggleErrorPopup()
+                setTimeout(() => {
+                    console.log(this.errorList[0])
+                    this.setAtomLocate(this.errorList[0])
+                    this.toggleErrorPopup()
+                }, 600)
             }
         },
         beforeDestroy () {
             this.togglePropertyPanel({
                 isShow: false
             })
+            if (this.activeErrorAtom?.taskId) {
+                this.locateError(this.activeErrorAtom, false)
+            }
         },
         methods: {
             ...mapActions('atom', [
@@ -466,11 +472,9 @@
             },
             toggleErrorPopup () {
                 this.showErrors = !this.showErrors
-                this.$emit('show-error-popup', this.showErrors)
             },
             setShowErrorPopup () {
                 this.showErrors = true
-                // this.$emit('show-error-popup', true)
             },
 
             handlePiplineClick (args) {
@@ -690,7 +694,7 @@
                     } else {
                         this.$set(container, 'locateActive', isLocate)
                     }
-
+                    console.log(element, elementIndex, container)
                     if (this.isPropertyPanelVisible || (showLog && isLocate)) {
                         this.togglePropertyPanel({
                             isShow: true,
@@ -707,7 +711,7 @@
                 }
             },
             setAtomLocate (row, showLog = false) {
-                console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible')
+                console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible', this.activeErrorAtom)
                 if (this.activeErrorAtom?.taskId === row.taskId && !showLog) return
                 if (this.activeErrorAtom?.taskId) {
                     this.locateError(this.activeErrorAtom, false, showLog)

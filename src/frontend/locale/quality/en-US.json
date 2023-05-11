@@ -27,6 +27,7 @@
     "请输入通知人员，支持输入流水线变量，默认发给流水线触发人": "Please enter notification personnel. Input pipeline variables are supported. It is sent to pipeline triggers by default.",
     "请输入描述": "Please enter a description",
     "生效流水线执行数：": "Number of pipeline execution in effect: ",
+    "生效流水线执行数": "Effected Pipeline",
     "编辑指标成功": "Edit indexes successfully",
     "默认阈值不能为空": "Default threshold cannot be empty",
     "相关插件": "Related plugin",

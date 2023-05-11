@@ -202,7 +202,7 @@
                                 :name="item.icon"
                             />
                             <span
-                                v-bk-tooltips="{ content: item.title }"
+                                v-bk-tooltips="{ content: item.title, maxWidth: 500 }"
                                 v-if="item.title"
                             >
                                 {{ item.title }}
@@ -417,7 +417,6 @@
                             (!active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1
                                 ? item.errorInfoList.slice(0, 1)
                                 : item.errorInfoList)?.map(err => {
-                                    console.log(err)
                                     return {
                                     title: err?.errorMsg ?? '--',
                                     icon: errorTypeMap[err.errorType]?.icon
