@@ -33,7 +33,6 @@ import com.perforce.p4java.core.file.FileSpecOpStatus
 import com.tencent.devops.scm.code.p4.P4Client
 import com.tencent.devops.scm.code.p4.P4Server
 import com.tencent.devops.scm.enums.P4TriggerType
-import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.p4.DepotInfo
 import com.tencent.devops.scm.pojo.p4.TriggerInfo
 import com.tencent.devops.scm.pojo.p4.Workspace

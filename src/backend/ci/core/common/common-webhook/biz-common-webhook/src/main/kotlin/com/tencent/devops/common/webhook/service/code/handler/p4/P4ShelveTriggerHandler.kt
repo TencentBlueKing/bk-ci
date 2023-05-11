@@ -118,7 +118,7 @@ class P4ShelveTriggerHandler(
                         val p4ServerInfo = client.get(ServiceP4Resource::class).getServerInfo(
                             projectId = projectId,
                             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                            repositoryType = repositoryConfig.repositoryType,
+                            repositoryType = repositoryConfig.repositoryType
                         )
                         p4ServerInfo.data?.run {
                             caseSensitive = this.caseSensitive

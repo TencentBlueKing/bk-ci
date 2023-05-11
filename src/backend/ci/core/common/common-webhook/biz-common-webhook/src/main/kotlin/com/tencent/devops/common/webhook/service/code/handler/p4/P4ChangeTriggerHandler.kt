@@ -120,7 +120,7 @@ class P4ChangeTriggerHandler(
                                 repo = repository,
                                 projectId = projectId,
                                 repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                                repositoryType = repositoryConfig.repositoryType,
+                                repositoryType = repositoryConfig.repositoryType
                             )
                             p4ServerInfo?.run {
                                 caseSensitive = this.caseSensitive
