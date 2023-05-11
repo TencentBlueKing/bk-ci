@@ -145,7 +145,10 @@ class RbacPermissionMigrateService constructor(
             val iamApprover = buildResourceCreator(
                 approver = migrateProject.approver,
                 projectCreator = projectInfo.creator!!
-            ) ?: return false
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
+                defaultMessage = "project creator not exist ${projectInfo.creator!!}"
+            )
 
             authMigrationDao.create(
                 dslContext = dslContext,
