@@ -88,13 +88,11 @@ class BcsBuilderClient @Autowired constructor(
                     val retryTimeLocal = retryTime - 1
                     return getBuilderDetail(buildId, vmSeqId, userId, name, retryTimeLocal)
                 }
-                val errorMsg =
-                    I18nUtil.getCodeLanMessage("${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}")
                     throw BuildFailureException(
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        errorMsg,
-                        "$errorMsg（Fail to get builder detail, http response code: ${response.code}"
+                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMesage(),
+                        "Fail to get builder detail, http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {
@@ -106,9 +104,7 @@ class BcsBuilderClient @Autowired constructor(
                 )
                 return getBuilderDetail(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
-                val errorMsg = I18nUtil.getCodeLanMessage(
-                    ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode.toString()
-                )
+                val errorMsg = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMesage()
                     logger.error("[$buildId]|[$vmSeqId] builderName: $name getBuilderDetail failed.", e)
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
@@ -156,9 +152,7 @@ class BcsBuilderClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    val errorMsg = I18nUtil.getCodeLanMessage(
-                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode.toString()
-                    )
+                    val errorMsg = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.getErrorMesage()
                         throw BuildFailureException(
                             ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                             ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
@@ -172,8 +166,7 @@ class BcsBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
-                    val errorMsg =
-                        I18nUtil.getCodeLanMessage("${ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode}")
+                    val errorMsg = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.getErrorMesage()
                     throw BuildFailureException(
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
@@ -214,9 +207,7 @@ class BcsBuilderClient @Autowired constructor(
                 val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] http code is ${response.code}, $responseContent")
                 if (!response.isSuccessful) {
-                    val errorMsg = I18nUtil.getCodeLanMessage(
-                        "${ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode}"
-                    )
+                    val errorMsg = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.getErrorMesage()
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
@@ -230,8 +221,7 @@ class BcsBuilderClient @Autowired constructor(
                     return responseData.data!!.taskId
                 } else {
                     val msg = "${responseData.message ?: responseData.getCodeMessage()}"
-                    val errorMsg =
-                        I18nUtil.getCodeLanMessage("${ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode}")
+                    val errorMsg = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMesage()
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
@@ -245,8 +235,7 @@ class BcsBuilderClient @Autowired constructor(
                 "[$buildId]|[$vmSeqId] create builder get SocketTimeoutException",
                 e
             )
-            val errorMsg =
-                I18nUtil.getCodeLanMessage("${ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode}")
+            val errorMsg = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMesage()
                 throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
@@ -380,7 +369,7 @@ class BcsBuilderClient @Autowired constructor(
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        I18nUtil.getCodeLanMessage("${ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode}"),
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMesage(),
                         "$errorMsg: $msg"
                     )
                 }

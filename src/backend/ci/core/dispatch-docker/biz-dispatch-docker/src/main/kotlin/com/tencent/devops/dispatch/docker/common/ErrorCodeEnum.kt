@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 @Suppress("ALL")
 enum class ErrorCodeEnum(
@@ -66,5 +67,9 @@ enum class ErrorCodeEnum(
         ErrorType.SYSTEM,
         2131014,
         "登录调试失败，调试容器异常关闭，请重试。"
-    )
+    );
+
+    fun getErrorMessage(): String {
+        return I18nUtil.getCodeLanMessage("${this.errorCode}")
+    }
 }

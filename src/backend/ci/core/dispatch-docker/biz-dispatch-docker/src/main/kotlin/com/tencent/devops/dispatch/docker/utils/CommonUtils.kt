@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -109,7 +108,7 @@ object CommonUtils {
             throw DockerServiceException(
                 errorType = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorType,
                 errorCode = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode,
-                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode}")
+                errorMsg = ErrorCodeEnum.GET_CREDENTIAL_FAIL.getErrorMessage()
             )
         }
     }

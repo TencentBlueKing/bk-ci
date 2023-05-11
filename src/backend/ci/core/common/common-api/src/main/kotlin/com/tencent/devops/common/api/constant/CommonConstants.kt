@@ -155,4 +155,3 @@ const val BK_START_PULL_IMAGE = "bkStartPullImage" // 开始拉取镜像，镜�
 const val BK_PULLING_IMAGE = "bkPullingImage" // 正在拉取镜像,第{0}层，进度：{1}
 const val BK_PUSH_IMAGE = "bkPushImage" // 正在推送镜像,第{0}层，进度：{1}
 const val BK_HUMAN_SERVICE = "bkHumanService" // 人工服务
-const val BK_SEE_DETAILS = "bkSeeDetails" // 查看详情

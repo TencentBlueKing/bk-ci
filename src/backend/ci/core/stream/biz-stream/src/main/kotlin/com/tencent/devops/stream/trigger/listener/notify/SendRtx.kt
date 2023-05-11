@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
-import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -120,7 +120,7 @@ object SendRtx {
             buildId = build.id
         )
         return " <font color=\"${state.second}\"> ${state.first} </font>" +
-                " $content \n [${I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)}]($detailUrl)"
+                " $content \n [${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
@@ -160,7 +160,7 @@ object SendRtx {
                 "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
                 request +
                 costTime +
-                "[${I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)}]" +
+                "[${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}]" +
                 "(${
                     StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamUrl,

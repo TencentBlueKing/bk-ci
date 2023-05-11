@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.kubernetes.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -83,10 +82,11 @@ class KubernetesJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("Get job: $jobName status response: $responseContent")
             if (!response.isSuccessful) {
-                throw ErrorCodeException(
+                throw BuildFailureException(
                     errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
-                    defaultMessage = "查询Job status接口异常（Fail to getJobStatus,http response code: ${response.code}"
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
+                    errorMessage = "Fail to getJobStatus,http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -106,10 +106,11 @@ class KubernetesJobClient @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("Get job: $jobName logs response: $responseContent")
             if (!response.isSuccessful) {
-                throw ErrorCodeException(
+                throw BuildFailureException(
                     errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
-                    defaultMessage = "获取Job logs接口异常（Fail to getJobLogs, http response code: ${response.code}"
+                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
+                    errorMessage = "Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -149,19 +150,21 @@ class KubernetesJobClient @Autowired constructor(
                 if (responseData.isOk()) {
                     return responseData.data!!.taskId
                 } else {
-                    throw ErrorCodeException(
+                    throw BuildFailureException(
                         errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
-                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode.toString(),
-                        defaultMessage = "构建并镜像接口返回失败: ${responseData.message}"
+                        errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMessage(),
+                        errorMessage = "Build and mirror interface returns failure: ${responseData.message}"
                     )
                 }
             }
         } catch (e: Exception) {
             logger.error("$userId build and push image failed.", e)
-            throw ErrorCodeException(
+            throw BuildFailureException(
                 errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
-                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode.toString(),
-                defaultMessage = "构建并推送接口超时, url: $url"
+                errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                errorMessage = "Build and push interface timeout, url: $url"
             )
         }
     }
