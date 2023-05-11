@@ -173,7 +173,7 @@ class PipelineWebsocketService @Autowired constructor(
                 pipelineId = pipelineId,
                 projectId = projectId,
                 atomId = null,
-                executeCount = null
+                executeCount = executeCount
             )
         )
         logger.debug("status websocket: page[$page], buildId:[$buildId],pipelineId:[$pipelineId],project:[$projectId]")

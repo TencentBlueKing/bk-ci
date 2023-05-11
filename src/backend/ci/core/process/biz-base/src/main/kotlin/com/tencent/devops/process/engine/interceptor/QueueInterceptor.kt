@@ -335,6 +335,7 @@ class QueueInterceptor @Autowired constructor(
         val redisLock = BuildIdLock(redisOperation = redisOperation, buildId = buildId)
         try {
             redisLock.lock()
+            val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, pipelineId, buildId)
             val tasks = pipelineTaskService.getRunningTask(projectId, buildId)
             tasks.forEach { task ->
                 val taskId = task["taskId"]?.toString() ?: ""
@@ -369,6 +370,7 @@ class QueueInterceptor @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
+                    executeCount = buildInfo?.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED
                 )
                 logger.info("Cancel the pipeline($pipelineId) of instance($buildId) by the user($userId)")
