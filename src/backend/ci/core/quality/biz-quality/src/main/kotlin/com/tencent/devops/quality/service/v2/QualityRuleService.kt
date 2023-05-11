@@ -721,10 +721,11 @@ class QualityRuleService @Autowired constructor(
             if (controlPoint != null && !templateElementCodes.contains(controlPoint.type)) {
                 lackElements.add(controlPoint.type)
             }
-            QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
-                                                              name = template.name,
-                                                              type = "TEMPLATE",
-                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            QualityRuleSummaryWithPermission.RuleRangeSummary(
+                id = template.templateId,
+                name = template.name,
+                type = "TEMPLATE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
             )
         }
     }
