@@ -39,6 +39,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
+@Suppress("LongParameterList")
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordContainer(
     @ApiModelProperty("构建ID", required = true)

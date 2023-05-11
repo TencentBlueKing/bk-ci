@@ -103,6 +103,7 @@ import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
 import com.tencent.devops.process.pojo.BuildHistoryWithPipelineVersion
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
@@ -350,7 +351,7 @@ class PipelineBuildFacadeService(
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true,
         checkManualStartup: Boolean? = false
-    ): String {
+    ): BuildId {
         if (checkPermission!!) {
             val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
@@ -394,7 +395,7 @@ class PipelineBuildFacadeService(
                         skipFailedTask = skipFailedTask
                     )
                 ) {
-                    return buildId
+                    return BuildId(buildId, buildInfo.executeCount ?: 1, projectId, pipelineId)
                 }
 
                 // 对不合法的重试进行拦截，防止重复提交
@@ -565,7 +566,7 @@ class PipelineBuildFacadeService(
         buildNo: Int? = null,
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null
-    ): String {
+    ): BuildId {
         logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
             val permission = AuthPermission.EXECUTE
@@ -709,7 +710,7 @@ class PipelineBuildFacadeService(
                 model = model,
                 signPipelineVersion = null,
                 frequencyLimit = false
-            )
+            ).id
         } finally {
             logger.info("Timer| It take(${System.currentTimeMillis() - startEpoch})ms to start pipeline($pipelineId)")
         }
@@ -779,7 +780,7 @@ class PipelineBuildFacadeService(
                 frequencyLimit = false,
                 startValues = startValues,
                 triggerReviewers = triggerReviewers
-            )
+            ).id
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
                     projectId = projectId,
@@ -929,7 +930,12 @@ class PipelineBuildFacadeService(
             }
         )
         if (params.status == ManualReviewAction.ABORT) {
-            buildRecordService.updateBuildCancelUser(projectId, buildId, userId)
+            buildRecordService.updateBuildCancelUser(
+                projectId = projectId,
+                buildId = buildId,
+                executeCount = buildInfo.executeCount ?: 1,
+                cancelUserId = userId
+            )
         }
     }
 
@@ -1276,6 +1282,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = buildInfo.startUser,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.FAILED
                 )
                 logger.info("$pipelineId|CANCEL_PIPELINE_BUILD|buildId=$buildId|user=${buildInfo.startUser}")
@@ -2143,6 +2150,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED,
                     terminateFlag = terminateFlag
                 )
@@ -2359,6 +2367,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     userId = userId,
+                    executeCount = buildInfo.executeCount ?: 1,
                     buildStatus = BuildStatus.CANCELED
                 )
                 return buildRestartPipeline(
@@ -2410,7 +2419,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 values = startParameters,
                 channelCode = ChannelCode.BS
-            )
+            ).id
         }
     }
 

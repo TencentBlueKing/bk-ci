@@ -97,6 +97,7 @@ class UserProjectServiceImpl @Autowired constructor(
             serviceTypeMap.forEach { serviceType ->
                 val typeId = serviceType.id
                 val typeName = I18nUtil.getCodeLanMessage(T_SERVICE_TYPE_PREFIX + serviceType.englishTitle)
+                    .ifBlank { serviceType.title }
                 val services = ArrayList<ServiceVO>()
 
                 val s = groupService[typeId]
@@ -113,7 +114,8 @@ class UserProjectServiceImpl @Autowired constructor(
                     services.add(
                         ServiceVO(
                             id = it.id,
-                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName),
+                            name = I18nUtil.getCodeLanMessage(T_SERVICE_PREFIX + it.englishName)
+                                .ifBlank { it.name },
                             link = it.link ?: "",
                             linkNew = it.linkNew ?: "",
                             status = status,
