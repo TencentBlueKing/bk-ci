@@ -81,7 +81,7 @@ require (
 
 require (
 	github.com/docker/cli v23.0.1+incompatible
-	github.com/docker/distribution v2.8.1+incompatible // indirect
+	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0
 	github.com/spf13/pflag v1.0.5
 )
