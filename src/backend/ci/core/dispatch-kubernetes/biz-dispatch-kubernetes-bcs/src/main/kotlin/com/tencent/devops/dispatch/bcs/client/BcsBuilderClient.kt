@@ -369,7 +369,7 @@ class BcsBuilderClient @Autowired constructor(
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
-                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMesage()
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.getErrorMesage(),
                         "$errorMsg: $msg"
                     )
                 }
