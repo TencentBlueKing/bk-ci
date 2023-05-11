@@ -28,8 +28,10 @@
 
 package com.tencent.devops.auth.service.migrate
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import org.slf4j.LoggerFactory
 
@@ -75,7 +77,12 @@ class MigrateResultService constructor(
                         } ?: false
                         if (verifyResult != rbacVerifyResult) {
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
-                            return false
+                            throw ErrorCodeException(
+                                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+                                params = arrayOf(projectCode),
+                                defaultMessage = "compare policy failed:" +
+                                    "$userId|$action|$projectId|$resourceType|$resourceCode"
+                            )
                         }
                     }
                 }

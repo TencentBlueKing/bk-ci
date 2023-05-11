@@ -100,7 +100,8 @@ abstract class AbMigratePolicyService(
                 groupCode = DefaultGroupType.MANAGER.value
             )?.relationId?.toInt() ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                params = arrayOf(DefaultGroupType.MANAGER.value)
+                params = arrayOf(DefaultGroupType.MANAGER.value),
+                defaultMessage = "${DefaultGroupType.MANAGER.value} group not exist"
             )
             // 蓝盾创建的默认用户组权限
             watcher.start("group_api_policy")
@@ -246,7 +247,8 @@ abstract class AbMigratePolicyService(
                 groupCode = DefaultGroupType.MANAGER.value
             )?.relationId?.toInt() ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
-                params = arrayOf(DefaultGroupType.MANAGER.value)
+                params = arrayOf(DefaultGroupType.MANAGER.value),
+                defaultMessage = "${DefaultGroupType.MANAGER.value} group not exist"
             )
             loopMigrateUserCustom(
                 projectCode = projectCode,

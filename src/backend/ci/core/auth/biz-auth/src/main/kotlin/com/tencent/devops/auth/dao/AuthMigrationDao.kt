@@ -30,9 +30,9 @@ package com.tencent.devops.auth.dao
 
 import com.tencent.devops.model.auth.tables.TAuthMigration
 import com.tencent.devops.model.auth.tables.records.TAuthMigrationRecord
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class AuthMigrationDao {
@@ -97,6 +97,7 @@ class AuthMigrationDao {
         dslContext: DSLContext,
         projectCode: String,
         status: Int,
+        errorMessage: String? = null,
         totalTime: Long?
     ) {
         with(TAuthMigration.T_AUTH_MIGRATION) {
@@ -106,6 +107,8 @@ class AuthMigrationDao {
             if (totalTime != null) {
                 update.set(TOTAL_TIME, totalTime)
             }
+            if (errorMessage != null)
+                update.set(ERROR_MESSAGE, errorMessage)
             update.where(PROJECT_CODE.eq(projectCode)).execute()
         }
     }

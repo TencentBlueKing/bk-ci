@@ -168,7 +168,8 @@ class RbacPermissionMigrateService constructor(
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION
+                    errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION,
+                    defaultMessage = "project $projectCode gradle manager not found"
                 )
             }
             // 迁移资源
@@ -224,13 +225,11 @@ class RbacPermissionMigrateService constructor(
                 totalTime = System.currentTimeMillis() - startEpoch
             )
             return true
-        } catch (ignore: Exception) {
-            logger.error("Failed to migrate $projectCode from $authType to rbac", ignore)
-            authMigrationDao.updateStatus(
-                dslContext = dslContext,
+        } catch (exception: Exception) {
+            handleException(
+                exception = exception,
                 projectCode = projectCode,
-                status = AuthMigrateStatus.FAILED.value,
-                totalTime = null
+                authType = authType
             )
             return false
         } finally {
@@ -261,14 +260,7 @@ class RbacPermissionMigrateService constructor(
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
-        val compareResult = migrateResultService.compare(projectCode = projectCode)
-        if (!compareResult) {
-            logger.warn("Failed to compare $projectCode policy")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
-                params = arrayOf(projectCode)
-            )
-        }
+        migrateResultService.compare(projectCode = projectCode)
     }
 
     private fun migrateV0Auth(
@@ -294,14 +286,7 @@ class RbacPermissionMigrateService constructor(
         )
         // 对比迁移结果
         watcher.start("comparePolicy")
-        val compareResult = migrateResultService.compare(projectCode = projectCode)
-        if (!compareResult) {
-            logger.warn("Failed to compare $projectCode policy")
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
-                params = arrayOf(projectCode)
-            )
-        }
+        migrateResultService.compare(projectCode = projectCode)
     }
 
     private fun createGradeManager(
@@ -346,5 +331,31 @@ class RbacPermissionMigrateService constructor(
             return null
         }
         return projectCreator ?: dbProjectCreator
+    }
+
+    private fun handleException(
+        exception: Exception,
+        projectCode: String,
+        authType: String
+    ) {
+        val errorMessage = when (exception) {
+            is IamException -> {
+                exception.errorMsg
+            }
+            is ErrorCodeException -> {
+                exception.defaultMessage
+            }
+            else -> {
+                exception.message
+            }
+        }
+        logger.error("Failed to migrate $projectCode from $authType to rbac", errorMessage)
+        authMigrationDao.updateStatus(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            status = AuthMigrateStatus.FAILED.value,
+            errorMessage = errorMessage,
+            totalTime = null
+        )
     }
 }
