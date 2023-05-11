@@ -31,7 +31,7 @@ func InitTokenService() *TokenService {
 }
 
 func (service *TokenService) UpdateBkTicket(ctx context.Context, ticket *BkticktRequestBody) error {
-	logs.WithField("ticket", ticket).Debug("do update bkticket")
+	logs.Debug("do update bkticket", logs.Any("ticket", ticket))
 
 	service.bkticket.cond.L.Lock()
 	defer service.bkticket.cond.L.Unlock()
@@ -68,7 +68,7 @@ func (service *TokenService) UpdateBkTicket(ctx context.Context, ticket *Bktickt
 	service.bkticket.markReady()
 	service.bkticket.cond.Broadcast()
 
-	logs.WithField("ticket", service.bkticket.ticket).Debug("devops remoting bkticket watcher: updated")
+	logs.Debug("devops remoting bkticket watcher: updated", logs.Any("ticket", service.bkticket.ticket))
 
 	return nil
 }

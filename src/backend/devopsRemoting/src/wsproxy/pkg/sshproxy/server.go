@@ -122,7 +122,7 @@ func (s *Server) HandleConn(c net.Conn) {
 	clientConn, clientChans, clientReqs, err := ssh.NewServerConn(c, s.sshConfig)
 	if err != nil {
 		c.Close()
-		logs.WithError(err).Error("ssh newServerConn error")
+		logs.Error("ssh newServerConn error", logs.Err(err))
 		return
 	}
 	defer clientConn.Close()
@@ -139,7 +139,7 @@ func (s *Server) HandleConn(c net.Conn) {
 	key, err := s.GetWorkspaceSSHKey(ctx, wsInfo.IPAddress)
 	if err != nil {
 		cancel()
-		logs.WithField("workspaceId", wsInfo.WorkspaceID).WithError(err).Error("failed to create private pair in workspace")
+		logs.Error("failed to create private pair in workspace", logs.String("workspaceId", wsInfo.WorkspaceID), logs.Err(err))
 		return
 	}
 	cancel()
@@ -152,7 +152,7 @@ func (s *Server) HandleConn(c net.Conn) {
 	remoteAddr := fmt.Sprintf("%s:%d", wsInfo.IPAddress, constant.RemotingSSHPort)
 	conn, err := net.Dial("tcp", remoteAddr)
 	if err != nil {
-		logs.WithField("workspaceId", wsInfo.WorkspaceID).WithField("workspaceIP", wsInfo.IPAddress).WithError(err).Error("dail failed")
+		logs.Error("dail failed", logs.String("workspaceId", wsInfo.WorkspaceID), logs.String("workspaceIP", wsInfo.IPAddress), logs.Err(err))
 		return
 	}
 	defer conn.Close()
@@ -168,7 +168,7 @@ func (s *Server) HandleConn(c net.Conn) {
 		Timeout: 10 * time.Second,
 	})
 	if err != nil {
-		logs.WithField("workspaceId", wsInfo.WorkspaceID).WithField("workspaceIP", wsInfo.IPAddress).WithError(err).Error("connect failed")
+		logs.Error("connect failed", logs.String("workspaceId", wsInfo.WorkspaceID), logs.String("workspaceIP", wsInfo.IPAddress), logs.Err(err))
 		return
 	}
 

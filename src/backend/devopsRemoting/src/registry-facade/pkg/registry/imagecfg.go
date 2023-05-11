@@ -2,6 +2,7 @@ package registry
 
 import (
 	"common/devops"
+	"common/logs"
 	"context"
 	"registry-facade/api"
 
@@ -101,13 +102,17 @@ func (p *RemoteSpecProvider) GetSpec(ctx context.Context, ref string) (*api.Imag
 		})
 	}
 
-	return &api.ImageSpec{
+	spec := &api.ImageSpec{
 		BaseRef:      resp.BaseRef,
 		IdeRef:       resp.IdeRef,
 		ContentLayer: content,
 		RemotingRef:  resp.RemotingRef,
 		IdeLayerRef:  resp.IdeLayerRef,
-	}, nil
+	}
+
+	logs.Debug("get remote spec", logs.Any("spec", spec))
+
+	return spec, nil
 }
 
 // NewCachingSpecProvider creates a new LRU caching spec provider with a max number of specs it can cache.

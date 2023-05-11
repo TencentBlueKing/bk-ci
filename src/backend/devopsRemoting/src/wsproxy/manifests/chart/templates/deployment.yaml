@@ -44,6 +44,25 @@ spec:
             - name: {{ .Release.Name }}-tls-certs
               mountPath: /data/workspace/wsproxy/tls
               readOnly: true
+            - name: {{ .Release.Name }}-logs
+              mountPath: /data/workspace/wsproxy/logs
+              readOnly: false
+        {{- if .Values.wsproxy.logConfig.sidecar.enable }}
+        - name: {{ .Release.Name }}-log-agent
+          image: {{ .Values.wsproxy.logConfig.sidecar.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.wsproxy.logConfig.sidecar.resources }}
+          resources: {{- toYaml .Values.wsproxy.logConfig.sidecar.resources | nindent 12 }}
+          {{- end }}
+          workingDir: {{ .Values.wsproxy.logConfig.sidecar.workingDir }}
+          volumeMounts:
+            - name: {{ .Release.Name }}-logs
+              mountPath: /data/workspace/wsproxy/logs
+              readOnly: false
+          {{- if .Values.wsproxy.logConfig.sidecar.env }}
+          env: {{- toYaml .Values.wsproxy.logConfig.sidecar.env | nindent 12 }}
+          {{- end }}    
+        {{- end }}
       volumes:
         - name: {{ .Release.Name }}-config
           configMap:
@@ -65,6 +84,8 @@ spec:
                 path: https.pem
               - key: https.key
                 path: https.key           
+        - name: {{ .Release.Name }}-logs
+          emptyDir: {}     
       {{- if .Values.wsproxy.affinity }}
       affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
       {{- end }}          
