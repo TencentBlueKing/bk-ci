@@ -83,13 +83,17 @@ class MigrateResultService constructor(
                         if (verifyResult != rbacVerifyResult) {
                             // 只对渠道为BS的流水线进行策略对比，因为只有该渠道注册的流水线，才有往权限中心注册
                             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-                                val isPipelineHasPermission = client.get(ServicePipelineResource::class)
+                                val pipelineInfo = client.get(ServicePipelineResource::class)
                                     .getPipelineInfo(
                                         projectId = projectCode,
                                         pipelineId = it.resourceCode,
                                         channelCode = ChannelCode.BS
-                                    ).data != null
-                                if (!isPipelineHasPermission)
+                                    ).data ?: throw ErrorCodeException(
+                                    errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                                    params = arrayOf(projectCode),
+                                    defaultMessage = "pipeline not found:|$resourceCode"
+                                )
+                                if (pipelineInfo.channelCode != ChannelCode.BS)
                                     return@forEach
                             }
                             // 如果是流水线类型，并且流水线的channelCode不是BS的，直接忽略
