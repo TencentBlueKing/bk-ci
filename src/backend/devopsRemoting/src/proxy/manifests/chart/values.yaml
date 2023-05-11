@@ -86,6 +86,7 @@ apisix:
     persistence:
       enabled: false
       size: 100Mi
+    replicaCount: 3  
 
   apisix-ingress-controller:
     image:
