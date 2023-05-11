@@ -307,8 +307,7 @@ class DevCloudClient {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        formatErrorMessage =
-                        I18nUtil.getCodeLanMessage("${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"),
+                        formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
                         errorMessage = I18nUtil.getCodeLanMessage(
                             messageCode = THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION
                         ) + I18nUtil.getCodeLanMessage(
@@ -328,8 +327,7 @@ class DevCloudClient {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage =
-                    I18nUtil.getCodeLanMessage("${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"),
+                    formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = I18nUtil.getCodeLanMessage(
                         messageCode = GET_STATUS_TIMED_OUT
                     ) + ", url: $url")

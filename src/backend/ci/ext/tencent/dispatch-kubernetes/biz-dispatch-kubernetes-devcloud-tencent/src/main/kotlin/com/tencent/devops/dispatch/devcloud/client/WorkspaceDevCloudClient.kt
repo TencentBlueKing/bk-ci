@@ -77,7 +77,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口异常: ${response.code}"
+                        "Env creation interface exception.: ${response.code}"
                     )
                 }
 
@@ -248,7 +248,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "获取环境状态接口超时, url: $url"
+                    errorMessage = "Get the environment status interface timeout, url: $url"
                 )
             }
         }
@@ -300,7 +300,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境列表返回失败：${environmentListRsp.message}"
+                        " list of operating environments returns a failure：${environmentListRsp.message}"
                     )
                 }
             }
@@ -318,7 +318,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     errorType = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "获取环境列表接口超时, url: $url"
+                    errorMessage = "Get the list of environments interface timed out, url: $url"
                 )
             }
         }
@@ -368,7 +368,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "获取TASK状态接口超时, url: $url"
+                    errorMessage = "Gets the TASK status interface timeout, url: $url"
                 )
             }
         }
