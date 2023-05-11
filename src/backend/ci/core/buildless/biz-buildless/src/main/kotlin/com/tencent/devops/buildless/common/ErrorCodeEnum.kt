@@ -42,7 +42,7 @@ enum class ErrorCodeEnum(
     NO_IDLE_CONTAINER_ERROR(ErrorType.SYSTEM, 2127003, "当前母机无可用空闲容器"),
     GET_LOCK_FAILED(ErrorType.SYSTEM, 2127004, "获取锁失败"); // 获取锁失败
 
-    fun ErrorCodeEnum.getFormatErrorMessage(): String {
+    fun getFormatErrorMessage(): String {
         return I18nUtil.getCodeLanMessage("${this.errorCode}")
     }
 }

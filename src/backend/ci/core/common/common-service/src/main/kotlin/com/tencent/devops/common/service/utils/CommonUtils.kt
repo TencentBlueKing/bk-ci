@@ -72,7 +72,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -102,9 +102,9 @@ object CommonUtils {
                 }
             }
         } catch (e: SocketException) {
-            logger.error("获取网卡失败", e)
+            logger.error("Failed to obtain NIC", e)
         } catch (ignore: NullPointerException) {
-            logger.error("获取网卡失败", ignore)
+            logger.error("Failed to obtain NIC", ignore)
         }
 
         return allIp
@@ -118,7 +118,7 @@ object CommonUtils {
         val netInterfaceName = netInterface.name
         // 过滤掉127.0.0.1的IP
         if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) {
-            logger.info("loopback地址或网卡名称为空")
+            logger.info("The loopback address or NIC name is empty")
         } else {
             val addresses = netInterface.inetAddresses
             while (addresses.hasMoreElements()) {

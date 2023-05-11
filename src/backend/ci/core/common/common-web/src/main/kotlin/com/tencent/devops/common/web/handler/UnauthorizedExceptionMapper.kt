@@ -27,15 +27,17 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_RESOURCES_THAT_NOT_AUTHORIZED_ACCESS
 import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
@@ -44,12 +46,12 @@ class UnauthorizedExceptionMapper : ExceptionMapper<UnauthorizedException> {
     }
 
     override fun toResponse(exception: UnauthorizedException): Response {
-        logger.warn("未授权错误: $exception")
+        logger.warn("Unauthorized error: $exception")
         val status = Response.Status.UNAUTHORIZED
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "未授权访问的资源"
+            I18nUtil.getCodeLanMessage(BK_RESOURCES_THAT_NOT_AUTHORIZED_ACCESS)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
