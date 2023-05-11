@@ -115,6 +115,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
+    @Suppress("ComplexMethod")
     override fun getUserAndDeptByName(
         name: String,
         accessToken: String?,
@@ -307,7 +308,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
@@ -322,7 +323,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(

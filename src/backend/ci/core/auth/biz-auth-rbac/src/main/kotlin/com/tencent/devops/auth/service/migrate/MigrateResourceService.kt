@@ -140,7 +140,7 @@ class MigrateResourceService @Autowired constructor(
         }
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("ALL")
     private fun createRbacResource(
         resourceType: String,
         projectCode: String,
