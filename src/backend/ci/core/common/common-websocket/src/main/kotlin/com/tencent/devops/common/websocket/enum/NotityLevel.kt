@@ -53,7 +53,7 @@ enum class NotityLevel(
                 ?: SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
                 return MessageUtil.getMessageByLocale(
                         messageCode = "NotityLevel." + this.name,
-                        language =language
+                        language = language
                 )
         }
 }
