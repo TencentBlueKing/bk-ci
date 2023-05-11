@@ -28,7 +28,7 @@
 package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
@@ -703,7 +703,7 @@ class QualityRuleCheckService @Autowired constructor(
                 logger.warn("taskId is null or blank for project($projectId) pipeline($pipelineId)")
                 return ""
             }
-            val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_SEE_DETAILS)
+            val bkSeeDetails = I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>$bkSeeDetails</a>"
             } else {

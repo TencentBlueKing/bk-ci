@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.bcs.common
 
 import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
     @BkFieldI18n
@@ -64,4 +65,8 @@ enum class ErrorCodeEnum(
     WEBSOCKET_URL_INTERFACE_ERROR(
         ErrorType.THIRD_PARTY, 2126010, "第三方服务-BCS 异常，异常信息 - 获取websocket接口异常"
     );
+
+    fun getErrorMesage(): String {
+        return I18nUtil.getCodeLanMessage("${this.errorCode}")
+    }
 }

@@ -367,10 +367,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 errorMsg = if (e is RemoteServiceException) {
                     e.errorMessage
                 } else {
-                    e.message ?: (
-                            I18nUtil.getCodeLanMessage("${ErrorCodeEnum.GET_VM_ERROR.errorCode}") +
-                                    "(${dispatchType.envName})"
-                            )
+                    e.message ?: (ErrorCodeEnum.GET_VM_ERROR.getErrorMessage() + "(${dispatchType.envName})")
                 }
             )
             return

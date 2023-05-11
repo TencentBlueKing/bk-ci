@@ -272,7 +272,7 @@ class DispatchBaseDebugService @Autowired constructor(
                 } else {
                     logger.info(
                         "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                                "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中"
+                                "debugBuilderName:$debugBuilderName container is not in debug or in use"
                     )
                 }
             } else {
@@ -340,18 +340,7 @@ class DispatchBaseDebugService @Autowired constructor(
             )
         ) {
             val language = I18nUtil.getLanguage(userId)
-            logger.info(
-                MessageUtil.getMessageByLocale(
-                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
-                    arrayOf(
-                        userId,
-                        projectId,
-                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
-                        pipelineId
-                    )
-                )
-            )
+            logger.info("user($userId)No permissions in project($projectId) edit pipeline($pipelineId)")
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE,

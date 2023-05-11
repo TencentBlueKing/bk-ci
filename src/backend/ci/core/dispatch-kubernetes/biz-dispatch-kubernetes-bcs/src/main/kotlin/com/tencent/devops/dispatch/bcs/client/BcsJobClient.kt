@@ -82,7 +82,7 @@ class BcsJobClient @Autowired constructor(
                 throw ErrorCodeException(
                     errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
-                    defaultMessage = "查询Job status接口异常（Fail to getJobStatus, http response code: ${response.code}"
+                    defaultMessage = "Fail to getJobStatus, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -104,7 +104,7 @@ class BcsJobClient @Autowired constructor(
                 throw ErrorCodeException(
                     errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
-                    defaultMessage = "获取Job logs接口异常（Fail to getJobLogs, http response code: ${response.code}"
+                    defaultMessage = "Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
