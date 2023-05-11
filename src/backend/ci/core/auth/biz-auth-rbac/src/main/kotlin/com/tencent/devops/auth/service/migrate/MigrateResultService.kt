@@ -33,12 +33,17 @@ import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
-    private val authVerifyRecordService: AuthVerifyRecordService
+    private val authVerifyRecordService: AuthVerifyRecordService,
+    private val client: Client
 ) {
 
     companion object {
@@ -76,6 +81,18 @@ class MigrateResultService constructor(
                             )
                         } ?: false
                         if (verifyResult != rbacVerifyResult) {
+                            // 只对渠道为BS的流水线进行策略对比，因为只有该渠道注册的流水线，才有往权限中心注册
+                            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+                                val isPipelineHasPermission = client.get(ServicePipelineResource::class)
+                                    .getPipelineInfo(
+                                        projectId = projectCode,
+                                        pipelineId = it.resourceCode,
+                                        channelCode = ChannelCode.BS
+                                    ).data != null
+                                if (!isPipelineHasPermission)
+                                    return@forEach
+                            }
+                            // 如果是流水线类型，并且流水线的channelCode不是BS的，直接忽略
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
                             throw ErrorCodeException(
                                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
