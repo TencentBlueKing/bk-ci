@@ -69,7 +69,7 @@ class FileServiceExt @Autowired constructor(
             val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
             val repoName = if (isCustom) "custom" else "pipeline"
             fileList.forEach { bkrepoFile ->
-                logger.info("BKRepoFile匹配到文件：(${bkrepoFile.displayPath})")
+                logger.info("BK Repo File matches to a file：(${bkrepoFile.displayPath})")
                 count++
                 val url =
                     "http://$gatewayUrl/bkrepo/api/service/generic/$projectId/$repoName/${bkrepoFile.fullPath}"

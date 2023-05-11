@@ -34,7 +34,6 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
@@ -49,7 +48,7 @@ import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostQpcService
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
-import java.util.Random
+import java.util.*
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -184,14 +183,14 @@ class DockerHostUtils @Autowired constructor(
             throw DockerServiceException(
                 errorType = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode}")
+                errorMsg = ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
             )
         } catch (e: Exception) {
             logger.error("$pipelineId|$vmSeq getIdlePoolNo error.", e)
             throw DockerServiceException(
                 errorType = ErrorCodeEnum.POOL_VM_ERROR.errorType,
                 errorCode = ErrorCodeEnum.POOL_VM_ERROR.errorCode,
-                errorMsg = I18nUtil.getCodeLanMessage("${ErrorCodeEnum.POOL_VM_ERROR.errorCode}")
+                errorMsg = ErrorCodeEnum.POOL_VM_ERROR.getErrorMessage()
             )
         } finally {
             lock.unlock()

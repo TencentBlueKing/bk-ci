@@ -312,8 +312,7 @@ class AuthManagerApprovalService @Autowired constructor(
         if (userManagerRecord == null) {
             logger.warn("userRenewalAuth : Manager permission has expired! | userId = $userId | managerId = $managerId")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.MANAGER_PERMISSION_EXPIRE,
-                defaultMessage = "管理员权限已经失效，请重新发起申请！"
+                errorCode = AuthMessageCode.MANAGER_PERMISSION_EXPIRE
             )
         }
         val userExpiringRecord = managerUserDao.getExpiringRecord(dslContext, managerId, userId)

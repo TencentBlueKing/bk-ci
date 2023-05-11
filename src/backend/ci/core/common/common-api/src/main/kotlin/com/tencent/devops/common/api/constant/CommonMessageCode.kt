@@ -148,4 +148,23 @@ object CommonMessageCode {
     const val BK_SESSION_ID = "bkSessionId" // 会话ID
     const val BK_GROUP_ID = "bkGroupId" // 群ID
     const val BK_THIS_GROUP_ID = "bkThisGroupId" // 本群ID='{0}'。PS:群ID可用于蓝盾平台上任意企业微信群通知。
+    const val BK_MISSING_RESOURCE_DEPENDENCY = "bkMissingResourceDependency" // 依赖的资源不存在
+
+    const val BK_REQUEST_TIMED_OUT = "bkRequestTimedOut" // 请求超时
+    const val BK_QUERY_PARAM_REQUEST_ERROR = "bkQueryParamRequestError" // 查询参数请求错误
+    const val BK_JSON_BAD_PARAMETERS = "bkJsonBadParameters" // JSON参数错误/Bad Parameters in json
+    // 请求体内容参数错误。温馨提示：请确认{0}是否符合要求
+    const val BK_REQUEST_BODY_CONTENT_PARAMETER_INCORRECT = "bkRequestBodyContentParameterIncorrect"
+    const val BK_REQUESTED_RESOURCE_DOES_NOT_EXIST = "bkRequestedResourceDoesNotExist" // 请求的资源不存在
+    const val BK_NOT_OAUTH_CERTIFICATION = "bkNotOauthCertification" // 你没有Oauth认证
+    const val BK_QUERY_PARAM_REQUEST_EMPTY = "bkQueryParamRequestEmpty" // 请求的参数内容为空
+    const val BK_QUERY_PARAM_TYPE_ERROR = "bkQueryParamTypeError" // 查询参数类型错误
+    // 你没有权限进行该操作
+    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION"
+    // 访问后台数据失败，已通知产品、开发，请稍后重试
+    const val BK_FAILED_ACCESS_BACKGROUND_DATA = "bkFailedAccessBackgroundData"
+    // 未授权访问的资源
+    const val BK_RESOURCES_THAT_NOT_AUTHORIZED_ACCESS = "bkResourcesThatNotAuthorizedAccess"
+    const val BK_CODE_BASE_TRIGGERING = "bkCodeBaseTriggering" // 代码库触发
+
 }
