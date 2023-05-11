@@ -73,6 +73,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -644,7 +645,10 @@ class LambdaDataService @Autowired constructor(
                 executeTime = t.executeTime ?: 0,
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                }
+                },
+                stageStatus = kotlin.runCatching {
+                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                }.getOrNull()
             )
         }
     }

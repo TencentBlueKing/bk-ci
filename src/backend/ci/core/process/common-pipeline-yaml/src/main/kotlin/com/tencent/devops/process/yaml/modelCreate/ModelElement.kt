@@ -122,7 +122,12 @@ class ModelElement @Autowired(required = false) constructor(
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
-                    ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                    ModelCommon.installMarketAtom(
+                        client = client,
+                        projectCode = event.projectCode,
+                        userId = event.elementInstallUserId,
+                        atomCode = element.getAtomCode()
+                    )
                 }
             }
         }

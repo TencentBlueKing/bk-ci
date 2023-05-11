@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.engine.dao
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_TASK
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -53,10 +53,7 @@ import java.util.concurrent.TimeUnit
 @Repository
 class PipelineBuildTaskDao {
 
-    fun create(
-        dslContext: DSLContext,
-        buildTask: PipelineBuildTask
-    ) {
+    fun create(dslContext: DSLContext, buildTask: PipelineBuildTask) {
 
         val count =
             with(T_PIPELINE_BUILD_TASK) {
@@ -116,51 +113,74 @@ class PipelineBuildTaskDao {
 
     fun batchSave(dslContext: DSLContext, taskList: Collection<PipelineBuildTask>) {
         with(T_PIPELINE_BUILD_TASK) {
-            taskList.forEach {
-                dslContext.insertInto(this)
-                    .set(PROJECT_ID, it.projectId)
-                    .set(PIPELINE_ID, it.pipelineId)
-                    .set(BUILD_ID, it.buildId)
-                    .set(STAGE_ID, it.stageId)
-                    .set(CONTAINER_ID, it.containerId)
-                    .set(TASK_NAME, it.taskName)
-                    .set(TASK_ID, it.taskId)
-                    .set(STEP_ID, it.stepId)
-                    .set(TASK_PARAMS, JsonUtil.toJson(it.taskParams, formatted = false))
-                    .set(TASK_TYPE, it.taskType)
-                    .set(TASK_ATOM, it.taskAtom)
-                    .set(START_TIME, it.startTime)
-                    .set(END_TIME, it.endTime)
-                    .set(STARTER, it.starter)
-                    .set(APPROVER, it.approver)
-                    .set(STATUS, it.status.ordinal)
-                    .set(EXECUTE_COUNT, it.executeCount)
-                    .set(TASK_SEQ, it.taskSeq)
-                    .set(SUB_PROJECT_ID, it.subProjectId)
-                    .set(SUB_BUILD_ID, it.subBuildId)
-                    .set(CONTAINER_TYPE, it.containerType)
-                    .set(
-                        ADDITIONAL_OPTIONS,
-                        it.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) }
-                    )
-                    .set(
-                        TOTAL_TIME,
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                STAGE_ID,
+                CONTAINER_ID,
+                TASK_NAME,
+                TASK_ID,
+                STEP_ID,
+                TASK_PARAMS,
+                TASK_TYPE,
+                TASK_ATOM,
+                START_TIME,
+                END_TIME,
+                STARTER,
+                APPROVER,
+                STATUS,
+                EXECUTE_COUNT,
+                TASK_SEQ,
+                SUB_PROJECT_ID,
+                SUB_BUILD_ID,
+                CONTAINER_TYPE,
+                ADDITIONAL_OPTIONS,
+                TOTAL_TIME,
+                ERROR_TYPE,
+                ERROR_CODE,
+                ERROR_MSG,
+                CONTAINER_HASH_ID,
+                ATOM_CODE
+            ).also { insert ->
+                taskList.forEach {
+                    insert.values(
+                        it.projectId,
+                        it.pipelineId,
+                        it.buildId,
+                        it.stageId,
+                        it.containerId,
+                        it.taskName,
+                        it.taskId,
+                        it.stepId,
+                        JsonUtil.toJson(it.taskParams, formatted = false),
+                        it.taskType,
+                        it.taskAtom,
+                        it.startTime,
+                        it.endTime,
+                        it.starter,
+                        it.approver,
+                        it.status.ordinal,
+                        it.executeCount,
+                        it.taskSeq,
+                        it.subProjectId,
+                        it.subBuildId,
+                        it.containerType,
+                        it.additionalOptions?.let { self -> JsonUtil.toJson(self, formatted = false) },
                         if (it.endTime != null && it.startTime != null) {
                             TimeUnit.MILLISECONDS.toSeconds(Duration.between(it.startTime, it.endTime).toMillis())
                         } else {
                             null
-                        }
+                        },
+                        it.errorType?.ordinal,
+                        it.errorCode,
+                        it.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX),
+                        it.containerHashId,
+                        it.atomCode
                     )
-                    .set(ERROR_TYPE, it.errorType?.ordinal)
-                    .set(ERROR_CODE, it.errorCode)
-                    .set(
-                        ERROR_MSG,
-                        CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
-                    )
-                    .set(CONTAINER_HASH_ID, it.containerHashId)
-                    .set(ATOM_CODE, it.atomCode)
-                    .execute()
-            }
+                }
+            }.execute()
         }
     }
 
@@ -192,10 +212,7 @@ class PipelineBuildTaskDao {
                     )
                     .set(TOTAL_TIME, it.totalTime)
                     .set(ERROR_TYPE, it.errorType?.ordinal)
-                    .set(
-                        ERROR_MSG,
-                        CommonUtils.interceptStringInLength(it.errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX)
-                    )
+                    .set(ERROR_MSG, it.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                     .set(ERROR_CODE, it.errorCode)
                     .set(CONTAINER_HASH_ID, it.containerHashId)
                     .set(ATOM_CODE, it.atomCode)
@@ -320,8 +337,7 @@ class PipelineBuildTaskDao {
             updateTaskInfo.errorType?.let { baseStep.set(ERROR_TYPE, it.num) }
             updateTaskInfo.errorCode?.let { baseStep.set(ERROR_CODE, it) }
             updateTaskInfo.errorMsg?.let {
-                val key = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-                baseStep.set(ERROR_MSG, CommonUtils.interceptStringInLength(it, key))
+                baseStep.set(ERROR_MSG, it.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
             }
             updateTaskInfo.additionalOptions?.let {
                 baseStep.set(ADDITIONAL_OPTIONS, JsonUtil.toJson(it, formatted = false))
@@ -346,7 +362,7 @@ class PipelineBuildTaskDao {
             dslContext.update(this)
                 .set(ERROR_TYPE, errorType.num)
                 .set(ERROR_CODE, errorCode)
-                .set(ERROR_MSG, CommonUtils.interceptStringInLength(errorMsg, PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
+                .set(ERROR_MSG, errorMsg.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX))
                 .where(BUILD_ID.eq(buildId)).and(TASK_ID.eq(taskId)).and(PROJECT_ID.eq(projectId))
                 .execute()
         }

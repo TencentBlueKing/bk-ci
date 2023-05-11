@@ -1,0 +1,55 @@
+{
+    "folders": [
+        {
+            "path": "."
+        },
+        {
+            "path": "src/common"
+        },
+        {
+            "path": "src/remoting"
+        },
+        {
+            "path": "src/remoting-api"
+        },
+        {
+            "path": "src/wsproxy"
+        },
+        {
+            "path": "src/ide/vscode"
+        },
+        {
+            "path": "src/ide/vscode-desktop"
+        },
+        {
+            "path": "src/registry-facade"
+        },
+        {
+            "path": "src/registry-facade-api"
+        },
+        {
+            "path": "src/proxy"
+        },
+        {
+            "path": "../../../../remote-dev-images"
+        }
+    ],
+    "settings": {
+        "[json]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "[yaml]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "[go]": {
+            "editor.formatOnSave": true
+        },
+        "go.formatTool": "goimports",
+        "go.lintTool": "golangci-lint",
+        "gopls": {
+            "allowModfileModifications": true
+        },
+    }
+}

@@ -73,7 +73,7 @@ class ServiceItemService @Autowired constructor(
         try {
             getServiceList()
             logger.info("projectServiceMap: $projectServiceMap")
-        } catch (t: Throwable) {
+        } catch (t: Exception) {
             logger.warn("init ServiceList fail", t)
             throw ErrorCodeException(
                 errorCode = CommonMessageCode.INIT_SERVICE_LIST_ERROR,
@@ -88,7 +88,7 @@ class ServiceItemService @Autowired constructor(
         val allItemMap = mutableMapOf<String, ServiceItem>()
         val itemList = mutableListOf<ExtItemDTO>()
         val parentIndexMap = mutableMapOf<String, MutableList<String>>()
-        allItemData.forEach { it ->
+        allItemData.forEach {
             allItemMap[it.id] = ServiceItem(
                 itemId = it.id,
                 itemCode = it.itemCode,
