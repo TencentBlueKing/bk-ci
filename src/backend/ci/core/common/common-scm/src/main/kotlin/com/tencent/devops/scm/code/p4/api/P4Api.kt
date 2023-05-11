@@ -278,6 +278,7 @@ class P4Api(
 
     fun getServerInfo(): P4ServerInfo {
         return P4Server(p4port = p4port, userName = username, password = password).use { p4Server ->
+            p4Server.connectionRetry()
             p4Server.getServer().serverInfo.run {
                 P4ServerInfo(
                     caseSensitive = this.isCaseSensitive
