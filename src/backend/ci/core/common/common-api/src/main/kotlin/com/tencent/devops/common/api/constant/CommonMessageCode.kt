@@ -166,5 +166,4 @@ object CommonMessageCode {
     // 未授权访问的资源
     const val BK_RESOURCES_THAT_NOT_AUTHORIZED_ACCESS = "bkResourcesThatNotAuthorizedAccess"
     const val BK_CODE_BASE_TRIGGERING = "bkCodeBaseTriggering" // 代码库触发
-
 }
