@@ -43,6 +43,7 @@ import com.tencent.devops.image.pojo.ImageItem
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -50,7 +51,6 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Service
 @Suppress("ALL")
@@ -380,8 +380,10 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test?query=" + URLEncoder.encode(aql, "UTF-8")
-
+        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test".toHttpUrlOrNull()!!.newBuilder()
+            .addQueryParameter("aql", aql)
+            .build()
+            .toString()
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
 
