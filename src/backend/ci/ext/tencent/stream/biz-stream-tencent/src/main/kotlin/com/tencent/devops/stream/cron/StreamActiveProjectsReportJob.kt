@@ -85,7 +85,7 @@ class StreamActiveProjectsReportJob @Autowired constructor(
 
     private fun doReport() {
         // 获取v2版本的指定日期的日活跃项目
-        val startDay = LocalDateTime.now().minusDays(7)
+        val startDay = LocalDateTime.now().minusDays(30)
         val endDay = LocalDateTime.now().minusDays(1)
         val startTime = startDay.withHour(0).withMinute(0).withSecond(0).timestampmilli()
         val endTime = endDay.withHour(23).withMinute(59).withSecond(59).timestampmilli()
