@@ -74,6 +74,7 @@ class RbacPermissionMigrateService constructor(
         private const val V3_AUTH_TYPE = "v3"
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val MAX_RETRY_TIMES = 3
         private const val IAM_NAME_CONFLICT_ERROR = 1902409L
     }
 
@@ -296,7 +297,7 @@ class RbacPermissionMigrateService constructor(
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
         val resourceName = projectInfo.projectName
-        for (suffix in 0..5) {
+        for (suffix in 0..MAX_RETRY_TIMES) {
             try {
                 permissionResourceService.resourceCreateRelation(
                     userId = resourceCreator,
@@ -308,7 +309,7 @@ class RbacPermissionMigrateService constructor(
                 break
             } catch (iamException: IamException) {
                 if (iamException.errorCode != IAM_NAME_CONFLICT_ERROR) throw iamException
-                if (suffix == 5) throw iamException
+                if (suffix == MAX_RETRY_TIMES) throw iamException
             }
         }
         return authResourceService.getOrNull(

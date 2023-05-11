@@ -180,7 +180,7 @@ class MigrateResourceService @Autowired constructor(
                 ) ?: run {
                     val iamApprover = buildIamApprover(it.iamApprover[0], resourceCreator)
                     val resourceName = it.displayName
-                    for (suffix in 0..5) {
+                    for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
                                 userId = iamApprover,
@@ -192,7 +192,7 @@ class MigrateResourceService @Autowired constructor(
                             break
                         } catch (iamException: IamException) {
                             if (iamException.errorCode != IAM_RESOURCE_NAME_CONFLICT_ERROR) throw iamException
-                            if (suffix == 5) throw iamException
+                            if (suffix == MAX_RETRY_TIMES) throw iamException
                         }
                     }
                 }
@@ -293,5 +293,6 @@ class MigrateResourceService @Autowired constructor(
         )
         private val executorService = Executors.newFixedThreadPool(10)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
+        private const val MAX_RETRY_TIMES = 3
     }
 }

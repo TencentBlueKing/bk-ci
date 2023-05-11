@@ -89,7 +89,6 @@ class QualityNotifyGroupDao {
         }
     }
 
-
     fun count(dslContext: DSLContext, projectId: String): Long {
         with(TGroup.T_GROUP) {
             return dslContext.selectCount()

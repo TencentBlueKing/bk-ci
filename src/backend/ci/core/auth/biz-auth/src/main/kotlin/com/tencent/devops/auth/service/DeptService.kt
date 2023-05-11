@@ -53,6 +53,6 @@ interface DeptService {
 
     fun getUserDeptInfo(userId: String): Set<String>
 
-    //获取单个用户信息
+    // 获取单个用户信息
     fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo?
 }

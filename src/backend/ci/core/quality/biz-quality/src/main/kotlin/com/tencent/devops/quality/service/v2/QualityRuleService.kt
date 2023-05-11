@@ -689,10 +689,11 @@ class QualityRuleService @Autowired constructor(
             if (controlPoint != null && !pipelineElementCodes.contains(controlPoint.type)) {
                 lackElements.add(controlPoint.type)
             }
-            QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
-                                                              name = info.pipelineName,
-                                                              type = "PIPELINE",
-                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            QualityRuleSummaryWithPermission.RuleRangeSummary(
+                id = info.pipelineId,
+                name = info.pipelineName,
+                type = "PIPELINE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
             )
         }
     }
