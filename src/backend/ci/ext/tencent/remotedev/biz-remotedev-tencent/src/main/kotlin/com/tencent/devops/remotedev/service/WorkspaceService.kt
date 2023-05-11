@@ -732,8 +732,8 @@ class WorkspaceService @Autowired constructor(
             kotlin.runCatching { checkAndFixExceptionWS(status, userId, workspaceName) }.onFailure {
                 if (it is ErrorCodeException && it.errorCode == ErrorCodeEnum.WORKSPACE_ERROR.errorCode) {
                     deleteImmediately = true
-                }
-            }.getOrThrow()
+                } else throw it
+            }
 
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
