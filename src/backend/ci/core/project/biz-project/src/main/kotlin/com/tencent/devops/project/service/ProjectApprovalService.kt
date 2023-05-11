@@ -132,6 +132,7 @@ class ProjectApprovalService @Autowired constructor(
         return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
     }
 
+    @Suppress("ComplexMethod")
     fun createApproved(projectId: String, applicant: String, approver: String) {
         logger.info("project create approved|$projectId|$applicant|$approver")
         val projectInfo =
