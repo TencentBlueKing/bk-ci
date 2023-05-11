@@ -50,6 +50,7 @@ import org.joda.time.DateTime
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Service
 @Suppress("ALL")
@@ -379,7 +380,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test"
+        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test?query=" + URLEncoder.encode(aql, "UTF-8")
 
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
@@ -421,11 +422,7 @@ class ImageArtifactoryService @Autowired constructor(
         val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
-            logger.info("it in records")
-            logger.info("it[\"createdDate\"] :${DateTime(it["createdDate"] as String).toString("yyyy-MM-dd HH:mm:ss")}")
-            logger.info("it[\"createdBy\"] :${it["createdBy"]}")
             dockerTag.created = DateTime(it["createdDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
-            logger.info("dockerTag.created :${dockerTag.created}")
             dockerTag.createdBy = it["createdBy"] as String?
             dockerTag.modified = DateTime(it["lastModifiedDate"] as String?).toString("yyyy-MM-dd HH:mm:ss")
             dockerTag.modifiedBy = it["lastModifiedBy"] as String?
