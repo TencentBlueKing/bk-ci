@@ -30,7 +30,6 @@ package com.tencent.devops.dispatch.docker.client
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
@@ -43,8 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessPrepareStartHandler @Autowired constructor(
-    private val bkTag: BkTag,
+class BuildLessStartDispatchHandler @Autowired constructor(
     private val redisUtils: RedisUtils,
     private val dslContext: DSLContext,
     private val dockerHostUtils: DockerHostUtils,
@@ -52,13 +50,10 @@ class BuildLessPrepareStartHandler @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao
 ) : Handler<BuildLessStartHandlerContext>() {
 
-    private val logger = LoggerFactory.getLogger(BuildLessPrepareStartHandler::class.java)
+    private val logger = LoggerFactory.getLogger(BuildLessStartDispatchHandler::class.java)
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
-            // 区分是否灰度环境
-            handlerContext.grayEnv = isGray()
-
             // 获取可用节点
             val (buildLessHost, buildLessPort) = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
                 projectId = event.projectId,
@@ -118,9 +113,5 @@ class BuildLessPrepareStartHandler @Autowired constructor(
 
             return Pair(agentId, secretKey)
         }
-    }
-
-    fun isGray(): Boolean {
-        return bkTag.getFinalTag().contains("gray")
     }
 }

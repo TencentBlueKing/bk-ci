@@ -33,9 +33,6 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.dispatch.docker.service.BuildLessWhitelistService
-import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -44,19 +41,20 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessSelectStartHandler @Autowired constructor(
+class BuildLessStartPrepareHandler @Autowired constructor(
     private val bkTag: BkTag,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val dockerHostClient: DockerHostClient,
-    private val buildLessPrepareStartHandler: BuildLessPrepareStartHandler,
-    private val dockerHostUtils: DockerHostUtils,
-    private val buildLessWhitelistService: BuildLessWhitelistService
+    private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler,
 ) : Handler<BuildLessStartHandlerContext>() {
-    private val logger = LoggerFactory.getLogger(BuildLessSelectStartHandler::class.java)
+    private val logger = LoggerFactory.getLogger(BuildLessStartPrepareHandler::class.java)
 
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
+            // 区分是否灰度环境
+            handlerContext.grayEnv = isGray()
+
+            // 设置日志打印关键字
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
             logger.info("$buildLogKey start select buildLess.")
 
@@ -67,25 +65,13 @@ class BuildLessSelectStartHandler @Autowired constructor(
                 buildLogPrinter.addLine(
                     buildId = event.buildId,
                     message = "Prepare BuildLess Job(#${event.vmSeqId})...",
-                    tag = "",
+                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
                     jobId = event.containerHashId,
                     executeCount = event.executeCount ?: 1
                 )
             }
 
-            if (!buildLessWhitelistService.checkBuildLessWhitelist(event.projectId)) {
-                buildLessPrepareStartHandler.handlerRequest(this)
-            } else {
-                val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
-                    projectId = event.projectId,
-                    pipelineId = event.pipelineId,
-                    vmSeqId = event.vmSeqId,
-                    specialIpSet = emptySet(),
-                    unAvailableIpList = emptySet(),
-                    clusterName = DockerHostClusterType.AGENT_LESS
-                )
-                dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
-            }
+            buildLessStartDispatchHandler.handlerRequest(this)
         }
     }
 
@@ -117,5 +103,10 @@ class BuildLessSelectStartHandler @Autowired constructor(
                 errorMessage = "流水线JOB已经不再运行，构建停止"
             )
         }
+    }
+
+
+    fun isGray(): Boolean {
+        return bkTag.getFinalTag().contains("gray")
     }
 }

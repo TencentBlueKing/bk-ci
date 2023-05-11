@@ -35,9 +35,9 @@ import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.docker.client.BuildLessEndHandlerContext
-import com.tencent.devops.dispatch.docker.client.BuildLessPrepareEndHandler
+import com.tencent.devops.dispatch.docker.client.BuildLessEndPrepareHandler
 import com.tencent.devops.dispatch.docker.client.BuildLessStartHandlerContext
-import com.tencent.devops.dispatch.docker.client.BuildLessSelectStartHandler
+import com.tencent.devops.dispatch.docker.client.BuildLessStartPrepareHandler
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -53,8 +53,8 @@ class AgentLessListener @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
     private val jobQuotaService: JobQuotaService,
-    private val buildLessStartHandler: BuildLessSelectStartHandler,
-    private val buildLessPrepareEndHandler: BuildLessPrepareEndHandler
+    private val buildLessStartHandler: BuildLessStartPrepareHandler,
+    private val buildLessEndPrepareHandler: BuildLessEndPrepareHandler
 ) {
 
     fun listenAgentStartUpEvent(event: PipelineBuildLessStartupDispatchEvent) {
@@ -107,7 +107,7 @@ class AgentLessListener @Autowired constructor(
 
     fun listenAgentShutdownEvent(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
-            buildLessPrepareEndHandler.handlerRequest(BuildLessEndHandlerContext(event = event))
+            buildLessEndPrepareHandler.handlerRequest(BuildLessEndHandlerContext(event = event))
         } catch (ignored: Throwable) {
             logger.error("Fail to start the pipe build($event)", ignored)
         } finally {

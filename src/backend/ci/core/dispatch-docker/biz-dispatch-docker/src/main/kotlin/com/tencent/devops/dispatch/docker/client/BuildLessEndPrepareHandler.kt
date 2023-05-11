@@ -29,8 +29,6 @@ package com.tencent.devops.dispatch.docker.client
 
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import com.tencent.devops.dispatch.docker.service.BuildLessWhitelistService
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
@@ -41,15 +39,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class BuildLessPrepareEndHandler @Autowired constructor(
+class BuildLessEndPrepareHandler @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
-    private val buildLessEndHandler: BuildLessEndHandler,
-    private val dockerHostClient: DockerHostClient,
-    private val buildLessWhitelistService: BuildLessWhitelistService
+    private val buildLessEndHandler: BuildLessEndHandler
 ) : Handler<BuildLessEndHandlerContext>() {
-    private val logger = LoggerFactory.getLogger(BuildLessPrepareEndHandler::class.java)
+    private val logger = LoggerFactory.getLogger(BuildLessEndPrepareHandler::class.java)
 
     override fun handlerRequest(handlerContext: BuildLessEndHandlerContext) {
         with(handlerContext) {
@@ -81,26 +77,13 @@ class BuildLessPrepareEndHandler @Autowired constructor(
         logger.info("${record.buildId}|${record.vmSeqId} Finish the docker buildless with result($success)")
         try {
             if (record.dockerIp.isNotEmpty()) {
-                if (!buildLessWhitelistService.checkBuildLessWhitelist(record.projectId)) {
-                    buildLessEndHandler.handlerRequest(
-                        BuildLessEndHandlerContext(
-                            event = event,
-                            containerId = record.containerId,
-                            buildLessHost = record.dockerIp
-                        )
-                    )
-                } else {
-                    dockerHostClient.endBuild(
-                        projectId = record.projectId,
-                        pipelineId = record.pipelineId,
-                        buildId = record.buildId,
-                        vmSeqId = record.vmSeqId?.toInt() ?: 0,
+                buildLessEndHandler.handlerRequest(
+                    BuildLessEndHandlerContext(
+                        event = event,
                         containerId = record.containerId,
-                        dockerIp = record.dockerIp,
-                        poolNo = record.poolNo,
-                        clusterType = DockerHostClusterType.AGENT_LESS
+                        buildLessHost = record.dockerIp
                     )
-                }
+                )
             }
 
             pipelineDockerBuildDao.updateStatus(
