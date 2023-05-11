@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.client
+package com.tencent.devops.dispatch.docker.client.context
 
 open class HandlerContext(
     open val grayEnv: Boolean,

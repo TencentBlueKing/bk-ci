@@ -27,6 +27,8 @@
 
 package com.tencent.devops.dispatch.docker.client
 
+import com.tencent.devops.dispatch.docker.client.context.HandlerContext
+
 abstract class Handler<T : HandlerContext> constructor(
 
 ) {

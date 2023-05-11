@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.client
 
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus

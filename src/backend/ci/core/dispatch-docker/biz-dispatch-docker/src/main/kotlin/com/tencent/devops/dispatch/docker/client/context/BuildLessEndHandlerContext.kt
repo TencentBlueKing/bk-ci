@@ -25,8 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.client
+package com.tencent.devops.dispatch.docker.client.context
 
+import com.tencent.devops.dispatch.docker.client.context.HandlerContext
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 
 class BuildLessEndHandlerContext(

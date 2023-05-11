@@ -34,9 +34,9 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.dispatch.docker.client.BuildLessEndHandlerContext
+import com.tencent.devops.dispatch.docker.client.context.BuildLessEndHandlerContext
 import com.tencent.devops.dispatch.docker.client.BuildLessEndPrepareHandler
-import com.tencent.devops.dispatch.docker.client.BuildLessStartHandlerContext
+import com.tencent.devops.dispatch.docker.client.context.BuildLessStartHandlerContext
 import com.tencent.devops.dispatch.docker.client.BuildLessStartPrepareHandler
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
