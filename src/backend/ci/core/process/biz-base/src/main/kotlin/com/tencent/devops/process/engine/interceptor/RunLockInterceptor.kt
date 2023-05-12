@@ -54,6 +54,7 @@ class RunLockInterceptor @Autowired constructor(
         return checkRunLock(runLockType, projectId, pipelineId, concurrencyGroup)
     }
 
+    @Suppress("ComplexMethod")
     fun checkRunLock(
         runLockType: PipelineRunLockType?,
         projectId: String,
