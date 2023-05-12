@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
@@ -152,7 +153,10 @@ class DevcloudContainerService @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, "DevCloud任务超时（10min）")
+                return DispatchBuildTaskStatus(
+                    DispatchBuildTaskStatusEnum.FAILED,
+                    I18nUtil.getCodeLanMessage(BK_DEVCLOUD_TASK_TIMED_OUT)
+                )
             }
             Thread.sleep(1 * 1000)
             val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)

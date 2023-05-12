@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.BK_FAIL_TO_GET_JOB_STATUS
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.CREATE_BUILD_MACHINE_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.CREATE_WORKSPACE_API_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.CREATE_WORKSPACE_ERROR
@@ -135,8 +136,9 @@ class KubernetesRemoteDevClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
-                    "${I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING)}查询Job status接口异常（Fail to getJobStatus, " +
-                        "http response code: ${response.code}"
+                    I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_FAIL_TO_GET_JOB_STATUS) +
+                        ", http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -162,8 +164,9 @@ class KubernetesRemoteDevClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
-                    "${I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING)}获取Job logs接口异常" +
-                        "（Fail to getJobLogs, http response code: ${response.code}"
+                    I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
+                            I18nUtil.getCodeLanMessage(BK_FAIL_TO_GET_JOB_STATUS) +
+                        ",（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
