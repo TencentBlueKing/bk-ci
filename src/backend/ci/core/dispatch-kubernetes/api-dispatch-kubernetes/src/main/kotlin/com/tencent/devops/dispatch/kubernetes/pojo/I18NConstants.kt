@@ -44,7 +44,7 @@ const val BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS = "bkDistributeBuildMachin
 // 构建机创建成功，等待机器启动...
 const val BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP = "bkMachineBuildCompletedWaitingForStartup"
 const val BK_BUILD_MACHINE_CREATION_FAILED = "bkBuildMachineCreationFailed" // 构建机创建失败
-const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "bkContainerIsNotInDebugOrInUse" // 容器没有处于debug或正在占用中\
+const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "bkContainerIsNotInDebugOrInUse" // 容器没有处于debug或正在占用中
 const val BK_BUILD_MACHINE_STARTUP_FAILED = "bkBuildMachineStartupFailed" // 构建机启动失败，错误信息:{0}
 const val BK_INTERFACE_REQUEST_TIMEOUT = "bkInterfaceRequestTimeout" // 接口请求超时
 //  "创建构建机失败，错误信息:{0}. \n容器构建异常请参考：{1}"

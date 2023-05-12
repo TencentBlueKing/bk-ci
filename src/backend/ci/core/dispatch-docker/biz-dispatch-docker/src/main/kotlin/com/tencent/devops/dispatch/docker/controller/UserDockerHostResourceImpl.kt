@@ -40,6 +40,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
+import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
@@ -149,7 +150,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(debugStartParam.pipelineId)
             )
