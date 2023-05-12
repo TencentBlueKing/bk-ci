@@ -41,9 +41,9 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
@@ -81,7 +81,7 @@ class JinGangService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val jinGangAppDao: JinGangAppDao,
     private val jinGangAppMetaDao: JinGangAppMetaDao,
-    private val authPermissionApi: BSAuthPermissionApi,
+    private val authPermissionApi: AuthPermissionApi,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
