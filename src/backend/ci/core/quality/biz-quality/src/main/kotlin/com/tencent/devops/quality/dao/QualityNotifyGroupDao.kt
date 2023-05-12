@@ -89,36 +89,6 @@ class QualityNotifyGroupDao {
         }
     }
 
-    fun listByIds(
-        dslContext: DSLContext,
-        projectId: String,
-        groupIds: List<Long>,
-        offset: Int,
-        limit: Int
-    ): Result<TGroupRecord> {
-        with(TGroup.T_GROUP) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(ID.`in`(groupIds))
-                .orderBy(CREATE_TIME.desc())
-                .offset(offset)
-                .limit(limit)
-                .fetch()
-        }
-    }
-
-    fun listIds(
-        dslContext: DSLContext,
-        projectId: String
-    ): Result<Record1<Long>> {
-        with(TGroup.T_GROUP) {
-            return dslContext.select(ID).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .orderBy(CREATE_TIME.desc())
-                .fetch()
-        }
-    }
-
     fun count(dslContext: DSLContext, projectId: String): Long {
         with(TGroup.T_GROUP) {
             return dslContext.selectCount()
