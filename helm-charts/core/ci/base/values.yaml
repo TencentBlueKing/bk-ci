@@ -258,11 +258,7 @@ mongodb:
   # - name: MONGODB_CLIENT_EXTRA_FLAGS
   #   value: "--ipv6"
 pulsar:
-  enabled: true
-  toolset:
-    additionalCommand: 
-      bin/pulsar-admin tenants create default-tenant;
-      bin/pulsar-admin namespaces create default-tenant/default-ns;
+  enabled: false
   ## deployed withh emptyDir
   volumes:
     persistence: false
@@ -272,7 +268,8 @@ pulsar:
   # disable auto recovery
   components:
     autorecovery: false
-    pulsar_manager: true
+    pulsar_manager: false
+    # functions: false
   zookeeper:
     replicaCount: 1
   bookkeeper:
@@ -289,6 +286,15 @@ pulsar:
       managedLedgerDefaultAckQuorum: "1"
   proxy:
     replicaCount: 1
+  monitoring:
+    # monitoring - prometheus
+    prometheus: false
+    # monitoring - grafana
+    grafana: false
+    # monitoring - node_exporter
+    node_exporter: false
+    # alerting - alert-manager
+    alert_manager: false
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
@@ -479,6 +485,11 @@ externalRabbitmq:
   username: bkci
   password: bkci
   vhost: bkci
+externalPulsar:
+  serviceUrl: bkci
+  namespace: bkci
+  tenant: bkci
+  tokenAuthValue: bkci
 externalInfluxdb:
   host: localhost
   port: 8086
@@ -1548,7 +1559,7 @@ gateway:
 
 # stream Deployment
 stream:
-  enabled: true
+  enabled: false
   replicas: 1
   podLabels: {}
   resources:

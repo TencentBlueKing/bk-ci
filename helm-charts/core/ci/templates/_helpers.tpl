@@ -322,7 +322,7 @@ Return th pulsar namespace
 */}}
 {{- define "bkci.pulsarNamespace" -}}
 {{- if eq .Values.pulsar.enabled true -}}
-default-ns
+default
 {{- else -}}
 {{- .Values.externalPulsar.namespace -}}
 {{- end -}}
@@ -333,7 +333,7 @@ Return th pulsar tenant
 */}}
 {{- define "bkci.pulsarTenant" -}}
 {{- if eq .Values.pulsar.enabled true -}}
-default-tenant
+public
 {{- else -}}
 {{- .Values.externalPulsar.tenant -}}
 {{- end -}}
