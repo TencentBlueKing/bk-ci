@@ -264,13 +264,13 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Credential {
-        if (credentialId.isNullOrBlank()) {
-            return /*兼容直接输入user/password的情况*/ pool?.credential ?: Credential("", "")
-        }
         val realCredentialId = EnvUtils.parseEnv(
             command = credentialId,
             data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         )
+        if (realCredentialId.isBlank()) {
+            return /*兼容直接输入user/password的情况*/ pool?.credential ?: Credential("", "")
+        }
         val ticketsMap = try {
             CommonCredentialUtils.getCredential(
                 client = client,
