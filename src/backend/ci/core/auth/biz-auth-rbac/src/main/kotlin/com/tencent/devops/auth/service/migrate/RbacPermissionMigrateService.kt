@@ -355,7 +355,7 @@ class RbacPermissionMigrateService constructor(
                 exception.defaultMessage
             }
             else -> {
-                exception.message
+                exception.toString()
             }
         }
         logger.error("Failed to migrate $projectCode from $authType to rbac", errorMessage)
