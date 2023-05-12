@@ -85,6 +85,7 @@ object ProcessMessageCode {
     const val BK_TCLS_ENVIRONMENT = "bkTclsEnvironment" // 获取 TCLS 环境失败，请检查用户名密码是否正确
     const val BK_CONTINUE = "bkContinue" // 继续
     const val BK_OVERRULE = "bkOverrule" // 驳回
+    const val BK_TRIGGER = "bkTrigger" // 触发
 
     const val OK = 0
 
