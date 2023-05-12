@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class MigrateResultService constructor(
     private val permissionService: PermissionService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
@@ -50,7 +51,6 @@ class MigrateResultService constructor(
         private val logger = LoggerFactory.getLogger(MigrateResultService::class.java)
     }
 
-    @Suppress("NestedBlockDepth")
     fun compare(projectCode: String): Boolean {
         logger.info("start to compare policy|$projectCode")
         val startEpoch = System.currentTimeMillis()
