@@ -530,7 +530,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1061,6 +1061,12 @@ class PipelineBuildFacadeService(
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
+                defaultMessage = "pipeline($pipelineId) setting is missing.",
+                params = arrayOf("pipeline($pipelineId) setting is missing.")
+            )
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
             runLock.lock()
@@ -1069,8 +1075,13 @@ class PipelineBuildFacadeService(
                     pipelineInfo = pipelineInfo,
                     model = null,
                     startType = StartType.MANUAL,
-                    setting = setting,
-                    buildId = buildId
+                    buildId = buildId,
+                    runLockType = setting.runLockType,
+                    waitQueueTimeMinute = setting.waitQueueTimeMinute,
+                    maxQueueSize = setting.maxQueueSize,
+                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize
                 )
             )
 
