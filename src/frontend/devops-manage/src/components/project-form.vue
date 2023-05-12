@@ -287,7 +287,7 @@ watch(() => projectData.value.englishName, (val) => {
   deep: true,
 })
 
-watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
+watch(() => [projectData.value.authSecrecy, projectData.value.projectType, projectData.value.subjectScopes], () => {
   projectForm.value.validate();
   emits('approvedChange', true);
 }, {
@@ -415,6 +415,7 @@ onBeforeUnmount(() => {
         :placeholder="t('选择项目类型')"
         name="center"
         searchable
+        @change="handleChangeForm"
       >
         <bk-option
           v-for="type in projectTypeList"
