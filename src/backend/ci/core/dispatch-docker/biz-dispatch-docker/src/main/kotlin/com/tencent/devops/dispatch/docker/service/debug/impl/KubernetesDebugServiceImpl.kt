@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
+import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.docker.service.debug.DebugInterface
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceBaseDebugResource
 import com.tencent.devops.dispatch.kubernetes.pojo.base.StartDebugReq
@@ -64,7 +65,7 @@ class KubernetesDebugServiceImpl @Autowired constructor(
 
         logger.info("$userId $pipelineId| kubernetes debug response: ${JsonUtil.toJson(bcsDebugResult.data ?: "")}")
         return bcsDebugResult.data?.websocketUrl ?: throw ErrorCodeException(
-            errorCode = "2103503",
+            errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
             defaultMessage = "Can not found debug container.",
             params = arrayOf(pipelineId)
         )

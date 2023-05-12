@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
+import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
@@ -62,7 +63,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 buildId = debugStartParam.buildId,
                 vmSeqId = debugStartParam.vmSeqId
             ) ?: throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(debugStartParam.pipelineId)
             )

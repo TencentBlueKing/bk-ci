@@ -39,6 +39,8 @@ import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_LOAD_TOO_HIGH
+import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerEnableDao
@@ -414,7 +416,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(pipelineId)
             )
@@ -479,7 +481,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     // 母机负载过高
                     LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
                     throw ErrorCodeException(
-                        errorCode = "2103505",
+                        errorCode = BK_LOAD_TOO_HIGH,
                         defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
                         params = arrayOf(pipelineId)
                     )
@@ -488,7 +490,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     val msg = response["message"]
                     LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
                     throw ErrorCodeException(
-                        errorCode = "2103503",
+                        errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                         defaultMessage = "Start debug Docker VM failed.",
                         params = arrayOf(pipelineId)
                     )

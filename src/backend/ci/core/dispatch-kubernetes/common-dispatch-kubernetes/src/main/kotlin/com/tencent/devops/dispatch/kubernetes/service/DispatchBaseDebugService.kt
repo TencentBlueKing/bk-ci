@@ -43,6 +43,8 @@ import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_STARTUP_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.BK_CONTAINER_STATUS_EXCEPTION
+import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
@@ -101,7 +103,7 @@ class DispatchBaseDebugService @Autowired constructor(
             buildHistory.containerName
         } else {
             throw ErrorCodeException(
-                errorCode = "2103501",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "no container is ready to debug",
                 params = arrayOf(pipelineId)
             )
@@ -165,7 +167,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     if (buildStatus != DispatchBuilderDebugStatus.RUNNING) {
                         logger.error("Status exception, builderName: $builderName, status: $buildStatus")
                         throw ErrorCodeException(
-                            errorCode = "2103502",
+                            errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                             defaultMessage = "Status exception, please try rebuild the pipeline",
                             params = arrayOf(pipelineId)
                         )
@@ -175,7 +177,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     // 异常状态
                     logger.error("Status exception, builderName: $builderName, status: $status")
                     throw ErrorCodeException(
-                        errorCode = "2103502",
+                        errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                         defaultMessage = "Status exception, please try rebuild the pipeline",
                         params = arrayOf(pipelineId)
                     )
@@ -318,12 +320,8 @@ class DispatchBaseDebugService @Autowired constructor(
         } else {
             logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
-                errorCode = "2103503",
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    BK_BUILD_MACHINE_STARTUP_FAILED,
-                    I18nUtil.getLanguage(userId),
-                    arrayOf(startResult.errMsg ?: "")
-                )
+                errorCode = BK_BUILD_MACHINE_STARTUP_FAILED,
+                params = arrayOf(startResult.errMsg ?: "")
             )
         }
     }
