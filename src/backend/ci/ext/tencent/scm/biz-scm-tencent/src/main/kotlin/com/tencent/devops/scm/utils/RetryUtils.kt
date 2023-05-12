@@ -38,7 +38,7 @@ object RetryUtils {
 
     private val logger = LoggerFactory.getLogger(RetryUtils::class.java)
 
-    private val RETRY_CODE = listOf(429)
+    private val RETRY_CODE = listOf(429, 500)
 
     fun doRetryHttp(request: Request): okhttp3.Response {
         return HttpRetryUtils.retry(retryPeriodMills = 2000) {

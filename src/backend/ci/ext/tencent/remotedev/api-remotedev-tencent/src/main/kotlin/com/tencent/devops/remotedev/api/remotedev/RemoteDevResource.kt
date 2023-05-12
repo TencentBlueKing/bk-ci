@@ -69,6 +69,21 @@ interface RemoteDevResource {
         timestamp: String
     ): Result<RemoteDevOauthBack>
 
+    @ApiOperation("提供给ws-proxy在完成拉取代码后上报")
+    @POST
+    @Path("/workspace/complete_pull_code")
+    fun completePullCode(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String
+    ): Result<Boolean>
+
     @ApiOperation("提供给ws-proxy上报工作空间心跳")
     @POST
     @Path("/workspace/heartbeat")
@@ -81,7 +96,6 @@ interface RemoteDevResource {
         workspaceName: String,
         @ApiParam(value = "时间戳", required = true)
         @QueryParam("timestamp")
-
         timestamp: String
     ): Result<Boolean>
 

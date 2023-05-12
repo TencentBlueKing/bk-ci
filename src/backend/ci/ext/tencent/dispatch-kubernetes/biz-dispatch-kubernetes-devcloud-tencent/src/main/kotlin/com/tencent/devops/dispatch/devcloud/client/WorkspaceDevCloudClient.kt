@@ -12,10 +12,12 @@ import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpPatch
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
+import com.tencent.devops.dispatch.devcloud.pojo.PatchOp
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
 import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
@@ -32,6 +34,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.util.Base64Utils
 import java.net.SocketTimeoutException
 
 @Component
@@ -111,7 +114,19 @@ class WorkspaceDevCloudClient @Autowired constructor(
         environmentAction: EnvironmentAction
     ): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/${environmentAction.getValue()}"
-        logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
+        val patchStr = Base64Utils.encodeToString(
+            (JsonUtil.toJson(
+                listOf(
+                    EnvironmentOpPatch(
+                        op = PatchOp.ADD.value,
+                        path = "/spec/containers/0/env/0/value",
+                        value = "false"
+                    )
+                )
+            ).toByteArray()
+                )
+        )
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, patchStr: $patchStr")
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
@@ -125,7 +140,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
             .post(
                 RequestBody.create(
                     "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    JsonUtil.toJson(UidReq(environmentUid))
+                    JsonUtil.toJson(UidReq(
+                        uid = environmentUid,
+                        patch = patchStr
+                    ))
                 )
             )
             .build()
