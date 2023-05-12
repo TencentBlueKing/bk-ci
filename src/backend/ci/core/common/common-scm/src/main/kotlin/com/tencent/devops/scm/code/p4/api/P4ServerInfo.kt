@@ -2,7 +2,6 @@ package com.tencent.devops.scm.code.p4.api
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import io.swagger.annotations.ApiParam
 
 @ApiModel("p4服务端信息")
 data class P4ServerInfo(

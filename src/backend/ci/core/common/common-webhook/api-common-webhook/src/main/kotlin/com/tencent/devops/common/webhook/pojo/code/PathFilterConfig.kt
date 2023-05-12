@@ -35,5 +35,5 @@ data class PathFilterConfig(
     val triggerOnPath: List<String>,
     val includedPaths: List<String>,
     val excludedPaths: List<String>,
-    val caseSensitive: Boolean? = true
+    val caseSensitive: Boolean = true
 )
