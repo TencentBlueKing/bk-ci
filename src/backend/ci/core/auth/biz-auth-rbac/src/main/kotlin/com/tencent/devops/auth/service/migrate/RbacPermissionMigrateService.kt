@@ -135,19 +135,23 @@ class RbacPermissionMigrateService constructor(
             )
             if (authMigrationInfo != null && authMigrationInfo.status == AuthMigrateStatus.PENDING.value) {
                 logger.info("project $projectCode is migrating")
-                return false
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_PROJECT_IN_MIGRATION,
+                    defaultMessage = "project $projectCode is migrating"
+                )
             }
-            val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data ?: run {
-                logger.warn("project $projectCode not exist")
-                return false
-            }
+            val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
+                ?: run {
+                    logger.warn("project $projectCode not exist")
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                        defaultMessage = "project not exist $projectCode"
+                    )
+                }
             // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
             val iamApprover = buildResourceCreator(
                 approver = migrateProject.approver,
                 projectCreator = projectInfo.creator!!
-            ) ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
-                defaultMessage = "project creator not exist ${projectInfo.creator!!}"
             )
 
             authMigrationDao.create(
@@ -169,7 +173,7 @@ class RbacPermissionMigrateService constructor(
                     iamApprover = iamApprover
                 )
             } ?: run {
-                logger.info("project $projectCode gradle manager not found")
+                logger.warn("project $projectCode gradle manager not found")
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.CAN_NOT_FIND_RELATION,
                     defaultMessage = "project $projectCode gradle manager not found"
@@ -324,14 +328,16 @@ class RbacPermissionMigrateService constructor(
     private fun buildResourceCreator(
         approver: String?,
         projectCreator: String
-    ): String? {
+    ): String {
         val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
             userId = "admin",
             name = projectCreator
         ) == null
         if (isDbProjectCreatorLeaveOffice && approver == null) {
-            logger.warn("project creator is not exist!|creator=$projectCreator")
-            return null
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
+                defaultMessage = "project creator not exist $projectCreator"
+            )
         }
         return approver ?: projectCreator
     }
