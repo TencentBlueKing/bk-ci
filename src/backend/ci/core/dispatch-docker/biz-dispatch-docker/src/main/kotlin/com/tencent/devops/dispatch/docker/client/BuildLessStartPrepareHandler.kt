@@ -85,8 +85,10 @@ class BuildLessStartPrepareHandler @Autowired constructor(
         )
 
         if (statusResult.isNotOk() || statusResult.data == null) {
-            logger.warn("The build event($event) fail to check if pipeline task is running " +
-                         "because of ${statusResult.message}")
+            logger.warn(
+                "The build event($event) fail to check if pipeline task is running " +
+                    "because of ${statusResult.message}"
+            )
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
@@ -105,7 +107,6 @@ class BuildLessStartPrepareHandler @Autowired constructor(
             )
         }
     }
-
 
     fun isGray(): Boolean {
         return bkTag.getFinalTag().contains("gray")
