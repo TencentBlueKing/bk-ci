@@ -27,17 +27,14 @@
 
 package com.tencent.devops.scm.api
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
+import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_P4"], description = "服务-p4相关")
@@ -102,4 +99,19 @@ interface ServiceP4Resource {
         @HeaderParam("password")
         password: String
     ): Result<String>
+
+    @ApiOperation("获取p4服务端信息")
+    @GET
+    @Path("/{projectId}/{repositoryId}/serverInfo")
+    fun getServerInfo(
+        @ApiParam("p4Port", required = true)
+        @QueryParam("p4Port")
+        p4Port: String,
+        @ApiParam("p4 username", required = true)
+        @QueryParam("username")
+        username: String,
+        @ApiParam("p4 password", required = true)
+        @QueryParam("password")
+        password: String
+    ): Result<P4ServerInfo>
 }

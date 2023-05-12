@@ -27,11 +27,13 @@
 
 package com.tencent.devops.scm.resources
 
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 
 @RestResource
 class ServiceP4ResourceImpl : ServiceP4Resource {
@@ -81,5 +83,18 @@ class ServiceP4ResourceImpl : ServiceP4Resource {
                 reversion = reversion
             )
         )
+    }
+
+    override fun getServerInfo(
+        p4Port: String,
+        username: String,
+        password: String
+    ): Result<P4ServerInfo> {
+        val serverInfo = P4Api(
+            p4port = p4Port,
+            username = username,
+            password = password
+        ).getServerInfo()
+        return Result(serverInfo)
     }
 }
