@@ -107,8 +107,7 @@ class AuthMigrationDao {
             if (totalTime != null) {
                 update.set(TOTAL_TIME, totalTime)
             }
-            if (errorMessage != null)
-                update.set(ERROR_MESSAGE, errorMessage)
+            update.set(ERROR_MESSAGE, errorMessage)
             update.where(PROJECT_CODE.eq(projectCode)).execute()
         }
     }

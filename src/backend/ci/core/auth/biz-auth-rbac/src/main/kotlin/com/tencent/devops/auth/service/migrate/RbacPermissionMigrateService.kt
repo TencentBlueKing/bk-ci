@@ -125,7 +125,6 @@ class RbacPermissionMigrateService constructor(
         authType: String
     ): Boolean {
         val projectCode = migrateProject.projectCode
-        val projectCreator = migrateProject.projectCreator
         logger.info("Start migrate $projectCode from $authType to rbac")
         val startEpoch = System.currentTimeMillis()
         val watcher = Watcher("migrateToRbacAuth|$projectCode")
@@ -143,10 +142,13 @@ class RbacPermissionMigrateService constructor(
                 return false
             }
             // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
-            val resourceCreator = buildResourceCreator(
-                projectCreator = projectCreator,
-                dbProjectCreator = projectInfo.creator!!
-            ) ?: return false
+            val iamApprover = buildResourceCreator(
+                approver = migrateProject.approver,
+                projectCreator = projectInfo.creator!!
+            ) ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
+                defaultMessage = "project creator not exist ${projectInfo.creator!!}"
+            )
 
             authMigrationDao.create(
                 dslContext = dslContext,
@@ -164,7 +166,7 @@ class RbacPermissionMigrateService constructor(
                 createGradeManager(
                     projectCode = projectCode,
                     projectInfo = projectInfo,
-                    resourceCreator = resourceCreator
+                    iamApprover = iamApprover
                 )
             } ?: run {
                 logger.info("project $projectCode gradle manager not found")
@@ -177,7 +179,7 @@ class RbacPermissionMigrateService constructor(
             watcher.start("migrateResource")
             migrateResourceService.migrateResource(
                 projectCode = projectCode,
-                resourceCreator = resourceCreator
+                iamApprover = iamApprover
             )
 
             when (authType) {
@@ -293,14 +295,14 @@ class RbacPermissionMigrateService constructor(
     private fun createGradeManager(
         projectCode: String,
         projectInfo: ProjectVO,
-        resourceCreator: String
+        iamApprover: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
         val resourceName = projectInfo.projectName
         for (suffix in 0..MAX_RETRY_TIMES) {
             try {
                 permissionResourceService.resourceCreateRelation(
-                    userId = resourceCreator,
+                    userId = iamApprover,
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode,
@@ -320,18 +322,18 @@ class RbacPermissionMigrateService constructor(
     }
 
     private fun buildResourceCreator(
-        projectCreator: String?,
-        dbProjectCreator: String
+        approver: String?,
+        projectCreator: String
     ): String? {
         val isDbProjectCreatorLeaveOffice = deptService.getUserInfo(
             userId = "admin",
-            name = dbProjectCreator
+            name = projectCreator
         ) == null
-        if (isDbProjectCreatorLeaveOffice && projectCreator == null) {
-            logger.warn("project creator is not exist!|creator=$dbProjectCreator")
+        if (isDbProjectCreatorLeaveOffice && approver == null) {
+            logger.warn("project creator is not exist!|creator=$projectCreator")
             return null
         }
-        return projectCreator ?: dbProjectCreator
+        return approver ?: projectCreator
     }
 
     private fun handleException(
