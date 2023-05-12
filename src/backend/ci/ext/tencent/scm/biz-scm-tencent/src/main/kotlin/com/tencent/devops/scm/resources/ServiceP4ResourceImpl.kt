@@ -27,7 +27,6 @@
 
 package com.tencent.devops.scm.resources
 
-import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.api.ServiceP4Resource

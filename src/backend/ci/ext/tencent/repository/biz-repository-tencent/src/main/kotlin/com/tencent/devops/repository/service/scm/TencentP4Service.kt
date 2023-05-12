@@ -121,7 +121,7 @@ class TencentP4Service(
         return client.getScm(ServiceP4Resource::class).getServerInfo(
             p4Port = repository.url,
             username = username,
-            password = URLEncoder.encode(password, "UTF-8"),
+            password = URLEncoder.encode(password, "UTF-8")
         ).data!!
     }
 }
