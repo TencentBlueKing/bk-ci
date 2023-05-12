@@ -50,12 +50,12 @@ class RunLockInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = task.setting
-        val runLockType = setting?.runLockType
-        val concurrencyGroup = setting?.concurrencyGroup
+        val runLockType = task.runLockType
+        val concurrencyGroup = task.concurrencyGroup
         return checkRunLock(runLockType, projectId, pipelineId, concurrencyGroup)
     }
 
+    @Suppress("ComplexMethod")
     fun checkRunLock(
         runLockType: PipelineRunLockType?,
         projectId: String,
@@ -69,10 +69,10 @@ class RunLockInterceptor @Autowired constructor(
             )
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
-            return if (buildSummaryRecord?.runningCount ?: 0 >= 1) {
+            return if ((buildSummaryRecord?.runningCount ?: 0) >= 1) {
                 logger.info(
                     "[$pipelineId] " +
-                            "The current pipeline has been set to run only one build task at a time, start queuing!"
+                        "The current pipeline has been set to run only one build task at a time, start queuing!"
                 )
                 Response(BuildStatus.QUEUE)
             } else {
