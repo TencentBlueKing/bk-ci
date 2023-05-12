@@ -145,11 +145,9 @@ const showNeedApprovedTips = () => {
  * 更新项目
  */
 const handleUpdate = async () => {
-  setTimeout(() => {
-    projectForm.value?.validate().then(async () => {
-      await updateProject();
-    })
-  });
+  projectForm.value?.validate().then(async () => {
+    await updateProject();
+  })
 };
 
 const initProjectForm = (value) => {
