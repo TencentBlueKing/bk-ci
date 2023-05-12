@@ -46,7 +46,7 @@ class BuildLessStartPrepareHandler @Autowired constructor(
     private val bkTag: BkTag,
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler,
+    private val buildLessStartDispatchHandler: BuildLessStartDispatchHandler
 ) : Handler<BuildLessStartHandlerContext>() {
     private val logger = LoggerFactory.getLogger(BuildLessStartPrepareHandler::class.java)
 

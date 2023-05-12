@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.client.context
 
 import com.tencent.devops.buildless.pojo.RejectedExecutionType
-import com.tencent.devops.dispatch.docker.client.context.HandlerContext
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 
 class BuildLessStartHandlerContext(

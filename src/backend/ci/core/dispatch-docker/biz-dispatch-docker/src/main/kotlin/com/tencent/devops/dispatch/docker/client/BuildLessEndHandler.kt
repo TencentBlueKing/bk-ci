@@ -46,7 +46,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class BuildLessEndHandler @Autowired constructor(
-    private val dockerHostProxyService: DockerHostProxyService,
+    private val dockerHostProxyService: DockerHostProxyService
 ) : Handler<BuildLessEndHandlerContext>() {
     private val logger = LoggerFactory.getLogger(BuildLessEndHandler::class.java)
 

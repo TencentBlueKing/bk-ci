@@ -37,7 +37,7 @@ class BuildLessEndHandlerContext(
     val event: PipelineBuildLessShutdownDispatchEvent,
     override var grayEnv: Boolean = false,
     override var agentId: String = "",
-    override var secretKey: String = "",
+    override var secretKey: String = ""
 ) : HandlerContext(
     grayEnv, agentId, secretKey
 )

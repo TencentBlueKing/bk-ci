@@ -210,8 +210,7 @@ class BuildLessStartHandler @Autowired constructor(
             // 当前IP此刻不可用，将IP状态置为false
             pipelineDockerIPInfoDao.updateDockerIpStatus(dslContext, buildLessHost, false)
 
-            logger.error("$buildLogKey Start build less failed," +
-                             " message: $errorMessage")
+            logger.error("$buildLogKey Start build less failed, message: $errorMessage")
             throw DockerServiceException(
                 errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
                 errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
