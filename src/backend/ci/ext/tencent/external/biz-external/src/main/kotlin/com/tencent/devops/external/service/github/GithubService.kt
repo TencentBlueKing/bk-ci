@@ -29,7 +29,6 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_TAG
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
@@ -40,6 +39,7 @@ import com.tencent.devops.external.constant.ExternalMessageCode.ACCOUNT_NOT_PERM
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_ADD_DETECTION_TASK
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_LIST_OF_BRANCHES
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_BRANCH
+import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_SPECIFIED_TAG
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_TAG_LIST
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_GET_WAREHOUSE_LIST
 import com.tencent.devops.external.constant.ExternalMessageCode.BK_UPDATE_DETECTION_TASK
@@ -223,7 +223,7 @@ class GithubService @Autowired constructor(
             override fun execute(): GithubTag? {
                 val path = "repos/$projectName/git/refs/tags/$tag"
                 val request = buildGet(token, path)
-                val body = getBody(OPERATION_GET_TAG, request)
+                val body = getBody(BK_GET_SPECIFIED_TAG, request)
                 return objectMapper.readValue(body)
             }
         }, 1, 500)

@@ -34,10 +34,11 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.BK_DEVCLOUD_TASK_TIMED_OUT
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildStatusResp
@@ -72,11 +73,11 @@ class DevcloudContainerService @Autowired constructor(
     override fun getLog() = DispatchBuildLog(
         readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE),
         startContainerError = I18nUtil.getCodeLanMessage(
-            messageCode = DispatchK8sMessageCode.START_BUILD_CONTAINER_FAIL,
+            messageCode = BK_START_BUILD_CONTAINER_FAIL,
             params = arrayOf("devcloud")
         ),
         troubleShooting = I18nUtil.getCodeLanMessage(
-            messageCode = DispatchK8sMessageCode.CONTAINER_BUILD_ERROR,
+            messageCode = BK_CONTAINER_BUILD_ERROR,
             params = arrayOf("devcloud")
         )
     )

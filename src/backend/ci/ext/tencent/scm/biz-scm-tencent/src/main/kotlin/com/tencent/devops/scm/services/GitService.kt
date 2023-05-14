@@ -32,7 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GIT_REPO_PEM_FAIL
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CustomException
@@ -70,9 +70,15 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.constant.ScmMessageCode
 import com.tencent.devops.scm.constant.ScmMessageCode.BK_FILE_CANNOT_EXCEED
 import com.tencent.devops.scm.constant.ScmMessageCode.GIT_TOKEN_EMPTY
 import com.tencent.devops.scm.constant.ScmMessageCode.INCORRECT_GIT_TOKEN
+import com.tencent.devops.scm.constant.ScmMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL
+import com.tencent.devops.scm.constant.ScmMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL
+import com.tencent.devops.scm.constant.ScmMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL
+import com.tencent.devops.scm.constant.ScmMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL
+import com.tencent.devops.scm.constant.ScmMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
@@ -105,6 +111,15 @@ import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.RetryUtils.doRetryHttp
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
+import java.io.File
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.nio.file.Files
+import java.time.LocalDateTime
+import java.util.*
+import java.util.concurrent.Executors
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.core.Response
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -114,15 +129,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.FileSystemUtils
 import org.springframework.util.StringUtils
-import java.io.File
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.nio.file.Files
-import java.time.LocalDateTime
-import java.util.Base64
-import java.util.concurrent.Executors
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -1050,7 +1056,7 @@ class GitService @Autowired constructor(
             val repositoryUrl = dataMap["http_url_to_repo"]
             if (StringUtils.isEmpty(repositoryUrl)) {
                 val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
-                    messageCode = RepositoryMessageCode.USER_CREATE_GIT_CODE_REPOSITORY_FAIL,
+                    messageCode = USER_CREATE_GIT_CODE_REPOSITORY_FAIL,
                     language = I18nUtil.getLanguage(userId)
                 )
                 logger.info("createOAuthCodeRepository validateResult>> $validateResult")
@@ -1209,7 +1215,7 @@ class GitService @Autowired constructor(
                     val message = dataMap["message"]
                     if (!StringUtils.isEmpty(message)) {
                         val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
-                            messageCode = RepositoryMessageCode.USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL,
+                            messageCode = USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL,
                             params = arrayOf(it),
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
@@ -1268,7 +1274,7 @@ class GitService @Autowired constructor(
                         val message = dataMap["message"]
                         if (!StringUtils.isEmpty(message)) {
                             val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
-                                messageCode = RepositoryMessageCode.USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL,
+                                messageCode = USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL,
                                 params = arrayOf(it),
                                 language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                             )
@@ -1331,7 +1337,7 @@ class GitService @Autowired constructor(
                 if (!StringUtils.isEmpty(message)) {
                     val validateResult: Result<String?> =
                         I18nUtil.generateResponseDataObject(
-                            messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
+                            messageCode = USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
                             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )
                     // 把工蜂的错误提示抛出去
@@ -1430,7 +1436,7 @@ class GitService @Autowired constructor(
                 } else {
                     val result: Result<String?> =
                         I18nUtil.generateResponseDataObject(
-                            messageCode = RepositoryMessageCode.GIT_REPO_PEM_FAIL,
+                            messageCode = GIT_REPO_PEM_FAIL,
                             language = I18nUtil.getLanguage(userId))
                     // 把工蜂的错误提示抛出去
                     Result(result.status, "${result.message}（git error:$message）")
@@ -1497,7 +1503,7 @@ class GitService @Autowired constructor(
             val message = dataMap["message"]
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
-                    messageCode = RepositoryMessageCode.USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
+                    messageCode = USER_UPDATE_GIT_CODE_REPOSITORY_FAIL,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 logger.info("updateGitProjectInfo validateResult>> $validateResult")
@@ -1585,7 +1591,7 @@ class GitService @Autowired constructor(
                 val message = dataMap["message"]
                 return if (!StringUtils.isEmpty(message)) {
                     val validateResult: Result<String?> = I18nUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
+                        messageCode = USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
                         params = arrayOf(groupCode),
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
@@ -1594,7 +1600,7 @@ class GitService @Autowired constructor(
                     Result(validateResult.status, "${validateResult.message}（git error:$message）")
                 } else {
                     I18nUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
+                        messageCode = USER_GIT_REPOSITORY_MOVE_GROUP_FAIL,
                         params = arrayOf(groupCode),
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
@@ -2050,7 +2056,7 @@ class GitService @Autowired constructor(
             if (!StringUtils.isEmpty(message)) {
                 val validateResult: Result<String?> =
                     I18nUtil.generateResponseDataObject(
-                        messageCode = RepositoryMessageCode.CREATE_TAG_FAIL,
+                        messageCode = ScmMessageCode.CREATE_TAG_FAIL,
                         language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 logger.info("createGitTag validateResult>> $validateResult")

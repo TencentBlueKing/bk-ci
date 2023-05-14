@@ -27,8 +27,8 @@
 
 package com.tencent.devops.scm.services
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
@@ -351,7 +351,7 @@ class ScmService @Autowired constructor(
             statusMessage = e.message
             throw ScmException(
                 e.message ?: I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL),
+                    messageCode = CommonMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         } finally {
