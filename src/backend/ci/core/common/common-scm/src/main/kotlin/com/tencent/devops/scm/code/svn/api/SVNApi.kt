@@ -29,9 +29,7 @@ package com.tencent.devops.scm.code.svn.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_CALL_ERROR
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_NOT_EXIST
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.ENGINEERING_REPO_UNAUTHORIZED
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -149,15 +147,15 @@ object SVNApi {
             if (!response.isSuccessful) {
                 when {
                     response.code == 401 -> throw ScmException(
-                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_UNAUTHORIZED),
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_UNAUTHORIZED),
                         ScmType.CODE_SVN.name
                     )
                     response.code == 404 -> throw ScmException(
-                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_NOT_EXIST),
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_NOT_EXIST),
                         ScmType.CODE_SVN.name
                     )
                     else -> throw ScmException(
-                        I18nUtil.getCodeLanMessage(ENGINEERING_REPO_CALL_ERROR),
+                        I18nUtil.getCodeLanMessage(CommonMessageCode.ENGINEERING_REPO_CALL_ERROR),
                         ScmType.CODE_SVN.name
                     )
                 }

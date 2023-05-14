@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo
+package com.tencent.devops.repository.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -45,28 +45,39 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object DispatchK8sMessageCode {
-    const val START_BUILD_CONTAINER_FAIL = "2126011" // 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
-    const val CONTAINER_BUILD_ERROR = "2126012" // {0}构建异常，请联系蓝盾助手排查，异常信息 -
-    const val START_BCS_BUILD_CONTAINER_FAIL = "2126013" // 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
-    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126014" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
-    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126015" // 获取构建机详情接口超时
-    const val MACHINE_INTERFACE_ERROR = "2126016" // 操作构建机接口异常
-    const val TROUBLE_SHOOTING = "2126017" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
-    const val NO_EMPTY_BUILDER = "2126018" // BCS构建机启动失败，没有空闲的构建机
-    const val MACHINE_INTERFACE_RETURN_FAIL = "2126019" // 操作构建机接口返回失败
-    const val MACHINE_INTERFACE_TIMEOUT = "2126020" // 操作构建机接口超时
-    const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126021" // 获取kubernetes task({0})状态接口异常
-    const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126022" // 获取kubernetes task状态接口超时
-    const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126023" // 获取kubernetes任务执行超时
-    const val CREATE_WORKSPACE_ERROR = "2126068" // 创建工作空间异常
-    const val CREATE_WORKSPACE_API_FAIL = "2126069" // 创建工作空间接口返回失败
-    const val CREATE_BUILD_MACHINE_TIMEOUT = "2126070" // 创建构建机接口超时
-    const val GET_WORKSPACE_URL_ERROR = "2126071" // 获取工作空间url接口异常
-    const val GET_WORKSPACE_LINK_TIMEOUT = "2126072" // 获取工作空间链接接口超时
-    const val BK_DEVCLOUD_TASK_TIMED_OUT = "2126073" // DevCloud任务超时（10min）
-    const val BK_NO_CONTAINER_IS_READY_DEBUG = "2126074" // pipeline({0})没有可用的容器进行登录调试
-    const val BK_CONTAINER_STATUS_EXCEPTION = "2126075" // pipeline({0})容器状态异常，请尝试重新构建流水线
-    const val BK_FAIL_TO_GET_JOB_STATUS = "2126076" // 查询Job status接口异常
-    const val BK_WORKSPACE_STATE_NOT_RUNNING = "2126077" // 工作空间状态非RUNNING
+object RepositoryMessageCode {
+    const val USER_CREATE_GIT_CODE_REPOSITORY_FAIL = "2115001" // 创建GIT代码库失败，请稍后再试
+    const val USER_UPDATE_GIT_CODE_REPOSITORY_FAIL = "2115002" // 更新GIT代码库失败，请稍后再试
+    const val USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115003" // GIT代码添加成员{0}失败，请稍后再试
+    const val USER_GIT_REPOSITORY_MOVE_GROUP_FAIL = "2115004" // 代码库迁移至{0}项目组失败，请稍后再试
+    const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115005" // GIT代码库删除成员{0}失败，请稍后再试
+
+    const val GIT_INVALID = "2115006" // 无效的GIT仓库
+    const val TGIT_INVALID = "2115007" // 无效的TGIT仓库
+    const val SVN_INVALID = "2115008" // 无效的SVN仓库
+    const val GITHUB_INVALID = "2115009" // 无效的GITHUB仓库
+    const val GET_TICKET_FAIL = "2115010" // 获取凭证异常
+    const val USER_SECRET_EMPTY = "2115011" // 用户私钥为空
+    const val GIT_REPO_PEM_FAIL = "2115012" // 代码仓库访问未授权
+    const val REPO_PATH_WRONG_PARM = "2115013" // 代码仓库路径不正确，仓库路径应该以{0}开头
+    const val REPO_NAME_EXIST = "2115014" // 代码库别名{0}已存在
+    const val USER_VIEW_PEM_ERROR = "2115015" // 用户{0}在工程{1}下没有代码库{2}查看权限
+    const val USER_EDIT_PEM_ERROR = "2115016" // 用户{0}在工程{1}下没有代码库{2}编辑权限
+    const val USER_DELETE_PEM_ERROR = "2115017" // 用户{0}在工程{1}下没有代码库{2}删除权限
+    const val REPO_LOCK_UN_SUPPORT = "2115018" // 代码库{0}不支持锁定
+    const val REPO_TYPE_NO_NEED_CERTIFICATION = "2115019" // 代码库类型{0}无需认证
+    const val CREATE_TAG_FAIL = "2115020" // 创建tag失败
+    const val P4_INVALID = "2115021" // 无效的p4仓库
+    const val GIT_NOT_FOUND = "2115022" // 代码库{0}不存在
+    const val USER_CREATE_PEM_ERROR = "2115023" // 用户{0}在工程{1}下没有代码库创建权限
+    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
+
+    const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
+    const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
+    const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns" // 更新检测任务
+    const val OPERATION_GET_REPOS = "OperationGetRepos" // 获取仓库列表
+    const val OPERATION_GET_BRANCH = "OperationGetBranch" // 获取指定分支
+    const val OPERATION_GET_TAG = "OperationGetTag" // 获取指定Tag
+    const val OPERATION_LIST_BRANCHS = "OperationListBranchs" // 获取分支列表
+    const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
 }

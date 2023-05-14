@@ -316,6 +316,17 @@ object ProcessMessageCode {
     const val BUILD_QUEUE_FOR_CONCURRENCY = "2101213" // 排队中: 当前构建正在并发组({0})排队中
     const val BUILD_QUEUE_FOR_SINGLE = "2101214" // 排队中: 当前构建正在排队中
 
+
+    const val GIT_INVALID = "2101215" // 无效的GIT仓库
+    const val TGIT_INVALID = "2101216" // 无效的TGIT仓库
+    const val SVN_INVALID = "2101217" // 无效的SVN仓库
+    const val GITHUB_INVALID = "2101218" // 无效的GITHUB仓库
+    const val P4_INVALID = "2101219" // 无效的p4仓库
+    const val GIT_NOT_FOUND = "2101220" // 代码库{0}不存在
+    const val NOT_SVN_CODE_BASE = "2101221" // 代码库({0})不是svn代码库
+    const val FAIL_TO_GET_SVN_DIRECTORY = "2101222" // 获取Svn目录失败, msg:{0}
+    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2101223" // 仓库ID和仓库名都为空
+
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
     const val BK_NO_MATCH_FILE_DISTRIBUTE = "bkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}

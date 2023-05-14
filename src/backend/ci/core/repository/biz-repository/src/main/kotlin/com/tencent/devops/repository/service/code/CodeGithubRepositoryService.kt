@@ -26,12 +26,12 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GITHUB_INVALID
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
@@ -81,7 +81,7 @@ class CodeGithubRepositoryService @Autowired constructor(
         if (record.type != ScmType.GITHUB.name) {
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GITHUB_INVALID,
+                    messageCode = GITHUB_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
             )

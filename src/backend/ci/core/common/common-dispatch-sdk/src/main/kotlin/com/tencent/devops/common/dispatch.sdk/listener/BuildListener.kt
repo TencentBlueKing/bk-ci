@@ -27,11 +27,11 @@
 
 package com.tencent.devops.common.dispatch.sdk.listener
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
@@ -254,7 +254,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("$FAILED_START_BUILD_MACHINE")}- ${e.message}",
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}- ${e.message}",
                 executeCount = event.executeCount)
 
             errorCode = e.errorCode
@@ -267,7 +267,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "${I18nUtil.getCodeLanMessage("$FAILED_START_BUILD_MACHINE")} - ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")} - ${t.message}",
                 executeCount = event.executeCount)
 
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR

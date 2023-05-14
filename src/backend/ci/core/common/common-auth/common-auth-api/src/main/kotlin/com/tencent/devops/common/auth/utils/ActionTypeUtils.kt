@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.NOT_MEMBER_AND_NOT_OPEN_SOURCE
+import com.tencent.devops.common.api.constant.CommonMessageCode.NOT_MEMBER_AND_NOT_OPEN_SOURCE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 

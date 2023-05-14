@@ -27,7 +27,7 @@
 
 package com.tencent.devops.scm.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
@@ -96,7 +96,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
+                    CommonMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -122,7 +122,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
+                    CommonMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -136,7 +136,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
+                    CommonMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -172,7 +172,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to add the webhook", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_CREATE_HOOK_FAIL
+                    CommonMessageCode.SVN_CREATE_HOOK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -199,7 +199,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to lock the repo:$repoName", e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.LOCK_FAIL
+                    CommonMessageCode.LOCK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -214,7 +214,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Fail to unlock the repo:$repoName", e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.UNLOCK_FAIL
+                    CommonMessageCode.UNLOCK_FAIL
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -239,7 +239,7 @@ class CodeSvnScmImpl constructor(
             if (e.errorMessage.errorCode.isAuthentication) {
                 throw ScmException(
                     message = I18nUtil.getCodeLanMessage(
-                        RepositoryMessageCode.GIT_REPO_PEM_FAIL
+                        CommonMessageCode.GIT_REPO_PEM_FAIL
                     ),
                     scmType = ScmType.CODE_SVN.name
                 )
@@ -247,7 +247,7 @@ class CodeSvnScmImpl constructor(
                 logger.error("engineering($projectName)failed to get branch", e)
                 throw ScmException(
                     message = I18nUtil.getCodeLanMessage(
-                        RepositoryMessageCode.CALL_REPO_ERROR
+                        CommonMessageCode.CALL_REPO_ERROR
                     ),
                     scmType = ScmType.CODE_SVN.name
                 )
@@ -263,7 +263,7 @@ class CodeSvnScmImpl constructor(
             logger.error("engineering($projectName)local repository creation failed", e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR
+                    CommonMessageCode.CALL_REPO_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -289,7 +289,7 @@ class CodeSvnScmImpl constructor(
             logger.warn("Get the project($projectName})version changelog failed", e)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR
+                    CommonMessageCode.CALL_REPO_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )

@@ -27,7 +27,7 @@
 
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.code.svn.ISvnService
@@ -210,7 +210,7 @@ class SvnService : ISvnService {
         } catch (e: SVNException) {
             logger.error("project($url)Failed to create local warehouse", e)
             throw ScmException(
-                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
             )
         }
@@ -227,7 +227,7 @@ class SvnService : ISvnService {
             logger.warn("Fail to check the svn latest revision", ignored)
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SVN_SECRET_OR_PATH_ERROR
+                    CommonMessageCode.SVN_SECRET_OR_PATH_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
@@ -277,7 +277,7 @@ class SvnService : ISvnService {
         } catch (e: SVNException) {
             throw ScmException(
                 message = I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.CALL_REPO_ERROR
+                    CommonMessageCode.CALL_REPO_ERROR
                 ),
                 scmType = ScmType.CODE_SVN.name
             )
