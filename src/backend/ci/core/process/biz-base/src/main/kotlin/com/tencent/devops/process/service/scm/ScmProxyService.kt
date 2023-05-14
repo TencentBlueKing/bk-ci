@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -60,12 +60,12 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import java.net.URLEncoder
+import java.util.*
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -382,7 +382,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitRepository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.GIT_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GIT_INVALID)
         val isOauth = repo.credentialId.isEmpty()
         val token = if (isOauth) {
             getAccessToken(repo.userName).first
@@ -424,7 +424,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.GITLAB_INVALID)
+            ?: throw ErrorCodeException(errorCode = GITLAB_INVALID)
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -443,7 +443,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addSvnWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeSvnRepository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.SVN_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.SVN_INVALID)
         val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -462,7 +462,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun addTGitWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeTGitRepository
-            ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = RepositoryMessageCode.TGIT_INVALID)
+            ?: throw ErrorCodeException(defaultMessage = "TGit", errorCode = ProcessMessageCode.TGIT_INVALID)
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -499,7 +499,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     ): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeP4Repository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.P4_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.P4_INVALID)
         val credential = getCredential(projectId, repo)
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -531,7 +531,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.GITHUB_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,
@@ -568,7 +568,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
 
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? GithubRepository
-            ?: throw ErrorCodeException(errorCode = RepositoryMessageCode.GITHUB_INVALID)
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.GITHUB_INVALID)
         val accessToken = getGithubAccessToken(repo.userName)
         val checkRuns = GithubCheckRuns(
             name = name,

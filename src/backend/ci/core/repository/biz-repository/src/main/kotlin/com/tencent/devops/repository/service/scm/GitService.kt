@@ -32,8 +32,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.BK_REQUEST_FILE_SIZE_LIMIT
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
@@ -45,6 +43,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -96,7 +95,7 @@ import java.net.URLEncoder
 import java.nio.charset.Charset
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
@@ -502,7 +501,7 @@ class GitService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 val data = it.stringLimit(
                     readLimit = MAX_FILE_SIZE,
-                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT)
+                    errorMsg = I18nUtil.getCodeLanMessage(RepositoryMessageCode.BK_REQUEST_FILE_SIZE_LIMIT)
                 )
                 if (!it.isSuccessful) {
                     throw CustomException(
@@ -540,7 +539,7 @@ class GitService @Autowired constructor(
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
                 val body = response.stringLimit(
                     readLimit = MAX_FILE_SIZE,
-                    errorMsg = I18nUtil.getCodeLanMessage(BK_REQUEST_FILE_SIZE_LIMIT)
+                    errorMsg = I18nUtil.getCodeLanMessage(RepositoryMessageCode.BK_REQUEST_FILE_SIZE_LIMIT)
                 )
                 logger.info("get gitlab content response body: $body")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)

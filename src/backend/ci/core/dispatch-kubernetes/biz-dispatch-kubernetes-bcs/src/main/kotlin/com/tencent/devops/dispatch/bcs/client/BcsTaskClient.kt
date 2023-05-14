@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.BcsTaskStatusEnum
 import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
@@ -44,6 +43,7 @@ import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskStatusResp
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_EXECUTION_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_GET_BCS_TASK_STATUS_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,10 +75,10 @@ class BcsTaskClient @Autowired constructor(
 
                 logger.error("Get task status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
                     I18nUtil.getCodeLanMessage(
-                        ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                        ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
                     ),
                     MessageUtil.getMessageByLocale(BK_GET_BCS_TASK_STATUS_ERROR, I18nUtil.getLanguage(userId)) +
                     "：http response code: ${response.code}"
@@ -92,10 +92,10 @@ class BcsTaskClient @Autowired constructor(
             } else {
                 logger.error("$taskId get task status failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    errorType = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = I18nUtil.getCodeLanMessage(
-                        ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
+                        ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode.toString()
                     ),
                     errorMessage = MessageUtil.getMessageByLocale(
                         BK_GET_BCS_TASK_STATUS_TIMEOUT,

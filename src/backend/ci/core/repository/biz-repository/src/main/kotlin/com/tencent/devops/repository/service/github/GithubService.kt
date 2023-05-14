@@ -29,21 +29,12 @@ package com.tencent.devops.repository.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_REPOS
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_GET_TAG
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
@@ -52,6 +43,13 @@ import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_ADD_CHECK_RUNS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_BRANCH
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_REPOS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_GET_TAG
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_BRANCHS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_LIST_TAGS
+import com.tencent.devops.repository.constant.RepositoryMessageCode.OPERATION_UPDATE_CHECK_RUNS
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
@@ -262,7 +260,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/branches?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = getMessageByLocale(RepositoryMessageCode.OPERATION_LIST_BRANCHS)
+                    val operation = getMessageByLocale(OPERATION_LIST_BRANCHS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
                 }
@@ -283,7 +281,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/tags?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = getMessageByLocale(RepositoryMessageCode.OPERATION_LIST_TAGS)
+                    val operation = getMessageByLocale(OPERATION_LIST_TAGS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
                 }
@@ -349,10 +347,13 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(PARAM_ERROR)
-            HTTP_401 -> getMessageByLocale(AUTH_FAIL, arrayOf("GitHub token"))
-            HTTP_403 -> getMessageByLocale(ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
-            HTTP_404 -> getMessageByLocale(REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GitHub", operation))
+            HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("GitHub token"))
+            HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(
+                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
+                arrayOf("GitHub", operation)
+            )
             else -> "GitHub platform $operation fail"
         }
         throw GithubApiException(

@@ -26,12 +26,14 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -102,7 +104,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_GITLAB.name) {
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GITLAB_INVALID,
+                    messageCode = GITLAB_INVALID,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -164,12 +166,12 @@ class CodeGitlabRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(

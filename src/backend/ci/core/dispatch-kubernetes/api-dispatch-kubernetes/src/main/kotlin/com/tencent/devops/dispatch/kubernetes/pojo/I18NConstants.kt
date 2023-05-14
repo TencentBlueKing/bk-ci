@@ -51,3 +51,23 @@ const val BK_INTERFACE_REQUEST_TIMEOUT = "bkInterfaceRequestTimeout" // 接口�
 const val BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE = "bkBuildMachineCreationFailedReference"
 // 构建机启动成功，等待Agent启动...
 const val BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START = "bkBuildMachineStartSuccessWaitAgentStart"
+
+const val BK_START_BUILD_CONTAINER_FAIL = "bkStartBuildContainerFail" // 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+const val BK_CONTAINER_BUILD_ERROR = "bkContainerBuildError" // {0}构建异常，请联系蓝盾助手排查，异常信息 -
+const val BK_START_BCS_BUILD_CONTAINER_FAIL = "bkStartBcsBuildContainerFail" // 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
+const val BK_THIRD_SERVICE_BCS_BUILD_ERROR = "bkThirdServiceBcsBuildError" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+const val BK_TROUBLE_SHOOTING = "bkTroubleShooting" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
+const val BK_MACHINE_INTERFACE_TIMEOUT = "bkMachineInterfaceTimeout" // 操作构建机接口超时
+const val BK_KUBERNETES_TASK_STATUS_API_EXCEPTION = "bkKubernetesTaskStatusApiException" // 获取kubernetes task({0})状态接口异常
+const val BK_KUBERNETES_TASK_STATUS_API_TIMEOUT = "bkKubernetesTaskStatusApiTimeout" // 获取kubernetes task状态接口超时
+const val BK_KUBERNETES_TASK_EXECUTE_TIMEOUT = "bkKubernetesTaskExecuteTimeout" // 获取kubernetes任务执行超时
+const val BK_CREATE_WORKSPACE_ERROR = "bkCreateWorkspaceError" // 创建工作空间异常
+const val BK_CREATE_WORKSPACE_API_FAIL = "bkCreateWorkspaceApiFail" // 创建工作空间接口返回失败
+const val BK_CREATE_BUILD_MACHINE_TIMEOUT = "bkCreateBuildMachineTimeout" // 创建构建机接口超时
+const val BK_GET_WORKSPACE_URL_ERROR = "bkGetWorkspaceUrlError" // 获取工作空间url接口异常
+const val BK_GET_WORKSPACE_LINK_TIMEOUT = "bkGetWorkspaceLinkTimeout" // 获取工作空间链接接口超时
+const val BK_DEVCLOUD_TASK_TIMED_OUT = "bkDevcloudTaskTimedOut" // DevCloud任务超时（10min）
+const val BK_NO_CONTAINER_IS_READY_DEBUG = "bkNoContainerIsReadyDebug" // pipeline({0})没有可用的容器进行登录调试
+const val BK_CONTAINER_STATUS_EXCEPTION = "bkContainerStatusException" // pipeline({0})容器状态异常，请尝试重新构建流水线
+const val BK_FAIL_TO_GET_JOB_STATUS = "bkFailToGetJobStatus" // 查询Job status接口异常
+const val BK_WORKSPACE_STATE_NOT_RUNNING = "bkWorkspaceStateNotRunning" // 工作空间状态非RUNNING

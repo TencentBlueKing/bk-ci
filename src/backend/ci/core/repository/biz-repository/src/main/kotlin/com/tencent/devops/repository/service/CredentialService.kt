@@ -27,23 +27,23 @@
 
 package com.tencent.devops.repository.service
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GET_TICKET_FAIL
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import java.util.Base64
+import java.util.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import kotlin.collections.ArrayList
 
 @Service
 class CredentialService @Autowired constructor(
@@ -73,7 +73,7 @@ class CredentialService @Autowired constructor(
         val result = client.get(ServiceCredentialResource::class)
             .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
-            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
+            throw ErrorCodeException(errorCode = GET_TICKET_FAIL)
         }
         val credential = result.data!!
         logger.info("Get the credential($credential)")
@@ -193,7 +193,7 @@ class CredentialService @Autowired constructor(
     fun checkUsername(username: String?) {
         if (username.isNullOrEmpty()) {
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
             )
         }
     }
@@ -201,7 +201,7 @@ class CredentialService @Autowired constructor(
     fun checkPassword(password: String?) {
         if (password.isNullOrBlank()) {
             throw OperationException(
-                message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
             )
         }
     }

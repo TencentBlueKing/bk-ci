@@ -27,7 +27,7 @@
 
 package com.tencent.devops.scm.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.IScm
@@ -98,7 +98,7 @@ class CodeTGitScmImpl constructor(
         if (privateKey == null) {
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.SERCRT_EMPTY
+                    CommonMessageCode.SERCRT_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -110,7 +110,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 ignored.message ?: I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_TOKEN_EMPTY
+                    CommonMessageCode.TGIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -126,7 +126,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
                 ignored.message ?: I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_SECRET_WRONG
+                    CommonMessageCode.TGIT_SECRET_WRONG
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -137,7 +137,7 @@ class CodeTGitScmImpl constructor(
         if (privateKey == null) {
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.PWD_EMPTY
+                    CommonMessageCode.PWD_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -150,7 +150,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_TOKEN_EMPTY
+                    CommonMessageCode.TGIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -165,7 +165,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
                 ignored.message ?: I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.TGIT_LOGIN_FAIL
+                    CommonMessageCode.TGIT_LOGIN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -176,7 +176,7 @@ class CodeTGitScmImpl constructor(
         if (token.isEmpty()) {
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY
+                    CommonMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -184,7 +184,7 @@ class CodeTGitScmImpl constructor(
         if (hookUrl.isEmpty()) {
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_HOOK_URL_EMPTY
+                    CommonMessageCode.GIT_HOOK_URL_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -194,7 +194,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to add webhook of git", ignored)
             throw ScmException(
-                ignored.message ?: I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -212,7 +212,7 @@ class CodeTGitScmImpl constructor(
         if (token.isEmpty()) {
             throw ScmException(
                 I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_EMPTY
+                    CommonMessageCode.GIT_TOKEN_EMPTY
                 ),
                 ScmType.CODE_TGIT.name
             )
@@ -234,7 +234,7 @@ class CodeTGitScmImpl constructor(
             logger.warn("Fail to add commit check of git", ignored)
             throw ScmException(
                 ignored.message ?: I18nUtil.getCodeLanMessage(
-                    RepositoryMessageCode.GIT_TOKEN_FAIL
+                    CommonMessageCode.GIT_TOKEN_FAIL
                 ),
                 ScmType.CODE_TGIT.name
             )
