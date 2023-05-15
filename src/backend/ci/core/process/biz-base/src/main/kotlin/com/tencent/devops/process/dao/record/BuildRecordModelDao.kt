@@ -30,7 +30,6 @@ package com.tencent.devops.process.dao.record
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -39,6 +38,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.jooq.impl.DSL.select
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -166,7 +166,7 @@ class BuildRecordModelDao {
                     modelVar = JsonUtil.to(
                         modelVar, object : TypeReference<Map<String, Any>>() {}
                     ).toMutableMap(),
-                    queueTime = queueTime.timestampmilli(),
+                    queueTime = queueTime,
                     startTime = startTime,
                     endTime = endTime,
                     startUser = startUser,
@@ -188,13 +188,15 @@ class BuildRecordModelDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
+        executeCount: Int,
         cancelUser: String
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             dslContext.update(this)
                 .set(CANCEL_USER, cancelUser)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(EXECUTE_COUNT.eq(executeCount))
                 .execute()
         }
     }
