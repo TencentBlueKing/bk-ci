@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -49,6 +48,7 @@ import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_INTERFACE_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import java.net.SocketTimeoutException
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
@@ -304,7 +304,7 @@ class BcsBuilderClient @Autowired constructor(
                 logger.info("response: $responseContent")
                 if (!response.isSuccessful) {
                     // throw OperationException("Fail to get container websocket")
-                    val errorMsg = "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
+                    val errorMsg = "${ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
                         throw BuildFailureException(
                         ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
@@ -321,7 +321,7 @@ class BcsBuilderClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$pipelineId] builderName: $builderName getWebsocketUrl failed.", e)
-            val errorMsg = "${ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
+            val errorMsg = "${ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode}"
                 throw BuildFailureException(
                 errorType = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.BCS_WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
@@ -351,7 +351,7 @@ class BcsBuilderClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 logger.info("$userId build and push image response: $responseContent")
-                val errorMsg = "${ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode}"
+                val errorMsg = "${ErrorCodeEnum.BCS_CREATE_IMAGE_INTERFACE_ERROR.errorCode}"
                     if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.BCS_CREATE_IMAGE_INTERFACE_ERROR.errorType,
@@ -376,7 +376,7 @@ class BcsBuilderClient @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("$userId builderName: $builderName build and push image failed.", e)
-            val errorMsg = "${ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode}"
+            val errorMsg = "${ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode}"
                 throw BuildFailureException(
                 errorType = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorType,
                 errorCode = ErrorCodeEnum.BCS_VM_STATUS_INTERFACE_ERROR.errorCode,
