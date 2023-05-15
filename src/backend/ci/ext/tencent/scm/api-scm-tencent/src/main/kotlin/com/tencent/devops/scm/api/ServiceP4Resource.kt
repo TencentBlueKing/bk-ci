@@ -106,7 +106,7 @@ interface ServiceP4Resource {
 
     @ApiOperation("获取p4服务端信息")
     @GET
-    @Path("/{projectId}/{repositoryId}/serverInfo")
+    @Path("/serverInfo")
     fun getServerInfo(
         @ApiParam("p4Port", required = true)
         @QueryParam("p4Port")
