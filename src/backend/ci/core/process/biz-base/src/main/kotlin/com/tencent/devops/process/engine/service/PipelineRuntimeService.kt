@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -583,6 +584,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
+        executeCount: Int,
         buildStatus: BuildStatus,
         terminateFlag: Boolean = false
     ): Boolean {
@@ -591,6 +593,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
+            executeCount = executeCount,
             cancelUserId = userId
         )
         // 发送取消事件
@@ -646,7 +649,7 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
-    fun startBuild(fullModel: Model, context: StartBuildContext): String {
+    fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
         buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -811,6 +814,7 @@ class PipelineRuntimeService @Autowired constructor(
                     updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
                     containerBuildRecords = containerBuildRecords,
+                    taskBuildRecords = taskBuildRecords,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
                 )
@@ -1004,7 +1008,12 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
-        return context.buildId
+        return BuildId(
+            id = context.buildId,
+            executeCount = context.executeCount,
+            projectId = context.projectId,
+            pipelineId = context.pipelineId
+        )
     }
 
     private fun StartBuildContext.genBuildNumAlias() {
@@ -1059,7 +1068,10 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             modelVar = mutableMapOf(), status = context.startBuildStatus.name,
-            timestamps = mapOf(), queueTime = context.now.timestampmilli()
+            timestamps = mapOf(
+                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                    BuildRecordTimeStamp(context.now.timestampmilli(), null)
+            ), queueTime = context.now
         )
 
         if (updateExistsTask.isNotEmpty()) {

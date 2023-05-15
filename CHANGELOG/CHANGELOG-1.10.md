@@ -1,4 +1,7 @@
 <!-- BEGIN MUNGE: GENERATED_TOC -->
+- [v1.10.0-rc.17](#v1100-rc17)
+   - [Changelog since v1.10.0-rc.13](#changelog-since-v1100-rc13)
+
 - [v1.10.0-rc.13](#v1100-rc13)
    - [Changelog since v1.10.0-rc.6](#changelog-since-v1100-rc6)
 
@@ -10,6 +13,39 @@
 
 
 <!-- NEW RELEASE NOTES ENTRY -->
+# v1.10.0-rc.17
+## Changelog since v1.10.0-rc.13
+#### 新增
+- [新增] 转发请求到容器化网关时带上token [链接](http://github.com/TencentBlueKing/bk-ci/issues/8725)
+- [新增] Stream:新表达式引擎大小写不敏感bug [链接](http://github.com/TencentBlueKing/bk-ci/issues/8737)
+- [新增] 环境管理 环境agent详情页 部分中文未被翻译 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8553)
+- [新增] github action 的 go 版本升级 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8728)
+- [新增] 【stream】concurrency 和蓝盾功能对齐 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8631)
+- [新增] 修改Git触发的判断条件 Tencent [链接](http://github.com/TencentBlueKing/bk-ci/issues/8570)
+- [新增] Goagent版本优化 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8671)
+- [新增] [bug] 质量红线模块表格为空 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8685)
+- [新增] 第三方构建机使用 docker 运行构建任务时，支持设置镜像拉取策略 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8635)
+- [新增] 限制JVM的 metaspace 大小 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8656)
+- [新增] [stream] 优化远程模板凭据引用 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8667)
+- [新增] Agent: 优化因为网络问题引起的agent请求报错展示 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8603)
+- [新增] 容器换环境不能调用consul [链接](http://github.com/TencentBlueKing/bk-ci/issues/8643)
+- [新增] 希望流水线模板实例化流水线时能够继承分组名称的配置 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8616)
+- [新增] 优化v4_user_template_get接口 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8550)
+- [新增] api文档优化（2022.10-2023.04） [链接](http://github.com/TencentBlueKing/bk-ci/issues/8594)
+- [新增] 矩阵支持跨库凭证引用 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8514)
+- [新增] p4触发器不主动注册trigger事件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8556)
+- [新增] 【蓝盾-评审会已评审】repo-hook 支持忽略指定的代码库 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8435)
+- [新增] [stream]手动触发 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8554)
+
+#### 修复
+- [修复] 研发商店工作台查询尚无统计数据组件时出现空指针异常 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8743)
+- [修复] 自定义插件task.json中使用demands设置环境变量不生效 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8665)
+- [修复] Stage条件判断支持新表达式 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8722)
+- [修复] 调整metrics数据上报分布式锁过期时间，防止锁过期时间小于业务处理时间 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8648)
+- [修复] 质量红线获取项目下可使用插件的指标缺失 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8565)
+- [修复] 流水线变量版本仓库过滤器，最多仅支持1w个文件 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8675)
+- [修复] 创建自定义指标报错英文名已存在 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8605)
+- [修复] 流水线中配有两个相同的codecc任务时，保存指标数据偶现死锁 [链接](http://github.com/TencentBlueKing/bk-ci/issues/8008)
 # v1.10.0-rc.13
 ## Changelog since v1.10.0-rc.6
 #### 新增
