@@ -45,11 +45,13 @@
                         <bk-input v-model="addMemberObj.form.memberName" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item v-else :label="$t('store.成员名称')" :desc="$t('store.若列表中找不到用户，请先将其添加为调试项目的成员')" :required="true" :rules="[requireRule($t('store.成员名称'))]" property="list" error-display-type="normal">
-                        <bk-select searchable
+                        <bk-select
+                            searchable
                             multiple
                             show-select-all
                             v-model="addMemberObj.form.list"
                             @selected="selectMember"
+                            @change="handleChangeForm"
                         >
                             <bk-option v-for="(option, index) in projectMemberList"
                                 :key="index"

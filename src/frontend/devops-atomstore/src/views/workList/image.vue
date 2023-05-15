@@ -542,6 +542,8 @@
         position: relative;
         .is-tooltips {
             position: absolute;
+            right: -5px;
+            top: 3px;
         }
     }
     .h32 {

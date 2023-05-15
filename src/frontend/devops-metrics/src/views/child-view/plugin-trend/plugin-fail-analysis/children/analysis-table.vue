@@ -32,7 +32,6 @@ const columns = [
   {
     label: t('Pipeline'),
     field: 'pipelineName',
-    showOverflowTooltip: true,
     render ({ cell, row }) {
       return h(
         'span',
@@ -40,7 +39,8 @@ const columns = [
           style: {
             cursor: 'pointer',
             color: '#3a84ff',
-          }, 
+          },
+          title: `${cell} #${row.buildNum}`,
           onClick () {
             const projectId = row.projectId
             const pipelineId = row.pipelineId
@@ -113,7 +113,6 @@ const columns = [
   {
     label: t('Error Message'),
     field: 'errorMsg',
-    showOverflowTooltip: true,
     sort: true,
     render ({ cell, row }) {
       return h(

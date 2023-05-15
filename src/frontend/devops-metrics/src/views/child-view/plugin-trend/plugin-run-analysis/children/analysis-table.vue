@@ -116,7 +116,6 @@ const getData = () => {
         const column = {
           label,
           field,
-          showOverflowTooltip: true,
           sort: true,
         }
         if (field === 'atomCode') {
@@ -128,7 +127,8 @@ const getData = () => {
                 style: {
                   cursor: 'pointer',
                   color: '#3a84ff',
-                }, 
+                },
+                title: cell,
                 onClick () {
                   router.push({
                     name: 'PluginFailAnalysis',
