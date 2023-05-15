@@ -86,4 +86,16 @@ class AuthResourceGroupConfigDao {
                 .fetchOne()
         }
     }
+
+    fun countByResourceType(
+        dslContext: DSLContext,
+        resourceType: String,
+    ): Int {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.selectCount()
+                .from(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
 }
