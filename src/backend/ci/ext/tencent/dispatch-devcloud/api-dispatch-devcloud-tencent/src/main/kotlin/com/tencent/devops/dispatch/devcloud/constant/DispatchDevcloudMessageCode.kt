@@ -45,5 +45,4 @@ object DispatchDevcloudMessageCode {
     const val BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE = "bkPrepareCreateTencentBuildMachine"
     const val BK_START_MIRROR = "bkStartMirror" // 启动镜像
     const val BK_GET_WEBSOCKET_URL_FAIL = "bkGetWebsocketUrlFail" // 获取websocket url失败，错误信息:{0}
-
 }

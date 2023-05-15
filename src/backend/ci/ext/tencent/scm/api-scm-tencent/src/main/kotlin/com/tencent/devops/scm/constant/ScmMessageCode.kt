@@ -63,7 +63,6 @@ object ScmMessageCode {
     const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2116015" // GIT代码库删除成员{0}失败，请稍后再试
     const val CREATE_TAG_FAIL = "2116016" // 创建tag失败
 
-
     const val BK_FILE_CANNOT_EXCEED = "bkFileCannotExceed" // 请求文件不能超过1M
     const val BK_LOCAL_WAREHOUSE_CREATION_FAILED = "bkLocalWarehouseCreationFailed" // 工程({0})本地仓库创建失败
     const val BK_TRIGGER_METHOD = "bkTriggerMethod" // 触发方式
