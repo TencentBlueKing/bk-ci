@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.MAXIMUM_NUMBER_CONCURRENCY_ILLEGAL
+import com.tencent.devops.process.constant.ProcessMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
@@ -43,7 +44,6 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.project.api.op.OPProjectResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.ProjectProperties
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

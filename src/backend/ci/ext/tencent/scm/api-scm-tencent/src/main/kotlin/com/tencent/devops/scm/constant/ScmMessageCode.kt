@@ -55,6 +55,14 @@ object ScmMessageCode {
     const val ERROR_GIT_SERVER_ERROR = "2116008" // 服务器出错
     const val GIT_TOKEN_EMPTY = "2116009" // Git Token为空
     const val INCORRECT_GIT_TOKEN = "2116010" // Git Token不正确
+    const val USER_CREATE_GIT_CODE_REPOSITORY_FAIL = "2116011" // 创建GIT代码库失败，请稍后再试
+    const val USER_UPDATE_GIT_CODE_REPOSITORY_FAIL = "2116012" // 更新GIT代码库失败，请稍后再试
+
+    const val USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2116013" // GIT代码添加成员{0}失败，请稍后再试
+    const val USER_GIT_REPOSITORY_MOVE_GROUP_FAIL = "2116014" // 代码库迁移至{0}项目组失败，请稍后再试
+    const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2116015" // GIT代码库删除成员{0}失败，请稍后再试
+    const val CREATE_TAG_FAIL = "2116016" // 创建tag失败
+
 
     const val BK_FILE_CANNOT_EXCEED = "bkFileCannotExceed" // 请求文件不能超过1M
     const val BK_LOCAL_WAREHOUSE_CREATION_FAILED = "bkLocalWarehouseCreationFailed" // 工程({0})本地仓库创建失败

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -530,7 +531,7 @@ class PipelineBuildFacadeService(
 
             logger.info(
                 "ENGINE|$buildId|RETRY_PIPELINE_ORIGIN|taskId=$taskId|$pipelineId|" +
-                        "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
+                    "retryCount=$retryCount|fc=$failedContainer|skip=$skipFailedTask"
             )
 
             paramMap[PIPELINE_RETRY_COUNT] = BuildParameters(PIPELINE_RETRY_COUNT, retryCount)
@@ -1061,6 +1062,12 @@ class PipelineBuildFacadeService(
         PipelineUtils.checkStageReviewParam(reviewRequest?.reviewParams)
 
         val setting = pipelineRepositoryService.getSetting(projectId, pipelineId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
+                defaultMessage = "pipeline($pipelineId) setting is missing.",
+                params = arrayOf("pipeline($pipelineId) setting is missing.")
+            )
         val runLock = PipelineBuildRunLock(redisOperation, pipelineId)
         try {
             runLock.lock()
@@ -1069,8 +1076,13 @@ class PipelineBuildFacadeService(
                     pipelineInfo = pipelineInfo,
                     model = null,
                     startType = StartType.MANUAL,
-                    setting = setting,
-                    buildId = buildId
+                    buildId = buildId,
+                    runLockType = setting.runLockType,
+                    waitQueueTimeMinute = setting.waitQueueTimeMinute,
+                    maxQueueSize = setting.maxQueueSize,
+                    concurrencyGroup = setting.concurrencyGroup,
+                    concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize
                 )
             )
 
@@ -2182,7 +2194,7 @@ class PipelineBuildFacadeService(
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
                     params = arrayOf(projectCode, nodeHashId)
                 )
             } $msg"

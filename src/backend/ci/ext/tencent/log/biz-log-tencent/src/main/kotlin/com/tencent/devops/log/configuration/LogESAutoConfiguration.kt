@@ -30,9 +30,9 @@ package com.tencent.devops.log.configuration
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.LogMessageCode.ES_CLUSTER_ADDRESS_NOT_CONFIGURED
-import com.tencent.devops.log.LogMessageCode.ES_CLUSTER_NAME_NOT_CONFIGURED
-import com.tencent.devops.log.LogMessageCode.ES_UNIQUE_NAME_NOT_CONFIGURED
+import com.tencent.devops.common.log.constant.LogMessageCode.ES_CLUSTER_ADDRESS_NOT_CONFIGURED
+import com.tencent.devops.common.log.constant.LogMessageCode.ES_CLUSTER_NAME_NOT_CONFIGURED
+import com.tencent.devops.common.log.constant.LogMessageCode.ES_UNIQUE_NAME_NOT_CONFIGURED
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao

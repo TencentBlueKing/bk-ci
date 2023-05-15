@@ -32,7 +32,6 @@ import com.tencent.devops.auth.api.ServiceRoleMemberResource
 import com.tencent.devops.auth.api.ServiceRoleResource
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -48,6 +47,7 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.ASSOCIATED_SYSTEM_NOT_BOUND
 import com.tencent.devops.project.constant.ProjectMessageCode.NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.RELATED_RESOURCE_EMPTY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.tof.TOFService
@@ -152,9 +152,9 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         if (relationGroupId == null) {
             logger.warn("create group user fail, $projectCode $roleName not find relationGroup")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                errorCode = RELATED_RESOURCE_EMPTY,
                 defaultMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
+                    messageCode = RELATED_RESOURCE_EMPTY
                 )
             )
         }

@@ -29,9 +29,6 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_CREDENTIAL_INFO_FAILED
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_CUSTOM_FILE_FAILED
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -43,6 +40,9 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CREDENTIAL_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_FILE_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -176,7 +176,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val message = MessageUtil.getMessageByLocale(
-            ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
+            UPLOAD_PIPELINE_FILE_FAILED,
             AgentEnv.getLocaleLanguage()
         )
         val response = request(request, message)

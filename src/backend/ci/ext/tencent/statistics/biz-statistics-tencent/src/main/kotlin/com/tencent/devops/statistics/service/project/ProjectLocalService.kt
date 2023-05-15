@@ -35,8 +35,9 @@ import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.statistics.constant.StatisticsMessageCode.ORG_NOT_PROJECT
+import com.tencent.devops.statistics.constant.StatisticsMessageCode.ORG_TYPE_ERROR
 import com.tencent.devops.statistics.dao.project.ProjectDao
 import com.tencent.devops.statistics.jmx.api.project.ProjectJmxApi
 import com.tencent.devops.statistics.util.project.ProjectUtils
@@ -209,7 +210,7 @@ class ProjectLocalService @Autowired constructor(
                     " not project[$projectId] permission "
             )
             throw OperationException((I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.ORG_NOT_PROJECT
+                messageCode = ORG_NOT_PROJECT
             )))
         }
         var queryProject: ProjectVO? = null
@@ -240,7 +241,7 @@ class ProjectLocalService @Autowired constructor(
             AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
             else -> {
                 throw OperationException((I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.ORG_TYPE_ERROR
+                    messageCode = ORG_TYPE_ERROR
                 )))
             }
         }

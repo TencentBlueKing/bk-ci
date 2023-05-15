@@ -1,6 +1,6 @@
 package com.tencent.devops.repository.service.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -12,10 +12,10 @@ import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.api.ServiceP4Resource
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 import java.net.URLDecoder
 import java.net.URLEncoder
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
 
 @Service
 @Primary
@@ -95,14 +95,14 @@ class TencentP4Service(
         if (username.isEmpty()) {
             throw OperationException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.USER_NAME_EMPTY
+                    messageCode = CommonMessageCode.USER_NAME_EMPTY
                 )
             )
         }
         if (credentials.size < 2) {
             throw OperationException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.PWD_EMPTY
+                    messageCode = CommonMessageCode.PWD_EMPTY
                 )
             )
         }
@@ -110,7 +110,7 @@ class TencentP4Service(
         if (password.isEmpty()) {
             throw OperationException(
                 message = I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.PWD_EMPTY
+                    messageCode = CommonMessageCode.PWD_EMPTY
                 )
             )
         }

@@ -30,6 +30,7 @@ package com.tencent.devops.process.util
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_PIPELINE
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_REMOTE
@@ -51,10 +52,11 @@ object BuildMsgUtils {
                 I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_REMOTE)
             StartType.SERVICE ->
                 if (channelCode != null) {
+                    val trigger = I18nUtil.getCodeLanMessage(BK_TRIGGER)
                     if (channelCode == ChannelCode.BS) {
-                        "OpenAPI trigger"
+                        "OpenAPI $trigger"
                     } else {
-                        channelCode.name + " trigger"
+                        channelCode.name + trigger
                     }
                 } else {
                     I18nUtil.getCodeLanMessage(messageCode = BUILD_MSG_SERVICE)

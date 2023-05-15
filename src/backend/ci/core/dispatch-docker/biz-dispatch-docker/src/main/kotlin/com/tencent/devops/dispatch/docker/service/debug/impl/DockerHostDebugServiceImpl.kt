@@ -414,7 +414,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(pipelineId)
             )
@@ -479,7 +479,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     // 母机负载过高
                     LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
                     throw ErrorCodeException(
-                        errorCode = "2103505",
+                        errorCode = "${ErrorCodeEnum.LOAD_TOO_HIGH.errorCode}",
                         defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
                         params = arrayOf(pipelineId)
                     )
@@ -488,7 +488,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     val msg = response["message"]
                     LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
                     throw ErrorCodeException(
-                        errorCode = "2103503",
+                        errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                         defaultMessage = "Start debug Docker VM failed.",
                         params = arrayOf(pipelineId)
                     )

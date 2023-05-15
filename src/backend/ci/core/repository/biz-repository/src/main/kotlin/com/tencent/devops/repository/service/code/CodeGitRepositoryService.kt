@@ -26,13 +26,16 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.GIT_INVALID
+import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
+import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -109,7 +112,7 @@ class CodeGitRepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_GIT.name) {
             throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_INVALID,
+                    messageCode = GIT_INVALID,
                     language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
@@ -177,12 +180,12 @@ class CodeGitRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(
@@ -199,12 +202,12 @@ class CodeGitRepositoryService @Autowired constructor(
             RepoAuthType.HTTP -> {
                 if (repoCredentialInfo.username.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.password.isEmpty()) {
                     throw OperationException(
-                        message = I18nUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
                 scmService.checkUsernameAndPassword(
@@ -220,7 +223,7 @@ class CodeGitRepositoryService @Autowired constructor(
             }
             else -> {
                 throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
+                    errorCode = REPO_TYPE_NO_NEED_CERTIFICATION,
                     params = arrayOf(repository.authType!!.name)
                 )
             }

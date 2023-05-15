@@ -27,8 +27,8 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -168,7 +168,7 @@ object ScmFactory {
                 if (passPhrase == null) {
                     throw ScmException(
                         MessageUtil.getMessageByLocale(
-                            messageCode = RepositoryMessageCode.PWD_EMPTY,
+                            messageCode = CommonMessageCode.PWD_EMPTY,
                             language = DEFAULT_LOCALE_LANGUAGE
                         ),
                         ScmType.CODE_P4.name
@@ -177,7 +177,7 @@ object ScmFactory {
                 if (userName == null) {
                     throw ScmException(
                         MessageUtil.getMessageByLocale(
-                            messageCode = RepositoryMessageCode.USER_NAME_EMPTY,
+                            messageCode = CommonMessageCode.USER_NAME_EMPTY,
                             language = DEFAULT_LOCALE_LANGUAGE
                         ),
                         ScmType.CODE_P4.name

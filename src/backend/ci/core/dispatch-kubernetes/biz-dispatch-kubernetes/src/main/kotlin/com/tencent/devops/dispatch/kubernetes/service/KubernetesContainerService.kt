@@ -43,20 +43,19 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
 import com.tencent.devops.dispatch.kubernetes.pojo.DeleteBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.CONTAINER_BUILD_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesBuilderStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesDockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResource
@@ -75,6 +74,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.canReStart
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.hasException
@@ -117,9 +117,9 @@ class KubernetesContainerService @Autowired constructor(
     override fun getLog() = DispatchBuildLog(
         readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
         startContainerError =
-        I18nUtil.getCodeLanMessage(messageCode = START_BUILD_CONTAINER_FAIL, params = arrayOf("kubernetes")),
+        I18nUtil.getCodeLanMessage(messageCode = BK_START_BUILD_CONTAINER_FAIL, params = arrayOf("kubernetes")),
         troubleShooting =
-        I18nUtil.getCodeLanMessage(messageCode = CONTAINER_BUILD_ERROR, params = arrayOf("kubernetes"))
+        I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_ERROR, params = arrayOf("kubernetes"))
     )
 
     @Value("\${kubernetes.resources.builder.cpu}")
@@ -361,9 +361,9 @@ class KubernetesContainerService @Autowired constructor(
     ): String {
         if (webConsoleProxy.isEmpty()) {
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
-                errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.getErrorMessage(),
+                errorType = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorType,
+                errorCode = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
+                formatErrorMessage = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.getErrorMessage(),
                 errorMessage = "webConsoleProxy is empty"
             )
         }

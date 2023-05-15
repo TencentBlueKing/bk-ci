@@ -1,4 +1,4 @@
-package com.tencent.devops.log
+package com.tencent.devops.common.log.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -24,6 +24,7 @@ object LogMessageCode {
     const val USER_NO_RIGHT_VIEW_PIPELINE = "2108004" // 用户({0})无权限在工程({1})下查看流水线
     const val PRINT_QUEUE_LIMIT = "2108005" // log print queue exceeds the limit
     const val PRINT_IS_DISABLED = "2108006" // log print config is disabled
+    const val FILE_NOT_FOUND_CHECK_PATH = "2108007" // 未找到 {0} 文件，请检查路径是否正确:
 
     const val BK_FAILED_INSERT_DATA = "bkFailedInsertData" // 蓝盾ES集群插入数据失败
     const val BK_ES_CLUSTER_RECOVERY = "bkEsClusterRecovery" // 蓝盾ES集群恢复

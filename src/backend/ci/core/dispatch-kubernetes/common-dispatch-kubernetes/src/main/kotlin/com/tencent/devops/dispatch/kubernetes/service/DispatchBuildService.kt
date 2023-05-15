@@ -38,7 +38,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
@@ -58,6 +57,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderSt
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.utils.PipelineBuilderLock
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -183,16 +183,16 @@ class DispatchBuildService @Autowired constructor(
             )
             if (e.message.equals("timeout")) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.INTERFACE_TIMEOUT.errorType,
-                    ErrorCodeEnum.INTERFACE_TIMEOUT.errorCode,
-                    ErrorCodeEnum.INTERFACE_TIMEOUT.getErrorMessage(),
+                    ErrorCodeEnum.BASE_INTERFACE_TIMEOUT.errorType,
+                    ErrorCodeEnum.BASE_INTERFACE_TIMEOUT.errorCode,
+                    ErrorCodeEnum.BASE_INTERFACE_TIMEOUT.getErrorMessage(),
                     dispatchBuild.getLog().troubleShooting + I18nUtil.getCodeLanMessage(BK_INTERFACE_REQUEST_TIMEOUT)
                 )
             }
             throw BuildFailureException(
-                ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                ErrorCodeEnum.SYSTEM_ERROR.errorCode,
-                ErrorCodeEnum.SYSTEM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.BASE_SYSTEM_ERROR.errorType,
+                ErrorCodeEnum.BASE_SYSTEM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_SYSTEM_ERROR.getErrorMessage(),
                 I18nUtil.getCodeLanMessage(
                     messageCode = BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE,
                     params = arrayOf("${e.message}", "${dispatchBuild.helpUrl}")
@@ -334,10 +334,10 @@ class DispatchBuildService @Autowired constructor(
             }
 
             throw BuildFailureException(
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage(),
-                ErrorCodeEnum.NO_IDLE_VM_ERROR.getErrorMessage()
+                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.BASE_NO_IDLE_VM_ERROR.getErrorMessage()
             )
         } finally {
             lock.unlock()
@@ -478,9 +478,9 @@ class DispatchBuildService @Autowired constructor(
                 executeCount = executeCount ?: 1
             )
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.getErrorMessage(),
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
                 dispatchBuild.getLog().troubleShooting + MessageUtil.getMessageByLocale(
                             BK_BUILD_MACHINE_STARTUP_FAILED,
                             I18nUtil.getLanguage(),

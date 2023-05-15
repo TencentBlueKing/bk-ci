@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.statistics.constant.StatisticsMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.statistics.service.process.permission.StatisticsPipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -119,7 +119,7 @@ class StatisticsPipelinePermissionServiceImpl @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION.toString(),
+                errorCode = USER_NEED_PIPELINE_X_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
             )

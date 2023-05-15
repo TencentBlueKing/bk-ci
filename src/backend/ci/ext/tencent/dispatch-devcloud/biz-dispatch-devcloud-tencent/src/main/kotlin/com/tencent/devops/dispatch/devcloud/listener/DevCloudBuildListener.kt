@@ -16,17 +16,18 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.client.DispatchDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_BUILD_MACHINE_FAILS_START
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_CONTAINER_BUILD_EXCEPTIONS
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_DEVCLOUD_EXCEPTION
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_FAILED_CREATE_BUILD_MACHINE
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_FAILED_START_DEVCLOUD
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_INTERFACE_REQUEST_TIMEOUT
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_WAITING_MACHINE_START
-import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudConstant.BK_WAIT_AGENT_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_CONTAINER_BUILD_EXCEPTIONS
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_DEVCLOUD_EXCEPTION
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_CREATE_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_FAILED_START_DEVCLOUD
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_INTERFACE_REQUEST_TIMEOUT
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_PREPARE_CREATE_TENCENT_CLOUD_BUILD_MACHINE
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_CREATE_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_SEND_REQUEST_START_BUILDER_SUCCESSFULLY
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_START_MIRROR
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAITING_MACHINE_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_WAIT_AGENT_START
 import com.tencent.devops.dispatch.devcloud.dao.BuildContainerPoolNoDao
 import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
@@ -53,7 +54,7 @@ import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import java.util.Random
+import java.util.*
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -201,7 +202,13 @@ class DevCloudBuildListener @Autowired constructor(
 
         try {
             val containerPool = getContainerPool(dispatchMessage)
-            printLogs(dispatchMessage, "启动镜像：${containerPool.container}")
+            printLogs(
+                dispatchMessage,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_START_MIRROR,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "：${containerPool.container}"
+            )
             if (!containerPool.performanceConfigId.isNullOrBlank() && containerPool.performanceConfigId != "0") {
                 val performanceOption =
                     dcPerformanceOptionsDao.get(dslContext, containerPool.performanceConfigId!!.toLong())
@@ -548,8 +555,9 @@ class DevCloudBuildListener @Autowired constructor(
                     I18nUtil.getCodeLanMessage(
                         messageCode = BK_DEVCLOUD_EXCEPTION
                     ) + I18nUtil.getCodeLanMessage(
-                        messageCode = BK_BUILD_MACHINE_FAILS_START
-                    ) + ":${startResult.second}"
+                        messageCode = BK_BUILD_MACHINE_FAILS_START,
+                        params = arrayOf(startResult.second)
+                    )
                 )
             }
         }

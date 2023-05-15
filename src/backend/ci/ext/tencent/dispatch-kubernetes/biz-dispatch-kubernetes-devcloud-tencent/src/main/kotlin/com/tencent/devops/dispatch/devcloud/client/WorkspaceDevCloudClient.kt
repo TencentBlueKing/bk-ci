@@ -8,21 +8,22 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpPatch
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
+import com.tencent.devops.dispatch.devcloud.pojo.PatchOp
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
 import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
-import java.net.SocketTimeoutException
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -33,6 +34,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import org.springframework.util.Base64Utils
+import java.net.SocketTimeoutException
 
 @Component
 class WorkspaceDevCloudClient @Autowired constructor(
@@ -74,9 +77,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 logger.info("User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage(),
+                        ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage(),
                         "Env creation interface exception.: ${response.code}"
                     )
                 }
@@ -85,10 +88,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 if (HttpStatus.OK.value == environmentOpRsp.code) {
                     return environmentOpRsp.data
                 } else {
-                    val message = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         message,
                         "$message: ${environmentOpRsp.message}"
                     )
@@ -96,10 +99,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId create environment get SocketTimeoutException", e)
-            val message = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
+            val message = ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                errorType = ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.DEVCLOUD_CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = message,
                 errorMessage = "$message, url: $url"
             )
@@ -113,7 +116,19 @@ class WorkspaceDevCloudClient @Autowired constructor(
         environmentAction: EnvironmentAction
     ): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/${environmentAction.getValue()}"
-        logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
+        val patchStr = Base64Utils.encodeToString(
+            (JsonUtil.toJson(
+                listOf(
+                    EnvironmentOpPatch(
+                        op = PatchOp.ADD.value,
+                        path = "/spec/containers/0/env/0/value",
+                        value = "false"
+                    )
+                )
+            ).toByteArray()
+                )
+        )
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, patchStr: $patchStr")
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
@@ -127,7 +142,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
             .post(
                 RequestBody.create(
                     "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    JsonUtil.toJson(UidReq(environmentUid))
+                    JsonUtil.toJson(UidReq(
+                        uid = environmentUid,
+                        patch = patchStr
+                    ))
                 )
             )
             .build()
@@ -135,10 +153,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         message,
                         "$message：${response.code}"
                     )
@@ -157,10 +175,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
 
                     return environmentOpRsp.data
                 } else {
-                    val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                        ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         message,
                         "$message：${environmentOpRsp.message}"
                     )
@@ -168,10 +186,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId ${environmentAction.getValue()} environment get SocketTimeoutException.", e)
-            val message = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
+            val message = ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.getErrorMessage()
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
-                errorCode = ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                errorType = ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.DEVCLOUD_OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                 formatErrorMessage = message,
                 errorMessage = "$message, url: $url"
             )
@@ -212,10 +230,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 if (!response.isSuccessful && retryTime <= 0) {
-                    val message = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         message,
                         "$message: ${response.code}"
                     )
@@ -225,10 +243,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 if (HttpStatus.OK.value == environmentStatusRsp.code) {
                     return environmentStatusRsp.data
                 } else {
-                    val message = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         message,
                         "$message：${environmentStatusRsp.message}"
                     )
@@ -245,9 +263,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
             } else {
                 logger.error("User $userId get environment status failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorType = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = "Get the environment status interface timeout, url: $url"
                 )
             }
@@ -284,10 +302,10 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 if (!response.isSuccessful && retryTime <= 0) {
-                    val message = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage()
+                    val message = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage()
                     throw BuildFailureException(
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
                         message,
                         "$message: ${response.code}"
                     )
@@ -297,9 +315,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     return environmentListRsp.data
                 } else {
                     throw BuildFailureException(
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
                         " list of operating environments returns a failure：${environmentListRsp.message}"
                     )
                 }
@@ -315,9 +333,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
             } else {
                 logger.error("User $userId get environment list failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
+                    errorType = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.DEVCLOUD_ENVIRONMENT_LIST_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = "Get the list of environments interface timed out, url: $url"
                 )
             }
@@ -365,9 +383,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
             } else {
                 logger.error("$taskUid get task status failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorType = ErrorCodeEnum.DEVCLOUD_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.DEVCLOUD_TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.DEVCLOUD_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     errorMessage = "Gets the TASK status interface timeout, url: $url"
                 )
             }
@@ -386,7 +404,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatusEnum.abort, "创建环境超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
+                return Triple(TaskStatusEnum.abort, "创建环境超时（10min）", ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR)
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
@@ -457,5 +475,5 @@ data class TaskResult(
     val isFinish: Boolean,
     val success: Boolean,
     val msg: String,
-    val errorCodeEnum: ErrorCodeEnum = ErrorCodeEnum.CREATE_VM_ERROR
+    val errorCodeEnum: ErrorCodeEnum = ErrorCodeEnum.DEVCLOUD_CREATE_VM_ERROR
 )

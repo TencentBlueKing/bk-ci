@@ -32,11 +32,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -80,8 +80,8 @@ class BcsJobClient @Autowired constructor(
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
-                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
+                    errorType = ErrorCodeEnum.BCS_SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_SYSTEM_ERROR.errorCode.toString(),
                     defaultMessage = "Fail to getJobStatus, http response code: ${response.code}"
                 )
             }
@@ -102,8 +102,8 @@ class BcsJobClient @Autowired constructor(
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
-                    errorType = ErrorCodeEnum.SYSTEM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.SYSTEM_ERROR.errorCode.toString(),
+                    errorType = ErrorCodeEnum.BCS_SYSTEM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_SYSTEM_ERROR.errorCode.toString(),
                     defaultMessage = "Fail to getJobLogs, http response code: ${response.code}"
                 )
             }

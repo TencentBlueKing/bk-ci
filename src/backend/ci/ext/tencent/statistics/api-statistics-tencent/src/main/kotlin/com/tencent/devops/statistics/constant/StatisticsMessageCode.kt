@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo
+package com.tencent.devops.statistics.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -37,7 +37,7 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
+ *    32: remotedev 33: statistics）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -45,23 +45,14 @@ package com.tencent.devops.dispatch.kubernetes.pojo
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object DispatchK8sMessageCode {
-    const val START_BUILD_CONTAINER_FAIL = "2126011" // 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
-    const val CONTAINER_BUILD_ERROR = "2126012" // {0}构建异常，请联系蓝盾助手排查，异常信息 -
-    const val START_BCS_BUILD_CONTAINER_FAIL = "2126013" // 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
-    const val THIRD_SERVICE_BCS_BUILD_ERROR = "2126014" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
-    const val GET_BUILD_MACHINE_DETAILS_TIMEOUT = "2126015" // 获取构建机详情接口超时
-    const val MACHINE_INTERFACE_ERROR = "2126016" // 操作构建机接口异常
-    const val TROUBLE_SHOOTING = "2126017" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
-    const val NO_EMPTY_BUILDER = "2126018" // BCS构建机启动失败，没有空闲的构建机
-    const val MACHINE_INTERFACE_RETURN_FAIL = "2126019" // 操作构建机接口返回失败
-    const val MACHINE_INTERFACE_TIMEOUT = "2126020" // 操作构建机接口超时
-    const val KUBERNETES_TASK_STATUS_API_EXCEPTION = "2126021" // 获取kubernetes task({0})状态接口异常
-    const val KUBERNETES_TASK_STATUS_API_TIMEOUT = "2126022" // 获取kubernetes task状态接口超时
-    const val KUBERNETES_TASK_EXECUTE_TIMEOUT = "2126023" // 获取kubernetes任务执行超时
-    const val CREATE_WORKSPACE_ERROR = "2126068" // 创建工作空间异常
-    const val CREATE_WORKSPACE_API_FAIL = "2126069" // 创建工作空间接口返回失败
-    const val CREATE_BUILD_MACHINE_TIMEOUT = "2126070" // 创建构建机接口超时
-    const val GET_WORKSPACE_URL_ERROR = "2126071" // 获取工作空间url接口异常
-    const val GET_WORKSPACE_LINK_TIMEOUT = "2126072" // 获取工作空间链接接口超时
+object StatisticsMessageCode {
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2133001" // OpenAPI：API Gateway公钥文件未设置
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2133002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2133003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2133004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
+    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2133005" // OpenAPI：JWT解析失败
+    const val USER_NEED_PIPELINE_X_PERMISSION = "2133006" // 流水线: 用户无{0}权限
+    const val ERROR_TEMPLATE_NOT_EXISTS = "2133007" // 模板不存在
+    const val ORG_NOT_PROJECT = "2133008" // {0}该组织下无项目
+    const val ORG_TYPE_ERROR = "2133009" // 组织类型有误
 }

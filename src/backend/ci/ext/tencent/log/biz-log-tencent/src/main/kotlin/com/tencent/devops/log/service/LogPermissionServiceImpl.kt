@@ -35,7 +35,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.LogMessageCode.USER_NO_RIGHT_VIEW_PIPELINE
+import com.tencent.devops.common.log.constant.LogMessageCode.USER_NO_RIGHT_VIEW_PIPELINE
 import org.springframework.beans.factory.annotation.Autowired
 
 class LogPermissionServiceImpl @Autowired constructor(

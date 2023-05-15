@@ -27,8 +27,8 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.common.log.constant.LogMessageCode.FILE_NOT_FOUND_CHECK_PATH
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.image.constants.ImageMessageCode.FILE_NOT_FOUND_CHECK_PATH
 import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import java.io.File
 import java.io.FileInputStream

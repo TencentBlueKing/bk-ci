@@ -36,9 +36,9 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
