@@ -29,10 +29,6 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.ARCHIVE_PLUGIN_FILE_FAILED
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_ENV_INFO_FAILED
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_SENSITIVE_INFO_FAILED
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
@@ -44,8 +40,6 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.store.constant.StoreMessageCode.ADD_PLUGIN_PLATFORM_INFO_FAILED
-import com.tencent.devops.store.constant.StoreMessageCode.GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
@@ -59,7 +53,13 @@ import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ADD_PLUGIN_PLATFORM_INFO_FAILED
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_ATOM_FILE_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.ARCHIVE_PLUGIN_FILE_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_ENV_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_PLUGIN_SENSITIVE_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File

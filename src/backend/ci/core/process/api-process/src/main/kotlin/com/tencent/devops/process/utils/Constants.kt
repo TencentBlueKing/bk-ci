@@ -33,14 +33,14 @@ const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pip
 const val PIPELINE_START_PARENT_BUILD_ID = "BK_CI_PARENT_BUILD_ID" // "pipeline.start.parent.build.id"
 const val PIPELINE_START_PARENT_BUILD_TASK_ID = "BK_CI_PARENT_BUILD_TASK_ID" // "pipeline.start.parent.build.task.id"
 const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user.id"
-const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "当前构建的启动人"
+const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
 const val PIPELINE_START_PIPELINE_USER_ID = "BK_CI_START_PIPELINE_USER_ID" // "pipeline.start.pipeline.user.id"
 const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pipeline.start.service.user.id"
 const val PIPELINE_START_MANUAL_USER_ID = "BK_CI_START_MANUAL_USER_ID" // "pipeline.start.manual.user.id"
 const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_ID"
 const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
-const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "当前构建的启动方式，从{0}中取值"
+const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
 const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"// 当前构建的唯一标示ID，从1开始自增
 const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.build.last.update"
@@ -51,17 +51,17 @@ const val PIPELINE_BUILD_URL = "BK_CI_BUILD_URL"
 const val GIT_MR_NUMBER = "BK_CI_GIT_MR_NUMBER" // git_mr_number
 const val GITHUB_PR_NUMBER = "BK_CI_GITHUB_PR_NUMBER" // github_pr_number
 
-const val PIPELINE_NAME = "BK_CI_PIPELINE_NAME" // "流水线名称"
-const val PIPELINE_ID = "BK_CI_PIPELINE_ID" // "流水线ID"
+const val PIPELINE_NAME = "BK_CI_PIPELINE_NAME" // "pipeline.name"
+const val PIPELINE_ID = "BK_CI_PIPELINE_ID" // "pipeline.id"
 const val WORKSPACE = "WORKSPACE" // "ci.workspace"
 
 const val PIPELINE_TIME_DURATION = "BK_CI_BUILD_TOTAL_TIME" // "pipeline.time.duration"
 
-const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "当前构建ID"
-const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "流水线JOB ID"
-const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "流水线Task ID"
+const val PIPELINE_BUILD_ID = "BK_CI_BUILD_ID" // "pipeline.build.id"
+const val PIPELINE_VMSEQ_ID = "BK_CI_BUILD_JOB_ID" // "pipeline.job.id"
+const val PIPELINE_ELEMENT_ID = "BK_CI_BUILD_TASK_ID" // "pipeline.task.id"
 const val PIPELINE_TURBO_TASK_ID = "BK_CI_TURBO_ID" // "turbo.task.id"
-const val PROJECT_NAME = "BK_CI_PROJECT_NAME" // "项目英文名"
+const val PROJECT_NAME = "BK_CI_PROJECT_NAME" // "project.name"
 const val REPORT_DYNAMIC_ROOT_URL = "BK_CI_REPORT_DYNAMIC_ROOT_URL" // "report.dynamic.root.url"
 
 const val PROJECT_NAME_CHINESE = "BK_CI_PROJECT_NAME_CN" // "project.name.chinese"

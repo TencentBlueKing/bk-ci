@@ -115,19 +115,51 @@ object CommonMessageCode {
     const val ERROR_LANGUAGE_IS_NOT_SUPPORT = "2100061" // 该语言蓝盾目前不支持，蓝盾目前支持的语言标识为：{0}
     const val INIT_SERVICE_LIST_ERROR = "2100062" // 初始化服务列表异常问题
     const val FILE_NOT_EXIST = "2100063" // 文件{0}不存在
+    const val USER_ACCESS_CHECK_FAIL = "2100064" // Gitlab access token 不正确
+
+    const val GITLAB_TOKEN_EMPTY = "2100065" // GitLab Token为空
+    const val GITLAB_HOOK_URL_EMPTY = "2100066" // GitLab hook url为空
+    const val GITLAB_TOKEN_FAIL = "2100067" // GitLab Token不正确
+    const val GIT_TOKEN_FAIL = "2100068" // Git Token不正确
+    const val SERCRT_EMPTY = "2100069" // GIT 私钥为空
+    const val GIT_SERCRT_WRONG = "2100070" // Git 私钥不对
+    const val PWD_EMPTY = "2100071" // 用户密码为空
+    const val USER_NAME_EMPTY = "2100072" // 用户名为空
+    const val GITLAB_INVALID = "2100073" // 无效的GITLAB仓库
+    const val GIT_TOKEN_WRONG = "2100074" // Git Token 不正确
+    const val GIT_LOGIN_FAIL = "2100075" // Git 用户名或者密码不对
+    const val GIT_TOKEN_EMPTY = "2100076" // Git Token为空
+    const val GIT_HOOK_URL_EMPTY = "2100077" // Git hook url为空
+    const val TGIT_LOGIN_FAIL = "2100078" // TGit 用户名或者密码不对
+    const val TGIT_TOKEN_EMPTY = "2100079" // TGit Token 不正确
+    const val TGIT_SECRET_WRONG = "2100080" // TGit 私钥不对
+    const val SVN_SECRET_OR_PATH_ERROR = "2100081" // SVN 私钥不正确 或者 SVN 路径没有权限
+    const val SVN_CREATE_HOOK_FAIL = "2100082" // 添加SVN WEB hook 失败
+    const val LOCK_FAIL = "2100083" // lock失败
+    const val UNLOCK_FAIL = "2100084" // unlock失败
+    const val GIT_REPO_PEM_FAIL = "2100085" // 代码仓库访问未授权
+    const val CALL_REPO_ERROR = "2100086" // 代码仓库访问异常
+    const val P4_USERNAME_PASSWORD_FAIL = "2100087" // p4用户名密码错误
+    const val PARAM_ERROR = "2100088" // 参数错误
+    const val AUTH_FAIL = "2100089" // {0}认证失败
+    const val ACCOUNT_NO_OPERATION_PERMISSIONS = "2100090" // 账户没有{0}的权限
+    const val REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION = "2100091" // {0}仓库不存在或者是账户没有该项目{1}的权限
+    const val GIT_INTERFACE_NOT_EXIST = "2100092" // {0}平台没有{1}的接口
+    const val GIT_CANNOT_OPERATION = "2100093" // {0}平台{1}操作不能进行
+    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2100094" // unlock webhooklock失败,请确认token是否已经配置
+    const val COMMIT_CHECK_ADD_FAIL = "2100095" // Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ADD_MR_COMMENTS_FAIL = "2100096" // 添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val WEBHOOK_ADD_FAIL = "2100097" // Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限
+    const val WEBHOOK_UPDATE_FAIL = "2100098" // Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ENGINEERING_REPO_UNAUTHORIZED = "2100099" // 工程仓库访问未授权
+    const val ENGINEERING_REPO_NOT_EXIST = "2100100" // 工程仓库不存在
+    const val ENGINEERING_REPO_CALL_ERROR = "2100101" // 工程仓库访问异常
+    const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100102" // 非项目成员且项目为非开源项目
+    // 2100108
+    const val USER_NO_PIPELINE_PERMISSION = "2100108" // 流水线: 用户无{0}权限
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
-    const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES = "bkBlueShieldPublicBuildResources" // 蓝盾公共构建资源
-    const val BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW = "bkBlueShieldPublicBuildResourcesNew" // 蓝盾公共构建资源(NEW)
-    const val BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL = "bkPublicDockerOnDevnetPhysical" // 公共：Docker on Devnet 物理机
-    const val BK_PUBLIC_DOCKER_ON_DEVCLOUD = "bkPublicDockerOnDevcloud" // 公共：Docker on DevCloud
-    const val BK_PUBLIC_DOCKER_ON_BCS = "bkPublicDockerOnBcs" // 公共：Docker on Bcs
-    const val BK_PRIVATE_SINGLE_BUIL_MACHINE = "bkPrivateSingleBuilMachine" // 私有：单构建机
-    const val BK_PRIVATE_BUILD_A_CLUSTER = "bkPrivateBuildACluster" // 私有：构建集群
-    const val BK_PCG_PUBLIC_BUILD_RESOURCES = "bkPcgPublicBuildResources" // PCG公共构建资源
-    const val BK_TENCENT_SELF_DEVELOPED_CLOUD = "bkTencentSelfDevelopedCloud" // 腾讯自研云（云devnet资源）
-    const val BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD = "bkCloudHostingWindowsOnDevcloud" // 云托管：Windows on DevCloud
 
     const val BK_FILE_NAME = "bkFileName" // 文件名
     const val BK_BELONG_TO_THE_PROJECT = "bkBelongToTheProject" // 所属项目
@@ -166,4 +198,27 @@ object CommonMessageCode {
     // 未授权访问的资源
     const val BK_RESOURCES_THAT_NOT_AUTHORIZED_ACCESS = "bkResourcesThatNotAuthorizedAccess"
     const val BK_CODE_BASE_TRIGGERING = "bkCodeBaseTriggering" // 代码库触发
+    const val BK_FAILED_START_BUILD_MACHINE = "bkFailedStartBuildMachine" // 启动构建机失败
+
+    const val CREATE_BRANCH = "bkCreateBranch" // 创建分支
+    const val DELETE_BRANCH = "bkDeleteBranch" // 删除分支
+
+    const val GET_PROJECT_INFO = "bkGetProjectInfo" // 获取项目详情
+
+    const val OPERATION_BRANCH = "bkOperationBranch" // 拉分支
+    const val OPERATION_TAG = "bkOperationTag" // 拉标签
+    const val OPERATION_ADD_WEBHOOK = "bkOperationAddWebhook" // 添加WEBHOOK
+    const val OPERATION_UPDATE_WEBHOOK = "bkOperationUpdateWebhook" // 修改WEBHOOK
+    const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook" // 查询WEBHOOK
+    const val OPERATION_ADD_COMMIT_CHECK = "bkOperationAddCommitCheck" // 添加COMMIT CHECK
+    const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment" // 添加MR COMMENT
+    const val OPERATION_COMMIT = "bkOperationCommit" // 拉提交记录
+    const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff" // 查询commit变化
+    const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock" // 解锁hook锁
+    const val OPERATION_MR_CHANGE = "bkOperationMrChange" // 查询合并请求的代码变更
+    const val OPERATION_MR_INFO = "bkOperationMrInfo" // 查询项目合并请求
+    const val OPERATION_GET_CHANGE_FILE_LIST = "bkOperationGetChangeFileList" // 查询变更文件列表
+    const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList" // 获取合并请求中的提交
+    const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo" // 获取项目中成员信息
+    const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkItems" // 查看绑定的TAPD单
 }

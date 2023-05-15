@@ -33,10 +33,10 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.KUBERNETES_TASK_EXECUTE_TIMEOUT
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.KUBERNETES_TASK_STATUS_API_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_EXECUTE_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_EXCEPTION
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_KUBERNETES_TASK_STATUS_API_TIMEOUT
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskStatusResp
@@ -76,11 +76,11 @@ class KubernetesTaskClient @Autowired constructor(
 
                 logger.error("Get task: $taskId status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
                     I18nUtil.getCodeLanMessage(
-                        messageCode = DispatchK8sMessageCode.KUBERNETES_TASK_STATUS_API_EXCEPTION,
+                        messageCode = BK_KUBERNETES_TASK_STATUS_API_EXCEPTION,
                         params = arrayOf(taskId)
                     ) + "：http response code: ${response.code}"
                 )
@@ -93,10 +93,10 @@ class KubernetesTaskClient @Autowired constructor(
             } else {
                 logger.error("$taskId get task status failed.", e)
                 throw BuildFailureException(
-                    errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
-                    errorMessage = "${I18nUtil.getCodeLanMessage(KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
+                    errorType = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.BCS_TASK_STATUS_INTERFACE_ERROR.getErrorMessage(),
+                    errorMessage = "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_STATUS_API_TIMEOUT)}, url: $url"
                 )
             }
         }
@@ -109,7 +109,7 @@ class KubernetesTaskClient @Autowired constructor(
                 logger.error("$taskId kubernetes task timeout")
                 return Pair(
                     TaskStatusEnum.TIME_OUT,
-                    "${I18nUtil.getCodeLanMessage(KUBERNETES_TASK_EXECUTE_TIMEOUT)}（10min）"
+                    "${I18nUtil.getCodeLanMessage(BK_KUBERNETES_TASK_EXECUTE_TIMEOUT)}（10min）"
                 )
             }
             Thread.sleep(1 * 1000)

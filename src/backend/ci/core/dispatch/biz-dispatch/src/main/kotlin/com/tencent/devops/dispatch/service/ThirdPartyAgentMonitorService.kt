@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.service
 
+import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
@@ -39,7 +40,6 @@ import com.tencent.devops.dispatch.pojo.AgentStartMonitor
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import java.util.Date
 import java.util.concurrent.TimeUnit
@@ -82,7 +82,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
         logMessage.append(
             I18nUtil.getCodeLanMessage(
-                messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
                 params = arrayOf(event.projectId, agentDetail.nodeId),
                 language = I18nUtil.getDefaultLocaleLanguage()
             )

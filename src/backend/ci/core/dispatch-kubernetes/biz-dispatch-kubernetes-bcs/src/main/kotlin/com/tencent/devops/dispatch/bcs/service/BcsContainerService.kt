@@ -36,7 +36,6 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
-import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsDeleteBuilderParams
@@ -66,10 +65,10 @@ import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAI
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_BCS_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BCS_BUILD_CONTAINER_FAIL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_THIRD_SERVICE_BCS_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.START_BCS_BUILD_CONTAINER_FAIL
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.THIRD_SERVICE_BCS_BUILD_ERROR
-import com.tencent.devops.dispatch.kubernetes.pojo.DispatchK8sMessageCode.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
@@ -81,6 +80,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderType
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
 import org.slf4j.LoggerFactory
@@ -106,8 +106,11 @@ class BcsContainerService @Autowired constructor(
         readyStartLog =
         I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
         startContainerError =
-        I18nUtil.getCodeLanMessage(START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
-        troubleShooting = I18nUtil.getCodeLanMessage(THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getDefaultLocaleLanguage())
+        I18nUtil.getCodeLanMessage(BK_START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            BK_THIRD_SERVICE_BCS_BUILD_ERROR,
+            I18nUtil.getDefaultLocaleLanguage()
+        )
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -250,10 +253,10 @@ class BcsContainerService @Autowired constructor(
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName)
                 throw BuildFailureException(
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.CREATE_VM_ERROR.errorCode.toString()),
-                    I18nUtil.getCodeLanMessage(TROUBLE_SHOOTING) +
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode,
+                    I18nUtil.getCodeLanMessage(ErrorCodeEnum.BCS_CREATE_VM_ERROR.errorCode.toString()),
+                    I18nUtil.getCodeLanMessage(BK_TROUBLE_SHOOTING) +
                             I18nUtil.getCodeLanMessage(BK_BUILD_MACHINE_CREATION_FAILED) +
                     ":${failedMsg ?: taskStatus.message}"
                 )

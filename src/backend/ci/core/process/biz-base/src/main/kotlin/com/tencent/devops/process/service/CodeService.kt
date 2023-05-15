@@ -27,10 +27,6 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.FAIL_TO_GET_SVN_DIRECTORY
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_NOT_FOUND
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.NOT_SVN_CODE_BASE
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPOSITORY_ID_AND_NAME_ARE_EMPTY
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
@@ -38,6 +34,10 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_GET_SVN_DIRECTORY
+import com.tencent.devops.process.constant.ProcessMessageCode.GIT_NOT_FOUND
+import com.tencent.devops.process.constant.ProcessMessageCode.NOT_SVN_CODE_BASE
+import com.tencent.devops.process.constant.ProcessMessageCode.REPOSITORY_ID_AND_NAME_ARE_EMPTY
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
@@ -46,12 +46,12 @@ import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.wc.SVNRevision
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service

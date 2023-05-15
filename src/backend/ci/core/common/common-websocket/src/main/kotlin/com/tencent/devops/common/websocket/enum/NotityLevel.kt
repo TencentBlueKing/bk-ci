@@ -28,10 +28,7 @@
 package com.tencent.devops.common.websocket.enum
 
 import com.fasterxml.jackson.annotation.JsonValue
-import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.SpringContextUtil
 
 enum class NotityLevel(
     private val level: Int,
@@ -48,9 +45,7 @@ enum class NotityLevel(
         }
 
         @JsonValue
-        fun getMessage(): String {
-                val language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE)
-                ?: SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+        fun getMessage(language: String): String {
                 return MessageUtil.getMessageByLocale(
                         messageCode = "NotityLevel." + this.name,
                         language = language

@@ -91,6 +91,7 @@ object ProjectMessageCode {
     const val USER_RESIGNED = "2119042" // 用户{0} 已离职
     const val FAILED_USER_INFORMATION = "2119043" // 获取用户{0} 信息失败
     const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
+    const val RELATED_RESOURCE_EMPTY = "2119045" // 权限系统：绑定系统资源为空
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

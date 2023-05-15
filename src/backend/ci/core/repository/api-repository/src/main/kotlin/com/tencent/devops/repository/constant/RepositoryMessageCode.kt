@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.constants
+package com.tencent.devops.repository.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -45,18 +45,40 @@ package com.tencent.devops.dispatch.constants
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object DispatchMassageCode {
-    // 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试.
-    const val CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "2103011"
-    // 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
-    const val THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "2103012"
-    const val BUILD_MACHINE_UPGRADE_IN_PROGRESS = "2103013" // 构建机升级中，重新调度(Agent is upgrading)
-    const val BUILD_MACHINE_BUSY = "2103014" // 构建机正忙,重新调度(Agent is busy) - {0}/{1}
-    // 构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群： {1} (env({2}) is empty)
-    const val BUILD_NODE_IS_EMPTY = "2103015"
-    const val BUILD_ENV_PREPARATION = "2103016" // 构建环境准备中...
-    // "当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，正在执行JOB数量：{1}, 配额: ${2}"
-    const val JOB_NUM_REACHED_MAX_QUOTA = "2103017"
-    // "当前项目下正在执行的【{0}】JOB数量已经超过告警阈值，正在执行JOB数量：{1}，配额：{2}，告警阈值：{3}%，当前已经使用：{4}%"
-    const val JOB_NUM_EXCEED_ALARM_THRESHOLD = "2103018"
+object RepositoryMessageCode {
+    const val USER_CREATE_GIT_CODE_REPOSITORY_FAIL = "2115001" // 创建GIT代码库失败，请稍后再试
+    const val USER_UPDATE_GIT_CODE_REPOSITORY_FAIL = "2115002" // 更新GIT代码库失败，请稍后再试
+    const val USER_ADD_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115003" // GIT代码添加成员{0}失败，请稍后再试
+    const val USER_GIT_REPOSITORY_MOVE_GROUP_FAIL = "2115004" // 代码库迁移至{0}项目组失败，请稍后再试
+    const val USER_DELETE_GIT_CODE_REPOSITORY_MEMBER_FAIL = "2115005" // GIT代码库删除成员{0}失败，请稍后再试
+
+    const val GIT_INVALID = "2115006" // 无效的GIT仓库
+    const val TGIT_INVALID = "2115007" // 无效的TGIT仓库
+    const val SVN_INVALID = "2115008" // 无效的SVN仓库
+    const val GITHUB_INVALID = "2115009" // 无效的GITHUB仓库
+    const val GET_TICKET_FAIL = "2115010" // 获取凭证异常
+    const val USER_SECRET_EMPTY = "2115011" // 用户私钥为空
+    const val GIT_REPO_PEM_FAIL = "2115012" // 代码仓库访问未授权
+    const val REPO_PATH_WRONG_PARM = "2115013" // 代码仓库路径不正确，仓库路径应该以{0}开头
+    const val REPO_NAME_EXIST = "2115014" // 代码库别名{0}已存在
+    const val USER_VIEW_PEM_ERROR = "2115015" // 用户{0}在工程{1}下没有代码库{2}查看权限
+    const val USER_EDIT_PEM_ERROR = "2115016" // 用户{0}在工程{1}下没有代码库{2}编辑权限
+    const val USER_DELETE_PEM_ERROR = "2115017" // 用户{0}在工程{1}下没有代码库{2}删除权限
+    const val REPO_LOCK_UN_SUPPORT = "2115018" // 代码库{0}不支持锁定
+    const val REPO_TYPE_NO_NEED_CERTIFICATION = "2115019" // 代码库类型{0}无需认证
+    const val CREATE_TAG_FAIL = "2115020" // 创建tag失败
+    const val P4_INVALID = "2115021" // 无效的p4仓库
+    const val GIT_NOT_FOUND = "2115022" // 代码库{0}不存在
+    const val USER_CREATE_PEM_ERROR = "2115023" // 用户{0}在工程{1}下没有代码库创建权限
+    const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
+    const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
+
+    const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
+    const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务
+    const val OPERATION_UPDATE_CHECK_RUNS = "OperationUpdateCheckRuns" // 更新检测任务
+    const val OPERATION_GET_REPOS = "OperationGetRepos" // 获取仓库列表
+    const val OPERATION_GET_BRANCH = "OperationGetBranch" // 获取指定分支
+    const val OPERATION_GET_TAG = "OperationGetTag" // 获取指定Tag
+    const val OPERATION_LIST_BRANCHS = "OperationListBranchs" // 获取分支列表
+    const val OPERATION_LIST_TAGS = "OperationListTags" // 获取Tag列表
 }
