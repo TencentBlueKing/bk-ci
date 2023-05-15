@@ -107,7 +107,10 @@ class BcsContainerService @Autowired constructor(
         I18nUtil.getCodeLanMessage(BK_READY_CREATE_BCS_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()),
         startContainerError =
         I18nUtil.getCodeLanMessage(BK_START_BCS_BUILD_CONTAINER_FAIL, I18nUtil.getDefaultLocaleLanguage()),
-        troubleShooting = I18nUtil.getCodeLanMessage(BK_THIRD_SERVICE_BCS_BUILD_ERROR, I18nUtil.getDefaultLocaleLanguage())
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            BK_THIRD_SERVICE_BCS_BUILD_ERROR,
+            I18nUtil.getDefaultLocaleLanguage()
+        )
     )
 
     @Value("\${bcs.resources.builder.cpu}")

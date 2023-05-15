@@ -51,14 +51,17 @@ const val BK_INTERFACE_REQUEST_TIMEOUT = "bkInterfaceRequestTimeout" // 接口�
 const val BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE = "bkBuildMachineCreationFailedReference"
 // 构建机启动成功，等待Agent启动...
 const val BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START = "bkBuildMachineStartSuccessWaitAgentStart"
-
-const val BK_START_BUILD_CONTAINER_FAIL = "bkStartBuildContainerFail" // 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+// 启动{0}构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：
+const val BK_START_BUILD_CONTAINER_FAIL = "bkStartBuildContainerFail"
 const val BK_CONTAINER_BUILD_ERROR = "bkContainerBuildError" // {0}构建异常，请联系蓝盾助手排查，异常信息 -
-const val BK_START_BCS_BUILD_CONTAINER_FAIL = "bkStartBcsBuildContainerFail" // 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
-const val BK_THIRD_SERVICE_BCS_BUILD_ERROR = "bkThirdServiceBcsBuildError" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+// 启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：
+const val BK_START_BCS_BUILD_CONTAINER_FAIL = "bkStartBcsBuildContainerFail"
+// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
+const val BK_THIRD_SERVICE_BCS_BUILD_ERROR = "bkThirdServiceBcsBuildError"
 const val BK_TROUBLE_SHOOTING = "bkTroubleShooting" // 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，
 const val BK_MACHINE_INTERFACE_TIMEOUT = "bkMachineInterfaceTimeout" // 操作构建机接口超时
-const val BK_KUBERNETES_TASK_STATUS_API_EXCEPTION = "bkKubernetesTaskStatusApiException" // 获取kubernetes task({0})状态接口异常
+// 获取kubernetes task({0})状态接口异常
+const val BK_KUBERNETES_TASK_STATUS_API_EXCEPTION = "bkKubernetesTaskStatusApiException"
 const val BK_KUBERNETES_TASK_STATUS_API_TIMEOUT = "bkKubernetesTaskStatusApiTimeout" // 获取kubernetes task状态接口超时
 const val BK_KUBERNETES_TASK_EXECUTE_TIMEOUT = "bkKubernetesTaskExecuteTimeout" // 获取kubernetes任务执行超时
 const val BK_CREATE_WORKSPACE_ERROR = "bkCreateWorkspaceError" // 创建工作空间异常

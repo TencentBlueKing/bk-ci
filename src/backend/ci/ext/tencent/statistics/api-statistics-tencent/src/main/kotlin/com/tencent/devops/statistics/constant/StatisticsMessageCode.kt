@@ -45,6 +45,7 @@ package com.tencent.devops.statistics.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+
 object StatisticsMessageCode {
     const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2133001" // OpenAPI：API Gateway公钥文件未设置
     const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2133002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
