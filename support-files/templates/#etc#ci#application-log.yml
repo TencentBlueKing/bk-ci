@@ -27,7 +27,6 @@ spring:
             concurrency: 10
         logStorageEventOut:
           destination: e.build.log.storage.event
-          binder: rabbit
         ## 状态队列
         logStatusEventIn-in-0:
           destination: e.build.log.status.event
