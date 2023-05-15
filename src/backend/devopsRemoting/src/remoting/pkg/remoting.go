@@ -1,6 +1,7 @@
 package remoting
 
 import (
+	"common/devops"
 	"common/logs"
 	"context"
 	"fmt"
@@ -147,6 +148,22 @@ func Run() {
 	if remotingConfig.IDE != nil {
 		ideWG.Add(1)
 		go ide.StartAndWatchIDE(ctx, remotingConfig, remotingConfig.IDE, childProcEnvvars, &ideWG, cstate, ideReady, ide.WebIDE, devfileService)
+		go func() {
+			// 等待webIde启动后上报上报
+			select {
+			case <-ctx.Done():
+				return
+			case <-ideReady.Wait():
+			}
+			wType := devops.WorkspaceActionStart
+			if remotingConfig.WorkSpace.WorkspaceFirstCreate == "true" {
+				wType = devops.WorkspaceActionCreate
+			}
+			err := thirdApi.Server.ReportGitCloneDone(ctx, remotingConfig.WorkSpace.WorkspaceId, wType)
+			if err != nil {
+				logs.WithError(err).Error("report ide done error")
+			}
+		}()
 	}
 
 	var (
