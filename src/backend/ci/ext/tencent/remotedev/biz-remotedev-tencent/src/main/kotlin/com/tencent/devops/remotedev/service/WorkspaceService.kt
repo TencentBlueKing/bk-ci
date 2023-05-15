@@ -851,7 +851,7 @@ class WorkspaceService @Autowired constructor(
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:${workspaceName}",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -860,13 +860,15 @@ class WorkspaceService @Autowired constructor(
                     defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
                     params = arrayOf(workspaceName)
                 )
-
         }
-        workspaceDao.updateWorkspaceDisplayName(
-            dslContext = dslContext,
-            workspaceName = workspaceName,
-            displayName = displayName
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.updateWorkspaceDisplayName(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                displayName = displayName
+            )
+        }
         return true
     }
 

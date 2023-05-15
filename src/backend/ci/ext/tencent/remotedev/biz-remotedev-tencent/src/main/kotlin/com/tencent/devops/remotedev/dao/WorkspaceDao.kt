@@ -306,7 +306,6 @@ class WorkspaceDao {
                     .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
                     .where(NAME.eq(workspaceName))
                     .execute()
-
         }
     }
     fun updateWorkspaceCreatorInfo(
