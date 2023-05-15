@@ -85,6 +85,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
+    override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceService.deleteWorkspace(userId, workspaceName))
     }

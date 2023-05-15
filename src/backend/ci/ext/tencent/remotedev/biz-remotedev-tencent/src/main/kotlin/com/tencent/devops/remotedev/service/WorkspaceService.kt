@@ -845,6 +845,31 @@ class WorkspaceService @Autowired constructor(
         doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
     }
 
+    // 修改workspace备注名称
+    fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
+        logger.info("$userId edit workspace $workspaceName|$displayName")
+        permissionService.checkPermission(userId, workspaceName)
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:${workspaceName}",
+            expiredTimeInSeconds
+        ).lock().use {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
+
+        }
+        workspaceDao.updateWorkspaceDisplayName(
+            dslContext = dslContext,
+            workspaceName = workspaceName,
+            displayName = displayName
+        )
+        return true
+    }
+
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
         permissionService.checkPermission(userId, workspaceName)
@@ -1085,6 +1110,7 @@ class WorkspaceService @Autowired constructor(
             WorkspaceDetail(
                 workspaceId = id,
                 workspaceName = name,
+                displayName = displayName,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +
