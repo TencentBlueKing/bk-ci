@@ -278,20 +278,8 @@ open class MarketAtomTask : ITask() {
 
             // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
             systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
-
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
-            if (!preCmd.isNullOrBlank()) {
-                runPreCmds(
-                    preCmds = CommonUtils.strToList(preCmd),
-                    buildVariables = buildVariables,
-                    atomTmpSpace = atomTmpSpace,
-                    workspace = workspace,
-                    runtimeVariables = runtimeVariables,
-                    buildEnvs = buildEnvs,
-                    buildTask = buildTask
-                )
-            }
             LoggerService.addFoldEndLine("-----")
             LoggerService.addNormalLine("")
             val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(
@@ -323,15 +311,22 @@ open class MarketAtomTask : ITask() {
                 osType = AgentEnv.getOS(),
                 postEntryParam = postEntryParam
             )
-
+            val runCmds = mutableListOf<String>()
+            if (!preCmd.isNullOrBlank()) {
+                runCmds.addAll(CommonUtils.strToList(preCmd))
+            }
+            runCmds.add(atomTarget)
             // 运行阶段单独处理执行失败错误
             try {
                 val errorMessage = "Fail to run the plugin"
                 when (AgentEnv.getOS()) {
                     OSType.WINDOWS -> {
+                        val script = runCmds.joinToString(
+                            separator = "\r\n"
+                        ) { "\r\n$it" }
                         BatScriptUtil.execute(
                             buildId = buildVariables.buildId,
-                            script = "\r\n$atomTarget\r\n",
+                            script = script,
                             runtimeVariables = runtimeVariables,
                             dir = atomTmpSpace,
                             workspace = workspace,
@@ -341,9 +336,12 @@ open class MarketAtomTask : ITask() {
                         )
                     }
                     OSType.LINUX, OSType.MAC_OS -> {
+                        val script = runCmds.joinToString(
+                            separator = "\n"
+                        ) { "\n$it" }
                         ShellUtil.execute(
                             buildId = buildVariables.buildId,
-                            script = "\n$atomTarget\n",
+                            script = script,
                             dir = atomTmpSpace,
                             workspace = workspace,
                             buildEnvs = buildEnvs,
@@ -444,55 +442,6 @@ open class MarketAtomTask : ITask() {
             atomSensitiveConfMap[it.fieldName] = it.fieldValue
         }
         return mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
-    }
-
-    private fun runPreCmds(
-        preCmds: List<String>,
-        buildVariables: BuildVariables,
-        atomTmpSpace: File,
-        workspace: File,
-        runtimeVariables: Map<String, String>,
-        buildEnvs: List<com.tencent.devops.store.pojo.app.BuildEnv>,
-        buildTask: BuildTask
-    ) {
-        val preCmdErrorMessage = "Fail to run the plugin demand command"
-        when (AgentEnv.getOS()) {
-            OSType.WINDOWS -> {
-                if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString(
-                        separator = "\r\n"
-                    ) { "\r\n$it" }
-                    BatScriptUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = preCommand,
-                        runtimeVariables = runtimeVariables,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        errorMessage = preCmdErrorMessage,
-                        stepId = buildTask.stepId
-                    )
-                }
-            }
-            OSType.LINUX, OSType.MAC_OS -> {
-                if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString(
-                        separator = "\n"
-                    ) { "\n$it" }
-                    ShellUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = preCommand,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        buildEnvs = buildEnvs,
-                        runtimeVariables = runtimeVariables,
-                        errorMessage = preCmdErrorMessage,
-                        stepId = buildTask.stepId
-                    )
-                }
-            }
-            else -> {
-            }
-        }
     }
 
     private fun printInput(

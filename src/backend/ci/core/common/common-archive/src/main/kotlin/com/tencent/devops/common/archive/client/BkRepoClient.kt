@@ -936,7 +936,9 @@ class BkRepoClient constructor(
         pathNamePairs: List<Pair<String, String>>, // (path eq and name match) or
         metadata: Map<String, String>, // eq and
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
     ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
@@ -965,7 +967,7 @@ class BkRepoClient constructor(
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, projectId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize, sortBy, direction)
     }
 
     fun queryByPattern(
@@ -1068,45 +1070,23 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    fun createReplicaTask(
+    private fun query(
         userId: String,
         projectId: String,
-        repoName: String,
-        fullPath: String,
-        taskType: ReplicaType = ReplicaType.EDGE_PULL
-    ) {
-        val url = "${getGatewayUrl()}/bkrepo/api/service/replication/api/task/edge/create"
-        val taskCreateRequest = ReplicaTaskCreateRequest(
-            name = "$fullPath-${UUID.randomUUID()}",
-            localProjectId = projectId,
-            replicaObjectType = ReplicaObjectType.PATH,
-            replicaTaskObjects = listOf(
-                ReplicaObjectInfo(
-                    localRepoName = repoName,
-                    remoteProjectId = projectId,
-                    remoteRepoName = repoName,
-                    repoType = RepositoryType.GENERIC,
-                    packageConstraints = null,
-                    pathConstraints = listOf(PathConstraint(fullPath))
-                )
-            ),
-            replicaType = taskType,
-            setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
-            remoteClusterIds = emptySet()
-        )
-        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
-        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
-            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
-            .build()
-        doRequest(request).resolveResponse<Response<Void>>()
-    }
-
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
+        rule: Rule,
+        page: Int,
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
+    ): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
-            sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
+            sort = if (!sortBy.isNullOrBlank() && direction != null) {
+                Sort(listOf(sortBy), direction)
+            } else {
+                Sort(listOf("fullPath"), Sort.Direction.ASC)
+            },
             select = mutableListOf(),
             rule = rule
         )

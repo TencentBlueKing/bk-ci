@@ -160,7 +160,7 @@ interface ApigwLogResourceV3 {
         @ApiParam("构建ID (b-开头)", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("起始行号", required = true)
+        @ApiParam("起始行号,请分阶段获取构建日志，是否有后续日志需关注返回的hasMore字段。", required = true)
         @QueryParam("start")
         start: Long,
         @ApiParam("是否包含调试日志", required = false)

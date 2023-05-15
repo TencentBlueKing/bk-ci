@@ -6,11 +6,11 @@ name: Backend Booster Check
 # events but only for the master branch
 on:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
     - 'src/backend/booster/**'
   pull_request:
-    branches: [ master, release-* ]
+    branches: [master, release-*]
     paths:
     - 'src/backend/booster/**'
 

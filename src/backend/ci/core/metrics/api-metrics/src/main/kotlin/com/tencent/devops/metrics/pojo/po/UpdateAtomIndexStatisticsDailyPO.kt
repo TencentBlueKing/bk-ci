@@ -25,19 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.lock
+package com.tencent.devops.metrics.pojo.po
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-class PipelineBuildHistoryLock(redisOperation: RedisOperation, pipelineId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "process:build:history:lock:$pipelineId",
-        expiredTimeInSeconds = 10L
-    ) {
-    override fun decorateKey(key: String): String {
-        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
-        return key
-    }
-}
+@ApiModel("更新插件指标每日统计数据")
+data class UpdateAtomIndexStatisticsDailyPO(
+    @ApiModelProperty("主键ID")
+    val id: Long,
+    @ApiModelProperty("失败执行次数")
+    var failExecuteCount: Int,
+    @ApiModelProperty("失败合规次数")
+    var failComplianceCount: Int,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("更新时间")
+    val updateTime: LocalDateTime
+)

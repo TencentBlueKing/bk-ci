@@ -7,7 +7,7 @@
         >
             <img class="tag-image" src="../images/honer-left.png">
             <span class="tag-txt">
-                <span class="tag-txt-main text-overflow" v-bk-overflow-tips="{ extCls: 'tippy-padding' }">{{ renderHoner.honorTitle }}</span>
+                <span class="tag-txt-main text-overflow" v-bk-tooltips="getHonorTips(renderHoner)">{{ renderHoner.honorTitle }}</span>
                 <img class="tag-txt-image" src="../images/honer-center.png">
             </span>
             <img class="tag-image" src="../images/honer-right.png">
@@ -51,6 +51,16 @@
                         acc += `<section class="honor-gaps"><span class="honor-title text-overflow" title=${cur.honorTitle}>${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
                         return acc
                     }, '')
+                }
+            }
+        },
+
+        methods: {
+            getHonorTips (honner) {
+                return {
+                    theme: 'light',
+                    allowHTML: true,
+                    content: `<section class="honor-gaps"><span class="honor-title text-overflow" title=${honner.honorTitle}>${honner.honorTitle}</span><span class="honor-name">${honner.honorName}</span></section>`
                 }
             }
         }
