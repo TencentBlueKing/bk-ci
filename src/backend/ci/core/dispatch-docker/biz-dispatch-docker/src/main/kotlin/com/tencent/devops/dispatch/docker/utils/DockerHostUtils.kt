@@ -85,7 +85,7 @@ class DockerHostUtils @Autowired constructor(
         unAvailableIpList: Set<String> = setOf(),
         clusterName: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
-        val grayEnv = isGray()
+        val grayEnv = bkTag.getFinalTag().contains("gray")
 
         // 获取负载配置
         val dockerHostLoadConfigTriple = getLoadConfig()
@@ -244,7 +244,7 @@ class DockerHostUtils @Autowired constructor(
     ): Pair<String, Int> {
         // 检测IP是否活跃以及负载情况
         if (!dockerIpInfo.enable ||
-            dockerIpInfo.grayEnv != isGray() ||
+            dockerIpInfo.grayEnv != (bkTag.getFinalTag().contains("gray")) ||
             overload(dockerIpInfo)) {
             return getAvailableDockerIpWithSpecialIps(
                 dispatchMessage.projectId,
@@ -470,9 +470,5 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair("", 0)
-    }
-
-    fun isGray(): Boolean {
-        return bkTag.getFinalTag().contains("gray")
     }
 }

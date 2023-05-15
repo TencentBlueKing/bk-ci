@@ -53,7 +53,7 @@ class BuildLessStartPrepareHandler @Autowired constructor(
     override fun handlerRequest(handlerContext: BuildLessStartHandlerContext) {
         with(handlerContext) {
             // 区分是否灰度环境
-            handlerContext.grayEnv = isGray()
+            handlerContext.grayEnv = bkTag.getFinalTag().contains("gray")
 
             // 设置日志打印关键字
             handlerContext.buildLogKey = "${event.pipelineId}|${event.buildId}|${event.vmSeqId}|$retryTime"
@@ -106,9 +106,5 @@ class BuildLessStartPrepareHandler @Autowired constructor(
                 errorMessage = "流水线JOB已经不再运行，构建停止"
             )
         }
-    }
-
-    fun isGray(): Boolean {
-        return bkTag.getFinalTag().contains("gray")
     }
 }
