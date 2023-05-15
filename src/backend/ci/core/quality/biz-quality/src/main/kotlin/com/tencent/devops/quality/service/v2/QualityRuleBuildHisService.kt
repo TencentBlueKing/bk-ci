@@ -39,7 +39,6 @@ import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -53,6 +52,7 @@ import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
 import com.tencent.devops.quality.constant.QualityMessageCode.CHANGE_QUALITY_GATE_VALUE
+import com.tencent.devops.quality.constant.QualityMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
@@ -345,7 +345,7 @@ class QualityRuleBuildHisService constructor(
                 if (it.gateKeepers!!.isEmpty() || !(it.gateKeepers!!.contains(userId))) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.FORBIDDEN.statusCode,
-                        errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                        errorCode = USER_NEED_PIPELINE_X_PERMISSION,
                         defaultMessage = "用户($userId)不在当前把关人名单中",
                         params = null
                     )

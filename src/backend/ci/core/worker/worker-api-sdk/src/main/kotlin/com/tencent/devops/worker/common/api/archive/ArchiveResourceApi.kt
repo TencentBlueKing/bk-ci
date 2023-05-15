@@ -29,9 +29,6 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_DOWNLOAD_LINK_REQUEST_ERROR
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_CUSTOM_FILE_FAILED
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
@@ -40,6 +37,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_DOWNLOAD_LINK_REQUEST_ERROR
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_FILE_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil

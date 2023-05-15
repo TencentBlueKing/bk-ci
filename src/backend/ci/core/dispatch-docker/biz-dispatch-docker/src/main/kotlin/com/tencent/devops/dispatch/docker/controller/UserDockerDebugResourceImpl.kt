@@ -35,14 +35,14 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.user.UserDockerDebugResource
-import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.pojo.DebugResponse
 import com.tencent.devops.dispatch.docker.pojo.DebugStartParam
 import com.tencent.devops.dispatch.docker.service.debug.DebugServiceEnum
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
+import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.stream.Collectors
 
 @RestResource
 class UserDockerDebugResourceImpl @Autowired constructor(
@@ -63,7 +63,7 @@ class UserDockerDebugResourceImpl @Autowired constructor(
                 buildId = debugStartParam.buildId,
                 vmSeqId = debugStartParam.vmSeqId
             ) ?: throw ErrorCodeException(
-                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(debugStartParam.pipelineId)
             )

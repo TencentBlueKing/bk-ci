@@ -100,7 +100,6 @@ object WorkerMessageCode {
     // ticket-证书凭据
     const val GET_CREDENTIAL_FAILED = "2130037" // 获取凭证失败
     const val CREDENTIAL_ID_NOT_EXIST = "2130038" // 凭证ID变量({0})不存在
-    // artifactory-版本仓库
     const val WAIT_BUILD_IMAGE_FINISH = "2130039" // 启动构建镜像成功，等待构建镜像结束，镜像名称：
     const val BUILD_IMAGE_FAIL_DETAIL = "2130040" // 构建镜像失败，错误详情：
     const val DOCKERFILE_FIRST_LINE_CHECK = "2130041" // Dockerfile第一行请确认使用 {0}
@@ -115,6 +114,18 @@ object WorkerMessageCode {
     const val ARCHIVE_FILE_LIMIT = "2130050" // 单次归档文件数太多，请打包后再归档！
     const val ARCHIVE_ATOM_FILE_FAIL = "2130051" // 归档插件文件失败
     const val START_BUILD_IMAGE_NAME = "2130052" // 启动构建镜像，镜像名称：
+    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2130053" // 获取下载链接请求出错
+    const val UPLOAD_CUSTOM_FILE_FAILED = "2130054" // 上传自定义文件失败
+    const val UPLOAD_PIPELINE_FILE_FAILED = "2130055" // 上传流水线文件失败
+    const val GET_BUILD_BASE_INFO_FAIL = "2130056" // 获取构建机基本信息失败
+    const val GET_CREDENTIAL_INFO_FAILED = "2130057" // 获取凭证信息失败
+    const val UPLOAD_FILE_FAILED = "2130058" // 上传文件失败
+    const val ARCHIVE_PLUGIN_FILE_FAILED = "2130059" // 归档插件文件失败
+    const val GET_PLUGIN_ENV_INFO_FAILED = "2130060" // 获取插件执行环境信息失败
+    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2130061" // 获取插件敏感信息失败
+    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2130062" // 更新插件执行环境信息失败
+    const val ADD_PLUGIN_PLATFORM_INFO_FAILED = "2130063" // 添加插件对接平台信息失败
+    const val GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED = "2130064" // 获取插件开发语言相关的环境变量信息失败
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！

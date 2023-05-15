@@ -37,10 +37,10 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.FAIL_TO_GET_SVN_DIRECTORY
 import com.tencent.devops.process.constant.ProcessMessageCode.GIT_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.NOT_SVN_CODE_BASE
+import com.tencent.devops.process.constant.ProcessMessageCode.REPOSITORY_ID_AND_NAME_ARE_EMPTY
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
-import com.tencent.devops.repository.constant.RepositoryMessageCode.REPOSITORY_ID_AND_NAME_ARE_EMPTY
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
 import com.tencent.devops.scm.pojo.enums.SvnFileType

@@ -71,6 +71,7 @@ object RepositoryMessageCode {
     const val GIT_NOT_FOUND = "2115022" // 代码库{0}不存在
     const val USER_CREATE_PEM_ERROR = "2115023" // 用户{0}在工程{1}下没有代码库创建权限
     const val REPOSITORY_ID_AND_NAME_ARE_EMPTY = "2115024" // 仓库ID和仓库名都为空
+    const val USER_NEED_PROJECT_X_PERMISSION = "2115025" // 用户（{0}）无（{1}）项目权限
 
     const val BK_REQUEST_FILE_SIZE_LIMIT = "bkRequestFileSizeLimit" // 请求文件不能超过1M
     const val OPERATION_ADD_CHECK_RUNS = "OperationAddCheckRuns" // 添加检测任务

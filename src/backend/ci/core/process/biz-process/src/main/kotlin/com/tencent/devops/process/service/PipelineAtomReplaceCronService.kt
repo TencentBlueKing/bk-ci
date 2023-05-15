@@ -48,6 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
@@ -60,11 +61,9 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
 import com.tencent.devops.store.pojo.atom.AtomReplaceParamConvertRequest
 import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
@@ -74,6 +73,8 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_NAMESPACE
 import com.tencent.devops.store.pojo.common.ATOM_OUTPUT
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
@@ -81,8 +82,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -661,7 +660,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             if (installFlag != true) {
                                 throw ErrorCodeException(
                                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                                    errorCode = ProcessMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
                                 )
                             }
                         }
@@ -730,7 +729,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             if (projectManagers == null || projectManagers.isEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL
+                    errorCode = ProcessMessageCode.QUERY_USER_INFO_FAIL
                 )
             }
             projectManager = projectManagers[0]
