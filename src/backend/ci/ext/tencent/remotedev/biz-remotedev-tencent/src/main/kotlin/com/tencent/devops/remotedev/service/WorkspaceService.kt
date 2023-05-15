@@ -205,6 +205,7 @@ class WorkspaceService @Autowired constructor(
             Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
+                displayName = null,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -950,6 +951,7 @@ class WorkspaceService @Autowired constructor(
                 Workspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
+                    displayName = it.displayName,
                     repositoryUrl = it.url,
                     branch = it.branch,
                     devFilePath = it.yamlPath,
