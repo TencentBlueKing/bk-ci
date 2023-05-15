@@ -73,7 +73,7 @@ object RbacAuthUtils {
         return resultMap
     }
 
-    fun addSuffixIfNeed(resourceName: String, suffix: Int = 0): String {
+    fun addSuffixIfNeed(resourceName: String, suffix: Int): String {
         return if (suffix == 0) resourceName else "$resourceName($suffix)"
     }
 }

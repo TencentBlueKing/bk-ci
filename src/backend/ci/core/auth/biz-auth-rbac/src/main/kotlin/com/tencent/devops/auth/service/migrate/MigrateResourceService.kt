@@ -259,6 +259,7 @@ class MigrateResourceService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType
         )
+        // todo 由于创建组是异步，统计的组数量有问题
         val groupCount = authResourceGroupDao.countByResourceType(
             dslContext = dslContext,
             projectCode = projectCode,
