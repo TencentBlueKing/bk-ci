@@ -27,27 +27,34 @@
 
 package com.tencent.devops.project.pojo.user
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
 /**
  * 用户机构信息
  *
  * since: 2018-12-09
  */
+@ApiModel("用户部门信息")
 data class UserDeptDetail(
-        // TODO 给别名会报错。不给别名成功
-//    @JsonProperty("bg_name")
+    @ApiModelProperty("bg名称")
     val bgName: String,
-//    @JsonProperty("bg_id")
+    @ApiModelProperty("bgID")
     val bgId: String,
-//    @JsonProperty("dept_name")
+    @ApiModelProperty("部门名称")
     val deptName: String,
-//    @JsonProperty("bg_id")
+    @ApiModelProperty("部门ID")
     val deptId: String,
-//    @JsonProperty("center_name")
+    @ApiModelProperty("中心名称")
     val centerName: String,
-//    @JsonProperty("center_id")
+    @ApiModelProperty("中心ID")
     val centerId: String,
-//    @JsonProperty("group_id")
+    @ApiModelProperty("组ID")
     val groupId: String,
-//    @JsonProperty("group_name")
-    val groupName: String
+    @ApiModelProperty("组名称")
+    val groupName: String,
+    @ApiModelProperty("用户ID")
+    val userId: String? = null,
+    @ApiModelProperty("用户名称")
+    val name: String? = null
 )

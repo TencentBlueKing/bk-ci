@@ -76,16 +76,25 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANC
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
+import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 object WebhookUtils {
 
     private val separatorPattern = Pattern.compile("[,;]")
     private const val MAX_VARIABLE_COUNT = 32
+    // p4自定义触发器插件版本号
+    const val CUSTOM_P4_TRIGGER_VERSION = 2
+
+    private val logger = LoggerFactory.getLogger(WebhookUtils::class.java)
 
     fun convert(commaSeparatedString: String?): List<String> {
         if (commaSeparatedString == null) {
@@ -278,5 +287,42 @@ object WebhookUtils {
             startParams[PIPELINE_GIT_MR_URL] = "$homepage/merge_requests/${pullRequest.number}"
         }
         return startParams
+    }
+
+    /**
+     * p4版本过滤器,2.0以后版本由用户自定义触发器,插件不再主动注册触发器
+     *
+     * 如果p4服务器已经配置过1.0版本的触发器,用户再增加一个2.0的触发器.因为2.0的插件上没有路径过滤，就会导致全部匹配，使2.0配置的流水线都触发
+     *
+     */
+    fun getP4Filter(
+        projectId: String,
+        pipelineId: String,
+        event: P4Event,
+        webHookParams: WebHookParams
+    ): WebhookFilter =
+        object : WebhookFilter {
+            override fun doFilter(response: WebhookFilterResponse): Boolean {
+                logger.info(
+                    "$pipelineId|triggerOn:${webHookParams.version}|" +
+                        "projectId:$projectId|eventProjectId:${event.projectId}|version filter"
+                )
+                return if (isCustomP4TriggerVersion(webHookParams.version)) {
+                    // 2.0以后,由用户配置的触发器触发
+                    // 2.0以后，触发的项目必须跟匹配的项目相同才能触发
+                    event.isCustomTrigger() && projectId == event.projectId
+                } else {
+                    // 1.0 由插件注册的触发器触发
+                    !event.isCustomTrigger()
+                }
+            }
+        }
+
+    fun getMajorVersion(version: String?): Int {
+        return version?.split(".")?.get(0)?.toInt() ?: 1
+    }
+
+    fun isCustomP4TriggerVersion(version: String?): Boolean {
+        return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
     }
 }

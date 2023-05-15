@@ -28,9 +28,11 @@
 package com.tencent.devops.metrics.service
 
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
+import com.tencent.devops.metrics.pojo.vo.QueryIntervalVO
 
 interface AtomStatisticsManageService {
 
@@ -51,4 +53,14 @@ interface AtomStatisticsManageService {
     fun queryAtomExecuteStatisticsInfo(
         queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
     ): ListPageVO<AtomExecutionStatisticsInfoDO>
+
+    /**
+     * 查询插件执行合规信息
+     * @return 插件合规信息
+     */
+    fun queryAtomComplianceInfo(
+        userId: String,
+        atomCode: String,
+        queryIntervalVO: QueryIntervalVO
+    ): ComplianceInfoDO?
 }

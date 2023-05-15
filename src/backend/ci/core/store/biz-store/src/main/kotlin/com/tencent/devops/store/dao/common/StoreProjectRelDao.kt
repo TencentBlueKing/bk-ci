@@ -442,12 +442,12 @@ class StoreProjectRelDao {
         dslContext: DSLContext,
         projectCode: String,
         storeType: StoreTypeEnum
-    ): Result<Record1<String>>? {
+    ): Result<Record2<String, Byte>>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_CODE.eq(projectCode))
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            return dslContext.select(STORE_CODE).from(this).where(conditions).groupBy(STORE_CODE).fetch()
+            return dslContext.select(STORE_CODE, TYPE).from(this).where(conditions).fetch()
         }
     }
 
@@ -490,20 +490,6 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
-        }
-    }
-
-    fun getInitProjectCodes(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        storeCodeList: List<String>
-    ): Result<Record2<String, String>> {
-        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
-            conditions.add(STORE_CODE.`in`(storeCodeList))
-            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this).where(conditions).fetch()
         }
     }
 }

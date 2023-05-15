@@ -22,62 +22,62 @@
             return {
                 sideMenuNav: {
                     icon: 'quality',
-                    title: '质量红线'
+                    title: this.$t('quality.quality')
                 },
                 sideMenuList: [
                     {
                         list: [
                             {
                                 id: 'qualityOverview',
-                                name: '总览',
+                                name: this.$t('quality.总览'),
                                 icon: 'devops-icon icon-overview',
                                 showChildren: false
                             },
                             {
                                 id: 'ruleList',
-                                name: '红线规则',
+                                name: this.$t('quality.红线规则'),
                                 icon: 'devops-icon icon-rule',
                                 showChildren: false,
                                 children: [
                                     {
                                         id: 'createRule',
-                                        name: '创建红线规则',
+                                        name: this.$t('quality.创建红线规则'),
                                         icon: 'devops-icon icon-rule'
                                     },
                                     {
                                         id: 'editRule',
-                                        name: '编辑规则',
+                                        name: this.$t('quality.编辑规则'),
                                         icon: 'devops-icon icon-rule'
                                     }
                                 ]
                             },
                             {
                                 id: 'interceptHistory',
-                                name: '红线记录',
+                                name: this.$t('quality.红线记录'),
                                 icon: 'devops-icon icon-intercept-history',
                                 showChildren: false
                             },
                             {
                                 id: 'metadataList',
-                                name: '指标列表',
+                                name: this.$t('quality.指标列表'),
                                 icon: 'devops-icon icon-rule',
                                 showChildren: false,
                                 children: [
                                     {
                                         id: 'createMeta',
-                                        name: '创建脚本任务指标',
+                                        name: this.$t('quality.创建脚本任务指标'),
                                         icon: 'devops-icon icon-rule'
                                     },
                                     {
                                         id: 'editMeta',
-                                        name: '编辑脚本任务指标',
+                                        name: this.$t('quality.编辑脚本任务指标'),
                                         icon: 'devops-icon icon-rule'
                                     }
                                 ]
                             },
                             {
                                 id: 'noticeGroup',
-                                name: '通知组',
+                                name: this.$t('quality.通知组'),
                                 icon: 'devops-icon icon-notification',
                                 showChildren: false
                             }

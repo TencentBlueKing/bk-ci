@@ -333,7 +333,8 @@ class ScmService @Autowired constructor(
                     targetUrl = targetUrl,
                     context = context,
                     description = description,
-                    block = block
+                    block = block,
+                    targetBranch = targetBranch
                 )
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return

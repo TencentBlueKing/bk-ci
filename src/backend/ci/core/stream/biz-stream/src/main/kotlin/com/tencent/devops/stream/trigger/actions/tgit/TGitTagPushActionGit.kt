@@ -166,7 +166,7 @@ class TGitTagPushActionGit(
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn,
             GitActionCommon.getTriggerBranch(event.ref),
-            data.getUserId(),
+            data.eventCommon.userId,
             event.create_from
         )
         return TriggerResult(

@@ -32,8 +32,10 @@ import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("查询错误码信息传输对象")
+@ApiModel("查询插件错误码信息传输对象")
 data class QueryErrorCodeInfoDTO(
+    @ApiModelProperty("插件代码")
+    val atomCode: String,
     @ApiModelProperty("错误类型")
     val errorTypes: List<Int>?,
     @ApiModelProperty("搜索关键字")

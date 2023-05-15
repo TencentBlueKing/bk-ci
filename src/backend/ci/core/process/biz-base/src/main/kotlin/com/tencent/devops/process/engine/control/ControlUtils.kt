@@ -407,5 +407,5 @@ object ControlUtils {
     }
 
     fun checkContainerFailure(c: PipelineBuildContainer) =
-        c.status.isFailure() && c.controlOption?.jobControlOption?.continueWhenFailed != true
+        c.status.isFailure() && c.controlOption.jobControlOption.continueWhenFailed != true
 }

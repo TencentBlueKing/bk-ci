@@ -14,8 +14,8 @@
         <logger name="com.tencent" level="DEBUG" />
     </springProfile>
 
-    <!-- 本地环境 或者 kubernetes环境 -->
-    <springProfile name="local | kubernetes">
+    <!-- 本地环境 -->
+    <springProfile name="local">
         <root level="INFO">
             <appender-ref ref="console"/>
         </root>
@@ -23,10 +23,17 @@
     </springProfile>
 
     <!-- 其他环境 -->
-    <springProfile name="!test &amp; !dev &amp; !local &amp; !kubernetes">
+    <springProfile name="!test &amp; !dev &amp; !local">
         <root level="INFO">
             <appender-ref ref="app-log"/>
             <appender-ref ref="error-log"/>
+        </root>
+    </springProfile>
+
+    <!-- kubernetes环境 -->
+    <springProfile name="kubernetes">
+        <root level="INFO">
+            <appender-ref ref="console"/>
         </root>
     </springProfile>
 </configuration>

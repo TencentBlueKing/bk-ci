@@ -39,4 +39,9 @@ interface ErrorCodeInfoManageService {
      * @return 错误码信息列表视图
      */
     fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
+
+    /**
+     * 同步插件错误信息关联数据
+     */
+    fun syncAtomErrorCodeRel(userId: String): Boolean
 }

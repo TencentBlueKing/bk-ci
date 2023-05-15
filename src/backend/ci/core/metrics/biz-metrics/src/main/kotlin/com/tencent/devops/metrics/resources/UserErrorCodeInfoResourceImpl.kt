@@ -42,15 +42,20 @@ class UserErrorCodeInfoResourceImpl constructor(
     override fun getErrorCodeInfo(
         projectId: String,
         userId: String,
-        errorTypes: List<Int>?,
+        atomCode: String,
+        errorTypes: String?,
         page: Int,
         pageSize: Int,
         keyword: String?
     ): Result<Page<ErrorCodeInfoDO>> {
+        val errorTypeList = errorTypes?.split(",")?.map {
+            it.toInt()
+        }
         return Result(
             errorCodeInfoManageService.getErrorCodeInfo(
                 QueryErrorCodeInfoDTO(
-                    errorTypes = errorTypes,
+                    atomCode = atomCode,
+                    errorTypes = errorTypeList,
                     keyword = keyword,
                     page = page,
                     pageSize = pageSize

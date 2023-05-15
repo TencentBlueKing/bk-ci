@@ -65,5 +65,7 @@ data class CommitCheckRequest(
     @ApiParam("mr对应的requestId", required = true)
     val mrRequestId: Long?,
     @ApiParam("报表数据", required = true)
-    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>
+    val reportData: Pair<List<String>, MutableMap<String, MutableList<List<String>>>>,
+    @ApiParam("检查结果关联的MR", required = true)
+    val targetBranch: List<String>? = null
 )
