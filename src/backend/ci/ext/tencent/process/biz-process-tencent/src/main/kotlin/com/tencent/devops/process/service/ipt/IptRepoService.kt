@@ -28,7 +28,6 @@
 package com.tencent.devops.process.service.ipt
 
 import com.tencent.devops.artifactory.api.service.ServiceIptResource
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -38,6 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.repository.api.ServiceGitCommitResource
 import org.slf4j.LoggerFactory

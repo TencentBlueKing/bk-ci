@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.constant
+package com.tencent.devops.statistics.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -37,7 +37,7 @@ package com.tencent.devops.dispatch.docker.constant
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-支撑服务
  *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
  *    25：prebuild-预建 26: dispatcher-kubernetes 27：buildless 28: lambda 29: stream  30: worker 31: dispatcher-docker
- *    32: remotedev）
+ *    32: remotedev 33: statistics）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）remotedev
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -45,8 +45,14 @@ package com.tencent.devops.dispatch.docker.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-
-object DispatchDockerMessageCode {
-    const val BK_NO_CONTAINER_IS_READY_DEBUG = "2131015" // pipeline({0})没有可用的容器进行登录调试
-    const val BK_LOAD_TOO_HIGH = "2131016" // pipeline({0})当前调试容器负载过高，请稍等并重试。
+object StatisticsMessageCode {
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2133001" // OpenAPI：API Gateway公钥文件未设置
+    const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2133002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR = "2133003" // OpenAPI：API Gateway公钥文件读取错误，路径：{0}
+    const val ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY = "2133004" // OpenAPI：API Gateway公钥文件内容为空，路径：{0}
+    const val ERROR_OPENAPI_JWT_PARSE_FAIL = "2133005" // OpenAPI：JWT解析失败
+    const val USER_NEED_PIPELINE_X_PERMISSION = "2133006" // 流水线: 用户无{0}权限
+    const val ERROR_TEMPLATE_NOT_EXISTS = "2133007" // 模板不存在
+    const val ORG_NOT_PROJECT = "2133008" // {0}该组织下无项目
+    const val ORG_TYPE_ERROR = "2133009" // 组织类型有误
 }
