@@ -86,6 +86,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Set<String>>()
 
+    private val userInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, UserAndDeptInfoVo>()
+
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
@@ -251,14 +256,17 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
-        val userInfo = getUserAndDeptByName(
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+    }
+
+    private fun getUserAndPutInCache(userId: String, name: String): UserAndDeptInfoVo? {
+        return getUserAndDeptByName(
             name = name,
             accessToken = null,
             userId = userId,
             type = ManagerScopesEnum.USER,
             exactLookups = true
-        )
-        return if (userInfo.isNotEmpty()) userInfo[0] else null
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
     }
 
     private fun getUserDeptFamily(userId: String): String {

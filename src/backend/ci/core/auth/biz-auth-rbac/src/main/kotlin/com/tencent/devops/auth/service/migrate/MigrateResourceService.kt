@@ -38,6 +38,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
@@ -73,7 +74,8 @@ class MigrateResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authMigrationDao: AuthMigrationDao,
-    private val deptService: DeptService
+    private val deptService: DeptService,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     @Suppress("SpreadOperator")
@@ -259,15 +261,14 @@ class MigrateResourceService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType
         )
-        val groupCount = authResourceGroupDao.countByResourceType(
+        val groupConfigCount = authResourceGroupConfigDao.countByResourceType(
             dslContext = dslContext,
-            projectCode = projectCode,
             resourceType = resourceType
         )
         return ResourceMigrationCountDTO(
             resourceType = resourceType,
             count = count,
-            groupCount = groupCount
+            groupCount = count * groupConfigCount
         )
     }
 

@@ -118,4 +118,5 @@ object AuthMessageCode {
     const val MIGRATION_GROUP_DESCRIPTION = "2121625" // 用户组:{0},迁移于{1}
     const val ERROR_MIGRATE_AUTH_COMPARE_FAIL = "2121626" // 迁移项目{0}失败,权限策略对比失败
     const val ERROR_CREATOR_NOT_EXIST = "2121627" // 创建人已离职
+    const val ERROR_PROJECT_IN_MIGRATION = "2121628" // 项目迁移中
 }

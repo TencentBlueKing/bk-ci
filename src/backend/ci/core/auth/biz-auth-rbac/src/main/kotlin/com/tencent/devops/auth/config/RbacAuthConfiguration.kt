@@ -290,7 +290,8 @@ class RbacAuthConfiguration {
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
         authMigrationDao: AuthMigrationDao,
-        deptService: DeptService
+        deptService: DeptService,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
@@ -302,7 +303,8 @@ class RbacAuthConfiguration {
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
         authMigrationDao = authMigrationDao,
-        deptService = deptService
+        deptService = deptService,
+        authResourceGroupConfigDao = authResourceGroupConfigDao
     )
 
     @Bean

@@ -96,7 +96,6 @@ class MigrateResultService constructor(
                                 if (pipelineInfo.channelCode != ChannelCode.BS)
                                     return@forEach
                             }
-                            // 如果是流水线类型，并且流水线的channelCode不是BS的，直接忽略
                             logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
                             throw ErrorCodeException(
                                 errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
