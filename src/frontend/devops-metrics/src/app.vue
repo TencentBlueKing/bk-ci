@@ -19,6 +19,9 @@ const calcRem = () => {
 onMounted(() => {
   calcRem();
   window.addEventListener('resize', calcRem, false);
+  window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
+    console.log(data, 123123)
+  })
 });
 
 onUnmounted(() => {
