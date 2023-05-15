@@ -30,12 +30,15 @@ package com.tencent.devops.common.client.ms
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
+import com.tencent.devops.common.api.constant.CommonMessageCode.SERVICE_PROVIDER_NOT_FOUND
 import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.BkTag
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.KubernetesUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import feign.Request
 import feign.RequestTemplate
 import java.util.concurrent.TimeUnit
@@ -84,7 +87,13 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (instances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的$serviceName【$discoveryTag】服务提供者")
+            throw ClientException(
+                errorInfo.message ?: MessageUtil.getMessageByLocale(
+                    messageCode = SERVICE_PROVIDER_NOT_FOUND,
+                    language = SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage,
+                    params = arrayOf(serviceName, discoveryTag)
+                )
+            )
         }
         return instances[RandomUtils.nextInt(0, instances.size)]
     }
