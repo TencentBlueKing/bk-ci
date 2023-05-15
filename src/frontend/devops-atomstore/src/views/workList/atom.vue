@@ -619,6 +619,9 @@
                         message = this.$t('store.新增成功')
                         theme = 'success'
 
+                        this.routerAtoms(this.createAtomForm.atomCode)
+                        this.requestList()
+
                         this.createAtomForm = {
                             projectCode: '',
                             atomCode: '',
@@ -629,8 +632,6 @@
                         setTimeout(() => {
                             this.createAtomsideConfig.show = false
                         })
-                        this.routerAtoms(this.createAtomForm.atomCode)
-                        this.requestList()
                     } catch (err) {
                         message = err.message ? err.message : err
                         theme = 'error'

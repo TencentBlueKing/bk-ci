@@ -350,6 +350,10 @@
             .name-desc {
                 line-height: 22px;
                 display: inline-block;
+                width: 100%;
+            }
+            .plan-name {
+                display: inline-block;
             }
             .name-hash {
                 font-size: 12px;

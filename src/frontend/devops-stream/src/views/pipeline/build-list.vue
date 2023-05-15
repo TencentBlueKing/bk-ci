@@ -125,14 +125,14 @@
                     <template slot-scope="props">
                         <section class="commit-message">
                             <i :class="getIconClass(props.row.buildHistory.status)"></i>
-                            <p>
+                            <p class="content">
                                 <span class="message">{{ props.row.gitRequestEvent.buildTitle }}</span>
                                 <span class="info">{{ props.row.displayName }} #{{ props.row.buildHistory.buildNum }}：{{ props.row.reason }}</span>
                             </p>
                         </section>
                     </template>
                 </bk-table-column>
-                <bk-table-column :label="$t('pipeline.branch')" width="200">
+                <bk-table-column :label="$t('pipeline.branch')" width="200" show-overflow-tooltip>
                     <template slot-scope="props">
                         <span>{{ props.row.gitRequestEvent.branch }}</span>
                     </template>
@@ -471,7 +471,7 @@
             },
 
             getIconClass (status) {
-                return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status)]
+                return [getPipelineStatusClass(status), ...getPipelineStatusCircleIconCls(status), 'statuc-icon']
             },
 
             handleStatusChange (val, id) {
@@ -1008,6 +1008,9 @@
                 &.pause {
                     color: #ff9801;
                 }
+            }
+            .content {
+                flex: 1;
             }
             .message {
                 display: block;

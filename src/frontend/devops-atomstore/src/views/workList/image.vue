@@ -112,7 +112,7 @@
                         <bk-input
                             v-model="relateImageData.form.imageName" :placeholder="$t('store.请输入镜像名称，不超过20个字符')" style="width: 96%;" @change="handleChangeForm"></bk-input>
                         <bk-popover placement="right" class="is-tooltips">
-                            <i class="devops-icon icon-info-circle"></i>
+                            <i class="devops-icon icon-info-circle info-icon"></i>
                             <template slot="content">
                                 <p> {{ $t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符') }} </p>
                             </template>
@@ -520,6 +520,8 @@
         position: relative;
         .is-tooltips {
             position: absolute;
+            right: -5px;
+            top: 3px;
         }
     }
     .h32 {
