@@ -47,9 +47,9 @@ package com.tencent.devops.common.dispatch.sdk
  */
 object DispatchSdkErrorCode {
     const val SUCESSS = 0 // 成功
-    const val SDK_SYSTEM_ERROR = 2103001 // SDK系统错误
-    const val PIPELINE_STATUS_ERROR = 2103002 // 无法获取流水线状态
-    const val PIPELINE_NOT_RUNNING = 2103003 // 流水线已经不再运行
-    const val RETRY_STARTUP_FAIL = 2103004 // Fail to start up the job after $retryTimes times
-    const val JOB_QUOTA_EXCESS = 2103005 // JOB配额超限
+    const val SDK_SYSTEM_ERROR = 2100103 // SDK系统错误
+    const val PIPELINE_STATUS_ERROR = 2100104 // 无法获取流水线状态
+    const val PIPELINE_NOT_RUNNING = 2100105 // 流水线已经不再运行
+    const val RETRY_STARTUP_FAIL = 2100106 // Fail to start up the job after $retryTimes times
+    const val JOB_QUOTA_EXCESS = 2100107 // JOB配额超限
 }

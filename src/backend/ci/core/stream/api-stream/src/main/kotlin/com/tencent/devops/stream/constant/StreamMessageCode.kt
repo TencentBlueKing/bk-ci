@@ -73,8 +73,17 @@ object StreamMessageCode {
     const val USER_NOT_PERMISSION_FOR_WORKER_BEE = "2129048" // 用户没有工蜂项目权限，无法获取下载链接
     const val INCORRECT_ID_BLUE_SHIELD_PROJECT = "2129049" // 蓝盾项目ID不正确
     const val BRANCH_INFO_ACCESS_DENIED = "2129050" // 无权限获取分支信息
+    const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "2129051" // 变量名称必须是英文字母、数字或下划线(_)
+    const val ERROR_DEL_PIPELINE_TIMER = "2129052" // 流水线{0}的定时触发器删除失败
+    const val ERROR_SAVE_PIPELINE_TIMER = "2129053" // 流水线的定时触发器保存失败
+    const val ILLEGAL_TIMER_CRONTAB = "2129054" // 定时触发器的定时参数[{0}]不合法
+    const val ILLEGAL_TIMER_INTERVAL_CRONTAB = "2129055" // 定时触发器的定时参数[{0}]不能秒级触发
+    const val PROJECT_NOT_EXIST = "2129056" // 项目不存在
 
     const val BK_FAILED_VERIFY_AUTHORITY = "bkFailedVerifyAuthority" // 授权人权限校验失败
     const val BK_STREAM_MESSAGE_NOTIFICATION = "bkStreamMessageNotification" // @Stream消息通知
     const val BK_PULL_CODE = "bkPullCode" // 拉代码
+    const val BK_WORKER_BEE_PROJECT_NOT_EXIST = "bkWorkerBeeProjectNotExist" // 工蜂项目信息不存在，请检查链接
+    // 工蜂项目未开启Stream，请前往仓库的CI/CD进行配置
+    const val BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED = "bkWorkerBeeProjectNotStreamEnabled"
 }

@@ -155,6 +155,8 @@ object CommonMessageCode {
     const val ENGINEERING_REPO_NOT_EXIST = "2100100" // 工程仓库不存在
     const val ENGINEERING_REPO_CALL_ERROR = "2100101" // 工程仓库访问异常
     const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100102" // 非项目成员且项目为非开源项目
+    // 2100108
+    const val USER_NO_PIPELINE_PERMISSION = "2100108" // 流水线: 用户无{0}权限
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息

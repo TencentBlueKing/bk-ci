@@ -41,9 +41,9 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_DEL_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode.ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.stream.constant.StreamMessageCode.TIMER_PARAM_TOO_LONG
 import com.tencent.devops.stream.dao.StreamTimerDao
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
@@ -112,20 +112,20 @@ class StreamTimerService @Autowired constructor(
         val newCrontabExpressions = mutableSetOf<String>()
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
+                errorCode = StreamMessageCode.ILLEGAL_TIMER_CRONTAB
             )
         }
         crontabExpressions.forEach { crontabExpression ->
             val newConvertExpression = convertExpression(crontabExpression)
             if (!CronExpression.isValidExpression(newConvertExpression)) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                    errorCode = StreamMessageCode.ILLEGAL_TIMER_CRONTAB,
                     params = arrayOf(crontabExpression)
                 )
             }
             if (!CronExpressionUtils.isValidTimeInterval(newConvertExpression)) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
+                    errorCode = StreamMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
                     params = arrayOf(crontabExpression)
                 )
             }

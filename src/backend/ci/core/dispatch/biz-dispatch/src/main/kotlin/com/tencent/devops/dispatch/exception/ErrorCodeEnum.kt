@@ -57,41 +57,53 @@ enum class ErrorCodeEnum(
     val errorCode: Int,
     val formatErrorMessage: String
 ) {
-    SYSTEM_ERROR(ErrorType.SYSTEM, 2103006, "Dispatcher系统错误"),
-    START_VM_FAIL(ErrorType.SYSTEM, 2103007, "Fail to start up after 3 retries"),
-    VM_STATUS_ERROR(ErrorType.USER, 2103008, "第三方构建机状态异常/Bad build agent status"),
-    GET_BUILD_AGENT_ERROR(ErrorType.SYSTEM, 2103009, "获取第三方构建机失败/Fail to get build agent"),
-    FOUND_AGENT_ERROR(ErrorType.SYSTEM, 2103010, "获取第三方构建机失败/Can not found agent by type"),
-    LOAD_BUILD_AGENT_FAIL(ErrorType.USER, 2103011, "获取第三方构建机失败/Load build agent fail"),
-    VM_NODE_NULL(ErrorType.USER, 2103012, "第三方构建机环境的节点为空"),
-    GET_VM_ENV_ERROR(ErrorType.USER, 2103013, "获取第三方构建机环境失败"),
-    GET_VM_ERROR(ErrorType.USER, 2103014, "获取第三方构建机失败"),
-    JOB_QUOTA_EXCESS(ErrorType.USER, 2103015, "JOB配额超限"),
+    SYSTEM_ERROR(ErrorType.SYSTEM, 2103001, "Dispatcher系统错误"),
+    START_VM_FAIL(ErrorType.SYSTEM, 2103002, "Fail to start up after 3 retries"),
+    VM_STATUS_ERROR(ErrorType.USER, 2103003, "第三方构建机状态异常/Bad build agent status"),
+    GET_BUILD_AGENT_ERROR(
+        ErrorType.SYSTEM,
+        2103004,
+        "获取第三方构建机失败/Fail to get build agent"
+    ),
+    FOUND_AGENT_ERROR(
+        ErrorType.SYSTEM,
+        2103005,
+        "获取第三方构建机失败/Can not found agent by type"
+    ),
+    LOAD_BUILD_AGENT_FAIL(ErrorType.USER, 2103006, "获取第三方构建机失败/Load build agent fail"),
+    VM_NODE_NULL(ErrorType.USER, 2103007, "第三方构建机环境的节点为空"),
+    GET_VM_ENV_ERROR(ErrorType.USER, 2103008, "获取第三方构建机环境失败"),
+    GET_VM_ERROR(ErrorType.USER, 2103009, "获取第三方构建机失败"),
+    JOB_QUOTA_EXCESS(ErrorType.USER, 2103010, "JOB配额超限"),
     CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT(
         ErrorType.SYSTEM,
-        2103016,
+        2103011,
         "第三方构建机Agent正在升级中或排队重试超时，请检查agent（{0}）并发任务数设置并稍后重试."
         ),
     THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR(
         ErrorType.USER,
-        2103017,
+        2103012,
         "第三方构建机状态异常，请在环境管理中检查第三方构建机状态"
     ),
-    BUILD_MACHINE_UPGRADE_IN_PROGRESS(ErrorType.SYSTEM,2103018, "构建机升级中，重新调度"),
-    BUILD_MACHINE_BUSY(ErrorType.SYSTEM, 2103019, "构建机正忙,重新调度"),
-    BUILD_ENV_PREPARATION(ErrorType.SYSTEM, 2103020, "构建环境准备中..."),
+    BUILD_MACHINE_UPGRADE_IN_PROGRESS(ErrorType.SYSTEM,2103013, "构建机升级中，重新调度"),
+    BUILD_MACHINE_BUSY(ErrorType.SYSTEM, 2103014, "构建机正忙,重新调度"),
+    BUILD_ENV_PREPARATION(ErrorType.SYSTEM, 2103015, "构建环境准备中..."),
     JOB_NUM_REACHED_MAX_QUOTA(
         ErrorType.USER,
-        2103021,
+        2103016,
         "当前项目下正在执行的【{0}】JOB数量已经达到配额最大值，正在执行JOB数量：{1}, 配额: {2}"
     ),
     JOB_NUM_EXCEED_ALARM_THRESHOLD(
         ErrorType.USER,
-        2103022,
+        2103017,
         "当前项目下正在执行的【{0}】JOB数量已经超过告警阈值，正在执行JOB数量：{1}，配额：{2}，" +
                 "告警阈值：{3}%，当前已经使用：{4}%"
     ),
-    BUILD_NODE_IS_EMPTY(ErrorType.USER, 2103023,  "构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群：");
+    BUILD_NODE_IS_EMPTY(
+        ErrorType.USER,
+        2103018,
+        "构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群："
+    );
 
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {

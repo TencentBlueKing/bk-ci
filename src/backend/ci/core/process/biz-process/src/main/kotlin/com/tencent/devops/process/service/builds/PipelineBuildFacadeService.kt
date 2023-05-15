@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.constant.BK_BUILD_AGENT_DETAIL_LINK_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -2182,7 +2183,7 @@ class PipelineBuildFacadeService(
         if (!nodeHashId.isNullOrBlank()) {
             msg = "${
                 I18nUtil.getCodeLanMessage(
-                    messageCode = ProcessMessageCode.BUILD_AGENT_DETAIL_LINK_ERROR,
+                    messageCode = BK_BUILD_AGENT_DETAIL_LINK_ERROR,
                     params = arrayOf(projectCode, nodeHashId)
                 )
             } $msg"

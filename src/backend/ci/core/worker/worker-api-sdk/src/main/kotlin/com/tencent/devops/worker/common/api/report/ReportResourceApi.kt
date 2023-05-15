@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -41,6 +40,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.CREATE_REPORT_FAIL
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_REPORT_ROOT_PATH_FAILURE
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_REPORT_FAILURE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -91,7 +91,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException(
                     MessageUtil.getMessageByLocale(
-                        ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
+                        UPLOAD_PIPELINE_FILE_FAILED,
                         AgentEnv.getLocaleLanguage()
                     )
                 )

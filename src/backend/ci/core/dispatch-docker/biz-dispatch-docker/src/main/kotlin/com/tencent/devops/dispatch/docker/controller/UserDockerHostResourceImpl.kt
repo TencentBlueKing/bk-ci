@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -40,7 +41,7 @@ import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
-import com.tencent.devops.dispatch.docker.constant.DispatchDockerMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
@@ -51,7 +52,6 @@ import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.process.constant.ProcessMessageCode
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -150,7 +150,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(debugStartParam.pipelineId)
             )
@@ -268,7 +268,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                errorCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
                 defaultMessage = message,
                 params = arrayOf(permissionMsg)
             )
