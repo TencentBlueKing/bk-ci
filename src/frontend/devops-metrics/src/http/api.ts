@@ -32,8 +32,8 @@ export default {
   getErrorTypeList(params) {
     return fetch.get(`${METRICS_API}/project/info/pipeline/errorType/list`, params);
   },
-  getErrorCodeList(params) {
-    return fetch.get(`${METRICS_API}/errorCode/infos/list`, params);
+  getErrorCodeList(params, atomCode) {
+    return fetch.get(`${METRICS_API}/errorCode/infos/${atomCode}/list`, params);
   },
   getErrorTypeSummaryData(params) {
     return fetch.post(`${METRICS_API}/pipeline/fail/infos/errorType/summary/data/get`, params);

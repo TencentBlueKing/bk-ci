@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.misc.dao.process.ProcessDao
 import com.tencent.devops.misc.dao.process.ProcessDataClearDao
 import com.tencent.devops.misc.lock.PipelineVersionLock
@@ -113,7 +114,9 @@ class ProcessDataClearService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId
             )
-            processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, buildId)
+            JooqUtils.retryWhenDeadLock {
+                processDataClearDao.deletePipelineBuildTemplateAcrossInfo(context, projectId, pipelineId, buildId)
+            }
             processDataClearDao.deleteBuildWebhookParameter(context, projectId, buildId)
             processDataClearDao.deleteBuildCommits(context, projectId, buildId)
             processDataClearDao.deleteBuildRecordPipelineByBuildId(context, projectId, buildId)

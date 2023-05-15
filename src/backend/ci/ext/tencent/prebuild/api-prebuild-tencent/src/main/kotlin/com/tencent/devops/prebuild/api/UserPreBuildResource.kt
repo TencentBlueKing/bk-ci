@@ -91,7 +91,10 @@ interface UserPreBuildResource {
         ip: String,
         @ApiParam("hostName", required = true)
         @PathParam("hostName")
-        hostName: String
+        hostName: String,
+        @ApiParam("指定生成node的别名", required = false)
+        @QueryParam("nodeStingId")
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
 
     @ApiOperation("获取agent状态")

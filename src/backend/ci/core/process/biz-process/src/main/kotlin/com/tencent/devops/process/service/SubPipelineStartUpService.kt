@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -63,7 +62,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -88,12 +86,6 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
     @Autowired
     lateinit var pipelineRuntimeService: PipelineRuntimeService
-
-    @Autowired
-    lateinit var pipelineBuildTaskDao: PipelineBuildTaskDao
-
-    @Autowired
-    lateinit var dslContext: DSLContext
 
     @Autowired
     lateinit var subPipelineStatusService: SubPipelineStatusService
@@ -183,8 +175,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
             parameters = startParams,
             triggerUser = triggerUser
         )
-        pipelineBuildTaskDao.updateSubBuildId(
-            dslContext = dslContext,
+        pipelineTaskService.updateSubBuildId(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
@@ -259,7 +250,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = false
-            )
+            ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
@@ -450,7 +441,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
     }
 
     fun getSubVar(projectId: String, buildId: String, taskId: String): Result<Map<String, String>> {
-        val task = pipelineBuildTaskDao.get(dslContext, projectId = projectId, buildId = buildId, taskId = taskId)
+        val task = pipelineTaskService.getByTaskId(projectId = projectId, buildId = buildId, taskId = taskId)
             ?: return Result(emptyMap())
 
         logger.info("getSubVar sub build :${task.subBuildId}|${task.subProjectId}")

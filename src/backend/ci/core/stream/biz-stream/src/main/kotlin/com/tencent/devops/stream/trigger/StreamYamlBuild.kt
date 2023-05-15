@@ -438,6 +438,7 @@ class StreamYamlBuild @Autowired constructor(
         val modelCreateEvent = ModelCreateEvent(
             userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
+            elementInstallUserId = action.data.setting.enableUser,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
                 repositoryUrl = streamGitProjectInfo.gitHttpUrl,
@@ -452,7 +453,8 @@ class StreamYamlBuild @Autowired constructor(
                 objectKind = action.metaData.streamObjectKind
             ),
             changeSet = action.getChangeSet(),
-            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action)
+            jobTemplateAcrossInfo = getJobTemplateAcrossInfo(yamlTransferData, action),
+            checkIfModify = action.checkIfModify()
         )
 
         return Pair(modelCreateEvent, modelParams)
@@ -487,7 +489,7 @@ class StreamYamlBuild @Autowired constructor(
                     templateId = yamlTransferData.templateData.templateId,
                     templateType = TemplateAcrossInfoType.JOB,
                     // 因为已经将jobId转为了map所以这里不保存，节省空间
-                    templateInstancesIds = emptyList(),
+                    templateInstancesIds = mutableListOf(),
                     targetProjectId = remoteProjectIdMap[objectData.remoteProjectId]!!
                 )
             }

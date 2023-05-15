@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `DOCKERFILE` longtext NOT NULL COMMENT '依赖镜像的DockerFile内容',
     `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
     `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',
+    `WORKSPACE_FOLDER` varchar(256) NOT NULL DEFAULT '' COMMENT '指定用户在连接到容器时应打开的默认路径',
     `HOST_NAME` varchar(64) NOT NULL DEFAULT '' COMMENT '工作空间对应的IP',
     `CPU` int(11) NOT NULL DEFAULT 16 COMMENT 'CPU',
     `MEMORY` int(11) NOT NULL DEFAULT 32768 COMMENT '内存',
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     `LAST_STATUS_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '状态最近修改时间',
+	`PRECI_AGENT_ID` varchar(32) NULL COMMENT 'preci go-agent id',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
@@ -106,6 +108,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
     `WORKSPACE_MAX_HAVING_COUNT` int(11) NULL COMMENT '最大创建个数(每人拥有的运行中+已休眠的开发环境)',
     `IN_GRAY` boolean NOT NULL DEFAULT 0 COMMENT '是否灰度',
     `PROJECT_ID` varchar(64) NULL COMMENT '个人对应的项目id',
+    `USER_SETTING` mediumtext NOT NULL COMMENT '用户设置，统一维护一个json字符串',
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`USER_ID`)
@@ -170,5 +173,16 @@ CREATE TABLE IF NOT EXISTS `T_SSH_PUBLIC_KEYS` (
     PRIMARY KEY (`ID`),
     KEY `idx_user` (`USER`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '用户SSH公钥存储';
+
+-- ----------------------------
+-- Table structure for T_REMOTE_DEV_IMAGE_SPEC_CONFIG 镜像配置表
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_IMAGE_SPEC_CONFIG`  (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `IDE_REF` varchar(255) NOT NULL COMMENT '包含ide进程的镜像层',
+  `REMOTING_REF` varchar(255) NOT NULL COMMENT '包含remoting进程的镜像层',
+  `IDE_LAYER_REF` json NULL COMMENT '包含除去ide进程和remoting进程的其他相关进程层',
+  PRIMARY KEY (`ID`)
+);
 
 SET FOREIGN_KEY_CHECKS = 1;

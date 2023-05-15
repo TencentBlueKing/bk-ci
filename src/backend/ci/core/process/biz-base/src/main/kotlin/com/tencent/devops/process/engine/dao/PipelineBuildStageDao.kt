@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
-import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_STAGE
 import com.tencent.devops.model.process.tables.records.TPipelineBuildStageRecord
 import com.tencent.devops.process.engine.common.Timeout
@@ -40,6 +40,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.RecordMapper
+import org.jooq.util.mysql.MySQLDSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -48,10 +49,7 @@ import java.time.LocalDateTime
 @Repository
 class PipelineBuildStageDao {
 
-    fun create(
-        dslContext: DSLContext,
-        buildStage: PipelineBuildStage
-    ) {
+    fun create(dslContext: DSLContext, buildStage: PipelineBuildStage) {
 
         val count = with(T_PIPELINE_BUILD_STAGE) {
             dslContext.insertInto(
@@ -92,29 +90,46 @@ class PipelineBuildStageDao {
 
     fun batchSave(dslContext: DSLContext, stageList: Collection<PipelineBuildStage>) {
         with(T_PIPELINE_BUILD_STAGE) {
-            stageList.forEach {
-                dslContext.insertInto(this)
-                    .set(PROJECT_ID, it.projectId)
-                    .set(PIPELINE_ID, it.pipelineId)
-                    .set(BUILD_ID, it.buildId)
-                    .set(STAGE_ID, it.stageId)
-                    .set(SEQ, it.seq)
-                    .set(STATUS, it.status.ordinal)
-                    .set(START_TIME, it.startTime)
-                    .set(END_TIME, it.endTime)
-                    .set(COST, it.cost)
-                    .set(EXECUTE_COUNT, it.executeCount)
-                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                    .set(CHECK_IN, it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                    .set(CHECK_OUT, it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) })
-                    .onDuplicateKeyUpdate()
-                    .set(STATUS, it.status.ordinal)
-                    .set(START_TIME, it.startTime)
-                    .set(END_TIME, it.endTime)
-                    .set(COST, it.cost)
-                    .set(EXECUTE_COUNT, it.executeCount)
-                    .execute()
-            }
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID,
+                STAGE_ID,
+                SEQ,
+                STATUS,
+                START_TIME,
+                END_TIME,
+                COST,
+                EXECUTE_COUNT,
+                CONDITIONS,
+                CHECK_IN,
+                CHECK_OUT
+            ).also { insert ->
+                stageList.forEach {
+                    insert.values(
+                        it.projectId,
+                        it.pipelineId,
+                        it.buildId,
+                        it.stageId,
+                        it.seq,
+                        it.status.ordinal,
+                        it.startTime,
+                        it.endTime,
+                        it.cost,
+                        it.executeCount,
+                        it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                        it.checkIn?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                        it.checkOut?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(COST, MySQLDSL.values(COST))
+                .set(EXECUTE_COUNT, MySQLDSL.values(EXECUTE_COUNT))
+                .execute()
         }
     }
 

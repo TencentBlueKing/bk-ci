@@ -56,7 +56,7 @@ class CheckDependOnContainerCmd(
     override fun execute(commandContext: ContainerContext) {
         val container = commandContext.container
         // 仅在初次进入(readyToRun), 或处于DependOn的等待状态下，做依赖链路查检
-        if (container.status.isReadyToRun() || container.status == BuildStatus.DEPENDENT_WAITING) {
+        if (container.status.isReadyToRun()) {
             checkDependOnStatus(commandContext, container)
         }
     }

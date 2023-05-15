@@ -265,7 +265,8 @@ class ScmOauthService @Autowired constructor(
                     targetUrl = targetUrl,
                     context = context,
                     description = description,
-                    block = block
+                    block = block,
+                    targetBranch = targetBranch
                 )
                 responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {

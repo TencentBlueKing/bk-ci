@@ -1,15 +1,13 @@
 package com.tencent.devops.remotedev.filter.impl
 
-import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
 import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
@@ -20,16 +18,11 @@ import javax.ws.rs.ext.Provider
 @PreMatching
 @RequestFilter
 class WhitelistApiFilter constructor(
-    private val redisOperation: RedisOperation
+    private val cacheService: RedisCacheService
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(WhitelistApiFilter::class.java)
     }
-
-    private val redisCache = Caffeine.newBuilder()
-        .maximumSize(1)
-        .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build<String, Set<String>?> { key -> redisOperation.getSetMembers(key) }
 
     enum class ApiType(val startContextPath: String, val verify: Boolean) {
 
@@ -68,7 +61,7 @@ class WhitelistApiFilter constructor(
             )
             return true
         }
-        if (redisCache.get(REDIS_WHITE_LIST_KEY)?.contains(userId) != true) {
+        if (cacheService.getSetMembers(REDIS_WHITE_LIST_KEY)?.contains(userId) != true) {
             logger.info("user($userId)wants to access the resource($path), but is blocked.")
             return false
         }

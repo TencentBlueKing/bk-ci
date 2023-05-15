@@ -122,7 +122,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     ): Result<Url> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|get plugin log url|$projectId|$pipelineId|$buildId|$elementId" +
-                    "|$executeCount"
+                "|$executeCount"
         )
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
@@ -148,7 +148,7 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
     ): Result<Page<FileInfo>> {
         logger.info(
             "OPENAPI_ARTIFACTORY_V4|$userId|list custom files|$projectId|$fullPath|$includeFolder|$deep" +
-                    "|$page|$pageSize"
+                "|$page|$pageSize"
         )
         return client.get(ServiceArtifactoryResource::class).listCustomFiles(
             userId = userId,
@@ -164,8 +164,13 @@ class ApigwArtifactoryResourceV4Impl @Autowired constructor(
 
     private fun checkPipelineId(projectId: String, pipelineId: String?, buildId: String): String {
         val pipelineIdFormDB = indexService.getHandle(buildId) {
-            client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
-                ?: throw ParamBlankException("Invalid buildId")
+            kotlin.runCatching {
+                client.get(ServiceBuildResource::class).getPipelineIdFromBuildId(projectId, buildId).data
+            }.getOrElse {
+                throw ParamBlankException(
+                    it.message ?: "Invalid buildId, please check if projectId & buildId are related"
+                )
+            } ?: throw ParamBlankException("Invalid buildId")
         }
         if (pipelineId != null && pipelineId != pipelineIdFormDB) {
             throw ParamBlankException("PipelineId is invalid ")

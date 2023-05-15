@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VAL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -91,4 +92,31 @@ interface ApigwEnvironmentAgentResourceV4 {
         @QueryParam("nodeHashId")
         nodeHashId: String
     ): Result<NodeWithPermission?>
+
+    @ApiOperation("获取指定第三方构建机详情信息", tags = ["v4_user_node_third_part_detail", "v4_app_node_third_part_detail"])
+    @Path("/third_part_agent_node_detail")
+    @GET
+    fun getNodeDetail(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam(value = "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点 hashId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeHashId")
+        nodeHashId: String?,
+        @ApiParam("节点 别名 (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?,
+        @ApiParam("节点 agentId (nodeHashId、nodeName、agentHashId 三个参数任选其一填入即可)", required = false)
+        @QueryParam("agentHashId")
+        agentHashId: String?
+    ): Result<ThirdPartyAgentDetail?>
 }

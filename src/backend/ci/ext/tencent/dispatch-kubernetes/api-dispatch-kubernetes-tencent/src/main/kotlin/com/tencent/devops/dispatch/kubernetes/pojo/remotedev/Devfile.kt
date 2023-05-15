@@ -22,7 +22,9 @@ data class Devfile(
     @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
     var gitEmail: String?,
     @ApiModelProperty("DEVOPS_REMOTING_DOTFILE_REPO dotfiles仓库地址")
-    var dotfileRepo: String?
+    var dotfileRepo: String?,
+    @ApiModelProperty("指定用户在连接到容器时应打开的默认路径")
+    var workspaceFolder: String?
 )
 //
 // data class DevfileImage(
@@ -54,7 +56,7 @@ data class RunsOn(
 )
 
 data class Container(
-    val image: String,
+    var image: String,
     val host: String? = null,
     val credentials: Credentials? = null
 )
@@ -72,7 +74,9 @@ data class ImagePullCertificate(
 
 data class DevfileCommands(
     @ApiModelProperty("当工作空间首次创建时需要执行的命令")
-    val postCreateCommand: String?
+    val postCreateCommand: String?,
+    @ApiModelProperty("当工作空间启动时需要执行的命令")
+    val postStartCommand: String?
 )
 
 data class DevfileVscode(

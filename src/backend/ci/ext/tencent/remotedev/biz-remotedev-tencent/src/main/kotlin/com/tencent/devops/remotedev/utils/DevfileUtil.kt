@@ -96,7 +96,8 @@ object DevfileUtil {
                 ports = ports,
                 commands = commands,
                 gitEmail = null,
-                dotfileRepo = null
+                dotfileRepo = null,
+                workspaceFolder = preDevfile.workspaceFolder
             )
         }
     }

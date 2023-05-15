@@ -513,15 +513,6 @@ interface ServicePipelineResource {
         pipelineId: String
     ): Result<SimplePipeline?>?
 
-    @ApiOperation("刷新所有流水线名拼音")
-    @PUT
-    @Path("/batch/pipeline/pinyin")
-    fun batchUpdatePipelineNamePinYin(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<Boolean>
-
     @ApiOperation("根据项目ID获取流水线标签关系列表")
     @POST
     @Path("/labelinfos/list")

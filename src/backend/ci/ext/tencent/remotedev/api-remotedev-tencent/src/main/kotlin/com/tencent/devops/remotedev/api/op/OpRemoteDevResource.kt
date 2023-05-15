@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
@@ -123,10 +124,50 @@ interface OpRemoteDevResource {
     @ApiOperation("更新用户组织架构")
     @POST
     @Path("/refresh/all")
-
     fun refreshUserInfo(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<Boolean>
+
+    @ApiOperation("添加客户端白名单用户")
+    @POST
+    @Path("/whiteList/add")
+    fun addWhiteListUser(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @QueryParam("whiteListUser")
+        whiteListUser: String
+    ): Result<Boolean>
+
+    @ApiOperation("新增镜像配置")
+    @POST
+    @Path("/image/spec")
+    fun addImageSpec(
+        spec: ImageSpec
+    ): Result<Boolean>
+
+    @ApiOperation("删除镜像配置")
+    @DELETE
+    @Path("/image/spec")
+    fun deleteImageSpec(
+        @QueryParam("id")
+        id: Int
+    ): Result<Boolean>
+
+    @ApiOperation("修改镜像配置")
+    @PUT
+    @Path("/image/spec")
+    fun updateImageSpec(
+        @QueryParam("id")
+        id: Int,
+        spec: ImageSpec
+    ): Result<Boolean>
+
+    @ApiOperation("镜像配置列表")
+    @GET
+    @Path("/image/spec")
+    fun listImageSpec(): Result<List<ImageSpec>?>
 }

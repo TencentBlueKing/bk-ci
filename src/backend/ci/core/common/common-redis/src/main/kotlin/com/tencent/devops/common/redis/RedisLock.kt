@@ -38,7 +38,8 @@ import java.util.UUID
 open class RedisLock(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
-    private val expiredTimeInSeconds: Long
+    private val expiredTimeInSeconds: Long,
+    private val sleepTime: Long = 100L // 临时抽sleepTime出来，供特殊场景设置减少等待时间，后续用RedissionRedLock取代这个类
 ) : AutoCloseable {
     companion object {
         /**
@@ -80,7 +81,7 @@ open class RedisLock(
                 locked = true
                 return
             }
-            Thread.sleep(100)
+            Thread.sleep(sleepTime)
         }
     }
 
