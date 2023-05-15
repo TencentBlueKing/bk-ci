@@ -44,9 +44,11 @@ spec:
             - name: {{ .Release.Name }}-tls-certs
               mountPath: /data/workspace/wsproxy/tls
               readOnly: true
+            {{- if .Values.wsproxy.logConfig.enablePathLog }}
             - name: {{ .Release.Name }}-logs
               mountPath: /data/workspace/wsproxy/logs
               readOnly: false
+            {{- end }}   
         {{- if .Values.wsproxy.logConfig.sidecar.enable }}
         - name: {{ .Release.Name }}-log-agent
           image: {{ .Values.wsproxy.logConfig.sidecar.image }}
@@ -83,9 +85,11 @@ spec:
               - key: https.pem
                 path: https.pem
               - key: https.key
-                path: https.key           
+                path: https.key   
+        {{- if .Values.wsproxy.logConfig.enablePathLog }}                
         - name: {{ .Release.Name }}-logs
           emptyDir: {}     
+        {{- end }}  
       {{- if .Values.wsproxy.affinity }}
       affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
       {{- end }}          

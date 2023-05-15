@@ -48,9 +48,11 @@ spec:
           - name: {{ .Values.registry.wsproxyName }}-tls-certs
             mountPath: /data/workspace/registry-facade/tls
             readOnly: true  
+          {{- if .Values.wsproxy.logConfig.enablePathLog }}  
           - name: {{ .Release.Name }}-logs
             mountPath: /data/workspace/registry-facade/logs
             readOnly: false  
+          {{- end }}  
         {{- if .Values.registry.readinessProbeAddr }}    
         readinessProbe:
           httpGet:
@@ -114,4 +116,8 @@ spec:
               path: https.pem
             - key: https.key
               path: https.key 
+      {{- if .Values.wsproxy.logConfig.enablePathLog }}        
+      - name: {{ .Release.Name }}-logs
+        emptyDir: {}          
+      {{- end }}  
         
