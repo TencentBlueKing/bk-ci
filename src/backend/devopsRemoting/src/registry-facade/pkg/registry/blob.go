@@ -152,7 +152,7 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 
 			retrieved, dontCache, err = bh.retrieveFromSource(ctx, s, w, r)
 			if err != nil {
-				logs.WithField("src", src.Name()).WithError(err).Error("unable to retrieve blob")
+				logs.WithField("src", s.Name()).WithError(err).Error("unable to retrieve blob")
 			}
 
 			if retrieved {
