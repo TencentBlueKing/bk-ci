@@ -3,7 +3,7 @@
         <div class="build-param-row" v-for="(_chunk, index) in paramChunks" :key="index">
             <div class="build-param-column" v-for="param in _chunk" :key="param.key">
                 <span class="build-param-span">
-                    <span class="build-param-key-span">
+                    <span class="build-param-key-span" :title="param.key">
                         {{ param.key }}
                     </span>
                     <i
