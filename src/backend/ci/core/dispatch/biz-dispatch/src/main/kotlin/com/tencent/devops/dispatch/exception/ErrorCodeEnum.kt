@@ -85,7 +85,7 @@ enum class ErrorCodeEnum(
         2103012,
         "第三方构建机状态异常，请在环境管理中检查第三方构建机状态"
     ),
-    BUILD_MACHINE_UPGRADE_IN_PROGRESS(ErrorType.SYSTEM,2103013, "构建机升级中，重新调度"),
+    BUILD_MACHINE_UPGRADE_IN_PROGRESS(ErrorType.SYSTEM, 2103013, "构建机升级中，重新调度"),
     BUILD_MACHINE_BUSY(ErrorType.SYSTEM, 2103014, "构建机正忙,重新调度"),
     BUILD_ENV_PREPARATION(ErrorType.SYSTEM, 2103015, "构建环境准备中..."),
     JOB_NUM_REACHED_MAX_QUOTA(
@@ -104,7 +104,6 @@ enum class ErrorCodeEnum(
         2103018,
         "构建机环境（{0}）的节点为空，请检查环境管理配置，构建集群："
     );
-
 
     fun getErrorMessage(params: Array<String>? = null, language: String? = null): String {
         return I18nUtil.getCodeLanMessage(
