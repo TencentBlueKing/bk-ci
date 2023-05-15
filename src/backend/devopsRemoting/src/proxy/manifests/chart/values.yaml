@@ -24,6 +24,7 @@ apisix:
       pullPolicy: IfNotPresent
       tag: 3.2.0-debian
     replicaCount: 1
+    timezone: "Asia/Shanghai"
 
   admin:
     credentials:
@@ -96,3 +97,15 @@ apisix:
     initContainer:
       image: mirrors.tencent.com/ruotiantang/apisix
       tag: busybox-1.28
+
+  customPlugins:
+    enabled: false
+    luaPath: "/opts/custom_plugins/?.lua"
+    plugins:
+      - name: "plugin-name"
+        attrs: {}
+        configMap:
+          name: "configmap-name"
+          mounts:
+            - key: "the-file-name"
+              path: "mount-path"
