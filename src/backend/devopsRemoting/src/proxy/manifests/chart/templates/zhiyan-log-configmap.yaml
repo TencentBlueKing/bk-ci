@@ -10,3 +10,4 @@ metadata:
 data:
   client.lua: |- {{ .Files.Get "plugins/zhiyan-log/client.lua" | nindent 4 }}
   msgpack.lua: |- {{ .Files.Get "plugins/zhiyan-log/msgpack.lua" | nindent 4 }}
+  zhiyan-log.lua: |- {{ .Files.Get "plugins/zhiyan-log/zhiyan-log.lua" | nindent 4 }}
