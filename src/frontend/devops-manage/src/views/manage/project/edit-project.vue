@@ -23,9 +23,9 @@ const route = useRoute();
 
 const { projectCode } = route.params;
 const projectData = ref<any>({});
+const projectForm = ref(null);
 const isLoading = ref(false);
 const isChange = ref(false);
-const isToBeApproved = ref(false);
 const btnLoading = ref(false);
 const hasPermission = ref(true)
 const statusDisabledTips = {
@@ -40,6 +40,7 @@ const fetchProjectData = async () => {
   }).then((res) => {
     projectData.value = res;
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
+    if (projectData.value.projectType === 0) projectData.value.projectType = ''
   }).catch((err) => {
     if (err.code === 403) {
       hasPermission.value = false
@@ -87,10 +88,6 @@ const handleFormChange = (val: boolean) => {
   isChange.value = val;
 };
 
-const handleApprovedChange = (val: boolean) => {
-  isToBeApproved.value = val;
-};
-
 const infoBoxInstance = ref();
 
 const updateProject = async () => {
@@ -109,6 +106,10 @@ const updateProject = async () => {
           resourceCode: projectCode,
         })
       }
+      Message({
+        theme: 'error',
+        message: err.message || err,
+      })
     })
     .finally(() => {
       btnLoading.value = false;
@@ -144,12 +145,13 @@ const showNeedApprovedTips = () => {
  * 更新项目
  */
 const handleUpdate = async () => {
-  updateProject();
-  // if (isToBeApproved.value) {
-  //   showNeedApprovedTips();
-  // } else {
-  //   updateProject();
-  // };
+  projectForm.value?.validate().then(async () => {
+    await updateProject();
+  })
+};
+
+const initProjectForm = (value) => {
+  projectForm.value = value;
 };
 
 const handleNoPermission = () => {
@@ -175,6 +177,7 @@ onMounted(() => {
         :is-change="isChange"
         :data="projectData"
         @change="handleFormChange"
+        @initProjectForm="initProjectForm"
         @approvedChange="handleApprovedChange">
         <bk-form-item>
           <Popover

@@ -400,22 +400,14 @@ export default {
   color: #63656E;
   cursor: pointer;
   &:hover {
-    color: #3a3c42;
     background-color: #eaebf0;
-    // .group-icon {
-    //   filter: invert(100%) sepia(0%) saturate(1%) hue-rotate(151deg) brightness(104%) contrast(101%);
-    // }
+   
   }
-}
-.group-item:hover .user-num,
-.group-item:hover .group-num {
-  background-color: #A3C5FD;
-  color: #fff;
 }
 
 .group-active {
-  color: #3A84FF;
-  background-color: #E1ECFF;
+  color: #3A84FF !important;
+  background-color: #E1ECFF !important;
   .user-num, .group-num {
     background-color: #A3C5FD;
     color: #fff;
@@ -457,7 +449,7 @@ export default {
   padding: 1px;
 }
 .more-icon:hover {
-  background-color: #d5ddef;
+  background-color: #DCDEE5;
   color: #3A84FF !important;
 }
 .group-icon {
