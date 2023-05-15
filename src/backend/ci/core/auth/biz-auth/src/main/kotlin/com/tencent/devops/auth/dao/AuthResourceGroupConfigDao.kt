@@ -89,7 +89,7 @@ class AuthResourceGroupConfigDao {
 
     fun countByResourceType(
         dslContext: DSLContext,
-        resourceType: String,
+        resourceType: String
     ): Int {
         return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectCount()
