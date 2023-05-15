@@ -77,12 +77,11 @@ func IsMacos() bool {
 	return runtime.GOOS == osMacos
 }
 
-// GetCurrentUser get current process user, panic when error found
+// GetCurrentUser get current process user, log & exit when error was found
 func GetCurrentUser() *user.User {
 	currentUser, err := user.Current()
 	if currentUser == nil {
-		logs.Error("GetCurrentUser cache return nil: error[%v]", err)
-		panic(err)
+		logs.Fatalf("GetCurrentUser cache return nil: error[%v]", err) //
 	}
 	return currentUser
 }
