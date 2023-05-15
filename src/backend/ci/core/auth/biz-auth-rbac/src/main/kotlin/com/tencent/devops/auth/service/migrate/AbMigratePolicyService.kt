@@ -80,10 +80,13 @@ abstract class AbMigratePolicyService(
 
     companion object {
         private val logger = LoggerFactory.getLogger(AbMigratePolicyService::class.java)
+
         // 自定义用户组默认过期时间6个月
         private const val DEFAULT_EXPIRED_DAY = 180L
+
         // 毫秒转换
         const val MILLISECOND = 1000
+
         // 用户创建用户组group_code
         private const val CUSTOM_GROUP_CODE = "custom"
     }
@@ -301,7 +304,6 @@ abstract class AbMigratePolicyService(
                     managerGroupId = managerGroupId,
                     permission = permission
                 )
-                // todo 如果為null怎麽處理
                 if (groupId != null) {
                     val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
                     val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
@@ -343,7 +345,6 @@ abstract class AbMigratePolicyService(
         if (!hasPermission) {
             rbacCacheService.getGroupConfigAction(resourceType).forEach groupConfig@{ groupConfig ->
                 if (groupConfig.actions.containsAll(actions)) {
-                    // todo 会不会出现组未创建成功的情况。因为组是异步创建的。
                     val groupId = authResourceGroupDao.get(
                         dslContext = dslContext,
                         projectCode = projectCode,
