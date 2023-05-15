@@ -25,7 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+<<<<<<<< HEAD:src/backend/ci/ext/tencent/statistics/api-statistics-tencent/src/main/kotlin/com/tencent/devops/statistics/constant/StatisticsMessageCode.kt
 package com.tencent.devops.statistics.constant
+========
+package com.tencent.devops.dispatch.docker.constant
+>>>>>>>> origin/issue-8211:src/backend/ci/core/dispatch-docker/api-dispatch-docker/src/main/kotlin/com/tencent/devops/dispatch/docker/constant/DispatchDockerMessageCode.kt
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -45,6 +49,7 @@ package com.tencent.devops.statistics.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+<<<<<<<< HEAD:src/backend/ci/ext/tencent/statistics/api-statistics-tencent/src/main/kotlin/com/tencent/devops/statistics/constant/StatisticsMessageCode.kt
 object StatisticsMessageCode {
     const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE = "2133001" // OpenAPI：API Gateway公钥文件未设置
     const val ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST = "2133002" // OpenAPI：API Gateway公钥文件不存在，路径：{0}
@@ -55,4 +60,10 @@ object StatisticsMessageCode {
     const val ERROR_TEMPLATE_NOT_EXISTS = "2133007" // 模板不存在
     const val ORG_NOT_PROJECT = "2133008" // {0}该组织下无项目
     const val ORG_TYPE_ERROR = "2133009" // 组织类型有误
+========
+
+object DispatchDockerMessageCode {
+    const val BK_NO_CONTAINER_IS_READY_DEBUG = "2131015" // pipeline({0})没有可用的容器进行登录调试
+    const val BK_LOAD_TOO_HIGH = "2131016" // pipeline({0})当前调试容器负载过高，请稍等并重试。
+>>>>>>>> origin/issue-8211:src/backend/ci/core/dispatch-docker/api-dispatch-docker/src/main/kotlin/com/tencent/devops/dispatch/docker/constant/DispatchDockerMessageCode.kt
 }

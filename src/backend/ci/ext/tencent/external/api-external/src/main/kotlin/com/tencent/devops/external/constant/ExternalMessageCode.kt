@@ -44,6 +44,7 @@ package com.tencent.devops.external.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+
 object ExternalMessageCode {
     const val PARAMETER_ERROR = "2124001" // 参数错误
     const val GITHUB_AUTHENTICATION_FAILED = "2124002" // GitHub认证失败
