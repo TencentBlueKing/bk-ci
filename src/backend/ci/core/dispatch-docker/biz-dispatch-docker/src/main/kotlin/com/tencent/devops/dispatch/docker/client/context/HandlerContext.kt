@@ -25,12 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.websocket.pojo
+package com.tencent.devops.dispatch.docker.client.context
 
-enum class WebSocketActionType {
-    WORKSPACE_CREATE, // 创建workspace
-    WORKSPACE_START, // 启动workspace
-    WORKSPACE_SLEEP, // 休眠workspace
-    WORKSPACE_DELETE, // 销毁workspace
-    WORKSPACE_DETAIL; // workspace 信息
-}
+open class HandlerContext(
+    open val grayEnv: Boolean,
+    open var agentId: String,
+    open var secretKey: String
+)

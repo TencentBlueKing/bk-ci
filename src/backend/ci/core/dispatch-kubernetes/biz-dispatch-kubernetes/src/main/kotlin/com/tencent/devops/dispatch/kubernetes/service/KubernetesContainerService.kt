@@ -84,13 +84,14 @@ import com.tencent.devops.dispatch.kubernetes.pojo.isStarting
 import com.tencent.devops.dispatch.kubernetes.pojo.isSuccess
 import com.tencent.devops.dispatch.kubernetes.pojo.readyToStart
 import com.tencent.devops.dispatch.kubernetes.utils.CommonUtils
-import java.util.stream.Collectors
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Locale
+import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
 class KubernetesContainerService @Autowired constructor(
@@ -213,7 +214,7 @@ class KubernetesContainerService @Autowired constructor(
                 KubernetesDockerRegistry(host, userName, password)
             }
 
-            val builderName = getOnlyName(userId)
+            val builderName = getBuilderName()
             val taskId = kubernetesBuilderClient.createBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -422,13 +423,8 @@ class KubernetesContainerService @Autowired constructor(
         return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
     }
 
-    private fun getOnlyName(userId: String): String {
-        val subUserId = if (userId.length > 14) {
-            userId.substring(0 until 14)
-        } else {
-            userId
-        }
-        return "${subUserId.replace("_", "-")}${System.currentTimeMillis()}-" +
-            RandomStringUtils.randomAlphabetic(8).toLowerCase()
+    private fun getBuilderName(): String {
+        return "build${System.currentTimeMillis()}-" +
+            RandomStringUtils.randomAlphabetic(8).lowercase(Locale.getDefault())
     }
 }

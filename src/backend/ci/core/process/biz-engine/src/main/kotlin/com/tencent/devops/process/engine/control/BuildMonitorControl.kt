@@ -39,6 +39,8 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
@@ -400,7 +402,10 @@ class BuildMonitorControl @Autowired constructor(
             val jobId = "0"
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: "排队超时(Queue timeout). Cancel build!",
+                message = errorInfo.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_QUEUE_TIMEOUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + ". Cancel build!",
                 tag = VMUtils.genStartVMTaskId(jobId),
                 jobId = jobId,
                 executeCount = 1
@@ -415,7 +420,10 @@ class BuildMonitorControl @Autowired constructor(
                     status = BuildStatus.QUEUE_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                    errorMsg = "Job排队超时，请检查并发配置/Queue timeout"
+                    errorMsg = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_QUEUE_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             )
         } else {

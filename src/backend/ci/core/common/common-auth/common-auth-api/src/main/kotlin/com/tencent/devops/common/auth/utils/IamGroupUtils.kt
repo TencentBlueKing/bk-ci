@@ -28,7 +28,10 @@
 
 package com.tencent.devops.common.auth.utils
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_USER_GROUP_CRATE_TIME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_USER_RATING_ADMIN_CRATE_TIME
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import java.time.LocalDateTime
 
@@ -38,14 +41,29 @@ object IamGroupUtils {
         return "$projectName-$groupName"
     }
 
-    fun buildDefaultDescription(projectName: String, groupName: String, userId: String): String {
-        return "$projectName 用户组:$groupName,由$userId 创建于 " +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+    fun buildDefaultDescription(
+        projectName: String,
+        groupName: String,
+        userId: String,
+        language: String
+    ): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = BK_USER_GROUP_CRATE_TIME,
+            language = language,
+            arrayOf(projectName, groupName, userId)
+        ) + "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
-    fun buildManagerDescription(projectName: String, userId: String): String {
-        return "$projectName 分级管理员, 由$userId 创建于" +
-            "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+    fun buildManagerDescription(
+        projectName: String,
+        userId: String,
+        language: String
+    ): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = BK_USER_RATING_ADMIN_CRATE_TIME,
+            language = language,
+            arrayOf(projectName, userId)
+        ) + "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
     fun renameSystemLable(groupName: String): String {

@@ -38,8 +38,9 @@ import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.RepositoryService
 import com.tencent.devops.scm.code.p4.api.P4Api
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
-import java.net.URLDecoder
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import org.springframework.stereotype.Service
+import java.net.URLDecoder
 
 @Service
 class P4Service(
@@ -130,5 +131,18 @@ class P4Service(
             )
         }
         return Triple(repository, username, password)
+    }
+
+    override fun getServerInfo(
+        projectId: String,
+        repositoryId: String,
+        repositoryType: RepositoryType?
+    ): P4ServerInfo {
+        val (repository, username, password) = getRepositoryInfo(projectId, repositoryId, repositoryType)
+        return P4Api(
+            p4port = repository.url,
+            username = username,
+            password = password
+        ).getServerInfo()
     }
 }

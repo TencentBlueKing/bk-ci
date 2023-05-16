@@ -25,45 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dispatch.docker.client.context
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.docker.common.Constants
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import com.tencent.devops.buildless.pojo.RejectedExecutionType
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 
-@Service
-class BuildLessWhitelistService constructor(
-    private val redisOperation: RedisOperation
-) {
-    private val logger = LoggerFactory.getLogger(BuildLessWhitelistService::class.java)
-
-    fun getDockerResourceWhiteList(userId: String): List<String> {
-        val whiteList = mutableListOf<String>()
-
-        val whiteSet = redisOperation.getSetMembers(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX)
-        return if (whiteSet != null) {
-            whiteSet.parallelStream().forEach {
-                whiteList.add(it)
-            }
-
-            whiteList
-        } else {
-            emptyList()
-        }
-    }
-
-    fun addBuildLessWhiteList(userId: String, projectId: String): Boolean {
-        redisOperation.addSetValue(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-        return true
-    }
-
-    fun deleteBuildLessWhiteList(userId: String, projectId: String): Boolean {
-        redisOperation.removeSetMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-        return true
-    }
-
-    fun checkBuildLessWhitelist(projectId: String): Boolean {
-        return redisOperation.isMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-    }
-}
+class BuildLessStartHandlerContext(
+    val event: PipelineBuildLessStartupDispatchEvent,
+    var buildLessHost: String = "",
+    var buildLessPort: Int = 80,
+    var retryTime: Int = 0,
+    var retryMaxTime: Int = 0,
+    var buildLogKey: String = "",
+    var rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+    var unAvailableIpList: Set<String>? = emptySet(),
+    override var grayEnv: Boolean = false,
+    override var agentId: String = "",
+    override var secretKey: String = ""
+) : HandlerContext(
+    grayEnv, agentId, secretKey
+)

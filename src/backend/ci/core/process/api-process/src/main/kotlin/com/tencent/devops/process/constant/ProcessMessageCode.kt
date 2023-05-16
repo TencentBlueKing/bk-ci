@@ -330,6 +330,7 @@ object ProcessMessageCode {
     const val QUERY_USER_INFO_FAIL = "2101225" // 获取用户信息失败
     const val USER_INSTALL_ATOM_CODE_IS_INVALID = "2101226" // 安装插件失败
     const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2101227" // 用户({0})在工程({1})下没有流水线{2}权限
+    const val PIPELINE_LIST_LENGTH_LIMIT = "2101228" // 流水线列表长度不能超过100
 
     const val BK_SUCCESSFULLY_DISTRIBUTED = "bkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
     const val BK_SUCCESSFULLY_FAILED = "bkSuccessfullyFailed" // 跨项目构件分发失败，
@@ -425,4 +426,52 @@ object ProcessMessageCode {
     const val BK_BUILD_VARIABLES = "bkBuildVariables" // 构建变量
     const val BK_BUILD_VARIABLES_VALUE = "bkBuildVariablesValue" // 构建变量的值
     const val BK_BUILD_HISTORY = "bkBuildHistory" // 构建历史
+    const val BK_PENDING_APPROVAL = "bkPendingApproval" // 步骤等待审核(Pending approval)
+    const val BK_REVIEWERS = "bkReviewers" // 待审核人(Reviewers)
+    const val BK_REVIEWER = "bkReviewer" // 审核人(Reviewer)
+    const val BK_DESCRIPTION = "bkDescription" // 审核说明(Description)
+    const val BK_PARAMS = "bkParams" // 审核参数(Params)
+    const val BK_AUDIT_RESULTS_APPROVE = "bkAuditResultsApprove" // 审核结果(result)：继续(Approve)
+    const val BK_AUDIT_RESULTS_REJECT = "bkAuditResultsReject" // 审核结果(result)：驳回(Reject)
+    const val BK_FINAL_APPROVAL = "bkFinalApproval" // 步骤审核结束(Final approval)
+    const val BK_REVIEW_COMMENTS = "bkReviewComments" // 审核意见(Review comments)
+    const val BK_QUEUE_TIMEOUT = "bkQueueTimeout" // 排队超时(Queue timeout)
+    const val BK_JOB_QUEUE_TIMEOUT = "bkJobQueueTimeout" // Job排队超时，请检查并发配置/Queue timeout
+    const val BK_TRIGGER_USER = "bkTriggerUser" // 触发人(trigger user)
+    const val BK_START_USER = "bkStartUser" // 执行人(start user)
+    // [自定义变量全部满足时不运行](Don‘t run it when all the custom variables are matched)
+    const val BK_WHEN_THE_CUSTOM_VARIABLES_ARE_ALL_SATISFIED = "bkWhenTheCustomVariablesAreAllSatisfied"
+    // [自定义变量全部满足时运行](Run it when all the custom variables are matched)
+    const val BK_CUSTOM_VARIABLES_ARE_ALL_SATISFIED = "bkCustomVariablesAreAllSatisfied"
+    const val BK_CHECK_TASK_RUN_CONDITION = "bkCheckTaskRunCondition" // 检查插件运行条件/Check Task Run Condition:
+    const val BK_TASK_DISABLED = "bkTaskDisabled" // [插件被禁用](Task disabled) = true
+    // [只有前面有任务失败时才运行](Only when a previous task has failed)
+    const val BK_ONLY_WHEN_PREVIOUS_TASK_HAS_FAILED = "bkOnlyWhenPreviousTaskHasFailed"
+    // [即使前面有插件运行失败也运行，除非被取消才不运行] (Even if a previous task has failed, unless the build was canceled)
+    const val BK_IT_DOES_NOT_RUN_UNLESS_IT_IS_CANCELED = "bkItDoesNotRunUnlessItIsCanceled"
+    // [即使前面有插件运行失败也运行，即使被取消也运行](Run even if a previous plugin failed, and run even if it was cancelled)
+    const val BK_RUNS_EVEN_IF_CANCELED = "bkRunsEvenIfCanceled"
+    const val BK_JOB_FAILURE_OR_CANCEL = "bkJobFailureOrCancel" // Job失败或被取消(Job failure or cancel) skip=true
+    const val BK_CHECK_JOB_RUN_CONDITION = "bkCheckJobRunCondition" // 检查Job运行条件/Check Job Run Condition:
+    const val BK_RELEASE_LOCK = "bkReleaseLock" // 释放互斥组锁(Release Lock)
+    const val BK_GET_LOCKED = "bkGetLocked" // 获得锁定(Matched) 锁定期(Exp):
+    const val BK_QUEUE_DISABLED = "bkQueueDisabled" // 未开启排队(Queue disabled)
+    // 当前排队数(Queuing)[$queueSize], 已等待(Waiting)[$timeDiff seconds]
+    const val BK_CURRENT_NUMBER_OF_QUEUES = "bkCurrentNumberOfQueues"
+    const val BK_QUEUE_FULL = "bkQueueFull" // 队列满(Queue full)
+    const val BK_ENQUEUE = "bkEnqueue" // 当前排队数(Queuing)[{0}]. 入队等待(Enqueue)
+    // Job#{0}|互斥组Mutex[{1}]|
+    const val BK_MUTUALLY_EXCLUSIVE_GROUPS = "bkMutuallyExclusiveGroups"
+    const val BK_LOCKED = "bkLocked" // 锁定中(Running)
+    const val BK_CLICK = "bkClick" // 查看
+    const val BK_CURRENT = "bkCurrent" // 当前(Current)
+    const val BK_PREVIOUS_STAGE_CANCEL = "bkPreviousStageCancel" // [上游 Stage 取消时](Previous Stage Cancel):
+    const val BK_PREVIOUS_STAGE_FAILED = "bkPreviousStageFailed" // [上游 Stage 失败时](Previous Stage Failed):
+    const val BK_PREVIOUS_STAGE_SUCCESS = "bkPreviousStageSuccess" // [上游 Stage 成功时](Previous Stage Success):
+    const val BK_UNEXECUTE_TASK = "bkUnexecuteTask" // 终止构建，跳过(UnExecute Task)
+    const val BK_CONDITION_INVALID = "bkConditionInvalid" // 执行条件判断失败(Condition Invalid)
+    // [SystemLog]收到终止指令(UnExecute PostAction Task)
+    const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
+    const val BK_TRIGGERED_MANUALLY = "bkTriggeredManually" // 手动触发
+    const val BK_MAX_PARALLEL = "bkMaxParallel" // 并行上限/Max parallel:
 }

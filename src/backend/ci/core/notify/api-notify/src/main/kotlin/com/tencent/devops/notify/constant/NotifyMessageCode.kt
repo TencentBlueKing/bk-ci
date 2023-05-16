@@ -56,4 +56,5 @@ object NotifyMessageCode {
     const val BK_CONTROL_MESSAGE_LENGTH = "bkControlMessageLength" // ...(消息长度超{0} 已截断,请控制消息长度)
     const val BK_LINE_BREAKS_WILL_ESCAPED = "bkLineBreaksWillEscaped" // (注意: 换行会被转义为\\n)
     const val BK_DESIGNATED_APPROVER_APPROVAL = "bkDesignatedApproverApproval" // 指定审批人审批
+    const val BK_NOTIFY_MESSAGES = "bkNotifyMessages" // 蓝鲸通知消息
 }
