@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.AuthPipelineIdService
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.common.client.Client
@@ -56,7 +57,8 @@ class IamAuthRbacConfiguration {
         managerService: ManagerService,
         iamCacheService: IamCacheService,
         client: Client,
-        authPipelineIdService: AuthPipelineIdService
+        authPipelineIdService: AuthPipelineIdService,
+        authVerifyRecordService: AuthVerifyRecordService
     ) = TxPermissionServiceImpl(
         authHelper = authHelper,
         policyService = policyService,
@@ -64,7 +66,8 @@ class IamAuthRbacConfiguration {
         managerService = managerService,
         iamCacheService = iamCacheService,
         client = client,
-        authPipelineIdService = authPipelineIdService
+        authPipelineIdService = authPipelineIdService,
+        authVerifyRecordService = authVerifyRecordService
     )
 
     @Bean
