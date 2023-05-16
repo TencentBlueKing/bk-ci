@@ -192,4 +192,20 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_TYPE` (
     PRIMARY KEY (`RESOURCE_TYPE`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='权限资源类型表';
 
+-- ----------------------------
+-- Table structure for T_AUTH_TEMPORARY_VERIFY_RECORD
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_TEMPORARY_VERIFY_RECORD`
+(
+    `USER_ID`          varchar(64)                        not null comment '用户ID',
+    `PROJECT_CODE`     varchar(64)                        not null comment '项目ID',
+    `RESOURCE_TYPE`    varchar(64)                        not null comment '资源类型',
+    `RESOURCE_CODE`    varchar(255)                       not null comment '资源ID',
+    `ACTION`           varchar(64)                        not null comment '操作ID',
+    `VERIFY_RESULT`    bit                                not null comment '鉴权结果',
+    `LAST_VERIFY_TIME` datetime default CURRENT_TIMESTAMP not null comment '最后鉴权时间',
+    primary key (USER_ID, PROJECT_CODE, RESOURCE_TYPE, RESOURCE_CODE, ACTION)
+)ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '迁移-鉴权记录表';
+
 SET FOREIGN_KEY_CHECKS = 1;

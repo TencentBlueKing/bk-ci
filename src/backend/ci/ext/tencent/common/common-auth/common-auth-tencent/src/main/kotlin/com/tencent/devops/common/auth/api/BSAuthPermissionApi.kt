@@ -29,6 +29,8 @@ package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.service.ServiceVerifyRecordResource
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
@@ -43,17 +45,21 @@ import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCE
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCES
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.VALIDATE_USER_RESOURCE
+import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.Executors
 
 class BSAuthPermissionApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val jmxAuthApi: JmxAuthApi
+    private val jmxAuthApi: JmxAuthApi,
+    private val client: Client
 ) : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
@@ -141,10 +147,54 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
+                // 异步记录鉴权结果
+                executor.submit {
+                    createVerifyRecord(
+                        user = user,
+                        permission = permission,
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        verifyResult = result
+                    )
+                }
                 return result
             }
         } finally {
             jmxAuthApi.execute(VALIDATE_USER_RESOURCE, System.currentTimeMillis() - epoch, success)
+        }
+    }
+
+    @Suppress("LongParameterList")
+    private fun createVerifyRecord(
+        user: String,
+        permission: AuthPermission,
+        projectCode: String,
+        resourceType: AuthResourceType,
+        resourceCode: String,
+        verifyResult: Boolean
+    ) {
+        // 若是创建动作，需要挂载在项目资源类型下
+        val (verifyRecordResourceType, verifyRecordResourceCode) =
+            if (permission == AuthPermission.CREATE) {
+                Pair(AuthResourceType.PROJECT, projectCode)
+            } else {
+                Pair(resourceType, resourceCode)
+            }
+        try {
+            client.get(ServiceVerifyRecordResource::class).createOrUpdate(
+                userId = user,
+                verifyRecordDTO = VerifyRecordDTO(
+                    userId = user,
+                    projectId = projectCode,
+                    resourceType = TActionUtils.extResourceType(verifyRecordResourceType),
+                    resourceCode = verifyRecordResourceCode,
+                    action = TActionUtils.buildAction(permission, resourceType),
+                    verifyResult = verifyResult
+                )
+            )
+        } catch (e: Exception) {
+            logger.warn("create v0 verify record failed!|$projectCode|$user|$permission|$resourceType|$resourceCode")
         }
     }
 
@@ -184,6 +234,24 @@ class BSAuthPermissionApi @Autowired constructor(
                     if (responseObject.code >= HTTP_500) {
                         throw RemoteServiceException(
                             httpStatus = responseObject.code, errorMessage = responseObject.message
+                        )
+                    }
+                }
+                // 异步批量记录鉴权结果
+                executor.submit {
+                    try {
+                        if (responseObject.data != null) {
+                            client.get(ServiceVerifyRecordResource::class).bathCreateOrUpdate(
+                                userId = user,
+                                projectCode = projectCode,
+                                resourceType = TActionUtils.extResourceType(resourceType),
+                                permissionsResourcesMap = mapOf(permission to responseObject.data)
+                            )
+                        }
+                    } catch (e: Exception) {
+                        logger.warn(
+                            "batch create v0 verify record failed!|" +
+                                "$projectCode|$user|$resourceType|$responseObject.data"
                         )
                     }
                 }
@@ -256,6 +324,22 @@ class BSAuthPermissionApi @Autowired constructor(
                     val bkAuthPermission = AuthPermission.get(it.policyCode)
                     val resourceList = it.resourceCodeList
                     permissionsResourcesMap[bkAuthPermission] = resourceList
+                }
+                // 异步批量记录鉴权结果
+                executor.submit {
+                    try {
+                        client.get(ServiceVerifyRecordResource::class).bathCreateOrUpdate(
+                            userId = user,
+                            projectCode = projectCode,
+                            resourceType = TActionUtils.extResourceType(resourceType),
+                            permissionsResourcesMap = permissionsResourcesMap
+                        )
+                    } catch (e: Exception) {
+                        logger.warn(
+                            "batch create v0 verify record failed!|" +
+                                "$projectCode|$user|$resourceType|$permissionsResourcesMap"
+                        )
+                    }
                 }
                 return permissionsResourcesMap
             }
@@ -413,5 +497,6 @@ class BSAuthPermissionApi @Autowired constructor(
         private const val HTTP_400 = 400
         private const val HTTP_500 = 500
         private val logger = LoggerFactory.getLogger(BSAuthPermissionApi::class.java)
+        private val executor = Executors.newFixedThreadPool(8)
     }
 }

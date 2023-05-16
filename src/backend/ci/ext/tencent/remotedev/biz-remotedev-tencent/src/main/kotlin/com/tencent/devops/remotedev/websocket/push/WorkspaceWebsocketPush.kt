@@ -36,7 +36,7 @@ import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
-import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
 

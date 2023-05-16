@@ -36,5 +36,6 @@ enum class WorkspaceAction {
     PREPARING,
     STARTING,
     SLEEPING,
-    DELETING
+    DELETING,
+    COMPLETE_PULL_CODE // 异步拉取代码完成，由proxy通知
 }

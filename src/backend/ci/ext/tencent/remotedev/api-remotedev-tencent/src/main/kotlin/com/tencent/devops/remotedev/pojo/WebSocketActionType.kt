@@ -25,28 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OPBuildLessWhiteListResource
-import com.tencent.devops.dispatch.docker.service.BuildLessWhitelistService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class OpBuildLessWhiteListResourceImpl @Autowired constructor(
-    private val buildLessWhitelistService: BuildLessWhitelistService
-) : OPBuildLessWhiteListResource {
-
-    override fun getPipelineWhitelist(userId: String): Result<List<String>> {
-        return Result(buildLessWhitelistService.getDockerResourceWhiteList(userId))
-    }
-
-    override fun addPipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
-        return Result(buildLessWhitelistService.addBuildLessWhiteList(userId, projectId))
-    }
-
-    override fun deletePipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
-        return Result(buildLessWhitelistService.deleteBuildLessWhiteList(userId, projectId))
-    }
+enum class WebSocketActionType {
+    WORKSPACE_CREATE, // 创建workspace
+    WORKSPACE_START, // 启动workspace
+    WORKSPACE_SLEEP, // 休眠workspace
+    WORKSPACE_DELETE, // 销毁workspace
+    WORKSPACE_DETAIL; // workspace 信息
 }
