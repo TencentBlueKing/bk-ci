@@ -481,7 +481,7 @@ class PipelineBuildFacadeService(
                                     pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
                                         ?: run {
                                             throw ErrorCodeException(
-                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
                                             )
                                         }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
