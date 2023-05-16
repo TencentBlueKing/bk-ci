@@ -161,7 +161,13 @@ class IamV3Service @Autowired constructor(
         )
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
             .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
-            .description(IamGroupUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
+            .description(
+                IamGroupUtils.buildManagerDescription(
+                    resourceRegisterInfo.resourceName,
+                    userId,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
+            )
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(arrayListOf(subjectScopes)).build()
@@ -172,7 +178,12 @@ class IamV3Service @Autowired constructor(
         val displayName = DefaultGroupType.MANAGER.getDisplayName(I18nUtil.getLanguage(userId))
         val defaultGroup = ManagerRoleGroup(
             IamGroupUtils.buildIamGroup(projectCode, displayName),
-            IamGroupUtils.buildDefaultDescription(projectCode, displayName, userId),
+            IamGroupUtils.buildDefaultDescription(
+                projectName = projectCode,
+                groupName = displayName,
+                userId = userId,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             true
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
