@@ -292,20 +292,20 @@ class BkWriterInterceptor : WriterInterceptor {
      * @param attributes 属性列表
      * @return 模块标识
      */
-    private fun getModuleCode(attributes: ServletRequestAttributes?): SystemModuleEnum {
+    private fun getModuleCode(attributes: ServletRequestAttributes?): String {
         val moduleCode = if (null != attributes) {
             val request = attributes.request
             // 从请求头中获取服务名称
             val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
             try {
-                SystemModuleEnum.valueOf(serviceName.uppercase())
+                serviceName.uppercase()
             } catch (ignored: Throwable) {
-                logger.warn("serviceName[$serviceName] is invalid", ignored)
-                SystemModuleEnum.COMMON
+                logger.warn("serviceName[${serviceName.uppercase()}] is invalid", ignored)
+                SystemModuleEnum.COMMON.name
             }
         } else {
             // 默认从公共模块获取国际化信息
-            SystemModuleEnum.COMMON
+            SystemModuleEnum.COMMON.name
         }
         return moduleCode
     }

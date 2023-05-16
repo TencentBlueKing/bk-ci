@@ -162,9 +162,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         }
         // 根据key前缀查出对应的国际化信息
         val i18nMessages = client.get(ServiceI18nMessageResource::class).getI18nMessagesByKeyPrefix(
-            userId = userId ?: "",
             keyPrefix = keyPrefix,
-            moduleCode = SystemModuleEnum.STORE,
+            moduleCode = SystemModuleEnum.STORE.name,
             language = I18nUtil.getLanguage(userId)
         ).data
         return if (i18nMessages.isNullOrEmpty()) {
@@ -250,7 +249,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 }
                 i18nMessages.add(
                     I18nMessage(
-                        moduleCode = SystemModuleEnum.STORE,
+                        moduleCode = SystemModuleEnum.STORE.name,
                         language = language,
                         key = key,
                         value = it.toString()

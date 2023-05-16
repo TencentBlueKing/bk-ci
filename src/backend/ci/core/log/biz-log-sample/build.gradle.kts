@@ -28,4 +28,5 @@
 dependencies {
     api(project(":core:log:biz-log"))
     api(project(":core:project:api-project"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }

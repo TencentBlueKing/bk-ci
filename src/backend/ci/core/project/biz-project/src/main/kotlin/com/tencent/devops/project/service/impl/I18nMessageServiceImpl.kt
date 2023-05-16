@@ -64,7 +64,7 @@ class I18nMessageServiceImpl @Autowired constructor(
      */
     override fun deleteI18nMessage(
         userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String?
     ): Boolean {
@@ -79,21 +79,19 @@ class I18nMessageServiceImpl @Autowired constructor(
 
     /**
      * 查询国际化信息
-     * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param key 国际化变量名
      * @param language 国际化语言信息
      * @return 国际化信息
      */
     override fun getI18nMessage(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String
     ): I18nMessage? {
         // 获取国际化信息缓在缓存中的key
         val i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
-            moduleCode = moduleCode.name,
+            moduleCode = moduleCode,
             key = key,
             language = language
         )
@@ -118,15 +116,13 @@ class I18nMessageServiceImpl @Autowired constructor(
 
     /**
      * 查询国际化信息集合
-     * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param keys 国际化变量名列表
      * @param language 国际化语言信息
      * @return 国际化信息
      */
     override fun getI18nMessages(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         keys: List<String>,
         language: String
     ): List<I18nMessage>? {
@@ -135,17 +131,17 @@ class I18nMessageServiceImpl @Autowired constructor(
         // 1、从缓存中获取缓存的国际化信息
         keys.forEach { key ->
             var i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
-                moduleCode = moduleCode.name,
+                moduleCode = moduleCode,
                 key = key,
                 language = language
             )
             var value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
             var keyCommonFlag = false
-            val commonModuleCode = SystemModuleEnum.COMMON
+            val commonModuleCode = SystemModuleEnum.COMMON.name
             if (value == null && moduleCode != commonModuleCode) {
                 // 如果key不存在业务模块中，则从公共模块中找
                 i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
-                    moduleCode = commonModuleCode.name,
+                    moduleCode = commonModuleCode,
                     key = key,
                     language = language
                 )
@@ -188,12 +184,11 @@ class I18nMessageServiceImpl @Autowired constructor(
     }
 
     override fun getI18nMessages(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         keyPrefix: String,
         language: String
     ): List<I18nMessage>? {
-        val busModuleCodeName = moduleCode.name
+        val busModuleCodeName = moduleCode
         val commonModuleCodeName = SystemModuleEnum.COMMON.name
         val moduleCodes = setOf(busModuleCodeName, commonModuleCodeName)
         // 查询业务模块和公共模块key前缀为keyPrefix的记录
@@ -210,7 +205,7 @@ class I18nMessageServiceImpl @Autowired constructor(
             }
             i18nMessages!!.add(
                 I18nMessage(
-                    moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
+                    moduleCode = i18nMessageRecord.moduleCode,
                     language = language,
                     key = i18nMessageRecord.key,
                     value = i18nMessageRecord.value
@@ -228,13 +223,13 @@ class I18nMessageServiceImpl @Autowired constructor(
      * @param i18nMessages 国际化信息集合
      */
     private fun handleNoCacheKey(
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         noCacheKeys: MutableList<String>,
         language: String,
         i18nMessages: MutableList<I18nMessage>
     ) {
         // 从db查找未缓存key的信息
-        val busModuleCodeName = moduleCode.name
+        val busModuleCodeName = moduleCode
         val commonModuleCodeName = SystemModuleEnum.COMMON.name
         val moduleCodes = setOf(busModuleCodeName, commonModuleCodeName)
         val i18nMessageRecords = i18nMessageDao.list(
@@ -265,7 +260,7 @@ class I18nMessageServiceImpl @Autowired constructor(
             }
             i18nMessages.add(
                 I18nMessage(
-                    moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
+                    moduleCode = i18nMessageRecord.moduleCode,
                     language = language,
                     key = i18nMessageRecord.key,
                     value = i18nMessageRecord.value
