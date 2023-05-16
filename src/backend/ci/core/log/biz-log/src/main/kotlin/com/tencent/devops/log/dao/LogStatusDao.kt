@@ -109,13 +109,18 @@ class LogStatusDao {
         executeCount: Int?
     ): Boolean {
         with(TLogStatus.T_LOG_STATUS) {
-            return dslContext.selectFrom(this)
+            val select = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(JOB_ID.eq(jobId))
-                .and(TAG.eq(tag))
-                .and(SUB_TAG.eq(subTags))
                 .and(EXECUTE_COUNT.eq(executeCount))
-                .fetchOne()?.finished == true
+            if (!jobId.isNullOrBlank()) {
+                select.and(JOB_ID.eq(jobId))
+                    .and(TAG.eq(""))
+                    .and(SUB_TAG.eq(""))
+            } else {
+                select.and(TAG.eq(tag))
+                    .and(SUB_TAG.eq(subTags))
+            }
+            return select.fetchOne()?.finished == true
         }
     }
 
