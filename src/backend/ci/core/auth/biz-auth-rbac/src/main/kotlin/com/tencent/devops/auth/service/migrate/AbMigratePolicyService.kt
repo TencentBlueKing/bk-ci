@@ -59,7 +59,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
@@ -377,7 +377,7 @@ abstract class AbMigratePolicyService(
     ): Int {
         val managerRoleGroup = ManagerRoleGroup().apply {
             name = groupName
-            description = MessageCodeUtil.getCodeMessage(
+            description = I18nUtil.getCodeLanMessage(
                 messageCode = AuthMessageCode.MIGRATION_GROUP_DESCRIPTION,
                 params = arrayOf(
                     groupName,

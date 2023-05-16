@@ -615,7 +615,7 @@ open class SvnUpdateTask constructor(
 
             if (localProjectName == newProjectName) {
                 LoggerService.addWarnLine(
-                    "SVN repo url "  + MessageUtil.getMessageByLocale(
+                    "SVN repo url " + MessageUtil.getMessageByLocale(
                         messageCode = WorkerMessageCode.PULL_THE_REPOSITORY_IN_SWITCH,
                         language = AgentEnv.getLocaleLanguage(),
                         params = arrayOf("${info.url}", "$svnUrl")

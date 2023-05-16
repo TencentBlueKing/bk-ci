@@ -150,9 +150,9 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
         if (record.dockerInfo != null) {
             logMessage.append(
                 I18nUtil.getCodeLanMessage(
-                messageCode = BK_DOCKER_WAS_RECENTLY_BUILT,
-                language = I18nUtil.getDefaultLocaleLanguage(),
-                params = arrayOf("${heartbeatInfo.dockerTaskList?.size ?: 0}")
+                    messageCode = BK_DOCKER_WAS_RECENTLY_BUILT,
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("${heartbeatInfo.dockerTaskList?.size ?: 0}")
                 )
             )
         } else {
@@ -213,7 +213,7 @@ class ThirdPartyAgentMonitorService @Autowired constructor(
 
     private fun genBuildDetailUrl(projectId: String, pipelineId: String, buildId: String): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!) +
-                "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
+            "/console/pipeline/$projectId/$pipelineId/detail/$buildId"
     }
 
     /**
