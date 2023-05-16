@@ -29,8 +29,8 @@ package com.tencent.devops.dispatch.docker.exception
 
 import com.tencent.devops.common.api.pojo.ErrorType
 
-open class DockerServiceException(
-    open val errorType: ErrorType,
-    open val errorCode: Int,
+open class NoAvailableHostException(
+    override val errorType: ErrorType,
+    override val errorCode: Int,
     errorMsg: String
-) : Exception(errorMsg)
+) : DockerServiceException(errorType, errorCode, errorMsg)

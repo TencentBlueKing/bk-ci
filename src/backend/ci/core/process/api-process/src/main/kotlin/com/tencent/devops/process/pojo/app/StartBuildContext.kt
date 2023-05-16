@@ -273,7 +273,7 @@ data class StartBuildContext(
                 buildParameters = genOriginStartParamsList(realStartParamKeys, pipelineParamMap),
                 // 优化并发组逻辑，只在GROUP_LOCK时才保存进history表
                 concurrencyGroup = pipelineSetting?.takeIf { it.runLockType == PipelineRunLockType.GROUP_LOCK }
-                    ?.concurrencyGroup.let {
+                    ?.concurrencyGroup?.let {
                         val tConcurrencyGroup = EnvUtils.parseEnv(it, PipelineVarUtil.fillContextVarMap(params))
                         logger.info("[$pipelineId]|[$buildId]|ConcurrencyGroup=$tConcurrencyGroup")
                         tConcurrencyGroup

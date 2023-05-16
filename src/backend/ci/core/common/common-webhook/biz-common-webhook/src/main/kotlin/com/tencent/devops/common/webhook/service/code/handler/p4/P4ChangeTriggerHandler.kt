@@ -108,11 +108,23 @@ class P4ChangeTriggerHandler(
                     if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
                         return true
                     }
+                    // 默认区分大小写
+                    var caseSensitive = true
                     // 用户配置的脚本触发,变更文件由触发脚本解析
                     val changeFiles =
                         if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                            caseSensitive = event.caseSensitive ?: true
                             event.files ?: emptyList()
                         } else {
+                            val p4ServerInfo = eventCacheService.getP4ServerInfo(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType
+                            )
+                            p4ServerInfo?.run {
+                                caseSensitive = this.caseSensitive
+                            }
                             eventCacheService.getP4ChangelistFiles(
                                 repo = repository,
                                 projectId = projectId,
@@ -127,7 +139,8 @@ class P4ChangeTriggerHandler(
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
-                            excludedPaths = WebhookUtils.convert(excludePaths)
+                            excludedPaths = WebhookUtils.convert(excludePaths),
+                            caseSensitive = caseSensitive
                         )
                     ).doFilter(response)
                 }
