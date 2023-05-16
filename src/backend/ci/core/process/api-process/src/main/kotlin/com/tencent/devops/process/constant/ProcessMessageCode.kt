@@ -456,7 +456,7 @@ object ProcessMessageCode {
     const val BK_RELEASE_LOCK = "bkReleaseLock" // 释放互斥组锁(Release Lock)
     const val BK_GET_LOCKED = "bkGetLocked" // 获得锁定(Matched) 锁定期(Exp):
     const val BK_QUEUE_DISABLED = "bkQueueDisabled" // 未开启排队(Queue disabled)
-    // 当前排队数(Queuing)[$queueSize], 已等待(Waiting)[$timeDiff seconds]
+    // 当前排队数(Queuing)[{0}], 已等待(Waiting)[{1}} seconds]
     const val BK_CURRENT_NUMBER_OF_QUEUES = "bkCurrentNumberOfQueues"
     const val BK_QUEUE_FULL = "bkQueueFull" // 队列满(Queue full)
     const val BK_ENQUEUE = "bkEnqueue" // 当前排队数(Queuing)[{0}]. 入队等待(Enqueue)
@@ -474,4 +474,47 @@ object ProcessMessageCode {
     const val BK_UNEXECUTE_POSTACTION_TASK = "bkUnexecutePostactionTask"
     const val BK_TRIGGERED_MANUALLY = "bkTriggeredManually" // 手动触发
     const val BK_MAX_PARALLEL = "bkMaxParallel" // 并行上限/Max parallel:
+    const val BK_MANUALLY_SKIPPED = "bkManuallySkipped" // 被手动跳过 Manually skipped
+    const val BK_EVENT = "bkEvent" // {0}事件
+    const val BK_WAREHOUSE_EVENTS = "bkWarehouseEvents" // 仓库事件
+    const val BK_VM_START_ALREADY = "bkVmStartAlready" // 重复启动构建机/VM Start already:
+    const val BK_CONTINUE_WHEN_ERROR = "bkContinueWhenError" // 失败自动跳过/continue when error
+    const val BK_MUTEX_WAITING = "bkMutexWaiting" // 互斥中(Mutex waiting)
+    const val BK_QUEUING = "bkQueuing" // 排队中(Queuing)
+    const val BK_PENDING = "bkPending" // 审核中(Pending)
+    const val BK_QUALITY_IN = "bkQualityIn" // 质量红线(准入)
+    const val BK_QUALITY_OUT = "bkQualityOut" // 质量红线(准出)
+    const val BK_BUILD_FINISHED_AND_DENY_PAUSE = "bkBuildFinishedAndDenyPause" // 构建已结束，禁止暂停请求(Build Finished And Deny Pause)
+    const val BK_EN_INDEX_ALREADY_EXISTS = "bkEnIndexAlreadyExists" // 英文名({0})的指标已存在
+    const val BK_CN_INDEX_ALREADY_EXISTS = "bkCnIndexAlreadyExists" // 中文名({0})的指标已存在
+    const val BK_TOOL_DESC_STANDARD = "bkToolDescStandard" // 代码规范
+    const val BK_TOOL_DESC_DEFECT = "bkToolDescDefect"// 代码缺陷
+    const val BK_TOOL_DESC_SECURITY = "bkToolDescSecurity"// 安全漏洞
+    const val BK_TOOL_DESC_RIPS = "bkToolDescRips"// 啄木鸟漏洞扫描
+    const val BK_TOOL_DESC_SENSITIVE = "bkToolDescSensitive"// 敏感信息
+    const val BK_TOOL_DESC_WOODPECKER_SENSITIVE = "bkToolDescWoodpeckerSensitive"// 啄木鸟敏感信息
+    const val BK_TOOL_DESC_CCN = "bkToolDescCcn"// 圈复杂度
+    const val BK_TOOL_DESC_DUPC = "bkToolDescDupc"// 重复率
+    const val BK_TOOL_NAME_STANDARD = "bkToolNameStandard" // 按维度(推荐)
+    const val BK_TOOL_NAME_DEFECT = "bkToolNameDefect" // 按维度(推荐)
+    const val BK_TOOL_NAME_SECURITY = "bkToolNameSecurity" // 按维度(推荐)
+    const val BK_TOOL_NAME_CCN = "bkToolNameCcn" // 通过计算函数的节点个数来衡量代码复杂性
+    const val BK_TOOL_NAME_DUPC = "bkToolNameDupc" // 可以检测项目中复制粘贴和重复开发相同功能等问题
+    const val BK_TOOL_NAME_COVERITY = "bkToolNameCoverity" // 斯坦福大学科学家研究成果，静态源代码分析领域的领导者
+    const val BK_TOOL_NAME_KLOCWORK = "bkToolNameKlocwork" // 业界广泛使用的商用代码检查工具，与Coverity互补
+    const val BK_TOOL_NAME_CPPLINT = "bkToolNameCpplint" // 谷歌开源的C++代码风格检查工具
+    const val BK_TOOL_NAME_ESLINT = "bkToolNameEslint" // JavaScript代码检查工具
+    const val BK_TOOL_NAME_PYLINT = "bkToolNamePylint" // Python代码风格检查工具
+    const val BK_TOOL_NAME_GOML = "bkToolNameGoml" // Golang静态代码分析工具
+    const val BK_TOOL_NAME_CHECKSTYLE = "bkToolNameCheckstyle" // Java代码风格检查工具
+    const val BK_TOOL_NAME_STYLECOP = "bkToolNameStylecop" // 微软开源的C#静态代码分析工具
+    const val BK_TOOL_NAME_DETEKT = "bkToolNameDetekt" // Kotlin静态代码分析工具
+    const val BK_TOOL_NAME_PHPCS = "bkToolNamePhpcs" // PHP代码风格检查工具
+    const val BK_TOOL_NAME_SENSITIVE = "bkToolNameSensitive" // 可扫描代码中有安全风险的敏感信息
+    const val BK_TOOL_NAME_OCCHECK = "bkToolNameOccheck" // OC代码风格检查工具
+    const val BK_TOOL_NAME_WOODPECKER_SENSITIVE = "bkToolNameWoodpeckerSensitive" // 敏感信息检查工具
+    const val BK_TOOL_NAME_BKCHECK_CPP = "bkToolNameBkcheckCpp" // C++代码风格检查工具
+    const val BK_TOOL_NAME_BKCHECK_OC = "bkToolNameBkcheckOc" // OC代码风格检查工具
+
+
 }

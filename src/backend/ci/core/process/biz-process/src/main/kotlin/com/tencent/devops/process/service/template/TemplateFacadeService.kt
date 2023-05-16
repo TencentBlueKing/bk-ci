@@ -295,8 +295,7 @@ class TemplateFacadeService @Autowired constructor(
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
         val templateId = UUIDUtil.generate()
@@ -356,22 +355,19 @@ class TemplateFacadeService @Autowired constructor(
             )
             if (instanceSize > 0) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE
                 )
             }
             if (template.type == TemplateType.CUSTOMIZE.name && template.storeFlag == true) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH,
-                    defaultMessage = "已关联到研发商店，请先下架再删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
                 )
             }
             if (template.type == TemplateType.CUSTOMIZE.name &&
                 templateDao.isExistInstalledTemplate(context, templateId)
             ) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL,
-                    defaultMessage = "已安装到其他项目下使用，不能删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL
                 )
             }
             templatePipelineDao.deleteByTemplateId(context, projectId, templateId)
@@ -404,8 +400,7 @@ class TemplateFacadeService @Autowired constructor(
             if (instanceSize > 0) {
                 logger.warn("There are $instanceSize pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE
                 )
             }
             templatePipelineDao.deleteByVersion(
@@ -464,8 +459,7 @@ class TemplateFacadeService @Autowired constructor(
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE,
-                defaultMessage = "来自研发商店的模板无法进行更新"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE
             )
         }
         var version: Long = 0
@@ -546,8 +540,7 @@ class TemplateFacadeService @Autowired constructor(
         if (setting == null) {
             logger.warn("Fail to get the template setting - [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
-                defaultMessage = "流水线模板设置不存在"
+                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
         val hasPermission = hasManagerPermission(projectId, userId)
@@ -656,8 +649,7 @@ class TemplateFacadeService @Autowired constructor(
 
             if (templateRecord == null) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "模板不存在"
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
                 )
             } else {
                 val modelStr = templateRecord[tTemplate.TEMPLATE] as String
@@ -936,8 +928,7 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignored: NotFoundException) {
                 logger.warn("The src template ${latestTemplate.srcTemplateId} is not exist")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "源模板不存在"
+                    errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS
                 )
             }
         }
@@ -946,8 +937,7 @@ class TemplateFacadeService @Autowired constructor(
         if (setting == null) {
             logger.warn("The template setting is not exist [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
-                defaultMessage = "模板设置不存在"
+                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
         val template = if (version == null && versionName.isNullOrBlank()) {
@@ -1083,8 +1073,7 @@ class TemplateFacadeService @Autowired constructor(
                 content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                        defaultMessage = "流水线编排不存在"
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                     )
             ),
             template
@@ -1252,8 +1241,7 @@ class TemplateFacadeService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId|$version]", ignored)
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS,
-                defaultMessage = "列举流水线参数失败"
+                errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
             )
         }
     }
@@ -1743,11 +1731,9 @@ class TemplateFacadeService @Autowired constructor(
      */
     private fun checkPermission(projectId: String, userId: String) {
         val isProjectUser = hasManagerPermission(projectId = projectId, userId = userId)
-        val errMsg = "用户${userId}没有模板操作权限"
         if (!isProjectUser) {
             logger.warn("The manager users is empty of project $projectId")
             throw ErrorCodeException(
-                defaultMessage = errMsg,
                 errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
             )
         }
@@ -1844,7 +1830,6 @@ class TemplateFacadeService @Autowired constructor(
             val pipelineSetting = pipelineSettings[pipelineId]
             if (pipelineSetting.isNullOrEmpty()) {
                 throw ErrorCodeException(
-                    defaultMessage = "流水线设置配置不存在",
                     errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
                 )
             }
@@ -1947,7 +1932,6 @@ class TemplateFacadeService @Autowired constructor(
     private fun checkTemplate(template: Model, projectId: String? = null) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
-                defaultMessage = "模板名不能为空字符串",
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
@@ -1987,8 +1971,7 @@ class TemplateFacadeService @Autowired constructor(
             triggerContainer.templateParams!!.forEach { template ->
                 if (param.id == template.id) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.PIPELINE_PARAM_CONSTANTS_DUPLICATE,
-                        defaultMessage = "流水线变量参数和常量重名"
+                        errorCode = ProcessMessageCode.PIPELINE_PARAM_CONSTANTS_DUPLICATE
                     )
                 }
             }
@@ -2042,8 +2025,7 @@ class TemplateFacadeService @Autowired constructor(
         )?.value1() ?: 0
         if (count > 0) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS,
-                defaultMessage = "模板名已经存在"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS
             )
         }
         // 判断提交的模板数量是否超过系统规定的阈值

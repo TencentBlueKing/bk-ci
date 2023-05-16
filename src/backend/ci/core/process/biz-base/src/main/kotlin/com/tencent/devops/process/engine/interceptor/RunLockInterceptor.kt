@@ -70,7 +70,9 @@ class RunLockInterceptor @Autowired constructor(
         } else if (runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK) {
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if ((buildSummaryRecord?.runningCount ?: 0) >= 1) {
-                logger.info("[$pipelineId] 当前流水线已设置为同时只能运行一个构建任务，开始排队！")
+                logger.info(
+                    "[$pipelineId] The current pipeline is set to run only one build task at a time, start queuing!"
+                )
                 Response(BuildStatus.QUEUE)
             } else {
                 Response(BuildStatus.RUNNING)
