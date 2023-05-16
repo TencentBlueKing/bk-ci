@@ -165,23 +165,6 @@ class PipelineBuildService(
                 isMobile = isMobile
             )
 
-            val interceptResult = pipelineInterceptorChain.filter(
-                InterceptData(
-                    pipelineInfo = pipeline,
-                    model = model,
-                    startType = startType,
-                    setting = setting,
-                    buildId = buildId
-                )
-            )
-            if (interceptResult.isNotOk()) {
-                // 发送排队失败的事件
-                throw ErrorCodeException(
-                    errorCode = interceptResult.status.toString(),
-                    defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
-                )
-            }
-
             val context = StartBuildContext.init(
                 projectId = pipeline.projectId,
                 pipelineId = pipeline.pipelineId,
@@ -194,6 +177,28 @@ class PipelineBuildService(
                 // 解析出定义的流水线变量
                 realStartParamKeys = (model.stages[0].containers[0] as TriggerContainer).params.map { it.id }
             )
+
+            val interceptResult = pipelineInterceptorChain.filter(
+                InterceptData(
+                    pipelineInfo = pipeline,
+                    model = model,
+                    startType = startType,
+                    buildId = buildId,
+                    runLockType = setting.runLockType,
+                    waitQueueTimeMinute = setting.waitQueueTimeMinute,
+                    maxQueueSize = setting.maxQueueSize,
+                    concurrencyGroup = context.concurrencyGroup,
+                    concurrencyCancelInProgress = setting.concurrencyCancelInProgress,
+                    maxConRunningQueueSize = setting.maxConRunningQueueSize
+                )
+            )
+            if (interceptResult.isNotOk()) {
+                // 发送排队失败的事件
+                throw ErrorCodeException(
+                    errorCode = interceptResult.status.toString(),
+                    defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
+                )
+            }
 
             return pipelineRuntimeService.startBuild(fullModel = model, context = context)
         } finally {

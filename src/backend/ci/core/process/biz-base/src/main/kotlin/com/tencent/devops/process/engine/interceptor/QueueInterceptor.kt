@@ -31,12 +31,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
-import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineNextQueueLock
@@ -48,10 +45,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.util.TaskUtils
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
@@ -77,23 +74,14 @@ class QueueInterceptor @Autowired constructor(
     override fun execute(task: InterceptData): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = task.setting
-            ?: return Response(
-                status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = I18nUtil.getCodeLanMessage(
-                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            )
-        val runLockType = setting.runLockType
+        val runLockType = task.runLockType
         val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
         return when {
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
                 Response(
                     status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_SUMMARY_NOT_FOUND)
-
+                    message = "异常：流水线的基础构建数据Summary不存在，请联系管理员"
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -110,13 +98,10 @@ class QueueInterceptor @Autowired constructor(
                     latestStartUser = buildSummaryRecord.latestStartUser,
                     runningCount = buildSummaryRecord.runningCount
                 )
-            setting.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
+            task.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = I18nUtil.getCodeLanMessage(
-                        messageCode = BK_MAX_PARALLEL,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ) + " ${setting.maxConRunningQueueSize}"
+                    message = "并行上限/Max parallel: ${task.maxConRunningQueueSize}"
                 )
             else -> Response(data = BuildStatus.RUNNING)
         }
@@ -132,27 +117,19 @@ class QueueInterceptor @Autowired constructor(
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
         val pipelineId = task.pipelineInfo.pipelineId
-        val setting = task.setting
-            ?: return Response(
-                status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = I18nUtil.getCodeLanMessage(
-                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            )
         return when {
             // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
             latestBuildId == null || pipelineRedisService.getBuildRestartValue(latestBuildId) != null ->
                 Response(data = BuildStatus.RUNNING)
             // 设置了最大排队数量限制为0，但此时没有构建正在执行
-            setting.maxQueueSize == 0 && runningCount == 0 && queueCount == 0 ->
+            task.maxQueueSize == 0 && runningCount == 0 && queueCount == 0 ->
                 Response(data = BuildStatus.RUNNING)
-            setting.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
+            task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_QUEUE_FULL)
+                    message = "流水线串行，排队数设置为0"
                 )
-            queueCount >= setting.maxQueueSize -> {
+            queueCount >= task.maxQueueSize -> {
                 if (groupName == null) {
                     outQueueCancelBySingle(
                         projectId = projectId,
@@ -264,18 +241,10 @@ class QueueInterceptor @Autowired constructor(
         runningCount: Int
     ): Response<BuildStatus> {
         val projectId = task.pipelineInfo.projectId
-        val setting = task.setting
-            ?: return Response(
-                status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = I18nUtil.getCodeLanMessage(
-                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                )
-            )
-        val concurrencyGroup = setting.concurrencyGroup ?: task.pipelineInfo.pipelineId
+        val concurrencyGroup = task.concurrencyGroup ?: task.pipelineInfo.pipelineId
         return when {
             concurrencyGroup.isNotBlank() -> {
-                if (setting.concurrencyCancelInProgress) {
+                if (task.concurrencyCancelInProgress) {
                     val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
                         pipelineId = task.pipelineInfo.pipelineId,
