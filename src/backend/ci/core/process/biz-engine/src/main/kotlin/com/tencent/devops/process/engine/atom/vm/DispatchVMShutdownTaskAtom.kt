@@ -101,7 +101,6 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
-            tag = task.taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount
         )
