@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
@@ -50,6 +51,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.Executors
 
 /**
  * rbac迁移服务
@@ -70,12 +72,11 @@ class RbacPermissionMigrateService constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
-        private const val V0_AUTH_TYPE = "v0"
-        private const val V3_AUTH_TYPE = "v3"
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
         private const val MAX_RETRY_TIMES = 3
         private const val IAM_NAME_CONFLICT_ERROR = 1902409L
+        private val executorService = Executors.newFixedThreadPool(2)
     }
 
     @Value("\${auth.migrateProjectTag:#{null}}")
@@ -83,24 +84,58 @@ class RbacPermissionMigrateService constructor(
 
     override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
         logger.info("migrate $migrateProjects auth from v3 to rbac")
-        val projectVos =
+        val dbProjectVos =
             client.get(ServiceProjectResource::class).listByProjectCode(
                 projectCodes = migrateProjects.map { it.projectCode }.toSet()
             ).data ?: run {
                 logger.info("migrate project info is empty")
                 return false
             }
+        return v3ToRbacAuth(
+            migrateProjects = migrateProjects,
+            dbProjectVos = dbProjectVos
+        )
+    }
+
+    private fun v3ToRbacAuth(
+        migrateProjects: List<MigrateProjectDTO>,
+        dbProjectVos: List<ProjectVO>
+    ): Boolean {
+        val migrateProjectRelationIds = dbProjectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
         // 1. 启动迁移任务
         migrateV3PolicyService.startMigrateTask(
-            v3GradeManagerIds = projectVos.filter { !it.relationId.isNullOrBlank() }.map { it.relationId!! }
+            v3GradeManagerIds = migrateProjectRelationIds
         )
         return migrateProjects.map { migrateProject ->
             migrateToRbacAuth(
                 migrateProject = migrateProject,
                 migrateTaskId = 0,
-                authType = V3_AUTH_TYPE
+                authType = AuthSystemType.V3_AUTH_TYPE
             )
         }.all { it }
+    }
+
+    override fun allV3ToRbacAuth(): Boolean {
+        executorService.submit {
+            var offset = 0
+            val limit = 100
+            do {
+                val dbV3Projects = client.get(ServiceProjectResource::class).getV0orV3Projects(
+                    authType = AuthSystemType.V3_AUTH_TYPE,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                val migrateProjects = dbV3Projects.map {
+                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
+                }
+                v3ToRbacAuth(
+                    migrateProjects = migrateProjects,
+                    dbProjectVos = dbV3Projects
+                )
+                offset += limit
+            } while (dbV3Projects.size == limit)
+        }
+        return true
     }
 
     override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
@@ -113,16 +148,36 @@ class RbacPermissionMigrateService constructor(
             migrateToRbacAuth(
                 migrateProject = migrateProject,
                 migrateTaskId = migrateTaskId,
-                authType = V0_AUTH_TYPE
+                authType = AuthSystemType.V0_AUTH_TYPE
             )
         }.all { it }
+    }
+
+    override fun allV0ToRbacAuth(): Boolean {
+        executorService.submit {
+            var offset = 0
+            val limit = 100
+            do {
+                val v0MigrateProjects = client.get(ServiceProjectResource::class).getV0orV3Projects(
+                    authType = AuthSystemType.V0_AUTH_TYPE,
+                    limit = limit,
+                    offset = offset
+                ).data ?: break
+                val migrateProjects = v0MigrateProjects.map {
+                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
+                }
+                v0ToRbacAuth(migrateProjects = migrateProjects)
+                offset += limit
+            } while (migrateProjects.size == limit)
+        }
+        return true
     }
 
     @Suppress("LongMethod", "ReturnCount", "ComplexMethod")
     private fun migrateToRbacAuth(
         migrateProject: MigrateProjectDTO,
         migrateTaskId: Int,
-        authType: String
+        authType: AuthSystemType
     ): Boolean {
         val projectCode = migrateProject.projectCode
         logger.info("Start migrate $projectCode from $authType to rbac")
@@ -187,7 +242,7 @@ class RbacPermissionMigrateService constructor(
             )
 
             when (authType) {
-                V0_AUTH_TYPE -> {
+                AuthSystemType.V0_AUTH_TYPE -> {
                     migrateV0Auth(
                         projectCode = projectCode,
                         projectName = projectInfo.projectName,
@@ -196,7 +251,7 @@ class RbacPermissionMigrateService constructor(
                         watcher = watcher
                     )
                 }
-                V3_AUTH_TYPE -> {
+                AuthSystemType.V3_AUTH_TYPE -> {
                     migrateV3Auth(
                         projectCode = projectCode,
                         projectName = projectInfo.projectName,
@@ -236,7 +291,7 @@ class RbacPermissionMigrateService constructor(
             handleException(
                 exception = exception,
                 projectCode = projectCode,
-                authType = authType
+                authType = authType.value
             )
             return false
         } finally {

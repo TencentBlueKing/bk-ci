@@ -110,12 +110,26 @@ class ProjectDao {
         }
     }
 
-    fun list(dslContext: DSLContext, limit: Int, offset: Int): Result<TProjectRecord> {
+    fun list(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int,
+        enabled: Boolean? = null,
+        channelCode: ProjectChannelCode? = null
+    ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
-                .where(ENABLED.eq(true))
-                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .limit(limit).offset(offset).fetch()
+                .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .let {
+                    if (enabled != null) it.and(ENABLED.eq(enabled)) else it
+                }
+                .let {
+                    if (channelCode != null) it.and(CHANNEL.eq(channelCode.name)) else it
+                }
+                .orderBy(CREATED_AT.desc())
+                .limit(limit)
+                .offset(offset)
+                .fetch()
         }
     }
 

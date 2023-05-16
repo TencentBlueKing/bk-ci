@@ -29,6 +29,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
@@ -77,6 +78,16 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun getAllProject(): Result<List<ProjectVO>> {
         return Result(projectService.getAllProject())
+    }
+
+    override fun getV0orV3Projects(authType: AuthSystemType, limit: Int, offset: Int): Result<List<ProjectVO>> {
+        return Result(
+            projectService.getV0orV3Projects(
+                authType = authType,
+                limit = limit,
+                offset = offset
+            )
+        )
     }
 
     override fun listByProjectCode(projectCodes: Set<String>): Result<List<ProjectVO>> {
