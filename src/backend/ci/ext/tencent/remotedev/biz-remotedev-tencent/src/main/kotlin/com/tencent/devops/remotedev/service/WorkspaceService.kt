@@ -86,7 +86,7 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
