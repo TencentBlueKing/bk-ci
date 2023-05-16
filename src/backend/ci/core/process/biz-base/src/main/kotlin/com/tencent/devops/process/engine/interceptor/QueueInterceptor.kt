@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
@@ -46,10 +45,10 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.util.TaskUtils
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.concurrent.TimeUnit
 
 /**
  * 队列拦截, 在外面业务逻辑中需要保证Summary数据的并发控制，否则可能会出现不准确的情况
@@ -82,8 +81,7 @@ class QueueInterceptor @Autowired constructor(
                 // Summary为空是不正常的，抛错
                 Response(
                     status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_SUMMARY_NOT_FOUND)
-
+                    message = "异常：流水线的基础构建数据Summary不存在，请联系管理员"
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -129,7 +127,7 @@ class QueueInterceptor @Autowired constructor(
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_QUEUE_FULL)
+                    message = "流水线串行，排队数设置为0"
                 )
             queueCount >= task.maxQueueSize -> {
                 if (groupName == null) {

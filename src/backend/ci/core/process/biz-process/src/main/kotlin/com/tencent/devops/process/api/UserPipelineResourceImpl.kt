@@ -45,6 +45,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_LIST_LENGTH_LIMIT
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
 import com.tencent.devops.process.engine.service.rule.PipelineRuleService
@@ -416,7 +417,9 @@ class UserPipelineResourceImpl @Autowired constructor(
             return Result(emptyMap())
         }
         if (pipelineIds.size > 100) {
-            throw InvalidParamException(message = "流水线列表长度不能超过100")
+            throw InvalidParamException(
+                I18nUtil.getCodeLanMessage(PIPELINE_LIST_LENGTH_LIMIT)
+            )
         }
         val result = pipelineIds.associateWith {
             try {
