@@ -143,7 +143,7 @@
                                     },
                                     props: {
                                         theme: 'primary',
-                                        href: `${WEB_URL_PREFIX}/bkrepo/${
+                                        href: `${WEB_URL_PREFIX}/repo/${
                                             this.$route.params.projectId
                                         }/generic?repoName=custom&path=${encodeURIComponent(
                                             `${this.activeFolder}/default`

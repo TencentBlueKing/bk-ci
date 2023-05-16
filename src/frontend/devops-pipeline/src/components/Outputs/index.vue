@@ -206,7 +206,7 @@
                             const fileName = this.activeOutput.fullPath.substring(0, pos)
                             const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]
                             window.open(
-                                `${WEB_URL_PREFIX}/bkrepo/${
+                                `${WEB_URL_PREFIX}/repo/${
                                     this.$route.params.projectId
                                 }/generic?repoName=${repoName}&path=${encodeURIComponent(
                                     `${fileName}/default`
