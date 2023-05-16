@@ -165,7 +165,7 @@ spec:
       resources:
       {{- toYaml .Values.apisix.resources | nindent 8 }}
     {{- if .Values.proxy.logConfig.sidecar.enable }}
-    - name: {{ .Chart.Name }}-log-agent
+    - name: {{ .Release.Name }}-log-agent
       image: {{ .Values.proxy.logConfig.sidecar.image }}
       imagePullPolicy: {{ .Values.apisix.image.pullPolicy }}
       {{- if .Values.proxy.logConfig.sidecar.resources }}
@@ -173,7 +173,7 @@ spec:
       {{- end }}
       workingDir: {{ .Values.proxy.logConfig.sidecar.workingDir }}
       volumeMounts:
-        - name: {{ .Chart.Name }}-logs
+        - name: {{ .Release.Name }}-logs
           mountPath: /data/workspace/proxy/logs
           readOnly: false
       {{- if .Values.proxy.logConfig.sidecar.env }}
