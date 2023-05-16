@@ -107,7 +107,7 @@ class LogStatusService @Autowired constructor(
         dslContext = dslContext,
         buildId = buildId,
         // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
-        jobId = jobId ?: "",
+        jobId = jobId,
         tag = tag ?: "",
         subTags = subTag ?: "",
         executeCount = executeCount ?: 1

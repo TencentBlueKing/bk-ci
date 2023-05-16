@@ -945,10 +945,10 @@ class LogServiceESImpl constructor(
     ): Boolean {
         return logStatusService.isFinish(
             buildId = buildId,
-            tag = tag?.ifBlank { null },
-            subTag = subTag?.ifBlank { null },
-            jobId = jobId?.ifBlank { null },
-            executeCount = executeCount ?: 1
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
         )
     }
 
