@@ -152,10 +152,21 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         if (iamInstanceList.contains("*")) {
             pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
-            val ids = iamInstanceList.map { it.toInt() }
+            val ids = iamInstanceList.map { it.toLong() }
             pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
+    }
+
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
+    ): Map<AuthPermission, List<String>> {
+        return authPermissions.associateWith {
+            pipelineIds
+        }
     }
 
     override fun createResource(

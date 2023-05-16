@@ -48,10 +48,6 @@ import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record7
@@ -62,6 +58,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 @Suppress("ALL")

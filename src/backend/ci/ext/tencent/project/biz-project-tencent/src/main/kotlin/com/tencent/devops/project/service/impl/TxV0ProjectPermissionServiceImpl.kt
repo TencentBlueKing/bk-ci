@@ -45,9 +45,10 @@ import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode.CALL_PEM_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.PEM_CREATE_ID_INVALID
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -70,12 +71,13 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     private val authUrl = authProperties.url
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
-        projectCreateInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceRegisterInfo: ResourceRegisterInfo,
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
-        val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        val accessToken = resourceCreateInfo.accessToken
+        val userId = resourceCreateInfo.userId
+        val userDeptDetail = resourceCreateInfo.userDeptDetail
+        val param: MutableMap<String, String> = mutableMapOf("project_code" to resourceRegisterInfo.resourceCode)
         // 创建AUTH项目
         val newAccessToken = if (accessToken.isNullOrBlank()) {
             param["creator"] = userId
@@ -134,13 +136,15 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         // 内部版用不到
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         authResourceApi.modifyResource(
             serviceCode = bsProjectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
-            projectCode = projectCode,
-            resourceCode = projectCode,
-            resourceName = projectName
+            projectCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
         )
     }
 
@@ -182,11 +186,11 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val isSuccess = authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = bsProjectAuthServiceCode,
-                projectCode = projectCode,
-                permission = permission,
-                resourceType = AuthResourceType.PROJECT
+            user = userId,
+            serviceCode = bsProjectAuthServiceCode,
+            projectCode = projectCode,
+            permission = permission,
+            resourceType = AuthResourceType.PROJECT
         )
         if (isSuccess) {
             return true
@@ -199,6 +203,19 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             authPermission = permission
         )
     }
+
+    override fun cancelCreateAuthProject(
+        userId: String,
+        projectCode: String
+    ) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun needApproval(needApproval: Boolean?) = false
+
+    override fun isShowUserManageIcon(): Boolean = false
+
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
 
     companion object {
         val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)

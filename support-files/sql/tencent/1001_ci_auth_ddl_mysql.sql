@@ -153,6 +153,46 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_MANAGER_APPROVAL`
 DEFAULT CHARSET = utf8mb4 COMMENT '蓝盾超级管理员权限续期审核表';
 
 -- ----------------------------
+-- Table structure for T_AUTH_ACTION
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
+    `actionId` varchar(64) NOT NULL COMMENT '操作ID',
+    `resourceType` varchar(64) NOT NULL COMMENT '资源类型',
+    `actionName` varchar(64) NOT NULL COMMENT '操作名称',
+    `englishName` varchar(64) DEFAULT NULL  COMMENT '动作英文名称',
+    `creator` varchar(32) DEFAULT NULL  COMMENT '创建者',
+    `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+    `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
+    `delete` bit(1) DEFAULT NULL  COMMENT '是否删除',
+    `actionType` varchar(32) DEFAULT NULL  COMMENT '操作类型',
+    PRIMARY KEY (`actionId`),
+    UNIQUE INDEX `UNI_INX_RESOURCE_TYPE_ACTION_ID`(`resourceType`, `actionId`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限操作表';
+
+-- ----------------------------
+-- Table structure for T_AUTH_RESOURCE_TYPE
+-- ----------------------------
+
+CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_TYPE` (
+    `ID` int(11) NOT NULL COMMENT 'ID',
+    `RESOURCE_TYPE` varchar(64) NOT NULL  COMMENT '资源类型',
+    `NAME` varchar(64) NOT NULL  COMMENT '资源名称',
+    `ENGLISH_NAME` varchar(64) DEFAULT NULL  COMMENT '资源英文名称',
+    `DESC` varchar(255) NOT NULL  COMMENT '资源描述',
+    `ENGLISH_DESC` varchar(255) DEFAULT NULL  COMMENT '资源英文描述',
+    `PARENT` varchar(255) DEFAULT NULL  COMMENT '父类资源',
+    `SYSTEM` varchar(255) NOT NULL  COMMENT '所属系统',
+    `CREATE_USER` varchar(32) NOT NULL  COMMENT '创建者',
+    `CREATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
+    `UPDATE_USER` varchar(32) DEFAULT NULL  COMMENT '更新者',
+    `UPDATE_TIME` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
+    `DELETE` bit(1) DEFAULT NULL  COMMENT '是否删除',
+    UNIQUE KEY `ID` (`ID`),
+    PRIMARY KEY (`RESOURCE_TYPE`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='权限资源类型表';
+
+-- ----------------------------
 -- Table structure for T_AUTH_TEMPORARY_VERIFY_RECORD
 -- ----------------------------
 

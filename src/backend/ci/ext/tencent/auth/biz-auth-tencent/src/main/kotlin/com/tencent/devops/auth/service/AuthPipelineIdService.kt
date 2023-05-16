@@ -46,7 +46,7 @@ class AuthPipelineIdService @Autowired constructor(
         return if (idNumType) {
             if (resourceName.isNullOrEmpty()) {
                 val pipelineInfo = client.get(ServiceTXPipelineResource::class)
-                    .getPipelineInfobyId(resourceCode.toInt()).data
+                    .getPipelineInfobyId(resourceCode.toLong()).data
                     ?: throw PermissionForbiddenException(
                         message = I18nUtil.getCodeLanMessage(
                             messageCode = CommonMessageCode.PERMISSION_DENIED,

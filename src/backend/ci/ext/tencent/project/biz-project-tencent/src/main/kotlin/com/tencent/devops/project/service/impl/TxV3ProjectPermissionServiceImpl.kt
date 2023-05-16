@@ -47,7 +47,9 @@ import com.tencent.devops.project.constant.ProjectMessageCode.FAILED_CREATE_PROJ
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_ID_INVALID_V0
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -81,11 +83,12 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun createResources(
-        userId: String,
-        accessToken: String?,
         resourceRegisterInfo: ResourceRegisterInfo,
-        userDeptDetail: UserDeptDetail?
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
+        val userId = resourceCreateInfo.userId
+        val accessToken = resourceCreateInfo.accessToken
+        val userDeptDetail = resourceCreateInfo.userDeptDetail
         // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
         // 同步创建V0项目
         val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
@@ -108,7 +111,9 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun modifyResource(projectCode: String, projectName: String) {
+    override fun modifyResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         // 资源都在接入方本地，无需修改iam侧数据
         return
     }
@@ -124,6 +129,16 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         // TODO:
         return emptyMap()
     }
+
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun needApproval(needApproval: Boolean?) = false
+
+    override fun isShowUserManageIcon(): Boolean = false
+
+    override fun filterProjects(userId: String, permission: AuthPermission): List<String>? = null
 
     override fun verifyUserProjectPermission(
         accessToken: String?,
@@ -205,7 +220,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code} , " +
-                            "message ${response.message} and response $responseContent")
+                        "message ${response.message} and response $responseContent"
+                )
                 throw OperationException(errorMessage)
             }
             return responseContent

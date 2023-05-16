@@ -38,9 +38,9 @@ import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")

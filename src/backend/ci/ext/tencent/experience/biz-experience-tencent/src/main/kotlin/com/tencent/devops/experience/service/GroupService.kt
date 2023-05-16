@@ -98,18 +98,27 @@ class GroupService @Autowired constructor(
         val addPublicElement = offset == 0 && returnPublic
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val groups = groupDao.list(
-            dslContext,
-            projectId,
-            offset,
-            finalLimit
+
+        val allGroupIds = groupDao.list(dslContext, projectId).map { it.value1() }
+        val canListGroupIds = experiencePermissionService.filterCanListGroup(
+            user = userId,
+            projectId = projectId,
+            groupRecordIds = allGroupIds
         )
-        val groupIds = groups.map { it.id }.toSet()
+
+        val groupListResult = groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupIds = canListGroupIds.toSet(),
+            offset = offset,
+            limit = finalLimit
+        )
+        val groupIds = groupListResult.map { it.id }.toSet()
 
         val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
         val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
 
-        val list = groups.map {
+        val list = groupListResult.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             val canDelete = groupPermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
             GroupSummaryWithPermission(
@@ -123,7 +132,7 @@ class GroupService @Autowired constructor(
                 remark = it.remark ?: "",
                 permissions = GroupPermission(canEdit, canDelete)
             )
-        }
+        }.toMutableList()
 
         if (addPublicElement) {
             list.add(
@@ -141,8 +150,7 @@ class GroupService @Autowired constructor(
                 )
             )
         }
-
-        return Pair(count, list)
+        return Pair(count + 1, list)
     }
 
     fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): List<String> {
@@ -167,6 +175,15 @@ class GroupService @Autowired constructor(
     }
 
     fun create(projectId: String, userId: String, group: GroupCreate): String {
+        if (!experiencePermissionService.validateCreateGroupPermission(
+                user = userId,
+                projectId = projectId
+            )) {
+            throw ErrorCodeException(
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
+                params = arrayOf(AuthPermission.CREATE.getI18n(I18nUtil.getLanguage(userId)))
+            )
+        }
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
@@ -206,11 +223,22 @@ class GroupService @Autowired constructor(
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
-        return serviceGet(groupHashId)
+        return serviceGet(
+            userId = userId,
+            projectId = projectId,
+            groupHashId = groupHashId
+        )
     }
 
-    fun serviceGet(groupHashId: String): Group {
+    fun serviceGet(userId: String, projectId: String, groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
+        experiencePermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.VIEW,
+            message = "用户在项目($projectId)没有体验组($groupHashId)的查看权限"
+        )
         val groupRecord = groupDao.get(dslContext, groupId)
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
