@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import {
+  computed,
   onMounted,
   onUnmounted,
 } from 'vue';
+import {
+  useRoute,
+  useRouter,
+} from 'vue-router';
 
+const route = useRoute();
+const router = useRouter();
+const projectId = computed(() => route.params.projectId)
 // 设置 rem
 const calcRem = () => {
   const doc = window.document;
@@ -20,7 +28,13 @@ onMounted(() => {
   calcRem();
   window.addEventListener('resize', calcRem, false);
   window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
-    console.log(data, 123123)
+    if (projectId.value !== data.currentProjectId) {
+      const params = Object.assign({}, route.params, { projectId: data.currentProjectId })
+      router.replace({
+          name: route.name,
+          params
+      })
+    }
   })
 });
 
