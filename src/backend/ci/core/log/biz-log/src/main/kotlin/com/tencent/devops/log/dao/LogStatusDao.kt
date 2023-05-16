@@ -45,7 +45,7 @@ class LogStatusDao {
         tag: String?,
         subTags: String?,
         jobId: String?,
-        executeCount: Int?,
+        executeCount: Int,
         logStorageMode: LogStorageMode,
         finish: Boolean
     ) {
