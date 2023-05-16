@@ -447,7 +447,6 @@ class PipelineInfoDao {
         return with(T_PIPELINE_INFO) {
             val query = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
-
             if (channelCode != null) {
                 query.and(CHANNEL.eq(channelCode.name))
             }
@@ -709,7 +708,7 @@ class PipelineInfoDao {
 
     fun getPipelineByAutoId(
         dslContext: DSLContext,
-        ids: List<Int>,
+        ids: List<Long>,
         projectId: String? = null
     ): Result<TPipelineInfoRecord> {
         return with(T_PIPELINE_INFO) {
