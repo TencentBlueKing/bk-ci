@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.websocket.pojo
+package com.tencent.devops.remotedev.pojo
 
 enum class WebSocketActionType {
     WORKSPACE_CREATE, // 创建workspace

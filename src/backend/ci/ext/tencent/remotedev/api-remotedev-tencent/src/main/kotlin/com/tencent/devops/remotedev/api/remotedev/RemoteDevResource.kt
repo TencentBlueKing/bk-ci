@@ -30,6 +30,7 @@ package com.tencent.devops.remotedev.api.remotedev
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -79,6 +80,9 @@ interface RemoteDevResource {
         @ApiParam(value = "工作空间ID", required = true)
         @QueryParam("workspaceName")
         workspaceName: String,
+        @ApiParam(value = "类型", required = false)
+        @QueryParam("type")
+        type: WebSocketActionType?,
         @ApiParam(value = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
