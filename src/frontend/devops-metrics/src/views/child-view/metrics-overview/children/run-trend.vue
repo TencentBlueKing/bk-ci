@@ -4,12 +4,8 @@ import Bar, { IData } from '@/components/charts/bar';
 import {
   ref,
   watch,
-  computed,
   onBeforeMount,
 } from 'vue';
-import {
-  useRoute,
-} from 'vue-router';
 import {
   sharedProps,
 } from '../common/props-type';
@@ -21,14 +17,6 @@ import { useRouter } from 'vue-router';
 interface IRunFailData extends IData {
   errorType: string | number
 }
-
-const route = useRoute();
-const projectId = computed(() => route.params.projectId);
-watch(() => projectId, () => {
-  init();
-}, {
-  deep: true,
-});
 
 // 状态
 const props = defineProps(sharedProps);

@@ -3,24 +3,13 @@ import AreaLine, { IData } from '@/components/charts/area-line';
 import {
   ref,
   watch,
-  computed,
   onBeforeMount,
 } from 'vue';
-import {
-  useRoute,
-} from 'vue-router';
 import {
   sharedProps,
 } from '../common/props-type';
 import http from '@/http/api';
 import { useI18n } from "vue-i18n";
-const route = useRoute();
-const projectId = computed(() => route.params.projectId);
-watch(() => projectId, () => {
-  getData();
-}, {
-  deep: true,
-});
 
 const { t } = useI18n();
 const props = defineProps(sharedProps);

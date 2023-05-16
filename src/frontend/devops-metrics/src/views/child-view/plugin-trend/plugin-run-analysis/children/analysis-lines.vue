@@ -4,11 +4,7 @@ import {
   ref,
   onMounted,
   watch,
-  computed,
 } from 'vue';
-import {
-  useRoute,
-} from 'vue-router';
 import http from '@/http/api';
 import {
   sharedProps,
@@ -21,14 +17,6 @@ interface ITrend {
   labels: Array<string>
 }
 
-const route = useRoute();
-const projectId = computed(() => route.params.projectId)
-
-watch(() => projectId, () => {
-  getData();
-}, {
-  deep: true
-})
 const props = defineProps(sharedProps);
 const isLoading = ref(false);
 const analysisData = ref<{
