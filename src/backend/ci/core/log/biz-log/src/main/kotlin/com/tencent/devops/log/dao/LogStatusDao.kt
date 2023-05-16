@@ -103,6 +103,7 @@ class LogStatusDao {
     fun isFinish(
         dslContext: DSLContext,
         buildId: String,
+        jobId: String?,
         tag: String?,
         subTags: String?,
         executeCount: Int?
@@ -110,10 +111,11 @@ class LogStatusDao {
         with(TLogStatus.T_LOG_STATUS) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .and(TAG.eq(tag ?: ""))
-                .and(SUB_TAG.eq(subTags ?: ""))
-                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
-                .fetchOne()?.finished ?: false
+                .and(JOB_ID.eq(jobId))
+                .and(TAG.eq(tag))
+                .and(SUB_TAG.eq(subTags))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .fetchOne()?.finished == true
         }
     }
 

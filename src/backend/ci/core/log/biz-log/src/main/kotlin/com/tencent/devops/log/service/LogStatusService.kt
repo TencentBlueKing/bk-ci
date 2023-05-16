@@ -102,12 +102,5 @@ class LogStatusService @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?
-    ): Boolean {
-        return if (jobId.isNullOrBlank()) {
-            logStatusDao.isFinish(dslContext, buildId, tag, subTag, executeCount)
-        } else {
-            val logStatusList = logStatusDao.listFinish(dslContext, buildId, executeCount)
-            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
-        }
-    }
+    ) = logStatusDao.isFinish(dslContext, buildId, jobId, tag, subTag, executeCount)
 }
