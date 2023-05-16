@@ -44,13 +44,14 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
@@ -66,7 +67,7 @@ import org.springframework.stereotype.Service
 class TaskAtomService @Autowired(required = false) constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineTaskService: PipelineTaskService,
-    private val pipelineBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -92,11 +93,13 @@ class TaskAtomService @Autowired(required = false) constructor(
                 userId = task.starter,
                 buildStatus = BuildStatus.RUNNING
             )
-            // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(
+            // 插件状态变化-启动（排除VM控制的启动插件）
+            if (!VMUtils.isVMTask(task.taskId)) taskBuildRecordService.taskStart(
                 projectId = task.projectId,
+                pipelineId = task.pipelineId,
                 buildId = task.buildId,
-                taskId = task.taskId
+                taskId = task.taskId,
+                executeCount = task.executeCount ?: 1
             )
             val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
@@ -199,20 +202,23 @@ class TaskAtomService @Autowired(required = false) constructor(
                 } else {
                     INIT_VERSION
                 }
-                val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
-                    TaskBuildEndParam(
-                        projectId = task.projectId,
-                        buildId = task.buildId,
-                        taskId = task.taskId,
-                        buildStatus = atomResponse.buildStatus,
-                        errorType = atomResponse.errorType,
-                        errorCode = atomResponse.errorCode,
-                        errorMsg = atomResponse.errorMsg,
-                        atomVersion = atomVersion
-                    )
+                val endParam = TaskBuildEndParam(
+                    projectId = task.projectId,
+                    pipelineId = task.pipelineId,
+                    buildId = task.buildId,
+                    containerId = task.containerId,
+                    taskId = task.taskId,
+                    executeCount = task.executeCount ?: 1,
+                    buildStatus = atomResponse.buildStatus,
+                    errorType = atomResponse.errorType,
+                    errorCode = atomResponse.errorCode,
+                    errorMsg = atomResponse.errorMsg,
+                    atomVersion = atomVersion
                 )
+                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
+                        task = task,
                         updateTaskInfo = UpdateTaskInfo(
                             projectId = task.projectId,
                             buildId = task.buildId,

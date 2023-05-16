@@ -38,7 +38,8 @@ import java.util.UUID
 open class RedisLock(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
-    private val expiredTimeInSeconds: Long
+    private val expiredTimeInSeconds: Long,
+    private val sleepTime: Long = 100L // 临时抽sleepTime出来，供特殊场景设置减少等待时间，后续用RedissionRedLock取代这个类
 ) : AutoCloseable {
     companion object {
         /**
@@ -80,7 +81,7 @@ open class RedisLock(
                 locked = true
                 return
             }
-            Thread.sleep(100)
+            Thread.sleep(sleepTime)
         }
     }
 
@@ -106,7 +107,7 @@ open class RedisLock(
      * @return
      */
     private fun set(key: String, value: String, seconds: Long): Boolean {
-        val finalLockKey = redisOperation.getKeyByRedisName(key)
+        val finalLockKey = decorateKey(key)
         return redisOperation.execute(RedisCallback { connection ->
             val result =
                 when (val nativeConnection = connection.nativeConnection) {
@@ -151,7 +152,7 @@ open class RedisLock(
 //            logger.info("Start to unlock the key($lockKey) of value($lockValue)")
             return redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
-                val finalLockKey = redisOperation.getKeyByRedisName(lockKey)
+                val finalLockKey = decorateKey(lockKey)
                 val keys = arrayOf(finalLockKey.toByteArray())
                 val result =
                     when (nativeConnection) {
@@ -186,6 +187,10 @@ open class RedisLock(
         }
 
         return true
+    }
+
+    open fun decorateKey(key: String): String {
+        return redisOperation.getKeyByRedisName(key)
     }
 
     fun <T> lockAround(action: () -> T): T {

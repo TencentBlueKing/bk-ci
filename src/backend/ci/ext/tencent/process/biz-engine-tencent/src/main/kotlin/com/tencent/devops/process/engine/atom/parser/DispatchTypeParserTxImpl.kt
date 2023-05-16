@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,6 +46,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -101,8 +101,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
-                            false, dispatchType.performanceConfigId)
+                        val pool = Pool(
+                            dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId
+                        )
                         dispatchType.image = JsonUtil.toJson(pool)
                     }
                 } else {
@@ -117,7 +119,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
                 if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
-                    dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                    dispatchType.value != DockerVersion.TLINUX2_2.value
+                ) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
@@ -126,7 +129,13 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // DevCloud镜像历史数据特殊处理
                 if (dispatchType is PublicDevCloudDispathcType) {
                     if (dispatchType.image != null) {
-                        val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(
+                            "devcloud/" + dispatchType.image!!.removePrefix("/"),
+                            null,
+                            null,
+                            false,
+                            dispatchType.performanceConfigId
+                        )
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
                         logger.warn("[$buildId]|image=null,dispatchType=${JsonUtil.toJson(dispatchType)}")
@@ -138,8 +147,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                 }
             }
-            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
-                            "dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info(
+                "$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
+                    "dispatchType=(${JsonUtil.toJson(dispatchType)})"
+            )
         } else {
             logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
@@ -152,10 +163,31 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
+        // 此处可以支持多种解析
+        return when (customInfo) {
+            is StreamDispatchInfo -> parseStreamDispatchInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                customInfo = customInfo,
+                context = context
+            )
+
+            else -> null
+        }
+    }
+
+    private fun parseStreamDispatchInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        customInfo: StreamDispatchInfo,
+        context: Map<String, String>
+    ): SampleDispatchInfo {
         val runVariables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         // 获取跨项目引用模板信息
         val buildTemplateAcrossInfo =
-            if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {
+            if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null) {
                 templateAcrossInfoService.getAcrossInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -167,27 +199,24 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             } else {
                 null
             }
-        // 此处可以支持多种解析
-        return when (customInfo) {
-            is StreamDispatchInfo -> SampleDispatchInfo(
-                name = customInfo.name,
-                dispatchType = TXStreamDispatchUtils.getDispatchType(
-                    client = client,
-                    objectMapper = objectMapper,
-                    job = customInfo.job,
-                    projectCode = customInfo.projectCode,
-                    defaultImage = customInfo.defaultImage,
-                    bizType = DispatchBizType.STREAM,
-                    resources = customInfo.resources,
-                    context = context,
-                    containsMatrix = true,
-                    buildTemplateAcrossInfo = buildTemplateAcrossInfo
-                ),
-                baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
-                buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
-            )
-            else -> null
-        }
+
+        return SampleDispatchInfo(
+            name = customInfo.name,
+            dispatchType = TXStreamDispatchUtils.getDispatchType(
+                client = client,
+                objectMapper = objectMapper,
+                job = customInfo.job,
+                projectCode = customInfo.projectCode,
+                defaultImage = customInfo.defaultImage,
+                bizType = DispatchBizType.STREAM,
+                resources = customInfo.resources,
+                context = context,
+                containsMatrix = true,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
+            ),
+            baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
+            buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
+        )
     }
 
     private fun genThirdDevCloudDispatchMessage(
@@ -196,30 +225,95 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ) {
-        var user = ""
-        var password = ""
         var credentialProject = projectId
         if (!dispatchType.credentialProject.isNullOrBlank()) {
             credentialProject = dispatchType.credentialProject!!
         }
+        val containerPool: Pool? =
+            kotlin.runCatching { objectMapper.readValue(dispatchType.value, Pool::class.java) }.getOrNull()
+
         // 通过凭证获取账号密码
-        if (!dispatchType.credentialId.isNullOrBlank()) {
-            val realCredentialId = EnvUtils.parseEnv(
-                command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId))
-            if (realCredentialId.isNotEmpty()) {
-                val ticketsMap = CommonCredentialUtils.getCredential(
-                    client = client,
-                    projectId = credentialProject,
-                    credentialId = realCredentialId,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-                user = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-        }
-        val credential = Credential(user, password)
-        val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
+        val credential = checkCredentialId(
+            pool = containerPool,
+            credentialId = dispatchType.credentialId?.ifBlank { null }
+                ?: containerPool?.credential?.credentialId?.ifBlank { null },
+            fromRemote = containerPool?.credential?.fromRemote,
+            projectId = credentialProject,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
+        val pool = Pool(
+            /*
+            container 应该是一个镜像地址字符串
+            containerPool?.container 走 stream 的情况, dispatchType.value走蓝盾的情况
+            */
+            container = containerPool?.container ?: dispatchType.value,
+            credential = credential,
+            macOS = null,
+            third = true,
+            performanceConfigId = dispatchType.performanceConfigId
+        )
         dispatchType.image = JsonUtil.toJson(pool)
+    }
+
+    private fun checkCredentialId(
+        pool: Pool?,
+        credentialId: String?,
+        fromRemote: Credential.Remote?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Credential {
+        if (credentialId.isNullOrBlank()) {
+            return /*兼容直接输入user/password的情况*/ pool?.credential ?: Credential("", "")
+        }
+        val realCredentialId = EnvUtils.parseEnv(
+            command = credentialId,
+            data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        )
+        val ticketsMap = try {
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = projectId,
+                credentialId = realCredentialId,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+        } catch (ignore: Exception) {
+            logger.info("get credential from $projectId failed, try to get from across project")
+            // 没有跨项目的模板引用就直接扔出错误
+            if (fromRemote == null || pool?.credential == null) {
+                throw ignore
+            }
+
+            kotlin.runCatching {
+                templateAcrossInfoService.getAcrossInfo(
+                    projectId, null, fromRemote.templateId
+                )
+            }.onFailure {
+                logger.warn("checkCredential get across info failed ${it.message}", it)
+                throw ignore
+            }.onSuccess {
+                if (it.isEmpty()) {
+                    logger.warn("checkCredential get across info empty")
+                    throw ignore
+                }
+                it.firstOrNull { info ->
+                    info.templateType == TemplateAcrossInfoType.JOB &&
+                        info.templateInstancesIds.contains(fromRemote.jobId)
+                } ?: run {
+                    logger.warn("checkCredential compare with across info failed|$it")
+                    throw ignore
+                }
+            }
+
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = fromRemote.targetProjectId,
+                credentialId = realCredentialId,
+                type = CredentialType.USERNAME_PASSWORD,
+                acrossProject = true
+            )
+        }
+        return Credential(user = ticketsMap["v1"] as String, password = ticketsMap["v2"] as String)
     }
 }

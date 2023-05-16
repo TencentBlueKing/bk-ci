@@ -43,7 +43,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
@@ -102,7 +102,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkRepoPath"
         val request = buildPut(
             url,
-            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
+            file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
@@ -162,7 +162,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "${buildVariables.buildId}/${file.name}"
         val request = buildPut(
             url,
-            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
+            file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
@@ -280,7 +280,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         isVmBuildEnv: Boolean?
     ): Result<Boolean> {
         LoggerService.addNormalLine("upload file url >>> $url")
-        val fileBody = RequestBody.create(MultipartFormData, file)
+        val fileBody = file.asRequestBody(MultipartFormData)
         val fileName = file.name
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)

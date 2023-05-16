@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.StagePauseCheck
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,8 +46,10 @@ data class Stage(
     @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var status: String? = null,
     @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     var elapsed: Long? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)
     val customBuildEnv: Map<String, String>? = null,
@@ -61,7 +64,11 @@ data class Stage(
     @ApiModelProperty("stage准入配置", required = false)
     var checkIn: StagePauseCheck? = null, // stage准入配置
     @ApiModelProperty("stage准出配置", required = false)
-    var checkOut: StagePauseCheck? = null // stage准出配置
+    var checkOut: StagePauseCheck? = null, // stage准出配置
+    @ApiModelProperty("步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    var executeCount: Int? = null,
+    @ApiModelProperty("各项耗时", required = true)
+    var timeCost: BuildRecordTimeCost? = null
 ) {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
@@ -84,5 +91,14 @@ data class Stage(
             return container.getContainerById(vmSeqId) ?: return@forEach
         }
         return null
+    }
+
+    /**
+     * 兼容性初始化等处理
+     */
+    fun transformCompatibility() {
+        containers.forEach { container ->
+            container.transformCompatibility()
+        }
     }
 }

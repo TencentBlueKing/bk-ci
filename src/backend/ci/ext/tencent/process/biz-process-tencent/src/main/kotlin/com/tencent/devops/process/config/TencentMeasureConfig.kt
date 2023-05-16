@@ -27,19 +27,10 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.service.PipelineInfoService
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
-import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
-import com.tencent.devops.process.template.service.TemplateService
-import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
@@ -59,38 +50,8 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TencentMeasureConfig {
 
-    @Value("\${build.atomMonitorData.report.switch:false}")
-    private val atomMonitorSwitch: String = "false"
-
-    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
-    private val maxMonitorDataSize: String = "1677216"
-
     @Bean
     fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun measureService(
-        @Autowired projectCacheService: ProjectCacheService,
-        @Autowired pipelineTaskService: PipelineTaskService,
-        @Autowired buildVariableService: BuildVariableService,
-        @Autowired dslContext: DSLContext,
-        @Autowired templateService: TemplateService,
-        @Autowired pipelineInfoService: PipelineInfoService,
-        @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher
-    ) = MeasureServiceImpl(
-        projectCacheService = projectCacheService,
-        pipelineTaskService = pipelineTaskService,
-        buildVariableService = buildVariableService,
-        templateService = templateService,
-        pipelineInfoService = pipelineInfoService,
-        redisOperation = redisOperation,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        atomMonitorSwitch = atomMonitorSwitch,
-        maxMonitorDataSize = maxMonitorDataSize,
-        measureEventDispatcher = measureEventDispatcher
-    )
 
     @Value("\${queueConcurrency.measure:3}")
     private val measureConcurrency: Int? = null

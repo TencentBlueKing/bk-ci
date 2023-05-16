@@ -52,6 +52,7 @@ CREATE TABLE IF NOT EXISTS `T_DEVCLOUD_BUILD_HIS` (
   `SECRET_KEY` varchar(64) DEFAULT '' COMMENT '构建密钥',
   `POOL_NO` varchar(64) DEFAULT '' COMMENT '并发构建池',
   `EXECUTE_COUNT` int(11) DEFAULT '1' COMMENT '流水线重试次数',
+  `PROJECT_ID` varchar(128) default '' COMMENT '蓝盾项目ID',
   PRIMARY KEY (`ID`),
   KEY `idx_1` (`BUIDLD_ID`,`PIPELINE_ID`,`VM_SEQ_ID`),
   KEY `idx_pipeline_vm_modify` (`PIPELINE_ID`,`VM_SEQ_ID`,`GMT_CREATE`),

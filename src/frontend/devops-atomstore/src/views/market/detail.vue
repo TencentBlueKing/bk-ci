@@ -169,6 +169,7 @@
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
                     detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
+                    detail.hotFlag = atomStatic.hotFlag
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.qualityData = quality
                     this.setDetail(detail)

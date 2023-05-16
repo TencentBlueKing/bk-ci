@@ -128,12 +128,8 @@ class YamlTemplateService @Autowired constructor(
         param: GetTemplateParam<BaseAction>
     ): String {
         with(param) {
-            val (isTicket, key) = getKey(targetRepo?.credentials?.personalAccessToken!!)
-            val personToken = if (isTicket) {
-                getTicket(param, key)
-            } else {
-                key
-            }
+            val key = targetRepo?.credentials?.personalAccessToken!!
+            val personToken = kotlin.runCatching { getTicket(param, key) }.getOrDefault(key)
             val ref = targetRepo?.ref ?: streamTriggerCache.getAndSaveRequestGitProjectInfo(
                 gitProjectKey = targetRepo?.repository!!,
                 action = extraParameters,
@@ -142,7 +138,7 @@ class YamlTemplateService @Autowired constructor(
             )!!.defaultBranch!!
             val content = extraParameters.api.getFileContent(
                 cred = extraParameters.getGitCred(personToken = personToken),
-                gitProjectId = extraParameters.getGitProjectIdOrName(),
+                gitProjectId = extraParameters.getGitProjectIdOrName(targetRepo!!.repository),
                 fileName = templateDirectory + path,
                 ref = ref,
                 retry = ApiRequestRetryInfo(true)
@@ -161,8 +157,8 @@ class YamlTemplateService @Autowired constructor(
                     client = client,
                     projectId = extraParameters.getProjectCode(),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN
-                )["v1"]!!
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN)
+                ).v1
             } catch (ignore: Exception) {
                 if (nowRepoId == null) {
                     // 没有库信息说明是触发库，并不需要获取跨项目信息
@@ -186,9 +182,9 @@ class YamlTemplateService @Autowired constructor(
                         streamGitConfig.getScmType()
                     ),
                     credentialId = key,
-                    type = CredentialType.ACCESSTOKEN,
+                    typeCheck = listOf(CredentialType.ACCESSTOKEN),
                     acrossProject = true
-                )["v1"]!!
+                ).v1
             } catch (ignore: Exception) {
                 throw YamlFormatException("across" + GET_TICKET_ERROR.format(ignore.message))
             }

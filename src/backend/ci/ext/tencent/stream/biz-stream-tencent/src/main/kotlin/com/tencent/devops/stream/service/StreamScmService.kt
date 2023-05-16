@@ -618,7 +618,7 @@ class StreamScmService @Autowired constructor(
                 apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
                 action = {
                     client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                        gitProjectId = gitProjectId,
+                        gitProjectId = gitProjectId.toString(),
                         path = filePath,
                         token = token,
                         ref = ref,
@@ -650,7 +650,7 @@ class StreamScmService @Autowired constructor(
                 apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR,
                 action = {
                     client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                        gitProjectId = gitProjectId,
+                        gitProjectId = gitProjectId.toString(),
                         path = if (filePath.contains("/")) {
                             filePath.substring(0, filePath.lastIndexOf("/"))
                         } else {

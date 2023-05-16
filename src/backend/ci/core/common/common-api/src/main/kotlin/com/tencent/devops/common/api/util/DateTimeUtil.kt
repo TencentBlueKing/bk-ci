@@ -149,16 +149,20 @@ object DateTimeUtil {
      * 2019-09-02T08:58:46+0000 -> xxxxx
      */
     fun zoneDateToTimestamp(timeStr: String?): Long {
+        return zoneDateToDate(timeStr)?.time ?: 0L
+    }
+
+    fun zoneDateToDate(timeStr: String?): Date? {
         try {
-            if (timeStr.isNullOrBlank()) return 0L
-            return formatter.parse(timeStr).time
+            if (timeStr.isNullOrBlank()) return null
+            return formatter.parse(timeStr)
         } catch (e: Exception) {
             try {
-                return utcTimeFormatter.parse(timeStr).time
+                return utcTimeFormatter.parse(timeStr)
             } catch (ignore: Exception) {
             }
         }
-        return 0L
+        return null
     }
 
     /**
@@ -228,6 +232,10 @@ object DateTimeUtil {
         val format = SimpleDateFormat(formatStr)
         val date = format.parse(dateTimeStr)
         return convertDateToLocalDateTime(date)
+    }
+
+    fun stringToTimestamp(dateTimeStr: String, formatStr: String = YYYY_MM_DD_HH_MM_SS): Long {
+        return stringToLocalDateTime(dateTimeStr, formatStr).timestamp()
     }
 
     /**

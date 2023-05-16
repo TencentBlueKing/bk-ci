@@ -79,7 +79,8 @@ class StoreWebsocketService @Autowired constructor(
                 buildId = null,
                 pipelineId = null,
                 projectId = null,
-                atomId = atomId
+                atomId = atomId,
+                executeCount = null
             )
         )
         logger.info("store websocket: page[$page], atomId:[$atomId]")

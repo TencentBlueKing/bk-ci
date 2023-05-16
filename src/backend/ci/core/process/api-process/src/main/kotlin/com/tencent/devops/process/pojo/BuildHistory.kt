@@ -60,7 +60,7 @@ data class BuildHistory(
     val isMobileStart: Boolean = false,
     @ApiModelProperty("原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
-    @ApiModelProperty("排队于", required = false)
+    @ApiModelProperty("排队于（毫秒时间戳）", required = false)
     val queueTime: Long?,
     @ApiModelProperty("构件列表", required = false)
     val artifactList: List<FileInfo>?,
@@ -91,5 +91,7 @@ data class BuildHistory(
     @ApiModelProperty("流水线编排的最后更新时间", required = false)
     val updateTime: Long? = null,
     @ApiModelProperty("并发时,设定的group", required = false)
-    var concurrencyGroup: String? = null
+    var concurrencyGroup: String? = null,
+    @ApiModelProperty("构建执行次数（重试次数-1）", required = false)
+    val executeCount: Int?
 )

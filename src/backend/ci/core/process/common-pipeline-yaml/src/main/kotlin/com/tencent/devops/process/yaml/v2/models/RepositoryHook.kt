@@ -29,6 +29,7 @@ package com.tencent.devops.process.yaml.v2.models
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.process.yaml.v2.models.on.DeleteRule
 import com.tencent.devops.process.yaml.v2.models.on.IssueRule
 import com.tencent.devops.process.yaml.v2.models.on.NoteRule
@@ -45,7 +46,11 @@ data class PreRepositoryHook(
 
     val credentials: Any? = null,
 
-    val events: RepositoryHookEvents? = null
+    val events: RepositoryHookEvents? = null,
+    @JsonProperty("repos_ignore")
+    val reposIgnore: List<String> = emptyList(),
+    @JsonProperty("repos_ignore_condition")
+    val reposIgnoreCondition: List<String> = emptyList()
 )
 
 data class RepositoryHook(
@@ -57,7 +62,9 @@ data class RepositoryHook(
 
     val credentialsForPassword: String? = null,
 
-    val credentialsForToken: String? = null
+    val credentialsForToken: String? = null,
+    val reposIgnore: List<String> = emptyList(),
+    val reposIgnoreCondition: List<String> = emptyList()
 
 )
 

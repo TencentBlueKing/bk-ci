@@ -16,6 +16,7 @@ import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
+import { BkciDocs } from '../../common-lib/docs'
 
 import createLocale from '../../locale'
 
@@ -86,7 +87,6 @@ router.beforeEach((to, from, next) => {
 })
 window.eventBus = eventBus
 window.vuexStore = store
-window.isMooc = false
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
@@ -95,6 +95,7 @@ Vue.prototype.isExtendTx = VERSION_TYPE === 'tencent'
 Vue.prototype.$permissionActionMap = actionMap
 Vue.prototype.$permissionResourceMap = resourceMap
 Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.BKCI_DOCS = BkciDocs
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -139,9 +140,6 @@ window.devops = new Vue({
     i18n,
     router,
     store,
-    provide: {
-        isMooc
-    },
     render (h) {
         return h(App)
     }

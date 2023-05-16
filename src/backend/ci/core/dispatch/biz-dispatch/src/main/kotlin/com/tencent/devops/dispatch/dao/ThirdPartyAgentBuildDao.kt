@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
@@ -203,11 +204,21 @@ class ThirdPartyAgentBuildDao {
         }
     }
 
-    fun fetchOneQueueBuild(dslContext: DSLContext, agentId: String): TDispatchThirdpartyAgentBuildRecord? {
+    fun fetchOneQueueBuild(
+        dslContext: DSLContext,
+        agentId: String,
+        buildType: BuildJobType
+    ): TDispatchThirdpartyAgentBuildRecord? {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+            val select = dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
+            if (buildType == BuildJobType.DOCKER) {
+                select.and(DOCKER_INFO.isNotNull)
+            } else if (buildType == BuildJobType.BINARY) {
+                select.and(DOCKER_INFO.isNull)
+            }
+            return select
                 .orderBy(UPDATED_TIME.asc())
                 .limit(1)
                 .fetchAny()

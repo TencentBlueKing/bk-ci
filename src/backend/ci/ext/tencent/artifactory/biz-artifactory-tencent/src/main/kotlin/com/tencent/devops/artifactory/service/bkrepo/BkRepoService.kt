@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
@@ -57,6 +58,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -197,8 +199,11 @@ class BkRepoService @Autowired constructor(
         matadataMap.forEach {
             propertyList.add(Property(it.key, it.value))
         }
-        if (matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            val pipelineName = pipelineService.getPipelineName(projectId, matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
+        if (matadataMap.containsKey(ARCHIVE_PROPS_PROJECT_ID) && matadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+            val pipelineName = pipelineService.getPipelineName(
+                matadataMap[ARCHIVE_PROPS_PROJECT_ID]!!,
+                matadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!
+            )
             propertyList.add(Property(ARCHIVE_PROPS_PIPELINE_NAME, pipelineName))
         }
         return propertyList
@@ -624,10 +629,12 @@ class BkRepoService @Autowired constructor(
             pathNamePairs = pathNamePairs,
             metadata = condition.properties,
             page = 0,
-            pageSize = 10000
+            pageSize = 10000,
+            sortBy = "lastModifiedDate",
+            direction = Sort.Direction.DESC
         ).records
 
-        return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
+        return fileList.map { it.fullPath }
     }
 
     override fun copyToCustom(
@@ -757,8 +764,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-                "/bkrepo/api/external/repository$shareUri&download=true"
+
+        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(

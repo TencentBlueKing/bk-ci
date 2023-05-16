@@ -88,7 +88,21 @@ class StreamScmServiceTest {
 
     @Test
     fun testGetProjectInfSuccess() {
-        val gitCIProjectInfoMock = GitCIProjectInfo(222, "1", "1", "1", "1", "1", "1", "1", "1", "1", "1")
+        val gitCIProjectInfoMock = GitCIProjectInfo(
+            gitProjectId = 222,
+            name = "1",
+            homepage = "1",
+            gitHttpUrl = "1",
+            gitHttpsUrl = "1",
+            gitSshUrl = "1",
+            nameWithNamespace = "1",
+            pathWithNamespace = "1",
+            defaultBranch = "1",
+            description = "1",
+            avatarUrl = "1",
+            createdAt = "1",
+            creatorId = "1"
+        )
         every {
             serviceGitCiResource.getProjectInfo("1", "1", true)
         } throws (CustomException(Response.Status.FORBIDDEN, "403 无权限")) andThen (Result(gitCIProjectInfoMock))

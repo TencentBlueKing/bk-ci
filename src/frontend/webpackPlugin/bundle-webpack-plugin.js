@@ -88,7 +88,9 @@ module.exports = class BundleWebpackPlugin {
 
                 let json = {}
                 if (fs.existsSync(SERVICE_ASSETS_JSON_PATH)) {
-                    json = require(SERVICE_ASSETS_JSON_PATH)
+                    json = JSON.parse(
+                        fs.readFileSync(SERVICE_ASSETS_JSON_PATH, 'utf-8').toString()
+                    )
                 }
                 json = {
                     ...json,

@@ -30,7 +30,6 @@ package com.tencent.devops.project.service.tof
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserRefreshService
 import com.tencent.devops.project.service.ProjectUserService
 import org.slf4j.LoggerFactory
@@ -83,22 +82,11 @@ class CronSynTofService @Autowired constructor(
     private fun sync(page: Int, pageSize: Int = 500): Boolean {
         val pageLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val userList = projectUserService.listUser(pageLimit.limit, pageLimit.offset) ?: return false
-
         userList.forEach {
             try {
-                val userInfo = UserDeptDetail(
-                    bgName = it.bgName,
-                    bgId = it.bgId.toString(),
-                    centerName = it.centerName,
-                    centerId = it.centerId?.toString() ?: "",
-                    deptName = it.deptName,
-                    deptId = it.deptId?.toString() ?: "",
-                    groupName = it.groupName,
-                    groupId = it.groypId?.toString() ?: ""
-                )
-                val synUser = projectUserRefreshService.synUserInfo(userInfo, it.userId)
+                val synUser = projectUserRefreshService.synUserInfo(it, it.userId!!)
                 if (synUser != null) {
-                    logger.info("syn userdata  ${it.userId}: old: $userInfo, new:$synUser")
+                    logger.info("syn userdata  ${it.userId}: old: $it, new:$synUser")
                 }
             } catch (e: Exception) {
                 logger.warn("synUser fail: user[${it.userId}] , $e")

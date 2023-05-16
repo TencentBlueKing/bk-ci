@@ -44,7 +44,9 @@ class CodeCCAutoConfiguration {
     fun coverityApi(codeccConfig: CodeccConfig): CodeccApi {
         return CodeccApi(
             codeccApiUrl = codeccConfig.codeccApiGateWay,
-            codeccApiProxyUrl = codeccConfig.codeccApiProxyGateWay
+            codeccApiProxyUrl = codeccConfig.codeccApiProxyGateWay,
+            codeccHost = codeccConfig.codeccHost,
+            codeccGrayProjectId = codeccConfig.codeccGrayProjectId
         )
     }
 }

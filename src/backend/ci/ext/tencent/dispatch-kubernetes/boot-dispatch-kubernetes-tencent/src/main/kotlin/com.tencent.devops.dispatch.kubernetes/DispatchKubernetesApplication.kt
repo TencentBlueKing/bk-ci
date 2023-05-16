@@ -33,7 +33,8 @@ import org.springframework.context.annotation.ComponentScan
 @MicroService
 @ComponentScan(
     "com.tencent.devops.dispatch",
-    "com.tencent.devops.common.dispatch.sdk"
+    "com.tencent.devops.common.dispatch.sdk",
+    "com.tencent.devops.common.remotedev"
 )
 class DispatchKubernetesApplication
 

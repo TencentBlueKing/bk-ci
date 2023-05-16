@@ -80,17 +80,21 @@ class CommitService @Autowired constructor(
                 repoId = it.repoId?.toString(),
                 repoName = it.repoName,
                 elementId = it.elementId,
+                // 代码库为工蜂时，封装提交链接信息
                 url = if (it.type.toInt() == 2 && repoUrl != null) {
                     val urlAndRepo = GitUtils.getDomainAndRepoName(repoUrl)
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
-                } else null
+                } else null,
+                repoUrl = it.url
             )
         }?.groupBy { it.elementId }?.map { a ->
             val elementId = a.value[0].elementId
             val repoId = a.value[0].repoId
             val repoName = a.value[0].repoName
+            // 代码库URL
+            val repoUrl = a.value[0].repoUrl
             CommitResponse(
-                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
+                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoUrl ?: "unknown repo"),
                 elementId = elementId,
                 records = a.value.filter { it.commit.isNotBlank() }
             )

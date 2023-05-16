@@ -68,9 +68,11 @@ class ModelElement @Autowired(required = false) constructor(
         val elementList = makeServiceElementList(job)
         // 解析job steps
         job.steps!!.forEach { step ->
+            val timeout = setupTimeout(step)
             val additionalOptions = ElementAdditionalOptions(
                 continueWhenFailed = step.continueOnError ?: false,
-                timeout = step.timeoutMinutes?.toLong() ?: 480,
+                timeout = timeout,
+                timeoutVar = timeout.toString(),
                 retryWhenFailed = step.retryTimes != null,
                 retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
@@ -96,7 +98,9 @@ class ModelElement @Autowired(required = false) constructor(
                 manualRetry = false
             )
 
-            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(step.ifModify, changeSet)
+            additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(
+                step.ifModify, changeSet, event.checkIfModify, event
+            )
             // bash
             val element: Element? = when {
                 step.run != null -> {
@@ -118,13 +122,20 @@ class ModelElement @Autowired(required = false) constructor(
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
-                    ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                    ModelCommon.installMarketAtom(
+                        client = client,
+                        projectCode = event.projectCode,
+                        userId = event.elementInstallUserId,
+                        atomCode = element.getAtomCode()
+                    )
                 }
             }
         }
 
         return elementList
     }
+
+    private fun setupTimeout(step: Step) = step.timeoutMinutes?.toLong() ?: 480
 
     private fun makeRunElement(
         step: Step,

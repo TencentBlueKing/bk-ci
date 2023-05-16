@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -61,7 +62,9 @@ data class Model(
     @ApiModelProperty("流水线事件回调", required = false)
     var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
     @ApiModelProperty("静态流水线组", required = false)
-    var staticViews: List<String> = emptyList()
+    var staticViews: List<String> = emptyList(),
+    @ApiModelProperty("各项耗时", required = true)
+    var timeCost: BuildRecordTimeCost? = null
 ) {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0

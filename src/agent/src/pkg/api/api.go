@@ -126,8 +126,8 @@ func GetAgentStatus() (*httputil.DevopsResult, error) {
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func GetBuild() (*httputil.AgentResult, error) {
-	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup")
+func GetBuild(buildType BuildJobType) (*httputil.AgentResult, error) {
+	url := buildUrl(fmt.Sprintf("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/startup?buildType=%s", buildType))
 	return httputil.NewHttpClient().Get(url).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()
 }
 

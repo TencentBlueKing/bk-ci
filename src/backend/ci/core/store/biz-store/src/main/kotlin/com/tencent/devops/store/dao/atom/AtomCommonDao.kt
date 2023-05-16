@@ -63,6 +63,15 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         }
     }
 
+    override fun getStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(NAME)
+                .from(this)
+                .where(ATOM_CODE.eq(storeCode).and(LATEST_FLAG.eq(true)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     override fun getNewestStoreNameByCode(dslContext: DSLContext, storeCode: String): String? {
         return with(TAtom.T_ATOM) {
             dslContext.select(NAME).from(this)

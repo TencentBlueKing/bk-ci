@@ -65,6 +65,12 @@ interface StreamGitProjectInfo {
 
     // 名称全称
     val nameWithNamespace: String
+
+    // 触发仓库创建时间字符串 如:2017-08-13T07:37:14+0000
+    val repoCreatedTime: String
+
+    // 触发仓库创建人id， 工蜂侧是数字 id 需要使用时转换为 name
+    val repoCreatorId: String
 }
 
 fun StreamGitProjectInfo.toStreamGitProjectInfoWithProject() = StreamGitProjectInfoWithProject(

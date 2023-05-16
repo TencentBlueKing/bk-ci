@@ -28,8 +28,8 @@
 package com.tencent.devops.dispatch.kubernetes.dao
 
 import com.tencent.devops.dispatch.kubernetes.pojo.PerformanceOptionsVO
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesPerformanceOption
-import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchKubernetesPerformanceOptionRecord
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesPerformanceOption
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchKubernetesPerformanceOptionRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

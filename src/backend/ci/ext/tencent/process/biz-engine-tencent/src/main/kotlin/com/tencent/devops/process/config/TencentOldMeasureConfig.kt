@@ -28,19 +28,8 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.service.PipelineInfoService
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
-import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
-import com.tencent.devops.process.template.service.TemplateService
-import org.jooq.DSLContext
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -49,38 +38,7 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TencentOldMeasureConfig {
 
-    @Value("\${build.atomMonitorData.report.switch:false}")
-    private val atomMonitorSwitch: String = "false"
-
-    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
-    private val maxMonitorDataSize: String = "1677216"
-
     @Bean
     @ConditionalOnMissingBean(name = ["measureEventDispatcher"])
     fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
-
-    @Bean
-    @ConditionalOnMissingBean(name = ["measureService"])
-    fun measureService(
-        @Autowired projectCacheService: ProjectCacheService,
-        @Autowired pipelineTaskService: PipelineTaskService,
-        @Autowired buildVariableService: BuildVariableService,
-        @Autowired dslContext: DSLContext,
-        @Autowired templateService: TemplateService,
-        @Autowired pipelineInfoService: PipelineInfoService,
-        @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher
-    ) = MeasureServiceImpl(
-        projectCacheService = projectCacheService,
-        pipelineTaskService = pipelineTaskService,
-        buildVariableService = buildVariableService,
-        templateService = templateService,
-        pipelineInfoService = pipelineInfoService,
-        redisOperation = redisOperation,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        atomMonitorSwitch = atomMonitorSwitch,
-        maxMonitorDataSize = maxMonitorDataSize,
-        measureEventDispatcher = measureEventDispatcher
-    )
 }

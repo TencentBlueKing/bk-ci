@@ -470,16 +470,18 @@
             },
 
             handleFilterChange () {
-                this.initBuildData()
-                const query = { page: 1 }
-                Object.keys(this.filterData).forEach(key => {
-                    if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
-                        query[key] = this.filterData[key]
-                    } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
-                        query[key] = this.filterData[key].join(',')
-                    }
-                })
-                this.$router.replace({ query })
+                this.$nextTick(() => {
+                    this.initBuildData()
+                    const query = { page: 1 }
+                    Object.keys(this.filterData).forEach(key => {
+                        if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                            query[key] = this.filterData[key]
+                        } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                            query[key] = this.filterData[key].join(',')
+                        }
+                    })
+                    this.$router.replace({ query })
+                });
             },
 
             toggleFilterBranch (isOpen) {
@@ -758,6 +760,7 @@
                 return pipelines.getPipelineParamJson(this.projectId, this.curPipeline.pipelineId, { branchName, commitId }).then((res) => {
                     this.uiFormSchema = res.schema || {}
                     this.formData.yaml = res.yaml || ''
+                    this.formData.inputs = {}
                     this.disableManual = res.enable === false
                 }).catch((err) => {
                     if (err.code === 2129028) {

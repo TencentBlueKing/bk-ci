@@ -37,13 +37,15 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -64,29 +66,7 @@ class PipelineBuildDao {
         private const val DEFAULT_PAGE_SIZE = 10
     }
 
-    fun create(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        version: Int,
-        buildNum: Int,
-        trigger: String,
-        status: BuildStatus,
-        startUser: String,
-        triggerUser: String,
-        taskCount: Int,
-        firstTaskId: String,
-        channelCode: ChannelCode,
-        parentBuildId: String?,
-        parentTaskId: String?,
-        buildParameters: List<BuildParameters>,
-        webhookType: String?,
-        webhookInfo: String?,
-        buildMsg: String?,
-        buildNumAlias: String? = null,
-        concurrencyGroup: String? = null
-    ) {
+    fun create(dslContext: DSLContext, startBuildContext: StartBuildContext) {
         try {
             with(T_PIPELINE_BUILD_HISTORY) {
                 dslContext.insertInto(
@@ -97,7 +77,6 @@ class PipelineBuildDao {
                     PIPELINE_ID,
                     PARENT_BUILD_ID,
                     PARENT_TASK_ID,
-                    START_TIME,
                     START_USER,
                     TRIGGER_USER,
                     STATUS,
@@ -114,28 +93,27 @@ class PipelineBuildDao {
                     BUILD_NUM_ALIAS,
                     CONCURRENCY_GROUP
                 ).values(
-                    buildId,
-                    buildNum,
-                    projectId,
-                    pipelineId,
-                    parentBuildId,
-                    parentTaskId,
+                    startBuildContext.buildId,
+                    startBuildContext.buildNum,
+                    startBuildContext.projectId,
+                    startBuildContext.pipelineId,
+                    startBuildContext.parentBuildId,
+                    startBuildContext.parentTaskId,
+                    startBuildContext.userId,
+                    startBuildContext.triggerUser,
+                    startBuildContext.startBuildStatus.ordinal,
+                    startBuildContext.startType.name,
+                    startBuildContext.taskCount,
+                    startBuildContext.firstTaskId,
+                    startBuildContext.channelCode.name,
+                    startBuildContext.resourceVersion,
                     LocalDateTime.now(),
-                    startUser,
-                    triggerUser,
-                    status.ordinal,
-                    trigger,
-                    taskCount,
-                    firstTaskId,
-                    channelCode.name,
-                    version,
-                    LocalDateTime.now(),
-                    JsonUtil.toJson(buildParameters, formatted = false),
-                    webhookType,
-                    webhookInfo,
-                    buildMsg,
-                    buildNumAlias,
-                    concurrencyGroup
+                    JsonUtil.toJson(startBuildContext.buildParameters, formatted = false),
+                    startBuildContext.webhookInfo?.webhookType,
+                    startBuildContext.webhookInfo?.let { self -> JsonUtil.toJson(self, formatted = false) },
+                    startBuildContext.buildMsg,
+                    startBuildContext.buildNumAlias,
+                    startBuildContext.concurrencyGroup
                 ).execute()
             }
         } catch (t: Throwable) {
@@ -160,12 +138,8 @@ class PipelineBuildDao {
             val where = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                where.and(STATUS.`in`(statusIntSet))
+            if (!statusSet.isNullOrEmpty()) {
+                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
             where.fetch()
         }
@@ -214,6 +188,15 @@ class PipelineBuildDao {
         }
     }
 
+    fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.select(START_USER)
+                .from(this)
+                .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     /**
      * 旧接口适配
      */
@@ -239,15 +222,6 @@ class PipelineBuildDao {
             dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
-        }
-    }
-
-    fun deletePipelineBuilds(dslContext: DSLContext, projectId: String, pipelineId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .execute()
         }
     }
 
@@ -302,12 +276,8 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
 
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                select.and(STATUS.`in`(statusIntSet))
+            if (!statusSet.isNullOrEmpty()) {
+                select.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
 
             if (buildNum != null && buildNum > 0) {
@@ -344,7 +314,7 @@ class PipelineBuildDao {
             if (pipelineId != null) {
                 select.and(PIPELINE_ID.eq(pipelineId))
             }
-            select.orderBy(QUEUE_TIME.asc()).limit(1)
+            select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
     }
@@ -356,15 +326,13 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        startTime: LocalDateTime? = null,
-        retry: Boolean = false
+        startTime: LocalDateTime?,
+        executeCount: Int?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
-            if (!retry) {
-                update.set(START_TIME, startTime)
-            }
-            update.set(IS_RETRY, retry)
+            startTime?.let { update.set(START_TIME, startTime) }
+            executeCount?.let { update.set(EXECUTE_COUNT, executeCount) }
             update.setNull(ERROR_INFO)
             update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
@@ -388,7 +356,10 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(RECOMMEND_VERSION, recommendVersion)
+
+            if (!recommendVersion.isNullOrBlank()) {
+                baseQuery.set(RECOMMEND_VERSION, recommendVersion)
+            }
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)
@@ -536,26 +507,38 @@ class PipelineBuildDao {
                 } catch (ignored: Exception) {
                     null
                 },
+                stageStatus = kotlin.runCatching {
+                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                }.getOrNull(),
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
                 retryFlag = t.isRetry,
+                executeCount = t.executeCount,
                 executeTime = t.executeTime ?: 0,
                 concurrencyGroup = t.concurrencyGroup,
                 webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                buildMsg = t.buildMsg,
                 errorType = t.errorType,
                 errorCode = t.errorCode,
-                errorMsg = t.errorMsg
+                errorMsg = t.errorMsg,
+                material = t.material?.let {
+                    JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
+                },
+                remark = t.remark
             )
         }
     }
 
-    fun count(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
+    fun count(dslContext: DSLContext, projectId: String, pipelineId: String, status: List<BuildStatus>? = null): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.selectCount().from(this)
+            val where = dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)!!
+            if (!status.isNullOrEmpty()) {
+                where.and(STATUS.`in`(status.map { it.ordinal }))
+            }
+            where.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -705,12 +688,12 @@ class PipelineBuildDao {
             var conditionsOr: Condition
 
             conditionsOr = JooqUtils.jsonExtract(t1 = MATERIAL, t2 = "\$[*].aliasName", lower = true)
-                .like("%${materialAlias.first().toLowerCase()}%")
+                .like("%${materialAlias.first().lowercase()}%")
 
             materialAlias.forEachIndexed { index, s ->
                 if (index == 0) return@forEachIndexed
                 conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.toLowerCase()}%")
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.lowercase()}%")
                 )
             }
             where.and(conditionsOr)
@@ -724,12 +707,12 @@ class PipelineBuildDao {
             var conditionsOr: Condition
 
             conditionsOr = JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true)
-                .like("%${materialBranch.first().toLowerCase()}%")
+                .like("%${materialBranch.first().lowercase()}%")
 
             materialBranch.forEachIndexed { index, s ->
                 if (index == 0) return@forEachIndexed
                 conditionsOr = conditionsOr.or(
-                    JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.toLowerCase()}%")
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.lowercase()}%")
                 )
             }
             where.and(conditionsOr)
@@ -785,7 +768,7 @@ class PipelineBuildDao {
                 ).lessOrEqual(totalTimeMax)
             )
         }
-        if (remark != null && remark.isNotEmpty()) {
+        if (!remark.isNullOrBlank()) {
             where.and(REMARK.like("%$remark%"))
         }
         if (buildNoStart != null && buildNoStart > 0) {
@@ -794,7 +777,7 @@ class PipelineBuildDao {
         if (buildNoEnd != null && buildNoEnd > 0) {
             where.and(BUILD_NUM.le(buildNoEnd))
         }
-        if (buildMsg != null && buildMsg.isNotEmpty()) {
+        if (!buildMsg.isNullOrBlank()) {
             where.and(BUILD_MSG.like("%$buildMsg%"))
         }
     }
@@ -929,11 +912,27 @@ class PipelineBuildDao {
 
     fun getBuildParameters(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
-            val record = dslContext.selectFrom(this)
+            return dslContext.select(BUILD_PARAMETERS)
+                .from(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
-                .fetchOne()
-            return record?.buildParameters
+                .fetchAny(0, String::class.java)
+        }
+    }
+
+    fun updateBuildParameters(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        buildParameters: Collection<BuildParameters>
+    ): Boolean {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            return dslContext.update(this)
+                .set(BUILD_PARAMETERS, JsonUtil.toJson(buildParameters, formatted = false))
+                .where(BUILD_ID.eq(buildId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId)).execute() == 1
         }
     }
 
@@ -965,6 +964,23 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId).and(BUILD_ID.eq(buildId)))).fetchAny()
+        }
+    }
+
+    fun countBuildNumByVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(VERSION.eq(version))
+            dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

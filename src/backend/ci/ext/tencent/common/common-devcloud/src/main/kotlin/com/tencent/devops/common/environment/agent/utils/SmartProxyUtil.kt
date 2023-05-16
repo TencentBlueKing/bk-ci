@@ -69,4 +69,23 @@ object SmartProxyUtil {
 
         return headerBuilder
     }
+
+    fun makeIdcProxyHeaders(
+        appId: String,
+        token: String,
+        userId: String
+    ): Map<String, String> {
+        val headerBuilder = mutableMapOf<String, String>()
+        headerBuilder["APPID"] = appId
+        val random = RandomStringUtils.randomAlphabetic(8)
+        headerBuilder["RANDOM"] = random
+        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        headerBuilder["TIMESTP"] = timestamp
+        val encKey = DigestUtils.md5Hex("$token$timestamp$random")
+        headerBuilder["ENCKEY"] = encKey
+        headerBuilder["TIMESTAMP"] = timestamp
+        headerBuilder["X-STAFFNAME"] = userId
+
+        return headerBuilder
+    }
 }

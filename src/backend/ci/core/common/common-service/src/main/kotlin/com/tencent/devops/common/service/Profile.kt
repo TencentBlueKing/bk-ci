@@ -98,5 +98,9 @@ class Profile(private val environment: Environment) {
         }
     }
 
+    fun getActiveProfiles(): Array<String> {
+        return activeProfiles
+    }
+
     fun getApplicationName() = environment.getProperty("spring.application.name")
 }

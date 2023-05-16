@@ -33,7 +33,7 @@ template:
 build:
   atomMonitorData:
     report:
-      switch: false
+      switch: true
       maxMonitorDataSize: 1677216
  
 # 流水线相关配置 

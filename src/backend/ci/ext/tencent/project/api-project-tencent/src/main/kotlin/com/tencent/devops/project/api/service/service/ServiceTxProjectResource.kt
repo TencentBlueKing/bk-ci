@@ -167,6 +167,15 @@ interface ServiceTxProjectResource {
     ): Result<ProjectVO?>
 
     @GET
+    @Path("/remotedev/userProject/{userId}")
+    @ApiOperation("查询用户项目")
+    fun getRemoteDevUserProject(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<ProjectVO?>
+
+    @GET
     @Path("/enNames/organization")
     @ApiOperation("查询用户项目")
     fun getProjectEnNamesByOrganization(

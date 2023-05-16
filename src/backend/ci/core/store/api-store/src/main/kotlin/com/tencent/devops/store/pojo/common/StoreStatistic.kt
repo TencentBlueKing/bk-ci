@@ -43,5 +43,8 @@ data class StoreStatistic(
     @ApiModelProperty("最近执行次数")
     val recentExecuteNum: Int? = null,
     @ApiModelProperty("成功率")
-    val successRate: Double? = null
+    val successRate: Double? = null,
+    @ApiModelProperty("hotFlag")
+    val hotFlag: Boolean? = false
+
 )
