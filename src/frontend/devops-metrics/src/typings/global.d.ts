@@ -1,6 +1,6 @@
 export {}
 declare global {
     interface Window {
-        eventBus: any;
+        Bus: any;
     }
 }

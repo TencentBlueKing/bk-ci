@@ -11,7 +11,7 @@
         var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
         window.dispatchEvent = (cs) => {
             if (cs.eventName === 'change::$currentProjectId') {
-                window.eventBus.emit('changeProjectId', cs.payload.currentProjectId)
+                window.Bus.emit('changeProjectId', cs.payload.currentProjectId)
             }
         }
         class CustomEvent {

@@ -29,7 +29,7 @@ const i18n = createI18n({
   }
 })
 
-window.eventBus = eventBus;
+window.Bus = eventBus;
 
 createApp(App)
   .use(router)
