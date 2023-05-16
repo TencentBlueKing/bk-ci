@@ -383,13 +383,13 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun buildRouterTag(routerTag: String?): String {
         return if (routerTag == null) {
-            V0_PERMISSION_CENTER
-        } else if (routerTag.contains(V3_PERMISSION_CENTER)) {
-            V3_PERMISSION_CENTER
-        } else if (routerTag.contains(RBAC_PERMISSION_CENTER)) {
-            RBAC_PERMISSION_CENTER
+            AuthSystemType.V0_AUTH_TYPE.value
+        } else if (routerTag.contains(AuthSystemType.V3_AUTH_TYPE.value)) {
+            AuthSystemType.V3_AUTH_TYPE.value
+        } else if (routerTag.contains(AuthSystemType.RBAC_AUTH_TYPE.value)) {
+            AuthSystemType.RBAC_AUTH_TYPE.value
         } else {
-            V0_PERMISSION_CENTER
+            AuthSystemType.V0_AUTH_TYPE.value
         }
     }
 
@@ -508,8 +508,5 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
-        private const val V0_PERMISSION_CENTER = "v0"
-        private const val V3_PERMISSION_CENTER = "v3"
-        private const val RBAC_PERMISSION_CENTER = "rbac"
     }
 }
