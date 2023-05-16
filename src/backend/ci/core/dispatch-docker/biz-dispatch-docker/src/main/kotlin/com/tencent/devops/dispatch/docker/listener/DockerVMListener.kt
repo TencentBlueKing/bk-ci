@@ -122,7 +122,12 @@ class DockerVMListener @Autowired constructor(
         } else {
             pipelineEventDispatcher.dispatch(event.copy(
                 routeKeySuffix = DispatchRouteKeySuffix.KUBERNETES.routeKeySuffix,
-                dockerRoutingType = dockerRoutingType.name
+                dockerRoutingType = dockerRoutingType.name,
+                dispatchType = KubernetesDispatchType(
+                    kubernetesBuildVersion = "",
+                    imageType = ImageType.THIRD,
+                    performanceConfigId = 0
+                ),
             ))
         }
     }
