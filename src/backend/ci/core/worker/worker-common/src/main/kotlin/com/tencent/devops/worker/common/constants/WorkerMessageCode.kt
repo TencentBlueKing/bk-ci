@@ -158,5 +158,4 @@ object WorkerMessageCode {
     const val BK_ENTERPRISE_SIGNATURE_FAILED = "bkEnterpriseSignatureFailed" // 企业签名失败
     const val BK_PLUGIN_IS_NO_LONGER_RECOMMENDED = "bkPluginIsNoLongerRecommended" // 该插件已不推荐使用
     const val BK_WRONG_GIT_SPECIFIES_THE_PULL_METHOD = "bkWrongGitSpecifiesThePullMethod" // 错误的GIT指定拉取方式（{0}）
-
 }

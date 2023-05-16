@@ -56,7 +56,7 @@ import com.tencent.devops.ticket.pojo.CredentialSettingUpdate
 import com.tencent.devops.ticket.pojo.CredentialUpdate
 import com.tencent.devops.ticket.pojo.CredentialWithPermission
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import java.util.*
+import java.util.Base64
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 import org.jooq.DSLContext

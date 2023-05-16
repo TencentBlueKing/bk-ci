@@ -432,10 +432,9 @@ class MutexControl @Autowired constructor(
     ) {
 
         val message = I18nUtil.getCodeLanMessage(
-          messageCode = BK_MUTUALLY_EXCLUSIVE_GROUPS,
-          params = arrayOf(container.containerId, "${mutexGroup.mutexGroupName}")
-        ) +
-            if (!lockedContainerMutexId.isNullOrBlank()) {
+            messageCode = BK_MUTUALLY_EXCLUSIVE_GROUPS,
+            params = arrayOf(container.containerId, "${mutexGroup.mutexGroupName}")
+        ) + if (!lockedContainerMutexId.isNullOrBlank()) {
                 // #5454 拿出占用锁定的信息
                 redisOperation.get(mutexGroup.genMutexLinkTipKey(lockedContainerMutexId))?.let { s ->
                     val endIndex = s.indexOf("_")

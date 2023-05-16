@@ -399,7 +399,7 @@ class PipelineBuildFacadeService(
 
                 // 对不合法的重试进行拦截，防止重复提交
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
+                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT
                 )
             }
 
