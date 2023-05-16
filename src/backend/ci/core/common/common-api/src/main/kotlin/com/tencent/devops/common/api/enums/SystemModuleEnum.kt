@@ -55,12 +55,12 @@ enum class SystemModuleEnum(val code: String) {
     METRICS("23"), // 度量服务
     EXTERNAL("24"), // 外部扩展
     PREBUILD("25"), // 预构建
-    //DISPATCH-KUBERNETES("26"), // k8s分发服务
+    // DISPATCH-KUBERNETES("26"), // k8s分发服务
     BUILDLESS("27"), // buildless服务
     LAMBDA("28"), // lambda服务
     STREAM("29"), // stream服务
     WORKER("30"), // 度量服务
-    //DISPATCH-DOCKER("31"), // docker分发服务
+    // DISPATCH-DOCKER("31"), // docker分发服务
     REMOTEDEV("32"); // 远程开发服务
 
     companion object {
