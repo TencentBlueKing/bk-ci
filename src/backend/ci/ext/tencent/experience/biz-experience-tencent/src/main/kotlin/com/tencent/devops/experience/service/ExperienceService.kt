@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.api.service.ServicePipelineArtifactoryReso
 import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -64,7 +65,6 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
-import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
@@ -769,11 +769,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ) {
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
-            val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)),
-                defaultMessage = AuthPermission.EXECUTE.alias,
-                language = I18nUtil.getLanguage(userId)
-            )
+            val permissionMsg = AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId))
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 params = arrayOf(permissionMsg)
