@@ -83,6 +83,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.util.Locale
 import java.util.stream.Collectors
 
 @Service("kubernetesContainerService")
@@ -203,7 +204,7 @@ class KubernetesContainerService @Autowired constructor(
                 KubernetesDockerRegistry(host, userName, password)
             }
 
-            val builderName = getOnlyName(userId)
+            val builderName = getOnlyName(buildId, vmSeqId)
             val taskId = kubernetesBuilderClient.createBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -405,13 +406,9 @@ class KubernetesContainerService @Autowired constructor(
         return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
     }
 
-    private fun getOnlyName(userId: String): String {
-        val subUserId = if (userId.length > 14) {
-            userId.substring(0 until 14)
-        } else {
-            userId
-        }
-        return "${subUserId.replace("_", "-")}${System.currentTimeMillis()}-" +
-            RandomStringUtils.randomAlphabetic(8).toLowerCase()
+    private fun getOnlyName(buildId: String, vmSeqId: String): String {
+        val hashHexString = "$buildId$vmSeqId".hashCode().toUInt().toString(16).padStart(8, '0')
+        return "$hashHexString-${System.currentTimeMillis()}-" +
+            RandomStringUtils.randomAlphabetic(8).lowercase(Locale.getDefault())
     }
 }
