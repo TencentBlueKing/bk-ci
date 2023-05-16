@@ -40,9 +40,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_CN_INDEX_ALREADY_EXISTS
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_EN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -51,9 +48,39 @@ import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
+import com.tencent.devops.quality.constant.BK_CN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.constant.BK_CREATE_FAIL
 import com.tencent.devops.quality.constant.BK_CREATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_EN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.constant.BK_METRIC_DATA_UPDATE_SUCCESS
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_CCN
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_DEFECT
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_DUPC
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_RIPS
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_SECURITY
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_STANDARD
+import com.tencent.devops.quality.constant.BK_TOOL_DESC_WOODPECKER_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_BKCHECK_CPP
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_BKCHECK_OC
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CCN
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CHECKSTYLE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_COVERITY
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_CPPLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DEFECT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DETEKT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_DUPC
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_ESLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_GOML
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_KLOCWORK
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_OCCHECK
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_PHPCS
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_PYLINT
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_SECURITY
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_SENSITIVE
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_STANDARD
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_STYLECOP
+import com.tencent.devops.quality.constant.BK_TOOL_NAME_WOODPECKER_SENSITIVE
 import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
@@ -62,7 +89,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -766,14 +793,14 @@ class QualityIndicatorService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
         fun getCodeccToolNameMap() = mapOf(
-            "STANDARD" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_STANDARD),
-            "DEFECT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_DEFECT),
-            "SECURITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_SECURITY),
+            "STANDARD" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_SECURITY),
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
-            "RIPS" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_RIPS),
-            "SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_SENSITIVE),
-            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_WOODPECKER_SENSITIVE),
+            "RIPS" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_RIPS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_SENSITIVE),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_WOODPECKER_SENSITIVE),
             "BKCHECK-CPP" to "bkcheck-cpp",
             "BKCHECK-OC" to "bkcheck-oc",
             "CHECKSTYLE" to "Checkstyle",
@@ -785,29 +812,29 @@ class QualityIndicatorService @Autowired constructor(
             "PHPCS" to "PHPCS",
             "PYLINT" to "PyLint",
             "STYLECOP" to "StyleCop",
-            "CCN" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_CCN),
-            "DUPC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_DUPC))
+            "CCN" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(BK_TOOL_DESC_DUPC))
 
         private fun getCodeccToolDescMap() = mapOf(
-            "STANDARD" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_STANDARD),
-            "DEFECT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DEFECT),
-            "SECURITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_SECURITY),
-            "CCN" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CCN),
-            "DUPC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DUPC),
-            "COVERITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_COVERITY),
-            "KLOCWORK" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_KLOCWORK),
-            "CPPLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CPPLINT),
-            "ESLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_ESLINT),
-            "PYLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_PYLINT),
-            "GOML" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_GOML),
-            "CHECKSTYLE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CHECKSTYLE),
-            "STYLECOP" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_STYLECOP),
-            "DETEKT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DETEKT),
-            "PHPCS" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_PHPCS),
-            "SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_SENSITIVE),
-            "OCCHECK" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_OCCHECK),
-            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_WOODPECKER_SENSITIVE),
-            "BKCHECK-CPP" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_BKCHECK_CPP),
-            "BKCHECK-OC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_BKCHECK_OC))
+            "STANDARD" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_SECURITY),
+            "CCN" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DUPC),
+            "COVERITY" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_COVERITY),
+            "KLOCWORK" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_KLOCWORK),
+            "CPPLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CPPLINT),
+            "ESLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_ESLINT),
+            "PYLINT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_PYLINT),
+            "GOML" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_GOML),
+            "CHECKSTYLE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_CHECKSTYLE),
+            "STYLECOP" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_STYLECOP),
+            "DETEKT" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_DETEKT),
+            "PHPCS" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_PHPCS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_SENSITIVE),
+            "OCCHECK" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_OCCHECK),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_WOODPECKER_SENSITIVE),
+            "BKCHECK-CPP" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_CPP),
+            "BKCHECK-OC" to I18nUtil.getCodeLanMessage(BK_TOOL_NAME_BKCHECK_OC))
     }
 }
