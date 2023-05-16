@@ -83,21 +83,18 @@ class CredentialServiceImpl @Autowired constructor(
         }
         if (!credentialHelper.isValid(credential)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
-                defaultMessage = "凭证格式不正确"
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL
                 )
             }
         }
@@ -147,39 +144,33 @@ class CredentialServiceImpl @Autowired constructor(
         if (credentialDao.has(dslContext, projectId, credential.credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_EXIST,
-                params = arrayOf(credential.credentialId),
-                defaultMessage = "凭证名称${credential.credentialId}已存在"
+                params = arrayOf(credential.credentialId)
             )
         }
         if (!credentialHelper.isValid(credential)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID,
-                defaultMessage = "凭证格式不正确"
+                errorCode = TicketMessageCode.CREDENTIAL_FORMAT_INVALID
             )
         }
         if (credential.credentialId.length > CREDENTIAL_ID_MAX_SIZE) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG,
-                defaultMessage = "凭证名称不能超过$CREDENTIAL_ID_MAX_SIZE 位"
+                errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG
             )
         }
         if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
             throw ErrorCodeException(
-                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL,
-                defaultMessage = "凭证名称必须是英文字母、数字或下划线(_)"
+                errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
-                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL
                 )
             }
         }

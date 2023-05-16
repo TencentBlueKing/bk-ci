@@ -27,12 +27,14 @@
 
 package com.tencent.devops.process.engine.interceptor
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.engine.common.Timeout
@@ -82,8 +84,10 @@ class QueueInterceptor @Autowired constructor(
                 // Summary为空是不正常的，抛错
                 Response(
                     status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_SUMMARY_NOT_FOUND)
-
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_PIPELINE_SUMMARY_NOT_FOUND,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -103,7 +107,10 @@ class QueueInterceptor @Autowired constructor(
             task.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = "并行上限/Max parallel: ${task.maxConRunningQueueSize}"
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_MAX_PARALLEL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + " ${task.maxConRunningQueueSize}"
                 )
             else -> Response(data = BuildStatus.RUNNING)
         }
@@ -129,7 +136,10 @@ class QueueInterceptor @Autowired constructor(
             task.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = I18nUtil.getCodeLanMessage(ERROR_PIPELINE_QUEUE_FULL)
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_PIPELINE_QUEUE_FULL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             queueCount >= task.maxQueueSize -> {
                 if (groupName == null) {

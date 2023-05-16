@@ -278,8 +278,7 @@ class PipelineRepositoryService constructor(
         val c = (
             stage.containers.getOrNull(0)
                 ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                    defaultMessage = "第一阶段的环境不能为空"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             ) as TriggerContainer
 
@@ -825,7 +824,6 @@ class PipelineRepositoryService constructor(
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "要删除的流水线不存在"
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
@@ -957,7 +955,6 @@ class PipelineRepositoryService constructor(
         if (existPipelines.contains(pipelineId)) {
             logger.info("[$projectId|$pipelineId] Sub pipeline call [$existPipelines|$pipelineId]")
             throw ErrorCodeException(
-                defaultMessage = "子流水线不允许循环调用",
                 errorCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL
             )
         }
@@ -1075,7 +1072,6 @@ class PipelineRepositoryService constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                defaultMessage = "流水线名称已被使用"
             )
         }
 
@@ -1180,7 +1176,6 @@ class PipelineRepositoryService constructor(
         val existModel = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -1194,8 +1189,7 @@ class PipelineRepositoryService constructor(
                 days = days
             ) ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND,
-                defaultMessage = "要还原的流水线不存在，可能已经被删除或还原了"
+                errorCode = ProcessMessageCode.ERROR_RESTORE_PIPELINE_NOT_FOUND
             )
 
             existModel.name = pipeline.pipelineName
@@ -1204,7 +1198,6 @@ class PipelineRepositoryService constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    defaultMessage = "指定编辑的流水线渠道来源${pipeline.channel}不符合$channelCode",
                     params = arrayOf(pipeline.channel)
                 )
             }

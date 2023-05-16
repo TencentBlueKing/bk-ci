@@ -210,7 +210,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
                 params = arrayOf(pipelineId)
             )
 
@@ -377,7 +376,6 @@ class PipelineBuildFacadeService(
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    defaultMessage = "构建任务${buildId}不存在",
                     params = arrayOf(buildId)
                 )
 
@@ -401,8 +399,7 @@ class PipelineBuildFacadeService(
 
                 // 对不合法的重试进行拦截，防止重复提交
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT,
-                    defaultMessage = "重试已经启动，忽略重复的请求"
+                    errorCode = ProcessMessageCode.ERROR_DUPLICATE_BUILD_RETRY_ACT
                 )
             }
 
@@ -411,13 +408,11 @@ class PipelineBuildFacadeService(
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                        defaultMessage = "流水线不存在",
                         params = arrayOf(buildId)
                     )
 
             if (!readyToBuildPipelineInfo.canManualStartup && checkManualStartup == false) {
                 throw ErrorCodeException(
-                    defaultMessage = "该流水线不能手动启动",
                     errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                 )
             }
@@ -446,13 +441,11 @@ class PipelineBuildFacadeService(
                             val stage = pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
                                 throw ErrorCodeException(
                                     errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
-                                    defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
                                 )
                             }
                             // 只有失败或取消情况下提供重试得可能
                             if (!stage.status.isFailure() && !stage.status.isCancel()) throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_FAILED,
-                                defaultMessage = "Stage($taskId)未处于失败或取消状态，无法重试"
                             )
                             paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                 key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!
@@ -476,7 +469,6 @@ class PipelineBuildFacadeService(
                                     pipelineContainerService.getContainer(projectId, buildId, s.id, c.id!!) ?: run {
                                         throw ErrorCodeException(
                                             errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
-                                            defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
                                         )
                                     }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
@@ -490,7 +482,6 @@ class PipelineBuildFacadeService(
                                         ?: run {
                                             throw ErrorCodeException(
                                                 errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
-                                                defaultMessage = "构建数据已过期，请使用rebuild进行重试(Please use rebuild)"
                                             )
                                         }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
@@ -593,7 +584,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
                 params = arrayOf(pipelineId)
             )
 
@@ -610,7 +600,6 @@ class PipelineBuildFacadeService(
             if (startType == StartType.MANUAL) {
                 if (!readyToBuildPipelineInfo.canManualStartup) {
                     throw ErrorCodeException(
-                        defaultMessage = "该流水线不能手动启动",
                         errorCode = ProcessMessageCode.DENY_START_BY_MANUAL
                     )
                 }
@@ -627,7 +616,6 @@ class PipelineBuildFacadeService(
 
                 if (!canRemoteStartup) {
                     throw ErrorCodeException(
-                        defaultMessage = "该流水线不能远程触发",
                         errorCode = ProcessMessageCode.DENY_START_BY_REMOTE
                     )
                 }
@@ -860,7 +848,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
 
@@ -872,8 +859,7 @@ class PipelineBuildFacadeService(
 
         val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         // 对人工审核提交时的参数做必填和范围校验
         checkManualReviewParam(params = params.params)
@@ -911,7 +897,6 @@ class PipelineBuildFacadeService(
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
                             )
                         }
@@ -966,14 +951,12 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         if (!buildInfo.isTriggerReviewing()) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_TRIGGER_NOT_UNDER_REVIEW,
-                defaultMessage = "构建任务${buildId}不在审核状态中",
                 params = arrayOf(buildId)
             )
         }
@@ -981,7 +964,6 @@ class PipelineBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                defaultMessage = "用户({0})不在审核人员名单中",
                 params = arrayOf(userId)
             )
         }
@@ -1010,14 +992,12 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
                 params = arrayOf(buildId)
             )
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
 
@@ -1032,13 +1012,11 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
-                defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
 
         if (buildStage.status.name != BuildStatus.PAUSE.name) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
-            defaultMessage = "Stage($stageId)未处于暂停状态",
             params = arrayOf(stageId)
         )
         val group = buildStage.checkIn?.getReviewGroupById(reviewRequest?.id)
@@ -1046,7 +1024,6 @@ class PipelineBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND,
-                defaultMessage = "(${group?.name ?: "Flow 1"})非Stage($stageId)当前待审核组",
                 params = arrayOf(stageId, reviewRequest?.id ?: "Flow 1")
             )
         }
@@ -1055,7 +1032,6 @@ class PipelineBuildFacadeService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                defaultMessage = "用户($userId)不在Stage($stageId)当前审核组可执行名单",
                 params = arrayOf(stageId)
             )
         }
@@ -1113,7 +1089,6 @@ class PipelineBuildFacadeService(
             if (!success) throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPLEINE_INPUT,
-                defaultMessage = "审核Stage($stageId)数据异常",
                 params = arrayOf(stageId)
             )
         } finally {
@@ -1133,7 +1108,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         if (buildInfo.pipelineId != pipelineId) {
@@ -1147,7 +1121,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_STAGE_EXISTS_BY_ID,
-                defaultMessage = "构建Stage${stageId}不存在",
                 params = arrayOf(stageId)
             )
         val (check, inOrOut) = when (qualityRequest.position) {
@@ -1163,14 +1136,12 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND,
-                    defaultMessage = "Stage($stageId)的准入准出标识(${qualityRequest.position})不正确",
                     params = arrayOf(stageId, qualityRequest.position)
                 )
             }
         }
         if (check?.status != BuildStatus.QUALITY_CHECK_WAIT.name) throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_STAGE_IS_NOT_PAUSED,
-            defaultMessage = "Stage($stageId)未处于质量红线带把关状态",
             params = arrayOf(stageId)
         )
         pipelineStageService.qualityTriggerStage(
@@ -1194,14 +1165,12 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
 
         val model = buildDetailService.get(projectId, buildId)?.model ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
         model.stages.forEachIndexed { index, s ->
@@ -1237,7 +1206,6 @@ class PipelineBuildFacadeService(
                         if (!reviewUser.contains(userId)) {
                             throw ErrorCodeException(
                                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                                defaultMessage = "用户($userId)不在审核人员名单中",
                                 params = arrayOf(userId)
                             )
                         }
@@ -1345,15 +1313,13 @@ class PipelineBuildFacadeService(
     ): ModelDetail {
         val newModel = buildDetailService.get(projectId, buildId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
         if (newModel.pipelineId != pipelineId) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
         }
 
@@ -1385,7 +1351,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建号($buildNo)不存在",
                 params = arrayOf("buildNo=$buildNo")
             )
         return getBuildDetail(
@@ -1406,14 +1371,12 @@ class PipelineBuildFacadeService(
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            defaultMessage = "构建任务${buildId}不存在",
             params = arrayOf(buildId)
         )
         if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}查找失败，请核对参数",
                 params = arrayOf(buildId)
             )
         }
@@ -1423,7 +1386,6 @@ class PipelineBuildFacadeService(
         ) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            defaultMessage = "构建任务${buildId}不存在第${executeCount}次执行",
             params = arrayOf(buildId)
         )
     }
@@ -1514,7 +1476,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         val currentQueuePosition = if (BuildStatus.valueOf(buildHistory.status).isReadyToRun()) {
@@ -1707,7 +1668,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
                 params = arrayOf(pipelineId)
             )
 
@@ -1804,7 +1764,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
                 params = arrayOf(pipelineId)
             )
 
@@ -1991,7 +1950,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
         return BuildBasicInfo(
@@ -2054,8 +2012,7 @@ class PipelineBuildFacadeService(
     fun getModel(projectId: String, pipelineId: String, version: Int? = null) =
         pipelineRepositoryService.getModel(projectId, pipelineId, version) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-            defaultMessage = "流水线编排不存在"
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
 
     private fun buildManualShutdown(
@@ -2077,7 +2034,6 @@ class PipelineBuildFacadeService(
                 logger.warn("The build $buildId of project $projectId already finished ")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    defaultMessage = "流水线已经被取消构建或已完成",
                     params = arrayOf(alreadyCancelUser ?: "")
                 )
             }
@@ -2097,7 +2053,6 @@ class PipelineBuildFacadeService(
                 val timeTip = cancelIntervalLimitTime - intervalTime / 1000
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.CANCEL_BUILD_BY_OTHER_USER,
-                    defaultMessage = "流水线已经被${alreadyCancelUser}取消构建",
                     params = arrayOf(userId, timeTip.toString())
                 )
             } else if (cancelActionTime > 0) {
@@ -2120,7 +2075,6 @@ class PipelineBuildFacadeService(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    defaultMessage = "构建任务${buildId}不存在",
                     params = arrayOf(buildId)
                 )
             }
@@ -2280,7 +2234,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "流水线构建[$buildId]不存在",
                 params = arrayOf(buildId)
             )
         containerBuildRecordService.saveBuildVmInfo(
@@ -2318,7 +2271,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "流水线构建[$buildId]不存在",
                 params = arrayOf(buildId)
             )
     }
@@ -2440,7 +2392,6 @@ class PipelineBuildFacadeService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
                 params = arrayOf(buildId)
             )
     }

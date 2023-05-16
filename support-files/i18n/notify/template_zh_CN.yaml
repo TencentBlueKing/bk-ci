@@ -590,3 +590,18 @@
     body: "流水线插件【${atomName}】的管理员【${atomAdmin}】驳回了你的协作申请,驳回原因: ${approveMsg}"
   creator: "system"
   modifior: "system"
+- index: 38
+  id: "1e7864726dd04311b21019bcceddfee8"
+  templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
+  templateName: "流水线callback禁用通知模板代码"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ca32a24efaf74062a0cd68a24f47e3b4"
+    sender: "DevOps"
+    title: "蓝盾流水线回调接口异常"
+    body: "项目【${projectName}】所注册的【${events}】事件回调接口【${callbackUrl}】因多次调用失败，现已被禁用\n流水线链接：${pipelineListUrl}"
+  creator: "system"
+  modifior: "system"

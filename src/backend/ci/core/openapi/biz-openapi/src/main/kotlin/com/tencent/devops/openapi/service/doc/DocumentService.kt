@@ -30,6 +30,38 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ALL_MODEL_DATA
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_APPLICATION_STATE_REQUIRED
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_BODY_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_CURL_PROMPT
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DEFAULT_VALUE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_DISCRIMINATOR_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ERROR_PROMPT
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HAVE_TO
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HEADER_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_HTTP_CODE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_INPUT_PARAMETER_DESCRIPTION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_MUST_BE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_NO
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_OBJECT_PROPERTY_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_NAME
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PARAM_TYPE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PATH_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_PAYLOAD_REQUEST_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_POLYMORPHIC_CLASS_IMPLEMENTATION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_POLYMORPHISM_MODEL_ILLUSTRATE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_QUERY_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_REQUEST_METHOD
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_REQUEST_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RESOURCE_DESCRIPTION
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RESPONSE_PARAMETER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_RETURNS_THE_SAMPLE
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_THE_FIELD_IS_READ_ONLY
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_USER_NAME
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.BK_YES
 import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
 import com.tencent.devops.openapi.pojo.SwaggerDocResponse
 import com.tencent.devops.openapi.utils.markdown.Code
@@ -116,59 +148,89 @@ class DocumentService {
                 // 该path 已组装的model
                 val loadedModel = mutableListOf<String>()
 //                loadMarkdown.add(Text(level = 1, body = "资源文档: ${operation.tags}", key = "resource_documentation"))
-                loadMarkdown.add(Text(level = 3, body = "请求方法/请求路径", key = "request_method"))
+                loadMarkdown.add(Text(level = 3, body = getI18n(BK_REQUEST_METHOD), key = "request_method"))
                 loadMarkdown.add(Text(level = 4, body = "$httpMethod $path", key = "http_method_path"))
-                loadMarkdown.add(Text(level = 3, body = "资源描述", key = "resource_description"))
+                loadMarkdown.add(Text(level = 3, body = getI18n(BK_RESOURCE_DESCRIPTION), key = "resource_description"))
                 loadMarkdown.add(Text(level = 4, body = operation.summary ?: "", key = "summary"))
-                loadMarkdown.add(Text(level = 3, body = "输入参数说明", key = "input_parameter_description"))
-                loadMarkdown.add(Text(level = 4, body = "Path参数", key = "path_parameter_title"))
+                loadMarkdown.add(Text(level = 3, body = getI18n(BK_INPUT_PARAMETER_DESCRIPTION), key = "input_parameter_description"))
+                loadMarkdown.add(Text(level = 4, body = getI18n(BK_PATH_PARAMETER), key = "path_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
                             rows = parseParameters(operation.parameters.filterIsInstance<PathParameter>()),
                             key = "path_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "path")
                 )
-                loadMarkdown.add(Text(4, "Query参数", "query_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_QUERY_PARAMETER), "query_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
                             rows = parseParameters(operation.parameters.filterIsInstance<QueryParameter>()),
                             "query_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "query")
                 )
-                loadMarkdown.add(Text(4, "Header参数", "header_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_HEADER_PARAMETER), "header_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
                             rows = parseParameters(operation.parameters.filterIsInstance<HeaderParameter>()),
                             "header_parameter"
                         ).checkLoadModel(onLoadModel)
-                            .setRow(AUTH_HEADER_USER_ID, "string", "应用态必填、用户态不填", "用户名", "{X-DEVOPS-UID}")
-                            .setRow("Content-Type", "string", "是", "", "application/json")
+                            .setRow(
+                                AUTH_HEADER_USER_ID,
+                                "string",
+                                getI18n(BK_APPLICATION_STATE_REQUIRED),
+                                getI18n(BK_USER_NAME),
+                                "{X-DEVOPS-UID}"
+                            )
+                            .setRow("Content-Type", "string", getI18n(BK_YES), "", "application/json")
                             .removeRow(AUTH_HEADER_DEVOPS_APP_CODE)
                     }, path + httpMethod + "header")
                 )
-                loadMarkdown.add(Text(4, "Body参数", "body_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_BODY_PARAMETER), "body_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                            header = TableRow(
+                                getI18n(BK_PARAM_NAME),
+                                getI18n(BK_PARAM_TYPE),
+                                getI18n(BK_HAVE_TO),
+                                getI18n(BK_PARAM_ILLUSTRATE),
+                                getI18n(BK_DEFAULT_VALUE)
+                            ),
                             rows = parseParameters(operation.parameters.filterIsInstance<BodyParameter>()),
                             "body_parameter"
                         ).checkLoadModel(onLoadModel)
                     }, path + httpMethod + "body")
                 )
-                loadMarkdown.add(Text(4, "响应参数", "response_parameter_title"))
+                loadMarkdown.add(Text(4, getI18n(BK_RESPONSE_PARAMETER), "response_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
                         Table(
-                            header = TableRow("HTTP代码", "参数类型", "说明"),
+                            header = TableRow(getI18n(BK_HTTP_CODE), getI18n(BK_PARAM_TYPE), getI18n(BK_ILLUSTRATE)),
                             rows = parseResponse(operation.responses),
                             "response_parameter"
                         ).checkLoadModel(onLoadModel)
@@ -180,7 +242,9 @@ class DocumentService {
                         operation.parameters.filterIsInstance<BodyParameter>()
                     )
                 )
-                loadMarkdown.add(Text(3, "Curl 请求样例", "curl_request_sample_title"))
+                loadMarkdown.add(
+                    Text(3, "Curl ${getI18n(BK_REQUEST_SAMPLE)}", "curl_request_sample_title")
+                )
                 loadMarkdown.add(
                     Code(
                         "Json",
@@ -205,7 +269,7 @@ class DocumentService {
                         operation.responses
                     )
                 )
-                loadMarkdown.add(Text(3, "相关模型数据", "all_model_data"))
+                loadMarkdown.add(Text(3, getI18n(BK_ALL_MODEL_DATA), "all_model_data"))
                 // 组装所有已使用的模型
                 loadMarkdown.addAll(parseAllModel(onLoadModel, loadedModel))
                 operation.tags.forEach { tag ->
@@ -248,13 +312,19 @@ class DocumentService {
                     val reflectInfo = parametersInfo?.get(key)?.get(table.columns[0])
                     if (reflectInfo != null) {
                         val column = table.columns.toMutableList()
-                        column[2] = if (reflectInfo.markedNullable.not()) "是" else "否"
+                        column[2] = if (reflectInfo.markedNullable.not()) getI18n(BK_YES) else getI18n(BK_NO)
                         column[4] = if (reflectInfo.markedNullable) reflectInfo.defaultValue ?: "" else column[4]
                         table.columns = column
                     }
                 }
                 Table(
-                    header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                    header = TableRow(
+                        getI18n(BK_PARAM_NAME),
+                        getI18n(BK_PARAM_TYPE),
+                        getI18n(BK_HAVE_TO),
+                        getI18n(BK_PARAM_ILLUSTRATE),
+                        getI18n(BK_DEFAULT_VALUE)
+                    ),
                     rows = tableRows,
                     key = "model_$key"
                 )
@@ -274,7 +344,13 @@ class DocumentService {
                 val tableRows = mutableListOf<TableRow>()
                 definitions[it]?.let { model -> loadModelDefinitions(model, tableRows) }
                 Table(
-                    header = TableRow("参数名称", "参数类型", "必须", "参数说明", "默认值"),
+                    header = TableRow(
+                        getI18n(BK_PARAM_NAME),
+                        getI18n(BK_PARAM_TYPE),
+                        getI18n(BK_HAVE_TO),
+                        getI18n(BK_PARAM_ILLUSTRATE),
+                        getI18n(BK_DEFAULT_VALUE)
+                    ),
                     rows = tableRows,
                     key = "model_$it"
                 )
@@ -283,8 +359,8 @@ class DocumentService {
                     this.setRow(
                         (definitions[it] as ModelImpl).discriminator,
                         "string",
-                        "是",
-                        "用于指定实现某一多态类, 可选${polymorphismMap[it]?.keys},具体实现见下方",
+                        getI18n(BK_YES),
+                        getI18n(BK_DISCRIMINATOR_ILLUSTRATE, arrayOf("${polymorphismMap[it]?.keys}")),
                         ""
                     )
                 }
@@ -297,12 +373,17 @@ class DocumentService {
             polymorphismMap[it]?.forEach { (child, value) ->
                 val discriminator = (definitions[it] as ModelImpl).discriminator
                 val childModel = cacheOrLoad({ null }, child)
-                    .setRow(discriminator, "string", "必须是[$value]", "多态类实现", value)
-                    .checkLoadModel(onLoadModel)
+                    .setRow(
+                        discriminator,
+                        "string",
+                        getI18n(BK_MUST_BE, arrayOf(value)),
+                        getI18n(BK_POLYMORPHIC_CLASS_IMPLEMENTATION),
+                        value
+                    ).checkLoadModel(onLoadModel)
                 markdownElement.add(Text(4, child, "polymorphism_model_${child}_title"))
                 markdownElement.add(
                     Text(
-                        level = 0, body = "*多态基类 <$it> 的实现处, 其中当字段 $discriminator = [$value] 时指定为该类实现*",
+                        level = 0, body = getI18n(BK_POLYMORPHISM_MODEL_ILLUSTRATE, arrayOf(it, discriminator, value)),
                         key = "polymorphism_model_$child"
                     )
                 )
@@ -324,7 +405,11 @@ class DocumentService {
             val loadJson = mutableMapOf<String, Any>()
             loadModelJson(response.responseSchema, loadJson)
             markdownElement.add(
-                Text(level = 3, body = "$httpStatus 返回样例", key = "${httpStatus}_return_example_title")
+                Text(
+                    level = 3,
+                    body = "$httpStatus $BK_RETURNS_THE_SAMPLE",
+                    key = "${httpStatus}_return_example_title"
+                )
             )
             markdownElement.add(
                 Code(language = "Json", body = JsonUtil.toJson(loadJson), key = "${httpStatus}_return_example")
@@ -340,7 +425,7 @@ class DocumentService {
         res.add(
             Text(
                 level = 0,
-                body = "**注意: 确保 header 中存在 Content-Type: application/json ,否则请求返回415错误码**",
+                body = getI18n(BK_ERROR_PROMPT),
                 key = "Payload_request_sample_explain"
             )
         )
@@ -348,7 +433,7 @@ class DocumentService {
             res.add(
                 Text(
                     level = 4,
-                    body = "< $texplain >, 那么请求应该为:",
+                    body = getI18n(BK_PAYLOAD_REQUEST_SAMPLE, arrayOf(texplain)),
                     key = "Payload_request_sample_title_$texplain"
                 )
             )
@@ -395,7 +480,11 @@ class DocumentService {
             }
         }
         return listOf(
-            Text(level = 3, body = "$httpMethod 请求样例", key = "${httpMethod}_request_sample_title"),
+            Text(
+                level = 3,
+                body = "$httpMethod ${getI18n(BK_REQUEST_SAMPLE)}",
+                key = "${httpMethod}_request_sample_title"
+            ),
             Code(language = "Json", body = JsonUtil.toJson(outJson), key = "${httpMethod}_request_sample")
         )
     }
@@ -407,7 +496,7 @@ class DocumentService {
         val headerString = header.rows.takeIf { it.isNotEmpty() }?.joinToString(prefix = "\\\n", separator = "\\\n") {
             "-H '${it.columns[0]}: ${it.columns[4]}' "
         } ?: ""
-        return "curl -X ${httpMethod.toUpperCase()} '[请替换为上方API地址栏请求地址]$queryString' $headerString"
+        return "curl -X ${httpMethod.toUpperCase()} ${getI18n(BK_CURL_PROMPT, arrayOf(queryString))} $headerString"
     }
 
     private fun parseResponse(responses: Map<String, Response>): List<TableRow> {
@@ -429,7 +518,7 @@ class DocumentService {
                         TableRow(
                             it.name,
                             loadModelType(it.schema),
-                            if (it.required) "是" else "否",
+                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
                             it.description,
                             ""
                         )
@@ -440,7 +529,7 @@ class DocumentService {
                         TableRow(
                             it.name,
                             loadSerializableParameter(it),
-                            if (it.required) "是" else "否",
+                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
                             it.description,
                             it.defaultValue
                         )
@@ -453,7 +542,7 @@ class DocumentService {
                         TableRow(
                             it.name,
                             Link(it.originalRef, '#' + it.originalRef).toString(),
-                            if (it.required) "是" else "否",
+                            if (it.required) getI18n(BK_YES) else getI18n(BK_NO),
                             it.description,
                             ""
                         )
@@ -531,7 +620,7 @@ class DocumentService {
                         TableRow(
                             key,
                             loadPropertyType(property),
-                            if (property.required) "是" else "否",
+                            if (property.required) getI18n(BK_YES) else getI18n(BK_NO),
                             loadDescriptionInfo(property),
                             loadPropertyDefault(property)
                         )
@@ -548,7 +637,13 @@ class DocumentService {
                                 loadModelDefinitions(it, table)
                             }
                             Table(
-                                header = TableRow("参数名称", "参数类型", "必须", "参数说明"),
+                                header = TableRow(
+                                    getI18n(BK_PARAM_NAME),
+                                    getI18n(BK_PARAM_TYPE),
+                                    getI18n(BK_HAVE_TO),
+                                    getI18n(BK_PARAM_ILLUSTRATE),
+                                    getI18n(BK_DEFAULT_VALUE)
+                                ),
                                 rows = table,
                                 key = "model_${model.originalRef}"
                             )
@@ -564,7 +659,7 @@ class DocumentService {
         if (property == null) return ""
         val res = StringBuffer()
         if (property.readOnly == true) {
-            res.append("(该字段只读)")
+            res.append(getI18n(BK_THE_FIELD_IS_READ_ONLY))
         }
         res.append(property.description ?: "")
         return res.toString()
@@ -624,7 +719,7 @@ class DocumentService {
                 mapOf("string" to loadPropertyJson(property.additionalProperties))
             }
             is ObjectProperty -> {
-                "Any 任意类型，参照实际请求或返回"
+                getI18n(BK_OBJECT_PROPERTY_ILLUSTRATE)
             }
             is ArrayProperty -> {
                 listOf(loadPropertyJson(property.items))
@@ -727,5 +822,12 @@ class DocumentService {
             this.remove(row)
         }
         this.add(table)
+    }
+
+    private fun getI18n(code: String, params: Array<String>? = null): String {
+        return I18nUtil.getCodeLanMessage(
+            messageCode = code,
+            params = params
+        )
     }
 }

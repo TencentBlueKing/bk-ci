@@ -57,6 +57,8 @@ import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_CONCURRENCY
 import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_QUEUE_FOR_SINGLE
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -529,7 +531,14 @@ class BuildStartControl @Autowired constructor(
 
         buildDetailService.updateModel(projectId = buildInfo.projectId, buildId = buildInfo.buildId, model = model)
         buildLogPrinter.addLine(
-            message = "触发人(trigger user): ${buildInfo.triggerUser}, 执行人(start user): ${buildInfo.startUser}",
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = BK_TRIGGER_USER,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + ": ${buildInfo.triggerUser}, " +
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_START_USER,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + ": ${buildInfo.startUser}",
             buildId = buildInfo.buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
         )
     }

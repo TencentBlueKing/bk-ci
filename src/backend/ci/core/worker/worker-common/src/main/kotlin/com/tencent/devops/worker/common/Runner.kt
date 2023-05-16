@@ -36,11 +36,13 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.PARAMETER_ERROR
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
@@ -53,10 +55,10 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 
 object Runner {
@@ -97,7 +99,8 @@ object Runner {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
             val errMsg = when (ignore) {
-                is java.lang.IllegalArgumentException -> "参数错误：${ignore.message}"
+                is java.lang.IllegalArgumentException ->
+                    "${I18nUtil.getCodeLanMessage(PARAMETER_ERROR)}：${ignore.message}"
                 is FileNotFoundException, is IOException -> {
                     "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
                         "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +

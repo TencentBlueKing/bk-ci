@@ -126,6 +126,12 @@ object WorkerMessageCode {
     const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2130062" // 更新插件执行环境信息失败
     const val ADD_PLUGIN_PLATFORM_INFO_FAILED = "2130063" // 添加插件对接平台信息失败
     const val GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED = "2130064" // 获取插件开发语言相关的环境变量信息失败
+    const val URL_INCORRECT = "2130065" // 外链({0})不是一个正确的URL地址
+    const val GET_GIT_HOST_INFO_FAIL = "2130066" // 获取git代码库主机信息失败: {0}
+    const val PULL_THE_REPOSITORY_IN_FULL = "2130067" // 从({0})变为({1}), 全量拉取代码仓库
+    const val PULL_THE_REPOSITORY_IN_SWITCH = "2130068" // 从({0})变为({1}), switch拉取代码
+    const val GET_SVN_DIRECTORY_ERROR = "2130069" // 获取Svn目录错误
+    const val PARAMETER_ERROR = "2130070" // 参数错误
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
@@ -150,4 +156,6 @@ object WorkerMessageCode {
     const val BK_FAILED_IOS_CERTIFICATE = "bkFailedIosCertificate" // 获取IOS证书失败
     const val BK_FAILED_ANDROID_CERTIFICATE = "bkFailedAndroidCertificate" // 获取Android证书失败
     const val BK_ENTERPRISE_SIGNATURE_FAILED = "bkEnterpriseSignatureFailed" // 企业签名失败
+    const val BK_PLUGIN_IS_NO_LONGER_RECOMMENDED = "bkPluginIsNoLongerRecommended" // 该插件已不推荐使用
+    const val BK_WRONG_GIT_SPECIFIES_THE_PULL_METHOD = "bkWrongGitSpecifiesThePullMethod" // 错误的GIT指定拉取方式（{0}）
 }

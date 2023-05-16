@@ -590,3 +590,18 @@
     body: "The administrator of the pipelined atom [${atomName}] [${atomAdmin}] rejected your collaboration application for the reason: ${approveMsg}"
   creator: "system"
   modifior: "system"
+- index: 38
+  id: "1e7864726dd04311b21019bcceddfee8"
+  templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
+  templateName: "Pipeline callback disables the notification template code"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ca32a24efaf74062a0cd68a24f47e3b4"
+    sender: "DevOps"
+    title: "bk-ci pipeline callback interface is abnormal"
+    body: "project【${projectName}】Registered【${events}】Event callback interface【${callbackUrl}】It is now disabled due to multiple failed calls\pipeline url：${pipelineListUrl}"
+  creator: "system"
+  modifior: "system"

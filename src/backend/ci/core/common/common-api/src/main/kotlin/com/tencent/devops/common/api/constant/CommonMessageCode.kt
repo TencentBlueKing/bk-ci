@@ -78,8 +78,8 @@ object CommonMessageCode {
     const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
+    const val SERVICE_NOT_EXIST = "2100029" // 父服务不存在异常
 
-    const val ILLEGAL_JOB_TYPE = "2100029" // 非法的job类型!
     const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100030" // GITCI Service镜像格式非法
     const val THIRD_PARTY_SERVICE_DEVCLOUD_EXCEPTION = "2100031" // 第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -
     const val CREATE_CONTAINER_INTERFACE_EXCEPTION = "2100032" // 创建容器接口异常
@@ -160,6 +160,7 @@ object CommonMessageCode {
     const val SERVICE_COULD_NOT_BE_ANALYZED = "2100109" // 无法根据接口"{0}"分析所属的服务
     const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
     const val SERVICE_PROVIDER_NOT_FOUND = "2100111" // 找不到任何有效的{0}【{1}】服务提供者
+    const val ILLEGAL_JOB_TYPE = "2100112" // 非法的job类型!
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
