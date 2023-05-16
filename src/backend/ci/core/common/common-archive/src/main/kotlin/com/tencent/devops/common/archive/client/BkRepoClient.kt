@@ -70,13 +70,6 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
-import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
-import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
-import com.tencent.devops.common.archive.pojo.replica.ReplicaType
-import com.tencent.devops.common.archive.pojo.replica.objects.PathConstraint
-import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
-import com.tencent.devops.common.archive.pojo.replica.setting.ConflictStrategy
-import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -103,7 +96,6 @@ import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
-import java.util.UUID
 import javax.ws.rs.NotFoundException
 
 @Component
