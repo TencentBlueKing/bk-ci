@@ -54,9 +54,10 @@ class LogStatusService @Autowired constructor(
         logStatusDao.finish(
             dslContext = dslContext,
             buildId = buildId,
-            tag = tag,
-            subTags = subTag,
-            jobId = jobId,
+            // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+            tag = tag ?: "",
+            subTags = subTag ?: "",
+            jobId = jobId ?: "",
             executeCount = executeCount ?: 1,
             logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
             finish = finish
@@ -102,5 +103,13 @@ class LogStatusService @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?
-    ) = logStatusDao.isFinish(dslContext, buildId, jobId, tag, subTag, executeCount)
+    ) = logStatusDao.isFinish(
+        dslContext = dslContext,
+        buildId = buildId,
+        // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+        jobId = jobId ?: "",
+        tag = tag ?: "",
+        subTags = subTag ?: "",
+        executeCount = executeCount ?: 1
+    )
 }
