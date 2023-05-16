@@ -268,7 +268,8 @@ class QualityHistoryService @Autowired constructor(
                         pipelineId = pipelineId,
                         buildId = buildId,
                         detail = record.detail,
-                        client = client
+                        client = client,
+                        logPrompt = null
                     )
                 }
             }
@@ -515,7 +516,8 @@ class QualityHistoryService @Autowired constructor(
                             pipelineId = pipelineId ?: "",
                             buildId = buildId ?: "",
                             detail = record.detail,
-                            client = client
+                            client = client,
+                            logPrompt = record.logPrompt
                         )
                     }
                 }
