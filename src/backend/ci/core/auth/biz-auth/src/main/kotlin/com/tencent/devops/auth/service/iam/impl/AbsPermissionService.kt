@@ -10,6 +10,7 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,6 +86,60 @@ open class AbsPermissionService @Autowired constructor(
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
 
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resource.resourceCode,
+                resourceType = resource.resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            resourceType = resource.resourceType,
+            relationResourceType = null
+        )
+    }
+
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -154,6 +209,28 @@ open class AbsPermissionService @Autowired constructor(
             result[AuthPermission.get(authPermission)] = actionResourceList
         }
         return result
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate { action ->
+            val authPermission = action.substringAfterLast("_")
+            AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+        }
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     companion object {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.dao
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.project.tables.TI18nMessage
@@ -56,7 +55,7 @@ class I18nMessageDao {
                 )
                     .values(
                         UUIDUtil.generate(),
-                        i18nMessage.moduleCode.name,
+                        i18nMessage.moduleCode,
                         i18nMessage.language,
                         i18nMessage.key,
                         i18nMessage.value,
@@ -72,13 +71,13 @@ class I18nMessageDao {
 
     fun delete(
         dslContext: DSLContext,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String? = null
     ) {
         with(TI18nMessage.T_I18N_MESSAGE) {
             val conditions = mutableListOf<Condition>()
-            conditions.add(MODULE_CODE.eq(moduleCode.name))
+            conditions.add(MODULE_CODE.eq(moduleCode))
             conditions.add(KEY.like("$key%"))
             language?.let { conditions.add(LANGUAGE.eq(language)) }
             dslContext.deleteFrom(this)
@@ -89,13 +88,13 @@ class I18nMessageDao {
 
     fun get(
         dslContext: DSLContext,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String
     ): TI18nMessageRecord? {
         with(TI18nMessage.T_I18N_MESSAGE) {
             return dslContext.selectFrom(this)
-                .where(MODULE_CODE.eq(moduleCode.name))
+                .where(MODULE_CODE.eq(moduleCode))
                 .and(KEY.eq(key))
                 .and(LANGUAGE.eq(language))
                 .fetchOne()

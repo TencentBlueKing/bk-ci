@@ -27,7 +27,6 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 
 interface I18nMessageService {
@@ -50,52 +49,46 @@ interface I18nMessageService {
      */
     fun deleteI18nMessage(
         userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String? = null
     ): Boolean
 
     /**
      * 查询国际化信息
-     * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param key 国际化变量名
      * @param language 国际化语言信息
      * @return 国际化信息
      */
     fun getI18nMessage(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         key: String,
         language: String
     ): I18nMessage?
 
     /**
      * 查询国际化信息集合
-     * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param keys 国际化变量名列表
      * @param language 国际化语言信息
      * @return 国际化信息
      */
     fun getI18nMessages(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         keys: List<String>,
         language: String
     ): List<I18nMessage>?
 
     /**
      * 查询国际化信息集合
-     * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param keyPrefix 字段key前缀
      * @param language 国际化语言信息
      * @return 国际化信息
      */
     fun getI18nMessages(
-        userId: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         keyPrefix: String,
         language: String
     ): List<I18nMessage>?

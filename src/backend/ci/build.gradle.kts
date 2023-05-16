@@ -122,6 +122,7 @@ allprojects {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 
