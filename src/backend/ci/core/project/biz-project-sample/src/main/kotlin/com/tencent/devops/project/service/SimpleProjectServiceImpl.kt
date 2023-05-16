@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
@@ -46,9 +47,12 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
+import com.tencent.devops.project.util.ProjectUtils
 import java.io.File
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -189,6 +193,21 @@ class SimpleProjectServiceImpl @Autowired constructor(
     override fun buildRouterTag(routerTag: String?): String? = null
 
     override fun updateProjectRouterTag(englishName: String) = Unit
+
+    override fun getV0orV3Projects(
+        authType: AuthSystemType,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.list(
+            dslContext = dslContext,
+            limit = limit,
+            offset = offset,
+            channelCode = ProjectChannelCode.BS
+        ).map {
+            ProjectUtils.packagingBean(it)
+        }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)

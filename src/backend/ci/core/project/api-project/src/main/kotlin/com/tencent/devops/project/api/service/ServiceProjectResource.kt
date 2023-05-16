@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -75,6 +76,21 @@ interface ServiceProjectResource {
     @Path("/getAllProject")
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/getV0orV3Projects")
+    @ApiOperation("获取v0或者v3的项目")
+    fun getV0orV3Projects(
+        @ApiParam("权限版本", required = true)
+        @QueryParam("authType")
+        authType: AuthSystemType,
+        @ApiParam("limit", required = true)
+        @QueryParam("limit")
+        limit: Int,
+        @ApiParam("offset", required = true)
+        @QueryParam("offset")
+        offset: Int
+    ): Result<List<ProjectVO>>
 
     @POST
     @Path("/")

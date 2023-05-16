@@ -26,48 +26,18 @@
  *
  */
 
-package com.tencent.devops.auth.api.migrate
+package com.tencent.devops.common.auth.enums
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+/**
+ * 权限中心类型
+ */
+enum class AuthSystemType(val value: String) {
+    // v0权限中心
+    V0_AUTH_TYPE("v0"),
 
-@Api(tags = ["AUTH_MIGRATE"], description = "权限-迁移")
-@Path("/op/auth/migrate")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpAuthMigrateResource {
+    // v3权限中心
+    V3_AUTH_TYPE("v3"),
 
-    @POST
-    @Path("/v3ToRbac")
-    @ApiOperation("v3权限批量升级到rbac权限")
-    fun v3ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
-        migrateProjects: List<MigrateProjectDTO>
-    ): Result<Boolean>
-
-    @POST
-    @Path("/allV3ToRbacAuth")
-    @ApiOperation("v3权限全部升级到rbac权限")
-    fun allV3ToRbacAuth(): Result<Boolean>
-
-    @POST
-    @Path("/v0ToRbac")
-    @ApiOperation("v0权限批量升级到rbac权限")
-    fun v0ToRbacAuth(
-        @ApiParam("迁移项目", required = true)
-        migrateProjects: List<MigrateProjectDTO>
-    ): Result<Boolean>
-
-    @POST
-    @Path("/allV0ToRbacAuth")
-    @ApiOperation("v0权限全部升级到rbac权限")
-    fun allV0ToRbacAuth(): Result<Boolean>
+    // rbac权限中心
+    RBAC_AUTH_TYPE("rbac")
 }

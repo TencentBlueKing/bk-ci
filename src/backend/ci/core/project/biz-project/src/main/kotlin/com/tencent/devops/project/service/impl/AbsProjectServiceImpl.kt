@@ -99,8 +99,8 @@ import javax.ws.rs.NotFoundException
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
     val projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    val dslContext: DSLContext,
+    val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
     val client: Client,
@@ -754,7 +754,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, limit, offset).map {
+            projectDao.list(
+                dslContext = dslContext,
+                limit = limit,
+                offset = offset,
+                enabled = true
+            ).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)

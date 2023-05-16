@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -179,6 +180,12 @@ interface ProjectService {
     fun listByChannel(limit: Int, offset: Int, projectChannelCode: ProjectChannelCode): Page<ProjectVO>
 
     fun getAllProject(): List<ProjectVO>
+
+    fun getV0orV3Projects(
+        authType: AuthSystemType,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO>
 
     /**
      * 获取用户已的可访问项目列表=
