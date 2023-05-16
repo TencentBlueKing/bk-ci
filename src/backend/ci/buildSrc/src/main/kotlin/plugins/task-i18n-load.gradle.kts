@@ -29,7 +29,7 @@ import java.io.FileOutputStream
 import java.util.Properties
 
 val i18nPath = joinPath(rootDir.absolutePath.replace("/src/backend/ci", ""), "support-files", "i18n")
-println("rootDir is: $rootDir, i18nPath is: $i18nPath")
+println("rootDir is: $rootDir, i18nPath is: $i18nPath, projectName is: ${project.name}")
 if (File(i18nPath).isDirectory) {
     println("i18n load register , Path is $i18nPath")
     // 编入i18n文件
@@ -37,7 +37,17 @@ if (File(i18nPath).isDirectory) {
         doLast {
             var moduleName = System.getProperty("i18n.module.name")
             if (moduleName.isNullOrBlank()) {
-                moduleName = project.name.split("-")[1].let { if (it == "engine") "process" else it }
+                val parts = project.name.split("-")
+                val projectNameSb = StringBuilder();
+                // 去掉头部和尾部即为微服务名称
+                for (i in 1 until parts.size - 1) {
+                    if (i != parts.size - 2) {
+                        projectNameSb.append(parts[i]).append("-")
+                    } else {
+                        projectNameSb.append(parts[i])
+                    }
+                }
+                moduleName = projectNameSb.toString().let { if (it == "engine") "process" else it }
             }
             val moduleFileNames = getFileNames(joinPath(i18nPath, moduleName))
 

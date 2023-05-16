@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
+import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
+import feign.Target.HardCodedTarget
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -110,7 +112,21 @@ class FeignConfiguration @Autowired constructor(
                 requestTemplate.header(REQUEST_CHANNEL, requestChannel)
             }
             // 设置服务名称
-            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME)
+            val serviceName = when (val target = requestTemplate.feignTarget()) {
+                is MicroServiceTarget -> {
+                    target.name()
+                }
+
+                is HardCodedTarget -> {
+                    val nameRegex = Regex("/([a-z]+)/api")
+                    val nameMatchResult = nameRegex.find(target.name())
+                    nameMatchResult?.groupValues?.get(1) ?: target.name()
+                }
+
+                else -> {
+                    target.name()
+                }
+            }
             if (!serviceName.isNullOrBlank()) {
                 requestTemplate.header(AUTH_HEADER_DEVOPS_SERVICE_NAME, serviceName)
             }

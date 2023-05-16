@@ -27,6 +27,8 @@
 
 package com.tencent.devops.project.pojo
 
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -67,5 +69,11 @@ data class ProjectCreateInfo(
     @ApiModelProperty("kind")
     val kind: Int = 0,
     @ApiModelProperty("项目相关配置")
-    val properties: ProjectProperties? = null
+    val properties: ProjectProperties? = null,
+    @ApiModelProperty("项目最大可授权人员范围")
+    var subjectScopes: List<SubjectScopeInfo>? = emptyList(),
+    @ApiModelProperty("logo地址")
+    val logoAddress: String? = null,
+    @ApiModelProperty("项目性质")
+    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value
 )
