@@ -204,7 +204,7 @@ class KubernetesContainerService @Autowired constructor(
                 KubernetesDockerRegistry(host, userName, password)
             }
 
-            val builderName = getOnlyName(buildId, vmSeqId)
+            val builderName = getBuilderName()
             val taskId = kubernetesBuilderClient.createBuilder(
                 buildId = buildId,
                 vmSeqId = vmSeqId,
@@ -406,9 +406,8 @@ class KubernetesContainerService @Autowired constructor(
         return DispatchTaskResp(kubernetesJobClient.buildAndPushImage(userId, info))
     }
 
-    private fun getOnlyName(buildId: String, vmSeqId: String): String {
-        val hashHexString = "$buildId$vmSeqId".hashCode().toUInt().toString(16).padStart(8, '0')
-        return "$hashHexString-${System.currentTimeMillis()}-" +
+    private fun getBuilderName(): String {
+        return "build${System.currentTimeMillis()}-" +
             RandomStringUtils.randomAlphabetic(8).lowercase(Locale.getDefault())
     }
 }
