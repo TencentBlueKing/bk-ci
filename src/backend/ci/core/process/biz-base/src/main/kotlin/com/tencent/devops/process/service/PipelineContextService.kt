@@ -72,7 +72,7 @@ class PipelineContextService @Autowired constructor(
         variables: Map<String, String>,
         model: Model? = null
     ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(projectId, buildId)?.model ?: return emptyMap()
+        val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return emptyMap()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
