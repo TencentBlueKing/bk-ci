@@ -895,6 +895,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildHistoryRecord.endTime = null
             buildHistoryRecord.queueTime = context.now // for EPC
             buildHistoryRecord.status = context.startBuildStatus.ordinal
+            buildHistoryRecord.concurrencyGroup = context.concurrencyGroup
             // 重试时启动参数只需要刷新执行次数
             buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
                 val retryCount = context.executeCount - 1
