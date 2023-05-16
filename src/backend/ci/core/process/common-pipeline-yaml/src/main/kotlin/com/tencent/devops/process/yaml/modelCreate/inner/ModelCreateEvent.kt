@@ -40,10 +40,12 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
  * @param changeSet 文件变更列表，主要用于实现 if-modify
  * @param jobTemplateAcrossInfo job级别的跨模板凭证需要的信息
  * @param checkIfModify 是否检查if-modify
+ * @param elementInstallUserId 插件安装用户
  */
 data class ModelCreateEvent(
     val userId: String,
     val projectCode: String,
+    val elementInstallUserId: String,
     val pipelineInfo: PipelineInfo? = null,
     val gitData: GitData? = null,
     val streamData: StreamData? = null,

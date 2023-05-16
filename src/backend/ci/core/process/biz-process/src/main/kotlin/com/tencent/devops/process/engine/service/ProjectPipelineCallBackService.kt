@@ -37,21 +37,27 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ProjectPipelineCallbackStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.ProjectPipelineCallbackDao
 import com.tencent.devops.process.dao.ProjectPipelineCallbackHistoryDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.CallBackHeader
 import com.tencent.devops.process.pojo.CreateCallBackResult
+import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -152,7 +158,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     projectId = it.projectId,
                     callBackUrl = it.callbackUrl,
                     events = it.events,
-                    secretToken = it.secretToken
+                    secretToken = it.secretToken,
+                    enable = it.enable
                 )
             )
         }
@@ -178,7 +185,8 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     projectId = it.projectId,
                     callBackUrl = it.callbackUrl,
                     events = it.events,
-                    secretToken = null
+                    secretToken = null,
+                    enable = it.enable
                 )
             }
         )
@@ -203,15 +211,111 @@ class ProjectPipelineCallBackService @Autowired constructor(
         )
     }
 
-    fun disable(
-        projectId: String,
-        id: Long
-    ) {
+    fun disable(callBack: ProjectPipelineCallBack) {
+        // 修改接口状态
         projectPipelineCallbackDao.disable(
             dslContext = dslContext,
-            projectId = projectId,
-            id = id
+            projectId = callBack.projectId,
+            id = callBack.id!!
         )
+        // 通知用户接口被禁用
+        sendDisableNotifyMessage(callBack)
+    }
+
+    /**
+     *  发送回调禁用通知
+     */
+    fun sendDisableNotifyMessage(callBack: ProjectPipelineCallBack) {
+        try {
+            val callbackRecord = projectPipelineCallbackDao.get(
+                dslContext = dslContext,
+                projectId = callBack.projectId,
+                id = callBack.id!!
+            )
+            callbackRecord?.run {
+                with(callbackRecord) {
+                    // 项目信息
+                    val projectInfo = client.get(ServiceProjectResource::class).get(
+                        englishName = projectId
+                    ).data
+                    // 禁用通知
+                    client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
+                        SendNotifyMessageTemplateRequest(
+                            templateCode =
+                            PipelineNotifyTemplateEnum.PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE.templateCode,
+                            receivers = mutableSetOf(creator),
+                            notifyType = mutableSetOf(NotifyType.WEWORK.name),
+                            titleParams = mapOf(),
+                            bodyParams = mapOf(
+                                "projectName" to (projectInfo?.projectName ?: ""),
+                                "events" to events,
+                                "callbackUrl" to callbackUrl,
+                                "pipelineListUrl" to projectPipelineListUrl(
+                                    projectId = projectId
+                                )
+                            ),
+                            cc = null,
+                            bcc = null
+                        )
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn(
+                "Failure to send disable notify message for " +
+                        "[${callBack.projectId}|${callBack.callBackUrl}|${callBack.events}]", e
+            )
+        }
+    }
+
+    fun enable(callBack: ProjectPipelineCallBack) {
+        // 启用接口
+        projectPipelineCallbackDao.enable(
+            dslContext = dslContext,
+            projectId = callBack.projectId,
+            id = callBack.id!!
+        )
+    }
+
+    fun enableByIds(
+        projectId: String,
+        callbackIds: String
+    ) {
+        val ids = callbackIds.split(",")
+            .filter { it.isNotEmpty() }
+            .map { it.toInt() }
+        projectPipelineCallbackDao.enableByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            ids = ids
+        )
+    }
+
+    /**
+     * 获取已被禁用的callback信息
+     */
+    fun getDisableCallbackList(
+        offset: Int,
+        limit: Int,
+        projectId: String?,
+        url: String?
+    ): List<ProjectPipelineCallBack> {
+        return projectPipelineCallbackDao.getDisableCallbackList(
+            dslContext = dslContext,
+            projectId = projectId,
+            url = url,
+            limit = limit,
+            offset = offset
+        ).map {
+            ProjectPipelineCallBack(
+                id = it.id,
+                projectId = it.projectId,
+                callBackUrl = it.callbackUrl,
+                events = it.events,
+                secretToken = null,
+                enable = it.enable
+            )
+        }
     }
 
     fun createHistory(
@@ -444,4 +548,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             )
         }
     }
+
+    private fun projectPipelineListUrl(projectId: String) =
+        "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/list/allPipeline"
 }

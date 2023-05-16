@@ -82,6 +82,12 @@ class BkShardingDataSourceConfiguration {
     private val tableAlgorithmClassName: String? = null
     @Value("\${sharding.tableShardingStrategy.shardingField:#{null}}")
     private val tableShardingField: String? = null
+    @Value("\${spring.datasource.minimumIdle:#{1}}")
+    private val datasourceMinimumIdle: Int = 1
+    @Value("\${spring.datasource.maximumPoolSize:#{50}}")
+    private val datasourceMaximumPoolSize: Int = 50
+    @Value("\${spring.datasource.idleTimeout:#{60000}}")
+    private val datasourceIdleTimeout: Long = 60000
 
     private fun dataSourceMap(config: DataSourceProperties): Map<String, DataSource> {
         val dataSourceMap: MutableMap<String, DataSource> = mutableMapOf()
@@ -115,9 +121,9 @@ class BkShardingDataSourceConfiguration {
             username = datasourceUsername
             password = datasourcePassword
             driverClassName = Driver::class.java.name
-            minimumIdle = 10
-            maximumPoolSize = 50
-            idleTimeout = 60000
+            minimumIdle = datasourceMinimumIdle
+            maximumPoolSize = datasourceMaximumPoolSize
+            idleTimeout = datasourceIdleTimeout
             connectionInitSql = datasourceInitSql
             leakDetectionThreshold = datasourceLeakDetectionThreshold
         }
@@ -130,7 +136,7 @@ class BkShardingDataSourceConfiguration {
         val dataSourceSize = config.dataSourceConfigs.size
         val tableRuleConfigs = shardingRuleConfig.tables
         val shardingTableRuleConfigs = config.tableRuleConfigs.filter { it.broadcastFlag != true }
-        if (!shardingTableRuleConfigs.isNullOrEmpty()) {
+        if (shardingTableRuleConfigs.isNotEmpty()) {
             shardingTableRuleConfigs.forEach { shardingTableRuleConfig ->
                 tableRuleConfigs.add(getTableRuleConfiguration(dataSourceSize, shardingTableRuleConfig))
             }
@@ -138,7 +144,7 @@ class BkShardingDataSourceConfiguration {
         // 设置广播表的路由规则
         val broadcastTables = shardingRuleConfig.broadcastTables
         val broadcastTableRuleConfigs = config.tableRuleConfigs.filter { it.broadcastFlag == true }
-        if (!broadcastTableRuleConfigs.isNullOrEmpty()) {
+        if (broadcastTableRuleConfigs.isNotEmpty()) {
             broadcastTableRuleConfigs.forEach { broadcastTableRuleConfig ->
                 broadcastTables.add(broadcastTableRuleConfig.name)
             }

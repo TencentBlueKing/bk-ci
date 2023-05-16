@@ -438,6 +438,7 @@ class StreamYamlBuild @Autowired constructor(
         val modelCreateEvent = ModelCreateEvent(
             userId = action.data.getUserId(),
             projectCode = action.data.setting.projectCode!!,
+            elementInstallUserId = action.data.setting.enableUser,
             pipelineInfo = PipelineInfo(action.data.context.pipeline!!.pipelineId),
             gitData = GitData(
                 repositoryUrl = streamGitProjectInfo.gitHttpUrl,

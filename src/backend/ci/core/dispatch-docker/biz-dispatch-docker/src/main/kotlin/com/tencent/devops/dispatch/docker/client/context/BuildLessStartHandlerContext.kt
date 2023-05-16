@@ -25,28 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.controller
+package com.tencent.devops.dispatch.docker.client.context
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.docker.api.op.OPBuildLessWhiteListResource
-import com.tencent.devops.dispatch.docker.service.BuildLessWhitelistService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.buildless.pojo.RejectedExecutionType
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 
-@RestResource
-class OpBuildLessWhiteListResourceImpl @Autowired constructor(
-    private val buildLessWhitelistService: BuildLessWhitelistService
-) : OPBuildLessWhiteListResource {
-
-    override fun getPipelineWhitelist(userId: String): Result<List<String>> {
-        return Result(buildLessWhitelistService.getDockerResourceWhiteList(userId))
-    }
-
-    override fun addPipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
-        return Result(buildLessWhitelistService.addBuildLessWhiteList(userId, projectId))
-    }
-
-    override fun deletePipelineWhitelist(userId: String, projectId: String): Result<Boolean> {
-        return Result(buildLessWhitelistService.deleteBuildLessWhiteList(userId, projectId))
-    }
-}
+class BuildLessStartHandlerContext(
+    val event: PipelineBuildLessStartupDispatchEvent,
+    var buildLessHost: String = "",
+    var buildLessPort: Int = 80,
+    var retryTime: Int = 0,
+    var retryMaxTime: Int = 0,
+    var buildLogKey: String = "",
+    var rejectedExecutionType: RejectedExecutionType = RejectedExecutionType.ABORT_POLICY,
+    var unAvailableIpList: Set<String>? = emptySet(),
+    override var grayEnv: Boolean = false,
+    override var agentId: String = "",
+    override var secretKey: String = ""
+) : HandlerContext(
+    grayEnv, agentId, secretKey
+)

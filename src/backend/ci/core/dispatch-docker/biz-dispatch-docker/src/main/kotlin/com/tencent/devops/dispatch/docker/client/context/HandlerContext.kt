@@ -25,19 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.lock
+package com.tencent.devops.dispatch.docker.client.context
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-
-class PipelineBuildHistoryLock(redisOperation: RedisOperation, pipelineId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "process:build:history:lock:$pipelineId",
-        expiredTimeInSeconds = 10L
-    ) {
-    override fun decorateKey(key: String): String {
-        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
-        return key
-    }
-}
+open class HandlerContext(
+    open val grayEnv: Boolean,
+    open var agentId: String,
+    open var secretKey: String
+)

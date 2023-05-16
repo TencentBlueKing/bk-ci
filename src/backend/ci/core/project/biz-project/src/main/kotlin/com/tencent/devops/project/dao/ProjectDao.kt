@@ -28,7 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.utils.JooqUtils
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
