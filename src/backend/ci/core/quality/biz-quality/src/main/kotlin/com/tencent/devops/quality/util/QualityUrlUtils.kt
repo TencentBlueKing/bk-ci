@@ -63,14 +63,14 @@ class QualityUrlUtils {
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
             "http://$codeccHost/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
         } else {
-            var fillDetailUrl = logPrompt
-            if (fillDetailUrl.isNullOrBlank()) {
-                val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
-                fillDetailUrl = detailValue.replace("##projectId##", projectId)
-                    .replace("##taskId##", taskId.toString())
-                    .replace("##buildId##", buildId)
-                    .replace("##detail##", detail)
+            var detailValue = logPrompt
+            if (detailValue.isNullOrBlank()) {
+                detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
             }
+            val fillDetailUrl = detailValue.replace("##projectId##", projectId)
+                .replace("##taskId##", taskId.toString())
+                .replace("##buildId##", buildId)
+                .replace("##detail##", detail)
             "http://$codeccHost$fillDetailUrl"
         }
     }
