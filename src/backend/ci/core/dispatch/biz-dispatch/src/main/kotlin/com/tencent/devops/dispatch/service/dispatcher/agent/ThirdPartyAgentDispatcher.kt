@@ -42,6 +42,15 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.constants.BK_AGENT_IS_BUSY
+import com.tencent.devops.dispatch.constants.BK_ENV_BUSY
+import com.tencent.devops.dispatch.constants.BK_MAX_BUILD_SEARCHING_AGENT
+import com.tencent.devops.dispatch.constants.BK_NO_AGENT_AVAILABLE
+import com.tencent.devops.dispatch.constants.BK_QUEUE_TIMEOUT_MINUTES
+import com.tencent.devops.dispatch.constants.BK_SCHEDULING_SELECTED_AGENT
+import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT
+import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_MOST_IDLE
+import com.tencent.devops.dispatch.constants.BK_SEARCHING_AGENT_PARALLEL_AVAILABLE
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -266,7 +275,14 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 saveAgentInfoToBuildDetail(event = event, agent = agent)
 
                 logger.info("${event.buildId}|START_AGENT_BY_ID|j(${event.vmSeqId})|agent=${agent.agentId}")
-                log(event, "调度构建机(Scheduling selected Agent): ${agent.hostname}/${agent.ip}")
+                log(
+                    event,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_SCHEDULING_SELECTED_AGENT,
+                        params = arrayOf(agent.hostname, agent.ip),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 return true
             } else {
                 log(
@@ -487,7 +503,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                  */
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                            "开始查找最近使用过并且当前没有任何任务的空闲构建机...(Searching Agent: Most recently used and idle)"
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_SEARCHING_AGENT,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
                 )
                 if (startEmptyAgents(
                         event = event,
@@ -512,7 +531,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 )
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                            "查找最近使用过并且未达到最大构建数的构建机...(Searching Agent: Recently used and parallel available)"
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_MAX_BUILD_SEARCHING_AGENT,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
                 )
                 /**
                  * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
@@ -535,7 +557,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                            "开始查找没有任何任务的空闲构建机...(Searching Agent: Most idle)"
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_SEARCHING_AGENT_MOST_IDLE,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
                 )
                 /**
                  * 根据哪些agent没有任何任务
@@ -558,7 +583,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
 
                 logDebug(
                     buildLogPrinter, event, message = "retry: ${event.retryTime} | " +
-                            "开始查找当前构建任务还没到达最大并行数构建机...(Searching Agent: Parallel available)"
+                            I18nUtil.getCodeLanMessage(
+                                messageCode = BK_SEARCHING_AGENT_PARALLEL_AVAILABLE,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
                 )
                 /**
                  * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
@@ -580,10 +608,24 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 }
 
                 if (event.retryTime == 1) {
-                    log(buildLogPrinter, event, message = "没有可用Agent，等待Agent释放...(No Agent available, wait)")
+                    log(
+                        buildLogPrinter,
+                        event,
+                        message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_NO_AGENT_AVAILABLE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                        )
+                    )
                 }
             } else {
-                log(buildLogPrinter, event, message = "构建环境并发保护，稍后重试...(Env busy, wait)")
+                log(
+                    buildLogPrinter,
+                    event,
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_ENV_BUSY,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
             }
 
             logger.info(
@@ -596,7 +638,11 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
                 errorMessage = "${event.buildId}|${event.vmSeqId} " +
-                        " 构建环境无可分配构建机，等待超时（queue-timeout-minutes=${event.queueTimeoutMinutes}）"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_QUEUE_TIMEOUT_MINUTES,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("${event.queueTimeoutMinutes}")
+                        )
             )
         } finally {
             redisLock.unlock()
@@ -623,7 +669,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             )
             return
         }
-        logDebug(buildLogPrinter, event, "构建机繁忙，继续重试(Agent is busy) - retry: ${event.retryTime + 1}")
+        logDebug(
+            buildLogPrinter,
+            event,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_AGENT_IS_BUSY,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + " - retry: ${event.retryTime + 1}")
 
         event.retryTime += 1
         event.delayMills = 10000

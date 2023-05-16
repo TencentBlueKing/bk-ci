@@ -53,4 +53,11 @@ object PluginMessageCode {
     const val WETEST_FAILED_GET = "2113004" // WeTest获取secretId,secretKey失败，返回码: {0}, 错误消息: {1}
     const val GET_SIGNATURE_ERROR = "2113005" // 获取Signature错误，err:
     const val URL_CODING_ERROR = "2113006" // url编码错误, err:
+
+    const val BK_APP_SCAN_COMPLETED = "bkAppScanCompleted" // 金刚app扫描完成
+    const val BK_BUILD_ID_NOT_FOUND = "bkBuildIdNotFound" // 服务端内部异常，buildId={0}的构建未查到
+    const val BK_PIPELINE_ID_NOT_FOUND = "bkPipelineIdNotFound" // 服务端内部异常，pipelineId={0}的构建未查到
+    const val BK_PROJECT_MANAGER = "bkProjectManager" // 项目管理员
+
+    const val BK_CI_PIPELINE = "bkCiPipeline" // 蓝盾流水线
 }
