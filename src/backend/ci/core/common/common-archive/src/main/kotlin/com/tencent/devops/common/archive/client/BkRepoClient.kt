@@ -34,6 +34,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -69,6 +70,13 @@ import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
 import com.tencent.devops.common.archive.pojo.RepoCreateRequest
+import com.tencent.devops.common.archive.pojo.replica.ReplicaObjectType
+import com.tencent.devops.common.archive.pojo.replica.ReplicaTaskCreateRequest
+import com.tencent.devops.common.archive.pojo.replica.ReplicaType
+import com.tencent.devops.common.archive.pojo.replica.objects.PathConstraint
+import com.tencent.devops.common.archive.pojo.replica.objects.ReplicaObjectInfo
+import com.tencent.devops.common.archive.pojo.replica.setting.ConflictStrategy
+import com.tencent.devops.common.archive.pojo.replica.setting.ReplicaSetting
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -95,6 +103,7 @@ import java.io.OutputStream
 import java.net.URLEncoder
 import java.nio.file.FileSystems
 import java.nio.file.Paths
+import java.util.UUID
 import javax.ws.rs.NotFoundException
 
 @Component
@@ -1082,6 +1091,40 @@ class BkRepoClient constructor(
             rule = rule
         )
         return query(userId, projectId, queryModel)
+    }
+
+    fun createReplicaTask(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        taskType: ReplicaType = ReplicaType.EDGE_PULL
+    ) {
+        val url = "${getGatewayUrl()}/bkrepo/api/service/replication/api/task/edge/create"
+        val taskCreateRequest = ReplicaTaskCreateRequest(
+            name = "$fullPath-${UUID.randomUUID()}",
+            localProjectId = projectId,
+            replicaObjectType = ReplicaObjectType.PATH,
+            replicaTaskObjects = listOf(
+                ReplicaObjectInfo(
+                    localRepoName = repoName,
+                    remoteProjectId = projectId,
+                    remoteRepoName = repoName,
+                    repoType = RepositoryType.GENERIC,
+                    packageConstraints = null,
+                    pathConstraints = listOf(PathConstraint(fullPath))
+                )
+            ),
+            replicaType = taskType,
+            setting = ReplicaSetting(conflictStrategy = ConflictStrategy.OVERWRITE),
+            remoteClusterIds = emptySet()
+        )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
+            .post(taskCreateRequest.toJsonString().toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+        doRequest(request).resolveResponse<Response<Void>>()
     }
 
     private fun query(userId: String, projectId: String, queryModel: QueryModel): QueryData {
