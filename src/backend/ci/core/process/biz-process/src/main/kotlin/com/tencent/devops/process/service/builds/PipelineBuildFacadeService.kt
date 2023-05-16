@@ -440,7 +440,7 @@ class PipelineBuildFacadeService(
                         if (s.id == taskId) {
                             val stage = pipelineStageService.getStage(projectId, buildId, stageId = s.id) ?: run {
                                 throw ErrorCodeException(
-                                    errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                    errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
                                 )
                             }
                             // 只有失败或取消情况下提供重试得可能
