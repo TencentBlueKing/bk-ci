@@ -132,6 +132,7 @@ object WorkerMessageCode {
     const val PULL_THE_REPOSITORY_IN_SWITCH = "2130068" // 从({0})变为({1}), switch拉取代码
     const val GET_SVN_DIRECTORY_ERROR = "2130069" // 获取Svn目录错误
     const val PARAMETER_ERROR = "2130070" // 参数错误
+    const val RUN_AGENT_WITHOUT_PERMISSION = "2130071" // 运行Agent需要构建机临时目录的写权限
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
