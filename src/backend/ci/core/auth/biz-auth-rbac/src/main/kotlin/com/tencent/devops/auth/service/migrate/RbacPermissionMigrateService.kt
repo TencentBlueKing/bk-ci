@@ -208,7 +208,7 @@ class RbacPermissionMigrateService constructor(
                 projectCode = projectCode,
                 status = AuthMigrateStatus.PENDING.value
             )
-            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
+            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束
             val iamApprover = buildResourceCreator(
                 approver = migrateProject.approver,
                 projectCreator = projectInfo.creator!!
