@@ -194,6 +194,17 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         return instanceSet.toList()
     }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
+    ): Map<AuthPermission, List<String>> {
+        return authPermissions.associateWith {
+            pipelineIds
+        }
+    }
+
     /**
      * 注册流水线到权限中心与权限关联
      * @param userId userId

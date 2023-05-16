@@ -43,6 +43,33 @@ class TxV3QualityPermissionService @Autowired constructor(
         }
     }
 
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+            resourceCode = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+        ).data ?: false
+    }
+
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
         authResourceApiStr.createResource(
             user = userId,
@@ -94,11 +121,19 @@ class TxV3QualityPermissionService @Autowired constructor(
         return resultMap
     }
 
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
+
     override fun validateRulePermission(
         userId: String,
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (authPermission == AuthPermission.LIST)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -126,15 +161,16 @@ class TxV3QualityPermissionService @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(ruleId),
-            action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
-            relationResourceType = null
-        ).data ?: false
+        val checkPermission =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(null)!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(ruleId),
+                action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
+                resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+                relationResourceType = null
+            ).data ?: false
         if (!checkPermission) {
             throw PermissionForbiddenException(message)
         }
@@ -189,4 +225,10 @@ class TxV3QualityPermissionService @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 }

@@ -31,6 +31,7 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -79,6 +80,24 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resource.resourceType)
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = serviceCodeService,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            permission = AuthPermission.get(action),
+            resourceCode = resource.resourceCode,
+            relationResourceType = null
+        )
+    }
+
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -116,6 +135,65 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
             permissions = permissions,
             supplier = null
         )
+    }
+
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resource.resourceCode,
+                resourceType = resource.resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate { action ->
+            val authPermission = action.substringAfterLast("_")
+            AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+        }
     }
 
     companion object {

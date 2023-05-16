@@ -63,7 +63,6 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 @Suppress("TooManyFunctions", "LongParameterList")
 interface ServiceTxProjectResource {
-
     @GET
     @Path("/")
     @ApiOperation("查询所有项目")

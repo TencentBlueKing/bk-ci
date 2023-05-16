@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.Error
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import com.tencent.devops.common.api.pojo.Error
 
 @ApiModel("第三方构建信息模型")
 data class ThirdPartyBuildWithStatus(

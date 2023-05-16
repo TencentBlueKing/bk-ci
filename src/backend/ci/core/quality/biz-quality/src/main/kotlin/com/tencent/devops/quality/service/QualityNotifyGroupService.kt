@@ -68,15 +68,33 @@ class QualityNotifyGroupService @Autowired constructor(
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
+        val allGroupIds = qualityNotifyGroupDao.listIds(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.value1() }
+        val hasListPermissionGroupIds = qualityPermissionService.filterListPermissionGroups(
+            userId = userId,
+            projectId = projectId,
+            allGroupIds = allGroupIds
+        )
+        if (hasListPermissionGroupIds.isEmpty())
+            return Pair(0, listOf())
+        val count = hasListPermissionGroupIds.size
         val groupPermissionListMap = qualityPermissionService.filterGroup(
             user = userId,
             projectId = projectId,
             authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        val count = qualityNotifyGroupDao.count(dslContext, projectId)
-        val finalLimit = if (limit == -1) count.toInt() else limit
-        val list = qualityNotifyGroupDao.list(dslContext, projectId, offset, finalLimit).map {
+        val finalLimit = if (limit == -1) count else limit
+        val ruleRecordList = qualityNotifyGroupDao.listByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupIds = hasListPermissionGroupIds,
+            offset = offset,
+            limit = finalLimit
+        )
+        val list = ruleRecordList.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]!!.contains(it.id)
             val canDelete = groupPermissionListMap[AuthPermission.DELETE]!!.contains(it.id)
             GroupSummaryWithPermission(
@@ -91,7 +109,7 @@ class QualityNotifyGroupService @Autowired constructor(
                 permissions = GroupPermission(canEdit, canDelete)
             )
         }
-        return Pair(count, list)
+        return Pair(count.toLong(), list)
     }
 
     fun getProjectGroupAndUsers(userId: String, projectId: String): List<ProjectGroupAndUsers> {
@@ -109,6 +127,12 @@ class QualityNotifyGroupService @Autowired constructor(
     }
 
     fun create(userId: String, projectId: String, group: GroupCreate) {
+        qualityPermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.CREATE,
+            message = "用户没有创建质量红线通知组权限"
+        )
         if (qualityNotifyGroupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,

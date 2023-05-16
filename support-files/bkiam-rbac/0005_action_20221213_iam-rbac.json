@@ -1,0 +1,2127 @@
+{
+  "system_id": "bk_ci_rbac",
+  "operations": [
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_visit",
+        "name": "访问项目",
+        "name_en": "Project Visit",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_view",
+        "name": "查看项目",
+        "name_en": "Project View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_list",
+        "name": "项目列表",
+        "name_en": "Project List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_edit",
+        "name": "编辑项目",
+        "name_en": "Project Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "project_list",
+          "project_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_enable",
+        "name": "禁用/启用项目",
+        "name_en": "Project Enable",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "project_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "project_manage",
+        "name": "项目权限管理",
+        "name_en": "Project Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_list",
+        "name": "流水线列表",
+        "name_en": "Pipeline List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_view",
+        "name": "查看流水线",
+        "name_en": "Pipeline View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_edit",
+        "name": "编辑流水线",
+        "name_en": "Pipeline Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_create",
+        "name": "创建流水线",
+        "name_en": "Pipeline Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_download",
+        "name": "下载制品",
+        "name_en": "Pipeline Download",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_delete",
+        "name": "删除流水线",
+        "name_en": "Pipeline Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_share",
+        "name": "分享制品",
+        "name_en": "Pipeline Share",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_execute",
+        "name": "执行流水线",
+        "name_en": "Pipeline Execute",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "pipeline_manage",
+        "name": "流水线权限管理",
+        "name_en": "Pipeline Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "pipeline",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_instance",
+                "ignore_iam_path": true
+              },
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "pipeline_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "pipeline_list",
+          "pipeline_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_list",
+        "name": "代码库列表",
+        "name_en": "Repository List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "repertory_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_view",
+        "name": "查看代码库",
+        "name_en": "Repository View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "repertory_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "repertory_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_edit",
+        "name": "编辑代码库",
+        "name_en": "Repository Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "repertory_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "repertory_list",
+          "repertory_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_create",
+        "name": "关联代码库",
+        "name_en": "Repository Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_delete",
+        "name": "删除代码库",
+        "name_en": "Repository Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "repertory_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "repertory_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "repertory_use",
+        "name": "使用代码库",
+        "name_en": "Repository Use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "repertory",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "repertory_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "repertory_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_list",
+        "name": "凭据列表",
+        "name_en": "Credential List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "credential_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_view",
+        "name": "查看凭据",
+        "name_en": "Credential View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "credential_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "credential_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_edit",
+        "name": "编辑凭据",
+        "name_en": "Credential Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "credential_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "credential_list",
+          "credential_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_create",
+        "name": "添加凭据",
+        "name_en": "Credential Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_delete",
+        "name": "删除凭据",
+        "name_en": "Credential Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "credential_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "credential_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "credential_use",
+        "name": "使用凭据",
+        "name_en": "Credential Use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "credential",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "credential_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "credential_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_list",
+        "name": "环境列表",
+        "name_en": "Environment List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "environment_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_use",
+        "name": "使用环境",
+        "name_en": "Environment Use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "environment_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "environment_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_view",
+        "name": "查看环境",
+        "name_en": "Environment View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "environment_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "environment_list",
+          "environment_use"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_edit",
+        "name": "编辑环境",
+        "name_en": "Environment Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "environment_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "environment_list",
+          "environment_use",
+          "environment_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_create",
+        "name": "创建环境",
+        "name_en": "Environment Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "environment_delete",
+        "name": "删除环境",
+        "name_en": "Environment Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "environment",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "environment_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "environment_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_list",
+        "name": "节点列表",
+        "name_en": "Node List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_use",
+        "name": "使用节点",
+        "name_en": "Node Use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "env_node_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_view",
+        "name": "查看节点",
+        "name_en": "Node View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "env_node_list",
+          "env_node_use"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_edit",
+        "name": "编辑节点",
+        "name_en": "Node Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "env_node_list",
+          "env_node_use",
+          "env_node_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_create",
+        "name": "添加节点",
+        "name_en": "Node Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "env_node_delete",
+        "name": "删除节点",
+        "name_en": "Node Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "env_node",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "node_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "env_node_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_list",
+        "name": "证书列表",
+        "name_en": "Cert List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cert_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_view",
+        "name": "查看证书",
+        "name_en": "Cert View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cert_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cert_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_edit",
+        "name": "编辑证书",
+        "name_en": "Cert Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cert_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cert_list",
+          "cert_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_create",
+        "name": "添加证书",
+        "name_en": "Cert Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_delete",
+        "name": "删除证书",
+        "name_en": "Cert Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cert_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cert_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "cert_use",
+        "name": "使用证书",
+        "name_en": "Cert Use",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "cert",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "cert_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "cert_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_list",
+        "name": "版本体验任务列表",
+        "name_en": "Experience Task List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_create",
+        "name": "创建版本体验任务",
+        "name_en": "Experience Task Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_view",
+        "name": "查看版本体验任务",
+        "name_en": "Experience Task View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_delete",
+        "name": "下架版本体验任务",
+        "name_en": "Experience Task Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_task_edit",
+        "name": "编辑版本体验任务",
+        "name_en": "Experience Task Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_task_list",
+          "experience_task_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_list",
+        "name": "版本体验用户组列表",
+        "name_en": "Experience Group List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_create",
+        "name": "创建版本体验用户组",
+        "name_en": "Experience Group Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_view",
+        "name": "查看版本体验用户组",
+        "name_en": "Experience Group View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_group_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_delete",
+        "name": "删除版本体验用户组",
+        "name_en": "Experience Group Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_group_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "experience_group_edit",
+        "name": "编辑版本体验用户组",
+        "name_en": "Experience Group Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "experience_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "experience_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "experience_group_list",
+          "experience_group_view"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_list",
+        "name": "质量红线规则列表",
+        "name_en": "Andon Rule List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_rule_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_create",
+        "name": "创建质量红线规则",
+        "name_en": "Andon Rule Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_delete",
+        "name": "删除质量红线规则",
+        "name_en": "Andon Rule Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_rule_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "rule_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_edit",
+        "name": "编辑质量红线规则",
+        "name_en": "Andon Rule Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_rule_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "rule_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "rule_enable",
+        "name": "启用/停用质量红线规则",
+        "name_en": "Andon Rule Enable",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "rule",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_rule_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "rule_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_list",
+        "name": "质量红线通知组列表",
+        "name_en": "Andon Notice Group List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "quality_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_create",
+        "name": "创建质量红线通知组",
+        "name_en": "Andon Notice Group Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_delete",
+        "name": "删除质量红线通知组",
+        "name_en": "Andon Notice Group Delete",
+        "auth_type": "rbac",
+        "type": "delete",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "quality_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "quality_group_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "quality_group_edit",
+        "name": "编辑质量红线通知组",
+        "name_en": "Andon Notice Group Edit",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "quality_group",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "quality_group_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "quality_group_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_list",
+        "name": "任务列表",
+        "name_en": "CodeCC Task List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_create",
+        "name": "新建任务",
+        "name_en": "CodeCC Task Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_analyze",
+        "name": "分析任务",
+        "name_en": "CodeCC Task Analyze",
+        "auth_type": "rbac",
+        "type": "execute",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_manage-defect",
+        "name": "问题管理",
+        "name_en": "CodeCC Task Manage Defect",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_view-defect",
+        "name": "查看问题列表和详情",
+        "name_en": "CodeCC Defect Detail View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_view-report",
+        "name": "查看报表",
+        "name_en": "CodeCC Task Report View",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_setting",
+        "name": "任务设置",
+        "name_en": "CodeCC Task Setting",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_task_manage",
+        "name": "任务权限管理",
+        "name_en": "CodeCC Task Manage Permissions",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "codecc_task",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "codecc_task_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit",
+          "codecc_task_list"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_rule_set_create",
+        "name": "规则集创建",
+        "name_en": "CodeCC Rule Set Create",
+        "auth_type": "rbac",
+        "type": "create",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_rule_set_list",
+        "name": "规则集列表",
+        "name_en": "CodeCC Rule Set List",
+        "auth_type": "rbac",
+        "type": "view",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
+        "id": "codecc_ignore_type_manage",
+        "name": "忽略配置",
+        "name_en": "CodeCC Ignore Type Manage",
+        "auth_type": "rbac",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci_rbac",
+                "id": "project_instance",
+                "ignore_iam_path": true
+              }
+            ]
+          }
+        ],
+        "related_actions": [
+          "project_visit"
+        ],
+        "version": 1
+      }
+    }
+  ]
+}

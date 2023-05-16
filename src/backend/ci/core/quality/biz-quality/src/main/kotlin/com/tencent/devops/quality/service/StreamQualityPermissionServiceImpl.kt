@@ -62,11 +62,13 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    private fun validateGroupPermission(
+    override fun validateGroupPermission(
         userId: String,
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
@@ -74,6 +76,22 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
             projectCode = projectId,
             resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
         ).data ?: false
+    }
+
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        val permissionCheck = validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = authPermission
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(message)
+        }
     }
 
     override fun createGroupResource(
@@ -121,11 +139,19 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
+
     override fun validateRulePermission(
         userId: String,
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (authPermission == AuthPermission.LIST)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
@@ -202,4 +228,10 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 }
