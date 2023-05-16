@@ -10,7 +10,7 @@
     <script>
         window.dispatchEvent = (cs) => {
             if (cs.eventName === 'change::$currentProjectId') {
-                window.eventBus.emit('changeProjectId', cs.payload.currentProjectId)
+                window.Bus.emit('changeProjectId', cs.payload.currentProjectId)
             }
         }
         class CustomEvent {
