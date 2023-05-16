@@ -190,7 +190,6 @@ class PipelineListFacadeService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.FORBIDDEN.statusCode,
                     errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                    defaultMessage = "用户($userId)无权限在工程($projectId)下获取流水线",
                     params = arrayOf(permissionMsg)
                 )
             }

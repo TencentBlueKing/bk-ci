@@ -261,16 +261,11 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = permission.getI18n(I18nUtil.getLanguage(userId)),
-                defaultMessage = permission.alias,
-                language = I18nUtil.getLanguage(userId)
-            )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
                 defaultMessage = message,
-                params = arrayOf(permissionMsg)
+                params = arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
     }

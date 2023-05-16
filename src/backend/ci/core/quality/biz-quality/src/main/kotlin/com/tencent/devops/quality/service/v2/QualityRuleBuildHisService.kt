@@ -345,9 +345,7 @@ class QualityRuleBuildHisService constructor(
                 if (it.gateKeepers!!.isEmpty() || !(it.gateKeepers!!.contains(userId))) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.FORBIDDEN.statusCode,
-                        errorCode = USER_NEED_PIPELINE_X_PERMISSION,
-                        defaultMessage = "用户($userId)不在当前把关人名单中",
-                        params = null
+                        errorCode = USER_NEED_PIPELINE_X_PERMISSION
                     )
                 }
                 val ruleResult = if (pass) RuleInterceptResult.INTERCEPT_PASS.name

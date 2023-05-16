@@ -71,8 +71,7 @@ class RunLockInterceptor @Autowired constructor(
             val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
             return if ((buildSummaryRecord?.runningCount ?: 0) >= 1) {
                 logger.info(
-                    "[$pipelineId] " +
-                        "The current pipeline has been set to run only one build task at a time, start queuing!"
+                    "[$pipelineId] The current pipeline is set to run only one build task at a time, start queuing!"
                 )
                 Response(BuildStatus.QUEUE)
             } else {

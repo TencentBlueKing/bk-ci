@@ -184,7 +184,6 @@ class PipelineBuildQualityService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
-                defaultMessage = "质量红线拦截的任务[$elementId]不存在",
                 params = arrayOf(elementId)
             )
         }
@@ -195,7 +194,6 @@ class PipelineBuildQualityService(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                defaultMessage = "用户($userId)不在审核人员名单中",
                 params = arrayOf(userId)
             )
         }

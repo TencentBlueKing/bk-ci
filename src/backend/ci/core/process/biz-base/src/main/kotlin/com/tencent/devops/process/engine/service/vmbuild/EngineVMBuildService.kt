@@ -88,6 +88,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -207,7 +209,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
-                        exception = OperationException("重复启动构建机/VM Start already: ${c.startVMStatus}")
+                        exception = OperationException(
+                            I18nUtil.getCodeLanMessage(messageCode = BK_VM_START_ALREADY) + " ${c.startVMStatus}"
+                        )
                     )
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
@@ -739,7 +743,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
                 buildLogPrinter.addRedLine(
                     buildId = task!!.buildId,
-                    message = "Plugin[${task.taskName}]: 失败自动跳过/continue when error",
+                    message = "Plugin[${task.taskName}]: " + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CONTINUE_WHEN_ERROR,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
