@@ -40,6 +40,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CN_INDEX_ALREADY_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
@@ -59,7 +62,7 @@ import com.tencent.devops.quality.pojo.po.QualityIndicatorPO
 import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.annotation.PostConstruct
 import org.jooq.DSLContext
@@ -111,7 +114,8 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun listByLevel(projectId: String): List<IndicatorStageGroup> {
-
+        val codeccToolNameMap = getCodeccToolNameMap()
+        val codeccToolDescMap = getCodeccToolDescMap()
         val indicatorRecords = listIndicatorByProject(projectId)
         val indicators = serviceListIndicatorRecord(indicatorRecords)
 
@@ -384,7 +388,7 @@ class QualityIndicatorService @Autowired constructor(
         val scriptIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val systemIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
         val marketIndicators = mutableListOf<IndicatorListResponse.IndicatorListItem>()
-
+        val codeccToolNameMap = getCodeccToolNameMap()
         listIndicatorByProject(projectId).filter {
             if (keyword.isNullOrBlank()) true
             else it.cnName.contains(keyword!!)
@@ -629,16 +633,36 @@ class QualityIndicatorService @Autowired constructor(
 
     private fun checkSystemIndicatorExist(enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
-        if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-        if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+        if (indicators.any { it.enName == enName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                params = arrayOf(enName)
+            )
+        )
+        if (indicators.any { it.cnName == cnName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                params = arrayOf(cnName)
+            )
+        )
         return false
     }
 
     private fun checkSystemIndicatorExcludeExist(id: Long, enName: String, cnName: String): Boolean {
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
         val filterList = indicators.filter { it.id != id }
-        if (filterList.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-        if (filterList.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+        if (filterList.any { it.enName == enName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                params = arrayOf(enName)
+            )
+        )
+        if (filterList.any { it.cnName == cnName }) throw OperationException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                params = arrayOf(cnName)
+            )
+        )
         return false
     }
 
@@ -646,8 +670,18 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.indicatorRange != projectId) return@forEach
-            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
-            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                    params = arrayOf(enName)
+                )
+            )
+            if (indicator.cnName == cnName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                    params = arrayOf(cnName)
+                )
+            )
         }
         return false
     }
@@ -656,8 +690,16 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.id == id || indicator.indicatorRange != projectId) return@forEach
-            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
-            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException(I18nUtil.getCodeLanMessage(
+                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                params = arrayOf(enName)
+            ))
+            if (indicator.cnName == cnName) throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                    params = arrayOf(cnName)
+                )
+            )
         }
         return false
     }
@@ -723,15 +765,15 @@ class QualityIndicatorService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(QualityIndicatorService::class.java)
 
-        val codeccToolNameMap = mapOf(
-            "STANDARD" to "代码规范",
-            "DEFECT" to "代码缺陷",
-            "SECURITY" to "安全漏洞",
+        fun getCodeccToolNameMap() = mapOf(
+            "STANDARD" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_SECURITY),
             "COVERITY" to "Coverity",
             "KLOCWORK" to "Klocwork",
-            "RIPS" to "啄木鸟漏洞扫描-PHP",
-            "SENSITIVE" to "敏感信息",
-            "WOODPECKER_SENSITIVE" to "啄木鸟敏感信息",
+            "RIPS" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_RIPS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_SENSITIVE),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_WOODPECKER_SENSITIVE),
             "BKCHECK-CPP" to "bkcheck-cpp",
             "BKCHECK-OC" to "bkcheck-oc",
             "CHECKSTYLE" to "Checkstyle",
@@ -743,29 +785,29 @@ class QualityIndicatorService @Autowired constructor(
             "PHPCS" to "PHPCS",
             "PYLINT" to "PyLint",
             "STYLECOP" to "StyleCop",
-            "CCN" to "圈复杂度",
-            "DUPC" to "重复率")
+            "CCN" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_DESC_DUPC))
 
-        private val codeccToolDescMap = mapOf(
-            "STANDARD" to "按维度(推荐)",
-            "DEFECT" to "按维度(推荐)",
-            "SECURITY" to "按维度(推荐)",
-            "CCN" to "通过计算函数的节点个数来衡量代码复杂性",
-            "DUPC" to "可以检测项目中复制粘贴和重复开发相同功能等问题",
-            "COVERITY" to "斯坦福大学科学家研究成果，静态源代码分析领域的领导者",
-            "KLOCWORK" to "业界广泛使用的商用代码检查工具，与Coverity互补",
-            "CPPLINT" to "谷歌开源的C++代码风格检查工具",
-            "ESLINT" to "JavaScript代码检查工具",
-            "PYLINT" to "Python代码风格检查工具",
-            "GOML" to "Golang静态代码分析工具",
-            "CHECKSTYLE" to "Java代码风格检查工具",
-            "STYLECOP" to "微软开源的C#静态代码分析工具",
-            "DETEKT" to "Kotlin静态代码分析工具 ",
-            "PHPCS" to "PHP代码风格检查工具",
-            "SENSITIVE" to "可扫描代码中有安全风险的敏感信息",
-            "OCCHECK" to "OC代码风格检查工具",
-            "WOODPECKER_SENSITIVE" to "敏感信息检查工具",
-            "BKCHECK-CPP" to "C++代码风格检查工具",
-            "BKCHECK-OC" to "OC代码风格检查工具")
+        private fun getCodeccToolDescMap() = mapOf(
+            "STANDARD" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_STANDARD),
+            "DEFECT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DEFECT),
+            "SECURITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_SECURITY),
+            "CCN" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CCN),
+            "DUPC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DUPC),
+            "COVERITY" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_COVERITY),
+            "KLOCWORK" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_KLOCWORK),
+            "CPPLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CPPLINT),
+            "ESLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_ESLINT),
+            "PYLINT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_PYLINT),
+            "GOML" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_GOML),
+            "CHECKSTYLE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_CHECKSTYLE),
+            "STYLECOP" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_STYLECOP),
+            "DETEKT" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_DETEKT),
+            "PHPCS" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_PHPCS),
+            "SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_SENSITIVE),
+            "OCCHECK" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_OCCHECK),
+            "WOODPECKER_SENSITIVE" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_WOODPECKER_SENSITIVE),
+            "BKCHECK-CPP" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_BKCHECK_CPP),
+            "BKCHECK-OC" to I18nUtil.getCodeLanMessage(ProcessMessageCode.BK_TOOL_NAME_BKCHECK_OC))
     }
 }

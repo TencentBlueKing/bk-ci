@@ -287,8 +287,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                    defaultMessage = "流水线名称已被使用"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
                 )
             }
 
@@ -447,8 +446,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 }
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS,
-                    defaultMessage = "流水线已经存在或未找到对应模板"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS
                 )
             } catch (ignored: Throwable) {
                 if (pipelineId != null) {
@@ -535,8 +533,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
@@ -597,8 +594,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "指定要复制的流水线-模型不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
         try {
             val copyMode = Model(
@@ -632,14 +628,12 @@ class PipelineInfoFacadeService @Autowired constructor(
             logger.error("Parse process($pipelineId) fail", e)
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ILLEGAL_PIPELINE_MODEL_JSON,
-                defaultMessage = "非法的流水线"
+                errorCode = ILLEGAL_PIPELINE_MODEL_JSON
             )
         } catch (e: PipelineAlreadyExistException) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                defaultMessage = "流水线名称已被使用"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
             )
         } catch (e: ErrorCodeException) {
             throw e
@@ -647,7 +641,6 @@ class PipelineInfoFacadeService @Autowired constructor(
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.OPERATE_PIPELINE_FAIL,
-                defaultMessage = "非法的流水线",
                 params = arrayOf(e.message ?: "")
             )
         }
@@ -665,8 +658,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(projectId, pipelineId)) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT,
-                defaultMessage = "模板流水线不支持编辑"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT
             )
         }
         val apiStartEpoch = System.currentTimeMillis()
@@ -703,16 +695,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                 logger.warn("The pipeline(${model.name}) is exist")
                 throw ErrorCodeException(
                     statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                    defaultMessage = "流水线名称已被使用"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
                 )
             }
 
             val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                    defaultMessage = "流水线不存在"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
                 )
 
             if (pipeline.channelCode != channelCode) {
@@ -838,15 +828,13 @@ class PipelineInfoFacadeService @Autowired constructor(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         if (pipelineInfo.channelCode != channelCode) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定编辑的流水线渠道来源${pipelineInfo.channelCode.name}不符合$channelCode",
                 params = arrayOf(pipelineInfo.channelCode.name)
             )
         }
@@ -854,8 +842,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "指定要复制的流水线-模型不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
         try {
@@ -941,8 +928,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             val existModel = pipelineRepositoryService.getModel(projectId, pipelineId)
                 ?: throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                    defaultMessage = "指定要复制的流水线-模型不存在"
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                 )
             // 对已经存在的模型做删除前处理
             val param = BeforeDeleteParam(
