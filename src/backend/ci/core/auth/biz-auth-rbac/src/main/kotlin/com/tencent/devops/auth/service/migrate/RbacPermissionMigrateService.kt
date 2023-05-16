@@ -411,7 +411,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", errorMessage)
+        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,
