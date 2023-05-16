@@ -137,6 +137,11 @@ class UserImageResourceImpl @Autowired constructor(
         return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
     }
 
+    override fun getProjectImages(userId: String, projectId: String, repoName: String, searchKey: String?): Result<ImageListResp> {
+        checkUserAndProject(userId, projectId)
+        return Result(artifactoryService.getProjectImages(projectId, repoName, searchKey))
+    }
+
     override fun listProjectBuildImages(
         userId: String,
         projectId: String,

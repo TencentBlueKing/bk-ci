@@ -146,6 +146,24 @@ interface UserImageResource {
         searchKey: String?
     ): Result<ImageListResp>
 
+    @ApiOperation("获取新仓库项目镜像列表")
+    @Path("/{projectId}/{repoName}/getAllProjectImages")
+    @GET
+    fun getProjectImages(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("仓库名称", required = true)
+        @PathParam("repoName")
+        repoName: String,
+        @ApiParam(value = "查询关键字", required = false)
+        @QueryParam("searchKey")
+        searchKey: String?
+    ): Result<ImageListResp>
+
     @ApiOperation("获取项目构建镜像列表")
     @Path("/{projectId}/listBuildImages")
     @GET

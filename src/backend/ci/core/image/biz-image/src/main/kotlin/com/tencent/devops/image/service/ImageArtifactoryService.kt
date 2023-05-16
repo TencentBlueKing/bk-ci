@@ -34,8 +34,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
@@ -43,7 +41,6 @@ import com.tencent.devops.image.pojo.ImageItem
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
-import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -57,13 +54,8 @@ import org.springframework.stereotype.Service
 class ImageArtifactoryService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val dockerConfig: DockerConfig,
-    private val commonConfig: CommonConfig,
     private val bkRepoClientConfig: BkRepoClientConfig
-    ) {
-
-    private fun getGatewayUrl(): String {
-        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
-    }
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(ImageArtifactoryService::class.java)
         private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
@@ -149,6 +141,28 @@ class ImageArtifactoryService @Autowired constructor(
         // 获取项目devCloud镜像列表
         val devCloudProjectImages = listDevCloudImages(projectCode, false)
         handleImageList(devCloudProjectImages, imageList)
+        return ImageListResp(imageList)
+    }
+    fun getUrl(projectCode: String, repoName: String, searchKey: String?): String{
+        if (searchKey.isNullOrBlank()){
+            return "https://dev.bkrepo.woa.com/repository/api/package/page/${projectCode}/${repoName}"
+        }
+        return "https://dev.bkrepo.woa.com/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
+    }
+    fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
+        // 查询项目镜像列表
+        val projectImages = getImagesByUrl(projectCode, repoName, searchKey)
+        val imageList = mutableListOf<ImageItem>()
+        val repoNames = projectImages.map { it.repo }.toSet().toList().sortedBy { it }
+        repoNames.forEach {
+            imageList.add(
+                ImageItem(
+                    repoUrl = bkRepoClientConfig.bkRepoApiUrl,
+                    repo = it!!,
+                    name = parseName(it)
+                )
+            )
+        }
         return ImageListResp(imageList)
     }
 
@@ -379,11 +393,20 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
+fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
+    val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
+        .get()
+        .header("Authorization", credential)
+        .build()
+    OkhttpUtils.doHttp(request).use { response ->
+        val responseBody = response.body?.string()
+        logger.info("responseBody: $responseBody")
+        return processingImages(responseBody)
+    }
+}
     private fun aqlSearchImage(aql: String): List<DockerTag> {
-        val url = "https://dev.bkrepo.woa.com/repository/api/package/page/template/docke-test".toHttpUrlOrNull()!!.newBuilder()
-            .addQueryParameter("aql", aql)
-            .build()
-            .toString()
+        val url = "${dockerConfig.registryUrl}/api/search/aql"
+
         logger.info("POST url: $url")
         logger.info("requestAql: $aql")
 
@@ -393,7 +416,7 @@ class ImageArtifactoryService @Autowired constructor(
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
         val request = Request.Builder().url(url)
-            .get()
+            .post(RequestBody.create(null, aql))
             .header("Authorization", credential)
             .build()
 //        val call = okHttpClient.newCall(request)
@@ -407,7 +430,7 @@ class ImageArtifactoryService @Autowired constructor(
 
                 val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
-                return parseImages(responseBody)
+                return parseImages(responseBody!!)
             } catch (e: Exception) {
                 logger.error("aql search failed", e)
                 throw RuntimeException("aql search failed")
@@ -415,7 +438,7 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-    private fun parseImages(dataStr: String?): List<DockerTag> {
+    fun processingImages(dataStr: String?): List<DockerTag> {
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
         logger.info("responseData : $responseData")
         val results: Map<String, Any> = responseData["data"] as Map<String, Any>
@@ -431,7 +454,27 @@ class ImageArtifactoryService @Autowired constructor(
             dockerTag.desc = it["description"] as String?
             dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"
             dockerTag.tag = it["latest"] as String?
-            /*val properties = it["properties"] as List<Map<String, Any>>
+
+            logger.info("{dockerConfig.imagePrefix} :$${dockerConfig.imagePrefix}")
+            dockerTag.image = "${dockerConfig.imagePrefix}/${dockerTag.repo}:${dockerTag.tag}"
+            logger.info("image: ${dockerTag.image}")
+            images.add(dockerTag)
+        }
+        return images
+    }
+
+    private fun parseImages(dataStr: String): List<DockerTag> {
+        val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr)
+        val results = responseData["results"] as List<Map<String, Any>>
+        val images = mutableListOf<DockerTag>()
+        for (it in results) {
+            val dockerTag = DockerTag()
+            dockerTag.created = DateTime(it["created"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.createdBy = it["created_by"] as String
+            dockerTag.modified = DateTime(it["modified"] as String).toString("yyyy-MM-dd HH:mm:ss")
+            dockerTag.modifiedBy = it["modified_by"] as String
+
+            val properties = it["properties"] as List<Map<String, Any>>
             for (item in properties) {
                 val key = item["key"] ?: ""
                 val value = item["value"] ?: ""
@@ -449,18 +492,17 @@ class ImageArtifactoryService @Autowired constructor(
                 if (key == "devops.desc") {
                     dockerTag.desc = value as String
                 }
-            }*/
+            }
 
             // 过滤掉路径跟repo匹配不上的镜像
-            /*val path = it["path"] as String
+            val path = it["path"] as String
             if (path.contains('/')) {
                 if (path.substring(0, path.lastIndexOf("/")) != dockerTag.repo) {
                     continue
                 }
-            }*/
-            logger.info("{dockerConfig.imagePrefix} :$${dockerConfig.imagePrefix}")
+            }
+
             dockerTag.image = "${dockerConfig.imagePrefix}/${dockerTag.repo}:${dockerTag.tag}"
-            logger.info("image: ${dockerTag.image}")
             images.add(dockerTag)
         }
         return images
