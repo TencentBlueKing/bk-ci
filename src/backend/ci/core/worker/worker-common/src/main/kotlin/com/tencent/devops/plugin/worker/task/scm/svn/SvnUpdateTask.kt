@@ -49,7 +49,8 @@ import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import java.io.File
 import java.nio.file.Files
-import java.util.*
+import java.util.LinkedList
+import java.util.Queue
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNDepth
 import org.tmatesoft.svn.core.SVNErrorCode
