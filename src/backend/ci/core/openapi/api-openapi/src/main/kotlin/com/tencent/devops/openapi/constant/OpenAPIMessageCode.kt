@@ -59,11 +59,11 @@ object OpenAPIMessageCode {
     const val ERROR_NODE_NOT_EXISTS = "2112011" // 环境管理：[{0}] 节点不存在
     const val BK_REQUEST_METHOD = "bkRequestMethod" // 请求方法/请求路径
     const val BK_RESOURCE_DESCRIPTION = "bkResourceDescription" // 资源描述
-    const val BK_INPUT_PARAMETER_DESCRIPTION ="bkInputParameterDescription" // 输入参数说明
+    const val BK_INPUT_PARAMETER_DESCRIPTION = "bkInputParameterDescription" // 输入参数说明
     const val BK_PATH_PARAMETER = "bkPathParameter" // Path参数
     const val BK_HEADER_PARAMETER = "bkHeaderParameter" // Header参数
     const val BK_BODY_PARAMETER = "bkBodyParameter" // Body参数
-    const val BK_RESPONSE_PARAMETER ="bkResponseParameter" // 响应参数
+    const val BK_RESPONSE_PARAMETER = "bkResponseParameter" // 响应参数
     const val BK_QUERY_PARAMETER = "bkQueryParameter" // Query参数
     const val BK_PARAM_NAME = "bkParamName" // 参数名称
     const val BK_PARAM_TYPE = "bkParamType" // 参数类型
@@ -91,5 +91,4 @@ object OpenAPIMessageCode {
     const val BK_THE_FIELD_IS_READ_ONLY = "bkTheFieldIsReadOnly" // 该字段只读
     const val BK_OBJECT_PROPERTY_ILLUSTRATE = "bkObjectPropertyIllustrate" // Any 任意类型，参照实际请求或返回
     const val BK_NO_SUCH_PARAMETER = "bkNoSuchParameter" // 无此参数
-
 }

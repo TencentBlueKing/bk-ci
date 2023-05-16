@@ -278,7 +278,7 @@ class PipelineRepositoryService constructor(
         val c = (
             stage.containers.getOrNull(0)
                 ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             ) as TriggerContainer
 

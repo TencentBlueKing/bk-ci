@@ -67,7 +67,7 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Date
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component

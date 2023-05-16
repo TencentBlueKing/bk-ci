@@ -488,13 +488,13 @@ object ProcessMessageCode {
     const val BK_EN_INDEX_ALREADY_EXISTS = "bkEnIndexAlreadyExists" // 英文名({0})的指标已存在
     const val BK_CN_INDEX_ALREADY_EXISTS = "bkCnIndexAlreadyExists" // 中文名({0})的指标已存在
     const val BK_TOOL_DESC_STANDARD = "bkToolDescStandard" // 代码规范
-    const val BK_TOOL_DESC_DEFECT = "bkToolDescDefect"// 代码缺陷
-    const val BK_TOOL_DESC_SECURITY = "bkToolDescSecurity"// 安全漏洞
-    const val BK_TOOL_DESC_RIPS = "bkToolDescRips"// 啄木鸟漏洞扫描
-    const val BK_TOOL_DESC_SENSITIVE = "bkToolDescSensitive"// 敏感信息
-    const val BK_TOOL_DESC_WOODPECKER_SENSITIVE = "bkToolDescWoodpeckerSensitive"// 啄木鸟敏感信息
-    const val BK_TOOL_DESC_CCN = "bkToolDescCcn"// 圈复杂度
-    const val BK_TOOL_DESC_DUPC = "bkToolDescDupc"// 重复率
+    const val BK_TOOL_DESC_DEFECT = "bkToolDescDefect" // 代码缺陷
+    const val BK_TOOL_DESC_SECURITY = "bkToolDescSecurity" // 安全漏洞
+    const val BK_TOOL_DESC_RIPS = "bkToolDescRips" // 啄木鸟漏洞扫描
+    const val BK_TOOL_DESC_SENSITIVE = "bkToolDescSensitive" // 敏感信息
+    const val BK_TOOL_DESC_WOODPECKER_SENSITIVE = "bkToolDescWoodpeckerSensitive" // 啄木鸟敏感信息
+    const val BK_TOOL_DESC_CCN = "bkToolDescCcn" // 圈复杂度
+    const val BK_TOOL_DESC_DUPC = "bkToolDescDupc" // 重复率
     const val BK_TOOL_NAME_STANDARD = "bkToolNameStandard" // 按维度(推荐)
     const val BK_TOOL_NAME_DEFECT = "bkToolNameDefect" // 按维度(推荐)
     const val BK_TOOL_NAME_SECURITY = "bkToolNameSecurity" // 按维度(推荐)
@@ -515,6 +515,4 @@ object ProcessMessageCode {
     const val BK_TOOL_NAME_WOODPECKER_SENSITIVE = "bkToolNameWoodpeckerSensitive" // 敏感信息检查工具
     const val BK_TOOL_NAME_BKCHECK_CPP = "bkToolNameBkcheckCpp" // C++代码风格检查工具
     const val BK_TOOL_NAME_BKCHECK_OC = "bkToolNameBkcheckOc" // OC代码风格检查工具
-
-
 }
