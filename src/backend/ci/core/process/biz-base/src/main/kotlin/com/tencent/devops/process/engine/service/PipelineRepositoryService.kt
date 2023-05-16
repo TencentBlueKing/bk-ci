@@ -1071,7 +1071,7 @@ class PipelineRepositoryService constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = Response.Status.CONFLICT.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS
             )
         }
 
@@ -1175,7 +1175,7 @@ class PipelineRepositoryService constructor(
     ): Model {
         val existModel = getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
         )
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)

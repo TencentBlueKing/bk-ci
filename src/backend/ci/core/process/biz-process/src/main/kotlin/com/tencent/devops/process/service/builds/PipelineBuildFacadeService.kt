@@ -445,7 +445,7 @@ class PipelineBuildFacadeService(
                             }
                             // 只有失败或取消情况下提供重试得可能
                             if (!stage.status.isFailure() && !stage.status.isCancel()) throw ErrorCodeException(
-                                errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_FAILED,
+                                errorCode = ProcessMessageCode.ERROR_RETRY_STAGE_NOT_FAILED
                             )
                             paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
                                 key = PIPELINE_RETRY_START_TASK_ID, value = s.id!!
@@ -468,7 +468,7 @@ class PipelineBuildFacadeService(
                                 if (index == pos) {
                                     pipelineContainerService.getContainer(projectId, buildId, s.id, c.id!!) ?: run {
                                         throw ErrorCodeException(
-                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                            errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
                                         )
                                     }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
@@ -481,7 +481,7 @@ class PipelineBuildFacadeService(
                                     pipelineTaskService.getByTaskId(null, projectId, buildId, taskId)
                                         ?: run {
                                             throw ErrorCodeException(
-                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY,
+                                                errorCode = ProcessMessageCode.ERROR_BUILD_EXPIRED_CANT_RETRY
                                             )
                                         }
                                     paramMap[PIPELINE_RETRY_START_TASK_ID] = BuildParameters(
