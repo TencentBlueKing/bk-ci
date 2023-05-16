@@ -119,7 +119,7 @@ class TxQualityPermissionService @Autowired constructor(
                 projectId = projectId,
                 authPermission = authPermission
             )) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+            val permissionMsg = I18nUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias
             )

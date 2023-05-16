@@ -841,7 +841,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val verify = validatePermission(englishName, userId, AuthPermission.EDIT)
         if (!verify) {
             logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(I18nUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
         if (projectRecord != null) {
