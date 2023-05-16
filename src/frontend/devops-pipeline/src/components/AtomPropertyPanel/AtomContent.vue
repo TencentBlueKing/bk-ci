@@ -394,6 +394,8 @@
                     bus.$emit('validate')
                 })
                 if (atomCode) {
+                    const version = this.element.version ? this.element.version : this.getDefaultVersion(atomCode)
+                    this.handleFetchAtomModal(atomCode, version)
                     this.fetchAtomVersionList({
                         projectCode: this.projectId,
                         atomCode
@@ -426,6 +428,7 @@
             }
             this.toggleAtomSelectorPopup(!atomCode)
         },
+
         methods: {
             ...mapActions('atom', [
                 'toggleAtomSelectorPopup',

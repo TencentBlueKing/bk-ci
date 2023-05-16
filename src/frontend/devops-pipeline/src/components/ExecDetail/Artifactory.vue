@@ -53,6 +53,15 @@
             }
         },
 
+        watch: {
+            taskId () {
+                console.log('chjange')
+                this.$nextTick(() => {
+                    this.initData()
+                })
+            }
+        },
+
         created () {
             this.initData()
         },

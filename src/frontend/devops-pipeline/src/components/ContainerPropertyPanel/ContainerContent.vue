@@ -979,7 +979,7 @@
                 })
             },
             async startDebug () {
-                const vmSeqId = this.container.containerId
+                const vmSeqId = this.container.id
                 const tab = window.open('about:blank')
                 const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
                 const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/dockerConsole/?pipelineId=${this.pipelineId}&dispatchType=${this.buildResourceType}&vmSeqId=${vmSeqId}${buildIdStr}`

@@ -15,25 +15,27 @@
         >{{ $t('editPage.docker.debugConsole') }}</span>
         <template v-slot:content>
             <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
-            <plugin-log :id="currentJob.containerHashId"
-                :build-id="execDetail.id"
-                :exec-detail="execDetail"
-                :current-tab="currentTab"
-                :execute-count="currentJob.executeCount"
-                type="containerLog"
-                ref="jobLog"
-                v-show="currentTab === 'log'"
-                v-if="currentJob.matrixGroupFlag"
-            />
-            <job-log
-                v-else
-                v-show="currentTab === 'log'"
-                :plugin-list="pluginList"
-                :build-id="execDetail.id"
-                :down-load-link="downLoadJobLink"
-                :execute-count="executeCount"
-                ref="jobLog"
-            />
+            <template v-if="currentTab === 'log'">
+                <plugin-log :id="currentJob.containerHashId"
+                    :key="currentJob.containerHashId"
+                    :build-id="execDetail.id"
+                    :exec-detail="execDetail"
+                    :current-tab="currentTab"
+                    :execute-count="currentJob.executeCount"
+                    type="containerLog"
+                    ref="jobLog"
+                    v-if="currentJob.matrixGroupFlag"
+                />
+                <job-log
+                    v-else
+                    :key="currentJob.id"
+                    :plugin-list="pluginList"
+                    :build-id="execDetail.id"
+                    :down-load-link="downLoadJobLink"
+                    :execute-count="executeCount"
+                    ref="jobLog"
+                />
+            </template>
             <container-content v-if="currentTab === 'setting'"
                 :container-index="editingElementPos.containerIndex"
                 :container-group-index="editingElementPos.containerGroupIndex"
@@ -123,7 +125,7 @@
             },
             activeErorr () {
                 try {
-                    return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id)
+                    return this.execDetail.errorInfoList.find(error => error.containerId === this.currentJob.id && !error.taskId)
                 } catch (error) {
                     return null
                 }

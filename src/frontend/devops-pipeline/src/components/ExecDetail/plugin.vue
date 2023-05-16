@@ -18,12 +18,13 @@
         <template v-slot:content>
             <error-summary v-if="activeErorr && currentTab === 'log'" :error="activeErorr"></error-summary>
             <plugin-log :id="currentElement.id"
+                :key="currentElement.id"
                 :build-id="execDetail.id"
                 :current-tab="currentTab"
                 :exec-detail="execDetail"
                 :execute-count="currentElement.executeCount"
                 ref="log"
-                v-show="currentTab === 'log'"
+                v-if="currentTab === 'log'"
             />
             <component :is="value.component"
                 v-bind="value.bindData"
@@ -148,6 +149,26 @@
 
             showTab () {
                 return this.tabList[1].completeLoading && this.tabList[2].completeLoading
+            }
+        },
+
+        watch: {
+            'currentElement.id': function () {
+                this.tabList = [
+                    { name: 'log', show: true },
+                    { name: 'artifactory', show: true, completeLoading: false },
+                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'setting', show: true }
+                ]
+            },
+            tabList: {
+                handler (val) {
+                    const tab = val.find(tab => tab.name === this.currentTab)
+                    if (!tab.show) {
+                        this.currentTab = 'log'
+                    }
+                },
+                deep: true
             }
         },
 
