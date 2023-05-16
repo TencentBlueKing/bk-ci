@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MAX_PARALLEL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
 import com.tencent.devops.process.constant.ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
@@ -79,7 +80,10 @@ class QueueInterceptor @Autowired constructor(
         val setting = task.setting
             ?: return Response(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = "流水线设置不存在/Setting not found"
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
         val runLockType = setting.runLockType
         val buildSummaryRecord = pipelineRuntimeService.getBuildSummaryRecord(projectId, pipelineId)
@@ -109,7 +113,10 @@ class QueueInterceptor @Autowired constructor(
             setting.maxConRunningQueueSize!! <= (buildSummaryRecord.queueCount + buildSummaryRecord.runningCount) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = "并行上限/Max parallel: ${setting.maxConRunningQueueSize}"
+                    message = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_MAX_PARALLEL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + " ${setting.maxConRunningQueueSize}"
                 )
             else -> Response(data = BuildStatus.RUNNING)
         }
@@ -128,7 +135,10 @@ class QueueInterceptor @Autowired constructor(
         val setting = task.setting
             ?: return Response(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = "流水线设置不存在/Setting not found"
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
         return when {
             // 如果最后一次构建被标记为refresh,则即便是串行也放行。因refresh的buildId都会被取消掉
@@ -257,7 +267,10 @@ class QueueInterceptor @Autowired constructor(
         val setting = task.setting
             ?: return Response(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
-                message = "流水线设置不存在/Setting not found"
+                message = I18nUtil.getCodeLanMessage(
+                    messageCode = PIPELINE_SETTING_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
         val concurrencyGroup = setting.concurrencyGroup ?: task.pipelineInfo.pipelineId
         return when {
