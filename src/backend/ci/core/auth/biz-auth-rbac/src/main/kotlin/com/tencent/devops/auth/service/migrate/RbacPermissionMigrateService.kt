@@ -203,18 +203,16 @@ class RbacPermissionMigrateService constructor(
                         defaultMessage = "project not exist $projectCode"
                     )
                 }
-            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
-            val iamApprover = buildResourceCreator(
-                approver = migrateProject.approver,
-                projectCreator = projectInfo.creator!!
-            )
-
             authMigrationDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 status = AuthMigrateStatus.PENDING.value
             )
-
+            // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
+            val iamApprover = buildResourceCreator(
+                approver = migrateProject.approver,
+                projectCreator = projectInfo.creator!!
+            )
             // 创建分级管理员
             watcher.start("createGradeManager")
             val gradeManagerId = authResourceService.getOrNull(
