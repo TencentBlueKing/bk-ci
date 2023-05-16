@@ -264,7 +264,7 @@ class BuildLogPrinter(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount
             )
         } catch (ignore: Exception) {
