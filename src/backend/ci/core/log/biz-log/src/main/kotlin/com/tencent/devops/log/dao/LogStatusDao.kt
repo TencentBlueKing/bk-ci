@@ -61,6 +61,7 @@ class LogStatusDao {
                 .onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
                 .set(MODE, logStorageMode.name)
+                .execute()
         }
     }
 
