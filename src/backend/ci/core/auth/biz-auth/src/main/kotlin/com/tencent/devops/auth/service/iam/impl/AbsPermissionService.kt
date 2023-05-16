@@ -139,6 +139,7 @@ open class AbsPermissionService @Autowired constructor(
         )
     }
 
+    @Suppress("ReturnCount", "ComplexMethod")
     override fun getUserResourceByAction(
         userId: String,
         action: String,

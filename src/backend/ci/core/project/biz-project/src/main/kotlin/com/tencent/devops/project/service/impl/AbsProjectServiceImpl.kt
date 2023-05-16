@@ -99,8 +99,8 @@ import javax.ws.rs.NotFoundException
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
     val projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    val dslContext: DSLContext,
+    val projectDao: ProjectDao,
     private val projectJmxApi: ProjectJmxApi,
     val redisOperation: RedisOperation,
     val client: Client,
@@ -315,7 +315,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record)
+        val projectVO = ProjectUtils.packagingBean(record)
+        val englishNames = getProjectFromAuth(userId, accessToken)
+        if (englishNames.isEmpty()) {
+            return null
+        }
+        if (!englishNames.contains(projectVO.englishName)) {
+            logger.warn("The user don't have the permission to get the project $englishName")
+            return null
+        }
+        return projectVO
     }
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
@@ -559,33 +568,51 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            // 是否需要toset
-            val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects.isEmpty() && !unApproved) {
+            val projectsWithVisitPermission = getProjectFromAuth(
+                userId = userId,
+                accessToken = accessToken
+            ).toSet()
+            if (projectsWithVisitPermission.isEmpty() && !unApproved) {
                 return emptyList()
             }
-            val list = ArrayList<ProjectVO>()
-            if (projects.isNotEmpty()) {
+            val projectsResp = mutableListOf<ProjectVO>()
+            if (projectsWithVisitPermission.isNotEmpty()) {
+                val projectsWithManagePermission = getProjectFromAuth(
+                    userId = userId,
+                    accessToken = accessToken,
+                    permission = AuthPermission.MANAGE
+                )
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
-                    englishNameList = projects.toList(),
-                    offset = null,
-                    limit = null,
-                    searchName = null,
+                    englishNameList = projectsWithVisitPermission.toList(),
                     enabled = enabled
-                ).map {
-                    list.add(ProjectUtils.packagingBean(it))
+                ).forEach {
+                    projectsResp.add(
+                        ProjectUtils.packagingBean(
+                            tProjectRecord = it,
+                            managePermission = projectsWithManagePermission?.contains(it.englishName),
+                            showUserManageIcon = isShowUserManageIcon(it.routerTag)
+                        )
+                    )
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
             if (unApproved) {
-                projectDao.listUnapprovedByUserId(
+                projectDao.listUnApprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
-                )?.map { list.add(ProjectUtils.packagingBean(it)) }
+                ).forEach {
+                    projectsResp.add(
+                        ProjectUtils.packagingBean(
+                            tProjectRecord = it,
+                            managePermission = true,
+                            showUserManageIcon = true
+                        )
+                    )
+                }
             }
             success = true
-            return list
+            return projectsResp
         } finally {
             projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
@@ -601,7 +628,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         pageSize: Int
     ): Pagination<ProjectWithPermission> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectListWithPermission: MutableList<ProjectWithPermission> = mutableListOf()
+        val projectsResp = mutableListOf<ProjectWithPermission>()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
         projectDao.listProjectsForApply(
@@ -612,19 +639,18 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
         ).forEach {
-            projectListWithPermission.add(
+            projectsResp.add(
                 ProjectWithPermission(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
-                    // todo routerTag 是灰度的项目，跳转去哪里申请权限
                     routerTag = buildRouterTag(it.value3())
                 )
             )
         }
         return Pagination(
-            hasNext = projectListWithPermission.size == pageSize,
-            records = projectListWithPermission
+            hasNext = projectsResp.size == pageSize,
+            records = projectsResp
         )
     }
 
@@ -633,7 +659,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-
             projectDao.listByCodes(dslContext, projectCodes, enabled = true).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
@@ -729,7 +754,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, limit, offset).map {
+            projectDao.list(
+                dslContext = dslContext,
+                limit = limit,
+                offset = offset,
+                enabled = true
+            ).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)
@@ -1059,6 +1089,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return projectDao.updatePropertiesByCode(dslContext, projectCode, properties) == 1
     }
 
+    override fun updateProjectSubjectScopes(
+        projectId: String,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Boolean {
+        projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = projectId
+        ) ?: throw NotFoundException("project - $projectId is not exist!")
+        val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
+        projectDao.updateSubjectScopes(
+            dslContext = dslContext,
+            englishName = projectId,
+            subjectScopesStr = subjectScopesStr
+        )
+        return true
+    }
+
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
@@ -1068,6 +1115,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun deleteAuth(projectId: String, accessToken: String?)
 
     abstract fun getProjectFromAuth(userId: String?, accessToken: String?): List<String>
+
+    abstract fun getProjectFromAuth(userId: String, accessToken: String?, permission: AuthPermission): List<String>?
+
+    abstract fun isShowUserManageIcon(routerTag: String?): Boolean
 
     abstract fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo)
 

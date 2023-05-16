@@ -99,5 +99,10 @@ enum class ThreadPoolName {
     /**
      * 构建结束处理线程池
      */
-    BUILD_END
+    BUILD_END,
+
+    /**
+     * 创建构建容器线程池
+     */
+    ADD_CONTAINER
 }

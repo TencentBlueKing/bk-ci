@@ -102,6 +102,7 @@ class ProjectPermissionConfiguration {
         dslContext = dslContext,
         authResourceApi = authResourceApi
     )
+
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "github")
     fun githubStreamProjectPermissionService(

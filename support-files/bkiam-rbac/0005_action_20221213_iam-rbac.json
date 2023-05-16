@@ -1583,11 +1583,11 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "rule",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
-                "id": "project_instance",
+                "id": "quality_rule_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -1721,11 +1721,11 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
-                "id": "project_instance",
+                "id": "quality_group_instance",
                 "ignore_iam_path": true
               }
             ]
@@ -1831,11 +1831,11 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci_rbac",
-            "id": "project",
+            "id": "codecc_task",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci_rbac",
-                "id": "project_instance",
+                "id": "codecc_task_instance",
                 "ignore_iam_path": true
               }
             ]

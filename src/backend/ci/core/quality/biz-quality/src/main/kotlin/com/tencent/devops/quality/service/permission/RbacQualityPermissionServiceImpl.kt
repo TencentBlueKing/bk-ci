@@ -56,7 +56,7 @@ class RbacQualityPermissionServiceImpl(
                 userId = userId,
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(groupId),
-                action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+                action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP_NEW),
                 relationResourceType = null,
                 resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
             ).data ?: false
@@ -74,7 +74,7 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP_NEW),
             resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
         ).data ?: false
     }
@@ -131,7 +131,7 @@ class RbacQualityPermissionServiceImpl(
     ): Map<AuthPermission, List<Long>> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
-            actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_GROUP))
+            actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_GROUP_NEW))
         }
         val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenService.getSystemToken(null)!!,
@@ -141,6 +141,20 @@ class RbacQualityPermissionServiceImpl(
             action = actions
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)
+    }
+
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> {
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            action = RbacAuthUtils.buildAction(AuthPermission.LIST, AuthResourceType.QUALITY_GROUP_NEW),
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
+        ).data?.map { HashUtil.decodeIdToLong(it) }?.distinct() ?: emptyList()
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
@@ -232,5 +246,19 @@ class RbacQualityPermissionServiceImpl(
             action = actions
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)
+    }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> {
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            action = RbacAuthUtils.buildAction(AuthPermission.LIST, AuthResourceType.QUALITY_RULE),
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_RULE.value
+        ).data?.map { HashUtil.decodeIdToLong(it) }?.distinct() ?: emptyList()
     }
 }

@@ -55,8 +55,9 @@ class AuthResourceGroupConfigDao {
         resourceType: String
     ): Result<TAuthResourceGroupConfigRecord> {
         return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
-            dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType))
-                .orderBy(ID.desc()).fetch()
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .fetch()
         }
     }
 
@@ -83,6 +84,18 @@ class AuthResourceGroupConfigDao {
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(GROUP_NAME.eq(groupName))
                 .fetchOne()
+        }
+    }
+
+    fun countByResourceType(
+        dslContext: DSLContext,
+        resourceType: String
+    ): Int {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
+            dslContext.selectCount()
+                .from(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

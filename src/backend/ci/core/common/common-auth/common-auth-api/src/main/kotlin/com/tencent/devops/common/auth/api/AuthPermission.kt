@@ -53,8 +53,7 @@ enum class AuthPermission(val value: String, val alias: String) {
     MANAGE_DEFECT("manage-defect", "问题管理"), // 问题管理
     VIEW_DEFECT("view-defect", "查看问题列表和详情"), // 查看问题列表和详情
     VIEW_REPORT("view-report", "查看报表"), // 查看报表
-    SETTING("setting", "设置"), // 设置
-    MANAGE_PERMISSIONS("manage-permissions", "权限管理"); // 权限管理
+    SETTING("setting", "设置"); // 设置
 
     companion object {
         fun get(value: String): AuthPermission {

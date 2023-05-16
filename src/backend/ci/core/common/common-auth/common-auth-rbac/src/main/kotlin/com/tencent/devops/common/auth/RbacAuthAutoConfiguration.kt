@@ -30,6 +30,7 @@ package com.tencent.devops.common.auth
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
@@ -50,6 +51,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -94,6 +96,7 @@ class RbacAuthAutoConfiguration {
     ) = TokenServiceImpl(iamConfiguration, apigwHttpClientServiceImpl)
 
     @Bean
+    @ConditionalOnMissingBean(AuthTokenApi::class)
     fun authTokenApi(
         redisOperation: RedisOperation,
         iamTokenService: TokenServiceImpl

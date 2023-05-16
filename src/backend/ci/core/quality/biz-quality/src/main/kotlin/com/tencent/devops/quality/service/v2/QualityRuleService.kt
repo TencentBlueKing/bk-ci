@@ -32,13 +32,15 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -46,8 +48,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
@@ -504,18 +504,26 @@ class QualityRuleService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<QualityRuleSummaryWithPermission>> {
-        // RBAC得先校验是否有质量红线列表权限，如果没有，直接返回空
-        val isListPermission = qualityPermissionService.validateRulePermission(
+        val allRulesIds = qualityRuleDao.listIds(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.value1() }
+        val hasListPermissionRuleIds = qualityPermissionService.filterListPermissionRules(
             userId = userId,
             projectId = projectId,
-            authPermission = AuthPermission.LIST
+            allRulesIds = allRulesIds
         )
-        if (!isListPermission)
+        if (hasListPermissionRuleIds.isEmpty())
             return Pair(0, listOf())
-
-        val count = qualityRuleDao.count(dslContext, projectId)
-        val finalLimit = if (limit == -1) count.toInt() else limit
-        val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)
+        val count = hasListPermissionRuleIds.size
+        val finalLimit = if (limit == -1) count else limit
+        val ruleRecordList = qualityRuleDao.listByIds(
+            dslContext = dslContext,
+            projectId = projectId,
+            rulesId = hasListPermissionRuleIds,
+            offset = offset,
+            limit = finalLimit
+        )
         val permissionMap = qualityPermissionService.filterRules(
             userId = userId,
             projectId = projectId,
@@ -526,9 +534,9 @@ class QualityRuleService @Autowired constructor(
         qualityControlPointService.serviceList(projectId).forEach { controlPointMap[it.type] = it }
 
         // 获取rule的详细数据
-        val ruleIds = ruleRecordList?.map { it.id } ?: listOf()
-        logger.info("serviceList rule ids for project($projectId): $ruleIds")
-        val ruleDetailMap = ruleMapDao.batchGet(dslContext, ruleIds)?.map { it.ruleId to it }?.toMap() ?: mapOf()
+        logger.info("serviceList rule ids for project($projectId): $hasListPermissionRuleIds")
+        val ruleDetailMap = ruleMapDao.batchGet(dslContext, hasListPermissionRuleIds)?.map { it.ruleId to it }?.toMap()
+            ?: mapOf()
 
         // 批量获取流水线信息
         val pipelineIds = mutableSetOf<String>()
@@ -626,7 +634,7 @@ class QualityRuleService @Autowired constructor(
                 gatewayId = rule.gatewayId
             )
         } ?: listOf()
-        return Pair(count, list)
+        return Pair(count.toLong(), list)
     }
 
     private fun getRulePermission(
@@ -681,7 +689,8 @@ class QualityRuleService @Autowired constructor(
             if (controlPoint != null && !pipelineElementCodes.contains(controlPoint.type)) {
                 lackElements.add(controlPoint.type)
             }
-            QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
+            QualityRuleSummaryWithPermission.RuleRangeSummary(
+                id = info.pipelineId,
                 name = info.pipelineName,
                 type = "PIPELINE",
                 lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
@@ -712,7 +721,8 @@ class QualityRuleService @Autowired constructor(
             if (controlPoint != null && !templateElementCodes.contains(controlPoint.type)) {
                 lackElements.add(controlPoint.type)
             }
-            QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
+            QualityRuleSummaryWithPermission.RuleRangeSummary(
+                id = template.templateId,
                 name = template.name,
                 type = "TEMPLATE",
                 lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }

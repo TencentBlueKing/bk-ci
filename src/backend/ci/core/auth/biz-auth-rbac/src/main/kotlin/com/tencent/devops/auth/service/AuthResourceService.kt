@@ -217,6 +217,15 @@ class AuthResourceService @Autowired constructor(
         )
     }
 
+    fun getAllResourceCode(
+        resourceType: String
+    ): List<String> {
+        return authResourceDao.getAllResourceCode(
+            dslContext = dslContext,
+            resourceType = resourceType
+        )
+    }
+
     fun countByProjectAndType(
         projectCode: String,
         resourceType: String

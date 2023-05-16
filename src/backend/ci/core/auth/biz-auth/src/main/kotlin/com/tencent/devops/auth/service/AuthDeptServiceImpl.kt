@@ -86,6 +86,11 @@ class AuthDeptServiceImpl @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*userId*/, Set<String>>()
 
+    private val userInfoCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*userId*/, UserAndDeptInfoVo>()
+
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
@@ -115,11 +120,13 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
+    @Suppress("ComplexMethod")
     override fun getUserAndDeptByName(
         name: String,
         accessToken: String?,
         userId: String,
-        type: ManagerScopesEnum
+        type: ManagerScopesEnum,
+        exactLookups: Boolean?
     ): List<UserAndDeptInfoVo?> {
         val deptSearch = SearchUserAndDeptEntity(
             bk_app_code = appCode!!,
@@ -127,8 +134,6 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = null,
             lookupField = NAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
         val userSearch = SearchUserAndDeptEntity(
@@ -137,10 +142,17 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_username = userId,
             fields = USER_LABLE,
             lookupField = USERNAME,
-            exactLookups = null,
-            fuzzyLookups = name,
             accessToken = accessToken
         )
+        // 模糊搜索或者精准搜索方式
+        if (exactLookups == null || exactLookups == false) {
+            deptSearch.fuzzyLookups = name
+            userSearch.fuzzyLookups = name
+        } else {
+            deptSearch.exactLookups = name
+            userSearch.exactLookups = name
+        }
+
         val userAndDeptInfos = mutableListOf<UserAndDeptInfoVo>()
         when (type) {
             ManagerScopesEnum.USER -> {
@@ -243,6 +255,20 @@ class AuthDeptServiceImpl @Autowired constructor(
         return userDeptIds
     }
 
+    override fun getUserInfo(userId: String, name: String): UserAndDeptInfoVo? {
+        return userInfoCache.getIfPresent(name) ?: getUserAndPutInCache(userId, name)
+    }
+
+    private fun getUserAndPutInCache(userId: String, name: String): UserAndDeptInfoVo? {
+        return getUserAndDeptByName(
+            name = name,
+            accessToken = null,
+            userId = userId,
+            type = ManagerScopesEnum.USER,
+            exactLookups = true
+        ).firstOrNull().also { if (it != null) userInfoCache.put(name, it) }
+    }
+
     private fun getUserDeptFamily(userId: String): String {
         val deptSearch = SearchProfileDeptEntity(
             id = userId,
@@ -290,7 +316,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
@@ -305,7 +331,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                            " | response = ($it)"
+                        " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(

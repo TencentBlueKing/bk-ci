@@ -98,6 +98,15 @@ class MockAuthProjectApi constructor(
         return sets.toList()
     }
 
+    override fun getUserProjectsByPermission(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        permission: AuthPermission,
+        supplier: (() -> List<String>)?
+    ): List<String> {
+        return emptyList()
+    }
+
     override fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,

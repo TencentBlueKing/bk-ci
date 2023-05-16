@@ -31,4 +31,5 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-auth:common-auth-rbac"))
     api(project(":core:auth:biz-auth"))
+    testImplementation(project(":core:common:common-test"))
 }

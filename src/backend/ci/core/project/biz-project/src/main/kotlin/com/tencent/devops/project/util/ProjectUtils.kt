@@ -40,7 +40,11 @@ import com.tencent.devops.project.pojo.ProjectVO
 @Suppress("ALL")
 object ProjectUtils {
 
-    fun packagingBean(tProjectRecord: TProjectRecord): ProjectVO {
+    fun packagingBean(
+        tProjectRecord: TProjectRecord,
+        managePermission: Boolean? = null,
+        showUserManageIcon: Boolean? = null
+    ): ProjectVO {
         return ProjectVO(
             /* 已经投产旧插件的使用字段兼容 */
             project_id = tProjectRecord.projectId,
@@ -102,7 +106,9 @@ object ProjectUtils {
             subjectScopes = tProjectRecord.subjectScopes?.let {
                 JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
             },
-            authSecrecy = tProjectRecord.authSecrecy
+            authSecrecy = tProjectRecord.authSecrecy,
+            managePermission = managePermission,
+            showUserManageIcon = showUserManageIcon
         )
     }
 

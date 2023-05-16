@@ -96,6 +96,21 @@ interface ServiceProjectAuthResource {
     ): Result<List<String>>
 
     @GET
+    @Path("/users/{userId}/{action}")
+    @ApiOperation("获取用户有某种项目资源类型权限的项目Code")
+    fun getUserProjectsByPermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("userId")
+        @ApiParam("用户userId", required = true)
+        userId: String,
+        @PathParam("action")
+        @ApiParam("项目资源类型action", required = true)
+        action: String
+    ): Result<List<String>>
+
+    @GET
     @Path("/{projectCode}/users/{userId}/isProjectUsers")
     @ApiOperation("判断是否某个项目中某个组角色的成员")
     fun isProjectUser(

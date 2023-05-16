@@ -139,6 +139,12 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
+
     override fun validateRulePermission(
         userId: String,
         projectId: String,
@@ -222,4 +228,10 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 }

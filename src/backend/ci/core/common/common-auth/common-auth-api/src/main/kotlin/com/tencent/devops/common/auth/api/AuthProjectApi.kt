@@ -80,6 +80,20 @@ interface AuthProjectApi {
     ): List<String>
 
     /**
+     * 获取用户有某种项目资源类型权限的项目Code
+     * @param serviceCode 调用者的服务编码
+     * @param userId 用户ID
+     * @param permission 项目资源类型权限
+     * @param supplier supplier函数，用于可能需要从外部加载资源的场景,可以不传
+     */
+    fun getUserProjectsByPermission(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        permission: AuthPermission,
+        supplier: (() -> List<String>)?
+    ): List<String>
+
+    /**
      * 获取用户有查看或管理权限的项目
      * @param serviceCode 调用者的服务编码
      * @param userId userId
@@ -109,6 +123,7 @@ interface AuthProjectApi {
      * @param group 项目组角色
      */
     fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean
+
     /**
      * 判断是否某个项目的管理员
      * @param userId 用户id

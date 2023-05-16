@@ -96,6 +96,19 @@ class RbacAuthProjectApi @Autowired constructor(
         ).data ?: emptyList()
     }
 
+    override fun getUserProjectsByPermission(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        permission: AuthPermission,
+        supplier: (() -> List<String>)?
+    ): List<String> {
+        return client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            action = permission.value
+        ).data ?: emptyList()
+    }
+
     override fun getUserProjectsAvailable(
         serviceCode: AuthServiceCode,
         userId: String,

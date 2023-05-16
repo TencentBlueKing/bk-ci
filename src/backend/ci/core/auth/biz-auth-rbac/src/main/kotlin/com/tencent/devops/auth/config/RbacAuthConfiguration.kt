@@ -45,6 +45,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.AuthVerifyRecordService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
@@ -64,8 +65,11 @@ import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.auth.service.migrate.MigrateIamApiService
 import com.tencent.devops.auth.service.migrate.MigrateResourceCodeConverter
 import com.tencent.devops.auth.service.migrate.MigrateResourceService
+import com.tencent.devops.auth.service.migrate.MigrateResultService
+import com.tencent.devops.auth.service.migrate.MigrateV0PolicyService
 import com.tencent.devops.auth.service.migrate.MigrateV3PolicyService
 import com.tencent.devops.auth.service.migrate.RbacPermissionMigrateService
 import com.tencent.devops.common.auth.api.AuthTokenApi
@@ -285,7 +289,9 @@ class RbacAuthConfiguration {
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
         authResourceGroupDao: AuthResourceGroupDao,
-        authMigrationDao: AuthMigrationDao
+        authMigrationDao: AuthMigrationDao,
+        deptService: DeptService,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao
     ) = MigrateResourceService(
         resourceService = resourceService,
         rbacCacheService = rbacCacheService,
@@ -296,7 +302,25 @@ class RbacAuthConfiguration {
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
-        authMigrationDao = authMigrationDao
+        authMigrationDao = authMigrationDao,
+        deptService = deptService,
+        authResourceGroupConfigDao = authResourceGroupConfigDao
+    )
+
+    @Bean
+    fun migrateIamApiService() = MigrateIamApiService()
+
+    @Bean
+    fun migrateResultService(
+        permissionService: PermissionService,
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        authVerifyRecordService: AuthVerifyRecordService,
+        client: Client
+    ) = MigrateResultService(
+        permissionService = permissionService,
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        authVerifyRecordService = authVerifyRecordService,
+        client = client
     )
 
     @Bean
@@ -307,23 +331,50 @@ class RbacAuthConfiguration {
         authResourceGroupDao: AuthResourceGroupDao,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        migrateIamApiService: MigrateIamApiService,
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
         rbacCacheService: RbacCacheService,
-        authMigrationDao: AuthMigrationDao,
-        authVerifyRecordService: AuthVerifyRecordService
+        authMigrationDao: AuthMigrationDao
     ) = MigrateV3PolicyService(
         v2ManagerService = v2ManagerService,
         iamConfiguration = iamConfiguration,
         dslContext = dslContext,
         authResourceGroupDao = authResourceGroupDao,
         authResourceGroupConfigDao = authResourceGroupConfigDao,
+        migrateIamApiService = migrateIamApiService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
         rbacCacheService = rbacCacheService,
-        authMigrationDao = authMigrationDao,
-        authVerifyRecordService = authVerifyRecordService
+        authMigrationDao = authMigrationDao
+    )
+
+    @Bean
+    fun migrateV0PolicyService(
+        v2ManagerService: V2ManagerServiceImpl,
+        iamConfiguration: IamConfiguration,
+        dslContext: DSLContext,
+        authResourceGroupDao: AuthResourceGroupDao,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        migrateResourceCodeConverter: MigrateResourceCodeConverter,
+        migrateIamApiService: MigrateIamApiService,
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        permissionService: PermissionService,
+        rbacCacheService: RbacCacheService,
+        authMigrationDao: AuthMigrationDao
+    ) = MigrateV0PolicyService(
+        v2ManagerService = v2ManagerService,
+        iamConfiguration = iamConfiguration,
+        dslContext = dslContext,
+        authResourceGroupDao = authResourceGroupDao,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        migrateIamApiService = migrateIamApiService,
+        migrateResourceCodeConverter = migrateResourceCodeConverter,
+        authResourceCodeConverter = authResourceCodeConverter,
+        permissionService = permissionService,
+        rbacCacheService = rbacCacheService,
+        authMigrationDao = authMigrationDao
     )
 
     @Bean
@@ -332,17 +383,23 @@ class RbacAuthConfiguration {
         client: Client,
         migrateResourceService: MigrateResourceService,
         migrateV3PolicyService: MigrateV3PolicyService,
+        migrateV0PolicyService: MigrateV0PolicyService,
+        migrateResultService: MigrateResultService,
         permissionResourceService: PermissionResourceService,
         authResourceService: AuthResourceService,
         dslContext: DSLContext,
-        authMigrationDao: AuthMigrationDao
+        authMigrationDao: AuthMigrationDao,
+        deptService: DeptService
     ) = RbacPermissionMigrateService(
         client = client,
         migrateResourceService = migrateResourceService,
         migrateV3PolicyService = migrateV3PolicyService,
+        migrateV0PolicyService = migrateV0PolicyService,
+        migrateResultService = migrateResultService,
         permissionResourceService = permissionResourceService,
         authResourceService = authResourceService,
         dslContext = dslContext,
-        authMigrationDao = authMigrationDao
+        authMigrationDao = authMigrationDao,
+        deptService = deptService
     )
 }

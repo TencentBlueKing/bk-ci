@@ -19,12 +19,19 @@ class UserAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
-        return Result(permissionApplyService.listResourceTypes(userId)
-            .filterNot { it.resourceType == AuthResourceType.PIPELINE_GROUP.value })
+        return Result(
+            permissionApplyService.listResourceTypes(userId = userId)
+                .filterNot { it.resourceType == AuthResourceType.PIPELINE_GROUP.value }
+        )
     }
 
     override fun listActions(userId: String, resourceType: String): Result<List<ActionInfoVo>> {
-        return Result(permissionApplyService.listActions(userId, resourceType))
+        return Result(
+            permissionApplyService.listActions(
+                userId = userId,
+                resourceType = resourceType
+            )
+        )
     }
 
     override fun listGroups(
@@ -42,11 +49,21 @@ class UserAuthApplyResourceImpl @Autowired constructor(
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Result<Boolean> {
-        return Result(permissionApplyService.applyToJoinGroup(userId, applyJoinGroupInfo))
+        return Result(
+            permissionApplyService.applyToJoinGroup(
+                userId = userId,
+                applyJoinGroupInfo = applyJoinGroupInfo
+            )
+        )
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
-        return Result(permissionApplyService.getGroupPermissionDetail(userId, groupId))
+        return Result(
+            permissionApplyService.getGroupPermissionDetail(
+                userId = userId,
+                groupId = groupId
+            )
+        )
     }
 
     override fun getRedirectInformation(

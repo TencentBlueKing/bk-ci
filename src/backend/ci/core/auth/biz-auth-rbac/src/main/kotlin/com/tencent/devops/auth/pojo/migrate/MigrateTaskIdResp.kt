@@ -23,47 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.auth.pojo.migrate
 
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.docker.common.Constants
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
-
-@Service
-class BuildLessWhitelistService constructor(
-    private val redisOperation: RedisOperation
-) {
-    private val logger = LoggerFactory.getLogger(BuildLessWhitelistService::class.java)
-
-    fun getDockerResourceWhiteList(userId: String): List<String> {
-        val whiteList = mutableListOf<String>()
-
-        val whiteSet = redisOperation.getSetMembers(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX)
-        return if (whiteSet != null) {
-            whiteSet.parallelStream().forEach {
-                whiteList.add(it)
-            }
-
-            whiteList
-        } else {
-            emptyList()
-        }
-    }
-
-    fun addBuildLessWhiteList(userId: String, projectId: String): Boolean {
-        redisOperation.addSetValue(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-        return true
-    }
-
-    fun deleteBuildLessWhiteList(userId: String, projectId: String): Boolean {
-        redisOperation.removeSetMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-        return true
-    }
-
-    fun checkBuildLessWhitelist(projectId: String): Boolean {
-        return redisOperation.isMember(Constants.BUILD_LESS_WHITE_LIST_KEY_PREFIX, projectId)
-    }
-}
+/**
+ * 迁移任务Id
+ */
+data class MigrateTaskIdResp(
+    val id: Int
+)
