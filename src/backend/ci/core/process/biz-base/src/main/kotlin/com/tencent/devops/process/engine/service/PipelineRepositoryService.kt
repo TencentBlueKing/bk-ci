@@ -823,7 +823,7 @@ class PipelineRepositoryService constructor(
 
         val record = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
