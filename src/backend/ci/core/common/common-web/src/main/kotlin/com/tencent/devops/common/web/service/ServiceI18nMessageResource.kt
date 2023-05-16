@@ -30,7 +30,6 @@ package com.tencent.devops.common.web.service
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -77,7 +76,7 @@ interface ServiceI18nMessageResource {
         key: String,
         @ApiParam("模块标识", required = true)
         @QueryParam("moduleCode")
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         @ApiParam("国际化语言信息", required = false)
         @QueryParam("language")
         language: String?
@@ -87,15 +86,12 @@ interface ServiceI18nMessageResource {
     @GET
     @Path("/keys/{key}/get")
     fun getI18nMessage(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = "",
         @ApiParam("国际化变量名", required = true)
         @PathParam("key")
         key: String,
         @ApiParam("模块标识", required = true)
         @QueryParam("moduleCode")
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         @ApiParam("国际化语言信息", required = true)
         @QueryParam("language")
         language: String
@@ -105,14 +101,11 @@ interface ServiceI18nMessageResource {
     @POST
     @Path("/list")
     fun getI18nMessages(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = "",
         @ApiParam(value = "国际化变量名列表", required = true)
         keys: List<String>,
         @ApiParam("模块标识", required = true)
         @QueryParam("moduleCode")
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         @ApiParam("国际化语言信息", required = true)
         @QueryParam("language")
         language: String
@@ -122,15 +115,12 @@ interface ServiceI18nMessageResource {
     @GET
     @Path("/listByKeyPrefix")
     fun getI18nMessagesByKeyPrefix(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String = "",
         @ApiParam(value = "key前缀", required = true)
         @QueryParam("keyPrefix")
         keyPrefix: String,
         @ApiParam("模块标识", required = true)
         @QueryParam("moduleCode")
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         @ApiParam("国际化语言信息", required = true)
         @QueryParam("language")
         language: String

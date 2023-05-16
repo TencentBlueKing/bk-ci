@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -46,7 +45,7 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
     override fun deleteI18nMessage(
         userId: String,
         key: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         language: String?
     ): Result<Boolean> {
         i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, language = language)
@@ -54,13 +53,11 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
     }
 
     override fun getI18nMessage(
-        userId: String,
         key: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         language: String
     ): Result<I18nMessage?> {
         val i18nMessage = i18nMessageService.getI18nMessage(
-            userId = userId,
             moduleCode = moduleCode,
             key = key,
             language = language
@@ -69,13 +66,11 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
     }
 
     override fun getI18nMessages(
-        userId: String,
         keys: List<String>,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         language: String
     ): Result<List<I18nMessage>?> {
         val i18nMessages = i18nMessageService.getI18nMessages(
-            userId = userId,
             moduleCode = moduleCode,
             keys = keys,
             language = language
@@ -84,13 +79,11 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
     }
 
     override fun getI18nMessagesByKeyPrefix(
-        userId: String,
         keyPrefix: String,
-        moduleCode: SystemModuleEnum,
+        moduleCode: String,
         language: String
     ): Result<List<I18nMessage>?> {
         val i18nMessages = i18nMessageService.getI18nMessages(
-            userId = userId,
             moduleCode = moduleCode,
             keyPrefix = keyPrefix,
             language = language

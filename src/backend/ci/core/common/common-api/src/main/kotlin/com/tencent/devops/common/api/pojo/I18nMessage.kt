@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("国际化信息")
 data class I18nMessage(
     @ApiModelProperty("模块标识")
-    val moduleCode: SystemModuleEnum,
+    val moduleCode: String,
     @ApiModelProperty("国际化语言信息")
     val language: String,
     @ApiModelProperty("国际化变量名")
