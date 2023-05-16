@@ -85,9 +85,9 @@ import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
 

@@ -14,7 +14,6 @@ import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
-import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
@@ -22,6 +21,7 @@ import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
 import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail

@@ -33,6 +33,7 @@ import com.tencent.devops.auth.api.service.ServiceVerifyRecordResource
 import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionGrantRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionVerifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionsPolicyCodeAndResourceType
@@ -71,6 +72,25 @@ class BSAuthPermissionApi @Autowired constructor(
         return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
     }
 
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null
+        )
+    }
+
+    @Suppress("NestedBlockDepth")
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -449,6 +469,27 @@ class BSAuthPermissionApi @Autowired constructor(
         }
 
         return result
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     companion object {

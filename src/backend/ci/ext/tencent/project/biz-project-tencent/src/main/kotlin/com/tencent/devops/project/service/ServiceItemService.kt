@@ -337,6 +337,11 @@ class ServiceItemService @Autowired constructor(
             logger.warn("createItem itemCode is exist, itemCode[$itemCode]")
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_EXIST, params = arrayOf(itemCode))
         }
+        // 检验增加扩展点时，父服务是否存在
+        if (projectServiceMap[itemInfo.pid] == null && getProjectService(itemInfo.pid) == null) {
+            logger.warn("createItem :Parent service is not exist, service[${itemInfo.pid}]")
+            throw ErrorCodeException(errorCode = CommonMessageCode.SERVICE_NOT_EXIST, params = arrayOf(itemInfo.pid))
+        }
         validArgs(itemInfo)
         val createInfo = ItemCreateInfo(
             itemCode = itemInfo.itemCode,

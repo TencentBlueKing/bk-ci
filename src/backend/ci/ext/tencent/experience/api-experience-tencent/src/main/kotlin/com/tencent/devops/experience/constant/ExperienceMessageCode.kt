@@ -76,6 +76,8 @@ object ExperienceMessageCode {
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2106026" // 体验：用户没有体验组的{0}权限
     const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2106027" // 体验：体验未与流水线绑定
     const val USER_NOT_IN_EXP_GROUP = "2106028" // 体验：用户{0}不在体验用户名单中
+    const val USER_NEED_CREATE_EXP_PERMISSION = "2106029" // 体验: 用户没有创建版本体验{0}权限
+    const val USER_NEED_CREATE_EXP_GROUP_PERMISSION = "2106030" // 体验: 用户没有创建体验用户组{0}权限
 
     const val BK_UPDATED_SUCCESSFULLY_AND_SET = "bkUpdatedSuccessfullyAndSet" // 更新成功,已置为
     const val BK_UPDATED_SUCCESSFULLY = "bkUpdatedSuccessfully" // 更新成功

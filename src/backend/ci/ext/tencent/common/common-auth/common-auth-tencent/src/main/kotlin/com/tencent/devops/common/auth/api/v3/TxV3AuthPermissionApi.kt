@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -98,6 +99,24 @@ class TxV3AuthPermissionApi @Autowired constructor(
             resourceCode = resourceCode,
             relationResourceType = relationResourceType?.value ?: null
         ).data!!
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null
+        )
     }
 
     override fun getUserResourceByPermission(
@@ -169,6 +188,16 @@ class TxV3AuthPermissionApi @Autowired constructor(
         ).data ?: emptyMap()
     }
 
+    override fun getUserResourceAndParentByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
+    }
+
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,
@@ -229,6 +258,17 @@ class TxV3AuthPermissionApi @Autowired constructor(
             allActionMap.put(cacheKey, "1")
         }
         return hasAllAction
+    }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
     }
 
     private fun buildAction(resourceType: String, permission: AuthPermission): String {

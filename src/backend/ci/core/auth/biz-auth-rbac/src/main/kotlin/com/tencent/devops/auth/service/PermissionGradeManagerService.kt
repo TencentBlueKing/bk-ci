@@ -68,11 +68,11 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
-import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.Arrays
 
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
@@ -92,7 +92,7 @@ class PermissionGradeManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionGradeManagerService::class.java)
         private const val DEPARTMENT = "department"
-        private const val CANCEL_CREATE_APPLICATION = "WITHDRAW"
+        private const val CANCEL_ITSM_APPLICATION_ACTION = "WITHDRAW"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -461,7 +461,7 @@ class PermissionGradeManagerService @Autowired constructor(
             ItsmCancelApplicationInfo(
                 sn = callbackRecord.sn,
                 operator = userId,
-                actionType = CANCEL_CREATE_APPLICATION
+                actionType = CANCEL_ITSM_APPLICATION_ACTION
             )
         )
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
