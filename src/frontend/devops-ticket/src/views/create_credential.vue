@@ -3,7 +3,9 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCredential') }}</span>
+                <span class="inner-header-title">
+                    {{ pageType === 'create' ? $t('ticket.createCredential') : $t('ticket.editCredential') }}
+                </span>
             </template>
         </content-header>
 
@@ -122,7 +124,18 @@
                     <!-- 凭据描述 end -->
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+
+                        <bk-button
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode: pageType === 'create' ? projectId : creId,
+                                    action: pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            key="comfirmBtn"
+                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -139,6 +152,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -150,6 +164,8 @@
         },
         data () {
             return {
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
                 ticketDocsUrl: this.BKCI_DOCS.TICKET_DOC,
                 showContent: false,
                 hasPermission: true,
@@ -187,7 +203,7 @@
                         {
                             type: 'success',
                             size: 'normal',
-                            handler: this.goToApplyPerm,
+                            handler: this.applyPermission,
                             text: this.$t('ticket.applyPermission')
                         }
                     ]
@@ -250,13 +266,13 @@
             changeProject () {
                 this.iframeUtil.toggleProjectMenu(true)
             },
-            goToApplyPerm () {
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
-                // window.open(url, '_blank')
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CRED_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: CRED_RESOURCE_ACTION.CREATE
+                })
             },
             cancel () {
                 this.$router.push({
@@ -295,14 +311,26 @@
                             }
                             message = this.$t('ticket.credential.successfullysavedential')
                             theme = 'success'
-                        } catch (err) {
-                            message = err.message ? err.message : err
-                            theme = 'error'
-                        } finally {
+
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            const resourceCode = this.pageType === 'create' ? this.projectId : this.creId
+                            const action = this.pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
+                            theme = 'error'
+
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode,
+                                    action
+                                }
+                            )
+                        } finally {
                             if (theme === 'success') {
                                 this.$router.push({
                                     name: 'credentialList'
@@ -365,13 +393,16 @@
                             credential: this.editInitCredential
                         })
                         this.newModel = this.getTicketByType(data.credentialType)
-                    } catch (err) {
-                        const message = err.message ? err.message : err
-                        const theme = 'error'
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: CRED_RESOURCE_TYPE,
+                                resourceCode: this.creId,
+                                action: CRED_RESOURCE_ACTION.VIEW
+                            }
+                        )
                     } finally {
                         this.loading.isLoading = false
                     }

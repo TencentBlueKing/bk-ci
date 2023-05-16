@@ -10,7 +10,11 @@
                     :title="$t('template.noTemplate')"
                     :desc="emptyTipsConfig.desc"
                     :btn-disabled="emptyTipsConfig.btnDisabled"
-                    :btns="emptyTipsConfig.btns">
+                    :btns="emptyTipsConfig.btns"
+                    :has-permission="emptyTipsConfig.hasPermission"
+                    :disable-permission-api="emptyTipsConfig.disablePermissionApi"
+                    :permission-data="emptyTipsConfig.permissionData"
+                >
                 </empty-tips>
             </div>
         </div>
@@ -43,6 +47,10 @@
     import emptyTips from '@/components/pipelineList/imgEmptyTips'
     import FormField from '@/components/AtomPropertyPanel/FormField'
     import templateTable from '@/components/template/templateTable'
+
+    import {
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -123,7 +131,17 @@
                         pageSize
                     })
                     this.isManagerUser = res.hasPermission
-                    Object.assign(this.emptyTipsConfig, { btnDisabled: !this.isManagerUser })
+                    Object.assign(this.emptyTipsConfig, {
+                        btnDisabled: !this.isManagerUser,
+                        hasPermission: this.isManagerUser,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: this.projectId,
+                            resourceType: 'project',
+                            resourceCode: this.projectId,
+                            action: PROJECT_RESOURCE_ACTION.MANAGE
+                        }
+                    })
                     return res
                 } catch (err) {
                     this.$showTips({

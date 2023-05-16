@@ -11,7 +11,7 @@
     "noCodelibPermission": "no permission for Code Repositories",
     "noPermissionDesc": "you do not have the permission for create, please switch the project or apply for permission accordingly",
     "switchProject": "switch project",
-    "applyPermission": "apply permission",
+    "applyPermission": "Apply permission",
     "index": "Index",
     "create": "create",
     "new": "new",
@@ -61,5 +61,6 @@
     "P4": "P4",
     "authType": "Authorization method",
     "authIdentity": "Authorized identity",
-    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port"
+    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
+    "noPermission": "No permission"
 }

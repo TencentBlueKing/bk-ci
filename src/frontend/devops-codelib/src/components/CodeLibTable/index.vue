@@ -24,8 +24,45 @@
         </bk-table-column>
         <bk-table-column :label="$t('codelib.operation')" width="150">
             <template slot-scope="props">
-                <bk-button theme="primary" text @click="editCodeLib(props.row)">{{ $t('codelib.edit') }}</bk-button>
-                <bk-button theme="primary" text @click="deleteCodeLib(props.row)">{{ $t('codelib.delete') }}</bk-button>
+                <template v-if="props.row.canUse">
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: props.row.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        text
+                        @click="editCodeLib(props.row)"
+                    >{{ $t('codelib.edit') }}</bk-button>
+                    <bk-button
+                        theme="primary"
+                        v-perm="{
+                            hasPermission: props.row.canDelete,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RESOURCE_TYPE,
+                                resourceCode: props.row.repositoryHashId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
+                        }"
+                        text
+                        @click="deleteCodeLib(props.row)"
+                    >{{ $t('codelib.delete') }}</bk-button>
+                </template>
+                <template v-else>
+                    <bk-button
+                        theme="primary"
+                        outline
+                        @click="handleApplyPermission(props.row)"
+                    >{{ $t('codelib.applyPermission') }}</bk-button>
+                </template>
             </template>
         </bk-table-column>
     </bk-table>
@@ -34,6 +71,8 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig } from '../../config/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../../utils/permission'
+
     export default {
         props: {
             switchPage: {
@@ -54,6 +93,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 pagination: {
                     current: this.page,
                     count: this.count,
@@ -159,11 +200,20 @@
                     projectId: this.projectId,
                     credentialTypes,
                     authType,
-                    codelib
+                    codelib,
+                    instance: this
                 }
                 this.toggleCodelibDialog(CodelibDialog)
             },
-
+            
+            handleApplyPermission (row) {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: row.repositoryHashId,
+                    action: RESOURCE_ACTION.USE
+                })
+            },
             deleteCodeLib ({ repositoryHashId, aliasName }) {
                 this.$bkInfo({
                     theme: 'warning',
@@ -194,24 +244,15 @@
                                 this.switchPage(currentPage, pageSize)
                             }
                         }).catch((e) => {
-                            if (e.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.edit,
-                                        resourceId: this.$permissionResourceMap.code,
-                                        instanceId: [{
-                                            id: repositoryHashId,
-                                            name: aliasName
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
-                            } else {
-                                this.$bkMessage({
-                                    message: e.message,
-                                    theme: 'error'
-                                })
-                            }
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: RESOURCE_TYPE,
+                                    resourceCode: repositoryHashId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
+                            )
                         }).finally(() => {
                             this.isLoading = false
                         })

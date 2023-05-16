@@ -70,7 +70,8 @@ class SlaveGatewayService @Autowired constructor(
             val defaultFileGateway = agentPropsScope.getDefaultFileGateway()
             if (defaultFileGateway.isNotBlank()) return defaultFileGateway
         }
-        return getConfigGateway(zoneName)
+        val (gateway, fileGateWay) = getConfigGateway(zoneName)
+        return fileGateWay ?: gateway
     }
 
     fun getGateway(zoneName: String?): String? {
@@ -78,20 +79,25 @@ class SlaveGatewayService @Autowired constructor(
             val defaultGateway = agentPropsScope.getDefaultGateway()
             if (defaultGateway.isNotBlank()) return defaultGateway
         }
-        return getConfigGateway(zoneName)
+        val (gateway, _) = getConfigGateway(zoneName)
+        return gateway
     }
 
-    private fun getConfigGateway(zoneName: String?): String {
+    // @return gateway,filegateway
+    private fun getConfigGateway(zoneName: String?): Pair<String, String?> {
         if (zoneName.isNullOrBlank()) {
-            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+            return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
         }
         val gateways = getGateway()
         gateways.forEach {
             if (it.zoneName == zoneName) {
-                return agentUrlService.fixGateway(it.gateway)
+                return Pair(
+                    agentUrlService.fixGateway(it.gateway),
+                    agentUrlService.fixGateway(it.fileGateway ?: it.gateway)
+                )
             }
         }
-        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+        return Pair(agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!), null)
     }
 
     fun getGateway(): List<SlaveGateway> {
@@ -104,7 +110,15 @@ class SlaveGatewayService @Autowired constructor(
                         val records = slaveGatewayDao.list(dslContext)
                         if (records.isNotEmpty()) {
                             records.forEach {
-                                cache.add(SlaveGateway(it.name, it.showName, it.gateway))
+                                cache.add(
+                                    SlaveGateway(
+                                        zoneName = it.name,
+                                        showName = it.showName,
+                                        gateway = it.gateway,
+                                        fileGateway = it.fileGateway,
+                                        visibility = it.visibility ?: false
+                                    )
+                                )
                             }
                         }
                     } finally {
@@ -115,6 +129,40 @@ class SlaveGatewayService @Autowired constructor(
             }
         }
         return cache
+    }
+
+    // 不走缓存的接口，给op接口使用
+    fun getGatewayNoCache(): List<SlaveGateway> {
+        val result = ArrayList<SlaveGateway>()
+
+        val records = slaveGatewayDao.list(dslContext)
+        if (records.isNotEmpty()) {
+            records.forEach {
+                result.add(
+                    SlaveGateway(
+                        zoneName = it.name,
+                        showName = it.showName,
+                        gateway = it.gateway,
+                        fileGateway = it.fileGateway,
+                        visibility = it.visibility ?: false
+                    )
+                )
+            }
+        }
+
+        return result
+    }
+
+    fun addGateway(gateway: SlaveGateway): Boolean {
+        return slaveGatewayDao.add(dslContext, gateway)
+    }
+
+    fun updateGateway(gateway: SlaveGateway): Boolean {
+        return slaveGatewayDao.update(dslContext, gateway)
+    }
+
+    fun deleteGateway(zoneName: String): Boolean {
+        return slaveGatewayDao.delete(dslContext, zoneName)
     }
 
     private fun need2Refresh() =

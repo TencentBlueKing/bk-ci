@@ -1,11 +1,23 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
         <template v-if="hasCodelibs">
-            <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
-            <bk-button theme="primary" v-else @click.stop="goCreatePermission">
+            <link-code-lib
+                v-perm="{
+                    hasPermission: codelibs.hasCreatePermission,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: RESOURCE_ACTION.CREATE
+                    }
+                }"
+                :create-codelib="createCodelib"
+            ></link-code-lib>
+            <!-- <bk-button theme="primary" v-else @click.stop="applyPermission">
                 <i class="devops-icon icon-plus"></i>
                 <span>{{ $t('codelib.linkCodelib') }}</span>
-            </bk-button>
+            </bk-button> -->
             <bk-input :placeholder="$t('codelib.aliasNamePlaceholder')"
                 class="codelib-search"
                 :clearable="true"
@@ -24,7 +36,7 @@
         </empty-tips>
         <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
             <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
-            <bk-button theme="success" @click="toApplyPermission">{{ $t('codelib.applyPermission') }}</bk-button>
+            <bk-button theme="success" @click="applyPermission">{{ $t('codelib.applyPermission') }}</bk-button>
         </empty-tips>
         <code-lib-dialog :refresh-codelib-list="refreshCodelibList" @powersValidate="powerValidate"></code-lib-dialog>
     </div>
@@ -44,6 +56,8 @@
         isTGit,
         isP4
     } from '../config/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../utils/permission'
+
     export default {
         name: 'codelib-list',
 
@@ -55,6 +69,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 isLoading: !this.codelibs,
                 defaultPagesize: 10,
                 startPage: 1,
@@ -177,21 +193,12 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            async toApplyPermission () {
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.code, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-            },
-
-            goCreatePermission () {
-                this.$showAskPermissionDialog({
-                    noPermissionList: [{
-                        actionId: this.$permissionActionMap.create,
-                        resourceId: this.$permissionResourceMap.code,
-                        instanceId: [],
-                        projectId: this.projectId
-                    }]
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: RESOURCE_ACTION.CREATE
                 })
             },
 
