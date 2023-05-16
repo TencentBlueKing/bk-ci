@@ -47,7 +47,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
+@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限--项目相关接口")
 @Path("/open/service/auth/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -93,6 +93,21 @@ interface ServiceProjectAuthResource {
         @PathParam("userId")
         @ApiParam("用户userId", required = true)
         userId: String
+    ): Result<List<String>>
+
+    @GET
+    @Path("/users/{userId}/{action}")
+    @ApiOperation("获取用户有某种项目资源类型权限的项目Code")
+    fun getUserProjectsByPermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @PathParam("userId")
+        @ApiParam("用户userId", required = true)
+        userId: String,
+        @PathParam("action")
+        @ApiParam("项目资源类型action", required = true)
+        action: String
     ): Result<List<String>>
 
     @GET

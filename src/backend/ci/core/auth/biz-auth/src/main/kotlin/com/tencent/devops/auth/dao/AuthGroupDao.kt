@@ -105,7 +105,7 @@ class AuthGroupDao {
         }
     }
 
-    fun getGroupByRelationIds(dslContext: DSLContext, relationIds: List<Int>): Result<TAuthGroupInfoRecord?> {
+    fun getGroupByRelationIds(dslContext: DSLContext, relationIds: List<Int>): Result<TAuthGroupInfoRecord> {
         with(TAuthGroupInfo.T_AUTH_GROUP_INFO) {
             return dslContext.selectFrom(this).where(RELATION_ID.`in`(relationIds).and(IS_DELETE.eq(false))).fetch()
         }

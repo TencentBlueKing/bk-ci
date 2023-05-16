@@ -40,3 +40,8 @@ sharding:
   database:
      assign: 
       fusibleSwitch: false
+
+# 项目是否开启审批,默认都不开启
+auth:
+  project:
+    approval: false
