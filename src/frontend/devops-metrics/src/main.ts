@@ -10,6 +10,7 @@ import en from 'bkui-vue/dist/locale/en.esm'
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
+import eventBus from '@/utils/bus.js'
 
 // i18n
 import { getCookie } from '@/common/util'
@@ -27,6 +28,8 @@ const i18n = createI18n({
     'en-US': EnUS
   }
 })
+
+window.eventBus = eventBus;
 
 createApp(App)
   .use(router)

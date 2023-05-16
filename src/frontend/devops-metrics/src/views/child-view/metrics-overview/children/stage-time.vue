@@ -3,12 +3,8 @@ import AreaLine, { IData } from '@/components/charts/area-line';
 import {
   ref,
   watch,
-  computed,
   onBeforeMount,
 } from 'vue';
-import {
-  useRoute,
-} from 'vue-router';
 import {
   sharedProps,
 } from '../common/props-type';
@@ -22,14 +18,6 @@ interface IStage {
   data: Array<IData>,
   labels: Array<string>
 }
-
-const route = useRoute();
-const projectId = computed(() => route.params.projectId);
-watch(() => projectId, () => {
-  getDataFromApi();
-}, {
-  deep: true,
-});
 
 const props = defineProps(sharedProps);
 const emit = defineEmits(['change']);

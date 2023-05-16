@@ -3,7 +3,6 @@ import {
   ref,
   onMounted,
   watch,
-  computed,
   h,
 } from 'vue';
 import http from '@/http/api';
@@ -11,22 +10,9 @@ import {
   sharedProps,
 } from '../common/props-type';
 
-import {
-  useRoute,
-  useRouter,
-} from 'vue-router';
 import useFilter from '@/composables/use-filter';
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
-const router = useRouter()
-const route = useRoute();
-const projectId = computed(() => route.params.projectId)
-
-watch(() => projectId, () => {
-  getData();
-}, {
-  deep: true
-})
 
 
 const emit = defineEmits(['change']);

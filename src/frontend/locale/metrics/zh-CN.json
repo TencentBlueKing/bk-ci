@@ -54,5 +54,9 @@
     "Success rate (%)": "成功率 (%)",
     "Plugin stat": "插件统计",
     "Average time of failure runs (min)": "运行失败平均耗时 (分钟)",
-    "noData": "无数据"
+    "noData": "无数据",
+    "编译": "编译",
+    "测试": "测试",
+    "部署": "部署",
+    "其它": "其它"
 }

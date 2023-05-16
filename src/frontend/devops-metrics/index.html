@@ -7,12 +7,43 @@
     <title>Metrics</title>
     <link rel="shortcut icon" href="/public/images/favicon.png" type="image/x-icon" />
     <script type="module" src="./src/main.ts"></script>
+    <script>
+        window.dispatchEvent = (cs) => {
+            if (cs.eventName === 'change::$currentProjectId') {
+                window.eventBus.emit('changeProjectId', cs.payload.currentProjectId)
+            }
+        }
+        class CustomEvent {
+            constructor(eventName, { detail }) {
+                this.list = {}
+                this.eventName = eventName
+                this.payload = detail
+            }
+            //订阅
+            $on(name,fn){
+                this.list[name]=this.list[name] || []
+                this.eventList[name].push(fn)
+            }
+            //发布
+            $emit(name,data){
+                //判断是否订阅
+                if(this.list[name]){
+                    this.list[name].forEach((fn)=>{
+                        fn(data)
+                    })
+                }
+            }
+            //取消
+            $off(name){
+                if (this.eventList[name]) {
+                    delete this.eventList[name]
+                }
+            }
+        }
+    </script>
+    <script src="/console/static/devops-utils.js?t="></script>
 </head>
 <body>
     <div class="app"></div>
-    <script>
-        var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
-    </script>
-    <script src="/console/static/devops-utils.js?t="></script>
 </body>
 </html>

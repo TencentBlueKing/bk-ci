@@ -8,10 +8,21 @@ import {
   useRoute,
   useRouter,
 } from 'vue-router';
+import eventBus from '@/utils/bus.js'
 
 const route = useRoute();
 const router = useRouter();
 const projectId = computed(() => route.params.projectId)
+eventBus.on('changeProjectId', (payload) => {
+  if (projectId.value && projectId.value !== payload) {
+    router.replace({
+        name: route.name,
+        params: {
+          projectId: payload,
+        },
+    });
+  }
+});
 // 设置 rem
 const calcRem = () => {
   const doc = window.document;
@@ -27,15 +38,6 @@ const calcRem = () => {
 onMounted(() => {
   calcRem();
   window.addEventListener('resize', calcRem, false);
-  window.globalVue.$on('change::$currentProjectId', data => { // 蓝盾选择项目时切换
-    if (projectId.value !== data.currentProjectId) {
-      const params = Object.assign({}, route.params, { projectId: data.currentProjectId })
-      router.replace({
-          name: route.name,
-          params
-      })
-    }
-  })
 });
 
 onUnmounted(() => {

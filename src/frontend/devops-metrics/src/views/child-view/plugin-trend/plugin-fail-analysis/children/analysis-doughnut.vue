@@ -4,11 +4,7 @@ import {
   ref,
   onMounted,
   watch,
-  computed,
 } from 'vue';
-import {
-  useRoute,
-} from 'vue-router';
 import {
   sharedProps,
 } from '../common/props-type';
@@ -21,15 +17,6 @@ const errorData = ref<IData>({
   labels: [],
   list: [],
 });
-
-const route = useRoute();
-const projectId = computed(() => route.params.projectId)
-
-watch(() => projectId, () => {
-  getData();
-}, {
-  deep: true
-})
 
 const getData = () => {
   isLoading.value = true;
