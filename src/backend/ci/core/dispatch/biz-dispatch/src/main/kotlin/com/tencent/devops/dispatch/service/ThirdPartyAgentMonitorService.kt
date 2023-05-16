@@ -49,7 +49,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.engine.common.VMUtils
-import java.util.*
+import java.util.Date
 import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
