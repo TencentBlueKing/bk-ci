@@ -157,6 +157,9 @@ object CommonMessageCode {
     const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100102" // 非项目成员且项目为非开源项目
     // 2100108
     const val USER_NO_PIPELINE_PERMISSION = "2100108" // 流水线: 用户无{0}权限
+    const val SERVICE_COULD_NOT_BE_ANALYZED = "2100109" // 无法根据接口"{0}"分析所属的服务
+    const val RETURNED_RESULT_COULD_NOT_BE_PARSED = "2100110" // 内部服务返回结果无法解析 status:{0} body:{1}
+    const val SERVICE_PROVIDER_NOT_FOUND = "2100111" // 找不到任何有效的{0}【{1}】服务提供者
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
@@ -221,4 +224,6 @@ object CommonMessageCode {
     const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList" // 获取合并请求中的提交
     const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo" // 获取项目中成员信息
     const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkItems" // 查看绑定的TAPD单
+    const val BK_USER_GROUP_CRATE_TIME = "bkUserGroupCrateTime" // {0} 用户组:{1},由{2} 创建于
+    const val BK_USER_RATING_ADMIN_CRATE_TIME = "bkUserRatingAdminCrateTime" // {0} 分级管理员,由{1} 创建于
 }

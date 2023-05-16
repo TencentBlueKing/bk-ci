@@ -90,7 +90,12 @@ open class IamPermissionRoleExtService @Autowired constructor(
         val groupName = IamGroupUtils.buildIamGroup(groupInfo.projectName, groupInfo.displayName ?: groupInfo.name)
 
         val groupDescription = if (groupInfo.description.isNullOrEmpty()) {
-            IamGroupUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name, userId)
+            IamGroupUtils.buildDefaultDescription(
+                projectName = groupInfo.projectName,
+                groupName = groupInfo.name,
+                userId = userId,
+                language = I18nUtil.getLanguage(I18nUtil.getLanguage(userId))
+            )
         } else {
             groupInfo.description
         }
