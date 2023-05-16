@@ -45,7 +45,8 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        async: Boolean? = true
     ): Boolean
 
     /**

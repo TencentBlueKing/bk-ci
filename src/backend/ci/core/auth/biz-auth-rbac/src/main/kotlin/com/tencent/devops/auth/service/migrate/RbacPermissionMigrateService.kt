@@ -363,7 +363,8 @@ class RbacPermissionMigrateService constructor(
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
+                    async = false
                 )
                 break
             } catch (iamException: IamException) {

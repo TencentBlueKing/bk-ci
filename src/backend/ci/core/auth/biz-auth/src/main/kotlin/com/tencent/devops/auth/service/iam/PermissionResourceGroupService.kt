@@ -99,4 +99,16 @@ interface PermissionResourceGroupService {
         groupId: Int,
         renameGroupDTO: RenameGroupDTO
     ): Boolean
+
+    @Suppress("LongParameterList")
+    fun createDefaultResourceGroup(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        managerId: Int,
+        resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String
+    ): Boolean
 }

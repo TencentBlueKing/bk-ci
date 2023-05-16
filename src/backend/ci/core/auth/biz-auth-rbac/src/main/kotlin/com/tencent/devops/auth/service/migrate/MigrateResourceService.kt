@@ -192,7 +192,8 @@ class MigrateResourceService @Autowired constructor(
                                 projectCode = projectCode,
                                 resourceType = resourceType,
                                 resourceCode = resourceCode,
-                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
+                                async = false
                             )
                             break
                         } catch (iamException: IamException) {
