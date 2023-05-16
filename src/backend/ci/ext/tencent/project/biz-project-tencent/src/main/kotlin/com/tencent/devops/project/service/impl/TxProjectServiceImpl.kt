@@ -46,12 +46,14 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.dao.ExtProjectDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -89,8 +91,8 @@ import java.io.File
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
@@ -111,7 +113,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bkTag: BkTag,
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
-    projectApprovalService: ProjectApprovalService
+    projectApprovalService: ProjectApprovalService,
+    private val extProjectDao: ExtProjectDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -485,6 +488,21 @@ class TxProjectServiceImpl @Autowired constructor(
         // rbac环境创建的项目,需要指定到rbac集群
         if (tag.contains(rbacTag)) {
             projectTagService.updateTagByProject(projectCode = englishName, tag = bkTag.getLocalTag())
+        }
+    }
+
+    override fun getV0orV3Projects(
+        authType: AuthSystemType,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return extProjectDao.getV0orV3Projects(
+            dslContext = dslContext,
+            authType = authType,
+            limit = limit,
+            offset = offset
+        ).map {
+            ProjectUtils.packagingBean(it)
         }
     }
 
