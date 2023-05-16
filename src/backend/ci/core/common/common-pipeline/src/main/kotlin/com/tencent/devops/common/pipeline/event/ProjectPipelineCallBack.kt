@@ -41,5 +41,7 @@ data class ProjectPipelineCallBack(
     @ApiModelProperty("事件", required = false)
     val events: String,
     @ApiModelProperty("密钥", required = false)
-    val secretToken: String?
+    val secretToken: String?,
+    @ApiModelProperty("回调是否启用", required = false)
+    val enable: Boolean? = true
 )
