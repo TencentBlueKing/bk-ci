@@ -152,7 +152,9 @@ class DocumentService {
                 loadMarkdown.add(Text(level = 4, body = "$httpMethod $path", key = "http_method_path"))
                 loadMarkdown.add(Text(level = 3, body = getI18n(BK_RESOURCE_DESCRIPTION), key = "resource_description"))
                 loadMarkdown.add(Text(level = 4, body = operation.summary ?: "", key = "summary"))
-                loadMarkdown.add(Text(level = 3, body = getI18n(BK_INPUT_PARAMETER_DESCRIPTION), key = "input_parameter_description"))
+                loadMarkdown.add(
+                    Text(level = 3, body = getI18n(BK_INPUT_PARAMETER_DESCRIPTION), key = "input_parameter_description")
+                )
                 loadMarkdown.add(Text(level = 4, body = getI18n(BK_PATH_PARAMETER), key = "path_parameter_title"))
                 loadMarkdown.add(
                     cacheOrLoad({
