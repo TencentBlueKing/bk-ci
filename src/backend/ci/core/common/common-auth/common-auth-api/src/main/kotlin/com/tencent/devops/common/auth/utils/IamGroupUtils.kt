@@ -63,7 +63,7 @@ object IamGroupUtils {
             messageCode = BK_USER_RATING_ADMIN_CRATE_TIME,
             language = language,
             arrayOf(projectName, userId)
-        )+ "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
+        ) + "${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")}"
     }
 
     fun renameSystemLable(groupName: String): String {
