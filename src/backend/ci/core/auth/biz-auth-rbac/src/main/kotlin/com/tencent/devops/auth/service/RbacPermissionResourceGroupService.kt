@@ -318,40 +318,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return true
     }
 
-    @Suppress("LongParameterList")
-    override fun createDefaultResourceGroup(
-        userId: String,
-        projectCode: String,
-        projectName: String,
-        resourceType: String,
-        managerId: Int,
-        resourceCode: String,
-        resourceName: String,
-        iamResourceCode: String
-    ): Boolean {
-        if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.createGradeDefaultGroup(
-                gradeManagerId = managerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName
-            )
-        } else {
-            permissionSubsetManagerService.createSubsetManagerDefaultGroup(
-                subsetManagerId = managerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName,
-                iamResourceCode = iamResourceCode,
-                createMode = AuthGroupCreateMode.CREATE
-            )
-        }
-        return true
-    }
-
     private fun checkDuplicateGroupName(
         projectId: String,
         groupName: String

@@ -103,16 +103,4 @@ class SamplePermissionResourceGroupService : PermissionResourceGroupService {
     ): Boolean {
         return true
     }
-
-    @Suppress("LongParameterList")
-    override fun createDefaultResourceGroup(
-        userId: String,
-        projectCode: String,
-        projectName: String,
-        resourceType: String,
-        managerId: Int,
-        resourceCode: String,
-        resourceName: String,
-        iamResourceCode: String
-    ): Boolean = true
 }
