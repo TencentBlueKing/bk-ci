@@ -55,4 +55,5 @@ object QualityMessageCode {
     const val INDEX_ENGLISH_NAME_CANNOT_EMPTY = "2114007" // 指标英文名不能为空
     const val CHANGE_QUALITY_GATE_VALUE = "2114008" // 指标[{0}]值类型为[{1}]，请修改红线阈值[{2}]
     const val USER_NEED_PIPELINE_X_PERMISSION = "2114009" // 用户无{0}权限
+    const val USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_QUALITY = "2114010" // 用户没有创建质量红线通知组权限
 }

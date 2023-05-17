@@ -72,7 +72,7 @@ import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -1238,7 +1238,10 @@ class CertServiceImpl @Autowired constructor(
             projectId = projectId,
             resourceCode = certId,
             authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
+            )
         )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
@@ -1265,7 +1268,10 @@ class CertServiceImpl @Autowired constructor(
             projectId = projectId,
             resourceCode = certId,
             authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                params = arrayOf(userId, projectId, certId, AuthPermission.VIEW.getI18n(I18nUtil.getLanguage(userId)))
+            )
         )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
