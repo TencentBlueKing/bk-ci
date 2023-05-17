@@ -37,11 +37,16 @@ if (File(i18nPath).isDirectory) {
         doLast {
             var moduleName = System.getProperty("i18n.module.name")
             if (moduleName.isNullOrBlank()) {
+                // 根据项目名称提取微服务名称
                 val parts = project.name.split("-")
+                val num = if (parts.size > 2) {
+                    parts.size - 1
+                } else {
+                    parts.size
+                }
                 val projectNameSb = StringBuilder();
-                // 去掉头部和尾部即为微服务名称
-                for (i in 1 until parts.size - 1) {
-                    if (i != parts.size - 2) {
+                for (i in 1 until num) {
+                    if (i != num - 1) {
                         projectNameSb.append(parts[i]).append("-")
                     } else {
                         projectNameSb.append(parts[i])
