@@ -708,5 +708,6 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
 
     private fun makeCredential(): String =
         //Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
-        Credentials.basic("v_lidingli", "44200b0d8b3f3a10a99cb5c3ee31cea0")
+        //Credentials.basic("v_lidingli", "44200b0d8b3f3a10a99cb5c3ee31cea0")
+        Credentials.basic(bkRepoClientConfig.bkRepoStaticUserName, bkRepoClientConfig.bkRepoStaticPassword)
 }
