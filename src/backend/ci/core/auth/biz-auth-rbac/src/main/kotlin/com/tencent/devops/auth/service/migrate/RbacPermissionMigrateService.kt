@@ -363,7 +363,8 @@ class RbacPermissionMigrateService constructor(
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
+                    async = false
                 )
                 break
             } catch (iamException: IamException) {
@@ -411,7 +412,7 @@ class RbacPermissionMigrateService constructor(
                 exception.toString()
             }
         }
-        logger.error("Failed to migrate $projectCode from $authType to rbac", errorMessage)
+        logger.error("Failed to migrate $projectCode from $authType to rbac", exception)
         authMigrationDao.updateStatus(
             dslContext = dslContext,
             projectCode = projectCode,
