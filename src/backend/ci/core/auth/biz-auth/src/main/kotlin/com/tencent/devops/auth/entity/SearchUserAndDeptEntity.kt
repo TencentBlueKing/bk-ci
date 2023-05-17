@@ -41,10 +41,10 @@ data class SearchUserAndDeptEntity(
     val fields: String?,
     @ApiModelProperty("精确查找内容列表", name = "exact_lookups")
     @JsonProperty("exact_lookups")
-    val exactLookups: Any? = null,
+    var exactLookups: Any? = null,
     @ApiModelProperty("模糊查找内容列表", name = "fuzzy_lookups")
     @JsonProperty("fuzzy_lookups")
-    val fuzzyLookups: Any? = null,
+    var fuzzyLookups: Any? = null,
     @ApiModelProperty("用户登录态信息", name = "access_token")
     @JsonProperty("access_token")
     val accessToken: String? = null,

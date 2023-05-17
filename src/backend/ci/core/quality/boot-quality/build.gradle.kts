@@ -31,4 +31,5 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-v3"))
     api(project(":core:quality:biz-quality"))
     api(project(":core:quality:biz-quality-sample"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }

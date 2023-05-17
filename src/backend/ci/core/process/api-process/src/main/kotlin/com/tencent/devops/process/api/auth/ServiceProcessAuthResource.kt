@@ -57,6 +57,17 @@ interface ServiceProcessAuthResource {
     ): CallbackBaseResponseDTO?
 
     @POST
+    @Path("/pipelineGroupInfo")
+    @ApiOperation("iam流水线组回调接口")
+    fun pipelineGroupInfo(
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO,
+        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @ApiParam("token")
+        token: String
+    ): CallbackBaseResponseDTO?
+
+    @POST
     @Path("/byAutoId")
     @ApiOperation("iam流水线回调接口")
     fun pipelineInfoByAutoId(
