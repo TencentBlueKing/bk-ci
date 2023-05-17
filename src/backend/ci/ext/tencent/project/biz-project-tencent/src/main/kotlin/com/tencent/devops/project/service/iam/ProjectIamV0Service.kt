@@ -121,11 +121,7 @@ class ProjectIamV0Service @Autowired constructor(
     ): Boolean {
         logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = I18nUtil.getCodeLanMessage(
-                messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                params = null
-            )
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
