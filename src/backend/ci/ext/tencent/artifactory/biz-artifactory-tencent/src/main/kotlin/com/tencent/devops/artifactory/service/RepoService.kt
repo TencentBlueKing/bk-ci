@@ -105,5 +105,24 @@ interface RepoService {
 
     fun listCustomFiles(userId: String, projectId: String, condition: CustomFileSearchCondition): List<String>
 
-    fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq)
+    fun copyToCustom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        copyToCustomReq: CopyToCustomReq
+    )
+
+    /**
+     * 复制文件
+     */
+    fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    )
 }
