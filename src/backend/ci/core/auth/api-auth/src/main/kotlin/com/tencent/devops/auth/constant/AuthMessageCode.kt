@@ -82,7 +82,6 @@ object AuthMessageCode {
     const val PARENT_TYPE_FAIL = "2121034" // 权限系统：父类资源必须为"项目"
     const val TOKEN_TICKET_FAIL = "2121035" // 权限系统：token校验失败
 
-
     const val RESOURCE_NOT_FOUND = "2121036" // 权限系统：资源{0}不存在
     const val DEFAULT_GROUP_CONFIG_NOT_FOUND = "2121037" // 权限系统：默认组配置不存在
     const val RESOURCE_ACTION_EMPTY = "2121038" // 权限系统：资源未绑定动作
