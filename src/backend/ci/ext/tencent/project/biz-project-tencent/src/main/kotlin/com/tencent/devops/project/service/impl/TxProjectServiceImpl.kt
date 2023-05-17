@@ -484,10 +484,14 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun updateProjectRouterTag(englishName: String) {
-        val tag = bkTag.getLocalTag()
-        // rbac环境创建的项目,需要指定到rbac集群
-        if (tag.contains(rbacTag)) {
-            projectTagService.updateTagByProject(projectCode = englishName, tag = bkTag.getLocalTag())
+        try {
+            val tag = bkTag.getLocalTag()
+            // rbac环境创建的项目,需要指定到rbac集群
+            if (tag.contains(rbacTag)) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update project router tag", ignore)
         }
     }
 
