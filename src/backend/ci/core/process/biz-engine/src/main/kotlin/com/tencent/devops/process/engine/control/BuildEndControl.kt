@@ -164,7 +164,7 @@ class BuildEndControl @Autowired constructor(
         fixBuildInfo(buildInfo)
 
         // 刷新详情页状态
-        val (model, allStageStatus) = pipelineBuildRecordService.buildEnd(
+        val (model, allStageStatus, timeCost) = pipelineBuildRecordService.buildEnd(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -184,7 +184,7 @@ class BuildEndControl @Autowired constructor(
             ),
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList,
-            timeCost = model.timeCost
+            timeCost = timeCost
         )
 
         // 更新buildNo
