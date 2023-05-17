@@ -14,13 +14,14 @@ const router = useRouter();
 const projectId = computed(() => route.params.projectId)
 window.Bus.on('changeProjectId', (payload) => {
   if (projectId.value && projectId.value !== payload) {
-    console.log('newProjectId ===', payload, '   oldProjectId', projectId.value)
-    router.replace({
-      name: route.name,
-      params: {
-        projectId: payload,
-      },
-    });
+    console.log(' route.name ===',  route.name)
+    location.reload();
+    // router.replace({
+    //   name: route.name,
+    //   params: {
+    //     projectId: payload,
+    //   },
+    // });
   }
 });
 // 设置 rem
