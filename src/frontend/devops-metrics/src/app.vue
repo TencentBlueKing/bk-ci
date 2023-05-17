@@ -15,7 +15,7 @@ const projectId = computed(() => route.params.projectId)
 window.Bus.on('changeProjectId', (payload) => {
   if (projectId.value && projectId.value !== payload) {
     console.log(' route.name ===',  route.name)
-    location.reload();
+    window.parent.location.reload();
     // router.replace({
     //   name: route.name,
     //   params: {
