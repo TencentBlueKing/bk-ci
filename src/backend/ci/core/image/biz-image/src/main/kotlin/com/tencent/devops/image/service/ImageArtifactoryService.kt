@@ -150,6 +150,7 @@ class ImageArtifactoryService @Autowired constructor(
         return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
+        logger.info("username：${bkRepoClientConfig.bkRepoStaticUserName}, password : ${bkRepoClientConfig.bkRepoStaticPassword}")
         // 查询项目镜像列表
         val projectImages = getImagesByUrl(projectCode, repoName, searchKey)
         val imageList = mutableListOf<ImageItem>()
@@ -394,7 +395,6 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
 fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
-    logger.info("username：${bkRepoClientConfig.bkRepoStaticUserName}, password : ${bkRepoClientConfig.bkRepoStaticPassword}")
     val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
         .get()
         .header("Authorization", credential)
