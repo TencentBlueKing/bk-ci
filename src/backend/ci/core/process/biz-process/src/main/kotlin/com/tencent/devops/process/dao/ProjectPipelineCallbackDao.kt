@@ -160,7 +160,64 @@ class ProjectPipelineCallbackDao {
         id: Long
     ) {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
-            dslContext.update(this).set(ENABLE, false).where(ID.eq(id).and(PROJECT_ID.eq(projectId))).execute()
+            dslContext.update(this)
+                .set(ENABLE, false)
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun enable(
+        dslContext: DSLContext,
+        projectId: String,
+        id: Long
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            dslContext.update(this)
+                .set(ENABLE, true)
+                .where(ID.eq(id).and(PROJECT_ID.eq(projectId)))
+                .execute()
+        }
+    }
+
+    fun getDisableCallbackList(
+        dslContext: DSLContext,
+        projectId: String?,
+        url: String?,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectPipelineCallbackRecord> {
+        return with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val conditions = mutableListOf(
+                ENABLE.eq(false)
+            )
+            if (!projectId.isNullOrEmpty()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (!url.isNullOrEmpty()) {
+                conditions.add(CALLBACK_URL.eq(url))
+            }
+            dslContext.selectFrom(this)
+                .where(conditions)
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun enableByIds(
+        dslContext: DSLContext,
+        projectId: String,
+        ids: List<Int>
+    ) {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            val conditions = mutableListOf(
+                ENABLE.eq(false),
+                ID.`in`(ids)
+            )
+            dslContext.update(this)
+                .set(ENABLE, true)
+                .where(conditions)
+                .execute()
         }
     }
 }

@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentDetailRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
@@ -26,6 +27,7 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -108,27 +110,20 @@ class WorkspaceDevCloudClient @Autowired constructor(
         userId: String,
         environmentUid: String,
         workspaceName: String,
-        environmentAction: EnvironmentAction
+        environmentAction: EnvironmentAction,
+        envPatchStr: String = ""
     ): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/${environmentAction.getValue()}"
-        logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
+
+        logger.info("User $userId request url: $url, enviromentUid: $environmentUid, patchStr: $envPatchStr")
+        val body = JsonUtil.toJson(UidReq(uid = environmentUid, patch = envPatchStr))
+
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
-            .headers(
-                makeHeaders(
-                    devCloudAppId,
-                    devCloudToken,
-                    userId
-                )
-                    .toHeaders()
-            )
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    JsonUtil.toJson(UidReq(environmentUid))
-                )
-            )
+            .headers(makeHeaders(devCloudAppId, devCloudToken, userId).toHeaders())
+            .post(body.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()))
             .build()
+
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body!!.string()
@@ -142,18 +137,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentOpRsp.code) {
-                    // 记录操作历史
-                    dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                        dslContext = dslContext,
-                        workspaceName = workspaceName,
-                        environmentUid = environmentUid,
-                        operator = "admin",
-                        action = environmentAction
-                    )
-
-                    return environmentOpRsp.data
-                } else {
+                if (HttpStatus.OK.value != environmentOpRsp.code) {
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
@@ -161,6 +145,17 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentOpRsp.message}"
                     )
                 }
+
+                // 记录操作历史
+                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    environmentUid = environmentUid,
+                    operator = "admin",
+                    action = environmentAction
+                )
+
+                return environmentOpRsp.data
             }
         } catch (e: SocketTimeoutException) {
             logger.error("User $userId ${environmentAction.getValue()} environment get SocketTimeoutException.", e)
@@ -242,6 +237,80 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "获取环境状态接口超时, url: $url"
+                )
+            }
+        }
+    }
+
+    fun getWorkspaceDetail(
+        userId: String,
+        environmentUid: String,
+        retryTime: Int = 3
+    ): Environment {
+        val url = devCloudUrl + "/environment/detail"
+        logger.info("User $userId get environment detail: $url")
+        val request = Request.Builder()
+            .url(commonService.getProxyUrl(url))
+            .headers(
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
+                )
+                    .toHeaders()
+            )
+            .post(
+                RequestBody.create(
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
+                    JsonUtil.toJson(UidReq(environmentUid))
+                )
+            )
+            .build()
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("User $userId get environment detail $environmentUid response: $responseContent")
+                if (!response.isSuccessful && retryTime > 0) {
+                    val retryTimeLocal = retryTime - 1
+                    return getWorkspaceDetail(userId, environmentUid, retryTimeLocal)
+                }
+
+                if (!response.isSuccessful && retryTime <= 0) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境详情异常: ${response.code}"
+                    )
+                }
+
+                val environmentDetailRsp: EnvironmentDetailRsp = jacksonObjectMapper().readValue(responseContent)
+                if (HttpStatus.OK.value == environmentDetailRsp.code) {
+                    return environmentDetailRsp.data
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境详情返回失败：${environmentDetailRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            // 接口超时失败，重试三次
+            if (retryTime > 0) {
+                logger.info(
+                    "User $userId get environment detail SocketTimeoutException. " +
+                        "retry: $retryTime"
+                )
+                return getWorkspaceDetail(userId, environmentUid, retryTime - 1)
+            } else {
+                logger.error("User $userId get environment detail failed.", e)
+                throw BuildFailureException(
+                    errorType = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
+                    formatErrorMessage = ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                    errorMessage = "获取环境详情接口超时, url: $url"
                 )
             }
         }

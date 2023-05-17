@@ -1,0 +1,14 @@
+{
+    "entrypoint": "/ide-desktop/vscode-desktop-status",
+    "entrypointArgs": [
+        "{DESKTOPIDEPORT}",
+        "Open in VS Code on Desktop",
+        "vscode"
+    ],
+    "readinessProbe": {
+        "type": "http",
+        "http": {
+            "path": "/status"
+        }
+    }
+}

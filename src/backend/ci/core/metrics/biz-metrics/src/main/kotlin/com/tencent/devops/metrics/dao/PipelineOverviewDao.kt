@@ -28,8 +28,8 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.productSum
-import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.common.db.utils.JooqUtils.productSum
+import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME

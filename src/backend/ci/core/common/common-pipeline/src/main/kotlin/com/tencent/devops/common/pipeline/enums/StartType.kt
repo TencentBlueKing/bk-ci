@@ -28,6 +28,15 @@
 package com.tencent.devops.common.pipeline.enums
 
 import com.tencent.devops.common.api.pojo.IdValue
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import org.slf4j.LoggerFactory
 
 enum class StartType {
@@ -81,6 +90,27 @@ enum class StartType {
             }
 
             return result
+        }
+
+        fun transform(startType: String, webhookType: String?): String {
+            return when (startType) {
+                MANUAL.name -> ManualTriggerElement.classType
+                TIME_TRIGGER.name -> TimerTriggerElement.classType
+                WEB_HOOK.name -> {
+                    when (webhookType) {
+                        CodeType.SVN.name -> CodeSVNWebHookTriggerElement.classType
+                        CodeType.GIT.name -> CodeGitWebHookTriggerElement.classType
+                        CodeType.GITLAB.name -> CodeGitlabWebHookTriggerElement.classType
+                        CodeType.GITHUB.name -> CodeGithubWebHookTriggerElement.classType
+                        CodeType.TGIT.name -> CodeTGitWebHookTriggerElement.classType
+                        else -> RemoteTriggerElement.classType
+                    }
+                }
+
+                else -> { // SERVICE.name,  PIPELINE.name, REMOTE.name
+                    RemoteTriggerElement.classType
+                }
+            }
         }
     }
 }

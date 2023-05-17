@@ -41,7 +41,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = emptyList(),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -49,7 +50,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = listOf("aa*", "bb"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -57,7 +59,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -65,7 +68,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt", "cc.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -73,7 +77,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("cc.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -82,7 +87,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = listOf("aa/", "bb/"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -90,7 +96,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -98,7 +105,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt", "bb/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -106,7 +114,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("cc/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
     }
@@ -117,7 +126,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = emptyList(),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -125,7 +135,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa*", "bb*")
+            excludedPaths = listOf("aa*", "bb*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -133,7 +144,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa*", "bb*")
+            excludedPaths = listOf("aa*", "bb*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -141,7 +153,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt", "cc.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa*", "bb*")
+            excludedPaths = listOf("aa*", "bb*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -150,7 +163,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa/*", "bb/*")
+            excludedPaths = listOf("aa/*", "bb/*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -158,7 +172,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa/*", "bb/*")
+            excludedPaths = listOf("aa/*", "bb/*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -166,7 +181,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt", "bb/include.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa/*", "bb/*")
+            excludedPaths = listOf("aa/*", "bb/*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -174,7 +190,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("cc/include.txt"),
             includedPaths = emptyList(),
-            excludedPaths = listOf("aa/*", "bb/*")
+            excludedPaths = listOf("aa/*", "bb/*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
     }
@@ -186,7 +203,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = emptyList(),
-            excludedPaths = emptyList()
+            excludedPaths = emptyList(),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -194,7 +212,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = listOf("cc")
+            excludedPaths = listOf("cc"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -202,7 +221,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = listOf("cc")
+            excludedPaths = listOf("cc"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -210,7 +230,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt", "bb.txt", "cc.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = listOf("cc*")
+            excludedPaths = listOf("cc*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -218,7 +239,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("cc.txt"),
             includedPaths = listOf("aa*", "bb*"),
-            excludedPaths = listOf("cc*")
+            excludedPaths = listOf("cc*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -227,7 +249,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = listOf("cc/*")
+            excludedPaths = listOf("cc/*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -235,7 +258,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = listOf("cc/*")
+            excludedPaths = listOf("cc/*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -243,7 +267,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt", "bb/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = listOf("cc/*")
+            excludedPaths = listOf("cc/*"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
 
@@ -251,7 +276,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("aa/include.txt", "bb/include.txt", "cc/include.txt"),
             includedPaths = listOf("aa/*", "bb/*"),
-            excludedPaths = listOf("aa/*", "bb/*", "cc/*")
+            excludedPaths = listOf("aa/*", "bb/*", "cc/*"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -260,7 +286,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
             includedPaths = listOf("src/main/**"),
-            excludedPaths = listOf("src/main/ext/**", "doc/b.md")
+            excludedPaths = listOf("src/main/ext/**", "doc/b.md"),
+            caseSensitive = true
         )
         Assertions.assertFalse(pathRegexFilter.doFilter(response))
 
@@ -268,7 +295,8 @@ class PathRegexFilterTest {
             pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
             triggerOnPath = listOf("src/main/ext/include.txt", "doc/b.md", "cc/other.txt"),
             includedPaths = listOf("src/main/**", "cc/**"),
-            excludedPaths = listOf("src/main/ext/**", "doc/b.md")
+            excludedPaths = listOf("src/main/ext/**", "doc/b.md"),
+            caseSensitive = true
         )
         Assertions.assertTrue(pathRegexFilter.doFilter(response))
     }

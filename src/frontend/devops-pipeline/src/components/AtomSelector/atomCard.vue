@@ -10,7 +10,7 @@
         <div class="atom-info-content">
             <p class="atom-name">
                 <span :class="[atomNameCls, 'mr16', 'text-overflow']" :title="atomNameTitle" v-bk-overflow-tips="{ extCls: 'tippy-padding', zIndex: 10000 }">{{ atom.name }}</span>
-                <honer-tag :detail="atom" :max-num="2" />
+                <honer-tag :detail="atom" :max-num="1" />
                 <img
                     v-for="indexInfo in atom.indexInfos"
                     v-bk-tooltips="{

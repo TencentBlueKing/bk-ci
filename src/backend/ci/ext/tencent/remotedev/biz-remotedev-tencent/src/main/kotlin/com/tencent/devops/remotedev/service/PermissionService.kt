@@ -29,7 +29,10 @@ package com.tencent.devops.remotedev.service
 
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
+import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import org.jooq.DSLContext
@@ -77,5 +80,21 @@ class PermissionService @Autowired constructor(
             return false
         }
         return true
+    }
+    /**
+     * 检查工蜂接口是否返回401，针对这种情况，抛出OAUTH_ILLEGAL 让前端跳转去重新授权
+     */
+    fun <T> checkOauthIllegal(userId: String, action: () -> T): T {
+        return kotlin.runCatching {
+            action()
+        }.onFailure {
+            if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode,
+                    defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
+                    params = arrayOf(userId)
+                )
+            }
+        }.getOrThrow()
     }
 }

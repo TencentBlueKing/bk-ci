@@ -150,6 +150,7 @@
     "permissionRefreshtitle": "Permission Request form has been submitted",
     "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
     "permissionRefreshOkText": "Reload Page",
+    "project": "Project",
     "documentTitleHome": "BK_CI | Tencent BlueKing | Home",
     "documentTitlePipeline": "BK_CI | Tencent BlueKing | Pipeline",
     "documentTitleCodelib": "BK_CI | Tencent BlueKing | Codelib",

@@ -109,9 +109,20 @@ class P4ShelveTriggerHandler(
                     if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
                         return true
                     }
+                    // 默认区分大小写
+                    var caseSensitive = true
                     val changeFiles = if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                        caseSensitive = event.caseSensitive ?: true
                         event.files ?: emptyList()
                     } else {
+                        val p4ServerInfo = client.get(ServiceP4Resource::class).getServerInfo(
+                            projectId = projectId,
+                            repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                            repositoryType = repositoryConfig.repositoryType
+                        )
+                        p4ServerInfo.data?.run {
+                            caseSensitive = this.caseSensitive
+                        }
                         client.get(ServiceP4Resource::class).getShelvedFiles(
                             projectId = projectId,
                             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
@@ -125,7 +136,8 @@ class P4ShelveTriggerHandler(
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
-                            excludedPaths = WebhookUtils.convert(excludePaths)
+                            excludedPaths = WebhookUtils.convert(excludePaths),
+                            caseSensitive = caseSensitive
                         )
                     ).doFilter(response)
                 }

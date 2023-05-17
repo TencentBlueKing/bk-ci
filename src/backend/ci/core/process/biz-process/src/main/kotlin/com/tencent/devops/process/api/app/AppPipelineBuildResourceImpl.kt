@@ -284,16 +284,14 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         val buildNo = values["buildNo"]?.let { NumberUtils.toInt(it) }
 
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = StartType.MANUAL,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values.filter { it.key != "buildNo" },
-                    channelCode = channelCode,
-                    buildNo = buildNo
-                )
+            pipelineBuildFacadeService.buildManualStartup(
+                userId = userId,
+                startType = StartType.MANUAL,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = values.filter { it.key != "buildNo" },
+                channelCode = channelCode,
+                buildNo = buildNo
             )
         )
     }
@@ -339,17 +337,15 @@ class AppPipelineBuildResourceImpl @Autowired constructor(
         val channelCode = if (projectId.startsWith("git_")) ChannelCode.GIT else ChannelCode.BS
 
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask,
-                    channelCode = channelCode
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask,
+                channelCode = channelCode
             )
         )
     }
