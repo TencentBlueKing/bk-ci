@@ -114,8 +114,7 @@ class RbacPermissionApplyService @Autowired constructor(
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
         } catch (e: Exception) {
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
-                defaultMessage = "权限系统：获取用户组失败！"
+                errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL
             )
         }
         val groupInfoList = buildGroupInfoList(

@@ -45,8 +45,6 @@ const val BK_CREATE_FAIL = "bkCreateFail" // 未知的异常，创建失败
 const val BK_UPDATE_FAIL = "bkUpdateFail" // 未知的异常，更新失败
 const val BK_METRIC_DATA_UPDATE_SUCCESS = "bkMetricDataUpdateSuccess" // 更新指标数据成功
 
-const val BK_EN_INDEX_ALREADY_EXISTS = "bkEnIndexAlreadyExists" // 英文名({0})的指标已存在
-const val BK_CN_INDEX_ALREADY_EXISTS = "bkCnIndexAlreadyExists" // 中文名({0})的指标已存在
 const val BK_TOOL_DESC_STANDARD = "bkToolDescStandard" // 代码规范
 const val BK_TOOL_DESC_DEFECT = "bkToolDescDefect" // 代码缺陷
 const val BK_TOOL_DESC_SECURITY = "bkToolDescSecurity" // 安全漏洞
