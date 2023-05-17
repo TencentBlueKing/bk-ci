@@ -102,37 +102,7 @@ const pagination = ref({
 const goToPipelineDetail = (row) => {
   console.log(row, arguments);
 }
-const settings = ref({
-  fields: [{
-    label: t('Pipeline'),
-    field: 'pipelineName',
-  },
-  {
-    label: t('Branch'),
-    field: 'branch'
-  },
-  {
-    label: t('Start Time'),
-    field: 'startTime',
-  },
-  {
-    label: t('Username'),
-    field: 'startUser',
-  },
-  {
-    label: t('Error Type'),
-    field: 'errorTypeName',
-  },
-  {
-    label: t('Error Code'),
-    field: 'errorCode',
-  },
-  {
-    label: t('Error Message'),
-    field: 'errorMsg',
-  }],
-  checked: ['pipelineName', 'startTime', 'startUser', 'errorTypeName', 'errorCode', 'errorMsg'],
-});
+
 const handlePageChange = (current) => {
   pagination.value.current = current;
   getData();
@@ -182,7 +152,7 @@ onMounted(getData);
       :columns="columns"
       :data="tableData"
       remote-pagination
-      :settings="settings"
+      settings
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange"

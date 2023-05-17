@@ -124,37 +124,6 @@ const pagination = ref({
   limit: 10,
 });
 
-const settings = ref({
-  fields: [{
-    label: t('Pipeline'),
-    field: 'pipelineName',
-  },
-  {
-    label: t('Plugin'),
-    field: 'atomName'
-  },
-  {
-    label: t('Start Time'),
-    field: 'startTime',
-  },
-  {
-    label: t('Username'),
-    field: 'startUser',
-  },
-  {
-    label: t('Error Type'),
-    field: 'errorTypeName',
-  },
-  {
-    label: t('Error Code'),
-    field: 'errorCode',
-  },
-  {
-    label: t('Error Message'),
-    field: 'errorMsg',
-  }],
-  checked: ['pipelineName', 'startTime', 'startUser', 'errorTypeName', 'errorCode', 'errorMsg'],
-});
 const handlePageChange = (current) => {
   pagination.value.current = current;
   getData();
@@ -201,7 +170,7 @@ onMounted(getData);
       :columns="columns"
       :data="tableData"
       remote-pagination
-      :settings="settings"
+      settings
       :pagination="pagination"
       @page-value-change="handlePageChange"
       @page-limit-change="handlePageLimitChange">
