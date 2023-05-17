@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -245,11 +244,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = params,
-                    defaultMessage = I18nUtil.getCodeLanMessage(
-                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
-                    )
+                    params = params
                 )
             }
             sourceModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑

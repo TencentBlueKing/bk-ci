@@ -49,6 +49,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
@@ -84,6 +85,9 @@ import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.StoreSdkApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_HAS_BEEN_REMOVED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_GET_OUTPUT_ARTIFACTVALUE_ERROR
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -469,12 +473,17 @@ open class MarketAtomTask : ITask() {
         val atomStatus = AtomStatusEnum.getAtomStatus(atomData.atomStatus)
         if (atomStatus == AtomStatusEnum.UNDERCARRIAGED) {
             LoggerService.addWarnLine(
-                "[警告]该插件已被下架，有可能无法正常工作！\n[WARNING]The plugin has been removed and may not work properly."
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ATOM_HAS_BEEN_REMOVED,
+                    language = AgentEnv.getLocaleLanguage()
+                )
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
             LoggerService.addWarnLine(
-                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
-                    "[WARNING]The plugin is in the transition period and may not work properly in the future."
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING,
+                    language = AgentEnv.getLocaleLanguage()
+                )
             )
         }
         LoggerService.addFoldEndLine("-----")
@@ -824,8 +833,13 @@ open class MarketAtomTask : ITask() {
                 }
             }
         } catch (e: Exception) {
-            LoggerService.addErrorLine("获取输出构件[artifact]值错误：${e.message}")
-            logger.error("获取输出构件[artifact]值错误", e)
+            LoggerService.addErrorLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GET_OUTPUT_ARTIFACTVALUE_ERROR,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + "：${e.message}"
+            )
+            logger.error("Get output artifact [artifact] value error", e)
         }
         return oneArtifact
     }

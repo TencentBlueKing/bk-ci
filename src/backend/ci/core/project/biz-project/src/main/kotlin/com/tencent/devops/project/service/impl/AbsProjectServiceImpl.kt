@@ -87,16 +87,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -123,9 +123,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             ProjectValidateType.project_name -> {
                 if (name.isEmpty() || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            ProjectMessageCode.NAME_TOO_LONG
-                        ),
                         errorCode = ProjectMessageCode.NAME_TOO_LONG
                     )
                 }
@@ -137,26 +134,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 // 2 ~ 64 个字符+数字，以小写字母开头
                 if (name.length < NAME_MIN_LENGTH || name.length > NAME_MAX_LENGTH) {
                     throw ErrorCodeException(
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_INTERVAL_ERROR
-                        ),
                         errorCode = ProjectMessageCode.EN_NAME_INTERVAL_ERROR
                     )
                 }
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR
-                        ),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = I18nUtil.getCodeLanMessage(
-                            ProjectMessageCode.EN_NAME_EXIST
-                        ),
                         errorCode = ProjectMessageCode.EN_NAME_EXIST
                     )
                 }
@@ -290,8 +278,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (getByEnglishName(projectCode) != null) {
             logger.warn("createExtProject $projectCode exist")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST)
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )
         }
         val projectCreateExtInfo = ProjectCreateExtInfo(
@@ -895,16 +882,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun updateProjectName(userId: String, projectId: String, projectName: String): Boolean {
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.NAME_TOO_LONG,
-                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG)
+                errorCode = ProjectMessageCode.NAME_TOO_LONG
             )
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectId)) {
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    ProjectMessageCode.PROJECT_NAME_EXIST
-                )
+                errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )
         }
         return projectDao.updateProjectName(dslContext, projectId, projectName) > 0
