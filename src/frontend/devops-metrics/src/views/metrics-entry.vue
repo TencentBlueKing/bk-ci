@@ -7,7 +7,7 @@ const { t } = useI18n();
 const route = useRoute()
 const navList = [
   {
-    name: t('Over123123view'),
+    name: t('Overview'),
     router: 'MetricsOverview',
     icon: 'metrics-overview',
   },
