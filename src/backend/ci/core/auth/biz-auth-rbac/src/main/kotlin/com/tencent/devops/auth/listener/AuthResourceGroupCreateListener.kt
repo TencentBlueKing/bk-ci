@@ -28,43 +28,29 @@
 
 package com.tencent.devops.auth.listener
 
-import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
-import com.tencent.devops.auth.service.PermissionGradeManagerService
-import com.tencent.devops.auth.service.PermissionSubsetManagerService
-import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 
 class AuthResourceGroupCreateListener(
-    private val permissionGradeManagerService: PermissionGradeManagerService,
-    private val permissionSubsetManagerService: PermissionSubsetManagerService,
+    private val permissionResourceGroupService: PermissionResourceGroupService,
     traceEventDispatcher: TraceEventDispatcher
 ) : BaseTraceListener<AuthResourceGroupCreateEvent>(traceEventDispatcher) {
 
     override fun run(event: AuthResourceGroupCreateEvent) {
         with(event) {
             logger.info("receive auth resource group create event|$managerId|$resourceType|$resourceCode|$resourceName")
-            if (resourceType == AuthResourceType.PROJECT.value) {
-                permissionGradeManagerService.createGradeDefaultGroup(
-                    gradeManagerId = managerId,
-                    userId = userId,
-                    projectCode = projectCode,
-                    projectName = projectName
-                )
-            } else {
-                permissionSubsetManagerService.createSubsetManagerDefaultGroup(
-                    subsetManagerId = managerId,
-                    userId = userId,
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    resourceName = resourceName,
-                    iamResourceCode = iamResourceCode,
-                    createMode = AuthGroupCreateMode.CREATE
-                )
-            }
+            permissionResourceGroupService.createDefaultResourceGroup(
+                userId = userId,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = resourceType,
+                managerId = managerId,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode
+            )
         }
     }
 }

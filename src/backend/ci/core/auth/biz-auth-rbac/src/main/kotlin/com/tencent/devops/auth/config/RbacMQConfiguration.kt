@@ -34,6 +34,7 @@ import com.tencent.devops.auth.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
@@ -137,12 +138,10 @@ class RbacMQConfiguration {
 
     @Bean
     fun authResourceGroupCreateListener(
-        permissionGradeManagerService: PermissionGradeManagerService,
-        permissionSubsetManagerService: PermissionSubsetManagerService,
+        permissionResourceGroupService: PermissionResourceGroupService,
         traceEventDispatcher: TraceEventDispatcher
     ) = AuthResourceGroupCreateListener(
-        permissionGradeManagerService = permissionGradeManagerService,
-        permissionSubsetManagerService = permissionSubsetManagerService,
+        permissionResourceGroupService = permissionResourceGroupService,
         traceEventDispatcher = traceEventDispatcher
     )
 
