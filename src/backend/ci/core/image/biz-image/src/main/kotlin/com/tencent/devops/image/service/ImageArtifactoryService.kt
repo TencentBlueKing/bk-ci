@@ -152,6 +152,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
         logger.info("username：${bkRepoClientConfig.bkRepoStaticUserName}, password : ${bkRepoClientConfig.bkRepoStaticPassword}")
+        logger.info("username：${dockerConfig.registryUsername}, password : ${dockerConfig.registryPassword}")
         // 查询项目镜像列表
         val projectImages = getImagesByUrl(projectCode, repoName, searchKey)
         val imageList = mutableListOf<ImageItem>()
