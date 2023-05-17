@@ -35,7 +35,7 @@ if (File(i18nPath).isDirectory) {
     // 编入i18n文件
     val i18nTask = tasks.register("i18n") {
         doLast {
-            var moduleName = System.getProperty("i18n.module.name")
+            var moduleName = project.property("i18n.module.name")?.toString()
             if (moduleName.isNullOrBlank()) {
                 // 根据项目名称提取微服务名称
                 val parts = project.name.split("-")
