@@ -244,7 +244,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                             templateCode =
                             PipelineNotifyTemplateEnum.PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE.templateCode,
                             receivers = mutableSetOf(creator),
-                            notifyType = mutableSetOf(NotifyType.WEWORK.name),
+                            notifyType = mutableSetOf(NotifyType.RTX.name),
                             titleParams = mapOf(),
                             bodyParams = mapOf(
                                 "projectName" to (projectInfo?.projectName ?: ""),
