@@ -394,6 +394,7 @@ class ImageArtifactoryService @Autowired constructor(
     }
 
 fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
+    logger.info("username：${bkRepoClientConfig.bkRepoStaticUserName}, password : ${bkRepoClientConfig.bkRepoStaticPassword}")
     val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
         .get()
         .header("Authorization", credential)
@@ -455,8 +456,8 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
             dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"
             dockerTag.tag = it["latest"] as String?
 
-            logger.info("{dockerConfig.imagePrefix} :$${dockerConfig.imagePrefix}")
-            dockerTag.image = "${dockerConfig.imagePrefix}/${dockerTag.repo}:${dockerTag.tag}"
+            logger.info("{bkRepoClientConfig.bkRepoIdcHost} :$${bkRepoClientConfig.bkRepoIdcHost}")
+            dockerTag.image = "${bkRepoClientConfig.bkRepoIdcHost}/${dockerTag.repo}:${dockerTag.tag}"
             logger.info("image: ${dockerTag.image}")
             images.add(dockerTag)
         }
