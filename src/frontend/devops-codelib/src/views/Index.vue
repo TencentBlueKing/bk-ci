@@ -5,8 +5,16 @@
                 <layout :flod="isListFlod" @on-flod="handleLayoutFlod">
                     <template>
                         <section class="header-content">
-                            <link-code-lib v-if="codelibs && codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
-                            <bk-button theme="primary" v-else @click.stop="goCreatePermission">
+                            <link-code-lib
+                                v-if="codelibs && codelibs.hasCreatePermission"
+                                :create-codelib="createCodelib"
+                            >
+                            </link-code-lib>
+                            <bk-button
+                                v-else
+                                theme="primary"
+                                @click.stop="goCreatePermission"
+                            >
                                 <i class="devops-icon icon-plus"></i>
                                 <span>{{ $t('codelib.linkCodelib') }}</span>
                             </bk-button>
@@ -28,6 +36,7 @@
                             v-bind="codelibs"
                             :cur-repo-id.sync="curRepoId"
                             :limit="limit"
+                            :alias-name.sync="aliasName"
                             :is-list-flod.sync="isListFlod"
                             :switch-page="switchPage"
                             @updataFlod="handleUpdataFlod"

@@ -33,13 +33,44 @@
         <div class="form-item">
             <div class="label">
                 {{ $t('codelib.common') }}
-                <Icon name="helper" size="14" class="edit-icon" />
+                <span
+                    v-if="!isEditing"
+                    @click="handleEditCommon">
+                    <Icon name="edit2" size="14" class="edit-icon" />
+                </span>
+                <span v-else>
+                    <bk-button
+                        class="ml20 mr5"
+                        text
+                        @click="handleSaveCommon"
+                    >
+                        {{ $t('codelib.save') }}
+                    </bk-button>
+                    <bk-button
+                        text
+                        @click="isEditing = false"
+                    >
+                        {{ $t('codelib.cancel') }}
+                    </bk-button>
+                </span>
             </div>
             <div class="content">
                 <div class="merge-request">
                     {{ $t('codelib.blockingMergeRequest') }}
                     <Icon name="helper" size="14" class="help-icon" />
-                    <p class="request-result">{{ true ? $t('codelib.yes') : $t('codelib.no') }}</p>
+                    <p v-if="!isEditing" class="request-result">{{ true ? $t('codelib.yes') : $t('codelib.no') }}</p>
+                    <bk-radio-group
+                        class="common-radio-group"
+                        v-else
+                        v-model="demo4"
+                        @change="handlerChange">
+                        <bk-radio class="mr15" :value="true">
+                            {{ $t('codelib.yes') }}
+                        </bk-radio>
+                        <bk-radio :value="false">
+                            {{ $t('codelib.no') }}
+                        </bk-radio>
+                    </bk-radio-group>
                 </div>
             </div>
         </div>
@@ -54,15 +85,15 @@
                     <span class="value">hwweng</span>
                 </div>
                 <div class="history-item">
-                    <span class="label">{{ $t('codelib.creator') }}</span>
+                    <span class="label">{{ $t('codelib.recentlyEditedBy') }}</span>
                     <span class="value">hwweng</span>
                 </div>
                 <div class="history-item">
-                    <span class="label">{{ $t('codelib.creator') }}</span>
+                    <span class="label">{{ $t('codelib.createdTime') }}</span>
                     <span class="value">hwweng</span>
                 </div>
                 <div class="history-item">
-                    <span class="label">{{ $t('codelib.creator') }}</span>
+                    <span class="label">{{ $t('codelib.lastModifiedTime') }}</span>
                     <span class="value">hwweng</span>
                 </div>
             </div>
@@ -77,7 +108,8 @@
         },
         data () {
             return {
-                isEnabled: false
+                isEnabled: false,
+                isEditing: false
             }
         },
         computed: {
@@ -87,9 +119,16 @@
            
         },
         created () {
+
         },
         methods: {
-           
+            handleEditCommon () {
+                this.isEditing = true
+            },
+
+            handleSaveCommon () {
+                this.isEditing = false
+            }
         }
     }
 </script>
@@ -104,6 +143,10 @@
                 font-weight: 700;
                 font-size: 14px;
                 color: #63656E;
+                ::v-deep .bk-button-text {
+                    font-weight: 400 !important;
+                    font-size: 12px !important;
+                }
             }
             .content,
             .history-content {
@@ -124,6 +167,7 @@
             }
             .edit-icon {
                 margin-left: 18px;
+                cursor: pointer;
             }
             .pac-enable {
                 margin: 0 24px 0 8px;
@@ -163,11 +207,18 @@
                 align-items: center;
                 font-size: 12px;
                 color: #979BA5;
+                white-space: nowrap;
             }
             .request-result {
                 font-size: 12px;
                 color: #63656E;
                 margin-left: 18px;
+            }
+            .common-radio-group {
+                margin-left: 30px;
+            }
+            ::v-deep .bk-form-radio {
+                font-size: 12px !important;
             }
         }
         .history-item {

@@ -1,8 +1,7 @@
 <template>
     <div>
         <div class="expand-btn" v-if="isListFlod" @click="handleExpandList">
-            <!-- {{ $t('codelib.expandList') }} -->
-            展开列表
+            {{ $t('codelib.expandList') }}
         </div>
         <bk-table
             ref="list"
@@ -25,6 +24,7 @@
                 :label="$t('codelib.aliasName')"
                 sortable
                 prop="aliasName"
+                show-overflow-tooltip
             >
                 <template slot-scope="props">
                     <a @click="handleShowDetail">{{ props.row.aliasName }}</a>
@@ -34,11 +34,13 @@
                 v-if="allColumnMap.url"
                 :label="$t('codelib.address')"
                 sortable prop="url"
+                show-overflow-tooltip
             >
             </bk-table-column>
             <bk-table-column
                 v-if="allColumnMap.authType"
                 :label="$t('codelib.auth')"
+                show-overflow-tooltip
             >
                 <template slot-scope="props">
                     <span>
@@ -81,6 +83,9 @@
                     :size="tableSize"
                     @setting-change="handleSettingChange" />
             </bk-table-column>
+            <template #empty>
+                <EmptyTableStatus :type="aliasName ? 'search-empty' : 'empty'" @clear="resetFilter" />
+            </template>
         </bk-table>
     </div>
 </template>
@@ -93,8 +98,12 @@
         listColumnsCache
     } from '../../config/'
     import { getOffset } from '@/utils/'
+    import EmptyTableStatus from '../empty-table-status.vue'
     
     export default {
+        components: {
+            EmptyTableStatus
+        },
         props: {
             switchPage: {
                 type: Function,
@@ -119,6 +128,10 @@
             },
             limit: {
                 type: Number
+            },
+            aliasName: {
+                type: String,
+                default: ''
             }
         },
 
@@ -440,6 +453,12 @@
                 const sortBy = this.sortByMap[prop]
                 const sortType = this.sortTypeMap[order]
                 this.$emit('handleSortChange', { sortBy, sortType })
+            },
+
+            resetFilter () {
+                this.$refs.list.clearSort()
+                this.$emit('update:aliasName', '')
+                this.$emit('handleSortChange', { sortBy: '', sortType: '' })
             }
         }
     }

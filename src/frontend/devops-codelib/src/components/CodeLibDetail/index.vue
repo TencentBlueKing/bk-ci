@@ -1,8 +1,61 @@
 <template>
     <section class="codelib-detail" v-bkloading="{ isLoading }">
         <div class="detail-header">
-            <p class="codelib-name">{{ curRepoId }}</p>
-            <a class="codelib-address">https://git.woa.com/bk-ci-test/test/yamlv2.git</a>
+            <div
+                v-if="!isEditing"
+                class="codelib-name"
+            >
+                <span class="mr5">{{ curRepoId }}</span>
+                <span @click="handleEditName">
+                    <Icon
+                        name="edit2"
+                        size="12"
+                        class="edit-icon"
+                    />
+                </span>
+                <span>
+                    <Icon
+                        name="delete"
+                        size="12"
+                        class="delete-icon"
+                        @click="handleDeleteCodeLib"
+                    />
+                </span>
+            </div>
+            <div v-else>
+                <bk-input
+                    class="aliasName-input"
+                    ref="aliasNameInput"
+                    @blur="handleBlur"
+                    @enter="handleBlur"
+                >
+                </bk-input>
+                <bk-button
+                    class="ml5 mr5"
+                    text
+                    @click="handleSave"
+                >
+                    {{ $t('codelib.save') }}
+                </bk-button>
+                <bk-button
+                    text
+                    @click="handleCancelEdit"
+                >
+                    {{ $t('codelib.cancel') }}
+                </bk-button>
+            </div>
+            <div>
+                <a class="codelib-address" v-bk-overflow-tips>
+                    https://git.woa.com/bk-ci-test/test111111111r12r21r21r21123123vjsae12e21e2oivjasoive12e21ejasf1111111/yamlv2.git
+                </a>
+                <span @click="handleCopy">
+                    <Icon
+                        name="copy"
+                        size="14"
+                        class="copy-icon"
+                    />
+                </span>
+            </div>
         </div>
         <bk-tab :active.sync="active" type="unborder-card">
             <bk-tab-panel
@@ -31,6 +84,7 @@
         },
         data () {
             return {
+                isEditing: false,
                 isLoading: false,
                 panels: [
                     { name: 'basic', label: this.$t('codelib.basicSetting') }
@@ -57,7 +111,34 @@
         created () {
         },
         methods: {
-           
+            handleEditName () {
+                this.isEditing = true
+                setTimeout(() => {
+                    this.$refs.aliasNameInput.focus()
+                })
+            },
+            handleSave () {
+                this.isEditing = false
+            },
+
+            handleCancelEdit () {
+                this.isEditing = false
+            },
+
+            handleCopy () {
+                const textarea = document.createElement('textarea')
+                document.body.appendChild(textarea)
+                textarea.value = '1'
+                textarea.select()
+                if (document.execCommand('copy')) {
+                    document.execCommand('copy')
+                    this.$bkMessage({
+                        theme: 'success',
+                        message: this.$t('codelib.copySuccess')
+                    })
+                }
+                document.body.removeChild(textarea)
+            }
         }
     }
 </script>
@@ -76,6 +157,39 @@
         .codelib-name {
             font-size: 16px;
             color: #313238;
+            margin-right: 30px;
+            &:hover {
+                .edit-icon,
+                .delete-icon {
+                    display: inline;
+                }
+            }
+        }
+
+        .aliasName-input {
+            width: 400px;
+            line-height: 48px;
+        }
+
+        .edit-icon,
+        .delete-icon {
+            cursor: pointer;
+            margin-left: 5px;
+            display: none;
+        }
+
+        .codelib-address {
+            display: inline-block;
+            max-width: 480px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+        }
+        .copy-icon {
+            margin-left: 10px;
+            position: relative;
+            top: -16px;
+            cursor: pointer;
         }
     }
 </style>
