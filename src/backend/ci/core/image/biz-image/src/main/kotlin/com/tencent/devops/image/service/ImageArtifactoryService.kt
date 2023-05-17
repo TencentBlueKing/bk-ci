@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.image.config.DockerConfig
@@ -400,9 +401,18 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
         .header("Authorization", credential)
         .build()
     OkhttpUtils.doHttp(request).use { response ->
-        val responseBody = response.body?.string()
-        logger.info("responseBody: $responseBody")
-        return processingImages(responseBody)
+        try {
+            if (!response.isSuccessful) {
+                logger.error(response.message)
+                throw RuntimeException("Failed to get images")
+            }
+            val responseBody = response.body?.string()
+            logger.info("responseBody: $responseBody")
+            return processingImages(responseBody)
+        } catch (e: Exception) {
+            logger.error(e.message)
+            throw RuntimeException("Failed to get images")
+        }
     }
 }
     private fun aqlSearchImage(aql: String): List<DockerTag> {
@@ -707,7 +717,7 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
     }
 
     private fun makeCredential(): String =
-        //Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
+        Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
         //Credentials.basic("v_lidingli", "44200b0d8b3f3a10a99cb5c3ee31cea0")
-        Credentials.basic(bkRepoClientConfig.bkRepoStaticUserName, bkRepoClientConfig.bkRepoStaticPassword)
+        //Credentials.basic(bkRepoClientConfig.bkRepoStaticUserName, bkRepoClientConfig.bkRepoStaticPassword)
 }
