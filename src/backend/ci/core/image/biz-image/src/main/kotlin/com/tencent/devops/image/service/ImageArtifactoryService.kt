@@ -145,9 +145,9 @@ class ImageArtifactoryService @Autowired constructor(
     }
     fun getUrl(projectCode: String, repoName: String, searchKey: String?): String{
         if (searchKey.isNullOrBlank()){
-            return "https://dev.bkrepo.woa.com/repository/api/package/page/${projectCode}/${repoName}"
+            return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}"
         }
-        return "https://dev.bkrepo.woa.com/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
+        return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
         // 查询项目镜像列表
@@ -157,7 +157,7 @@ class ImageArtifactoryService @Autowired constructor(
         repoNames.forEach {
             imageList.add(
                 ImageItem(
-                    repoUrl = bkRepoClientConfig.bkRepoApiUrl,
+                    repoUrl = bkRepoClientConfig.bkRepoIdcHost!!,
                     repo = it!!,
                     name = parseName(it)
                 )
