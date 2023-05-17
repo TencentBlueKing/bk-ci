@@ -227,4 +227,8 @@ object CommonMessageCode {
     const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkItems" // 查看绑定的TAPD单
     const val BK_USER_GROUP_CRATE_TIME = "bkUserGroupCrateTime" // {0} 用户组:{1},由{2} 创建于
     const val BK_USER_RATING_ADMIN_CRATE_TIME = "bkUserRatingAdminCrateTime" // {0} 分级管理员,由{1} 创建于
+    const val BK_SECOND_LEVEL_ADMIN_CREATE = "bkSecondLevelAdminCreate" // {0} 二级管理员, 由{1} 创建于
+    const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
+    // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
+    const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
 }

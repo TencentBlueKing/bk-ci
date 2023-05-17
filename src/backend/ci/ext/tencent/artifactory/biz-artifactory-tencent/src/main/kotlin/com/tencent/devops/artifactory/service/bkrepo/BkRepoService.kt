@@ -46,6 +46,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.RepoService
 import com.tencent.devops.artifactory.service.ShortUrlService
+import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
@@ -77,6 +78,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import java.io.File
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -115,8 +117,8 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
-            // 镜像不支持按路径查询列表
-            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+            // 镜像/报告不支持按路径查询列表
+            else -> throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(ArtifactoryType.IMAGE.name)
             )
@@ -141,12 +143,21 @@ class BkRepoService @Autowired constructor(
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                     ?: throw NotFoundException(
-                            MessageUtil.getMessageByLocale(
-                                messageCode = FILE_NOT_EXIST,
-                                language = I18nUtil.getLanguage(userId)
-                            )
+                        MessageUtil.getMessageByLocale(
+                            messageCode = FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId)
+                        )
                     )
-            RepoUtils.toFileDetail(fileDetail)
+            val shortUrl = if (fileDetail.name.endsWith(".ipa") || fileDetail.name.endsWith(".apk")) {
+                val ttl = TimeUnit.DAYS.toSeconds(1).toInt()
+                shortUrlService.createShortUrl(
+                    url = externalDownloadUrl(userId, userId, projectId, artifactoryType, fileDetail.fullPath, ttl),
+                    ttl = ttl
+                )
+            } else {
+                null
+            }
+            RepoUtils.toFileDetail(fileDetail, shortUrl)
         }
     }
 
@@ -517,9 +528,9 @@ class BkRepoService @Autowired constructor(
                 } else {
                     it.metadata!!.map { itp ->
                         if (itp.key == "appVersion") {
-                            appVersion = itp.value ?: ""
+                            appVersion = itp.value.toString()
                         }
-                        Property(itp.key, itp.value ?: "")
+                        Property(itp.key, itp.value.toString())
                     }
                 }
                 if (RepoUtils.isPipelineFile(it)) {
@@ -732,6 +743,28 @@ class BkRepoService @Autowired constructor(
             )
         }
         return Count(srcFiles.size)
+    }
+
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        val srcRepo = BkRepoUtils.getRepoName(srcArtifactoryType)
+        val dstRepo = BkRepoUtils.getRepoName(dstArtifactoryType)
+        bkRepoClient.copy(
+            userId = userId,
+            fromProject = srcProjectId,
+            fromRepo = srcRepo,
+            fromPath = srcFullPath,
+            toProject = dstProjectId,
+            toRepo = dstRepo,
+            toPath = dstFullPath
+        )
     }
 
     fun getFileDownloadUrl(param: ArtifactorySearchParam): List<String> {

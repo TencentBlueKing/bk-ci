@@ -241,6 +241,19 @@ interface ArchiveFileService {
     ): Page<FileInfo>
 
     /**
+     * 复制文件
+     */
+    fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    )
+
+    /**
      * 根据文件路径获取相关文件内容
      */
     fun getFileContent(

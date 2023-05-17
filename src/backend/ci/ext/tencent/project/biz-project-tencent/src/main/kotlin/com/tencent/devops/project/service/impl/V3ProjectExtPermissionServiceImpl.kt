@@ -152,10 +152,7 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         if (relationGroupId == null) {
             logger.warn("create group user fail, $projectCode $roleName not find relationGroup")
             throw ErrorCodeException(
-                errorCode = RELATED_RESOURCE_EMPTY,
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = RELATED_RESOURCE_EMPTY
-                )
+                errorCode = RELATED_RESOURCE_EMPTY
             )
         }
 

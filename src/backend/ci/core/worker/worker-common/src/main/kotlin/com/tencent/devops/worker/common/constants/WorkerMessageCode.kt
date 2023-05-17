@@ -133,6 +133,11 @@ object WorkerMessageCode {
     const val GET_SVN_DIRECTORY_ERROR = "2130069" // 获取Svn目录错误
     const val PARAMETER_ERROR = "2130070" // 参数错误
     const val RUN_AGENT_WITHOUT_PERMISSION = "2130071" // 运行Agent需要构建机临时目录的写权限
+    const val UNKNOWN_ERROR = "2130072" // 未知错误:
+    const val AGENT_DNS_ERROR = "2130073" // 构建机DNS解析问题(Agent DNS Error)
+    const val AGENT_NETWORK_CONNECT_FAILED = "2130074" // 构建机网络连接问题(Agent Network Connect Failed)
+    const val AGENT_NETWORK_TIMEOUT = "2130075" // 构建机网络超时问题(Agent Network Timeout)
+    const val AGENT_NETWORK_UNKNOWN = "2130076" // 构建机网络未知异常(Agent Network Unknown)
 
     const val BK_CERTIFICATE_ID_EMPTY = "bkCertificateIdEmpty" // 证书ID为空
     const val BK_BUILD_IMAGE_SUCCEED = "bkBuildImageSucceed" // 构建镜像成功！
@@ -151,7 +156,8 @@ object WorkerMessageCode {
     const val BK_FAILED_GET_PLUG = "bkFailedGetPlug" // 获取插件执行环境信息失败
     const val BK_FAILED_UPDATE_PLUG = "bkFailedUpdatePlug" // 更新插件执行环境信息失败
     const val BK_FAILED_SENSITIVE_INFORMATION = "bkFailedSensitiveInformation" // 获取插件敏感信息失败
-    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = " " // 获取插件开发语言相关的环境变量信息失败
+    // 获取插件开发语言相关的环境变量信息失败
+    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = "bkFailedEnvironmentVariableInformation"
     const val BK_FAILED_ADD_INFORMATION = "bkFailedAddInformation" // 添加插件对接平台信息失败
     const val BK_ARCHIVE_PLUG_FILES = "bkArchivePlugFiles" // 归档插件文件
     const val BK_FAILED_IOS_CERTIFICATE = "bkFailedIosCertificate" // 获取IOS证书失败
@@ -159,4 +165,9 @@ object WorkerMessageCode {
     const val BK_ENTERPRISE_SIGNATURE_FAILED = "bkEnterpriseSignatureFailed" // 企业签名失败
     const val BK_PLUGIN_IS_NO_LONGER_RECOMMENDED = "bkPluginIsNoLongerRecommended" // 该插件已不推荐使用
     const val BK_WRONG_GIT_SPECIFIES_THE_PULL_METHOD = "bkWrongGitSpecifiesThePullMethod" // 错误的GIT指定拉取方式（{0}）
+    const val BK_PREPARE_TO_BUILD = "bkPrepareToBuild" // 构建机已收到请求，准备构建(Build[{0}] Job#{1} is ready）
+    const val BK_ATOM_HAS_BEEN_REMOVED = "bkAtomHasBeenRemoved" // [警告]该插件已被下架，有可能无法正常工作！
+    // [警告]该插件处于下架过渡期，后续可能无法正常工作！
+    const val BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING = "bkAtomIsInTheTransitionPeriodOfDelisting"
+    const val BK_GET_OUTPUT_ARTIFACTVALUE_ERROR = "bkGetOutputArtifactvalueError" // 获取输出构件[artifact]值错误
 }

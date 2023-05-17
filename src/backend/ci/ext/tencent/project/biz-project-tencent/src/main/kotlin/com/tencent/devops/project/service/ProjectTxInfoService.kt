@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.api.pojo.ProjectOrganization
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -76,13 +75,11 @@ class ProjectTxInfoService @Autowired constructor(
         // projectName表字段长度调整到64位限制
         if (projectName.isEmpty() || projectName.length > MAX_PROJECT_NAME_LENGTH) {
             throw ErrorCodeException(
-                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.NAME_TOO_LONG),
                 errorCode = ProjectMessageCode.NAME_TOO_LONG
             )
         }
         if (projectDao.existByProjectName(dslContext, projectName, projectCode)) {
             throw ErrorCodeException(
-                defaultMessage = I18nUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
                 errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
             )
         }
@@ -101,10 +98,6 @@ class ProjectTxInfoService @Autowired constructor(
         logger.info("PROJECT|userId|$userId|projectName|$projectName")
         if (projectName.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = I18nUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.NAME_EMPTY,
-                    language = I18nUtil.getLanguage(userId)
-                ),
                 errorCode = ProjectMessageCode.NAME_EMPTY
             )
         }

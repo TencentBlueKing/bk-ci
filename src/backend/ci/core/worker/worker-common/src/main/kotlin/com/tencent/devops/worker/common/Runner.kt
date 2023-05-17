@@ -42,8 +42,10 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.PARAMETER_ERROR
 import com.tencent.devops.worker.common.constants.WorkerMessageCode.RUN_AGENT_WITHOUT_PERMISSION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UNKNOWN_ERROR
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -113,7 +115,10 @@ object Runner {
                         params = arrayOf("${ignore.message}")
                     )
                 }
-                else -> "未知错误: ${ignore.message}"
+                else -> MessageUtil.getMessageByLocale(
+                    messageCode = UNKNOWN_ERROR,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + " ${ignore.message}"
             }
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
@@ -353,7 +358,13 @@ object Runner {
      * 发送构建初始化日志
      */
     private fun showBuildStartupLog(buildId: String, vmSeqId: String) {
-        LoggerService.addNormalLine("构建机已收到请求，准备构建(Build[$buildId] Job#$vmSeqId is ready）")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PREPARE_TO_BUILD,
+                params = arrayOf(buildId, vmSeqId),
+                language = AgentEnv.getLocaleLanguage()
+            )
+        )
     }
 
     /**

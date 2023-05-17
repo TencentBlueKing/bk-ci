@@ -80,11 +80,6 @@ object ProjectMessageCode {
     const val USER_NOT_PROJECT_USER = "2119032" // 目标用户非该项目成员
     const val USER_NOT_CREATE_PERM = "2119033" // 无创建项目权限，请申请权限
     const val PROJECT_ASSIGN_DATASOURCE_FAIL = "2119034" // 无法为项目分配可用的数据源
-    const val PROJECT_UPDATE_FAIL = "2119037" // 修改项目错误
-    const val CANCEL_CREATION_PROJECT_FAIL = "2119039" // 取消创建中的项目失败
-    const val APPROVAL_PROJECT_CANT_UPDATE = "2119041" // 审批下的下项目不能修改
-    const val UNDER_APPROVAL_PROJECT = "2119042" // 项目{0}审批中，请耐心等待，或联系审批人处理
-
     const val FAILED_CREATE_PROJECT_V0 = "2119035" // 调用权限中心V0创建项目失败
     const val PROJECT_ID_INVALID_V0 = "2119036" // 权限中心V0创建的项目ID无效
     const val ASSOCIATED_SYSTEM_NOT_BOUND = "2119037" // 关联系统未绑定
@@ -96,6 +91,11 @@ object ProjectMessageCode {
     const val FAILED_USER_INFORMATION = "2119043" // 获取用户{0} 信息失败
     const val BOUND_IAM_GRADIENT_ADMIN = "2119044" // 已绑定IAM分级管理员
     const val RELATED_RESOURCE_EMPTY = "2119045" // 权限系统：绑定系统资源为空
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2119046" // iam回调方法${0}不支持
+    const val PROJECT_UPDATE_FAIL = "2119047" // 修改项目错误
+    const val CANCEL_CREATION_PROJECT_FAIL = "2119048" // 取消创建中的项目失败
+    const val APPROVAL_PROJECT_CANT_UPDATE = "2119049" // 审批下的下项目不能修改
+    const val UNDER_APPROVAL_PROJECT = "2119050" // 项目{0}审批中，请耐心等待，或联系审批人处理
 
     const val BK_CONTAINER_SERVICE = "bkContainerService" // 容器服务
     const val BK_FAILED_BSC_CREATE_PROJECT = "bkFailedBscCreateProject" // 调用BSC接口创建项目失败

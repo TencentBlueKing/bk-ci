@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.constant.QualityMessageCode.NEED_USER_GROUP_X_PERMISSION
+import com.tencent.devops.quality.constant.QualityMessageCode.USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_QUALITY
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.pojo.Group
 import com.tencent.devops.quality.pojo.GroupCreate
@@ -134,7 +135,7 @@ class QualityNotifyGroupService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             authPermission = AuthPermission.CREATE,
-            message = "用户没有创建质量红线通知组权限"
+            message = I18nUtil.getCodeLanMessage(USER_DOES_NOT_HAVE_PERMISSION_TO_CREATE_QUALITY)
         )
         if (qualityNotifyGroupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
