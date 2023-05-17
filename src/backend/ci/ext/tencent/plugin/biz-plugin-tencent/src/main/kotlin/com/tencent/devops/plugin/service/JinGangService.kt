@@ -201,8 +201,9 @@ class JinGangService @Autowired constructor(
             else -> throw IllegalArgumentException("$fileName is not a app")
         }
 
-        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw IllegalArgumentException("no appVersion found")
-        val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]
+        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION]?.toString()
+            ?: throw IllegalArgumentException("no appVersion found")
+        val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString()
             ?: throw IllegalArgumentException("no bundleIdentifier found")
         val pipelineName = client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId))
             .data?.get(pipelineId) ?: throw IllegalArgumentException("no pipeline name found for $pipelineId")

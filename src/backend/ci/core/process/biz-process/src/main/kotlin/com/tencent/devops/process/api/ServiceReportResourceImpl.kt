@@ -35,8 +35,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceReportResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
-import com.tencent.devops.process.pojo.ReportListDTO
-import com.tencent.devops.process.pojo.TaskReport
+import com.tencent.devops.common.archive.pojo.ReportListDTO
+import com.tencent.devops.common.archive.pojo.TaskReport
 import com.tencent.devops.process.report.service.ReportService
 import org.springframework.beans.factory.annotation.Autowired
 

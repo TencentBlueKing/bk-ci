@@ -300,7 +300,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                 fullPath = it.fullPath,
                 size = it.size,
                 folder = it.folder,
-                properties = it.metadata?.map { m -> Property(m.key, m.value) },
+                properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
                 modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                 artifactoryType = parseArtifactoryType(it.repoName)
             )
@@ -506,6 +506,28 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         )
         val fileInfoList = data.records.map { it.toFileInfo() }
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)
+    }
+
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        val srcRepo = BkRepoUtils.getRepoName(srcArtifactoryType)
+        val dstRepo = BkRepoUtils.getRepoName(dstArtifactoryType)
+        bkRepoClient.copy(
+            userId = userId,
+            fromProject = srcProjectId,
+            fromRepo = srcRepo,
+            fromPath = srcFullPath,
+            toProject = dstProjectId,
+            toRepo = dstRepo,
+            toPath = dstFullPath
+        )
     }
 
     companion object {
