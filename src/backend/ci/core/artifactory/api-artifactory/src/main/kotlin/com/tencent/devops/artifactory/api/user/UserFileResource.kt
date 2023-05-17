@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.api.user
 
+import com.tencent.devops.artifactory.pojo.CopyFileRequest
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -120,4 +121,15 @@ interface UserFileResource {
         @Context
         response: HttpServletResponse
     )
+
+    @ApiOperation("复制文件")
+    @POST
+    @Path("/file/copy")
+    fun copy(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("复制文件请求体", required = true)
+        copyFileRequest: CopyFileRequest
+    ): Result<Boolean>
 }

@@ -622,6 +622,18 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         TODO("Not yet implemented")
     }
 
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        TODO("Not yet implemented")
+    }
+
     override fun getFileContent(
         userId: String,
         projectId: String,
