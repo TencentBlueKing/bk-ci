@@ -620,6 +620,18 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         TODO("Not yet implemented")
     }
 
+    override fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    ) {
+        TODO("Not yet implemented")
+    }
+
     companion object {
         private const val DEFAULT_PAGESIZE = 100
         private val logger = LoggerFactory.getLogger(DiskArchiveFileServiceImpl::class.java)

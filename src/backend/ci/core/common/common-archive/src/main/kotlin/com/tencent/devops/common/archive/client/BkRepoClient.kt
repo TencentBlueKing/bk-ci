@@ -34,6 +34,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -1059,6 +1060,32 @@ class BkRepoClient constructor(
         val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }.get().build()
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
+    }
+
+    fun listDir(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String?,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): QueryData {
+        if (path.isNullOrBlank() && name.isNullOrBlank()) {
+            throw IllegalArgumentException()
+        }
+        val projectRule = Rule.QueryRule("projectId", projectId)
+        val repoRule = Rule.QueryRule("repoName", repoName)
+        val folderRule = Rule.QueryRule("folder", true)
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, folderRule)
+        if (!path.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("path", PathUtils.normalizePath(path)))
+        }
+        if (!name.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("name", name, OperationType.MATCH))
+        }
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        return query(userId, projectId, rule, page, pageSize)
     }
 
     private fun query(
