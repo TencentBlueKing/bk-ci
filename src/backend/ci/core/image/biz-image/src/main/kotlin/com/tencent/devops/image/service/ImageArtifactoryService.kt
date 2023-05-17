@@ -144,11 +144,11 @@ class ImageArtifactoryService @Autowired constructor(
         handleImageList(devCloudProjectImages, imageList)
         return ImageListResp(imageList)
     }
-    fun getUrl(projectCode: String, repoName: String, searchKey: String?): String{
-        if (searchKey.isNullOrBlank()){
-            return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}"
+    fun getUrl(projectCode: String, repoName: String, searchKey: String?): String {
+        if (searchKey.isNullOrBlank()) {
+            return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName"
         }
-        return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
+        return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/$projectCode/$repoName?packageName=$searchKey"
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
         // 查询项目镜像列表
