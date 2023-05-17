@@ -16,8 +16,48 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+import _ from 'lodash'
 export const regionList = ['TC', 'SH', 'BJ', 'GZ', 'CD', 'GY', 'GROUP']
+
+export const TABLE_COLUMN_CACHE = 'codelib_list_columns'
+export const CODE_REPOSITORY_CACHE = 'codelib_repository_payload'
+
+/**
+ * @desc 列表列显示缓存
+*/
+export const listColumnsCache = {
+    key: 'list_column_display',
+    setItem (key, value) {
+        const lastValue = listColumnsCache.getItem() || {}
+        localStorage.setItem(listColumnsCache.key, JSON.stringify({
+            ...lastValue,
+            [key]: value
+        }))
+    },
+    getItem (key) {
+        try {
+            const allCache = JSON.parse(localStorage.getItem(listColumnsCache.key))
+            if (!_.isPlainObject(allCache)) {
+                return false
+            }
+            if (!key) {
+                return allCache
+            }
+            if (!allCache[key]) {
+                return false
+            }
+            if (!allCache[key].columns || !allCache[key].size) {
+                return false
+            }
+            return allCache[key]
+        } catch {
+            return false
+        }
+    },
+    clearItem () {
+        localStorage.removeItem(listColumnsCache.key)
+    }
+}
 
 export const codelibConfig = {
     svn: {
