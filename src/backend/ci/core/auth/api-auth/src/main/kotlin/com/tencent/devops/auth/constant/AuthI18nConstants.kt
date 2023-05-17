@@ -14,4 +14,13 @@ object AuthI18nConstants {
     const val BK_CANCELLED_AUTHORIZATION_SUCCEEDED = "bkCancelledAuthorizationSucceeded"
     // 取消授权成功, 缓存在5分钟后完全失效
     const val BK_FAILED_CALL_CALLBACK_API = "bkFailedCallCallbackApi" // 调用回调接口失败
+    const val BK_CREATE_BKCI_PROJECT_APPLICATION = "bkCreateBkciProjectApplication" // 创建蓝盾项目{0}申请
+    const val BK_REVISE_BKCI_PROJECT_APPLICATION = "bkReviseBkciProjectApplication" // 修改蓝盾项目{0}申请
+    const val BK_PROJECT_NAME = "bkProjectName" // 项目名称
+    const val BK_PROJECT_ID = "bkProjectId" // 项目ID
+    const val BK_PROJECT_DESC = "bkProjectDesc" // 项目描述
+    const val BK_ORGANIZATION = "bkOrganization" // 所属组织
+    const val BK_AUTH_SECRECY = "bkAuthSecrecy" // 项目性质
+    const val BK_SUBJECT_SCOPES = "bkSubjectScopes" // 最大可授权人员范围
+    const val BK_CREATE_PROJECT_APPROVAL = "bkCreateProjectApproval" // 创建项目{0}审批
 }

@@ -64,7 +64,6 @@ object EnvironmentMessageCode {
     const val ERROR_NODE_NO_EDIT_PERMISSSION = "2105015" // 环境管理：没有节点编辑权限
     const val ERROR_NODE_NO_VIEW_PERMISSSION = "2105016" // 环境管理：没有节点查看权限
     const val ERROR_NODE_NO_DEL_PERMISSSION = "2105017" // 环境管理：没有节点删除权限
-    const val ERROR_NODE_NO_USE_PERMISSSION = "2105039" // 环境管理：没有节点使用权限
     const val ERROR_NODE_AGENT_STATUS_EXCEPTION = "2105018" // 环境管理：构建机状态异常
     const val ERROR_NODE_AGENT_SECRET_KEY_INVALID = "2105019" // 环境管理：构建机密钥不对
     const val ERROR_ENV_EXPIRED_DAYS = "2105020" // 环境管理：有效期不能超过[{0}]天
@@ -92,6 +91,7 @@ object EnvironmentMessageCode {
     const val ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "2105042" // 无权限使用第三方构建机环境
     const val ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "2105043" // 第三方构建机环境节点不存在
     const val ERROR_PIPE_NOT_FOUND = "2105044" // 环境管理：不存在该管道信息
+    const val ERROR_NODE_NO_USE_PERMISSSION = "2105045" // 环境管理：没有节点使用权限
 
     const val BK_NORMAL_VERSION = "bkNormalVersion" // 8核16G（普通版）
     const val BK_INTEL_XEON_SKYLAKE_PROCESSOR = "bkIntelXeonSkylakeProcessor" // 2.5GHz 64核 Intel Xeon Skylake 6133处理器

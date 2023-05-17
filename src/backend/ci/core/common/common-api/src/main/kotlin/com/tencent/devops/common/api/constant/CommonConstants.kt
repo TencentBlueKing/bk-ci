@@ -118,6 +118,8 @@ const val EXECUTE_COUNT = "executeCount"
 const val LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE" // locale国际化语言信息
 const val DEFAULT_LOCALE_LANGUAGE = "zh_CN" // 默认语言信息
 const val REQUEST_CHANNEL = "BK_CI_REQUEST_CHANNEL" // 请求渠道
+const val BK_CREATE = "bkCreate" // 创建
+const val BK_REVISE = "bkRevise" // 修改
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
