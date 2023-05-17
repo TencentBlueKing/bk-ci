@@ -76,7 +76,7 @@ class TxQualityPermissionService @Autowired constructor(
                 permission = authPermission
             )) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                 defaultMessage = authPermission.alias
             )
             throw PermissionForbiddenException(
@@ -120,7 +120,7 @@ class TxQualityPermissionService @Autowired constructor(
                 authPermission = authPermission
             )) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                 defaultMessage = authPermission.alias
             )
             throw PermissionForbiddenException(
@@ -267,7 +267,7 @@ class TxQualityPermissionService @Autowired constructor(
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
                 val permissionMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                     defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
@@ -300,7 +300,7 @@ class TxQualityPermissionService @Autowired constructor(
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
                 val permissionMsg = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                     defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
