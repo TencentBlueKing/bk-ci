@@ -460,7 +460,7 @@ class PipelineBuildRecordService @Autowired constructor(
     ): Triple<Model, List<BuildStageStatus>, BuildRecordTimeCost?> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
 //        var allStageStatus: List<BuildStageStatus> = emptyList()
-        var timeCost: BuildRecordTimeCost?
+        var timeCost: BuildRecordTimeCost? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val recordModel = recordModelDao.getRecord(
