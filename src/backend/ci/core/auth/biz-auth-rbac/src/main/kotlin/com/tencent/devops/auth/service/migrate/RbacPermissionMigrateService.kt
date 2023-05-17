@@ -118,7 +118,7 @@ class RbacPermissionMigrateService constructor(
     override fun allV3ToRbacAuth(): Boolean {
         executorService.submit {
             var offset = 0
-            val limit = 100
+            val limit = 10
             do {
                 val dbV3Projects = client.get(ServiceProjectResource::class).getV0orV3Projects(
                     authType = AuthSystemType.V3_AUTH_TYPE,
@@ -156,7 +156,7 @@ class RbacPermissionMigrateService constructor(
     override fun allV0ToRbacAuth(): Boolean {
         executorService.submit {
             var offset = 0
-            val limit = 100
+            val limit = 10
             do {
                 val v0MigrateProjects = client.get(ServiceProjectResource::class).getV0orV3Projects(
                     authType = AuthSystemType.V0_AUTH_TYPE,
