@@ -77,7 +77,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        async: Boolean?
+        async: Boolean
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val iamResourceCode = authResourceCodeConverter.generateIamCode(
@@ -126,7 +126,7 @@ class RbacPermissionResourceService(
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
-            if (async!!) {
+            if (async) {
                 traceEventDispatcher.dispatch(
                     AuthResourceGroupCreateEvent(
                         managerId = managerId,
