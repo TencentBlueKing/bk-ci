@@ -163,25 +163,7 @@ class BuildEndControl @Autowired constructor(
 
         fixBuildInfo(buildInfo)
 
-        // 记录本流水线最后一次构建的状态
-        val endTime = LocalDateTime.now()
-        pipelineRuntimeService.finishLatestRunningBuild(
-            latestRunningBuild = LatestRunningBuild(
-                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
-                endTime = endTime, buildNum = buildInfo.buildNum
-            ),
-            currentBuildStatus = buildInfo.status,
-            errorInfoList = buildInfo.errorInfoList
-        )
-
-        // 更新buildNo
-        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
-        if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
-        }
-
-        // 设置状态
+        // 刷新详情页状态
         val (model, allStageStatus) = pipelineBuildRecordService.buildEnd(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -191,6 +173,25 @@ class BuildEndControl @Autowired constructor(
             errorMsg = errorMsg,
             executeCount = buildInfo.executeCount ?: 1
         )
+
+        // 记录本流水线最后一次构建的状态
+        val endTime = LocalDateTime.now()
+        pipelineRuntimeService.finishLatestRunningBuild(
+            latestRunningBuild = LatestRunningBuild(
+                projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                userId = buildInfo.startUser, status = buildStatus, taskCount = buildInfo.taskCount,
+                endTime = endTime, buildNum = buildInfo.buildNum
+            ),
+            currentBuildStatus = buildInfo.status,
+            errorInfoList = buildInfo.errorInfoList,
+            timeCost = model.timeCost
+        )
+
+        // 更新buildNo
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
+            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+        }
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
 
@@ -295,7 +296,8 @@ class BuildEndControl @Autowired constructor(
                         stageId = task.stageId,
                         containerId = task.containerId,
                         matrixFlag = VMUtils.isMatrixContainerId(task.containerId),
-                        taskId = task.taskId,
+                        // 启动插件问题设为job级别问题，将taskId置空，用于前端定位图至job
+                        taskId = task.taskId.let { if (it.startsWith(VMUtils.getStartVmLabel())) "" else it },
                         taskName = task.taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
                         errorType = task.errorType?.num ?: ErrorType.USER.num,
