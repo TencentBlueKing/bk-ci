@@ -61,7 +61,6 @@ class RbacPermissionResourceService(
     private val authResourceCodeConverter: AuthResourceCodeConverter,
     private val permissionService: PermissionService,
     private val permissionProjectService: PermissionProjectService,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
     private val traceEventDispatcher: TraceEventDispatcher,
     private val client: Client
 ) : PermissionResourceService {
@@ -141,16 +140,26 @@ class RbacPermissionResourceService(
                 )
             } else {
                 // 同步创建组，主要用于迁移数据；正常创建资源，走异步
-                permissionResourceGroupService.createDefaultResourceGroup(
-                    userId = userId,
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    resourceType = resourceType,
-                    managerId = managerId,
-                    resourceCode = resourceCode,
-                    resourceName = resourceName,
-                    iamResourceCode = iamResourceCode
-                )
+                if (resourceType == AuthResourceType.PROJECT.value) {
+                    permissionGradeManagerService.createGradeDefaultGroup(
+                        gradeManagerId = managerId,
+                        userId = userId,
+                        projectCode = projectCode,
+                        projectName = projectName
+                    )
+                } else {
+                    permissionSubsetManagerService.createSubsetManagerDefaultGroup(
+                        subsetManagerId = managerId,
+                        userId = userId,
+                        projectCode = projectCode,
+                        projectName = projectName,
+                        resourceType = resourceType,
+                        resourceCode = resourceCode,
+                        resourceName = resourceName,
+                        iamResourceCode = iamResourceCode,
+                        createMode = AuthGroupCreateMode.CREATE
+                    )
+                }
             }
         }
         return true

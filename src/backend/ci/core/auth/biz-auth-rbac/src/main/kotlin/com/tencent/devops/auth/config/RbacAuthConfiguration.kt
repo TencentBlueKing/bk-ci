@@ -63,7 +63,6 @@ import com.tencent.devops.auth.service.RbacPermissionResourceValidateService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.auth.service.migrate.MigrateIamApiService
@@ -129,7 +128,6 @@ class RbacAuthConfiguration {
         authResourceCodeConverter: AuthResourceCodeConverter,
         permissionService: PermissionService,
         permissionProjectService: PermissionProjectService,
-        permissionResourceGroupService: PermissionResourceGroupService,
         traceEventDispatcher: TraceEventDispatcher,
         client: Client
     ) = RbacPermissionResourceService(
@@ -139,7 +137,6 @@ class RbacAuthConfiguration {
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService,
         permissionProjectService = permissionProjectService,
-        permissionResourceGroupService = permissionResourceGroupService,
         traceEventDispatcher = traceEventDispatcher,
         client = client
     )
