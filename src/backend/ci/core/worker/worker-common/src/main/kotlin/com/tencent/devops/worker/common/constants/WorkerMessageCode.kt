@@ -156,7 +156,8 @@ object WorkerMessageCode {
     const val BK_FAILED_GET_PLUG = "bkFailedGetPlug" // 获取插件执行环境信息失败
     const val BK_FAILED_UPDATE_PLUG = "bkFailedUpdatePlug" // 更新插件执行环境信息失败
     const val BK_FAILED_SENSITIVE_INFORMATION = "bkFailedSensitiveInformation" // 获取插件敏感信息失败
-    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = "bkFailedEnvironmentVariableInformation" // 获取插件开发语言相关的环境变量信息失败
+    // 获取插件开发语言相关的环境变量信息失败
+    const val BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION = "bkFailedEnvironmentVariableInformation"
     const val BK_FAILED_ADD_INFORMATION = "bkFailedAddInformation" // 添加插件对接平台信息失败
     const val BK_ARCHIVE_PLUG_FILES = "bkArchivePlugFiles" // 归档插件文件
     const val BK_FAILED_IOS_CERTIFICATE = "bkFailedIosCertificate" // 获取IOS证书失败
