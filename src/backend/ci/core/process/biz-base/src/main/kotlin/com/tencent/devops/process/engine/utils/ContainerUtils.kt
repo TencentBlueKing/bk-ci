@@ -75,8 +75,6 @@ object ContainerUtils {
             "${getMutexPrefix()}$containerName"
         }
 
-    private const val QueuePrefix = "排队中(Queuing)"
-    private const val ReviewPrefix = "审核中(Pending)"
     private fun getQueuePrefix() = I18nUtil.getCodeLanMessage(BK_QUEUING)
     private fun getReviewPrefix() = I18nUtil.getCodeLanMessage(BK_PENDING)
 

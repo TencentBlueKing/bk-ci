@@ -73,7 +73,7 @@ class RbacPermissionMigrateService constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val ALL_MEMBERS = "*"
-        private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val ALL_MEMBERS_NAME = "allMembersName"
         private const val MAX_RETRY_TIMES = 3
         private const val IAM_NAME_CONFLICT_ERROR = 1902409L
         private val executorService = Executors.newFixedThreadPool(2)

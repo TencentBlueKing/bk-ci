@@ -48,10 +48,8 @@ import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorListResponse
 import com.tencent.devops.quality.api.v2.pojo.response.IndicatorStageGroup
-import com.tencent.devops.quality.constant.BK_CN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.constant.BK_CREATE_FAIL
 import com.tencent.devops.quality.constant.BK_CREATE_SUCCESS
-import com.tencent.devops.quality.constant.BK_EN_INDEX_ALREADY_EXISTS
 import com.tencent.devops.quality.constant.BK_METRIC_DATA_UPDATE_SUCCESS
 import com.tencent.devops.quality.constant.BK_TOOL_DESC_CCN
 import com.tencent.devops.quality.constant.BK_TOOL_DESC_DEFECT
@@ -82,6 +80,8 @@ import com.tencent.devops.quality.constant.BK_TOOL_NAME_STANDARD
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_STYLECOP
 import com.tencent.devops.quality.constant.BK_TOOL_NAME_WOODPECKER_SENSITIVE
 import com.tencent.devops.quality.constant.BK_UPDATE_FAIL
+import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_CHINESE_NAME_EXISTS
+import com.tencent.devops.quality.constant.QualityMessageCode.QUALITY_INDICATOR_ENGLISH_NAME_EXISTS
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
@@ -662,13 +662,13 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.SYSTEM) ?: return false
         if (indicators.any { it.enName == enName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
-                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             )
         )
         if (indicators.any { it.cnName == cnName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
-                messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                 params = arrayOf(cnName)
             )
         )
@@ -680,13 +680,13 @@ class QualityIndicatorService @Autowired constructor(
         val filterList = indicators.filter { it.id != id }
         if (filterList.any { it.enName == enName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
-                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             )
         )
         if (filterList.any { it.cnName == cnName }) throw OperationException(
             I18nUtil.getCodeLanMessage(
-                messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                 params = arrayOf(cnName)
             )
         )
@@ -699,13 +699,13 @@ class QualityIndicatorService @Autowired constructor(
             if (indicator.indicatorRange != projectId) return@forEach
             if (indicator.enName == enName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                    messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                     params = arrayOf(enName)
                 )
             )
             if (indicator.cnName == cnName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                    messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                     params = arrayOf(cnName)
                 )
             )
@@ -718,12 +718,12 @@ class QualityIndicatorService @Autowired constructor(
         indicators.forEach { indicator ->
             if (indicator.id == id || indicator.indicatorRange != projectId) return@forEach
             if (indicator.enName == enName) throw OperationException(I18nUtil.getCodeLanMessage(
-                messageCode = BK_EN_INDEX_ALREADY_EXISTS,
+                messageCode = QUALITY_INDICATOR_ENGLISH_NAME_EXISTS,
                 params = arrayOf(enName)
             ))
             if (indicator.cnName == cnName) throw OperationException(
                 I18nUtil.getCodeLanMessage(
-                    messageCode = BK_CN_INDEX_ALREADY_EXISTS,
+                    messageCode = QUALITY_INDICATOR_CHINESE_NAME_EXISTS,
                     params = arrayOf(cnName)
                 )
             )

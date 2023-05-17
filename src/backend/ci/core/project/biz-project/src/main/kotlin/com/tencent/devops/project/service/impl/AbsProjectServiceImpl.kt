@@ -171,7 +171,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
         val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
-            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         }
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
@@ -387,7 +387,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         val subjectScopes = projectUpdateInfo.subjectScopes!!.ifEmpty {
-            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = getAllMembersName()))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
         logger.info(
@@ -1141,12 +1141,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun updateProjectRouterTag(englishName: String)
 
+    private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
+
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
         private const val ALL_MEMBERS = "*"
-        private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val ALL_MEMBERS_NAME = "allMembersName"
         private const val FIRST_PAGE = 1
 
         // 项目tips默认展示时间
