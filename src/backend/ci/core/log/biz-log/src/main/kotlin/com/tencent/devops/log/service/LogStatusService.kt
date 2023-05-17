@@ -54,10 +54,11 @@ class LogStatusService @Autowired constructor(
         logStatusDao.finish(
             dslContext = dslContext,
             buildId = buildId,
-            tag = tag,
-            subTags = subTag,
-            jobId = jobId,
-            executeCount = executeCount,
+            // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+            tag = tag ?: "",
+            subTags = subTag ?: "",
+            jobId = jobId ?: "",
+            executeCount = executeCount ?: 1,
             logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
             finish = finish
         )
@@ -102,12 +103,13 @@ class LogStatusService @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?
-    ): Boolean {
-        return if (jobId.isNullOrBlank()) {
-            logStatusDao.isFinish(dslContext, buildId, tag, subTag, executeCount)
-        } else {
-            val logStatusList = logStatusDao.listFinish(dslContext, buildId, executeCount)
-            logStatusList?.firstOrNull { it.jobId == jobId && it.tag.startsWith("stopVM-") }?.finished == true
-        }
-    }
+    ) = logStatusDao.isFinish(
+        dslContext = dslContext,
+        buildId = buildId,
+        // #8804 将db中保存字段兜底为空字符串，方便唯一键冲突判断
+        jobId = jobId,
+        tag = tag ?: "",
+        subTags = subTag ?: "",
+        executeCount = executeCount ?: 1
+    )
 }
