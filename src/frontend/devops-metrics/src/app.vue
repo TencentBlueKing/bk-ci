@@ -8,18 +8,18 @@ import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import eventBus from '@/utils/bus.js'
 
 const route = useRoute();
 const router = useRouter();
 const projectId = computed(() => route.params.projectId)
-eventBus.on('changeProjectId', (payload) => {
+window.Bus.on('changeProjectId', (payload) => {
   if (projectId.value && projectId.value !== payload) {
+    console.log('newProjectId ===', payload, '   oldProjectId', projectId.value)
     router.replace({
-        name: route.name,
-        params: {
-          projectId: payload,
-        },
+      name: route.name,
+      params: {
+        projectId: payload,
+      },
     });
   }
 });
