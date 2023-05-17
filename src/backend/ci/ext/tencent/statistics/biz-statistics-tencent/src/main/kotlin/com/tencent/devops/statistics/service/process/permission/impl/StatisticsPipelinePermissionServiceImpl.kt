@@ -39,9 +39,9 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.statistics.constant.StatisticsMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.statistics.service.process.permission.StatisticsPipelinePermissionService
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 /**
  * Pipeline专用权限校验接口
@@ -114,7 +114,7 @@ class StatisticsPipelinePermissionServiceImpl @Autowired constructor(
             )
         ) {
             val permissionMsg = I18nUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.name}",
                 defaultMessage = permission.alias
             )
             throw ErrorCodeException(
