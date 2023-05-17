@@ -151,8 +151,6 @@ class ImageArtifactoryService @Autowired constructor(
         return "${bkRepoClientConfig.bkRepoIdcHost}/repository/api/package/page/${projectCode}/${repoName}?packageName=${searchKey}"
     }
     fun getProjectImages(projectCode: String, repoName: String, searchKey: String?): ImageListResp {
-        logger.info("username：${bkRepoClientConfig.bkRepoStaticUserName}, password : ${bkRepoClientConfig.bkRepoStaticPassword}")
-        logger.info("username：${dockerConfig.registryUsername}, password : ${dockerConfig.registryPassword}")
         // 查询项目镜像列表
         val projectImages = getImagesByUrl(projectCode, repoName, searchKey)
         val imageList = mutableListOf<ImageItem>()
@@ -396,26 +394,25 @@ class ImageArtifactoryService @Autowired constructor(
         }
     }
 
-fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
-    val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
-        .get()
-        .header("Authorization", credential)
-        .build()
-    OkhttpUtils.doHttp(request).use { response ->
-        try {
-            if (!response.isSuccessful) {
-                logger.error(response.message)
+    fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): List<DockerTag> {
+        val request = Request.Builder().url(getUrl(projectCode, repoName, searchKey))
+            .get()
+            .header("Authorization", credential)
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            try {
+                if (!response.isSuccessful) {
+                    logger.error(response.message)
+                    throw RuntimeException("Failed to get images")
+                }
+                val responseBody = response.body?.string()
+                return processingImages(responseBody)
+            } catch (e: Exception) {
+                logger.error(e.message)
                 throw RuntimeException("Failed to get images")
             }
-            val responseBody = response.body?.string()
-            logger.info("responseBody: $responseBody")
-            return processingImages(responseBody)
-        } catch (e: Exception) {
-            logger.error(e.message)
-            throw RuntimeException("Failed to get images")
         }
     }
-}
     private fun aqlSearchImage(aql: String): List<DockerTag> {
         val url = "${dockerConfig.registryUrl}/api/search/aql"
 
@@ -452,10 +449,8 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
 
     fun processingImages(dataStr: String?): List<DockerTag> {
         val responseData: Map<String, Any> = jacksonObjectMapper().readValue(dataStr.toString())
-        logger.info("responseData : $responseData")
         val results: Map<String, Any> = responseData["data"] as Map<String, Any>
         val records = results["records"] as List<Map<String, Any>>
-        logger.info("records: $records")
         val images = mutableListOf<DockerTag>()
         records.forEach {
             val dockerTag = DockerTag()
@@ -466,10 +461,7 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
             dockerTag.desc = it["description"] as String?
             dockerTag.repo = "${it["projectId"]}/${it["repoName"]}/${it["name"]}"
             dockerTag.tag = it["latest"] as String?
-
-            logger.info("{bkRepoClientConfig.bkRepoIdcHost} :$${bkRepoClientConfig.bkRepoIdcHost}")
             dockerTag.image = "${bkRepoClientConfig.bkRepoIdcHost}/${dockerTag.repo}:${dockerTag.tag}"
-            logger.info("image: ${dockerTag.image}")
             images.add(dockerTag)
         }
         return images
@@ -719,6 +711,4 @@ fun getImagesByUrl(projectCode: String, repoName: String, searchKey: String?): L
 
     private fun makeCredential(): String =
         Credentials.basic(dockerConfig.registryUsername!!, SecurityUtil.decrypt(dockerConfig.registryPassword!!))
-        //Credentials.basic("v_lidingli", "44200b0d8b3f3a10a99cb5c3ee31cea0")
-        //Credentials.basic(bkRepoClientConfig.bkRepoStaticUserName, bkRepoClientConfig.bkRepoStaticPassword)
 }
