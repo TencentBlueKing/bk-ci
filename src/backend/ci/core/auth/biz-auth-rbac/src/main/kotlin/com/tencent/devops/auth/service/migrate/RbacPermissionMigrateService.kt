@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
@@ -266,7 +267,7 @@ class RbacPermissionMigrateService constructor(
                         SubjectScopeInfo(
                             id = ALL_MEMBERS,
                             type = ALL_MEMBERS,
-                            name = ALL_MEMBERS_NAME
+                            name = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
                         )
                     )
                 )
