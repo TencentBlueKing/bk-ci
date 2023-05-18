@@ -100,6 +100,7 @@ class AuthExperienceService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${experienceTaskInfos.size.toLong()}")
@@ -186,6 +187,7 @@ class AuthExperienceService @Autowired constructor(
             val entity = InstanceInfoDTO()
             entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
+            entity.iamApprover = arrayListOf(it.createUser)
             entityInfo.add(entity)
         }
         logger.info("entityInfo $entityInfo, count ${experienceGroupInfos.size.toLong()}")
