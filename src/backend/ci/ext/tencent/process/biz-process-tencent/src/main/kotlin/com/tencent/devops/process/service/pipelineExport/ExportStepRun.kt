@@ -217,7 +217,6 @@ object ExportStepRun {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
-                    defaultMessage = "变量名[$key]来源不唯一，请修改变量名称或增加插件输出命名空间：$names",
                     params = arrayOf(key, names.toString())
                 )
             }

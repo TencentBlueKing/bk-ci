@@ -27,11 +27,16 @@
 
 package com.tencent.devops.common.auth.api.pojo
 
+import com.tencent.devops.common.api.util.MessageUtil
+
 /**
  * 项目角色组
  */
-enum class DefaultGroupType(val value: String, val displayName: String) {
-    MANAGER("manager", "CI管理员"), // 管理员
+enum class DefaultGroupType(
+    val value: String,
+    val displayName: String
+) {
+    MANAGER("manager", "CI管理员"), // CI管理员
     DEVELOPER("developer", "开发人员"), // 开发人员
     MAINTAINER("maintainer", "运维人员"), // 运维人员
     TESTER("tester", "测试人员"), // 测试人员
@@ -54,9 +59,9 @@ enum class DefaultGroupType(val value: String, val displayName: String) {
             return false
         }
 
-        fun containsDisplayName(displayName: String): Boolean {
+        fun containsDisplayName(displayName: String, language: String): Boolean {
             values().forEach {
-                if (displayName == it.displayName) return true
+                if (displayName == it.getDisplayName(language)) return true
             }
             return false
         }
@@ -70,6 +75,13 @@ enum class DefaultGroupType(val value: String, val displayName: String) {
             allGroup.add(QC)
             allGroup.add(TESTER)
             return allGroup
+        }
+
+        fun DefaultGroupType.getDisplayName(language: String): String {
+            return MessageUtil.getMessageByLocale(
+                messageCode = "DEFAULT_GROUP_TYPE_" + this.name,
+                language = language
+            )
         }
     }
 }

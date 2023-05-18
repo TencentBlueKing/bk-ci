@@ -1,0 +1,60 @@
+[ {
+  "id" : 2,
+  "name" : "日常构建",
+  "type" : "TEMPLATE",
+  "desc" : "用于控制日常构建的告警数",
+  "stage" : "开发",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:56:57",
+  "updateTime" : "2019-04-10T11:03:51",
+  "enable" : true
+}, {
+  "id" : 3,
+  "name" : "版本转测",
+  "type" : "TEMPLATE",
+  "desc" : "用于版本转测时的质量控制",
+  "stage" : "部署测试环境",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T10:58:12",
+  "updateTime" : "2019-04-10T11:03:52",
+  "enable" : true
+}, {
+  "id" : 4,
+  "name" : "发布上线",
+  "type" : "TEMPLATE",
+  "desc" : "用于发布版本时的质量控制",
+  "stage" : "部署正式环境",
+  "controlPoint" : "CodeCCCheckAtom",
+  "controlPointPosition" : "AFTER",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+}, {
+  "id" : 5,
+  "name" : "安全相关",
+  "type" : "INDICATOR_SET",
+  "desc" : "包含Coverity安全规则包和敏感信息告警",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:42:27",
+  "updateTime" : "2019-04-10T11:42:33",
+  "enable" : false
+}, {
+  "id" : 6,
+  "name" : "Java工具规范",
+  "type" : "INDICATOR_SET",
+  "desc" : "CheckStyle工具规范",
+  "createUser" : "admin",
+  "updateUser" : "admin",
+  "createTime" : "2019-04-10T11:01:34",
+  "updateTime" : "2019-04-10T11:43:06",
+  "enable" : true
+} ]

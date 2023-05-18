@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -107,7 +108,11 @@ class TxNotifyPipelineCmdImpl @Autowired constructor(
             buildUser = pipelineUserId!!
         }
 
-        val trigger = StartType.toReadableString(triggerType, channelCode)
+        val trigger = StartType.toReadableString(
+            type = triggerType,
+            channelCode = channelCode,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
 
         // TODO: 考虑是否有必要放在此处
 //        if (triggerType == StartType.PIPELINE.name) {

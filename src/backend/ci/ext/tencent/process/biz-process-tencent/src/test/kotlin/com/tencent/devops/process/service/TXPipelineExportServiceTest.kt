@@ -11,6 +11,9 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -27,8 +30,11 @@ import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
+import io.mockk.every
 import io.mockk.mockk
+import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -85,6 +91,25 @@ class TXPipelineExportServiceTest {
     )
 
     private val defaultContext = PipelineExportContext()
+
+    @BeforeEach
+    fun setup() {
+        val commonConfig: CommonConfig = mockk()
+        val redisOperation: RedisOperation = mockk()
+        every {
+            commonConfig.devopsDefaultLocaleLanguage
+        } returns "zh_CN"
+        every {
+            redisOperation.get(any())
+        } returns "zh_CN"
+        mockkObject(SpringContextUtil)
+        every {
+            SpringContextUtil.getBean(CommonConfig::class.java)
+        } returns commonConfig
+        every {
+            SpringContextUtil.getBean(RedisOperation::class.java)
+        } returns redisOperation
+    }
 
     @Test
     fun doParseModel() {

@@ -27,7 +27,9 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
@@ -41,6 +43,7 @@ data class AtomVersion(
     @ApiModelProperty("插件标识")
     val atomCode: String,
     @ApiModelProperty("插件名称")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("logo地址")
     val logoUrl: String?,
@@ -61,8 +64,10 @@ data class AtomVersion(
     @ApiModelProperty("操作系统")
     val os: List<String>?,
     @ApiModelProperty("插件简介")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("插件描述")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val description: String?,
     @ApiModelProperty("版本号")
     val version: String?,
@@ -71,12 +76,14 @@ data class AtomVersion(
     @ApiModelProperty("发布类型")
     val releaseType: String?,
     @ApiModelProperty("版本日志")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
     @ApiModelProperty("开发语言")
     val language: String?,
     @ApiModelProperty("代码库链接")
     val codeSrc: String?,
     @ApiModelProperty("发布者")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val publisher: String?,
     @ApiModelProperty("创建人")
     val creator: String,

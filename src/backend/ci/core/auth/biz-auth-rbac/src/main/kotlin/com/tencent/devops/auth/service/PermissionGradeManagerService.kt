@@ -46,6 +46,15 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_AUTH_SECRECY
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_BKCI_PROJECT_APPLICATION
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_CREATE_PROJECT_APPROVAL
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_ORGANIZATION
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_DESC
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_ID
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_PROJECT_NAME
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_REVISE_BKCI_PROJECT_APPLICATION
+import com.tencent.devops.auth.constant.AuthI18nConstants.BK_SUBJECT_SCOPES
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
@@ -65,6 +74,7 @@ import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
@@ -187,11 +197,23 @@ class PermissionGradeManagerService @Autowired constructor(
                 .syncPerm(true)
                 .groupName(manageGroupConfig.groupName)
                 .applicant(userId)
-                .reason(IamGroupUtils.buildItsmDefaultReason(projectName, userId, true))
+                .reason(
+                    IamGroupUtils.buildItsmDefaultReason(
+                        projectName = projectName,
+                        userId = userId,
+                        isCreate = true,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
                 .callbackId(callbackId)
                 .callbackUrl(itsmCreateCallBackUrl)
                 .content(itsmContentDTO)
-                .title("创建蓝盾项目${projectName}申请")
+                .title(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CREATE_BKCI_PROJECT_APPLICATION,
+                        params = arrayOf(projectName)
+                    )
+                )
                 .build()
             logger.info("create grade manager application|$projectCode|$name|$callbackId|$itsmCreateCallBackUrl")
             val createGradeManagerApplication =
@@ -291,12 +313,22 @@ class PermissionGradeManagerService @Autowired constructor(
                 .applicant(projectApprovalInfo.updator)
                 .members(gradeManagerDetail.members)
                 .reason(
-                    IamGroupUtils.buildItsmDefaultReason(projectCode, projectApprovalInfo.updator!!, false)
+                    IamGroupUtils.buildItsmDefaultReason(
+                        projectName = projectCode,
+                        userId = projectApprovalInfo.updator!!,
+                        isCreate = false,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
                 .callbackId(callbackId)
                 .callbackUrl(itsmUpdateCallBackUrl)
                 .content(itsmContentDTO)
-                .title("修改蓝盾项目${projectName}申请")
+                .title(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_REVISE_BKCI_PROJECT_APPLICATION,
+                        params = arrayOf(projectName)
+                    )
+                )
                 .build()
             logger.info("update grade manager application|$projectCode|$name|$callbackId|$itsmUpdateCallBackUrl")
             val updateGradeManagerApplication =
@@ -574,12 +606,16 @@ class PermissionGradeManagerService @Autowired constructor(
         subjectScopes: List<SubjectScopeInfo>
     ): ItsmContentDTO {
         val itsmColumns = listOf(
-            ItsmColumn.builder().key("projectName").name("项目名称").type("text").build(),
-            ItsmColumn.builder().key("projectId").name("项目ID").type("text").build(),
-            ItsmColumn.builder().key("desc").name("项目描述").type("text").build(),
-            ItsmColumn.builder().key("organization").name("所属组织").type("text").build(),
-            ItsmColumn.builder().key("authSecrecy").name("项目性质").type("text").build(),
-            ItsmColumn.builder().key("subjectScopes").name("最大可授权人员范围").type("text").build()
+            ItsmColumn.builder().key("projectName")
+                .name(I18nUtil.getCodeLanMessage(BK_PROJECT_NAME)).type("text").build(),
+            ItsmColumn.builder().key("projectId").name(I18nUtil.getCodeLanMessage(BK_PROJECT_ID)).type("text").build(),
+            ItsmColumn.builder().key("desc").name(I18nUtil.getCodeLanMessage(BK_PROJECT_DESC)).type("text").build(),
+            ItsmColumn.builder().key("organization")
+                .name(I18nUtil.getCodeLanMessage(BK_ORGANIZATION)).type("text").build(),
+            ItsmColumn.builder().key("authSecrecy")
+                .name(I18nUtil.getCodeLanMessage(BK_AUTH_SECRECY)).type("text").build(),
+            ItsmColumn.builder().key("subjectScopes")
+                .name(I18nUtil.getCodeLanMessage(BK_SUBJECT_SCOPES)).type("text").build()
         )
         val itsmAttrs = ItsmAttrs.builder().column(itsmColumns).build()
         val itsmScheme = ItsmScheme.builder().attrs(itsmAttrs).type("table").build()
@@ -595,7 +631,9 @@ class PermissionGradeManagerService @Autowired constructor(
         value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
         val itsmValue = ItsmValue.builder()
             .scheme("content_table")
-            .lable("创建项目${projectName}审批")
+            .lable(
+                I18nUtil.getCodeLanMessage(BK_CREATE_PROJECT_APPROVAL)
+            )
             .value(listOf(value))
             .build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()

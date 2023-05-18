@@ -108,7 +108,7 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomById(atomId, userId)
     }
 
-    override fun getAtomByCode(userId: String, bk_ticket: String, atomCode: String): Result<AtomVersion?> {
+    override fun getAtomByCode(userId: String, atomCode: String): Result<AtomVersion?> {
         return marketAtomService.getAtomByCode(userId, atomCode)
     }
 

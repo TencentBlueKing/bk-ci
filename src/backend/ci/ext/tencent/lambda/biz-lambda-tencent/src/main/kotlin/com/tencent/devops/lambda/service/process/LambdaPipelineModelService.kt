@@ -33,19 +33,21 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.process.LambdaPipelineInfoDao
 import com.tencent.devops.lambda.dao.process.LambdaPipelineModelDao
 import com.tencent.devops.lambda.pojo.DataPlatPipelineInfo
 import com.tencent.devops.lambda.pojo.DataPlatPipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.ForkJoinPool
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.ForkJoinPool
 
 @Service
 class LambdaPipelineModelService @Autowired constructor(
@@ -155,7 +157,11 @@ class LambdaPipelineModelService @Autowired constructor(
 
     private fun checkParamBlank(param: String?, message: String): String {
         if (param.isNullOrBlank()) {
-            throw ParamBlankException("启动配置缺少 $message")
+            throw ParamBlankException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = STARTUP_CONFIGURATION_MISSING,
+                params = arrayOf(message)
+            ))
         }
         return param
     }
