@@ -10,13 +10,10 @@ import {
   sharedProps,
 } from '../common/props-type';
 
-import {
-  useRouter,
-} from 'vue-router';
 import useFilter from '@/composables/use-filter';
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
-const router = useRouter()
+
 
 const emit = defineEmits(['change']);
 

@@ -10,13 +10,9 @@ import {
 } from 'vue';
 import http from '@/http/api';
 
-import {
-  useRoute,
-} from 'vue-router';
 import { useI18n } from "vue-i18n";
 const { t } = useI18n();
 
-const route = useRoute();
 const status = ref({
   pipelineIds: <any[]>[route.query.pipelineId].filter(v => v),
   pipelineLabelIds: [],

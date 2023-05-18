@@ -23,7 +23,6 @@ interface IShowTime {
   m?: number,
   s: number
 }
-
 const { t } = useI18n();
 
 const emit = defineEmits(['change']);

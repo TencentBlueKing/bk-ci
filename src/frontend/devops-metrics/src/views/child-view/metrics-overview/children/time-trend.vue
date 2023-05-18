@@ -10,6 +10,7 @@ import {
 } from '../common/props-type';
 import http from '@/http/api';
 import { useI18n } from "vue-i18n";
+
 const { t } = useI18n();
 const props = defineProps(sharedProps);
 const isLoading = ref(false);

@@ -1,9 +1,22 @@
 <script setup lang="ts">
 import {
+  computed,
   onMounted,
   onUnmounted,
 } from 'vue';
+import {
+  useRoute,
+  useRouter,
+} from 'vue-router';
 
+const route = useRoute();
+const router = useRouter();
+const projectId = computed(() => route.params.projectId)
+window.Bus.on('changeProjectId', (payload) => {
+  if (projectId.value && projectId.value !== payload) {
+    window.parent.location.reload();
+  }
+});
 // 设置 rem
 const calcRem = () => {
   const doc = window.document;
