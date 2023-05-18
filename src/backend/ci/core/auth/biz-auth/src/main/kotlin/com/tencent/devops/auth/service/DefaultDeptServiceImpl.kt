@@ -71,6 +71,6 @@ class DefaultDeptServiceImpl : DeptService {
         UserAndDeptInfoVo(
             id = 0,
             name = name,
-            type = ManagerScopesEnum.USER,
+            type = ManagerScopesEnum.USER
         )
 }
