@@ -82,7 +82,7 @@
                 </div>
             </div>
 
-            <div class="devops-news">
+            <div class="devops-news" v-if="news.length > 0">
                 <header>
                     <p class="title">
                         {{ $t("latestNews") }}
@@ -128,7 +128,7 @@
                     {{ $t("bkdevopsWay") }}
                 </p>
             </article>
-            <article>
+            <article v-if="related.length > 0">
                 <h2>{{ $t("relatedLink") }}</h2>
                 <div>
                     <a
@@ -150,12 +150,13 @@
     import Vue from 'vue'
     import { Component } from 'vue-property-decorator'
     import { Action, State } from 'vuex-class'
-    import { Accordion, AccordionItem } from '../components/Accordion'
+    
     import ConsultTools from '../components/ConsultTools/index.vue'
-    import Logo from '../components/Logo/index.vue'
-    import NavBox from '../components/NavBox/index.vue'
     
     import { isAbsoluteUrl, urlJoin } from '@/utils/util'
+    import { Accordion, AccordionItem } from '../components/Accordion/index'
+    import Logo from '../components/Logo/index.vue'
+    import NavBox from '../components/NavBox/index.vue'
 
     @Component({
         components: {

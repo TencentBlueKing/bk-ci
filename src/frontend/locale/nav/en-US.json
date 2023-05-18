@@ -1,4 +1,4 @@
-{   
+{
     "serviceManage": "serviceExtendManage",
     "okLabel": "Confirm",
     "cancelLabel": "Cancel",
@@ -10,7 +10,7 @@
     "switchProject": "Switch project",
     "applyAuth": "Apply for access",
     "sumService": "{serviceCount}  services in total",
-    "slogan": "One-stop RD solution",
+    "slogan": "One-stop CI/CD solution",
     "issueLabel": "Story",
     "developLabel": "Develop",
     "testLabel": "Test",
@@ -22,8 +22,7 @@
     "latestNews": "Latest news",
     "latest": "Latest",
     "bkdevopsTitle": "BlueKing CI",
-    "bkdevopsTarget": "Accelerate your delivery through pipeline",
-    "bkdevopsDesc": "a free & open source CI server, bk-ci(BlueKing Continuous Integration) helps you automate your build-test-release workflows, continuous delivery of your product faster, easier, with fewer bugs.",
+    "bkdevopsDesc": "BK-CI（BlueKing Continuous Integration） is a free and open source CI service. The visual UI orchestration pipeline can help you easily automate the build-test-release workflow and deliver your products continuously, quickly and with few bugs.",
     "bkdevopsWay": "Continous delivery stresses faster and more reliable automation software delivery with low costs，pipeline provides visualization, one-click delopyment service, continous seamless integration and support parallel deployment",
     "maintaining": "Maintaining，please wait",
     "NetworkError": "Network error",
@@ -68,10 +67,9 @@
         "pipelineStepDesc": "We have provided various pipeline packages based on different code library projects，now SVN, Git library and blue whale Gitlab library of Code platform are supported",
         "previewPipeline": "Preview pipeline",
         "previewTips": "We recommend the following pipeline for continous delivery based on the code library you selected",
-        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",            
+        "completeTips": "You have created a delivery pipeline successfully uder [{projectName}]",
         "codelib": "Code library：",
         "getStarted": "Get the pipeline started"
-                
     },
     "accessGuide": "User guide",
     "configProject": "Configure project",
@@ -178,5 +176,32 @@
     "communityForum": "Forum",
     "ProductOfficialWebsite": "Official ",
     "enableDisableProject": "Enable/Disable Project",
-    "createProject": "Create"
+    "createProject": "Create",
+    "codelib": "Repo",
+    "pipeline": "Pipeline",
+    "ticket": "Ticket",
+    "cert": "Cert",
+    "env": "Env",
+    "node": "Node",
+    "quality": "Gate",
+    "rules": "Rules",
+    "experience": "Experience",
+    "experience_group": "Experience Group",
+    "notify_group": "Notify Group",
+    "artifactory": "Artifactory",
+    "actions": {
+        "create": "Create",
+        "deploy": "Deploy",
+        "download": "Download",
+        "edit": "Edit",
+        "delete": "Delete",
+        "view": "View",
+        "move": "Move",
+        "use": "Use",
+        "share": "Share",
+        "list": "List",
+        "execute": "Execute",
+        "enable/disable": "Enable/Disable",
+        "manage": "Manage"
+    }
 }
