@@ -238,27 +238,25 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     val projectInfo = client.get(ServiceProjectResource::class).get(
                         englishName = projectId
                     ).data
-                    val messageTemplateRequest = SendNotifyMessageTemplateRequest(
-                        templateCode =
-                        PipelineNotifyTemplateEnum.PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE.templateCode,
-                        receivers = mutableSetOf(creator),
-                        notifyType = mutableSetOf(NotifyType.RTX.name),
-                        titleParams = mapOf(),
-                        bodyParams = mapOf(
-                            "projectName" to (projectInfo?.projectName ?: ""),
-                            "events" to events,
-                            "callbackUrl" to callbackUrl,
-                            "pipelineListUrl" to projectPipelineListUrl(
-                                projectId = projectId
-                            )
-                        ),
-                        cc = null,
-                        bcc = null
-                    )
-                    logger.info("send disable notify message|request=$messageTemplateRequest")
                     // 禁用通知
                     client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(
-                        messageTemplateRequest
+                        SendNotifyMessageTemplateRequest(
+                            templateCode =
+                            PipelineNotifyTemplateEnum.PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE.templateCode,
+                            receivers = mutableSetOf(creator),
+                            notifyType = mutableSetOf(NotifyType.RTX.name),
+                            titleParams = mapOf(),
+                            bodyParams = mapOf(
+                                "projectName" to (projectInfo?.projectName ?: ""),
+                                "events" to events,
+                                "callbackUrl" to callbackUrl,
+                                "pipelineListUrl" to projectPipelineListUrl(
+                                    projectId = projectId
+                                )
+                            ),
+                            cc = null,
+                            bcc = null
+                        )
                     )
                 }
             }
