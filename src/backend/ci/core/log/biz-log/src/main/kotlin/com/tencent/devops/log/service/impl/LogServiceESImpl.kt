@@ -83,7 +83,6 @@ import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 import kotlin.math.ceil
 
-
 @Suppress(
     "LongParameterList",
     "LargeClass",
