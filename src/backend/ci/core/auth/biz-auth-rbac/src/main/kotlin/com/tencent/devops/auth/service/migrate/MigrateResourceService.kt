@@ -39,7 +39,6 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
@@ -52,12 +51,12 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 /**
  * 将资源迁移到权限中心
@@ -72,7 +71,6 @@ class MigrateResourceService @Autowired constructor(
     private val tokenApi: AuthTokenApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
-    private val authResourceGroupDao: AuthResourceGroupDao,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
@@ -135,6 +133,9 @@ class MigrateResourceService @Autowired constructor(
                 projectCode = projectCode,
                 iamApprover = iamApprover
             )
+        } catch (ignore: Exception) {
+            logger.error("Failed to migrate resource|$projectCode|$resourceType", ignore)
+            throw ignore
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource|$projectCode|$resourceType"
@@ -204,7 +205,7 @@ class MigrateResourceService @Autowired constructor(
                 }
             }
             offset += limit
-        } while (resourceData!!.data.count == limit)
+        } while (resourceData!!.data.result.size.toLong() == limit)
     }
 
     private fun listInstance(
