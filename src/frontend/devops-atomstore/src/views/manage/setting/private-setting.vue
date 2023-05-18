@@ -29,7 +29,7 @@
                         <bk-input v-model="privateObj.fieldName" :placeholder="$t('store.请输入字段名称，不超过30个字符')" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.字段值')" :rules="[requireRule($t('store.字段值'))]" :required="true" property="fieldValue" error-display-type="normal">
-                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" :maxlength="256" @focus="handlePrivateFocus" :placeholder="$t('store.请输入字段值')" @change="handleChangeForm"></bk-input>
+                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldValue" @focus="handlePrivateFocus" :placeholder="$t('store.请输入字段值')" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.适用范围')" property="fieldType" :desc="$t('store.适用范围选择为“全部”或“前端”时，字段值将明文返回给插件前端，请谨慎设置')" :desc-type="'icon'">
                         <bk-radio-group v-model="privateObj.fieldType" @change="handleChangeForm" class="radio-group">
@@ -37,7 +37,7 @@
                         </bk-radio-group>
                     </bk-form-item>
                     <bk-form-item :label="$t('store.描述')" property="fieldDesc">
-                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc" :placeholder="$t('store.请输入描述')" @change="handleChangeForm"></bk-input>
+                        <bk-input type="textarea" :rows="3" v-model="privateObj.fieldDesc" :maxlength="256" :placeholder="$t('store.请输入描述')" @change="handleChangeForm"></bk-input>
                     </bk-form-item>
                     <bk-form-item>
                         <bk-button theme="primary" @click="savePrivate" :loading="isSaving">{{ $t('store.保存') }}</bk-button>

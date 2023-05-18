@@ -870,7 +870,10 @@
                         
                         this.routerAtoms(this.createAtomForm.atomCode)
                         this.requestList()
-                        
+                    } catch (err) {
+                        message = err.message ? err.message : err
+                        theme = 'error'
+                    } finally {
                         this.createAtomForm = {
                             projectCode: '',
                             atomCode: '',
@@ -881,10 +884,6 @@
                         setTimeout(() => {
                             this.createAtomsideConfig.show = false
                         })
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
-                    } finally {
                         this.$bkMessage({
                             message,
                             theme

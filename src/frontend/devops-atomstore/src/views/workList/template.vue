@@ -589,3 +589,10 @@
         }
     }
 </script>
+<style lang="scss">
+    .bk-icon-tooltips {
+        padding-top: 3px;
+        padding-left: 10px;
+    }
+    
+</style>
