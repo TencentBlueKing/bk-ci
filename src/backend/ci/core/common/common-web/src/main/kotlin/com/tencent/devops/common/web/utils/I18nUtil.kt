@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.web.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -185,5 +187,28 @@ object I18nUtil {
         )
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)
+    }
+
+    /**
+     * 获取模块标识
+     * @param attributes 属性列表
+     * @return 模块标识
+     */
+    fun getModuleCode(attributes: ServletRequestAttributes?): String {
+        val moduleCode = if (null != attributes) {
+            val request = attributes.request
+            // 从请求头中获取服务名称
+            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
+            try {
+                serviceName.uppercase()
+            } catch (ignored: Throwable) {
+                logger.warn("serviceName[${serviceName.uppercase()}] is invalid", ignored)
+                SystemModuleEnum.COMMON.name
+            }
+        } else {
+            // 默认从公共模块获取国际化信息
+            SystemModuleEnum.COMMON.name
+        }
+        return moduleCode
     }
 }

@@ -216,7 +216,11 @@ open class GitApi {
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)
         try {
-            callMethod(getMessageByLocale(CommonMessageCode.OPERATION_ADD_COMMIT_CHECK), request, GitCommitCheck::class.java)
+            callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_COMMIT_CHECK),
+                request = request,
+                classOfT = GitCommitCheck::class.java
+            )
         } catch (t: GitApiException) {
             if (t.code == 403) {
                 throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.COMMIT_CHECK_ADD_FAIL))
@@ -235,7 +239,11 @@ open class GitApi {
         logger.info("add mr comment for project($projectName): url($url), $params")
         val request = post(host, token, url, body)
         try {
-            callMethod(getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR_COMMENT), request, GitMRComment::class.java)
+            callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_ADD_MR_COMMENT),
+                request = request,
+                classOfT = GitMRComment::class.java
+            )
         } catch (t: GitApiException) {
             if (t.code == 403) {
                 throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.ADD_MR_COMMENTS_FAIL))
@@ -319,7 +327,11 @@ open class GitApi {
         val body = webhookBody(hookUrl, event, secret)
         val request = put(host, token, "projects/${urlEncode(projectName)}/hooks/$hookId", body)
         try {
-            return callMethod(getMessageByLocale(CommonMessageCode.OPERATION_UPDATE_WEBHOOK), request, GitHook::class.java)
+            return callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_UPDATE_WEBHOOK),
+                request = request,
+                classOfT = GitHook::class.java
+            )
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
                 throw GitApiException(t.code, getMessageByLocale(CommonMessageCode.WEBHOOK_UPDATE_FAIL))
@@ -440,7 +452,10 @@ open class GitApi {
             HTTP_400 -> getMessageByLocale(CommonMessageCode.PARAM_ERROR)
             HTTP_401 -> getMessageByLocale(CommonMessageCode.AUTH_FAIL, arrayOf("Git token"))
             HTTP_403 -> getMessageByLocale(CommonMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
-            HTTP_404 -> getMessageByLocale(CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GIT", operation))
+            HTTP_404 -> getMessageByLocale(
+                CommonMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION,
+                arrayOf("GIT", operation)
+            )
             HTTP_405 -> getMessageByLocale(CommonMessageCode.GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
             HTTP_422 -> getMessageByLocale(CommonMessageCode.GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
             else -> "Git platform $operation fail"
@@ -487,7 +502,11 @@ open class GitApi {
         logger.info("unlock hook lock for project($projectName): url($url)")
         val request = put(host, token, url, "")
         try {
-            val result = callMethod(getMessageByLocale(CommonMessageCode.OPERATION_UNLOCK_HOOK_LOCK), request, String::class.java)
+            val result = callMethod(
+                operation = getMessageByLocale(CommonMessageCode.OPERATION_UNLOCK_HOOK_LOCK),
+                request = request,
+                classOfT = String::class.java
+            )
             // 工蜂解锁可能会失败,增加重试
             if (result == "false" && retryTimes > 0) {
                 Thread.sleep(500)

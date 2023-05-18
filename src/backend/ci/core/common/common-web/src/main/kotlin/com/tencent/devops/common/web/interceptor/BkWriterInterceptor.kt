@@ -88,9 +88,8 @@ class BkWriterInterceptor : WriterInterceptor {
                     keyPrefixMap = keyPrefixMap
                 )
             }
-            val fixKeyTailPrefixName = bkInterfaceI18nAnnotation.fixKeyTailPrefixName
-            if (fixKeyTailPrefixName.isNotBlank()) {
-                i18nKeySb.append("$fixKeyTailPrefixName.")
+            if (bkInterfaceI18nAnnotation.fixKeyTailPrefixName.isNotBlank()) {
+                i18nKeySb.append("${bkInterfaceI18nAnnotation.fixKeyTailPrefixName}.")
             }
             i18nKeySb.append(fieldKey)
             val i18nKey = i18nKeySb.toString()
@@ -102,13 +101,21 @@ class BkWriterInterceptor : WriterInterceptor {
             }
         }
         // 5、为字段设置国际化信息
+        setI18nFieldValue(dbI18nKeyMap, bkI18nFieldMap, propertyI18nKeyMap)
+        context.proceed()
+    }
+
+    private fun setI18nFieldValue(
+        dbI18nKeyMap: MutableMap<String, String>,
+        bkI18nFieldMap: MutableMap<String, I18nFieldInfo>,
+        propertyI18nKeyMap: MutableMap<String, String>
+    ) {
         if (dbI18nKeyMap.isNotEmpty()) {
             setDbI18nFieldValue(dbI18nKeyMap, bkI18nFieldMap)
         }
         if (propertyI18nKeyMap.isNotEmpty()) {
             setPropertyI18nFieldValue(propertyI18nKeyMap, bkI18nFieldMap)
         }
-        context.proceed()
     }
 
     /**
@@ -221,7 +228,7 @@ class BkWriterInterceptor : WriterInterceptor {
     ) {
         val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
         // 获取模块标识
-        val moduleCode = getModuleCode(attributes)
+        val moduleCode = I18nUtil.getModuleCode(attributes)
         // 获取用户ID
         val userId = I18nUtil.getRequestUserId()
         // 根据用户ID获取语言信息
@@ -287,28 +294,6 @@ class BkWriterInterceptor : WriterInterceptor {
         }
     }
 
-    /**
-     * 获取模块标识
-     * @param attributes 属性列表
-     * @return 模块标识
-     */
-    private fun getModuleCode(attributes: ServletRequestAttributes?): String {
-        val moduleCode = if (null != attributes) {
-            val request = attributes.request
-            // 从请求头中获取服务名称
-            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
-            try {
-                serviceName.uppercase()
-            } catch (ignored: Throwable) {
-                logger.warn("serviceName[${serviceName.uppercase()}] is invalid", ignored)
-                SystemModuleEnum.COMMON.name
-            }
-        } else {
-            // 默认从公共模块获取国际化信息
-            SystemModuleEnum.COMMON.name
-        }
-        return moduleCode
-    }
 
     /**
      * 获取前缀名称对应的值
