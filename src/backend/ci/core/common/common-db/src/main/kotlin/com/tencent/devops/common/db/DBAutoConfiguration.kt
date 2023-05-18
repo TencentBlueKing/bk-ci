@@ -66,6 +66,12 @@ class DBAutoConfiguration {
     private val datasourceInitSql: String? = null
     @Value("\${spring.datasource.leakDetectionThreshold:#{0}}")
     private val datasouceLeakDetectionThreshold: Long = 0
+    @Value("\${spring.datasource.minimumIdle:#{1}}")
+    private val datasourceMinimumIdle: Int = 1
+    @Value("\${spring.datasource.maximumPoolSize:#{50}}")
+    private val datasourceMaximumPoolSize: Int = 50
+    @Value("\${spring.datasource.idleTimeout:#{60000}}")
+    private val datasourceIdleTimeout: Long = 60000
 
     @Bean
     @Primary
@@ -79,9 +85,9 @@ class DBAutoConfiguration {
             username = datasourceUsername
             password = datasourcePassword
             driverClassName = Driver::class.java.name
-            minimumIdle = 10
-            maximumPoolSize = 50
-            idleTimeout = 60000
+            minimumIdle = datasourceMinimumIdle
+            maximumPoolSize = datasourceMaximumPoolSize
+            idleTimeout = datasourceIdleTimeout
             connectionInitSql = datasourceInitSql
             leakDetectionThreshold = datasouceLeakDetectionThreshold
         }

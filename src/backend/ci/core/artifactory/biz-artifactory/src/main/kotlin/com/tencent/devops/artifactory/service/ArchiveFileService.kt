@@ -239,4 +239,17 @@ interface ArchiveFileService {
         pageSize: Int?,
         modifiedTimeDesc: Boolean?
     ): Page<FileInfo>
+
+    /**
+     * 复制文件
+     */
+    fun copyFile(
+        userId: String,
+        srcProjectId: String,
+        srcArtifactoryType: ArtifactoryType,
+        srcFullPath: String,
+        dstProjectId: String,
+        dstArtifactoryType: ArtifactoryType,
+        dstFullPath: String
+    )
 }

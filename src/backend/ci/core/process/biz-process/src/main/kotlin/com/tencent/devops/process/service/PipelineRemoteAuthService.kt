@@ -144,6 +144,7 @@ class PipelineRemoteAuthService @Autowired constructor(
             }
             BuildId(
                 id = buildId.id,
+                executeCount = 1,
                 pipelineId = pipeline.pipelineId,
                 projectId = pipeline.projectId
             )

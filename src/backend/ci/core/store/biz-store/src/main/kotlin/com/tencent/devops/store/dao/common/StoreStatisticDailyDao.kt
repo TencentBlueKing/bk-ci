@@ -29,7 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.common.db.utils.JooqUtils.sum
 import com.tencent.devops.model.store.tables.TStoreStatisticsDaily
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.store.pojo.common.BK_SUM_DAILY_FAIL_NUM

@@ -86,7 +86,7 @@ class RuntimeDictionaryContextData(private val runtimeNamedValue: RuntimeNamedVa
     private val indexLookup: MutableMap<String, Int>
         get() {
             if (mIndexLookup == null) {
-                mIndexLookup = TreeMap<String, Int>(String.CASE_INSENSITIVE_ORDER)
+                mIndexLookup = TreeMap<String, Int>()
                 if (mList.isNotEmpty()) {
                     mList.forEachIndexed { index, pair ->
                         mIndexLookup!![pair.key] = index

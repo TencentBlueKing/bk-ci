@@ -140,6 +140,8 @@ object ProcessMessageCode {
     const val ERROR_JOB_TIME_OUT_PARAM_VAR = "2101084" // Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)
     const val ERROR_TASK_TIME_OUT_PARAM_VAR = "2101085" // Job[{0}]的Task[{1}]的超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
     const val ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR = "2101086" // Job[{0}]的互斥组[{1}]超时配置的流水线变量[{2}]值[{3}]超出合理范围[{4}](分钟)
+    const val BUILD_QUEUE_FOR_CONCURRENCY = "2101087" // 排队中: 当前构建正在并发组({0})排队中
+    const val BUILD_QUEUE_FOR_SINGLE = "2101088" // 排队中: 当前构建正在排队中
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败

@@ -31,9 +31,13 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-auth:common-auth-api"))
     api(project(":core:common:common-db"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
+
     api(project(":core:process:api-process"))
     api(project(":core:ticket:api-ticket"))
     api(project(":core:auth:api-auth"))
     api(project(":core:ticket:model-ticket"))
+    api(project(":core:project:api-project"))
+
     api("org.dom4j:dom4j")
 }

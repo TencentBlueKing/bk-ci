@@ -51,7 +51,7 @@ data class BuildRecordModel(
     @ApiModelProperty("执行变量", required = true)
     val modelVar: MutableMap<String, Any>,
     @ApiModelProperty("触发时间", required = false)
-    val queueTime: Long,
+    val queueTime: LocalDateTime,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)

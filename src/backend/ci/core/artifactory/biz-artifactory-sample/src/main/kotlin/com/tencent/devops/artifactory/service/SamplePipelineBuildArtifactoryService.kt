@@ -87,7 +87,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             fullPath = it.fullPath,
             size = it.size,
             folder = it.folder,
-            properties = it.metadata?.map { m -> Property(m.key, m.value) },
+            properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
             modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
             artifactoryType = BkRepoUtils.parseArtifactoryType(it.repoName)
         ) }

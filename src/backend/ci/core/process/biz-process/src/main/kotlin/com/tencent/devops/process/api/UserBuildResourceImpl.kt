@@ -105,7 +105,7 @@ class UserBuildResourceImpl @Autowired constructor(
             triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(BuildId(manualStartup))
+        return Result(manualStartup)
     }
 
     override fun retry(
@@ -122,16 +122,14 @@ class UserBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask
             )
         )
     }
