@@ -29,7 +29,6 @@ package com.tencent.devops.quality.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -49,13 +48,13 @@ import com.tencent.devops.quality.pojo.GroupSummaryWithPermission
 import com.tencent.devops.quality.pojo.GroupUpdate
 import com.tencent.devops.quality.pojo.GroupUsers
 import com.tencent.devops.quality.pojo.ProjectGroupAndUsers
-import java.util.regex.Pattern
-import javax.ws.rs.core.Response
 import org.apache.commons.lang3.math.NumberUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.regex.Pattern
+import javax.ws.rs.core.Response
 
 @Service
 class QualityNotifyGroupService @Autowired constructor(
@@ -119,11 +118,7 @@ class QualityNotifyGroupService @Autowired constructor(
         val groupAndUsersList = bkAuthProjectApi.getProjectGroupAndUserList(serviceCode, projectId)
         return groupAndUsersList.map {
             ProjectGroupAndUsers(
-                groupName = I18nUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${it.roleName}",
-                    defaultMessage = it.displayName,
-                    language = I18nUtil.getLanguage(userId)
-                ),
+                groupName = it.displayName,
                 groupId = it.roleName,
                 users = it.userIdList.toSet()
             )
