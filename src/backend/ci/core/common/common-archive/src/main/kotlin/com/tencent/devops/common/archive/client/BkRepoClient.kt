@@ -77,7 +77,6 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
