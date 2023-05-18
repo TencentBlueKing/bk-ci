@@ -320,7 +320,11 @@ class PipelineBuildRecordService @Autowired constructor(
                 language = I18nUtil.getDefaultLocaleLanguage()
             )
         } else {
-            StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode)
+            StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         }
         val queueTime = buildRecordModel?.queueTime?.timestampmilli() ?: buildInfo.queueTime
         val startTime = buildRecordModel?.startTime?.timestampmilli()

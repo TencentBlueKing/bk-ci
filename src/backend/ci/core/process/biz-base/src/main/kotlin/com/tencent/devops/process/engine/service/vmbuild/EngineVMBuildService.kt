@@ -55,7 +55,9 @@ import com.tencent.devops.common.web.utils.AtomRuntimeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -88,8 +90,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskPauseService
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -97,12 +97,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress(
     "LongMethod",
@@ -936,18 +936,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    (
-                        errorCode?.let {
-                            "\n${
-                                I18nUtil.getCodeLanMessage(
-                                    messageCode = errorCode.toString(),
-                                    checkUrlDecoder = true,
-                                    language = I18nUtil.getDefaultLocaleLanguage()
-                                )
-                            }\n"
-                        }
-                            ?: ""
-                        ) +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."
