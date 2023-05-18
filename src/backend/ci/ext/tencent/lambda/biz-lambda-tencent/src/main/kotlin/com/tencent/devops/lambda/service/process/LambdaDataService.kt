@@ -686,7 +686,11 @@ class LambdaDataService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
+                trigger = StartType.toReadableString(
+                    type = trigger,
+                    channelCode = ChannelCode.valueOf(channel),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 buildNum = buildNum,
                 pipelineVersion = version,
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
