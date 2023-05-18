@@ -30,10 +30,12 @@ package com.tencent.devops.worker.common.task.script
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_SCRIPT_TASK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -149,9 +151,12 @@ open class ScriptTask : ITask() {
                     )
                 }
             }
-            val errorMsg = if (ignore is TaskExecuteException) {
+            val errorMsg = (if (ignore is TaskExecuteException) {
                 ignore.errorMsg
-            } else ""
+            } else "") + I18nUtil.getCodeLanMessage(
+                messageCode = "$USER_SCRIPT_TASK_FAIL",
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
 
             throw TaskExecuteException(
                 errorMsg = errorMsg,
