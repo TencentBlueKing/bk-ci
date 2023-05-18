@@ -50,7 +50,7 @@ func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
 		cmd.Stderr = os.Stderr
 		err := cmd.Run()
 		if err != nil {
-			logs.WithError(err).Warn("git config error")
+			logs.Warn("git config error", logs.Err(err))
 		}
 	}
 }
@@ -77,13 +77,13 @@ func IsShallowRepository(rootDir string, env []string) bool {
 	cmd.Dir = rootDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		logs.WithError(err).Error("unexpected error checking if git repository is shallow")
+		logs.Error("unexpected error checking if git repository is shallow", logs.Err(err))
 		return true
 	}
 
 	isShallow, err := strconv.ParseBool(strings.TrimSpace(string(out)))
 	if err != nil {
-		logs.WithError(err).WithField("input", string(out)).Error("unexpected error parsing bool")
+		logs.Error("unexpected error parsing bool", logs.Err(err), logs.String("input", string(out)))
 		return true
 	}
 
@@ -123,7 +123,7 @@ type Client struct {
 func (c *Client) Clone(ctx context.Context) (err error) {
 	err = os.MkdirAll(c.Location, 0775)
 	if err != nil {
-		logs.WithError(err).Error("cannot create clone location")
+		logs.Error("cannot create clone location", logs.Err(err))
 	}
 
 	args := []string{"--depth=1", "--shallow-submodules", c.RemoteURI}

@@ -44,7 +44,7 @@ func NewWorkspaceProxy(
 func (p *WorkspaceProxy) MustServe() {
 	handler, err := p.Handler(nil)
 	if err != nil {
-		logs.WithError(err).Fatal("cannot initialize proxy - this is likely a configuration issue")
+		logs.Fatal("cannot initialize proxy - this is likely a configuration issue", logs.Err(err))
 		return
 	}
 	srv := &http.Server{
@@ -58,7 +58,7 @@ func (p *WorkspaceProxy) MustServe() {
 			PreferServerCipherSuites: true,
 			NextProtos:               []string{"h2", "http/1.1"},
 		},
-		ErrorLog: stdlog.New(logrusErrorWriter{}, "", 0),
+		ErrorLog: stdlog.New(logsErrorWriter{}, "", 0),
 	}
 
 	var (
@@ -69,17 +69,17 @@ func (p *WorkspaceProxy) MustServe() {
 		srv := &http.Server{
 			Addr:     p.Ingress.HTTPAddress,
 			Handler:  handler,
-			ErrorLog: stdlog.New(logrusErrorWriter{}, "", 0),
+			ErrorLog: stdlog.New(logsErrorWriter{}, "", 0),
 		}
 		err := srv.ListenAndServe()
 		if err != nil {
-			logs.WithError(err).Fatal("cannot start http proxy")
+			logs.Fatal("cannot start http proxy", logs.Err(err))
 		}
 	}()
 
 	err = srv.ListenAndServeTLS(crt, key)
 	if err != nil {
-		logs.WithError(err).Fatal("cannot start proxy")
+		logs.Fatal("cannot start proxy", logs.Err(err))
 		return
 	}
 }
@@ -113,7 +113,7 @@ func redirectToHTTPS(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.RawQuery) > 0 {
 		target += "?" + r.URL.RawQuery
 	}
-	logs.WithField("target", target).Debug("redirect to https")
+	logs.Debug("redirect to https", logs.String("target", target))
 	http.Redirect(w, r, target, http.StatusTemporaryRedirect)
 }
 
@@ -148,9 +148,9 @@ func optimalDefaultCipherSuites() []uint16 {
 
 var tlsHandshakeErrorPrefix = []byte("http: TLS handshake error")
 
-type logrusErrorWriter struct{}
+type logsErrorWriter struct{}
 
-func (w logrusErrorWriter) Write(p []byte) (int, error) {
+func (w logsErrorWriter) Write(p []byte) (int, error) {
 	if bytes.Contains(p, tlsHandshakeErrorPrefix) {
 		return len(p), nil
 	}

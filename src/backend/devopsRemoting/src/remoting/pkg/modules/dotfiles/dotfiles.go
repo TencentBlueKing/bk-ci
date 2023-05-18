@@ -179,6 +179,6 @@ func InstallDotfiles(ctx context.Context, cfg *config.Config, thirdApi *thirdpar
 	}()
 	if err != nil {
 		// TODO: 安装失败应该告知用户
-		logs.WithError(err).Warn("installing dotfiles failed")
+		logs.Error("installing dotfiles failed", logs.Err(err))
 	}
 }

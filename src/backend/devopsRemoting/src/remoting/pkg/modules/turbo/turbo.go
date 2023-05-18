@@ -33,7 +33,7 @@ func StartTurbo(
 
 	// 更新turbo到最新版本
 	if err := updateTurbo(ctx, workDir, cfg.WorkSpace.TurboDownUrl, childProcessEnv); err != nil {
-		logs.WithError(err).Error("updateTurbo error")
+		logs.Error("updateTurbo error", logs.Err(err))
 		return
 	}
 

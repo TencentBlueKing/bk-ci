@@ -116,7 +116,7 @@ spec:
                   "id": "1",           
                   "cert": "{{ .Values.proxy.https.crt }}",
                   "key": "{{ .Values.proxy.https.key }}",       
-                  "snis": ["*.{{ .Values.proxy.domain }}","{{ .Values.proxy.domain }}"]
+                  "snis": ["*.{{ .Values.proxy.domain }}","{{ .Values.proxy.domain }}","apisix.{{ .Values.proxy.domain }}"]
               }'
 
               # 创建 wsproxy https route
