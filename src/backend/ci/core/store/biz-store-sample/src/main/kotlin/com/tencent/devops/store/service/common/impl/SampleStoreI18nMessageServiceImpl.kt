@@ -37,6 +37,10 @@ import java.net.URLEncoder
 @Service
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
+    companion object {
+        private const val DEFAULT_I18N_FOLDER_NAME = "i18n"
+    }
+
     override fun getPropertiesFileStr(
         projectCode: String,
         fileDir: String,
@@ -44,7 +48,8 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): String? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
+        val filePath =
+            URLEncoder.encode("$projectCode/$fileDir/$DEFAULT_I18N_FOLDER_NAME/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).getFileContent(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
@@ -59,7 +64,7 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
-        val filePath = URLEncoder.encode("$projectCode/$fileDir", Charsets.UTF_8.name())
+        val filePath = URLEncoder.encode("$projectCode/$fileDir/$DEFAULT_I18N_FOLDER_NAME", Charsets.UTF_8.name())
         return client.get(ServiceArtifactoryResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
