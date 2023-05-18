@@ -44,7 +44,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
-import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -315,40 +314,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val managerRoleGroup = ManagerRoleGroup()
         managerRoleGroup.name = renameGroupDTO.groupName
         iamV2ManagerService.updateRoleGroupV2(groupId, managerRoleGroup)
-        return true
-    }
-
-    @Suppress("LongParameterList")
-    override fun createDefaultResourceGroup(
-        userId: String,
-        projectCode: String,
-        projectName: String,
-        resourceType: String,
-        managerId: Int,
-        resourceCode: String,
-        resourceName: String,
-        iamResourceCode: String
-    ): Boolean {
-        if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.createGradeDefaultGroup(
-                gradeManagerId = managerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName
-            )
-        } else {
-            permissionSubsetManagerService.createSubsetManagerDefaultGroup(
-                subsetManagerId = managerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName,
-                iamResourceCode = iamResourceCode,
-                createMode = AuthGroupCreateMode.CREATE
-            )
-        }
         return true
     }
 
