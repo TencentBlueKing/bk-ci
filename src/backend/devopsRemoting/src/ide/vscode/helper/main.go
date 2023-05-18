@@ -39,7 +39,7 @@ type WorkspaceInfo struct {
 func main() {
 	enableDebug := os.Getenv("DEVOPS_REMOTING_DEBUG_ENABLE") == "true"
 
-	logs.Init(Service, Version, true, false)
+	logs.DeafultInitStd(Service, Version, enableDebug)
 	logs.Info("codehelper started")
 	startTime := time.Now()
 
@@ -50,12 +50,12 @@ func main() {
 	}
 
 	if err := replaceOpenVSXUrl(); err != nil {
-		logs.WithError(err).Error("failed to replace OpenVSX URL")
+		logs.Error("failed to replace OpenVSX URL", logs.Err(err))
 	}
 
 	wsInfo, err := loadWorkspaceConfigFromEnv()
 	if err != nil {
-		logs.WithError(err).Error("load workspace config error")
+		logs.Error("load workspace config error", logs.Err(err))
 	}
 
 	// vscode 服务的启动参数
@@ -69,9 +69,9 @@ func main() {
 	uniqMap := map[string]struct{}{}
 	extensions, err := getExtensions(wsInfo)
 	if err != nil {
-		logs.WithError(err).Error("get extensions failed")
+		logs.Error("get extensions failed", logs.Err(err))
 	}
-	logs.WithField("ext", extensions).Info("get extensions")
+	logs.Info("get extensions", logs.Any("ext", extensions))
 
 	for _, ext := range extensions {
 		if _, ok := uniqMap[ext.Local]; ok {
@@ -94,9 +94,9 @@ func main() {
 	args = append(args, os.Args[1:]...)
 	args = append(args, "--do-not-sync")
 	args = append(args, "--start-server")
-	logs.WithField("cost", time.Now().Local().Sub(startTime).Milliseconds()).Info("starting server")
+	logs.Info("starting server", logs.Int64("cost", time.Now().Local().Sub(startTime).Milliseconds()))
 	if err := syscall.Exec(Code, append([]string{"devopsRemoting-vscode"}, args...), os.Environ()); err != nil {
-		logs.WithError(err).Error("install ext and start code server failed")
+		logs.Error("install ext and start code server failed", logs.Err(err))
 	}
 }
 

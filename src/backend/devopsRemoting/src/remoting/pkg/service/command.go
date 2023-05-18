@@ -83,7 +83,7 @@ func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 	logs.Debugf("commands: %v", cm.commands)
 
 	for _, c := range cm.commands {
-		log := logs.WithField("command", c.command)
+		log := logs.With(logs.String("command", c.command))
 		log.Info("starting a command terminal...")
 
 		resp, err := cm.termSrv.OpenWithOptions(ctx, terminal.TermOptions{
@@ -91,12 +91,12 @@ func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 			Title:       string(c.commandType),
 		})
 		if err != nil {
-			log.Error("cannot open new command terminal ", err)
+			log.Error("cannot open new command terminal ", logs.Err(err))
 			cm.setTaskState(c, remoteTypes.CommandClosed)
 			continue
 		}
 
-		log = log.WithField("terminal", resp.Terminal.Alias)
+		log = log.With(logs.String("terminal", resp.Terminal.Alias))
 		term, ok := cm.termSrv.Mux.Get(resp.Terminal.Alias)
 		if !ok {
 			log.Error("cannot find a command terminal ")
@@ -104,7 +104,7 @@ func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 			continue
 		}
 
-		log = log.WithField("pid", term.Command.Process.Pid)
+		log = log.With(logs.Int("pid", term.Command.Process.Pid))
 		log.Info("command terminal has been started")
 		cm.updateState(func() bool {
 			c.Terminal = resp.Terminal.Alias
@@ -114,7 +114,7 @@ func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 
 		go func(term *terminal.Term) {
 			state, err := term.Wait()
-			log.WithField("state", state).WithError(err).Info("command terminal has been closed")
+			log.Info("command terminal has been closed", logs.Any("state", state), logs.Err(err))
 			cm.setTaskState(c, remoteTypes.CommandClosed)
 		}(term)
 

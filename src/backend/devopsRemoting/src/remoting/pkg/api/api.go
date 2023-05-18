@@ -64,7 +64,7 @@ func StartAPIServer(ctx context.Context, cfg *config.Config, wg *sync.WaitGroup)
 
 	go func() {
 		if err := httpSrv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			logs.WithError(err).Error("Could not start api listener")
+			logs.Error("Could not start api listener", logs.Err(err))
 		}
 	}()
 
@@ -77,7 +77,7 @@ func StartAPIServer(ctx context.Context, cfg *config.Config, wg *sync.WaitGroup)
 func okFail(c *gin.Context, code int, err error) {
 	// 对于所有的500日志都记录下堆栈信息
 	if code == http.StatusInternalServerError {
-		logs.WithField("uri", c.Request.RequestURI).WithError(err).Error("request error.")
+		logs.Error("request error.", logs.Err(err), logs.String("uri", c.Request.RequestURI))
 	}
 	c.JSON(http.StatusOK, &devops.DevopsHttpResult{
 		Data:    nil,
@@ -111,7 +111,7 @@ func ginRecovery(stack bool) gin.HandlerFunc {
 
 				httpRequest, _ := httputil.DumpRequest(c.Request, false)
 				if brokenPipe {
-					logs.Error(fmt.Sprintf("%s %v %s. ", c.Request.URL.Path, err, string(httpRequest)))
+					logs.Errorf("%s %v %s. ", c.Request.URL.Path, err, string(httpRequest))
 					// If the connection is dead, we can't write a status to it.
 					c.Error(err.(error)) // nolint: errcheck
 					c.Abort()
@@ -119,10 +119,9 @@ func ginRecovery(stack bool) gin.HandlerFunc {
 				}
 
 				if stack {
-					logs.Error(fmt.Sprintf("[Recovery from panic] %v %s %s. ",
-						err, string(httpRequest), string(debug.Stack())))
+					logs.Errorf("[Recovery from panic] %v %s %s. ", err, string(httpRequest), string(debug.Stack()))
 				} else {
-					logs.Error(fmt.Sprintf("[Recovery from panic] %v %s. ", err, string(httpRequest)))
+					logs.Errorf("[Recovery from panic] %v %s. ", err, string(httpRequest))
 				}
 				c.AbortWithStatus(http.StatusInternalServerError)
 				c.JSON(http.StatusInternalServerError, &devops.DevopsHttpResult{

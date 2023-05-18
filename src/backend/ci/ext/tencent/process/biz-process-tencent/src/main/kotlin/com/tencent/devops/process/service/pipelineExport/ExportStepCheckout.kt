@@ -6,7 +6,6 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
 import com.tencent.devops.process.pojo.PipelineExportV2YamlConflictMapItem
-import com.tencent.devops.process.service.pipelineExport.ExportStepCheckout.updateIfNotAbsent
 import com.tencent.devops.process.service.pipelineExport.pojo.CheckoutAtomParam
 import com.tencent.devops.process.service.pipelineExport.pojo.GitCodeRepoAtomParam
 import com.tencent.devops.process.service.pipelineExport.pojo.GitCodeRepoCommonAtomParam

@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.api.remotedev.RemoteDevResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.pojo.ImageSpec
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.service.WorkspaceImageService
@@ -41,7 +42,6 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.RsaUtil
-import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -79,7 +79,12 @@ class RemoteDevResourceImpl @Autowired constructor(
         )
     }
 
-    override fun completePullCode(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
+    override fun completePullCode(
+        signature: String,
+        workspaceName: String,
+        type: WebSocketActionType?,
+        timestamp: String
+    ): Result<Boolean> {
         if (!checkSignature(signature, workspaceName, timestamp)) {
             return Result(403, "Forbidden request", false)
         }
@@ -88,7 +93,7 @@ class RemoteDevResourceImpl @Autowired constructor(
             workspaceName = workspaceName,
             workspaceHost = null,
             errorMsg = null,
-            type = WebSocketActionType.WORKSPACE_CREATE,
+            type = type ?: WebSocketActionType.WORKSPACE_CREATE,
             status = true,
             action = WorkspaceAction.COMPLETE_PULL_CODE
         )

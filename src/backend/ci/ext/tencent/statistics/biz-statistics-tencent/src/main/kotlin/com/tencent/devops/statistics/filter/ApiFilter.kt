@@ -37,10 +37,9 @@ import com.tencent.devops.statistics.pojo.openapi.constant.OpenAPIMessageCode.ER
 import com.tencent.devops.statistics.util.openapi.ApiGatewayPubFile
 import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
-import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.bouncycastle.openssl.PEMParser
-import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter
+import org.bouncycastle.jce.provider.JCERSAPublicKey
+import org.bouncycastle.openssl.PEMReader
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayInputStream
 import java.io.InputStreamReader
@@ -67,10 +66,12 @@ class ApiFilter(
         private const val apigwSourceHeader = "X-DEVOPS-APIGW-TYPE"
     }
 
-    enum class ApiType(val startContextPath: String) {
-        DEFAULT("/api/apigw/"),
-        USER("/api/apigw-user/"),
-        APP("/api/apigw-app/");
+    enum class ApiType(val startContextPath: String, val verify: Boolean) {
+        DEFAULT("/api/apigw/", true),
+        USER("/api/apigw-user/", true),
+        APP("/api/apigw-app/", true),
+        OP("/api/op/", false),
+        SWAGGER("/api/swagger.json", false);
 
         companion object {
             fun parseType(path: String): ApiType? {
@@ -84,52 +85,16 @@ class ApiFilter(
         }
     }
 
-    override fun filter(requestContext: ContainerRequestContext) {
-
+    @Suppress("UNCHECKED_CAST", "ComplexMethod", "NestedBlockDepth", "ReturnCount")
+    fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         // path为为空的时候，直接退出
         val path = requestContext.uriInfo.requestUri.path
-        // 判断是否需要处理apigw
-        val apiType = ApiType.parseType(path) ?: return
+        // 判断是否为合法的路径
+        val apiType = ApiType.parseType(path) ?: return false
+        // 如果是op的接口访问直接跳过jwt认证
+        if (!apiType.verify) return true
 
         logger.info("FILTER| url=$path")
-        if (!apiGatewayUtil.isAuth()) {
-            // 将query中的app_code和app_secret设置成头部
-            setupHeader(requestContext)
-        } else {
-            // 验证通过
-            if (!verifyJWT(requestContext, apiType)) {
-                requestContext.abortWith(
-                    Response.status(Response.Status.BAD_REQUEST)
-                        .entity("Devops OpenAPI Auth fail：user or app auth fail.")
-                        .build()
-                )
-                return
-            }
-        }
-    }
-
-    private fun setupHeader(requestContext: ContainerRequestContext) {
-        requestContext.uriInfo?.pathParameters?.forEach { pathParam ->
-            if (pathParam.key == appCodeHeader && pathParam.value.isNotEmpty()) {
-                requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
-                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
-                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, pathParam.value[0])
-                } else {
-                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, pathParam.value[0])
-                }
-            } else if (pathParam.key == appSecHeader && pathParam.value.isNotEmpty()) {
-                requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, null)
-                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET] != null) {
-                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, pathParam.value[0])
-                } else {
-                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, pathParam.value[0])
-                }
-            }
-        }
-    }
-
-    @Suppress("UNCHECKED_CAST", "ComplexMethod", "NestedBlockDepth", "ReturnCount")
-    fun verifyJWT(requestContext: ContainerRequestContext, apiType: ApiType): Boolean {
         val bkApiJwt = requestContext.getHeaderString(jwtHeader)
         if (bkApiJwt.isNullOrBlank()) {
             logger.error("Request bk api jwt is empty for ${requestContext.request}")
@@ -173,10 +138,10 @@ class ApiFilter(
             val user = jwt["user"] as Map<String, Any>
             // 用户身份登录
             if (user.contains("username")) {
-                val username = user["username"]?.toString()
+                val username = user["username"]?.toString() ?: ""
                 val verified = user["verified"].toString().toBoolean()
                 // 名字为空或者没有通过认证的时候，直接失败
-                if (username.isNullOrBlank() && verified) {
+                if (username.isNotBlank() && verified) {
                     // 将user头部置空
                     requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
                     if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
@@ -197,8 +162,45 @@ class ApiFilter(
         return true
     }
 
+    override fun filter(requestContext: ContainerRequestContext) {
+        if (!apiGatewayUtil.isAuth()) {
+            // 将query中的app_code和app_secret设置成头部
+            setupHeader(requestContext)
+        } else {
+            // 验证通过
+            if (!verifyJWT(requestContext)) {
+                requestContext.abortWith(
+                    Response.status(Response.Status.BAD_REQUEST)
+                        .entity("Devops OpenAPI Auth fail：user or app auth fail.")
+                        .build()
+                )
+                return
+            }
+        }
+    }
+
+    private fun setupHeader(requestContext: ContainerRequestContext) {
+        requestContext.uriInfo?.pathParameters?.forEach { pathParam ->
+            if (pathParam.key == appCodeHeader && pathParam.value.isNotEmpty()) {
+                requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, pathParam.value[0])
+                } else {
+                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, pathParam.value[0])
+                }
+            } else if (pathParam.key == appSecHeader && pathParam.value.isNotEmpty()) {
+                requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, null)
+                if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET] != null) {
+                    requestContext.headers[AUTH_HEADER_DEVOPS_APP_SECRET]?.set(0, pathParam.value[0])
+                } else {
+                    requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, pathParam.value[0])
+                }
+            }
+        }
+    }
+
     private fun parseJwt(bkApiJwt: String, apigwtType: String?): Map<String, Any> {
-        var reader: PEMParser? = null
+        var reader: PEMReader? = null
         try {
             val key = if (!apigwtType.isNullOrEmpty() && apigwtType == "outer") {
                 SpringContextUtil.getBean(ApiGatewayPubFile::class.java).getPubOuter().toByteArray()
@@ -207,10 +209,9 @@ class ApiFilter(
             }
             Security.addProvider(BouncyCastleProvider())
             val bais = ByteArrayInputStream(key)
-            reader = PEMParser(InputStreamReader(bais))
-            val publicKeyInfo = reader.readObject() as SubjectPublicKeyInfo
-            val publicKey = JcaPEMKeyConverter().getPublicKey(publicKeyInfo)
-            val jwtParser = Jwts.parserBuilder().setSigningKey(publicKey).build()
+            reader = PEMReader(InputStreamReader(bais)) { "".toCharArray() }
+            val keyPair = reader.readObject() as JCERSAPublicKey
+            val jwtParser = Jwts.parser().setSigningKey(keyPair)
             val parse = jwtParser.parse(bkApiJwt)
             logger.info("Get the parse body(${parse.body}) and header(${parse.header})")
             return JsonUtil.toMap(parse.body)

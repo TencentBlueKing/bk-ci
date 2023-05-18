@@ -31,14 +31,14 @@ func newCommandInit() *cobra.Command {
 		Short: "init the DevopsRemoting",
 		Long:  initDesc,
 		Run: func(_ *cobra.Command, _ []string) {
-			logs.Init(Service, Version, true, false)
+			logs.DeafultInitStd(Service, Version, false)
 
 			sigInput := make(chan os.Signal, 1)
 			signal.Notify(sigInput, os.Interrupt, syscall.SIGTERM)
 
 			cmd, err := runRemoting()
 			if err != nil {
-				logs.WithError(err).Error("devopsRemoting run start error")
+				logs.Error("devopsRemoting run start error", logs.Err(err))
 				return
 			}
 			done := make(chan struct{})
@@ -47,7 +47,7 @@ func newCommandInit() *cobra.Command {
 
 				err := cmd.Wait()
 				if err != nil && !(strings.Contains(err.Error(), "signal: interrupt") || strings.Contains(err.Error(), "no child processes")) {
-					logs.WithError(err).Error("devopsRemoting run error")
+					logs.Error("devopsRemoting run error", logs.Err(err))
 					return
 				}
 			}()
@@ -112,7 +112,7 @@ func newShutdownLogger() *shutdownLogger {
 	os.MkdirAll(filepath.Dir(file), os.ModePerm)
 	fs, err := os.Create(file)
 	if err != nil {
-		logs.WithError(err).WithField("file", file).Error("create shutdown log err")
+		logs.Error("create shutdown log err", logs.Err(err), logs.String("file", file))
 	}
 	result := shutdownLogger{
 		file:      fs,
@@ -130,7 +130,7 @@ func (s *shutdownLogger) write(content string) {
 	if s.file != nil {
 		_, err := s.file.WriteString(fmt.Sprintf("[%s] %s \n", time.Since(s.startTime), content))
 		if err != nil {
-			logs.WithError(err).Error("shutdownLogger write error")
+			logs.Error("shutdownLogger write error", logs.Err(err))
 		}
 	} else {
 		logs.Debug(content)
@@ -170,7 +170,7 @@ func terminateAllOtherProcesses(ctx context.Context, shutDownLog *shutdownLogger
 	for {
 		processes, err := procfs.AllProcs()
 		if err != nil {
-			logs.WithError(err).Error("can not list processes")
+			logs.Error("can not list processes", logs.Err(err))
 			shutDownLog.write(fmt.Sprintf("can not list processes: %s", err))
 			return
 		}

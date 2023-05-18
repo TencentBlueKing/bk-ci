@@ -67,8 +67,8 @@ import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
 import com.tencent.devops.store.dao.image.MarketImageVersionLogDao
-import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.CLOSE
+import com.tencent.devops.store.pojo.common.OPEN
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.REJECT
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem

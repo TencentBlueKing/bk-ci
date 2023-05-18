@@ -35,14 +35,14 @@ func StartSSHServer(ctx context.Context, cfg *config.Config, wg *sync.WaitGroup,
 	go func() {
 		ssh, err := newSSHServer(ctx, cfg, childProcEnvvars)
 		if err != nil {
-			logs.WithError(err).Error("err creating SSH server")
+			logs.Error("err creating SSH server", logs.Err(err))
 			return
 		}
 		configureSSHDefaultDir(cfg)
 		configureSSHMessageOfTheDay()
 		err = ssh.listenAndServe()
 		if err != nil {
-			logs.WithError(err).Error("err starting SSH server")
+			logs.Error("err starting SSH server", logs.Err(err))
 		}
 	}()
 }
@@ -56,7 +56,7 @@ func (s *sshServer) listenAndServe() error {
 	for {
 		conn, err := listener.Accept()
 		if err != nil {
-			logs.WithError(err).Error("listening for SSH connection")
+			logs.Error("listening for SSH connection", logs.Err(err))
 			continue
 		}
 
@@ -109,7 +109,7 @@ func (s *sshServer) handleConn(ctx context.Context, conn net.Conn) {
 
 	socketFD, err := conn.(*net.TCPConn).File()
 	if err != nil {
-		logs.WithError(err).Error("cannot start SSH server")
+		logs.Error("cannot start SSH server", logs.Err(err))
 		return
 	}
 	defer socketFD.Close()
@@ -125,7 +125,7 @@ func (s *sshServer) handleConn(ctx context.Context, conn net.Conn) {
 
 	err = cmd.Start()
 	if err != nil {
-		logs.WithError(err).Error("cannot start SSH server")
+		logs.Error("cannot start SSH server", logs.Err(err))
 		return
 	}
 
@@ -144,7 +144,7 @@ func (s *sshServer) handleConn(ctx context.Context, conn net.Conn) {
 		return
 	case err = <-done:
 		if err != nil {
-			logs.WithError(err).Error("SSH server stopped ")
+			logs.Error("SSH server stopped ", logs.Err(err))
 		}
 	}
 }
@@ -200,7 +200,7 @@ func (s *SSHService) CreateSSHKeyPair() (response *apitypes.CreateSSHKeyPairResp
 				PrivateKey: s.privateKey,
 			}, nil
 		}
-		logs.WithError(err).Error("check authorized_keys failed, will recreate")
+		logs.Error("check authorized_keys failed, will recreate", logs.Err(err))
 	}
 
 	dir, err := os.MkdirTemp(os.TempDir(), "ssh-key-*")
@@ -316,11 +316,11 @@ func configureSSHDefaultDir(cfg *config.Config) {
 	}
 	file, err := os.OpenFile(fmt.Sprintf("%s/.bash_profile", constant.RemotingUserHome), os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0o644)
 	if err != nil {
-		logs.WithError(err).Error("cannot write .bash_profile", err)
+		logs.Error("cannot write .bash_profile", logs.Err(err))
 	}
 	defer file.Close()
 	if _, err := file.WriteString(fmt.Sprintf("\nif [[ -n $SSH_CONNECTION ]]; then cd \"%s\"; fi\n", cfg.WorkSpace.GitRepoRootPath)); err != nil {
-		logs.WithError(err).Error("write .bash_profile failed", err)
+		logs.Error("write .bash_profile failed", logs.Err(err))
 	}
 }
 
@@ -328,6 +328,6 @@ func configureSSHMessageOfTheDay() {
 	msg := []byte("Welcome to DevopsRemoting~ \n")
 
 	if err := ioutil.WriteFile("/etc/motd", msg, 0o644); err != nil {
-		logs.WithError(err).Error("write /etc/motd failed")
+		logs.Error("write /etc/motd failed", logs.Err(err))
 	}
 }

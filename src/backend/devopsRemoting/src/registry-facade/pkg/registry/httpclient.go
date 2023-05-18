@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 )
 
 type Option func(opts *httpOpts)
@@ -67,7 +67,7 @@ func WithHTTPClient(client *http.Client) Option {
 }
 
 type leveledLogrus struct {
-	*logrus.Entry
+	*zap.Logger
 }
 
 func (l *leveledLogrus) fields(keysAndValues ...interface{}) map[string]interface{} {
@@ -81,17 +81,17 @@ func (l *leveledLogrus) fields(keysAndValues ...interface{}) map[string]interfac
 }
 
 func (l *leveledLogrus) Error(msg string, keysAndValues ...interface{}) {
-	l.WithFields(l.fields(keysAndValues...)).Error(msg)
+	l.Sugar().Errorw(msg, keysAndValues...)
 }
 
 func (l *leveledLogrus) Info(msg string, keysAndValues ...interface{}) {
-	l.WithFields(l.fields(keysAndValues...)).Info(msg)
+	l.Sugar().Infow(msg, keysAndValues...)
 }
 
 func (l *leveledLogrus) Debug(msg string, keysAndValues ...interface{}) {
-	l.WithFields(l.fields(keysAndValues...)).Debug(msg)
+	l.Sugar().Debugw(msg, keysAndValues...)
 }
 
 func (l *leveledLogrus) Warn(msg string, keysAndValues ...interface{}) {
-	l.WithFields(l.fields(keysAndValues...)).Warn(msg)
+	l.Sugar().Warnw(msg, keysAndValues...)
 }

@@ -119,6 +119,7 @@ allprojects {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 
@@ -135,6 +136,7 @@ allprojects {
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
         it.exclude("org.bouncycastle", "bcutil-jdk15on")
+        it.exclude("org.bouncycastle", "bcpkix-jdk15on")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

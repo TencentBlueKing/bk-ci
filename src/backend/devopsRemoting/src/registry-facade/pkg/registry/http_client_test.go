@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"common/logs"
 	"context"
 	"errors"
 	"io"
@@ -39,6 +40,8 @@ func TestRetryableFetcher(t *testing.T) {
 			Expectation: Expectation{Error: "object required"},
 		},
 	}
+
+	logs.DeafultInitStd("registry-facade", "test", true)
 
 	for _, test := range tests {
 		t.Run(test.Name, func(t *testing.T) {

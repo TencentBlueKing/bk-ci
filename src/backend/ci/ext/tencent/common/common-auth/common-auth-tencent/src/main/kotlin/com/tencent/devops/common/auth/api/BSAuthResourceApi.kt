@@ -279,6 +279,22 @@ class BSAuthResourceApi @Autowired constructor(
         }
     }
 
+    override fun cancelCreateResource(
+        userId: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
+
+    override fun cancelUpdateResource(
+        userId: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
+
     override fun batchCreateResource(
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,

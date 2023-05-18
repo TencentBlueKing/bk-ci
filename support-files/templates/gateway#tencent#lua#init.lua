@@ -105,6 +105,7 @@ config = {
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
+        tags = {"rbac"},
         codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
         api = {
             host = "__BK_CI_KUBERNETES_API_HOST__",

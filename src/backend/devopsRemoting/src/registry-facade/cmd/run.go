@@ -14,6 +14,7 @@ import (
 	"registry-facade/pkg/common/pprof"
 	"registry-facade/pkg/common/watch"
 	"registry-facade/pkg/config"
+	"registry-facade/pkg/constant"
 	"registry-facade/pkg/registry"
 	"sync"
 	"syscall"
@@ -42,14 +43,21 @@ var runCmd = &cobra.Command{
 		configPath := args[0]
 		cfg, err := config.GetConfig(configPath)
 		if err != nil {
-			logs.WithError(err).WithField("filename", configPath).Fatal("cannot load config")
+			fmt.Printf("can not load config %s %s", args[0], err.Error())
+			os.Exit(1)
+		}
+
+		if cfg.LogConfig != nil {
+			logs.DefaultInitFileLog(cfg.LogConfig.ServiceLogPath, cfg.LogConfig.ErrorLogPath, ServiceName, Version, os.Getenv(constant.DebugModEnvName) == "true")
+		} else {
+			logs.DeafultInitStd(ServiceName, Version, os.Getenv(constant.DebugModEnvName) == "true")
 		}
 
 		promreg := prometheus.NewRegistry()
 		gpreg := prometheus.WrapRegistererWithPrefix("devops_registry_facade_", promreg)
 		rtt, err := registry.NewMeasuringRegistryRoundTripper(newDefaultTransport(), prometheus.WrapRegistererWithPrefix("downstream_", gpreg))
 		if err != nil {
-			logs.WithError(err).Fatal("cannot register metrics")
+			logs.Fatal("cannot register metrics", logs.Err(err))
 		}
 		if cfg.PrometheusAddr != "" {
 			promreg.MustRegister(
@@ -64,10 +72,10 @@ var runCmd = &cobra.Command{
 			go func() {
 				err := http.ListenAndServe(cfg.PrometheusAddr, handler)
 				if err != nil {
-					logs.WithError(err).Error("Prometheus metrics server failed")
+					logs.Error("Prometheus metrics server failed", logs.Err(err))
 				}
 			}()
-			logs.WithField("addr", cfg.PrometheusAddr).Info("started Prometheus metrics server")
+			logs.Info("started Prometheus metrics server", logs.String("addr", cfg.PrometheusAddr))
 		}
 		if cfg.PProfAddr != "" {
 			go pprof.Serve(cfg.PProfAddr)
@@ -111,7 +119,7 @@ var runCmd = &cobra.Command{
 
 			named, err := reference.ParseNamed(staticLayerRef)
 			if err != nil {
-				logs.WithError(err).WithField("repo", staticLayerRef).Fatal("cannot parse repository reference")
+				logs.Fatal("cannot parse repository reference", logs.Err(err), logs.String("repo", staticLayerRef))
 			}
 
 			staticLayerHost := reference.Domain(named)
@@ -127,7 +135,7 @@ var runCmd = &cobra.Command{
 
 			go func() {
 				if err := http.ListenAndServe(cfg.ReadinessProbeAddr, health); err != nil && err != http.ErrServerClosed {
-					logs.WithError(err).Panic("error starting HTTP server")
+					logs.Fatal("error starting HTTP server", logs.Err(err))
 				}
 			}()
 		}
@@ -135,7 +143,7 @@ var runCmd = &cobra.Command{
 		registryDoneChan := make(chan struct{})
 		reg, err := registry.NewRegistry(cfg.Registry, resolverProvider, prometheus.WrapRegistererWithPrefix("registry_", gpreg))
 		if err != nil {
-			logs.WithError(err).Fatal("cannot create registry")
+			logs.Fatal("cannot create registry", logs.Err(err))
 		}
 
 		ctx, cancel := context.WithCancel(context.Background())
@@ -147,17 +155,17 @@ var runCmd = &cobra.Command{
 
 			cfg, err := config.GetConfig(configPath)
 			if err != nil {
-				logs.WithError(err).Warn("cannot reload configuration")
+				logs.Warn("cannot reload configuration", logs.Err(err))
 				return
 			}
 
 			err = reg.UpdateStaticLayer(ctx, cfg.Registry.StaticLayer)
 			if err != nil {
-				logs.WithError(err).Warn("cannot reload configuration")
+				logs.Warn("cannot reload configuration", logs.Err(err))
 			}
 		})
 		if err != nil {
-			logs.WithError(err).Fatal("cannot start watch of configuration file")
+			logs.Fatal("cannot start watch of configuration file", logs.Err(err))
 		}
 
 		err = watch.File(ctx, cfg.AuthCfg, func() {
@@ -167,7 +175,7 @@ var runCmd = &cobra.Command{
 			dockerCfg = loadDockerCfg(cfg.AuthCfg)
 		})
 		if err != nil {
-			logs.WithError(err).Fatal("cannot start watch of Docker auth configuration file")
+			logs.Fatal("cannot start watch of Docker auth configuration file", logs.Err(err))
 		}
 
 		go func() {
@@ -191,16 +199,16 @@ func loadDockerCfg(path string) *configfile.ConfigFile {
 	}
 	fr, err := os.OpenFile(path, os.O_RDONLY, 0)
 	if err != nil {
-		logs.WithError(err).Fatal("cannot read docker auth config")
+		logs.Fatal("cannot read docker auth config", logs.Err(err))
 	}
 
 	dockerCfg := configfile.New(path)
 	err = dockerCfg.LoadFromReader(fr)
 	fr.Close()
 	if err != nil {
-		logs.WithError(err).Fatal("cannot read docker config")
+		logs.Fatal("cannot read docker config", logs.Err(err))
 	}
-	logs.WithField("path", path).Info("using authentication for backing registries")
+	logs.Info("using authentication for backing registries", logs.String("path", path))
 
 	return dockerCfg
 }

@@ -148,7 +148,7 @@ func NewFileLayerSource(_ context.Context, file ...string) (FileLayerSource, err
 			Filename: fn,
 		})
 
-		logs.WithField("diffID", diffID).WithField("fn", fn).Debug("loaded static layer")
+		logs.Debug("loaded static layer", logs.Any("diffID", diffID), logs.String("fn", fn))
 	}
 
 	return res, nil

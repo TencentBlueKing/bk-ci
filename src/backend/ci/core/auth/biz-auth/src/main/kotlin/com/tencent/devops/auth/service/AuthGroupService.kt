@@ -29,13 +29,13 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupDao
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.entity.GroupCreateInfo
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.auth.tables.records.TAuthGroupInfoRecord
 import org.jooq.DSLContext
@@ -163,6 +163,13 @@ class AuthGroupService @Autowired constructor(
         } else {
             groupDao.deleteRole(dslContext, id)
         }
+    }
+
+    fun getGroupByRelationIds(relationIds: List<Int>): List<TAuthGroupInfoRecord> {
+        return groupDao.getGroupByRelationIds(
+            dslContext = dslContext,
+            relationIds = relationIds
+        )
     }
 
     companion object {

@@ -35,14 +35,14 @@ func (reg *Registry) handleBlob(ctx context.Context, r *http.Request) http.Handl
 	spname, name := getSpecProviderName(ctx)
 	sp, ok := reg.SpecProvider[spname]
 	if !ok {
-		logs.WithField("specProvName", spname).Error("unknown spec provider")
+		logs.Error("unknown spec provider", logs.String("specProvName", spname))
 		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
 	}
 	spec, err := sp.GetSpec(ctx, name)
 	if err != nil {
-		logs.WithError(err).WithField("specProvName", spname).WithField("name", name).Error("cannot get spec")
+		logs.Error("cannot get spec", logs.Err(err), logs.String("specProvName", spname), logs.String("name", name))
 		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
@@ -50,7 +50,7 @@ func (reg *Registry) handleBlob(ctx context.Context, r *http.Request) http.Handl
 
 	dgst, err := digest.Parse(getDigest(ctx))
 	if err != nil {
-		logs.WithError(err).WithField("instanceId", name).Error("cannot get workspace details")
+		logs.Error("cannot get workspace details", logs.Err(err), logs.String("instanceId", name))
 	}
 
 	blobHandler := &blobHandler{
@@ -152,7 +152,7 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 
 			retrieved, dontCache, err = bh.retrieveFromSource(ctx, s, w, r)
 			if err != nil {
-				logs.WithField("src", s.Name()).WithError(err).Error("unable to retrieve blob")
+				logs.Error("unable to retrieve blob", logs.String("src", s.Name()), logs.Err(err))
 			}
 
 			if retrieved {
@@ -162,7 +162,7 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if !retrieved {
-			logs.WithField("baseRef", bh.Spec.BaseRef).WithError(err).Error("unable to return blob")
+			logs.Error("unable to return blob", logs.String("baseRef", bh.Spec.BaseRef), logs.Err(err))
 			return xerrors.Errorf("unable to return blob: %w", err)
 		}
 
@@ -175,11 +175,11 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 			// to be in the blobstore when in reality it isn't.
 			_, _, _, rc, err := src.GetBlob(context.Background(), bh.Spec, bh.Digest)
 			if err != nil {
-				logs.WithError(err).WithField("digest", bh.Digest).Warn("cannot push to IPFS - unable to get blob")
+				logs.Warn("cannot push to IPFS - unable to get blob", logs.Err(err), logs.Any("digest", bh.Digest))
 				return
 			}
 			if rc == nil {
-				logs.WithField("digest", bh.Digest).Warn("cannot push to IPFS - blob is nil")
+				logs.Warn("cannot push to IPFS - blob is nil", logs.Any("digest", bh.Digest))
 				return
 			}
 
@@ -187,7 +187,7 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 
 			// err = bh.IPFS.Store(context.Background(), bh.Digest, rc, mediaType)
 			if err != nil {
-				logs.WithError(err).WithField("digest", bh.Digest).Warn("cannot push to IPFS")
+				logs.Warn("cannot push to IPFS", logs.Err(err), logs.Any("digest", bh.Digest))
 			}
 		}()
 
@@ -195,7 +195,7 @@ func (bh *blobHandler) getBlob(w http.ResponseWriter, r *http.Request) {
 	}()
 
 	if err != nil {
-		logs.WithError(err).Error("cannot get blob")
+		logs.Error("cannot get blob", logs.Err(err))
 		respondWithError(w, err)
 	}
 	// tracing.FinishSpan(span, &err)
@@ -229,7 +229,7 @@ func (bh *blobHandler) retrieveFromSource(ctx context.Context, src BlobSource, w
 			return true, nil
 		}
 		if errors.Is(err, syscall.ECONNRESET) || errors.Is(err, syscall.EPIPE) {
-			logs.WithField("blobSource", src.Name()).WithField("baseRef", bh.Spec.BaseRef).WithError(err).Warn("retry get blob because of error")
+			logs.Warn("retry get blob because of error", logs.String("blobSource", src.Name()), logs.String("baseRef", bh.Spec.BaseRef), logs.Err(err))
 			return false, nil
 		}
 		return true, err
@@ -260,7 +260,7 @@ func (bh *blobHandler) downloadManifest(ctx context.Context, ref string) (res *o
 
 	fetcher, err = bh.Resolver.Fetcher(ctx, ref)
 	if err != nil {
-		logs.WithError(err).WithField("ref", ref).WithField("instanceId", bh.Name).Error("cannot get fetcher")
+		logs.Error("cannot get fetcher", logs.Err(err), logs.String("ref", ref), logs.String("instanceId", bh.Name))
 		return nil, nil, err
 	}
 	res, _, err = DownloadManifest(ctx, AsFetcherFunc(fetcher), desc, WithStore(bh.Store))
@@ -369,7 +369,7 @@ func (sbs configBlobSource) Name() string {
 func (pbs *configBlobSource) HasBlob(ctx context.Context, spec *api.ImageSpec, dgst digest.Digest) bool {
 	cfg, err := pbs.getConfig(ctx)
 	if err != nil {
-		logs.WithError(err).Error("cannot (re-)produce image config")
+		logs.Error("cannot (re-)produce image config", logs.Err(err))
 		return false
 	}
 

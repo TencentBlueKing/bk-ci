@@ -233,8 +233,8 @@ class BuildLogPrinter(
 
     fun stopLog(
         buildId: String,
-        tag: String,
-        jobId: String?,
+        tag: String? = null,
+        jobId: String? = null,
         executeCount: Int? = null,
         subTag: String? = null
     ) {
@@ -244,7 +244,7 @@ class BuildLogPrinter(
                 finished = true,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount
             )
         } catch (ignore: Exception) {
@@ -264,7 +264,7 @@ class BuildLogPrinter(
                 buildId = buildId,
                 tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount
             )
         } catch (ignore: Exception) {

@@ -2,118 +2,196 @@ package logs
 
 import (
 	"fmt"
-	"path"
-	"runtime"
-	"strings"
+	"io"
+	"os"
 	"time"
 
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
-var Logs = logrus.WithFields(logrus.Fields{})
+var Logs *zap.Logger
+
+// DefaultInitFileLog 使用默认配置初始化，落盘的日志
+func DefaultInitFileLog(serviceLogPath, errorLogPath, service, version string, isDebug bool) error {
+	var tops = []TeeOption{
+		{
+			Lef: func(lvl zapcore.Level) bool {
+				if isDebug {
+					return lvl <= zapcore.WarnLevel
+				} else {
+					return lvl > zapcore.DebugLevel && lvl <= zapcore.WarnLevel
+				}
+			},
+			Writer: &lumberjack.Logger{
+				Filename:   serviceLogPath,
+				MaxSize:    100,
+				MaxBackups: 7,
+				MaxAge:     7,
+			},
+		},
+		{
+			Lef: func(lvl zapcore.Level) bool {
+				return lvl > zapcore.WarnLevel
+			},
+			Writer: &lumberjack.Logger{
+				Filename:   errorLogPath,
+				MaxSize:    100,
+				MaxBackups: 7,
+				MaxAge:     7,
+			},
+		},
+	}
+	return Init(tops, service, version)
+}
+
+// DeafultInitStd 初始化控制台日志
+func DeafultInitStd(service, version string, isDebug bool) error {
+	var tops = []TeeOption{
+		{
+			Lef: func(lvl zapcore.Level) bool {
+				if isDebug {
+					return lvl <= zapcore.WarnLevel
+				} else {
+					return lvl > zapcore.DebugLevel && lvl <= zapcore.WarnLevel
+				}
+			},
+			Writer: os.Stdout,
+		},
+		{
+			Lef: func(lvl zapcore.Level) bool {
+				return lvl > zapcore.WarnLevel
+			},
+			Writer: os.Stderr,
+		},
+	}
+	return Init(tops, service, version)
+}
+
+// Init 自定初始化
+func Init(tops []TeeOption, service, version string) error {
+	var cores []zapcore.Core
+	cfg := zap.NewProductionConfig()
+	cfg.EncoderConfig.TimeKey = "time"
+	cfg.EncoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+		enc.AppendString(t.Format(time.RFC3339Nano))
+	}
+
+	for _, top := range tops {
+		top := top
+
+		lv := zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
+			return top.Lef(lvl)
+		})
+
+		w := zapcore.AddSync(top.Writer)
+
+		core := zapcore.NewCore(
+			zapcore.NewJSONEncoder(cfg.EncoderConfig),
+			zapcore.AddSync(w),
+			lv,
+		)
+		cores = append(cores, core)
+	}
+
+	Logs = zap.New(zapcore.NewTee(cores...), zap.AddCaller()).With(zap.Object("serviceContext", &ServiceContext{service, version}))
+
+	return nil
+}
+
+type LevelEnablerFunc func(lvl zapcore.Level) bool
+
+type TeeOption struct {
+	Lef    LevelEnablerFunc
+	Writer io.Writer
+}
 
 type ServiceContext struct {
 	Service string `json:"service"`
 	Version string `json:"version"`
 }
 
-func Init(service, version string, json, debug bool) {
-	logInfo := logrus.WithFields(logrus.Fields{
-		"serviceContext": ServiceContext{service, version},
-	})
-
-	if json {
-		Logs.Logger.SetFormatter(&LogJsonFormatter{
-			logrus.JSONFormatter{
-				FieldMap: logrus.FieldMap{
-					logrus.FieldKeyMsg: "message",
-				},
-				CallerPrettyfier: func(f *runtime.Frame) (string, string) {
-					s := strings.Split(f.Function, ".")
-					funcName := s[len(s)-1]
-					return funcName, fmt.Sprintf("%s:%d", path.Base(f.File), f.Line)
-				},
-				TimestampFormat: time.RFC3339Nano,
-			},
-		})
-	} else {
-		Logs.Logger.SetFormatter(&logrus.TextFormatter{
-			TimestampFormat: time.RFC3339Nano,
-			FullTimestamp:   true,
-		})
-	}
-
-	if debug {
-		Logs.Logger.SetLevel(logrus.DebugLevel)
-	}
-
-	Logs = logInfo
+func (s *ServiceContext) MarshalLogObject(enc zapcore.ObjectEncoder) error {
+	enc.AddString("service", s.Service)
+	enc.AddString("version", s.Version)
+	return nil
 }
 
-type LogJsonFormatter struct {
-	logrus.JSONFormatter
+var (
+	DebugLevel = zap.DebugLevel
+
+	String  = zap.String
+	Strings = zap.Strings
+	Int     = zap.Int
+	Uint32  = zap.Uint32
+	Int64   = zap.Int64
+	Bool    = zap.Bool
+	Err     = zap.Error
+	Any     = zap.Any
+	Bytes   = zap.ByteString
+)
+
+func Debug(msg string, fields ...zap.Field) {
+	Logs.Debug(msg, fields...)
 }
 
-func (m *LogJsonFormatter) Format(entry *logrus.Entry) ([]byte, error) {
-	// 打印error
-	for k, v := range entry.Data {
-		switch v := v.(type) {
-		case error:
-			entry.Data[k] = fmt.Sprintf("%+v", v)
-		}
-	}
-
-	return m.JSONFormatter.Format(entry)
+func Debugf(template string, args ...interface{}) {
+	Logs.Sugar().Debugf(template, args...)
 }
 
-func Debug(args ...interface{}) {
-	Logs.Debug(args...)
+func Debugfw(template string, args []any, fields ...zap.Field) {
+	Logs.Debug(fmt.Sprintf(template, args...), fields...)
 }
 
-func Info(args ...interface{}) {
-	Logs.Info(args...)
+func Info(msg string, fields ...zap.Field) {
+	Logs.Info(msg, fields...)
 }
 
-func Warn(args ...interface{}) {
-	Logs.Warn(args...)
+func Infof(template string, args ...interface{}) {
+	Logs.Sugar().Infof(template, args...)
 }
 
-func Warnf(format string, args ...interface{}) {
-	Logs.Warnf(format, args...)
+func Infofw(template string, args []any, fields ...zap.Field) {
+	Logs.Info(fmt.Sprintf(template, args...), fields...)
 }
 
-func Error(args ...interface{}) {
-	Logs.Error(args...)
+func Warn(msg string, fields ...zap.Field) {
+	Logs.Warn(msg, fields...)
 }
 
-func Errorf(format string, args ...interface{}) {
-	Logs.Errorf(format, args...)
+func Warnf(template string, args ...interface{}) {
+	Logs.Sugar().Warnf(template, args...)
 }
 
-func Infof(format string, args ...interface{}) {
-	Logs.Infof(format, args...)
+func Warnfw(template string, args []any, fields ...zap.Field) {
+	Logs.Warn(fmt.Sprintf(template, args...), fields...)
 }
 
-func Debugf(format string, args ...interface{}) {
-	Logs.Debugf(format, args...)
+func Error(msg string, fields ...zap.Field) {
+	Logs.Error(msg, fields...)
 }
 
-func Printf(format string, args ...interface{}) {
-	Logs.Printf(format, args...)
+func Errorf(template string, args ...interface{}) {
+	Logs.Sugar().Errorf(template, args...)
 }
 
-func Fatal(args ...interface{}) {
-	Logs.Fatal(args...)
+func Errorfw(template string, args []any, fields ...zap.Field) {
+	Logs.Error(fmt.Sprintf(template, args...), fields...)
 }
 
-func WithError(err error) *logrus.Entry {
-	return Logs.WithError(err)
+func Fatal(msg string, fields ...zap.Field) {
+	Logs.Fatal(msg, fields...)
 }
 
-func WithField(key string, value interface{}) *logrus.Entry {
-	return Logs.WithField(key, value)
+func Fatalf(template string, args ...interface{}) {
+	Logs.Sugar().Fatalf(template, args...)
 }
 
-func WithFields(fields logrus.Fields) *logrus.Entry {
-	return Logs.WithFields(fields)
+func With(fields ...zap.Field) *zap.Logger {
+	return Logs.With(fields...)
+}
+
+func Sync() error {
+	return Logs.Sync()
 }

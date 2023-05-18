@@ -4,23 +4,27 @@ import (
 	"common/devops"
 	"common/logs"
 	"errors"
+	"fmt"
 	"net"
 	"os"
 	"path/filepath"
+	"time"
 	"wsproxy/pkg/config"
 	"wsproxy/pkg/constant"
 	"wsproxy/pkg/proxy"
 	"wsproxy/pkg/sshproxy"
 
-	"github.com/bombsimon/logrusr/v2"
 	"github.com/ci-plugins/crypto-go/ssh"
 	"github.com/spf13/cobra"
+	uzap "go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 )
 
 var scheme = runtime.NewScheme()
@@ -35,15 +39,21 @@ func newCommandRun() *cobra.Command {
 		Short: "Starts ws-proxy",
 		Args:  cobra.ExactArgs(1),
 		Run: func(_ *cobra.Command, args []string) {
-			logs.Init(Service, Version, true, os.Getenv(constant.DebugModEnvName) == "true")
 			cfg, err := config.GetConfig(args[0])
 			if err != nil {
-				logs.WithError(err).WithField("filename", args[0]).Fatal("cannot load config")
+				fmt.Printf("can not load config %s %s", args[0], err.Error())
+				os.Exit(1)
+			}
+
+			if cfg.Proxy.LogConfig != nil && cfg.KubemanagerType == string(config.Backend) {
+				logs.DefaultInitFileLog(cfg.Proxy.LogConfig.ServiceLogPath, cfg.Proxy.LogConfig.ErrorLogPath, Service, Version, os.Getenv(constant.DebugModEnvName) == "true")
+			} else {
+				logs.DeafultInitStd(Service, Version, os.Getenv(constant.DebugModEnvName) == "true")
 			}
 
 			workspaceInfoProvider, mgr, err := initWorkspaceInfoProvider(cfg)
 			if err != nil {
-				logs.WithError(err).WithField("filename", args[0]).Fatal("initWorkspaceInfoProvider error")
+				logs.Fatal("initWorkspaceInfoProvider error", logs.Err(err), logs.String("filename", args[0]))
 			}
 
 			var heartbeat sshproxy.Heartbeat
@@ -96,7 +106,7 @@ func newCommandRun() *cobra.Command {
 				logs.Infof("started proxying on %s", cfg.Ingress.HTTPAddress)
 
 				if err := mgr.Start(ctrl.SetupSignalHandler()); err != nil {
-					logs.WithError(err).Fatal(err, "problem starting ws-proxy")
+					logs.Fatal("problem starting ws-proxy", logs.Err(err))
 				}
 
 				logs.Info("Received SIGINT - shutting down")
@@ -122,7 +132,16 @@ func initWorkspaceInfoProvider(cfg *config.WsPorxyConfig) (proxy.WorkspaceInfoPr
 	switch cfg.KubemanagerType {
 	case string(config.KubeApi):
 		{
-			ctrl.SetLogger(logrusr.New(logs.Logs))
+			zapcfg := uzap.NewProductionConfig()
+			zapcfg.EncoderConfig.TimeKey = "time"
+			zapcfg.EncoderConfig.EncodeTime = func(t time.Time, enc zapcore.PrimitiveArrayEncoder) {
+				enc.AppendString(t.Format(time.RFC3339Nano))
+			}
+			zapopts := zap.Options{
+				Development: false,
+				Encoder:     zapcore.NewJSONEncoder(zapcfg.EncoderConfig),
+			}
+			ctrl.SetLogger(zap.New(zap.UseFlagOptions(&zapopts)))
 
 			opts := ctrl.Options{
 				Scheme:         scheme,
@@ -142,7 +161,7 @@ func initWorkspaceInfoProvider(cfg *config.WsPorxyConfig) (proxy.WorkspaceInfoPr
 			if cfg.KubeConfig.KubeConfig != "" && checkConfig(cfg.KubeConfig.KubeConfig) {
 				kubeConfig, err = clientcmd.BuildConfigFromFlags("", cfg.KubeConfig.KubeConfig)
 				if err != nil {
-					logs.WithError(err).Fatal(err, "unable to start manager")
+					logs.Fatal("unable to start manager", logs.Err(err))
 				}
 			} else {
 				kubeConfig = ctrl.GetConfigOrDie()
@@ -150,13 +169,13 @@ func initWorkspaceInfoProvider(cfg *config.WsPorxyConfig) (proxy.WorkspaceInfoPr
 
 			mgr, err := ctrl.NewManager(kubeConfig, opts)
 			if err != nil {
-				logs.WithError(err).Fatal(err, "unable to start manager")
+				logs.Fatal("unable to start manager", logs.Err(err))
 			}
 
 			wsInfop := proxy.NewRemoteWorkspaceInfoProvider(mgr.GetClient(), mgr.GetScheme())
 			err = wsInfop.SetupWithManager(mgr)
 			if err != nil {
-				logs.WithError(err).Fatal(err, "unable to create controller", "controller", "Pod")
+				logs.Fatal("unable to create controller", logs.Err(err))
 			}
 
 			return wsInfop, mgr, nil

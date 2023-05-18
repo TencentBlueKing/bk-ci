@@ -77,4 +77,5 @@ object CommonMessageCode {
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
     const val INIT_SERVICE_LIST_ERROR = "2100062" // 初始化服务列表异常问题
+    const val SERVICE_NOT_EXIST = "2100029" // 父服务不存在异常
 }

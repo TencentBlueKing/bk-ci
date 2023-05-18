@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfo
@@ -49,6 +48,7 @@ import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
+import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
 @Suppress("ALL")
 object StreamDispatchUtils {
