@@ -464,7 +464,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 actionType = CANCEL_ITSM_APPLICATION_ACTION
             )
         )
-        logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
+            logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
     }
 

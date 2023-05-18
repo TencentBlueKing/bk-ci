@@ -34,7 +34,6 @@ import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.ErrorCodeException
