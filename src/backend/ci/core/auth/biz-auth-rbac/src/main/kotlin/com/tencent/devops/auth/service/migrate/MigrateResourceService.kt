@@ -184,7 +184,7 @@ class MigrateResourceService @Autowired constructor(
                     resourceCode = resourceCode
                 ) ?: run {
                     // 版本体验名称会重复,需添加上时间戳
-                    val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK.value) {
+                    val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK_NEW.value) {
                         "${it.displayName}-${LocalDateTime.now()}"
                     } else {
                         it.displayName
