@@ -44,7 +44,7 @@ class AuthPipelineGroupService @Autowired constructor(
                 )
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
-                val ids = callBackInfo.filter.idList.map { it.toString().toLong() }
+                val ids = callBackInfo.filter.idList.map { HashUtil.decodeIdToLong(it.toString()) }
                 return getPipelineGroupInfo(ids.toSet(), token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
