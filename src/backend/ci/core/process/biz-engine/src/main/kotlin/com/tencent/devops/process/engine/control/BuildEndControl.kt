@@ -238,7 +238,7 @@ class BuildEndControl @Autowired constructor(
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)
         // 记录日志
-        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
+        buildLogPrinter.stopLog(buildId = buildId, executeCount = buildInfo.executeCount)
         return buildInfo
     }
 

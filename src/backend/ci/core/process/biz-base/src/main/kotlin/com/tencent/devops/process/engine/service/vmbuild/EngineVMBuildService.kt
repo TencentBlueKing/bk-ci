@@ -178,6 +178,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         Preconditions.checkNotNull(buildInfo, NotFoundException("Pipeline build ($buildId) is not exist"))
         LOG.info("ENGINE|$buildId|BUILD_VM_START|j($vmSeqId)|vmName($vmName)")
         // var表中获取环境变量，并对老版本变量进行兼容
+        val pipelineId = buildInfo.pipelineId
         val variables = buildVariableService.getAllVariable(projectId, buildInfo.pipelineId, buildId)
         val variablesWithType = buildVariableService.getAllVariableWithType(projectId, buildId).toMutableList()
         val model = containerBuildDetailService.getBuildModel(projectId, buildId)
@@ -214,7 +215,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         is VMBuildContainer -> {
                             val envList = mutableListOf<BuildEnv>()
                             val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
-                            val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
+                            val contextMap = variables.plus(
+                                pipelineContextService.buildContext(
+                                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                                    stageId = s.id!!, containerId = c.id!!, taskId = null,
+                                    variables = variables, model = model
+                                )
+                            ).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             val asCodeEnabled = asCodeSettings?.enable == true
                             val contextPair = if (asCodeEnabled) {
@@ -756,7 +763,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             "ENGINE|$buildId|BCT_DONE|$projectId|j($vmSeqId)|${result.taskId}|$buildStatus|" +
                 "type=$errorType|code=${result.errorCode}|msg=${result.message}]"
         )
-        buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = result.containerId ?: "")
+        buildLogPrinter.stopLog(buildId = buildId, tag = result.elementId, jobId = task?.containerHashId)
     }
 
     private fun getCompleteTaskBuildStatus(

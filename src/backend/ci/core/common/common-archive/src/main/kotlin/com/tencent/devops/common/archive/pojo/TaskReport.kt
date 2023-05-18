@@ -25,17 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.common.archive.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("版本仓库-文件下载统计")
-data class FileDownloadUserCount(
-    @ApiModelProperty("下载用户", required = true)
-    val userId: String,
-    @ApiModelProperty("下载次数", required = true)
-    val count: Int,
-    @ApiModelProperty("最后下载时间(秒)", required = true)
-    val updateTime: Long
+@ApiModel("自定义报告-报告信息")
+data class TaskReport(
+    @ApiModelProperty("名称", required = true)
+    val name: String,
+    @ApiModelProperty("首页地址", required = true)
+    val indexFileUrl: String,
+    @ApiModelProperty("报告类型", required = true)
+    val type: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件Id", required = true)
+    val taskId: String,
+    @ApiModelProperty("插件code", required = true)
+    val atomCode: String,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: LocalDateTime
 )

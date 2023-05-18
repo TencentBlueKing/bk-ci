@@ -94,7 +94,7 @@ class BuildLogListenerService @Autowired constructor(
         try {
             logService.updateLogStatus(event)
             // #3089 当收到构建级别的状态刷新时，清理缓存并保存行数
-            if (event.jobId.isBlank() && event.tag.isBlank()) {
+            if (event.jobId.isNullOrBlank() && event.tag.isNullOrBlank()) {
                 indexService.flushLineNum2DB(event.buildId)
             }
             result = true
