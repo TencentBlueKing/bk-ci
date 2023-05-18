@@ -288,7 +288,7 @@ object ProcessMessageCode {
     const val ERROR_VIEW_DUPLICATE_NAME = "2101185" // 流水线组名称重复
     const val ERROR_VIEW_NAME_ILLEGAL = "2101186" // 流水线组名称不合法
     const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = "2101187" // Windows暂时没有公共构建机可用，请联系持续集成助手添加
-    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = "2101188" // 重复的重试构建请求
+    const val ERROR_DUPLICATE_BUILD_RETRY_ACT = "2101188" // 当前构建正在运行中，请勿重复提交重试请求
     const val ERROR_NO_PARAM_IN_JOB_CONDITION = "2101189" // 请设置Job运行的自定义变量
     const val ERROR_TIMEOUT_IN_RUNNING = "2101190" // {0}运行达到({1})分钟，超时结束运行!
     const val ERROR_TIMEOUT_IN_BUILD_QUEUE = "2101191" // 排队超时，取消运行! [{0}]
