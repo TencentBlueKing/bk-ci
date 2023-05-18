@@ -995,6 +995,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             if (count > 0) {
                 releaseFlag = true
             }
+            val templateStatus = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt())
             templateList.add(
                 MyTemplateItem(
                     templateId = it[tTemplate.ID] as String,
@@ -1002,7 +1003,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     templateName = it[tTemplate.TEMPLATE_NAME] as String,
                     logoUrl = it[tTemplate.LOGO_URL],
                     version = it[tTemplate.VERSION] as String,
-                    templateStatus = TemplateStatusEnum.getTemplateStatus((it[tTemplate.TEMPLATE_STATUS] as Byte).toInt()),
+                    templateStatus = templateStatus,
                     projectCode = it[KEY_PROJECT_CODE] as String,
                     projectName = projectMap?.get(it[KEY_PROJECT_CODE] as String) as String,
                     releaseFlag = releaseFlag,

@@ -251,44 +251,54 @@ object MessageUtil {
             }
 
             else -> {
-                val entityClass = entity::class
-                // 统计出返回对象需要进行国际化翻译的字段
-                entityClass.java.declaredFields.forEach { dataField ->
-                    val dataFieldName = dataField.name
-                    // 生成完整字段路径
-                    val fullFieldPath = if (fieldPath.isNotBlank()) {
-                        "$fieldPath.$dataFieldName"
-                    } else {
-                        dataFieldName
-                    }
-                    // 判断字段上是否有BkFieldI18n注解，有该注解的字段才需要做国际化替换
-                    val bkFieldI18nAnnotation =
-                        dataField.annotations.firstOrNull { it is BkFieldI18n } as? BkFieldI18n ?: return@forEach
-                    // 获取字段的值，如果字段的值为空则无需进行国际化替换
-                    val dataFieldValue = getFieldValue(dataField, entity)
-                    if (dataFieldValue?.toString().isNullOrBlank()) { return@forEach }
-                    if (ReflectUtil.isNativeType(dataFieldValue!!) || dataFieldValue is String ||
-                        dataFieldValue is Enum<*>
-                    ) {
-                        // 如果字段的值是基本类型则把该字段放入需要国际化翻译的集合中
-                        val i18nFieldInfo = I18nFieldInfo(
-                            field = dataField,
-                            entity = entity,
-                            source = bkFieldI18nAnnotation.source,
-                            translateType = bkFieldI18nAnnotation.translateType,
-                            keyPrefixName = bkFieldI18nAnnotation.keyPrefixName,
-                            reusePrefixFlag = bkFieldI18nAnnotation.reusePrefixFlag,
-                            convertName = bkFieldI18nAnnotation.convertName
-                        )
-                        bkI18nFieldMap[fullFieldPath] = i18nFieldInfo
-                    } else {
-                        // 如果字段的值不是基本类型则进行递归收集国际化字段处理
-                        bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = dataFieldValue, fieldPath = fullFieldPath))
-                    }
-                }
+                doCommonEntityBus(entity, fieldPath, bkI18nFieldMap)
             }
         }
         return bkI18nFieldMap
+    }
+
+    private fun doCommonEntityBus(
+        entity: Any,
+        fieldPath: String,
+        bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
+    ) {
+        val entityClass = entity::class
+        // 统计出返回对象需要进行国际化翻译的字段
+        entityClass.java.declaredFields.forEach { dataField ->
+            val dataFieldName = dataField.name
+            // 生成完整字段路径
+            val fullFieldPath = if (fieldPath.isNotBlank()) {
+                "$fieldPath.$dataFieldName"
+            } else {
+                dataFieldName
+            }
+            // 判断字段上是否有BkFieldI18n注解，有该注解的字段才需要做国际化替换
+            val bkFieldI18nAnnotation =
+                dataField.annotations.firstOrNull { it is BkFieldI18n } as? BkFieldI18n ?: return@forEach
+            // 获取字段的值，如果字段的值为空则无需进行国际化替换
+            val dataFieldValue = getFieldValue(dataField, entity)
+            if (dataFieldValue?.toString().isNullOrBlank()) {
+                return@forEach
+            }
+            if (ReflectUtil.isNativeType(dataFieldValue!!) || dataFieldValue is String ||
+                dataFieldValue is Enum<*>
+            ) {
+                // 如果字段的值是基本类型则把该字段放入需要国际化翻译的集合中
+                val i18nFieldInfo = I18nFieldInfo(
+                    field = dataField,
+                    entity = entity,
+                    source = bkFieldI18nAnnotation.source,
+                    translateType = bkFieldI18nAnnotation.translateType,
+                    keyPrefixName = bkFieldI18nAnnotation.keyPrefixName,
+                    reusePrefixFlag = bkFieldI18nAnnotation.reusePrefixFlag,
+                    convertName = bkFieldI18nAnnotation.convertName
+                )
+                bkI18nFieldMap[fullFieldPath] = i18nFieldInfo
+            } else {
+                // 如果字段的值不是基本类型则进行递归收集国际化字段处理
+                bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = dataFieldValue, fieldPath = fullFieldPath))
+            }
+        }
     }
 
     /**

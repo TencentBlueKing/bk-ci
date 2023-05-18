@@ -1911,7 +1911,7 @@ class PipelineBuildFacadeService(
                 arrayOf(userId, pipelineId, I18nUtil.getCodeLanMessage(BK_BUILD_HISTORY))
             )
         )
-        return StartType.getStartTypeMap()
+        return StartType.getStartTypeMap(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
     }
 
     fun getHistoryConditionRepo(userId: String, projectId: String, pipelineId: String): List<String> {
