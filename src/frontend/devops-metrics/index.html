@@ -8,6 +8,7 @@
     <link rel="shortcut icon" href="/public/images/favicon.png" type="image/x-icon" />
     <script type="module" src="./src/main.ts"></script>
     <script>
+        var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
         window.dispatchEvent = (cs) => {
             if (cs.eventName === 'change::$currentProjectId') {
                 window.eventBus.emit('changeProjectId', cs.payload.currentProjectId)
