@@ -27,9 +27,12 @@
 
 package com.tencent.devops.dockerhost.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 enum class ErrorCodeEnum(
+    @BkFieldI18n
     val errorType: ErrorType,
     val errorCode: Int,
     val formatErrorMessage: String
@@ -43,5 +46,9 @@ enum class ErrorCodeEnum(
     DOCKER_JAR_DOWNLOAD_ERROR(ErrorType.SYSTEM, 2104007, "docker.jar下载失败"),
     DOCKER_INIT_CURL_ERROR(ErrorType.SYSTEM, 2104008, "镜像curl命令异常，导致下载初始脚本出错"),
     DOCKER_INIT_JDK_ERROR(ErrorType.SYSTEM, 2104009, "镜像内JDK安装路径不存在"),
-    DOCKER_INIT_ERROR(ErrorType.SYSTEM, 2104010, "初始化脚本执行失败"),
+    DOCKER_INIT_ERROR(ErrorType.SYSTEM, 2104010, "初始化脚本执行失败");
+
+    fun getErrorMessage(): String {
+        return I18nUtil.getCodeLanMessage("${this.errorCode}")
+    }
 }

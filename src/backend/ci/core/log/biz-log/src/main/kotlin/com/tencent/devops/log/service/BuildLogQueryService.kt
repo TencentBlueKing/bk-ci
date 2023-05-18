@@ -27,9 +27,11 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
 import com.tencent.devops.common.log.pojo.PageQueryLogs
@@ -38,10 +40,11 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
 @Service
@@ -409,7 +412,14 @@ class BuildLogQueryService @Autowired constructor(
                 permission = permission
             )
         ) {
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下${permission.alias}流水线")
+            val language = I18nUtil.getLanguage(userId)
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, AuthPermission.EDIT.getI18n(language), pipelineId)
+                )
+            )
         }
     }
 

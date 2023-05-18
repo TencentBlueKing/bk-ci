@@ -47,10 +47,7 @@ object StreamApiUtil {
             }
         } catch (e: ClientException) {
             logger.warn("TGitApiService|retryFun|retry 5 times $log", e)
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
-            )
+            throw ErrorCodeException(errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString())
         } catch (e: RemoteServiceException) {
             logger.warn("TGitApiService|retryFun|GIT_API_ERROR $log", e)
             throw ErrorCodeException(
@@ -70,7 +67,7 @@ object StreamApiUtil {
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
+                    "$log: ${apiErrorCode.getErrorMessage()}"
                 } else {
                     "$log: ${e.message}"
                 }
