@@ -112,7 +112,7 @@ export default (r, initSetLocale = false) => {
         })
     }
 
-    function setLocale (localeLang) {
+    async function setLocale (localeLang) {
         Object.keys(loadedModule).map(mod => {
             const [, module] = mod.split('_')
             if (!loadedModule[getLocalModuleId(module, localeLang)]) {
@@ -120,7 +120,7 @@ export default (r, initSetLocale = false) => {
             }
         })
         if (localeLang !== localeAliasMap[window.INIT_LOCALE]) {
-            syncLocaleBackend(localeLang)
+            await syncLocaleBackend(localeLang)
         }
         i18n.locale = localeLang
         setLsLocale(localeLang)
