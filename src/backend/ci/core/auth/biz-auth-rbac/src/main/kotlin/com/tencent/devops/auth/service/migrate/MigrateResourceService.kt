@@ -292,9 +292,7 @@ class MigrateResourceService @Autowired constructor(
             AuthResourceType.CODECC_RULE_SET.value,
             AuthResourceType.PIPELINE_GROUP.value,
             AuthResourceType.TURBO.value,
-            AuthResourceType.PROJECT.value,
-            AuthResourceType.EXPERIENCE_TASK_NEW.value,
-            AuthResourceType.EXPERIENCE_GROUP_NEW.value
+            AuthResourceType.PROJECT.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
