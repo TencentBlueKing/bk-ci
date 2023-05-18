@@ -3,6 +3,7 @@ package cron
 import (
 	"disaptch-k8s-manager/pkg/db/mysql"
 	"disaptch-k8s-manager/pkg/logs"
+
 	"github.com/robfig/cron/v3"
 )
 
@@ -18,6 +19,8 @@ const expiredDay = 5
 
 func initClearExpiredTaskDBData() error {
 	c := cron.New()
+
+	logs.Info("debug ===================")
 
 	if _, err := c.AddFunc("@every 2h10m", func() {
 		logs.Info("start clear expired task db data")
