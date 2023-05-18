@@ -523,7 +523,11 @@ open class GitApi {
     fun getMergeRequestChangeInfo(host: String, token: String, url: String): GitMrChangeInfo {
         logger.info("get mr changes info url: $url")
         val request = get(host, token, url, "")
-        return callMethod(getMessageByLocale(CommonMessageCode.OPERATION_MR_CHANGE), request, GitMrChangeInfo::class.java)
+        return callMethod(
+            operation = getMessageByLocale(CommonMessageCode.OPERATION_MR_CHANGE),
+            request = request,
+            classOfT = GitMrChangeInfo::class.java
+        )
     }
 
     fun getMrInfo(host: String, token: String, url: String): GitMrInfo {
