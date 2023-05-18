@@ -61,6 +61,7 @@ spec:
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
               INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/project/api/open/project/callback/", "project", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (12,"http://{{ include "bkci.names.fullname" . }}-gateway.{{ .Release.Namespace }}", "/ms/process/api/open/pipeline/callback/pipelineGroupInfo", "pipeline_group", "ci");
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
       restartPolicy: OnFailure

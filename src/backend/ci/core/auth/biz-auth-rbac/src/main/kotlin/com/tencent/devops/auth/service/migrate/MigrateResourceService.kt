@@ -289,11 +289,6 @@ class MigrateResourceService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
         private val noNeedToMigrateResourceType = listOf(
-            AuthResourceType.CODECC_TASK.value,
-            AuthResourceType.CODECC_IGNORE_TYPE.value,
-            AuthResourceType.CODECC_RULE_SET.value,
-            AuthResourceType.PIPELINE_GROUP.value,
-            AuthResourceType.TURBO.value,
             AuthResourceType.PROJECT.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
