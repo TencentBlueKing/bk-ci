@@ -275,8 +275,9 @@ class MigrateResourceService @Autowired constructor(
 
     private fun buildIamApprover(
         resourceCreator: String,
-        iamApprover: String
+        iamApprover: String?
     ): String {
+        if (iamApprover == null) return resourceCreator
         val isResourceCreatorNotExist = deptService.getUserInfo(
             userId = "admin",
             name = resourceCreator
