@@ -51,6 +51,7 @@ import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
+import java.time.LocalDateTime
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executors
 import org.jooq.DSLContext
@@ -182,7 +183,12 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    val resourceName = it.displayName
+                    // 版本体验名称会重复,需添加上时间戳
+                    val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK.value) {
+                        "${it.displayName}-${LocalDateTime.now()}"
+                    } else {
+                        it.displayName
+                    }
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
