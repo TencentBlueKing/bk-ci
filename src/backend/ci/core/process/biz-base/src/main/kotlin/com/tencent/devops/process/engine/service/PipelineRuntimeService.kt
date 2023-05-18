@@ -458,7 +458,11 @@ class PipelineRuntimeService @Autowired constructor(
             BuildHistory(
                 id = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, channelCode),
+                trigger = StartType.toReadableString(
+                    trigger,
+                    channelCode,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 buildNum = buildNum,
                 pipelineVersion = version,
                 startTime = startTime?.timestampmilli() ?: 0L,

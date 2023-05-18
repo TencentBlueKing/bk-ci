@@ -58,7 +58,11 @@ object QualityUtils {
 
         val titleData = mutableListOf(event.status,
                 DateTimeUtil.formatMilliTime(System.currentTimeMillis() - event.startTime),
-                StartType.toReadableString(event.triggerType, null),
+                StartType.toReadableString(
+                    event.triggerType,
+                    null,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 pipelineName,
                 "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
                 I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
