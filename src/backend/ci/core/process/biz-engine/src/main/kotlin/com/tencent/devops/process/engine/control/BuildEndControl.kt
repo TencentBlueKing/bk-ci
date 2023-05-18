@@ -41,6 +41,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -69,6 +70,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
@@ -96,6 +98,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
@@ -291,14 +294,23 @@ class BuildEndControl @Autowired constructor(
             }
             // 将插件出错信息逐一加入构建错误信息
             if (task.errorType != null) {
+                val (taskId, taskName) = if (task.taskId.startsWith(VMUtils.getStartVmLabel())) {
+                    val container = containerBuildRecordService.getRecord(
+                        transactionContext = null, projectId = task.projectId, pipelineId = task.pipelineId,
+                        buildId = task.buildId, containerId = task.containerId, executeCount = task.executeCount ?: 1
+                    )
+                    Pair(task.taskId, container?.containerVar?.get(Container::name.name)?.toString() ?: task.taskName)
+                } else {
+                    Pair("", task.taskName)
+                }
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = task.stageId,
                         containerId = task.containerId,
                         matrixFlag = VMUtils.isMatrixContainerId(task.containerId),
                         // 启动插件问题设为job级别问题，将taskId置空，用于前端定位图至job
-                        taskId = task.taskId.let { if (it.startsWith(VMUtils.getStartVmLabel())) "" else it },
-                        taskName = task.taskName,
+                        taskId = taskId,
+                        taskName = taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
                         errorType = task.errorType?.num ?: ErrorType.USER.num,
                         errorCode = task.errorCode ?: PLUGIN_DEFAULT_ERROR,
