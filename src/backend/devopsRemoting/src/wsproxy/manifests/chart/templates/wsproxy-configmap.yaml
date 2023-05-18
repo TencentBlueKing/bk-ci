@@ -31,6 +31,12 @@ data:
           "vscodePort": 23000,
           "remotingPort": 22999
         },
+        {{- if .Values.wsproxy.logConfig.enablePathLog }}
+        "logConfig": {
+          "serviceLogPath": "{{ .Values.wsproxy.logConfig.serviceLogPath }}",
+          "errorLogPath": "{{ .Values.wsproxy.logConfig.errorLogPath }}"
+        },
+        {{- end }}
         "builtinPages": {
           "location": "/data/workspace/wsproxy/public"
         }

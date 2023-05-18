@@ -2,7 +2,6 @@ package main
 
 import (
 	"common/cli/check"
-	"common/logs"
 	"fmt"
 	"os"
 
@@ -15,8 +14,6 @@ var (
 )
 
 func main() {
-	logs.Init(Service, Version, true, false)
-
 	if err := newWsproxyCommand(Version).Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

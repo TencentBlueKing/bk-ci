@@ -57,7 +57,7 @@ func WorkspaceAuthHandler(hostname, redirUrl string, checkAuth checkAuth) mux.Mi
 
 			ok, err := checkAuth(context.Background(), hostname, wsID, ticketV)
 			if err != nil {
-				log.Errorf("checkauth err %s", err)
+				log.Sugar().Errorf("checkauth err %s", err.Error())
 				resp.WriteHeader(http.StatusForbidden)
 				return
 			}

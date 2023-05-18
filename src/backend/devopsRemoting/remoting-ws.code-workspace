@@ -51,5 +51,6 @@
         "gopls": {
             "allowModfileModifications": true
         },
+        "go.useLanguageServer": true,
     }
 }

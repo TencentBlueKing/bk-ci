@@ -26,8 +26,8 @@ func (b *BackendHeartbeat) SendHeartbeat(workspaceId string, _, _ bool) {
 	defer cancel()
 	err := b.Client.SendHeartbeat(ctx, workspaceId)
 	if err != nil {
-		logs.WithError(err).Warn("cannot send heartbeat for workspace instance")
+		logs.Error("cannot send heartbeat for workspace instance", logs.Err(err))
 	} else {
-		logs.WithField("workspaceId", workspaceId).Debug("sent heartbeat to ws-manager")
+		logs.Debug("sent heartbeat to ws-manager", logs.String("workspaceId", workspaceId))
 	}
 }

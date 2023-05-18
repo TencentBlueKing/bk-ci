@@ -15,9 +15,28 @@ registry:
   # 用来挂载wsproxy配置的参数，不同环境wsproxy名字可能不同
   wsproxyName: wsproxy
   # 填写后添加固定镜像，方便测试
-  fixedSpec:
+  fixedSpec: ""
   # 存活检查
   readinessProbeAddr: 
+  # 关于日志的配置  
+  logConfig:  
+    # 日志是否落盘
+    enablePathLog: false
+    serviceLogPath: "/data/workspace/registry-facade/logs/service.log"
+    errorLogPath: "/data/workspace/registry-facade/logs/error.log"
+    # 使用sidecar模式采集日志
+    sidecar:
+      enable: false
+      image: ""
+      env: []
+      resources:
+        requests:
+          cpu: 500m
+          memory: 256Mi
+        limits:
+          cpu: 750m
+          memory: 512Mi
+      workingDir: ""  
 
 # 镜像配置
 backendImage:

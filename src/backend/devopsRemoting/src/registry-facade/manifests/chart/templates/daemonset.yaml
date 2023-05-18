@@ -48,6 +48,11 @@ spec:
           - name: {{ .Values.registry.wsproxyName }}-tls-certs
             mountPath: /data/workspace/registry-facade/tls
             readOnly: true  
+          {{- if .Values.registry.logConfig.enablePathLog }}  
+          - name: {{ .Release.Name }}-logs
+            mountPath: /data/workspace/registry-facade/logs
+            readOnly: false  
+          {{- end }}  
         {{- if .Values.registry.readinessProbeAddr }}    
         readinessProbe:
           httpGet:
@@ -67,7 +72,23 @@ spec:
           timeoutSeconds: 2
           successThreshold: 1
           failureThreshold: 3   
-        {{- end }}       
+        {{- end }}  
+      {{- if .Values.registry.logConfig.sidecar.enable }}
+      - name: {{ .Release.Name }}-log-agent
+        image: {{ .Values.registry.logConfig.sidecar.image }}
+        imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+        {{- if .Values.registry.logConfig.sidecar.resources }}
+        resources: {{- toYaml .Values.registry.logConfig.sidecar.resources | nindent 10 }}
+        {{- end }}
+        workingDir: {{ .Values.registry.logConfig.sidecar.workingDir }}
+        volumeMounts:
+          - name: {{ .Release.Name }}-logs
+            mountPath: /data/workspace/registry-facade/logs
+            readOnly: false
+        {{- if .Values.registry.logConfig.sidecar.env }}
+        env: {{- toYaml .Values.registry.logConfig.sidecar.env | nindent 10 }}
+        {{- end }}
+      {{- end }}
       volumes:
       - name: {{ .Release.Name }}-cache
         emptyDir:
@@ -95,4 +116,8 @@ spec:
               path: https.pem
             - key: https.key
               path: https.key 
+      {{- if .Values.registry.logConfig.enablePathLog }}        
+      - name: {{ .Release.Name }}-logs
+        emptyDir: {}          
+      {{- end }}  
         

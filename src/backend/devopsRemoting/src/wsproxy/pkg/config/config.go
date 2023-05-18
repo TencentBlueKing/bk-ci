@@ -26,8 +26,6 @@ type KubemanagerType string
 const (
 	//KubeApi kubernetes原生api作为集群管理接口
 	KubeApi KubemanagerType = "KUBE_API"
-	//Devcloud 使用devcloud作为集群管理接口
-	Devcloud KubemanagerType = "DEVCLOUD"
 	//Backend 调用后台dispatch作为集群管理接口
 	Backend KubemanagerType = "BACKEND"
 )
@@ -72,6 +70,7 @@ type ProxyConfig struct {
 	TransportConfig    *TransportConfig    `json:"transportConfig"`
 	WorkspacePodConfig *WorkspacePodConfig `json:"workspacePodConfig"`
 	BuiltinPages       BuiltinPagesConfig  `json:"builtinPages"`
+	LogConfig          *LogConfig          `json:"logConfig"`
 }
 type TransportConfig struct {
 	ConnectTimeout      util.Duration `json:"connectTimeout"`
@@ -94,4 +93,9 @@ type DevRemotingBackend struct {
 	WorkspaceHostSuffix string `json:"workspaceHostSuffix"`
 	SHA1Key             string `json:"sha1key"`
 	OauthRedirectUrl    string `json:"oauthRedirectUrl"`
+}
+
+type LogConfig struct {
+	ServiceLogPath string `json:"serviceLogPath"`
+	ErrorLogPath   string `json:"errorLogPath"`
 }

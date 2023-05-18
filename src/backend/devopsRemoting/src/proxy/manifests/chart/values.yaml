@@ -24,6 +24,7 @@ apisix:
       pullPolicy: IfNotPresent
       tag: 3.2.0-debian
     replicaCount: 1
+    timezone: "Asia/Shanghai"
 
   admin:
     credentials:
@@ -86,6 +87,7 @@ apisix:
     persistence:
       enabled: false
       size: 100Mi
+    replicaCount: 3  
 
   apisix-ingress-controller:
     image:
@@ -95,3 +97,32 @@ apisix:
     initContainer:
       image: mirrors.tencent.com/ruotiantang/apisix
       tag: busybox-1.28
+
+  extraVolumes: []
+  
+  extraVolumeMounts: [] 
+
+  logs:
+    enableAccessLog: true
+    accessLog: "/dev/stdout"
+    accessLogFormat: '$remote_addr - $remote_user [$time_local] $http_host \"$request\" $status $body_bytes_sent $request_time \"$http_referer\" \"$http_user_agent\" $upstream_addr $upstream_status $upstream_response_time \"$upstream_scheme://$upstream_host$upstream_uri\"'
+    accessLogFormatEscape: default
+    errorLog: "/dev/stderr"
+    errorLogLevel: "warn"
+
+  proxy:
+    # 关于日志的配置，需要配合apisix logs，extraVolumes，extraVolumeMounts使用
+    logConfig:
+      # 使用sidecar模式采集日志
+      sidecar:
+        enable: false
+        image: ""
+        env: []
+        resources:
+          requests:
+            cpu: 500m
+            memory: 256Mi
+          limits:
+            cpu: 750m
+            memory: 512Mi
+        workingDir: ""
