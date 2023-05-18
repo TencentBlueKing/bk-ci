@@ -1,10 +1,8 @@
 package com.tencent.devops.common.web.interceptor
 
 import com.tencent.devops.common.api.annotation.BkInterfaceI18n
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
-import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.JsonUtil
@@ -293,7 +291,6 @@ class BkWriterInterceptor : WriterInterceptor {
             }
         }
     }
-
 
     /**
      * 获取前缀名称对应的值
