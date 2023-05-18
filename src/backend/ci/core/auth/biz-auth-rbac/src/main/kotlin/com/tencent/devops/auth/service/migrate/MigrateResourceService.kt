@@ -186,7 +186,7 @@ class MigrateResourceService @Autowired constructor(
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
                                 userId = buildIamApprover(
-                                    resourceCreator = it.iamApprover[0],
+                                    resourceCreator = it.iamApprover.firstOrNull(),
                                     iamApprover = iamApprover
                                 ),
                                 projectCode = projectCode,
@@ -274,16 +274,10 @@ class MigrateResourceService @Autowired constructor(
     }
 
     private fun buildIamApprover(
-        resourceCreator: String,
-        iamApprover: String?
-    ): String {
-        if (iamApprover == null) return resourceCreator
-        val isResourceCreatorNotExist = deptService.getUserInfo(
-            userId = "admin",
-            name = resourceCreator
-        ) == null
-        return if (isResourceCreatorNotExist) iamApprover else resourceCreator
-    }
+        resourceCreator: String?,
+        iamApprover: String
+    ): String = if (resourceCreator != null && deptService.getUserInfo("admin", resourceCreator) != null)
+        resourceCreator else iamApprover
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
