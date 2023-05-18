@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
-import com.tencent.devops.statistics.pojo.openapi.constant.OpenAPIMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
+import com.tencent.devops.statistics.constant.StatisticsMessageCode.ERROR_OPENAPI_JWT_PARSE_FAIL
 import com.tencent.devops.statistics.util.openapi.ApiGatewayPubFile
 import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import io.jsonwebtoken.Jwts
