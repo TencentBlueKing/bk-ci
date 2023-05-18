@@ -45,6 +45,7 @@ import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
@@ -185,7 +186,7 @@ class MigrateResourceService @Autowired constructor(
                 ) ?: run {
                     // 版本体验名称会重复,需添加上时间戳
                     val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK_NEW.value) {
-                        "${it.displayName}-${LocalDateTime.now()}"
+                        "${it.displayName}-${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyyMMddHHmmss")}"
                     } else {
                         it.displayName
                     }

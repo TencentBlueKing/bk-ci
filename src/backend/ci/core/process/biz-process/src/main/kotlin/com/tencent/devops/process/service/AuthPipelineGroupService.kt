@@ -6,6 +6,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
@@ -81,7 +82,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupList.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
@@ -107,7 +108,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupList.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.iamApprover = arrayListOf(it.createUser)
             entity.displayName = it.name
             entityInfo.add(entity)
@@ -139,7 +140,7 @@ class AuthPipelineGroupService @Autowired constructor(
         val entityInfo = mutableListOf<InstanceInfoDTO>()
         pipelineGroupInfo.map {
             val entity = InstanceInfoDTO()
-            entity.id = it.id.toString()
+            entity.id = HashUtil.encodeLongId(it.id)
             entity.displayName = it.name
             entityInfo.add(entity)
         }
