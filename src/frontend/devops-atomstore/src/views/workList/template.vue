@@ -127,7 +127,7 @@
                                     </bk-select>
                                     <div v-if="templateErrors.projectError" class="error-tips"> {{ $t('store.项目不能为空') }} </div>
                                 </div>
-                                <bk-popover placement="right">
+                                <bk-popover placement="right" class="bk-icon-tooltips">
                                     <i class="devops-icon icon-info-circle"></i>
                                     <template slot="content">
                                         <p> {{ $t('store.源模版所属项目') }} </p>
@@ -586,3 +586,10 @@
         }
     }
 </script>
+<style lang="scss">
+    .bk-icon-tooltips {
+        padding-top: 3px;
+        padding-left: 10px;
+    }
+    
+</style>
