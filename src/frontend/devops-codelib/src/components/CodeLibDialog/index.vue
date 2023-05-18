@@ -267,9 +267,6 @@
             isP4 () {
                 return isP4(this.codelibTypeName)
             },
-            isSvn () {
-                return isSvn(this.codelibTypeName)
-            },
             isGithub () {
                 return isGithub(this.codelibTypeName)
             },

@@ -80,8 +80,8 @@
 </template>
 
 <script>
-    import breadCrumbs from '@/components/bread-crumbs.vue'
     import BuildLog from '@/components/Log'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
     import { mapActions } from 'vuex'
     import detailInfo from '../components/detailInfo'
 
@@ -310,7 +310,7 @@
             font-size: 14px;
             padding-bottom: 10px;
             margin-bottom: 19px;
-            border-bottom: 1px solid $fontLigtherColor;
+            border-bottom: 1px solid fontLighterColor;
             .cancel-release {
                 float: right;
                 color: $primaryColor;
