@@ -57,6 +57,7 @@ import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
 import org.elasticsearch.action.index.IndexRequest
+import org.elasticsearch.action.search.ClearScrollRequest
 import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.action.search.SearchScrollRequest
 import org.elasticsearch.client.HttpAsyncResponseConsumerFactory.HeapBufferedResponseConsumerFactory
@@ -376,6 +377,10 @@ class LogServiceESImpl constructor(
                 )
             } while (scrollResp.hits.hits.isNotEmpty())
         }
+        // 清除 scroll 上下文
+        val clearScrollRequest = ClearScrollRequest()
+        clearScrollRequest.addScrollId(scrollResp.scrollId)
+        scrollClient.restClient.clearScroll(clearScrollRequest, RequestOptions.DEFAULT)
 
         val resultName = fileName ?: "$pipelineId-$buildId-log"
         return Response

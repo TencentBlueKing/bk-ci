@@ -86,7 +86,7 @@ function _M:get_tag(ns_config)
         end
         -- 是否使用kubernetes
         if not string.find(tag, '^kubernetes-') then
-            if config.kubernetes.switchAll == true then
+            if config.kubernetes.switchAll == true or self:switch_kubernetes(tag) then
                 tag = "kubernetes-" .. tag
             else
                 local k8s_redis_key = nil
@@ -112,6 +112,17 @@ function _M:get_tag(ns_config)
     self:set_header(tag)
 
     return tag
+end
+
+function _M:switch_kubernetes(tag)
+    local isInList = false
+    for _, v in ipairs(config.kubernetes.tags) do
+        if v == tag then
+            isInList = true
+            break
+        end
+    end
+    return isInList
 end
 
 -- 设置tag到http请求头

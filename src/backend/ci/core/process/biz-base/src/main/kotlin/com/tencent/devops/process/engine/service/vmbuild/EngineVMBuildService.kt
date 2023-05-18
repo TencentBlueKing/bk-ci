@@ -221,9 +221,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                         is VMBuildContainer -> {
                             val envList = mutableListOf<BuildEnv>()
                             val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
-                            val contextMap = pipelineContextService.buildContext(
-                                projectId = projectId, pipelineId = pipelineId, buildId = buildId, stageId = s.id!!,
-                                containerId = c.id!!, taskId = null, variables = variables, model = model
+                            val contextMap = variables.plus(
+                                pipelineContextService.buildContext(
+                                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                                    stageId = s.id!!, containerId = c.id!!, taskId = null,
+                                    variables = variables, model = model
+                                )
                             ).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             val asCodeEnabled = asCodeSettings?.enable == true
