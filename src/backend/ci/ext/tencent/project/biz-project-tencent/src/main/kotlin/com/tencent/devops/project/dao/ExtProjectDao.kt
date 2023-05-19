@@ -50,8 +50,8 @@ class ExtProjectDao {
                 .and(CHANNEL.eq(ProjectChannelCode.BS.name))
                 .and(
                     if (authType == AuthSystemType.V0_AUTH_TYPE) {
-                        ROUTER_TAG.notLike(AuthSystemType.V3_AUTH_TYPE.value)
-                            .and(ROUTER_TAG.notLike(AuthSystemType.RBAC_AUTH_TYPE.value))
+                        ROUTER_TAG.notContains(AuthSystemType.V3_AUTH_TYPE.value)
+                            .and(ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value))
                             .or(ROUTER_TAG.isNull)
                     } else {
                         ROUTER_TAG.contains(AuthSystemType.V3_AUTH_TYPE.value)
