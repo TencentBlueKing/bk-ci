@@ -129,7 +129,6 @@ const getData = () => {
                   cursor: 'pointer',
                   color: '#3a84ff',
                 },
-                title: cell,
                 onClick () {
                   router.push({
                     name: 'PluginFailAnalysis',
