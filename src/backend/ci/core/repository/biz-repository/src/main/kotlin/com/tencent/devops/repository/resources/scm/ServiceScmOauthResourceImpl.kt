@@ -34,13 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.pojo.*
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -260,6 +254,23 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 mrId = mrId,
                 page = page,
                 size = size
+            )
+        )
+    }
+    override fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): Result<GitCommitReviewInfo?> {
+        return Result(
+            scmOauthService.getCommitReviewInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                crId = crId
             )
         )
     }

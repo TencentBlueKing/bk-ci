@@ -41,16 +41,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
-import com.tencent.devops.scm.pojo.ChangeFileInfo
-import com.tencent.devops.scm.pojo.GitCodeGroup
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
-import com.tencent.devops.scm.pojo.GitMember
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.TapdWorkItem
+import com.tencent.devops.scm.pojo.*
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
@@ -91,6 +82,7 @@ open class GitApi {
         private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
         private const val OPERATION_TAPD_WORKITEMS = "查看绑定的TAPD单"
         private const val GET_PROJECT_INFO = "获取项目详情"
+        private const val GET_COMMIT_REVIEW_INFO = "获取Commit评审信息"
     }
 
     fun listBranches(
@@ -607,5 +599,10 @@ open class GitApi {
     fun getProjectInfo(host: String, token: String, url: String): GitProjectInfo {
         val request = get(host, token, url, StringUtils.EMPTY)
         return JsonUtil.getObjectMapper().readValue(getBody(GET_PROJECT_INFO, request))
+    }
+
+    fun getCommitReviewInfo(host: String, token: String, url: String): GitCommitReviewInfo {
+        val request = get(host, token, url, StringUtils.EMPTY)
+        return JsonUtil.getObjectMapper().readValue(getBody(GET_COMMIT_REVIEW_INFO, request))
     }
 }

@@ -36,15 +36,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.P4Config
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitDiff
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -581,6 +573,27 @@ class ScmService @Autowired constructor(
         ).getProjectInfo(
             projectName = projectName
         )
+    }
+
+    override fun getCommitReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getCommitReviewInfo(crId = crId)
     }
 
     companion object {

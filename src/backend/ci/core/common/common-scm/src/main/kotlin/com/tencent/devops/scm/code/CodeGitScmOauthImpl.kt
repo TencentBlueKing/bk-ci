@@ -36,6 +36,7 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -277,6 +278,15 @@ class CodeGitScmOauthImpl constructor(
     override fun getProjectInfo(projectName: String): GitProjectInfo {
         val url = "projects/${GitUtils.urlEncode(projectName)}"
         return gitOauthApi.getProjectInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getCommitReviewInfo(crId: Long): GitCommitReviewInfo? {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/review/$crId"
+        return gitOauthApi.getCommitReviewInfo(
             host = apiUrl,
             token = token,
             url = url

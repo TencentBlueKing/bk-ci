@@ -82,6 +82,8 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.p4.P4Event
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import java.util.regex.Pattern
@@ -324,5 +326,17 @@ object WebhookUtils {
 
     fun isCustomP4TriggerVersion(version: String?): Boolean {
         return getMajorVersion(version) >= CUSTOM_P4_TRIGGER_VERSION
+    }
+
+    /**
+     * 代码评审启动参数填充
+     */
+    fun crStartParam(
+        gitCommitReviewInfo: GitCommitReviewInfo?,
+        gitMrInfo: GitMrInfo?
+    ): Map<String, Any>{
+        val startParams = mutableMapOf<String, Any>()
+        startParams[PIPELINE_BUILD_MSG] = gitCommitReviewInfo?.title ?: (gitMrInfo?.title ?: "代码库触发")
+        return startParams
     }
 }
