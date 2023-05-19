@@ -202,4 +202,34 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
         )
         return Result(fileList)
     }
+
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<String> {
+        val content = archiveFileService.getFileContent(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(content)
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<List<String>> {
+        val fileNames = archiveFileService.listFileNamesByPath(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(fileNames)
+    }
 }

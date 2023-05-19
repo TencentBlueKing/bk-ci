@@ -27,9 +27,11 @@
 
 package com.tencent.devops.common.web.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -38,11 +40,14 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceLocaleResource
-import java.net.URLDecoder
+import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
+import java.net.URLDecoder
 
 object I18nUtil {
+
+    private val logger = LoggerFactory.getLogger(I18nUtil::class.java)
 
     /**
      * 从redis缓存获取用户的国际化语言信息
@@ -102,19 +107,24 @@ object I18nUtil {
         val requestChannel = getRequestChannel()
         return if (requestChannel != RequestChannelTypeEnum.BUILD.name) {
             // 如果请求来源是build接口，先从缓存中获取用户获取的语言信息
-            var language = getUserLocaleLanguageFromCache(userId)
-            if (language.isNullOrBlank()) {
-                // 缓存中未取到语言则通过接口从db中获取用户设置的语言信息（db中也没有语言信息则给该用户的语言设置为默认语言）
-                val client = SpringContextUtil.getBean(Client::class.java)
-                language =
-                    client.get(ServiceLocaleResource::class).getUserLocale(userId).data?.language ?: defaultLanguage
-                val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-                // 把查出来的用户语言放入缓存
-                redisOperation.set(LocaleUtil.getUserLocaleLanguageKey(userId), language)
+            try {
+                var language = getUserLocaleLanguageFromCache(userId)
+                if (language.isNullOrBlank()) {
+                    // 缓存中未取到语言则通过接口从db中获取用户设置的语言信息（db中也没有语言信息则给该用户的语言设置为默认语言）
+                    val client = SpringContextUtil.getBean(Client::class.java)
+                    language =
+                        client.get(ServiceLocaleResource::class).getUserLocale(userId).data?.language ?: defaultLanguage
+                    val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+                    // 把查出来的用户语言放入缓存
+                    redisOperation.set(LocaleUtil.getUserLocaleLanguageKey(userId), language)
+                }
+                language
+            } catch (ignored: Throwable) {
+                logger.warn("Fail to get language of userId[$userId]", ignored)
+                defaultLanguage
             }
-            language
         } else {
-            getDefaultLocaleLanguage()
+            defaultLanguage
         }
     }
 
@@ -177,5 +187,28 @@ object I18nUtil {
         )
         // 生成Result对象
         return Result(messageCode.toInt(), message, data)
+    }
+
+    /**
+     * 获取模块标识
+     * @param attributes 属性列表
+     * @return 模块标识
+     */
+    fun getModuleCode(attributes: ServletRequestAttributes?): String {
+        val moduleCode = if (null != attributes) {
+            val request = attributes.request
+            // 从请求头中获取服务名称
+            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
+            try {
+                serviceName.uppercase()
+            } catch (ignored: Throwable) {
+                logger.warn("serviceName[${serviceName.uppercase()}] is invalid", ignored)
+                SystemModuleEnum.COMMON.name
+            }
+        } else {
+            // 默认从公共模块获取国际化信息
+            SystemModuleEnum.COMMON.name
+        }
+        return moduleCode
     }
 }
