@@ -192,7 +192,7 @@ class CategoryServiceImpl @Autowired constructor(
     override fun addCategoryToCategoryList(it: Record, categoryList: MutableList<Category>) {
         val categoryCode = it[KEY_CATEGORY_CODE] as String
         val categoryName = it[KEY_CATEGORY_NAME] as String
-        val type = it[KEY_CATEGORY_TYPE] as Int
+        val type = (it[KEY_CATEGORY_TYPE] as Byte).toInt()
         val categoryLanName = I18nUtil.getCodeLanMessage(
             messageCode = "${StoreTypeEnum.getStoreType(type)}.category.$categoryCode",
             defaultMessage = categoryName
