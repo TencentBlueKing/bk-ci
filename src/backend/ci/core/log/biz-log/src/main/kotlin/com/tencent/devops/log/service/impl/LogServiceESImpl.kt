@@ -213,7 +213,13 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
+        val queryLogs = getQueryLogs(
+            buildId = buildId,
+            tag = tag,
+            jobId = jobId,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         try {
             val query = getQuery(
                 buildId = buildId,
@@ -452,7 +458,13 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): PageQueryLogs {
-        var queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
+        var queryLogs = getQueryLogs(
+            buildId = buildId,
+            tag = tag,
+            jobId = jobId,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         var logSize = 0L
         try {
             queryLogs = doQueryInitLogsPage(
@@ -527,7 +539,13 @@ class LogServiceESImpl constructor(
         page: Int,
         pageSize: Int
     ): QueryLogs {
-        val queryLogs = QueryLogs(buildId, getLogStatus(buildId, tag, subTag, jobId, executeCount))
+        val queryLogs = getQueryLogs(
+            buildId = buildId,
+            tag = tag,
+            jobId = jobId,
+            subTag = subTag,
+            executeCount = executeCount
+        )
         val index = indexService.getIndexName(buildId)
 
         val boolQuery = QueryBuilders.boolQuery()
@@ -589,14 +607,13 @@ class LogServiceESImpl constructor(
         size: Int
     ): QueryLogs {
         logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
-        val logStatus = getLogStatus(
+        val queryLogs = getQueryLogs(
             buildId = buildId,
             tag = tag,
-            subTag = subTag,
             jobId = jobId,
+            subTag = subTag,
             executeCount = executeCount
         )
-        val queryLogs = QueryLogs(buildId, logStatus)
         try {
             val index = indexService.getIndexName(buildId)
             val logSize = getLogSize(
@@ -930,30 +947,19 @@ class LogServiceESImpl constructor(
         subTag: String?,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = getLogStatus(
+        val logStatus = logStatusService.isFinish(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
+        val cleaned = indexService.getBuildIndexName(buildId)?.let { indexName ->
+            !isExistIndex(buildId, indexName)
+        } ?: true
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
-        return QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
-    }
-
-    private fun getLogStatus(
-        buildId: String,
-        tag: String?,
-        subTag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Boolean {
-        return logStatusService.isFinish(
-            buildId = buildId,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            executeCount = executeCount
+        return QueryLogs(
+            buildId = buildId, finished = logStatus, cleaned = cleaned, subTags = subTags
         )
     }
 
