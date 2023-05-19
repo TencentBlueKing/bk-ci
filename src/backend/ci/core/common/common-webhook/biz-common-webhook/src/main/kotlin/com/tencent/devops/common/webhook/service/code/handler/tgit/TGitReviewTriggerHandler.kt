@@ -119,8 +119,8 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
-        if(projectId !=null && repository!=null){
-            when(event.reviewableType){
+        if (projectId != null && repository != null) {
+            when (event.reviewableType) {
                 // MR Review
                 "merge_request" -> {
                     // MR提交人
