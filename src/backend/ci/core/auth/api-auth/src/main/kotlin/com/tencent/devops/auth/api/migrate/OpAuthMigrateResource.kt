@@ -54,11 +54,6 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/allV3ToRbac")
-    @ApiOperation("v3权限全部升级到rbac权限")
-    fun allV3ToRbacAuth(): Result<Boolean>
-
-    @POST
     @Path("/v0ToRbac")
     @ApiOperation("v0权限批量升级到rbac权限")
     fun v0ToRbacAuth(
@@ -67,7 +62,7 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/allV0ToRbac")
-    @ApiOperation("v0权限全部升级到rbac权限")
-    fun allV0ToRbacAuth(): Result<Boolean>
+    @Path("/allToRbacAuth")
+    @ApiOperation("权限全部升级到rbac权限")
+    fun allToRbacAuth(): Result<Boolean>
 }

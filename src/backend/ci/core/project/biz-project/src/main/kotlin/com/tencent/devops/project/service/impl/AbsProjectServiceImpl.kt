@@ -749,17 +749,30 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
+    override fun listMigrateProjects(
+        limit: Int,
+        offset: Int
+    ): List<ProjectWithPermission> {
+        return projectDao.listMigrateProjects(
+            dslContext = dslContext,
+            limit = limit,
+            offset = offset
+        ).map {
+            ProjectWithPermission(
+                projectName = it.projectName,
+                englishName = it.englishName,
+                permission = true,
+                routerTag = buildRouterTag(it.routerTag)
+            )
+        }
+    }
+
     override fun list(limit: Int, offset: Int): Page<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
             val list = ArrayList<ProjectVO>()
-            projectDao.list(
-                dslContext = dslContext,
-                limit = limit,
-                offset = offset,
-                enabled = true
-            ).map {
+            projectDao.list(dslContext, limit, offset).map {
                 list.add(ProjectUtils.packagingBean(it))
             }
             val count = projectDao.getCount(dslContext)

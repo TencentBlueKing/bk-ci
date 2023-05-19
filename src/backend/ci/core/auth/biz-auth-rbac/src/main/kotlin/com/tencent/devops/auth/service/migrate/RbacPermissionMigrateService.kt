@@ -115,29 +115,6 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    override fun allV3ToRbacAuth(): Boolean {
-        executorService.submit {
-            var offset = 0
-            val limit = 50
-            do {
-                val dbV3Projects = client.get(ServiceProjectResource::class).getV0orV3Projects(
-                    authType = AuthSystemType.V3_AUTH_TYPE,
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                val migrateProjects = dbV3Projects.map {
-                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
-                }
-                v3ToRbacAuth(
-                    migrateProjects = migrateProjects,
-                    dbProjectVos = dbV3Projects
-                )
-                offset += limit
-            } while (dbV3Projects.size == limit)
-        }
-        return true
-    }
-
     override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
         logger.info("migrate $migrateProjects auth from v0 to rbac")
         // 1. 启动迁移任务
@@ -153,20 +130,30 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    override fun allV0ToRbacAuth(): Boolean {
+    override fun allToRbacAuth(): Boolean {
         executorService.submit {
             var offset = 0
             val limit = 50
             do {
-                val v0MigrateProjects = client.get(ServiceProjectResource::class).getV0orV3Projects(
-                    authType = AuthSystemType.V0_AUTH_TYPE,
+                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
                     limit = limit,
                     offset = offset
                 ).data ?: break
-                val migrateProjects = v0MigrateProjects.map {
-                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
+                val v3MigrateProjects =
+                    migrateProjects.filter { it.routerTag == null ||
+                        it.routerTag == AuthSystemType.V3_AUTH_TYPE.value }
+                        .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
+
+                val v0MigrateProjects =
+                    migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
+                        .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
+
+                if (v3MigrateProjects.isNotEmpty()) {
+                    v3ToRbacAuth(migrateProjects = v3MigrateProjects)
                 }
-                v0ToRbacAuth(migrateProjects = migrateProjects)
+                if (v0MigrateProjects.isNotEmpty()) {
+                    v0ToRbacAuth(migrateProjects = v0MigrateProjects)
+                }
                 offset += limit
             } while (migrateProjects.size == limit)
         }
