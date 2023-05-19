@@ -295,13 +295,13 @@ class BuildEndControl @Autowired constructor(
             // 将插件出错信息逐一加入构建错误信息
             if (task.errorType != null) {
                 val (taskId, taskName) = if (task.taskId.startsWith(VMUtils.getStartVmLabel())) {
-                    Pair("", task.taskName)
-                } else {
                     val container = containerBuildRecordService.getRecord(
                         transactionContext = null, projectId = task.projectId, pipelineId = task.pipelineId,
                         buildId = task.buildId, containerId = task.containerId, executeCount = task.executeCount ?: 1
                     )
-                    Pair(task.taskId, container?.containerVar?.get(Container::name.name)?.toString() ?: task.taskName)
+                    Pair("", container?.containerVar?.get(Container::name.name)?.toString() ?: task.taskName)
+                } else {
+                    Pair(task.taskId, task.taskName)
                 }
                 errorInfoList.add(
                     ErrorInfo(
