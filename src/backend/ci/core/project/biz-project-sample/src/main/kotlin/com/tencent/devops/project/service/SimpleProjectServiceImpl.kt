@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
@@ -35,25 +35,29 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
+import com.tencent.devops.project.util.ProjectUtils
+import java.io.File
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Suppress("ALL", "UNUSED")
 @Service
@@ -67,7 +71,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
-    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -78,7 +85,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper,
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -94,21 +104,18 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
-    }
-
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(
+                userId = userId,
+                serviceUrlPrefix = serviceUrlPrefix,
+                file = logoFile,
+                fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
+                language = I18nUtil.getLanguage(userId),
+                logo = true
+            )
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -121,6 +128,21 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
         return projectPermissionService.getUserProjects(userId!!)
+    }
+
+    override fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission
+    ): List<String>? {
+        return projectPermissionService.filterProjects(
+            userId = userId,
+            permission = permission
+        )
+    }
+
+    override fun isShowUserManageIcon(routerTag: String?): Boolean {
+        return projectPermissionService.isShowUserManageIcon()
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
@@ -142,20 +164,55 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PEM_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         return true
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
+    override fun modifyProjectAuthResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
         projectPermissionService.modifyResource(
-            projectCode = projectCode,
-            projectName = projectName
+            resourceUpdateInfo = resourceUpdateInfo
         )
+    }
+
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(userId = userId, projectCode = projectCode)
+    }
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         return true
+    }
+
+    override fun isRbacPermission(projectId: String): Boolean = true
+
+    override fun buildRouterTag(routerTag: String?): String? = null
+
+    override fun updateProjectRouterTag(englishName: String) = Unit
+
+    override fun getV0orV3Projects(
+        authType: AuthSystemType,
+        limit: Int,
+        offset: Int
+    ): List<ProjectVO> {
+        return projectDao.list(
+            dslContext = dslContext,
+            limit = limit,
+            offset = offset,
+            channelCode = ProjectChannelCode.BS
+        ).map {
+            ProjectUtils.packagingBean(it)
+        }
     }
 
     companion object {

@@ -29,15 +29,16 @@ package com.tencent.devops.common.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.constant.CommonMessageCode.RETURNED_RESULT_COULD_NOT_BE_PARSED
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import feign.Response
 import feign.codec.ErrorDecoder
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.IOException
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 /**
  *
@@ -53,7 +54,10 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
         try {
             result = objectMapper.readValue(content)
         } catch (ignore: IOException) {
-            return ClientException("内部服务返回结果无法解析 status:${response.status()} body:$content")
+            return ErrorCodeException(
+                errorCode = RETURNED_RESULT_COULD_NOT_BE_PARSED,
+                params = arrayOf(response.status().toString(), content)
+            )
         }
         return RemoteServiceException(
             httpStatus = response.status(),

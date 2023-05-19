@@ -32,7 +32,12 @@ import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.DOWNLOAD_CODECC_TOOL_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 import okhttp3.Protocol
 import okhttp3.Response
 
@@ -53,7 +58,11 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "下载Codecc的 $tool 工具失败"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    DOWNLOAD_CODECC_TOOL_FAIL,
+                    AgentEnv.getLocaleLanguage(),
+                    arrayOf(tool)
+                )
             )
         }
         return response
@@ -73,7 +82,10 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "下载codecc的coverity的执行脚本失败"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    DOWNLOAD_CODECC_COVERITY_SCRIPT_FAIL,
+                    AgentEnv.getLocaleLanguage()
+                )
             )
         }
         return response
@@ -94,7 +106,10 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "下载codecc的多工具执行脚本失败"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    DOWNLOAD_CODECC_MULTI_TOOL_SCRIPT_FAIL,
+                    AgentEnv.getLocaleLanguage()
+                )
             )
         }
         return response

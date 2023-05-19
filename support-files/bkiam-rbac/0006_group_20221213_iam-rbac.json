@@ -1,0 +1,349 @@
+{
+  "system_id": "bk_ci_rbac",
+  "operations": [
+    {
+      "operation": "upsert_action_groups",
+      "data": [
+        {
+          "name": "项目",
+          "name_en": "Project Permissions",
+          "actions": [
+            {
+              "id": "project_visit"
+            },
+            {
+              "id": "project_view"
+            },
+            {
+              "id": "project_edit"
+            },
+            {
+              "id": "project_enable"
+            },
+            {
+              "id": "project_list"
+            },
+            {
+              "id": "project_manage"
+            }
+          ]
+        },
+        {
+          "name": "流水线",
+          "name_en": "Pipeline Permissions",
+          "actions": [
+            {
+              "id": "pipeline_list"
+            },
+            {
+              "id": "pipeline_view"
+            },
+            {
+              "id": "pipeline_edit"
+            },
+            {
+              "id": "pipeline_create"
+            },
+            {
+              "id": "pipeline_download"
+            },
+            {
+              "id": "pipeline_delete"
+            },
+            {
+              "id": "pipeline_share"
+            },
+            {
+              "id": "pipeline_execute"
+            },
+            {
+              "id": "pipeline_manage"
+            }
+          ]
+        },
+        {
+          "name": "代码分析",
+          "name_en": "CodeCC Permissions",
+          "sub_groups": [
+            {
+              "name": "CodeCC任务",
+              "name_en": "Codecc Task Permissions",
+              "actions": [
+                {
+                  "id": "codecc_task_analyze"
+                },
+                {
+                  "id": "codecc_task_manage-defect"
+                },
+                {
+                  "id": "codecc_task_view-defect"
+                },
+                {
+                  "id": "codecc_task_view-report"
+                },
+                {
+                  "id": "codecc_task_create"
+                },
+                {
+                  "id": "codecc_task_list"
+                },
+                {
+                  "id": "codecc_task_setting"
+                },
+                {
+                  "id": "codecc_task_manage"
+                }
+              ]
+            },
+            {
+              "name": "CodeCC规则集",
+              "name_en": "Codecc Rule Set Permissions",
+              "actions": [
+                {
+                  "id": "codecc_rule_set_create"
+                },
+                {
+                  "id": "codecc_rule_set_list"
+                }
+              ]
+            },
+            {
+              "name": "CodeCC忽略类型",
+              "name_en": "CodeCC Ignore Type Permissions",
+              "actions": [
+                {
+                  "id": "codecc_ignore_type_manage"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "代码库",
+          "name_en": "Repository Permissions",
+          "actions": [
+            {
+              "id": "repertory_list"
+            },
+            {
+              "id": "repertory_view"
+            },
+            {
+              "id": "repertory_edit"
+            },
+            {
+              "id": "repertory_create"
+            },
+            {
+              "id": "repertory_delete"
+            },
+            {
+              "id": "repertory_use"
+            }
+          ]
+        },
+        {
+          "name": "凭证",
+          "name_en": "Credential Permissions",
+          "sub_groups": [
+            {
+              "name": "凭据",
+              "name_en": "Credential Permissions",
+              "actions": [
+                {
+                  "id": "credential_list"
+                },
+                {
+                  "id": "credential_view"
+                },
+                {
+                  "id": "credential_edit"
+                },
+                {
+                  "id": "credential_create"
+                },
+                {
+                  "id": "credential_delete"
+                },
+                {
+                  "id": "credential_use"
+                }
+              ]
+            },
+            {
+              "name": "证书",
+              "name_en": "Cert Permissions",
+              "actions": [
+                {
+                  "id": "cert_list"
+                },
+                {
+                  "id": "cert_view"
+                },
+                {
+                  "id": "cert_edit"
+                },
+                {
+                  "id": "cert_create"
+                },
+                {
+                  "id": "cert_delete"
+                },
+                {
+                  "id": "cert_use"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "环境",
+          "name_en": "Environment Permissions",
+          "sub_groups": [
+            {
+              "name": "环境",
+              "name_en": "Environment Permissions",
+              "actions": [
+                {
+                  "id": "environment_list"
+                },
+                {
+                  "id": "environment_view"
+                },
+                {
+                  "id": "environment_edit"
+                },
+                {
+                  "id": "environment_create"
+                },
+                {
+                  "id": "environment_delete"
+                },
+                {
+                  "id": "environment_use"
+                }
+              ]
+            },
+            {
+              "name": "环境节点",
+              "name_en": "Node Permissions",
+              "actions": [
+                {
+                  "id": "env_node_list"
+                },
+                {
+                  "id": "env_node_view"
+                },
+                {
+                  "id": "env_node_edit"
+                },
+                {
+                  "id": "env_node_create"
+                },
+                {
+                  "id": "env_node_delete"
+                },
+                {
+                  "id": "env_node_use"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "版本体验",
+          "name_en": "Experience Permissions",
+          "sub_groups": [
+            {
+              "name": "版本体验任务",
+              "name_en": "Experience Task Permissions",
+              "actions": [
+                {
+                  "id": "experience_task_list"
+                },
+                {
+                  "id": "experience_task_create"
+                },
+                {
+                  "id": "experience_task_view"
+                },
+                {
+                  "id": "experience_task_edit"
+                },
+                {
+                  "id": "experience_task_delete"
+                }
+              ]
+            },
+            {
+              "name": "版本体验用户组",
+              "name_en": "Experience User Group Permissions",
+              "actions": [
+                {
+                  "id": "experience_group_list"
+                },
+                {
+                  "id": "experience_group_create"
+                },
+                {
+                  "id": "experience_group_view"
+                },
+                {
+                  "id": "experience_group_edit"
+                },
+                {
+                  "id": "experience_group_delete"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "质量红线",
+          "name_en": "Quality Permissions",
+          "sub_groups": [
+            {
+              "name": "质量红线规则",
+              "name_en": "Quality Rule Permissions",
+              "actions": [
+                {
+                  "id": "rule_list"
+                },
+                {
+                  "id": "rule_create"
+                },
+                {
+                  "id": "rule_delete"
+                },
+                {
+                  "id": "rule_edit"
+                },
+                {
+                  "id": "rule_enable"
+                }
+              ]
+            },
+            {
+              "name": "质量红线通知组",
+              "name_en": "Quality Notice Group Permissions",
+              "actions": [
+                {
+                  "id": "quality_group_list"
+                },
+                {
+                  "id": "quality_group_create"
+                },
+                {
+                  "id": "quality_group_delete"
+                },
+                {
+                  "id": "quality_group_edit"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

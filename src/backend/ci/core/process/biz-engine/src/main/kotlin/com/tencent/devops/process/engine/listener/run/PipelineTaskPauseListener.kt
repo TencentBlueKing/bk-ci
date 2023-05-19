@@ -42,7 +42,6 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineTaskPauseEvent
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
@@ -59,7 +58,6 @@ import org.springframework.stereotype.Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
@@ -90,7 +88,7 @@ class PipelineTaskPauseListener @Autowired constructor(
             if (event.actionType == ActionType.REFRESH) {
                 taskContinue(taskRecord, event.userId)
             } else if (event.actionType == ActionType.END) {
-                taskCancel(task = taskRecord, userId = event.userId)
+                taskPauseCancel(task = taskRecord, userId = event.userId)
             }
             // #3400 减少重复DETAIL事件转发， Cancel与Continue之后插件任务执行都会刷新DETAIL
         } catch (ignored: Exception) {
@@ -123,7 +121,7 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         // 修改详情model
-        taskBuildRecordService.taskContinue(
+        taskBuildRecordService.taskPauseContinue(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,
@@ -167,13 +165,13 @@ class PipelineTaskPauseListener @Autowired constructor(
         )
     }
 
-    private fun taskCancel(task: PipelineBuildTask, userId: String) {
+    private fun taskPauseCancel(task: PipelineBuildTask, userId: String) {
         logger.info("${task.buildId}|task cancel|${task.taskId}|CANCELED")
         // 修改插件状态位运行
         pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        taskBuildRecordService.taskCancel(
+        taskBuildRecordService.taskPauseCancel(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
             buildId = task.buildId,

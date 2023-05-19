@@ -5,6 +5,7 @@
   "linkCodelibLabel": "关联{0}代码库",
   "typeCodelib": "{0}代码库",
   "link": "关联",
+  "linkRepo": "关联{0}代码库",
   "codelibDesc": "代码库服务可以将项目已有的 SVN 及 GIT 工程关联至CI，它将作为流水线的原材料",
   "laodingTitle": "正在加载仓库列表",
   "aliasNamePlaceholder": "请输入别名，按回车进行搜索",
@@ -63,7 +64,6 @@
   "P4": "P4",
   "authType": "授权方式",
   "auth": "授权",
-  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port",
   "basicSetting": "基本设置",
   "resetAuth": "重置授权",
   "PACmode": "PAC 模式",
@@ -80,6 +80,8 @@
   "createdTime": "创建时间",
   "lastModifiedTime": "最近修改时间",
   "pacTips": "Pipeline As Code 模式下，使用代码库 .ci 目录下的 YAML 文件编排流水线，且 YAML 文件变更将自动同步到对应的蓝盾流水线。",
+  "authIdentity": "授权身份",
+  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port",
   "暂无数据": "暂无数据",
   "搜索结果为空": "搜索结果为空",
   "清空筛选条件": "清空筛选条件",
@@ -98,5 +100,8 @@
   "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）": "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）",
   "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机": "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机",
   "流水线执行时，回写流水线执行状态到代码库": "流水线执行时，回写流水线执行状态到代码库",
-  "代码库别名不能重复": "代码库别名不能重复"
+  "代码库别名不能重复": "代码库别名不能重复",
+  "noPermission": "没有权限",
+  "sshExampleTips": "eg: svn+ssh://svn.sample.com/test_proj",
+  "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj"
 }

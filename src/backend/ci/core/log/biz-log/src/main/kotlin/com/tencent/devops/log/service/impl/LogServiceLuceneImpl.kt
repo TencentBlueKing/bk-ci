@@ -421,13 +421,7 @@ class LogServiceLuceneImpl constructor(
         size: Int
     ): QueryLogs {
         logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(
-            buildId = buildId,
-            tag = jobId,
-            subTag = null,
-            jobId = null,
-            executeCount = executeCount
-        ) else getLogStatus(
+        val logStatus = getLogStatus(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -471,13 +465,7 @@ class LogServiceLuceneImpl constructor(
     ): QueryLogs {
         val startTime = System.currentTimeMillis()
         logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(
-            buildId = buildId,
-            tag = jobId,
-            subTag = null,
-            jobId = null,
-            executeCount = executeCount
-        ) else getLogStatus(
+        val logStatus = getLogStatus(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -532,23 +520,13 @@ class LogServiceLuceneImpl constructor(
         executeCount: Int?
     ): QueryLogs {
         logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine")
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
+        val logStatus = getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
 
         val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag)
         val moreLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
@@ -592,23 +570,13 @@ class LogServiceLuceneImpl constructor(
         executeCount: Int?
     ): QueryLogs {
         logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine")
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
+        val logStatus = getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
 
         val subTags = if (tag.isNullOrBlank()) null else logTagService.getSubTags(buildId, tag!!)
         val queryLogs = QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)

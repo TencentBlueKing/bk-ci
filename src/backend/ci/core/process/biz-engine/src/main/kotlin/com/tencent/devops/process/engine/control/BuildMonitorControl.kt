@@ -37,8 +37,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
@@ -59,11 +61,11 @@ import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 /**
@@ -244,9 +246,10 @@ class BuildMonitorControl @Autowired constructor(
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
-                params = arrayOf("Job", "$minute")
+                params = arrayOf("Job", "$minute"),
+                language = I18nUtil.getLanguage(userId)
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
@@ -391,14 +394,18 @@ class BuildMonitorControl @Autowired constructor(
                 buildStatus = buildInfo.status
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
-                params = arrayOf(event.buildId)
+                params = arrayOf(event.buildId),
+                language = I18nUtil.getLanguage()
             )
             val jobId = "0"
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: "排队超时(Queue timeout). Cancel build!",
+                message = errorInfo.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_QUEUE_TIMEOUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + ". Cancel build!",
                 tag = VMUtils.genStartVMTaskId(jobId),
                 jobId = jobId,
                 executeCount = 1
@@ -413,7 +420,10 @@ class BuildMonitorControl @Autowired constructor(
                     status = BuildStatus.QUEUE_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                    errorMsg = "Job排队超时，请检查并发配置/Queue timeout"
+                    errorMsg = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_QUEUE_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             )
         } else {

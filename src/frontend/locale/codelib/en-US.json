@@ -62,6 +62,7 @@
     "P4": "P4",
     "authType": "Authorization method",
     "auth": "Auth",
+    "authIdentity": "Authorized identity",
     "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
     "basicSetting": "Basic Setting",
     "resetAuth": "Reset Authorization",
@@ -95,5 +96,8 @@
     "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）": "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）",
     "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机": "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机",
     "流水线执行时，回写流水线执行状态到代码库": "流水线执行时，回写流水线执行状态到代码库",
-    "代码库别名不能重复。": "Codelib alias already exists."
+    "代码库别名不能重复。": "Codelib alias already exists.",
+    "noPermission": "No permission",
+    "sshExampleTips": "eg: svn+ssh://svn.sample.com/test_proj",
+    "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj"
 }

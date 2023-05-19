@@ -63,8 +63,8 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -106,6 +106,7 @@ import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
@@ -457,7 +458,11 @@ class PipelineRuntimeService @Autowired constructor(
             BuildHistory(
                 id = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, channelCode),
+                trigger = StartType.toReadableString(
+                    trigger,
+                    channelCode,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 buildNum = buildNum,
                 pipelineVersion = version,
                 startTime = startTime?.timestampmilli() ?: 0L,
@@ -583,6 +588,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         userId: String,
+        executeCount: Int,
         buildStatus: BuildStatus,
         terminateFlag: Boolean = false
     ): Boolean {
@@ -591,6 +597,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
+            executeCount = executeCount,
             cancelUserId = userId
         )
         // 发送取消事件
@@ -646,7 +653,7 @@ class PipelineRuntimeService @Autowired constructor(
         return true
     }
 
-    fun startBuild(fullModel: Model, context: StartBuildContext): String {
+    fun startBuild(fullModel: Model, context: StartBuildContext): BuildId {
         buildLogPrinter.startLog(context.buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -811,6 +818,7 @@ class PipelineRuntimeService @Autowired constructor(
                     updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
                     containerBuildRecords = containerBuildRecords,
+                    taskBuildRecords = taskBuildRecords,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
                 )
@@ -891,6 +899,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildHistoryRecord.endTime = null
             buildHistoryRecord.queueTime = context.now // for EPC
             buildHistoryRecord.status = context.startBuildStatus.ordinal
+            buildHistoryRecord.concurrencyGroup = context.concurrencyGroup
             // 重试时启动参数只需要刷新执行次数
             buildHistoryRecord.buildParameters = buildHistoryRecord.buildParameters?.let { self ->
                 val retryCount = context.executeCount - 1
@@ -1004,7 +1013,12 @@ class PipelineRuntimeService @Autowired constructor(
             )
         }
         LogUtils.printCostTimeWE(context.watcher, warnThreshold = 4000, errorThreshold = 8000)
-        return context.buildId
+        return BuildId(
+            id = context.buildId,
+            executeCount = context.executeCount,
+            projectId = context.projectId,
+            pipelineId = context.pipelineId
+        )
     }
 
     private fun StartBuildContext.genBuildNumAlias() {
@@ -1059,7 +1073,10 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             modelVar = mutableMapOf(), status = context.startBuildStatus.name,
-            timestamps = mapOf(), queueTime = context.now.timestampmilli()
+            timestamps = mapOf(
+                BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
+                    BuildRecordTimeStamp(context.now.timestampmilli(), null)
+            ), queueTime = context.now
         )
 
         if (updateExistsTask.isNotEmpty()) {
@@ -1772,7 +1789,7 @@ class PipelineRuntimeService @Autowired constructor(
                 BuildStageStatus(
                     stageId = TRIGGER_STAGE,
                     name = TRIGGER_STAGE,
-                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE),
+                    status = I18nUtil.getCodeLanMessage(BUILD_QUEUE),
                     showMsg = showMsg
                 )
             ),

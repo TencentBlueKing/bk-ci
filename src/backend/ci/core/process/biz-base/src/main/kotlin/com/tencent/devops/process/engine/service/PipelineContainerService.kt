@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service
 
 import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
@@ -48,7 +49,10 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.db.utils.JooqUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MANUALLY_SKIPPED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_START_USER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TRIGGER_USER
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
@@ -66,11 +70,11 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 /**
  * 流水线Container相关的服务
@@ -391,6 +395,7 @@ class PipelineContainerService @Autowired constructor(
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -399,6 +404,7 @@ class PipelineContainerService @Autowired constructor(
         var needUpdateContainer = false
         var taskSeq = 0
         val containerElements = container.elements
+        val retryFlag = lastTimeBuildTasks.isEmpty()
 
         containerElements.forEach nextElement@{ atomElement ->
             modelCheckPlugin.checkElementTimeoutVar(container, atomElement, contextMap = context.variables)
@@ -420,11 +426,21 @@ class PipelineContainerService @Autowired constructor(
             if (status.isFinish()) {
                 logger.info("[${context.buildId}|${atomElement.id}] status=$status")
                 atomElement.status = status.name
+                if (retryFlag) taskBuildRecords.add(
+                    BuildRecordTask(
+                        projectId = context.projectId, pipelineId = context.pipelineId,
+                        buildId = context.buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                        taskId = atomElement.id!!, classType = atomElement.getClassType(),
+                        atomCode = atomElement.getTaskAtom(), executeCount = context.executeCount,
+                        resourceVersion = context.resourceVersion, taskSeq = taskSeq, status = status.name,
+                        taskVar = mutableMapOf(), timestamps = mapOf()
+                    )
+                )
                 return@nextElement
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (lastTimeBuildTasks.isEmpty()) {
+            if (retryFlag) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     addBuildTaskToList(
@@ -752,7 +768,7 @@ class PipelineContainerService @Autowired constructor(
             target.errorCode = null
             target.errorType = null
         } else { // 跳过的需要保留下跳过的信息
-            target.errorMsg = "被手动跳过 Manually skipped"
+            target.errorMsg = I18nUtil.getCodeLanMessage(BK_MANUALLY_SKIPPED)
         }
         if (atomElement != null) { // 将原子状态重置
             if (initialStatus == null) { // 未指定状态的，将重新运行
@@ -969,7 +985,8 @@ class PipelineContainerService @Autowired constructor(
 //                )
                 buildLogPrinter.addLine(
                     buildId = context.buildId,
-                    message = "触发人(trigger user): ${context.triggerUser}, 执行人(start user): ${context.userId}",
+                    message = "${I18nUtil.getCodeLanMessage(BK_TRIGGER_USER)}: ${context.triggerUser}," +
+                            " ${I18nUtil.getCodeLanMessage(BK_START_USER)}: ${context.userId}",
                     tag = context.firstTaskId,
                     jobId = container.id,
                     executeCount = context.executeCount

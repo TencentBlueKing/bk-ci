@@ -33,9 +33,11 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_TAG"], description = "项目流量信息")
@@ -50,5 +52,26 @@ interface ServiceProjectTagResource {
         @ApiParam("项目id", required = true)
         @PathParam("projectId")
         projectId: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/{projectId}/isRbacPermission")
+    @ApiOperation("获取项目网关路由Tag")
+    fun isRbacPermission(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectCode}/updateProjectRouteTag")
+    @ApiOperation("更新项目tag")
+    fun updateProjectRouteTag(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("项目tag", required = true)
+        @QueryParam("tag")
+        tag: String
     ): Result<Boolean>
 }

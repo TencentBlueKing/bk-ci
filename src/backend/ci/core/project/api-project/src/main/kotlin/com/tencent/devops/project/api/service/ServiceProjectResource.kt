@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -74,6 +76,21 @@ interface ServiceProjectResource {
     @Path("/getAllProject")
     @ApiOperation("查询所有项目")
     fun getAllProject(): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/getV0orV3Projects")
+    @ApiOperation("获取v0或者v3的项目")
+    fun getV0orV3Projects(
+        @ApiParam("权限版本", required = true)
+        @QueryParam("authType")
+        authType: AuthSystemType,
+        @ApiParam("limit", required = true)
+        @QueryParam("limit")
+        limit: Int,
+        @ApiParam("offset", required = true)
+        @QueryParam("offset")
+        offset: Int
+    ): Result<List<ProjectVO>>
 
     @POST
     @Path("/")
@@ -293,5 +310,16 @@ interface ServiceProjectResource {
         @ApiParam("权限action", required = true)
         @PathParam("permission")
         permission: AuthPermission
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}/updateProjectSubjectScopes")
+    @ApiOperation("修改项目最大可授权范围")
+    fun updateProjectSubjectScopes(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "ke", required = true)
+        subjectScopes: List<SubjectScopeInfo>
     ): Result<Boolean>
 }

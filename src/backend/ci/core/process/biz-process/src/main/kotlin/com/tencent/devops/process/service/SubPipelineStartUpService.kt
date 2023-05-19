@@ -40,8 +40,9 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -62,9 +63,9 @@ import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PipelineVarUtil
+import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
 abstract class SubPipelineStartUpService @Autowired constructor() {
@@ -144,9 +145,10 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         )
         val callChannelCode = channelCode ?: ChannelCode.valueOf(
             runVariables[PIPELINE_START_CHANNEL]
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildId)
+                    params = arrayOf(buildId),
+                    language = I18nUtil.getLanguage(userId)
                 )
         )
         // 获取子流水线启动参数
@@ -160,7 +162,10 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         try {
             checkSub(atomCode, projectId = fixProjectId, pipelineId = callPipelineId, existPipelines = existPipelines)
         } catch (e: OperationException) {
-            return MessageCodeUtil.generateResponseDataObject(ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = ProcessMessageCode.ERROR_SUBPIPELINE_CYCLE_CALL,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         val subBuildId = subPipelineStartup(
@@ -210,8 +215,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         val readyToBuildPipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, channelCode)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         val startEpoch = System.currentTimeMillis()
@@ -250,7 +254,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
                 isMobile = isMobile,
                 model = model,
                 frequencyLimit = false
-            )
+            ).id
             // 更新父流水线关联子流水线构建id
             pipelineTaskService.updateSubBuildId(
                 projectId = parentProjectId,
@@ -269,8 +273,7 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
         pipelineRepositoryService.getModel(projectId, pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
     /**
@@ -297,7 +300,12 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
         if (existPipelines.contains(pipelineId)) {
             logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
-            throw OperationException("子流水线不允许循环调用,循环流水线:projectId:$projectId,pipelineId:$pipelineId")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
+                    params = arrayOf(projectId, pipelineId)
+                )
+            )
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
