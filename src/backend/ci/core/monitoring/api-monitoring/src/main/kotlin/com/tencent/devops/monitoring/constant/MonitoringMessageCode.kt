@@ -28,7 +28,15 @@
 package com.tencent.devops.monitoring.constant
 
 object MonitoringMessageCode {
-    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110001" // 监控服务：通知发送失败
-    const val ERROR_MONITORING_INSERT_DATA_FAIL = "2110002" // 监控服务：写入influxdb失败
-    const val ERROR_MONITORING_INFLUXDB_BAD = "2110003" // 监控服务：influxdb异常
+    const val ERROR_MONITORING_SEND_NOTIFY_FAIL = "2110008" // 监控服务：通知发送失败
+    const val ERROR_MONITORING_INSERT_DATA_FAIL = "2110009" // 监控服务：写入influxdb失败
+    const val ERROR_MONITORING_INFLUXDB_BAD = "2110010" // 监控服务：influxdb异常
+
+    const val BK_ILLEGAL_TIMESTAMP_RANGE = "bkIllegalTimestampRange" // 非法时间戳范围
+    const val BK_ILLEGAL_ENTERPRISE_GROUP_ID = "bkIllegalEnterpriseGroupId" // 非法事业群ID
+    const val BK_INCORRECT_PASSWORD = "bkIncorrectPassword" // 密码错误
+    const val BK_SENT_SUCCESSFULLY = "bkSentSuccessfully" // 发送成功
+    const val BK_WARNING_MESSAGE_FROM_GRAFANA = "bkWarningMessageFromGrafana" // 来自Grafana的预警信息
+    const val BK_MONITORING_OBJECT = "bkMonitoringObject" // 监控对象：{0}，当前值为：{1}；
+    const val BK_SEND_MONITORING_MESSAGES = "bkSendMonitoringMessages" // 只有处于alerting告警状态的信息才发送监控消息
 }

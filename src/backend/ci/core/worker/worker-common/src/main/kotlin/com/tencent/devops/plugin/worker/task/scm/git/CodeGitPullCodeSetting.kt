@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.worker.task.scm.git
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ScmException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.plugin.worker.task.scm.util.SSHAgentUtils
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -39,8 +40,10 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.scm.OauthSDKApi
-import org.slf4j.LoggerFactory
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GIT_CREDENTIAL_ILLEGAL
+import com.tencent.devops.worker.common.env.AgentEnv
 import java.io.File
+import org.slf4j.LoggerFactory
 
 open class CodeGitPullCodeSetting(
     override val pipelineId: String,
@@ -118,16 +121,17 @@ open class CodeGitPullCodeSetting(
     private fun doHttpPullCode(repo: CodeGitRepository): Map<String, String>? {
         val credentials = getCredential(repo.credentialId)
 
+        val message = MessageUtil.getMessageByLocale(GIT_CREDENTIAL_ILLEGAL, AgentEnv.getLocaleLanguage())
         if (credentials.size < CredentialSize) {
             logger.warn("The git credential($credentials) is illegal")
-            throw ScmException("git凭据不合法", ScmType.CODE_GIT.name)
+            throw ScmException(message, ScmType.CODE_GIT.name)
         }
 
         val username = credentials[1]
         val password = credentials[2]
         if (username.isEmpty() || password.isEmpty()) {
             logger.warn("The git credential username($username) or password($password) is empty")
-            throw ScmException("git凭据不合法", ScmType.CODE_GIT.name)
+            throw ScmException(message, ScmType.CODE_GIT.name)
         }
 
         val workspace = getCodeSourceDir(path)

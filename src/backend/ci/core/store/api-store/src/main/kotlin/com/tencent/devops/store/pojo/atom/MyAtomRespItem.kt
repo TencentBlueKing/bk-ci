@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import com.tencent.devops.common.pipeline.pojo.AtomBaseInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -36,6 +38,7 @@ data class MyAtomRespItem(
     @ApiModelProperty("插件ID", required = true)
     val atomId: String,
     @ApiModelProperty("插件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,

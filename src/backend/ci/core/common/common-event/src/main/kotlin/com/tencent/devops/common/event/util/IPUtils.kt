@@ -41,7 +41,7 @@ object IPUtils {
         val ipMap = getNtNameAndIP()
         var innerIp = ipMap["eth1"]
         if (innerIp.isNullOrBlank()) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.error("eth1 NIC IP is empty, therefore, get eth0's NIC")
             innerIp = ipMap["eth0"]
         }
         if (innerIp.isNullOrBlank()) {
@@ -69,7 +69,7 @@ object IPUtils {
                 loopNetworkIp(allNetInterfaces, allIp)
             }
         } catch (e: Exception) {
-            logger.error("获取网卡失败", e)
+            logger.error("Failed to obtain NIC", e)
         }
 
         return allIp
@@ -81,7 +81,7 @@ object IPUtils {
             val netInterfaceName = netInterface.name
             // 过滤掉127.0.0.1的IP
             if (netInterfaceName.isNullOrBlank() || "lo".equals(netInterfaceName, ignoreCase = true)) {
-                logger.info("loopback地址或网卡名称为空")
+                logger.info("loopback address or NIC name is empty")
                 continue
             }
 

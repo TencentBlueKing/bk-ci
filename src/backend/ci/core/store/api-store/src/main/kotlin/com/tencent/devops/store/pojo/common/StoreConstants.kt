@@ -29,12 +29,12 @@ package com.tencent.devops.store.pojo.common
 
 const val PASS = "PASS"
 const val REJECT = "REJECT"
-const val LATEST = "latest"
-const val HOTTEST = "hottest"
-const val UN_RELEASE = "unRelease"
+const val LATEST = "latest" // 最新
+const val HOTTEST = "hottest" // 最热
+const val UN_RELEASE = "unRelease" // 取消发布
 const val TASK_JSON_NAME = "task.json"
 const val QUALITY_JSON_NAME = "quality.json"
-const val ERROR_JSON_NAME = "error.json"
+const val ERROR_JSON_NAME = "errorCodes.json"
 const val EXTENSION_JSON_NAME = "extension.json"
 const val README = "README.md"
 const val STORE_ATOM_STATUS = "STORE_ATOM_STATUS" // 插件状态
@@ -137,6 +137,8 @@ const val KEY_PROJECT_CODE = "projectCode"
 const val KEY_CODE_SRC = "codeSrc"
 const val KEY_FINISH_KILL_FLAG = "finishKillFlag"
 const val KEY_INDEX_CODE = "indexCode"
+const val KEY_RELEASE_INFO = "releaseInfo"
+const val KEY_VERSION_INFO = "versionInfo"
 
 const val STORE_INDEX_CODE = "INDEX_CODE"
 const val STORE_INDEX_NAME = "INDEX_NAME"
@@ -161,3 +163,9 @@ const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
 const val CREATE_TIME = "CREATE_TIME"
 const val BK_SUM_DAILY_SUCCESS_NUM = "bkSumDailySuccessNum"
 const val BK_SUM_DAILY_FAIL_NUM = "bkSumDailyFailNum"
+const val BK_UP_TO_PAR = "bkUpToPar" // 达标
+const val BK_NOT_UP_TO_PAR = "bkNotUpToPar" // 不达标
+const val BK_ATOM_SLA = "bkAtomSla" // 插件SLA
+const val BK_NO_FAIL_DATA = "bkNoFailData" // 近一月无执行失败数据
+const val BK_COMPLIANCE_RATE = "bkComplianceRate" // 错误码合规率
+const val BK_CODE_QUALITY = "bkCodeQuality" // codecc代码质量
