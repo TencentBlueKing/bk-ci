@@ -41,10 +41,7 @@ import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -363,6 +360,48 @@ class GitScmService @Autowired constructor(
                 Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
             else ->
                 return null
+        }
+    }
+
+    /**
+     * 获取Commit 评审信息
+     */
+    fun getCommitReviewInfo(
+        projectId: String,
+        commitReviewId: Long?,
+        repo: Repository
+    ): GitCommitReviewInfo? {
+        val type = getType(repo)
+        if (commitReviewId == null || type == null) return null
+
+        return try {
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val token = getToken(
+                projectId = projectId,
+                credentialId = repo.credentialId,
+                userName = repo.userName,
+                authType = tokenType
+            )
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getCommitReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    crId = commitReviewId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getCommitReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    crId = commitReviewId
+                ).data
+            }
+        } catch (e: Exception) {
+            logger.warn("fail to get mr info", e)
+            null
         }
     }
 }

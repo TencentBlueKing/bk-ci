@@ -30,13 +30,7 @@ package com.tencent.devops.repository.api.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.scm.pojo.*
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -388,4 +382,25 @@ interface ServiceScmResource {
         @QueryParam("size")
         size: Int
     ): Result<List<GitCommit>>
+
+    @ApiOperation("查询日常评审的信息")
+    @GET
+    @Path("getCommitReviewInfo")
+    fun getCommitReviewInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("commitReviewId", required = true)
+        @QueryParam("crId")
+        crId: Long
+    ): Result<GitCommitReviewInfo?>
 }
