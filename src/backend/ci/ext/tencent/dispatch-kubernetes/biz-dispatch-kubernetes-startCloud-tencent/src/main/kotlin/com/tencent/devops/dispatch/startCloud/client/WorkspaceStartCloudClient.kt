@@ -8,7 +8,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
-import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
