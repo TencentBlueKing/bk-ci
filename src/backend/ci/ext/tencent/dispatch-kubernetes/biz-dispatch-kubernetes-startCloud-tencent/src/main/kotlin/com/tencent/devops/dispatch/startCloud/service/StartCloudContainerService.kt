@@ -29,8 +29,12 @@ package com.tencent.devops.dispatch.startCloud.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
@@ -47,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
-@Service("devcloudContainerService")
+@Service("startcloudContainerService")
 class StartCloudContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val dslContext: DSLContext
@@ -57,12 +61,18 @@ class StartCloudContainerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(StartCloudContainerService::class.java)
     }
 
-    override val shutdownLockBaseKey = "workspace_devcloud_shutdown_lock_"
+    override val shutdownLockBaseKey = "workspace_startCloud_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
-        readyStartLog = "准备创建devcloud开发环境...",
-        startContainerError = "启动devcloud开发环境失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "Devcloud构建异常，请联系蓝盾助手排查，异常信息 - "
+    override fun getLog() = DispatchBuildLog(
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_DEVCLOUD_BUILD_MACHINE),
+        startContainerError = I18nUtil.getCodeLanMessage(
+            messageCode = BK_START_BUILD_CONTAINER_FAIL,
+            params = arrayOf("startCloud")
+        ),
+        troubleShooting = I18nUtil.getCodeLanMessage(
+            messageCode = BK_CONTAINER_BUILD_ERROR,
+            params = arrayOf("startCloud")
+        )
     )
 
     @Value("\${devCloud.resources.builder.cpu}")
