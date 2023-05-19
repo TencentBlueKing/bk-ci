@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BuildApiPermission
+import com.tencent.devops.common.web.constant.BuildApiHandleType
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
@@ -45,6 +47,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
 
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
@@ -61,6 +64,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
@@ -75,6 +79,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,

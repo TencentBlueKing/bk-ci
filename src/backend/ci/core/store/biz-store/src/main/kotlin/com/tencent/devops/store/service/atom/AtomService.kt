@@ -37,8 +37,8 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 
 /**
  * 插件业务逻辑类
@@ -93,6 +93,11 @@ interface AtomService {
      * 获取项目下插件相关的信息
      */
     fun getProjectElements(projectCode: String): Result<Map<String, String>>
+
+    /**
+     * 获取项目下所有可用的插件信息
+     */
+    fun getProjectElementsInfo(projectCode: String): Result<Map<String, String>>
 
     /**
      * 根据插件代码和版本号获取插件信息
@@ -190,10 +195,6 @@ interface AtomService {
         atomCode: String,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean>
-
-    fun findUnDefaultAtom(
-        atomList: List<String>
-    ): Result<List<String>>
 
     /**
      * 获取插件真实版本号

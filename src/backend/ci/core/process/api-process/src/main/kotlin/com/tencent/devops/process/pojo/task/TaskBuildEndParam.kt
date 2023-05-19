@@ -42,6 +42,8 @@ data class TaskBuildEndParam(
     val containerId: String,
     @ApiModelProperty("任务id", required = false)
     val taskId: String,
+    @ApiModelProperty("执行次数", required = false)
+    val executeCount: Int,
     @ApiModelProperty("状态", required = false)
     var buildStatus: BuildStatus,
     @ApiModelProperty("插件版本", required = false)

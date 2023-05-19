@@ -26,6 +26,8 @@
  */
 package com.tencent.devops.store.pojo.image.response
 
+import com.tencent.devops.store.pojo.common.HonorInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -104,7 +106,16 @@ data class MarketImageItem constructor(
     val updateTime: Long,
 
     @ApiModelProperty("是否已安装", required = true)
-    var installedFlag: Boolean?
+    var installedFlag: Boolean?,
+
+    @ApiModelProperty("荣誉信息", required = false)
+    val honorInfos: List<HonorInfo>? = null,
+
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null,
+
+    @ApiModelProperty("hotFlag")
+    val hotFlag: Boolean? = null
 ) {
     constructor(instance: MarketImageItem) : this(
         instance.id,
@@ -129,6 +140,9 @@ data class MarketImageItem constructor(
         instance.modifier,
         instance.createTime,
         instance.updateTime,
-        instance.installedFlag
+        instance.installedFlag,
+        instance.honorInfos,
+        instance.indexInfos,
+        instance.hotFlag
     )
 }

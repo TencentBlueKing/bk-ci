@@ -27,8 +27,11 @@
 
 package com.tencent.devops.common.pipeline.extend
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 
 /**
@@ -39,11 +42,10 @@ interface ModelCheckPlugin {
 
     /**
      * 检查[model]编排的完整性，并返回[JobSize + ElementSize = MetaSize]所有元素数量
-     * @throws RuntimeException 子类  将检查失败或异常的以RuntimeException子类抛出
+     * @throws RuntimeException 子类  将检查失败或异常的以[ErrorCodeException]类抛出
      */
+    @Throws(ErrorCodeException::class)
     fun checkModelIntegrity(model: Model, projectId: String?): Int
-
-    fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String, finallyStage: Boolean)
 
     /**
      * 清理Model--不删除里面的Element内的逻辑
@@ -61,4 +63,25 @@ interface ModelCheckPlugin {
         sourceModel: Model? = null,
         param: BeforeDeleteParam
     )
+
+    /**
+     * 检查[container]下的[element]插件的超时配置是否合法。
+     * 如果使用了变量，则从变量表[contextMap]进行替换，如果值不符合，则抛出异常[ErrorCodeException]
+     */
+    @Throws(ErrorCodeException::class)
+    fun checkElementTimeoutVar(container: Container, element: Element, contextMap: Map<String, String>)
+
+    /**
+     * 检查[container]下互斥组配置是否合法，
+     * 如果使用了变量，则从变量表[contextMap]进行替换，如果值不符合，则抛出异常[ErrorCodeException]
+     */
+    @Throws(ErrorCodeException::class)
+    fun checkMutexGroup(container: Container, contextMap: Map<String, String>)
+
+    /**
+     * 检查是否是[finallyStage]Stage的Job[container]下[JobControlOption]配置是否合法。
+     * 如果使用了变量，则从变量表[contextMap]进行替换，如果值不符合，则抛出异常[ErrorCodeException]
+     */
+    @Throws(ErrorCodeException::class)
+    fun checkJobCondition(container: Container, finallyStage: Boolean, contextMap: Map<String, String>)
 }

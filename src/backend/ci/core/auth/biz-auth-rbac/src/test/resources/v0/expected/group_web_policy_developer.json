@@ -1,0 +1,26 @@
+[ {
+  "system" : "bk_ci_rbac",
+  "actions" : [ {
+    "id" : "pipeline_create"
+  }, {
+    "id" : "credential_create"
+  }, {
+    "id" : "cert_create"
+  }, {
+    "id" : "repertory_create"
+  }, {
+    "id" : "environment_create"
+  }, {
+    "id" : "env_node_create"
+  } ],
+  "resources" : [ {
+    "system" : "bk_ci_rbac",
+    "type" : "project",
+    "paths" : [ [ {
+      "system" : "bk_ci_rbac",
+      "type" : "project",
+      "id" : "bkdevops",
+      "name" : "bkdevops"
+    } ] ]
+  } ]
+} ]

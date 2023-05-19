@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.constant.coerceAtMaxLength
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_QUALITY_CHECK_FAIL
@@ -47,7 +48,6 @@ import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -63,13 +63,13 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.measure.MetricsService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PROJECT_ID
@@ -176,13 +176,9 @@ class BuildEndControl @Autowired constructor(
         )
 
         // 更新buildNo
-        if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
-            )
+        val retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+        if (!retryFlag && !buildStatus.isCancel() && !buildStatus.isFailure()) {
+            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
         }
 
         // 设置状态
@@ -241,36 +237,28 @@ class BuildEndControl @Autowired constructor(
         // 发送metrics统计数据消息
         metricsService.postMetricsData(buildInfo, model)
         // 记录日志
-        buildLogPrinter.stopLog(buildId = buildId, tag = "", jobId = null)
+        buildLogPrinter.stopLog(buildId = buildId, executeCount = buildInfo.executeCount)
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        retryFlag: Boolean
-    ) {
+    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
 
         if (buildNoObj.buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
             // 使用分布式锁防止并发更新
-            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
-            try {
+            PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId).use { buildNoLock ->
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId, retryFlag)
-            } finally {
-                buildNoLock.unlock()
+                updateBuildNoInfo(projectId, pipelineId)
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String, retryFlag: Boolean) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
-        if (buildNo != null && !retryFlag) {
+        if (buildNo != null) {
             pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
@@ -312,9 +300,7 @@ class BuildEndControl @Autowired constructor(
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
                         errorType = task.errorType?.num ?: ErrorType.USER.num,
                         errorCode = task.errorCode ?: PLUGIN_DEFAULT_ERROR,
-                        errorMsg = CommonUtils.interceptStringInLength(
-                            string = task.errorMsg, length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-                        ) ?: ""
+                        errorMsg = task.errorMsg?.coerceAtMaxLength(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX) ?: ""
                     )
                 )
                 // 做入库长度保护，假设超过上限则抛弃该错误信息
@@ -413,7 +399,11 @@ class BuildEndControl @Autowired constructor(
             varName = PIPELINE_TIME_END,
             varValue = endTime
         )
-        val duration = ((endTime - startTime) / 1000).toString()
+        val duration = if (startTime <= 0L) { // 未启动，直接取消的情况下，耗时不准确
+            "0"
+        } else {
+            ((endTime - startTime) / 1000).toString()
+        }
         buildVariableService.setVariable(
             projectId = this.projectId,
             pipelineId = this.pipelineId,

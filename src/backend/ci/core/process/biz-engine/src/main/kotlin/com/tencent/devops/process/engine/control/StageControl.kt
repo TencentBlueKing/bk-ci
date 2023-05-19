@@ -52,6 +52,7 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.PipelineAsCodeService
 import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +70,8 @@ class StageControl @Autowired constructor(
     private val pipelineContainerService: PipelineContainerService,
     private val buildVariableService: BuildVariableService,
     private val pipelineContextService: PipelineContextService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     companion object {
@@ -137,6 +139,7 @@ class StageControl @Autowired constructor(
             containsMatrix = false
         )
         val executeCount = buildVariableService.getBuildExecuteCount(projectId, pipelineId, buildId)
+        val pipelineAsCodeEnabled = pipelineAsCodeService.asCodeEnabled(projectId, pipelineId)
         val stageContext = StageContext(
             buildStatus = stage.status, // 初始状态为Stage状态，中间流转会切换状态，并最终赋值Stage状态
             event = this,
@@ -145,6 +148,7 @@ class StageControl @Autowired constructor(
             latestSummary = "init",
             watcher = watcher,
             variables = pipelineContextService.getAllBuildContext(variables), // 传递全量上下文
+            pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount,
             previousStageStatus = addPreviousStageStatus(stage)
         )

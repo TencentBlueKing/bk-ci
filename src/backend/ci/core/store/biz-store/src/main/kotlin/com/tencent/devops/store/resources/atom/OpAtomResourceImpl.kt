@@ -74,8 +74,8 @@ class OpAtomResourceImpl @Autowired constructor(
         atomStatus: AtomStatusEnum?,
         sortType: OpSortTypeEnum?,
         desc: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        page: Int,
+        pageSize: Int
     ): Result<AtomResp<Atom>?> {
         return opAtomService.getOpPipelineAtoms(
             atomName = atomName,

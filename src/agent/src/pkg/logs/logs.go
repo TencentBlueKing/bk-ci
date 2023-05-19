@@ -116,6 +116,18 @@ func Error(f interface{}, v ...interface{}) {
 	logs.Error(formatLog(f, v...))
 }
 
+func Errorf(format string, args ...interface{}) {
+	logs.Errorf(format, args...)
+}
+
+func Fatal(f interface{}, v ...interface{}) {
+	logs.Fatal(formatLog(f, v...))
+}
+
+func Fatalf(format string, args ...interface{}) {
+	logs.Fatalf(format, args...)
+}
+
 func Debug(args ...interface{}) {
 	logs.Debug(args...)
 }

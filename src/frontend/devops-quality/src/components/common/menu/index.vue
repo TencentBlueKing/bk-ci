@@ -42,7 +42,7 @@
         <template v-else>
             <div class="biz-no-data" style="margin-top: 100px;">
                 <i class="devops-icon icon-empty"></i>
-                <p>暂时没数据!</p>
+                <p>{{$t('quality.暂时没数据!')}}</p>
             </div>
         </template>
     </div>

@@ -35,6 +35,7 @@ import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 
 /**
  * 构建容器逻辑类
@@ -47,6 +48,11 @@ interface ContainerService {
      * 获取所有构建容器信息
      */
     fun getAllPipelineContainer(): Result<List<Container>>
+
+    /**
+     * 获取容器信息
+     */
+    fun getAllContainers(): Result<List<ContainerType>?>
 
     /**
      * 获取构建容器信息

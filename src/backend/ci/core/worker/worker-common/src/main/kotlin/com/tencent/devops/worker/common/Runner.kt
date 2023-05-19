@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
@@ -41,6 +42,11 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_PREPARE_TO_BUILD
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.PARAMETER_ERROR
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.RUN_AGENT_WITHOUT_PERMISSION
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UNKNOWN_ERROR
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.env.DockerEnv
@@ -53,10 +59,10 @@ import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
+import org.slf4j.LoggerFactory
 import kotlin.system.exitProcess
 
 object Runner {
@@ -75,7 +81,8 @@ object Runner {
         try {
             BuildEnv.setBuildId(buildVariables.buildId)
 
-            workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
+            // 准备工作空间并返回 + 启动日志服务 + 启动心跳 + 打印构建信息
+            workspacePathFile = prepareWorker(buildVariables, workspaceInterface)
 
             try {
                 // 上报agent启动给quota
@@ -87,23 +94,31 @@ object Runner {
                 logger.error("Other ignore error has occurred:", ignore)
                 LoggerService.addErrorLine("Other ignore error has occurred: " + ignore.message)
             } finally {
-                LoggerService.stop()
+                // 仅当有插件运行时会产生待归档日志
                 LoggerService.archiveLogFiles()
-                EngineService.endBuild(buildVariables.variables)
+                // 兜底try中的增加配额
                 QuotaService.removeRunningAgent(buildVariables)
-                Heartbeat.stop()
             }
         } catch (ignore: Exception) {
             failed = true
             logger.warn("Catch unknown exceptions", ignore)
             val errMsg = when (ignore) {
-                is java.lang.IllegalArgumentException -> "参数错误：${ignore.message}"
+                is java.lang.IllegalArgumentException ->
+                    MessageUtil.getMessageByLocale(
+                        messageCode = PARAMETER_ERROR,
+                        language = AgentEnv.getLocaleLanguage()
+                    ) + "：${ignore.message}"
                 is FileNotFoundException, is IOException -> {
-                    "运行Agent需要构建机临时目录的写权限，请检查Agent运行帐号相关权限: ${ignore.message}" +
-                        "\n 可以检查devopsAgent进程的启动帐号和{agent_dir}/.agent.properties文件中的" +
-                        "devops.slave.user配置的指定构建帐号（此选项非必须，是由用户设置),如果有可删除或者修改为正确的帐号"
+                    MessageUtil.getMessageByLocale(
+                        messageCode = RUN_AGENT_WITHOUT_PERMISSION,
+                        language = AgentEnv.getLocaleLanguage(),
+                        params = arrayOf("${ignore.message}")
+                    )
                 }
-                else -> "未知错误: ${ignore.message}"
+                else -> MessageUtil.getMessageByLocale(
+                    messageCode = UNKNOWN_ERROR,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + " ${ignore.message}"
             }
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
@@ -118,9 +133,10 @@ object Runner {
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
             )
-            EngineService.endBuild(buildVariables.variables)
             throw ignore
         } finally {
+            // 对应prepareWorker的兜底动作
+            finishWorker(buildVariables)
             finally(workspacePathFile, failed)
 
             if (systemExit) {
@@ -145,7 +161,7 @@ object Runner {
         }
     }
 
-    private fun prepareWorkspace(buildVariables: BuildVariables, workspaceInterface: WorkspaceInterface): File {
+    private fun prepareWorker(buildVariables: BuildVariables, workspaceInterface: WorkspaceInterface): File {
         // 为进程加上ShutdownHook事件
         KillBuildProcessTree.addKillProcessTreeHook(
             projectId = buildVariables.projectId,
@@ -176,6 +192,12 @@ object Runner {
         )
         LoggerService.pipelineLogDir = workspaceAndLogPath.second
         return workspaceAndLogPath.first
+    }
+
+    private fun finishWorker(buildVariables: BuildVariables) {
+        LoggerService.stop()
+        EngineService.endBuild(buildVariables.variables)
+        Heartbeat.stop()
     }
 
     private fun loopPickup(workspacePathFile: File, buildVariables: BuildVariables): Boolean {
@@ -336,7 +358,13 @@ object Runner {
      * 发送构建初始化日志
      */
     private fun showBuildStartupLog(buildId: String, vmSeqId: String) {
-        LoggerService.addNormalLine("构建机已收到请求，准备构建(Build[$buildId] Job#$vmSeqId is ready）")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PREPARE_TO_BUILD,
+                params = arrayOf(buildId, vmSeqId),
+                language = AgentEnv.getLocaleLanguage()
+            )
+        )
     }
 
     /**

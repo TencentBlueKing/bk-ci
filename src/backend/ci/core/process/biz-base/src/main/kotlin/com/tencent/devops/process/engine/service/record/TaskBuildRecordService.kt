@@ -41,15 +41,19 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -62,16 +66,22 @@ import java.time.LocalDateTime
     "ReturnCount",
     "TooManyFunctions",
     "ComplexCondition",
-    "ComplexMethod"
+    "ComplexMethod",
+    "LongMethod",
+    "NestedBlockDepth"
 )
 @Service
 class TaskBuildRecordService(
     private val buildVariableService: BuildVariableService,
     private val dslContext: DSLContext,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineBuildDao: PipelineBuildDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -81,7 +91,12 @@ class TaskBuildRecordService(
     buildRecordModelDao = buildRecordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineBuildDao = pipelineBuildDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(
@@ -164,7 +179,6 @@ class TaskBuildRecordService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        containerId: String,
         taskId: String,
         executeCount: Int
     ) {
@@ -249,8 +263,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
-    fun taskCancel(
+    fun taskPauseCancel(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -278,88 +291,16 @@ class TaskBuildRecordService(
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.CANCELED,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                timestamps = mapOf(
+                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
             )
         }
     }
 
-    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
-
-        val projectId = taskBuildEndParam.projectId
-        val pipelineId = taskBuildEndParam.pipelineId
-        val buildId = taskBuildEndParam.buildId
-        val taskId = taskBuildEndParam.taskId
-        val buildStatus = taskBuildEndParam.buildStatus
-        val atomVersion = taskBuildEndParam.atomVersion
-        val errorType = taskBuildEndParam.errorType
-        val executeCount = buildTaskDao.get(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            taskId = taskId
-        )?.executeCount ?: 1
-
-        update(
-            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
-            cancelUser = null, operation = "taskEnd#$taskId"
-        ) {
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                val recordTask = recordTaskDao.getRecord(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    executeCount = executeCount
-                ) ?: run {
-                    logger.warn(
-                        "ENGINE|$buildId|taskEnd| get task($taskId) record failed."
-                    )
-                    return@transaction
-                }
-                val taskVar = mutableMapOf<String, Any>()
-                taskVar.putAll(recordTask.taskVar)
-                if (atomVersion != null) {
-                    when (recordTask.classType) {
-                        MarketBuildAtomElement.classType -> {
-                            taskVar[MarketBuildAtomElement::version.name] = atomVersion
-                        }
-                        MarketBuildLessAtomElement.classType -> {
-                            taskVar[MarketBuildLessAtomElement::version.name] = atomVersion
-                        }
-                        else -> {
-                            taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
-                        }
-                    }
-                }
-                if (errorType != null) {
-                    taskVar[Element::errorType.name] = errorType.name
-                    taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
-                    taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
-                }
-                taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
-                recordTaskDao.updateRecord(
-                    dslContext = context,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    executeCount = executeCount,
-                    taskVar = taskVar,
-                    buildStatus = buildStatus,
-                    startTime = null,
-                    endTime = LocalDateTime.now(),
-                    timestamps = null
-                )
-            }
-        }
-
-        return taskBuildDetailService.taskEnd(taskBuildEndParam)
-    }
-
-    @Suppress("NestedBlockDepth")
-    fun taskContinue(
+    fun taskPauseContinue(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -403,6 +344,91 @@ class TaskBuildRecordService(
                     BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
             )
         )
+    }
+
+    fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+
+        val projectId = taskBuildEndParam.projectId
+        val pipelineId = taskBuildEndParam.pipelineId
+        val buildId = taskBuildEndParam.buildId
+        val taskId = taskBuildEndParam.taskId
+        // #7983 将RETRY中间态过滤，不体现在详情页面
+        val buildStatus = taskBuildEndParam.buildStatus.let {
+            if (it == BuildStatus.RETRY) null else it
+        }
+        val atomVersion = taskBuildEndParam.atomVersion
+        val errorType = taskBuildEndParam.errorType
+        val executeCount = taskBuildEndParam.executeCount
+
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "taskEnd#$taskId"
+        ) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                val recordTask = recordTaskDao.getRecord(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount
+                ) ?: run {
+                    logger.warn(
+                        "ENGINE|$buildId|taskEnd| get task($taskId) record failed."
+                    )
+                    return@transaction
+                }
+                val taskVar = mutableMapOf<String, Any>()
+                taskVar.putAll(recordTask.taskVar)
+                if (atomVersion != null) {
+                    when (recordTask.classType) {
+                        MarketBuildAtomElement.classType -> {
+                            taskVar[MarketBuildAtomElement::version.name] = atomVersion
+                        }
+                        MarketBuildLessAtomElement.classType -> {
+                            taskVar[MarketBuildLessAtomElement::version.name] = atomVersion
+                        }
+                        else -> {
+                            taskVar[MarketBuildAtomElement::version.name] = INIT_VERSION
+                        }
+                    }
+                }
+                var timestamps: MutableMap<BuildTimestampType, BuildRecordTimeStamp>? = null
+                if (recordTask.status == BuildStatus.PAUSE.name) {
+                    timestamps = mergeTimestamps(
+                        recordTask.timestamps,
+                        mapOf(
+                            BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                                BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                        )
+                    )
+                }
+                if (errorType != null) {
+                    taskVar[Element::errorType.name] = errorType.name
+                    taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
+                    taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
+                }
+                recordTask.generateTaskTimeCost()?.let {
+                    taskVar[Element::timeCost.name] = it
+                }
+                recordTaskDao.updateRecord(
+                    dslContext = context,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    taskId = taskId,
+                    executeCount = executeCount,
+                    taskVar = taskVar,
+                    buildStatus = buildStatus,
+                    startTime = null,
+                    endTime = LocalDateTime.now(),
+                    timestamps = timestamps
+                )
+            }
+        }
+
+        return taskBuildDetailService.taskEnd(taskBuildEndParam)
     }
 
     fun updateTaskRecord(

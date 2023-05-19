@@ -34,7 +34,8 @@ abstract class BasePathFilter(
     private val pipelineId: String,
     private val triggerOnPath: List<String>,
     private val includedPaths: List<String>,
-    private val excludedPaths: List<String>
+    private val excludedPaths: List<String>,
+    private val caseSensitive: Boolean = true
 ) : WebhookFilter {
 
     companion object {
@@ -44,7 +45,7 @@ abstract class BasePathFilter(
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         logger.info(
             "$pipelineId|triggerOnPath:$triggerOnPath|includedPaths:$includedPaths" +
-                "|excludedPaths:$excludedPaths|path prefix filter"
+                "|excludedPaths:$excludedPaths|caseSensitive:$caseSensitive|path prefix filter"
         )
         return hasNoPathSpecs() || hashPathSpecs(response)
     }

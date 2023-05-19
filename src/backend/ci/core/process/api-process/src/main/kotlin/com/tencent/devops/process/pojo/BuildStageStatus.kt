@@ -46,7 +46,7 @@ data class BuildStageStatus(
     @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var elapsed: Long? = null,
     @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost(),
+    var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("前端", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var showMsg: String? = null
 )

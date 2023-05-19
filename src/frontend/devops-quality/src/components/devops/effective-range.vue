@@ -7,7 +7,7 @@
         :show-footer="rangeListConf.hasFooter">
         <div>
             <div class="range-list-header">
-                <div class="title">生效范围</div>
+                <div class="title">{{$t('quality.生效范围')}}</div>
                 <div><i class="devops-icon icon-close" @click="close" style="color: #C3CDD7;"></i></div>
             </div>
             <div class="range-content">
@@ -17,34 +17,38 @@
                     :data="rangeList"
                     :pagination="pagination"
                     @page-change="handlePageChange">
-                    <bk-table-column label="名称" prop="name" width="320">
+                    <bk-table-column :label="$t('quality.名称')" prop="name" width="320">
                         <template slot-scope="props">
-                            <span>{{ props.row.name }}</span>
+                            <span>{{props.row.name}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="类型" width="80">
+                    <bk-table-column :label="$t('quality.类型')" width="80">
                         <template slot-scope="props">
-                            <span>{{ props.row.type === 'PIPELINE' ? '单流水线' : '模板' }}</span>
+                            <span>{{props.row.type === 'PIPELINE' ? $t('quality.单流水线') : $t('quality.模板')}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="指标相关插件">
+                    <bk-table-column :label="$t('quality.指标相关插件')">
                         <template slot-scope="props">
-                            <span v-if="props.row.lackElements.length" :title="`缺少${props.row.lackElements.join('、')}插件`" style="color:#F5A623;">{{ `缺少${props.row.lackElements.join('、')}插件` }}</span>
-                            <span v-else style="color:#00C873;">指标所需插件完整</span>
+                            <span v-if="props.row.lackElements.length" :title="$t('quality.缺少{0}插件', [props.row.lackElements.join('、')])" style="color:#F5A623;">
+                                {{
+                                    $t('quality.缺少{0}插件', [props.row.lackElements.join('、')])
+                                }}
+                            </span>
+                            <span v-else style="color:#00C873;">{{$t('quality.指标所需插件完整')}}</span>
                         </template>
                     </bk-table-column>
-                    <bk-table-column label="操作建议" width="100">
+                    <bk-table-column :label="$t('quality.操作建议')" width="100">
                         <template slot-scope="props">
                             <a class="add-btn"
                                 v-if="props.row.type === 'PIPELINE' && (props.row.lackElements.length)"
                                 target="_blank"
                                 :href="`/console/pipeline/${projectId}/${props.row.id}/edit`"
-                            >去修改</a>
+                            >{{$t('quality.去修改')}}</a>
                             <a class="add-btn"
                                 v-else-if="props.row.type === 'TEMPLATE' && (props.row.lackElements.length)"
                                 target="_blank"
                                 :href="`/console/pipeline/${projectId}/template/${props.row.id}/edit`"
-                            >去修改</a>
+                            >{{$t('quality.去修改')}}</a>
                             <span v-else>-</span>
                         </template>
                     </bk-table-column>

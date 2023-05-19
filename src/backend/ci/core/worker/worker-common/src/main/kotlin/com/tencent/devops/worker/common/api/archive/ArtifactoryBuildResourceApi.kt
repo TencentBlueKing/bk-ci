@@ -30,7 +30,10 @@ package com.tencent.devops.worker.common.api.archive
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_BUILD_BASE_INFO_FAIL
+import com.tencent.devops.worker.common.env.AgentEnv
 
 class ArtifactoryBuildResourceApi : AbstractBuildResourceApi() {
 
@@ -45,7 +48,10 @@ class ArtifactoryBuildResourceApi : AbstractBuildResourceApi() {
         return try {
             val path = "/artifactory/api/build/fileGateway/get"
             val request = buildGet(path)
-            val response = request(request, "获取构建机基本信息失败")
+            val response = request(
+                request,
+                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, AgentEnv.getLocaleLanguage())
+            )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
         } catch (e: Exception) {

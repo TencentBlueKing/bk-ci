@@ -28,11 +28,13 @@
 package com.tencent.devops.worker.common.task.market
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
@@ -47,6 +49,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.EnvReplacementParser
@@ -79,10 +82,12 @@ import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.atom.StoreSdkApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_HAS_BEEN_REMOVED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_GET_OUTPUT_ARTIFACTVALUE_ERROR
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -99,10 +104,10 @@ import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
 import com.tencent.devops.worker.common.utils.TaskUtil
 import com.tencent.devops.worker.common.utils.TemplateAcrossInfoUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -226,7 +231,8 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_CODE to atomData.atomCode,
                 PIPELINE_ATOM_VERSION to atomData.version,
                 PIPELINE_TASK_NAME to taskName,
-                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString()
+                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString(),
+                LOCALE_LANGUAGE to (AgentEnv.getLocaleLanguage())
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }
@@ -278,20 +284,8 @@ open class MarketAtomTask : ITask() {
 
             // #7023 找回重构导致的逻辑丢失： runtime 覆盖 system 环境变量
             systemEnvVariables.forEach { runtimeVariables.putIfAbsent(it.key, it.value) }
-
             val preCmd = atomData.preCmd
             val buildEnvs = buildVariables.buildEnvs
-            if (!preCmd.isNullOrBlank()) {
-                runPreCmds(
-                    preCmds = CommonUtils.strToList(preCmd),
-                    buildVariables = buildVariables,
-                    atomTmpSpace = atomTmpSpace,
-                    workspace = workspace,
-                    runtimeVariables = runtimeVariables,
-                    buildEnvs = buildEnvs,
-                    buildTask = buildTask
-                )
-            }
             LoggerService.addFoldEndLine("-----")
             LoggerService.addNormalLine("")
             val atomRunConditionHandleService = AtomRunConditionFactory.createAtomRunConditionHandleService(
@@ -323,15 +317,22 @@ open class MarketAtomTask : ITask() {
                 osType = AgentEnv.getOS(),
                 postEntryParam = postEntryParam
             )
-
+            val runCmds = mutableListOf<String>()
+            if (!preCmd.isNullOrBlank()) {
+                runCmds.addAll(CommonUtils.strToList(preCmd))
+            }
+            runCmds.add(atomTarget)
             // 运行阶段单独处理执行失败错误
             try {
                 val errorMessage = "Fail to run the plugin"
                 when (AgentEnv.getOS()) {
                     OSType.WINDOWS -> {
+                        val script = runCmds.joinToString(
+                            separator = "\r\n"
+                        ) { "\r\n$it" }
                         BatScriptUtil.execute(
                             buildId = buildVariables.buildId,
-                            script = "\r\n$atomTarget\r\n",
+                            script = script,
                             runtimeVariables = runtimeVariables,
                             dir = atomTmpSpace,
                             workspace = workspace,
@@ -341,9 +342,12 @@ open class MarketAtomTask : ITask() {
                         )
                     }
                     OSType.LINUX, OSType.MAC_OS -> {
+                        val script = runCmds.joinToString(
+                            separator = "\n"
+                        ) { "\n$it" }
                         ShellUtil.execute(
                             buildId = buildVariables.buildId,
-                            script = "\n$atomTarget\n",
+                            script = script,
                             dir = atomTmpSpace,
                             workspace = workspace,
                             buildEnvs = buildEnvs,
@@ -446,55 +450,6 @@ open class MarketAtomTask : ITask() {
         return mapOf("bkSensitiveConfInfo" to atomSensitiveConfMap)
     }
 
-    private fun runPreCmds(
-        preCmds: List<String>,
-        buildVariables: BuildVariables,
-        atomTmpSpace: File,
-        workspace: File,
-        runtimeVariables: Map<String, String>,
-        buildEnvs: List<com.tencent.devops.store.pojo.app.BuildEnv>,
-        buildTask: BuildTask
-    ) {
-        val preCmdErrorMessage = "Fail to run the plugin demand command"
-        when (AgentEnv.getOS()) {
-            OSType.WINDOWS -> {
-                if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString(
-                        separator = "\r\n"
-                    ) { "\r\n$it" }
-                    BatScriptUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = preCommand,
-                        runtimeVariables = runtimeVariables,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        errorMessage = preCmdErrorMessage,
-                        stepId = buildTask.stepId
-                    )
-                }
-            }
-            OSType.LINUX, OSType.MAC_OS -> {
-                if (preCmds.isNotEmpty()) {
-                    val preCommand = preCmds.joinToString(
-                        separator = "\n"
-                    ) { "\n$it" }
-                    ShellUtil.execute(
-                        buildId = buildVariables.buildId,
-                        script = preCommand,
-                        dir = atomTmpSpace,
-                        workspace = workspace,
-                        buildEnvs = buildEnvs,
-                        runtimeVariables = runtimeVariables,
-                        errorMessage = preCmdErrorMessage,
-                        stepId = buildTask.stepId
-                    )
-                }
-            }
-            else -> {
-            }
-        }
-    }
-
     private fun printInput(
         atomData: AtomEnv,
         atomParams: Map<String, String>,
@@ -518,12 +473,17 @@ open class MarketAtomTask : ITask() {
         val atomStatus = AtomStatusEnum.getAtomStatus(atomData.atomStatus)
         if (atomStatus == AtomStatusEnum.UNDERCARRIAGED) {
             LoggerService.addWarnLine(
-                "[警告]该插件已被下架，有可能无法正常工作！\n[WARNING]The plugin has been removed and may not work properly."
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ATOM_HAS_BEEN_REMOVED,
+                    language = AgentEnv.getLocaleLanguage()
+                )
             )
         } else if (atomStatus == AtomStatusEnum.UNDERCARRIAGING) {
             LoggerService.addWarnLine(
-                "[警告]该插件处于下架过渡期，后续可能无法正常工作！\n" +
-                    "[WARNING]The plugin is in the transition period and may not work properly in the future."
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ATOM_IS_IN_THE_TRANSITION_PERIOD_OF_DELISTING,
+                    language = AgentEnv.getLocaleLanguage()
+                )
             )
         }
         LoggerService.addFoldEndLine("-----")
@@ -876,8 +836,13 @@ open class MarketAtomTask : ITask() {
                 }
             }
         } catch (e: Exception) {
-            LoggerService.addErrorLine("获取输出构件[artifact]值错误：${e.message}")
-            logger.error("获取输出构件[artifact]值错误", e)
+            LoggerService.addErrorLine(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GET_OUTPUT_ARTIFACTVALUE_ERROR,
+                    language = AgentEnv.getLocaleLanguage()
+                ) + "：${e.message}"
+            )
+            logger.error("Get output artifact [artifact] value error", e)
         }
         return oneArtifact
     }

@@ -69,7 +69,13 @@ class P4ChangeTriggerHandler(
     )
     override fun getEventType(): CodeEventType = CodeEventType.CHANGE_COMMIT
 
-    override fun getEventType(event: P4ChangeEvent): CodeEventType = event.eventType
+    override fun getEventType(event: P4ChangeEvent): CodeEventType = when (event.eventType) {
+        P4ChangeEvent.CHANGE_COMMIT -> CodeEventType.CHANGE_COMMIT
+        P4ChangeEvent.CHANGE_SUBMIT -> CodeEventType.CHANGE_SUBMIT
+        P4ChangeEvent.CHANGE_CONTENT -> CodeEventType.CHANGE_SUBMIT
+        else ->
+            CodeEventType.valueOf(event.eventType)
+    }
 
     override fun getMessage(event: P4ChangeEvent) = ""
 
@@ -81,6 +87,12 @@ class P4ChangeTriggerHandler(
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
+            val p4Filter = WebhookUtils.getP4Filter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                webHookParams = webHookParams
+            )
             val urlFilter = P4PortFilter(
                 pipelineId = pipelineId,
                 triggerOnP4port = event.p4Port,
@@ -93,25 +105,47 @@ class P4ChangeTriggerHandler(
             )
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
-                    val changeFiles = eventCacheService.getP4ChangelistFiles(
-                        repo = repository,
-                        projectId = projectId,
-                        repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
-                        repositoryType = repositoryConfig.repositoryType,
-                        change = event.change
-                    )
+                    if (includePaths.isNullOrBlank() && excludePaths.isNullOrBlank()) {
+                        return true
+                    }
+                    // 默认区分大小写
+                    var caseSensitive = true
+                    // 用户配置的脚本触发,变更文件由触发脚本解析
+                    val changeFiles =
+                        if (WebhookUtils.isCustomP4TriggerVersion(webHookParams.version)) {
+                            caseSensitive = event.caseSensitive ?: true
+                            event.files ?: emptyList()
+                        } else {
+                            val p4ServerInfo = eventCacheService.getP4ServerInfo(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType
+                            )
+                            p4ServerInfo?.run {
+                                caseSensitive = this.caseSensitive
+                            }
+                            eventCacheService.getP4ChangelistFiles(
+                                repo = repository,
+                                projectId = projectId,
+                                repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
+                                repositoryType = repositoryConfig.repositoryType,
+                                change = event.change
+                            )
+                        }
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = PathFilterType.RegexBasedFilter,
                             pipelineId = pipelineId,
                             triggerOnPath = changeFiles,
                             includedPaths = WebhookUtils.convert(includePaths),
-                            excludedPaths = WebhookUtils.convert(excludePaths)
+                            excludedPaths = WebhookUtils.convert(excludePaths),
+                            caseSensitive = caseSensitive
                         )
                     ).doFilter(response)
                 }
             }
-            return listOf(urlFilter, eventTypeFilter, pathFilter)
+            return listOf(p4Filter, urlFilter, eventTypeFilter, pathFilter)
         }
     }
 
