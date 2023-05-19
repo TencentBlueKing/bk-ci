@@ -35,6 +35,8 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
     `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
     `LAST_STATUS_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '状态最近修改时间',
 	`PRECI_AGENT_ID` varchar(32) NULL COMMENT 'preci go-agent id',
+	`WORKSPACE_MOUNT_TYPE` varchar(32) default 'DEVCLOUD' not null comment '挂载平台（DEVCLOUD、BCS、START）',
+	`SYSTEM_TYPE` varchar(32) default 'LINUX' not null comment '系统类型（LINUX、WINDOWS-GPU）',
     PRIMARY KEY (`ID`),
     UNIQUE INDEX `NAME`(`NAME`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8;

@@ -97,14 +97,14 @@ class WorkspaceListener @Autowired constructor(
             backEvent.environmentIp = remoteDevService.getWorkspaceInfo(event.userId, event.workspaceName).environmentIP
             when (event.type) {
                 UpdateEventType.START -> {
-                    val workspaceResponse = remoteDevService.startWorkspace(event.userId, event.workspaceName)
+                    val workspaceResponse = remoteDevService.startWorkspace(event)
                     backEvent.environmentHost = workspaceResponse.environmentHost
                 }
                 UpdateEventType.STOP -> {
-                    remoteDevService.stopWorkspace(event.userId, event.workspaceName)
+                    remoteDevService.stopWorkspace(event)
                 }
                 UpdateEventType.DELETE -> {
-                    remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
+                    remoteDevService.deleteWorkspace(event)
                 }
                 else -> {
                 }

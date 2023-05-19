@@ -66,11 +66,13 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
+import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -216,7 +218,9 @@ class WorkspaceService @Autowired constructor(
                 createUserId = userId,
                 workPath = Constansts.prefixWorkPath.plus(projectName),
                 workspaceFolder = devfile.workspaceFolder ?: "",
-                hostName = ""
+                hostName = "",
+                workspaceMountType = devfile.checkWorkspaceMountType(),
+                workspaceSystemType = devfile.checkWorkspaceSystemType()
             )
         }
 
@@ -422,7 +426,8 @@ class WorkspaceService @Autowired constructor(
                     ),
                     workspaceName = workspace.name,
                     settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable,
-                    bkTicket = bkTicket
+                    bkTicket = bkTicket,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -658,7 +663,8 @@ class WorkspaceService @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -774,7 +780,8 @@ class WorkspaceService @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -934,7 +941,9 @@ class WorkspaceService @Autowired constructor(
                     createUserId = it.creator,
                     workPath = it.workPath,
                     workspaceFolder = it.workspaceFolder,
-                    hostName = it.hostName
+                    hostName = it.hostName,
+                    workspaceMountType = WorkspaceMountType.valueOf(it.workspaceMountType),
+                    workspaceSystemType = WorkspaceSystemType.valueOf(it.systemType)
                 )
             }
         )
@@ -1230,10 +1239,11 @@ class WorkspaceService @Autowired constructor(
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = ADMIN_NAME,
+                    userId = getSystemOperator(workspace.creator, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.STOP,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 
@@ -1301,6 +1311,12 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    private fun getSystemOperator(workspaceOwner: String, mountType: String): String =
+        when (mountType) {
+            WorkspaceMountType.START.name -> workspaceOwner
+            else -> ADMIN_NAME
+        }
+
     fun heartBeatDeleteWS(workspace: TWorkspaceRecord): Boolean {
         logger.info("heart beat delete workspace ${workspace.name}")
         // 校验状态
@@ -1331,10 +1347,11 @@ class WorkspaceService @Autowired constructor(
             val bizId = MDC.get(TraceTag.BIZID)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = ADMIN_NAME,
+                    userId = getSystemOperator(workspace.creator, workspace.workspaceMountType),
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
                 )
             )
 

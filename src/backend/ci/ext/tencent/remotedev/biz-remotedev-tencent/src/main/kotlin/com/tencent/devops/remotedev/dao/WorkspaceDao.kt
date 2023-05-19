@@ -33,6 +33,7 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceShared
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.remotedev.pojo.Workspace
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -57,53 +58,56 @@ class WorkspaceDao {
         return with(TWorkspace.T_WORKSPACE) {
             dslContext.insertInto(
                 /* into = */ this,
-                /* field1 = */ PROJECT_ID,
-                /* field2 = */ NAME,
-                /* field3 = */ TEMPLATE_ID,
-                /* field4 = */ URL,
-                /* field5 = */ BRANCH,
-                /* field6 = */ YAML_PATH,
-                /* field7 = */ IMAGE_PATH,
-                /* field8 = */ WORK_PATH,
-                /* field9 = */ WORKSPACE_FOLDER,
-                /* field10 = */ HOST_NAME,
-                /* field11 = */ CPU,
-                /* field12 = */ MEMORY,
-                /* field13 = */ DISK,
-                /* field14 = */ STATUS,
-                /* field15 = */ LAST_STATUS_UPDATE_TIME,
-                /* field16 = */ YAML,
-                /* field17 = */ DOCKERFILE,
-                /* field18 = */ CREATOR,
-                /* field19 = */ CREATOR_BG_NAME,
-                /* field20 = */ CREATOR_DEPT_NAME,
-                /* field21 = */ CREATOR_CENTER_NAME,
-                /* field22 = */ CREATOR_GROUP_NAME
-
+                /* ...fields = */ PROJECT_ID,
+                NAME,
+                TEMPLATE_ID,
+                URL,
+                BRANCH,
+                YAML_PATH,
+                IMAGE_PATH,
+                WORK_PATH,
+                WORKSPACE_FOLDER,
+                HOST_NAME,
+                CPU,
+                MEMORY,
+                DISK,
+                STATUS,
+                LAST_STATUS_UPDATE_TIME,
+                YAML,
+                DOCKERFILE,
+                CREATOR,
+                CREATOR_BG_NAME,
+                CREATOR_DEPT_NAME,
+                CREATOR_CENTER_NAME,
+                CREATOR_GROUP_NAME,
+                WORKSPACE_MOUNT_TYPE,
+                SYSTEM_TYPE
             )
                 .values(
-                    /* value1 = */ "",
-                    /* value2 = */ workspace.workspaceName,
-                    /* value3 = */ workspace.wsTemplateId,
-                    /* value4 = */ workspace.repositoryUrl,
-                    /* value5 = */ workspace.branch,
-                    /* value6 = */ workspace.devFilePath,
-                    /* value7 = */ "",
-                    /* value8 = */ workspace.workPath,
-                    /* value9 = */ workspace.workspaceFolder,
-                    /* value10 = */ workspace.hostName,
-                    /* value11 = */ 8,
-                    /* value12 = */ 32,
-                    /* value13 = */ 100,
-                    /* value14 = */ workspaceStatus.ordinal,
-                    /* value15 = */ LocalDateTime.now(),
-                    /* value16 = */ workspace.yaml,
-                    /* value17 = */ "",
-                    /* value18 = */ workspace.createUserId,
-                    /* value19 = */ userInfo?.bgName ?: "",
-                    /* value20 = */ userInfo?.deptName ?: "",
-                    /* value21 = */ userInfo?.centerName ?: "",
-                    /* value22 = */ userInfo?.groupName ?: ""
+                    "",
+                    workspace.workspaceName,
+                    workspace.wsTemplateId,
+                    workspace.repositoryUrl,
+                    workspace.branch,
+                    workspace.devFilePath,
+                    "",
+                    workspace.workPath,
+                    workspace.workspaceFolder,
+                    workspace.hostName,
+                    8,
+                    32,
+                    100,
+                    workspaceStatus.ordinal,
+                    LocalDateTime.now(),
+                    workspace.yaml,
+                    "",
+                    workspace.createUserId,
+                    userInfo?.bgName ?: "",
+                    userInfo?.deptName ?: "",
+                    userInfo?.centerName ?: "",
+                    userInfo?.groupName ?: "",
+                    workspace.workspaceMountType.name,
+                    workspace.workspaceSystemType.name
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -216,10 +220,17 @@ class WorkspaceDao {
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        workspaceName: String? = null
+        workspaceName: String? = null,
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null
     ): TWorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId = userId, workspaceName = workspaceName)
+            val condition = mixCondition(
+                userId = userId,
+                workspaceName = workspaceName,
+                status = status,
+                mountType = mountType
+            )
 
             if (condition.isEmpty()) {
                 return null
@@ -252,7 +263,8 @@ class WorkspaceDao {
     private fun mixCondition(
         userId: String? = null,
         workspaceName: String? = null,
-        status: WorkspaceStatus? = null
+        status: WorkspaceStatus? = null,
+        mountType: WorkspaceMountType? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -264,6 +276,9 @@ class WorkspaceDao {
             }
             if (status != null) {
                 condition.add(STATUS.eq(status.ordinal))
+            }
+            if (mountType != null) {
+                condition.add(WORKSPACE_MOUNT_TYPE.eq(mountType.name))
             }
         }
         return condition
@@ -294,6 +309,7 @@ class WorkspaceDao {
             }
         }
     }
+
     fun updateWorkspaceCreatorInfo(
         dslContext: DSLContext,
         workspaceName: String,

@@ -30,6 +30,7 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineExportV2YamlData
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
@@ -38,20 +39,22 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PIPELINE"], description = "服务-流水线资源")
-@Path("/service/streams/pipelines")
+@Path("/service")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceTXPipelineResource {
 
     @ApiOperation("导出流水线yaml,gitci")
     @GET
-    @Path("/{pipelineId}/projects/{projectId}/yaml/gitci")
+    @Path("/streams/pipelines/{pipelineId}/projects/{projectId}/yaml/gitci")
     fun exportPipelineGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -66,10 +69,27 @@ interface ServiceTXPipelineResource {
 
     @ApiOperation("根据自增id获取流水线信息")
     @GET
-    @Path("/ids/{id}/info")
+    @Path("/streams/pipelines/ids/{id}/info")
     fun getPipelineInfobyId(
         @PathParam("id")
         @ApiParam(value = "流水线自增id", required = true)
         id: Int
     ): Result<SimplePipeline>
+
+    @ApiOperation("用模板实例化一条AM流水线并且触发运行")
+    @POST
+    @Path("/{projectId}/run_pipeline_with_template")
+    fun runPipelineWithTemplate(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("templateVersionId")
+        templateVersionId: Long,
+        @ApiParam(value = "实例化所需参数", required = true)
+        parameters: Map<String, String>
+    ): Result<BuildId>
 }

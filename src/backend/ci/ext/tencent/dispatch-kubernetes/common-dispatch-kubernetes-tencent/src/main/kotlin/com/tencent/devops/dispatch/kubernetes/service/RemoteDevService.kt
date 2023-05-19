@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import org.jooq.DSLContext
@@ -58,8 +59,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
-        val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .createWorkspace(userId, event)
+        val mountType = event.devFile.checkWorkspaceMountType()
+        val (enviromentUid, taskId) = remoteDevServiceFactory.loadRemoteDevService(mountType).createWorkspace(userId, event)
 
         // 记录创建历史
         dispatchWorkspaceDao.createWorkspace(
@@ -70,13 +71,12 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(mountType).waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. $enviromentUid")
 
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(userId)
+            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(mountType)
                 .getWorkspaceInfo(userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
@@ -138,15 +138,15 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .startWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun startWorkspace(event: WorkspaceOperateEvent): WorkspaceResponse {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+            .startWorkspace(event.userId, event.workspaceName)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(userId)
-                .getWorkspaceInfo(userId, workspaceName)
+            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+                .getWorkspaceInfo(event.userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
@@ -159,7 +159,7 @@ class RemoteDevService @Autowired constructor(
 
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.running,
                 dslContext = dslContext
             )
@@ -179,16 +179,16 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .stopWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun stopWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+            .stopWorkspace(event.userId, event.workspaceName)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.stopped,
                 dslContext = dslContext
             )
@@ -204,16 +204,16 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(userId)
-            .deleteWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(userId)
-            .waitTaskFinish(userId, taskId)
+    fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+            .deleteWorkspace(event.userId, event)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+            .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
-                workspaceName = workspaceName,
+                workspaceName = event.workspaceName,
                 status = EnvStatusEnum.deleted,
                 dslContext = dslContext
             )
