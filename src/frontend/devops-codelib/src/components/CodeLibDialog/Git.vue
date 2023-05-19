@@ -65,7 +65,7 @@
         </bk-form-item>
         <template v-if="hasPower && isOAUTH">
             <bk-form-item
-                :label="$t('codelib.codelibUrl')"
+                :label="$t('codelib.address')"
                 :required="true"
                 property="url"
                 error-display-type="normal"
@@ -100,7 +100,7 @@
         </template>
         <template v-else-if="!isOAUTH">
             <bk-form-item
-                :label="$t('codelib.codelibUrl')"
+                :label="$t('codelib.address')"
                 :required="true"
                 property="url"
                 error-display-type="normal"

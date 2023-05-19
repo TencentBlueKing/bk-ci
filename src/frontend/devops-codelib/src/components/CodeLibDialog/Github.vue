@@ -54,7 +54,7 @@
         </bk-form-item>
         <template v-if="hasPower">
             <bk-form-item
-                :label="$t('codelib.codelibUrl')"
+                :label="$t('codelib.address')"
                 :required="true"
                 property="url"
                 error-display-type="normal"

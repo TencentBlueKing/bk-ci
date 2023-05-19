@@ -109,7 +109,9 @@ export default {
             )
         },
         title () {
-            return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
+            return this.$t('codelib.linkRepo', [
+                this.codelibConfig.label
+            ])
         },
         isGit () {
             return isGit(this.codelibTypeName)
@@ -119,6 +121,9 @@ export default {
         },
         isGitLab () {
             return isGitLab(this.codelibTypeName)
+        },
+        isSvn () {
+            return isSvn(this.codelibTypeName)
         },
         isP4 () {
             return isP4(this.codelibTypeName)
@@ -347,7 +352,6 @@ export default {
                 projectId,
                 user: { username },
                 codelib,
-                codelibTypeName,
                 createOrEditRepo,
                 repositoryHashId
             } = this
@@ -357,7 +361,7 @@ export default {
                 this.$refs.form.$refs.form.validate().then(async () => {
                     if (!this.urlErrMsg) {
                         this.saving = true
-                        if (isSvn(codelibTypeName)) {
+                        if (this.isSvn) {
                             params.region = parsePathRegion(codelib.url)
                         }
                         await createOrEditRepo({
