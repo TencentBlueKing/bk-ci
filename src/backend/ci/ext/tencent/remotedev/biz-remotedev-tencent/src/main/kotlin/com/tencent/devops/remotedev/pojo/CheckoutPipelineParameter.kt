@@ -10,5 +10,5 @@ data class CheckoutPipelineParameter(
     @JsonProperty("git_branch")
     val gitBranch: String,
     @JsonProperty("git_save_path")
-    val gitSavePath: String,
+    val gitSavePath: String
 )
