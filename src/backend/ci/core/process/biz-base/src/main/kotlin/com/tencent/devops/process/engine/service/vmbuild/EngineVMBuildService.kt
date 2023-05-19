@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ObjectReplaceEnvVarUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,10 +51,13 @@ import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.AtomRuntimeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.engine.api.pojo.HeartBeatInfo
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTINUE_WHEN_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VM_START_ALREADY
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToMills
 import com.tencent.devops.process.engine.common.Timeout.transMinuteTimeoutToSec
@@ -93,12 +97,12 @@ import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.NotFoundException
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress(
     "LongMethod",
@@ -206,7 +210,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
                         condition = !BuildStatus.parse(c.startVMStatus).isFinish() || retryCount > 0,
-                        exception = OperationException("重复启动构建机/VM Start already: ${c.startVMStatus}")
+                        exception = OperationException(
+                            I18nUtil.getCodeLanMessage(messageCode = BK_VM_START_ALREADY) + " ${c.startVMStatus}"
+                        )
                     )
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
 
@@ -351,13 +357,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         if (startUpVMTask == null) {
             return false
         }
+        val finalBuildStatus = getFinalBuildStatus(buildStatus, buildId, vmSeqId, startUpVMTask)
 
         // 如果是完成状态，则更新构建机启动插件的状态
-        if (buildStatus.isFinish()) {
+        if (finalBuildStatus.isFinish()) {
             pipelineTaskService.updateTaskStatus(
                 task = startUpVMTask,
                 userId = startUpVMTask.starter,
-                buildStatus = buildStatus,
+                buildStatus = finalBuildStatus,
                 errorType = errorType,
                 errorCode = errorCode,
                 errorMsg = errorMsg
@@ -380,7 +387,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     containerId = vmSeqId,
                     executeCount = startUpVMTask.executeCount ?: 1,
-                    containerBuildStatus = buildStatus
+                    containerBuildStatus = finalBuildStatus
                 )
             }
         }
@@ -388,12 +395,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // 失败的话就发终止事件
         var message: String?
         val actionType = when {
-            buildStatus.isTimeout() -> {
+            finalBuildStatus.isTimeout() -> {
                 message = "Job Timeout"
                 ActionType.TERMINATE
             }
-            buildStatus.isFailure() -> {
+            finalBuildStatus.isFailure() -> {
                 message = "Agent failed to start!"
+                ActionType.TERMINATE
+            }
+            finalBuildStatus.isCancel() -> {
+                message = "Job Cancel"
                 ActionType.TERMINATE
             }
             else -> {
@@ -403,13 +414,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
 
         // #1613 完善日志
-        errorType?.let { message = "$message \nerrorType: ${errorType.typeName}" }
+        val typeName = errorType?.typeName
+        errorType?.let { message = "$message \nerrorType: ${I18nUtil.getCodeLanMessage("errorType.$typeName")}" }
         errorCode?.let { message = "$message \nerrorCode: $errorCode" }
         errorMsg?.let { message = "$message \nerrorMsg: $errorMsg" }
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
-                source = "container_startup_$buildStatus",
+                source = "container_startup_$finalBuildStatus",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -423,6 +435,29 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
         return true
+    }
+
+    private fun getFinalBuildStatus(
+        buildStatus: BuildStatus,
+        buildId: String,
+        vmSeqId: String,
+        startUpVMTask: PipelineBuildTask
+    ): BuildStatus {
+        val finalBuildStatus = if (buildStatus.isFinish()) {
+            buildStatus
+        } else {
+            val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
+            val cancelFlag = redisOperation.isMember(cancelTaskSetKey, startUpVMTask.taskId)
+            val runCondition = startUpVMTask.additionalOptions?.runCondition
+            val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            // 判断开机插件是否被取消
+            if (!failedEvenCancelFlag && cancelFlag) {
+                BuildStatus.CANCELED
+            } else {
+                buildStatus
+            }
+        }
+        return finalBuildStatus
     }
 
     /**
@@ -510,7 +545,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 LOG.info("ENGINE|$buildId|BC_RUNNING|${task.projectId}|j($vmSeqId)|${task.taskId}|${task.status}")
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "正在处理当前上报的任务, 请稍等。。。(Waiting please)",
+                    message = MessageUtil.getMessageByLocale(
+                        BK_PROCESSING_CURRENT_REPORTED_TASK_PLEASE_WAIT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -741,7 +779,10 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             if (ControlUtils.continueWhenFailure(task?.additionalOptions)) {
                 buildLogPrinter.addRedLine(
                     buildId = task!!.buildId,
-                    message = "Plugin[${task.taskName}]: 失败自动跳过/continue when error",
+                    message = "Plugin[${task.taskName}]: " + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CONTINUE_WHEN_ERROR,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = task.taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -926,17 +967,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         task?.run {
             errorType?.also { // #5046 增加错误信息
                 val errMsg = "Error: Process completed with exit code $errorCode: $errorMsg. " +
-                    (
-                        errorCode?.let {
-                            "\n${
-                                MessageCodeUtil.getCodeLanMessage(
-                                    messageCode = errorCode.toString(),
-                                    checkUrlDecoder = true
-                                )
-                            }\n"
-                        }
-                            ?: ""
-                        ) +
                     when (errorType) {
                         ErrorType.USER -> "Please check your input or service."
                         ErrorType.THIRD_PARTY -> "Please contact the third-party service provider."

@@ -47,6 +47,9 @@ import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EVENT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_WAREHOUSE_EVENTS
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
@@ -71,14 +74,14 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress(
     "LongParameterList",
@@ -269,28 +272,59 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerContainer.elements.find { it.status == BuildStatus.SUCCEED.name }?.let {
                 when (it) {
                     is CodeGitWebHookTriggerElement -> {
-                        "Git事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("Git")
+                        )
                     }
                     is CodeTGitWebHookTriggerElement -> {
-                        "Git事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("Git")
+                        )
                     }
                     is CodeGithubWebHookTriggerElement -> {
-                        "GitHub事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("GitHub")
+                        )
                     }
                     is CodeGitlabWebHookTriggerElement -> {
-                        "Gitlab事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("Gitlab")
+                        )
                     }
                     is CodeP4WebHookTriggerElement -> {
-                        "P4事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("P4")
+                        )
                     }
                     is CodeSVNWebHookTriggerElement -> {
-                        "SVN事件"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_EVENT,
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf("SVN")
+                        )
                     }
                     else -> null
                 }
-            } ?: "仓库事件"
+            } ?: I18nUtil.getCodeLanMessage(
+                messageCode = BK_WAREHOUSE_EVENTS,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
         } else {
-            StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode)
+            StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         }
         val queueTime = buildRecordModel?.queueTime?.timestampmilli() ?: buildInfo.queueTime
         val startTime = buildRecordModel?.startTime?.timestampmilli()

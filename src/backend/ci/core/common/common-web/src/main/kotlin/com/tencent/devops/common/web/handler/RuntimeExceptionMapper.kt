@@ -27,15 +27,17 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_ACCESS_BACKGROUND_DATA
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import com.tencent.devops.common.web.jmx.exception.JmxExceptions
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
@@ -49,7 +51,7 @@ class RuntimeExceptionMapper : ExceptionMapper<RuntimeException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "访问后台数据失败，已通知产品、开发，请稍后重试"
+            I18nUtil.getCodeLanMessage(BK_FAILED_ACCESS_BACKGROUND_DATA)
         }
         JmxExceptions.encounter(exception)
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)

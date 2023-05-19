@@ -15,7 +15,7 @@
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                        <label class="bk-label">{{ $t('codelib.address') }}:</label>
                         <div class="bk-form-content">
                             <bk-select
                                 v-model="codelibUrl"
@@ -64,17 +64,20 @@
                     <label class="bk-label">{{ $t('codelib.codelibPullType') }}:</label>
                     <bk-radio-group v-model="codelib.svnType" @change="svnTypeChange(codelib)" class="bk-form-content form-radio">
                         <bk-radio value="ssh">SSH</bk-radio>
-                        <bk-radio value="http">HTTP</bk-radio>
+                        <bk-radio value="http">HTTP/HTTPS</bk-radio>
                     </bk-radio-group>
                 </div>
                 <!-- 源代码地址 start -->
                 <div class="bk-form-item is-required" v-if="!isP4">
-                    <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                    <label class="bk-label">{{ $t('codelib.address') }}:</label>
                     <div class="bk-form-content">
                         <input type="text" class="bk-form-input" :placeholder="urlPlaceholder" name="codelibUrl" v-model.trim="codelibUrl" :v-validate="'required' ? !isP4 : false" :class="{ 'is-danger': urlErrMsg || errors.has('codelibUrl') }">
                         <span class="error-tips" v-if="(urlErrMsg || errors.has('codelibUrl') && !isP4)">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
+                        <div v-else-if="isSvn" class="example-tips">
+                            {{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}
+                        </div>
                     </div>
                 </div>
                 <!-- 源代码地址 end -->
@@ -140,7 +143,7 @@
 
 <script>
     import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
+    import { getCodelibConfig, isGit, isGitLab, isGithub, isP4, isSvn, isTGit } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
@@ -245,7 +248,9 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
+                return this.$t('codelib.linkRepo', [
+                    this.codelibConfig.label
+                ])
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -255,6 +260,9 @@
             },
             isGitLab () {
                 return isGitLab(this.codelibTypeName)
+            },
+            isSvn () {
+                return isSvn(this.codelibTypeName)
             },
             isP4 () {
                 return isP4(this.codelibTypeName)
@@ -423,7 +431,6 @@
                     projectId,
                     user: { username },
                     codelib,
-                    codelibTypeName,
                     createOrEditRepo,
                     repositoryHashId
                 } = this
@@ -434,7 +441,7 @@
 
                     if (valid && !this.urlErrMsg) {
                         this.saving = true
-                        if (isSvn(codelibTypeName)) {
+                        if (this.isSvn) {
                             params.region = parsePathRegion(codelib.url)
                         }
                         await createOrEditRepo({
@@ -581,6 +588,7 @@
 
     .form-radio {
         margin-top: 4px;
+        margin-left: 0;
         >label {
             margin-right: 30px;
         }
@@ -596,5 +604,9 @@
         .tip-icon {
             margin-left: 5px;
         }
+    }
+    .example-tips {
+        color: #c4c6cd;
+        font-size: 12px;
     }
 </style>

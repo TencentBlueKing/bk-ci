@@ -27,7 +27,10 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.constant.PushMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.ENV_MACHINE_NOT_AUTH
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.ENV_NAME_MACHINE_NOT_EXITS
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.NODE_NAME_MACHINE_NOT_EXITS
 import com.tencent.devops.artifactory.pojo.EnvSet
 import com.tencent.devops.artifactory.pojo.PushTypeEnum
 import com.tencent.devops.artifactory.pojo.RemoteResourceInfo
@@ -83,7 +86,7 @@ class EnvServiceExt @Autowired constructor(
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
             throw ErrorCodeException(
-                errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                errorCode = ENV_NAME_MACHINE_NOT_EXITS,
                 params = arrayOf(noExistsEnvNames.toString())
             )
         }
@@ -99,7 +102,7 @@ class EnvServiceExt @Autowired constructor(
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
             throw ErrorCodeException(
-                errorCode = PushMessageCode.ENV_MACHINE_NOT_AUTH,
+                errorCode = ENV_MACHINE_NOT_AUTH,
                 params = arrayOf(noAuthEnvIds.toString())
             )
         }
@@ -133,7 +136,7 @@ class EnvServiceExt @Autowired constructor(
             if (noExistsEnvIds.isNotEmpty()) {
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 throw ErrorCodeException(
-                    errorCode = PushMessageCode.ENV_NAME_MACHINE_NOT_EXITS,
+                    errorCode = ENV_NAME_MACHINE_NOT_EXITS,
                     params = arrayOf(noExistsEnvIds.toString())
                 )
             }
@@ -149,7 +152,7 @@ class EnvServiceExt @Autowired constructor(
             if (noExistsNodeIds.isNotEmpty()) {
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 throw ErrorCodeException(
-                    errorCode = PushMessageCode.NODE_NAME_MACHINE_NOT_EXITS,
+                    errorCode = NODE_NAME_MACHINE_NOT_EXITS,
                     params = arrayOf(noExistsNodeIds.toString())
                 )
             }
@@ -163,7 +166,7 @@ class EnvServiceExt @Autowired constructor(
 
     private fun checkParams(str: String?): Boolean {
         if (str == null || str.isEmpty()) {
-            throw ErrorCodeException(errorCode = PushMessageCode.FUSH_FILE_REMOTE_MACHINE_EMPTY)
+            throw ErrorCodeException(errorCode = FUSH_FILE_REMOTE_MACHINE_EMPTY)
         }
         return true
     }

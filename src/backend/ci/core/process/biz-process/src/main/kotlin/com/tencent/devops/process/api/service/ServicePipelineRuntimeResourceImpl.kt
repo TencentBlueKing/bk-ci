@@ -36,8 +36,8 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -66,7 +66,6 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             val buildHistory = pipelineRuntimeService.getBuildHistoryById(projectId, buildId)
                 ?: throw ErrorCodeException(
                     errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
-                    defaultMessage = "要更新的构建 $buildId 不存在",
                     params = arrayOf(buildId)
                 )
 
@@ -83,7 +82,6 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
 
         throw ErrorCodeException(
             errorCode = ERROR_UPDATE_FAILED,
-            defaultMessage = "更新失败的构建 $buildId",
             params = arrayOf(buildId)
         )
     }
