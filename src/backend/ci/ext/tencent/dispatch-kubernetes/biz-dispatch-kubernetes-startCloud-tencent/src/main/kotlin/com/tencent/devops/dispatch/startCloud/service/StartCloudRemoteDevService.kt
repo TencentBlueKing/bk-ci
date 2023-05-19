@@ -121,6 +121,12 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         val ip = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)?.environmentUid
+            ?: throw BuildFailureException(
+                ErrorCodeEnum.CREATE_VM_USER_ERROR.errorType,
+                ErrorCodeEnum.CREATE_VM_USER_ERROR.errorCode,
+                ErrorCodeEnum.CREATE_VM_USER_ERROR.formatErrorMessage,
+                "第三方服务-START-CLOUD 异常，异常信息 - ip 为空"
+            )
         return WorkspaceInfo(
             status = EnvStatusEnum.running,
             hostIP = ip,
