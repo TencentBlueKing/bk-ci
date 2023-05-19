@@ -53,7 +53,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.dao.ExtProjectDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -114,7 +113,6 @@ class TxProjectServiceImpl @Autowired constructor(
     objectMapper: ObjectMapper,
     projectExtService: ProjectExtService,
     projectApprovalService: ProjectApprovalService,
-    private val extProjectDao: ExtProjectDao
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -492,21 +490,6 @@ class TxProjectServiceImpl @Autowired constructor(
             }
         } catch (ignore: Exception) {
             logger.warn("Failed to update project router tag", ignore)
-        }
-    }
-
-    override fun getV0orV3Projects(
-        authType: AuthSystemType,
-        limit: Int,
-        offset: Int
-    ): List<ProjectVO> {
-        return extProjectDao.getV0orV3Projects(
-            dslContext = dslContext,
-            authType = authType,
-            limit = limit,
-            offset = offset
-        ).map {
-            ProjectUtils.packagingBean(it)
         }
     }
 
