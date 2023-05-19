@@ -29,7 +29,15 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.enums.CodeSvnRegion
-import com.tencent.devops.scm.pojo.*
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.pojo.TokenCheckResult
 
 @Suppress("ALL")
 interface IScmService {
@@ -218,15 +226,4 @@ interface IScmService {
         type: ScmType,
         token: String?
     ): GitProjectInfo?
-
-    /**
-     * 获取日常评审信息
-     */
-    fun getCommitReviewInfo(
-        projectName: String,
-        url: String,
-        type: ScmType,
-        token: String?,
-        crId: Long
-    ): GitCommitReviewInfo?
 }
