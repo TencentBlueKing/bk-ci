@@ -94,7 +94,7 @@ class TGitTagPushTriggerHandler : CodeWebhookTriggerHandler<GitTagPushEvent> {
     }
 
     override fun getMessage(event: GitTagPushEvent): String {
-        return event.message ?: ""
+        return event.ref.replace("refs/tags/","")
     }
 
     override fun retrieveParams(
