@@ -30,19 +30,23 @@ package com.tencent.devops.support.robot
 import com.tencent.bkrepo.common.api.util.toJsonString
 import com.tencent.devops.auth.api.manager.ServiceManagerApprovalResource
 import com.tencent.devops.auth.pojo.enum.ApprovalType
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_GROUP_ID
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_SESSION_ID
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WeworkRobotCustomConfig
-import com.tencent.devops.support.robot.pojo.RobotCallback
-import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
+import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
+import com.tencent.devops.support.constant.SupportMessageCode.BK_GROUP_CHATID
+import com.tencent.devops.support.robot.pojo.RobotCallback
+import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.w3c.dom.Document
 import org.xml.sax.InputSource
 import java.io.StringReader
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.support.util.callback.WXBizMsgCryptV2
 import javax.xml.parsers.DocumentBuilderFactory
 
 @Service
@@ -82,11 +86,21 @@ class RobotService @Autowired constructor(
             // 如为进入机器人单聊, 直接返回空包
             return true
         }
-        if (robotCallBack.content.contains("会话ID") || robotCallBack.content.contains("群ID")) {
+        if (robotCallBack.content.contains(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SESSION_ID
+                )
+        ) || robotCallBack.content.contains(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_GROUP_ID
+                )
+        )) {
             val msg = RobotTextSendMsg(
                 chatId = robotCallBack.chatId,
                 text = MsgInfo(
-                    content = "本群ChatId: ${robotCallBack.chatId}"
+                    content = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_GROUP_CHATID
+                    ) + ": ${robotCallBack.chatId}"
                 )
             )
             wechatWorkRobotService.send(msg.toJsonString())

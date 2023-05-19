@@ -26,6 +26,7 @@ const val ENV_KEY_AGENT_SECRET_KEY = "devops_agent_secret_key"
 const val ENV_KEY_GATEWAY = "devops_gateway"
 const val ENV_DOCKER_HOST_IP = "docker_host_ip"
 const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
+const val ENV_DEFAULT_LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE"
 
 const val ENTRY_POINT_CMD = "/data/init.sh"
 

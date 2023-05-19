@@ -30,7 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -65,7 +65,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
             logger.warn("The project is not exist : projectId = $projectId")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    ProjectMessageCode.PROJECT_NOT_EXIST, language = I18nUtil.getLanguage(userId))
+            )
         }
         // 判断项目是不是审核的情况
         var flag = false
@@ -85,7 +88,12 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (ignored: DuplicateKeyException) {
                 logger.warn("Duplicate ${projectInfoRequest.projectId} or ${projectInfoRequest.projectName}", ignored)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST))
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        ProjectMessageCode.PROJECT_NAME_EXIST,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.vm
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Zone
@@ -41,13 +42,13 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
-import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -144,7 +145,8 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(pipelineInfo, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-            errorMsg = "流水线不存在",
+            errorMsg =
+            I18nUtil.getCodeLanMessage(messageCode = ERROR_PIPELINE_NOT_EXISTS, params = arrayOf(pipelineId)),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId
@@ -154,7 +156,10 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
         Preconditions.checkNotNull(container, BuildTaskException(
             errorType = ErrorType.SYSTEM,
             errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
-            errorMsg = "流水线的模型中指定构建Job不存在",
+            errorMsg = I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                params = arrayOf(vmSeqId)
+            ),
             pipelineId = pipelineId,
             buildId = buildId,
             taskId = taskId

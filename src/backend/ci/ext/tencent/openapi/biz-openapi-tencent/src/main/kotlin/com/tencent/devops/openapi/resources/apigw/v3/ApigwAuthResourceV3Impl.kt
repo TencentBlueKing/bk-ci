@@ -7,9 +7,11 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.api.apigw.pojo.BlackListInfo
 import com.tencent.devops.openapi.api.apigw.pojo.WesecResult
 import com.tencent.devops.openapi.api.apigw.v3.ApigwAuthResourceV3
@@ -39,10 +41,14 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
                 groupName = it.groupName ?: ""
                 displayName = it.displayName ?: ""
             } else {
+                val name = DefaultGroupType.get(it.groupCode).getDisplayName(
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
                 groupType = true
-                groupName = DefaultGroupType.get(it.groupCode).displayName
-                displayName = DefaultGroupType.get(it.groupCode).displayName
+                groupName = name
+                displayName = name
             }
+
             ciGroupInfos.add(
                 GroupDTO(
                     groupName = groupName,

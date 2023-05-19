@@ -31,8 +31,11 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.api.service.v1.GitCIRequestResource
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_OPEN_STREAM
 import com.tencent.devops.stream.v1.pojo.V1GitRequestHistory
 import com.tencent.devops.stream.v1.service.V1GitCIRequestService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
@@ -52,7 +55,12 @@ class GitCIRequestResourceImpl @Autowired constructor(
     ): Result<Page<V1GitRequestHistory>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                )
         }
         return Result(gitCIRequestService.getRequestList(userId, gitProjectId, page, pageSize))
     }

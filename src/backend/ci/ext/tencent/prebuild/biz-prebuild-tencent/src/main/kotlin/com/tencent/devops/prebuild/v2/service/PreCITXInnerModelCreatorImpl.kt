@@ -9,6 +9,10 @@ import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.prebuild.PreBuildMessageCode.BK_SYNCHRONIZE_LOCAL_CODE
+import com.tencent.devops.prebuild.PreBuildMessageCode.CODE_CHECKOUT_NOT_SUPPORTED
+import com.tencent.devops.prebuild.PreBuildMessageCode.SERVICES_KEYWORD_NOT_SUPPORTED
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.PreCIData
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
@@ -62,7 +66,10 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         event: ModelCreateEvent,
         additionalOptions: ElementAdditionalOptions
     ): MarketBuildAtomElement {
-        throw CustomException(Response.Status.BAD_REQUEST, "不支持checkout关键字进行代码检出")
+        throw CustomException(Response.Status.BAD_REQUEST,
+            I18nUtil.getCodeLanMessage(
+                messageCode = CODE_CHECKOUT_NOT_SUPPORTED
+            ))
     }
 
     override fun getServiceJobDevCloudInput(
@@ -71,7 +78,10 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
         imageTag: String,
         params: String
     ): ServiceJobDevCloudInput? {
-        throw CustomException(Response.Status.BAD_REQUEST, "不支持services关键字")
+            throw CustomException(Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = SERVICES_KEYWORD_NOT_SUPPORTED
+                ))
     }
 
     override fun getDispatchInfo(
@@ -122,7 +132,9 @@ class PreCITXInnerModelCreatorImpl : TXInnerModelCreator {
 
             return MarketBuildAtomElement(
                 id = step.taskId,
-                name = step.name ?: "同步本地代码",
+                name = step.name ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_SYNCHRONIZE_LOCAL_CODE
+                ),
                 stepId = step.id,
                 atomCode = "syncAgentCode",
                 version = "3.*",

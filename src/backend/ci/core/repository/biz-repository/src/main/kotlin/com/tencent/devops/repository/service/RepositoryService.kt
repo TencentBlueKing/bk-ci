@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
@@ -41,11 +40,14 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_CREATE_PEM_ERROR
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -67,15 +69,15 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import java.time.LocalDateTime
+import java.util.Base64
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Base64
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("ALL")
@@ -145,7 +147,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("createGitCodeRepository error is :$e", e)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         logger.info("gitRepositoryResp>> $gitRepositoryResp")
         return if (null != gitRepositoryResp) {
@@ -178,7 +183,10 @@ class RepositoryService @Autowired constructor(
                 )
             )
         } else {
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -188,7 +196,10 @@ class RepositoryService @Autowired constructor(
             logger.info("gitToken>> $gitToken")
             if (null == gitToken) {
                 // 抛出无效的token提示
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
+                return I18nUtil.generateResponseDataObject(
+                    CommonMessageCode.OAUTH_TOKEN_IS_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             gitToken.accessToken
         } else {
@@ -245,7 +256,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("updateGitCodeRepository error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -267,15 +281,18 @@ class RepositoryService @Autowired constructor(
             val getGitRepositoryTreeInfoResult = gitService.getGitRepositoryTreeInfo(
                 userId = userId,
                 repoName = repo.projectName,
-                refName = null,
-                path = null,
+                refName = refName,
+                path = path,
                 token = token,
                 tokenType = tokenType
             )
             getGitRepositoryTreeInfoResult
         } catch (e: Exception) {
             logger.error("getGitRepositoryTreeInfo error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -423,7 +440,10 @@ class RepositoryService @Autowired constructor(
             }
         } catch (e: Exception) {
             logger.error("moveProjectToGroupResult error is :$e", e)
-            MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            I18nUtil.generateResponseDataObject(
+                CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
     }
 
@@ -441,7 +461,16 @@ class RepositoryService @Autowired constructor(
     fun userCreate(userId: String, projectId: String, repository: Repository): String {
         // 指定oauth的用户名字只能是登录用户。
         repository.userName = userId
-        validatePermission(userId, projectId, AuthPermission.CREATE, "用户($userId)在工程($projectId)下没有代码库创建权限")
+        validatePermission(
+            userId,
+            projectId,
+            AuthPermission.CREATE,
+            MessageUtil.getMessageByLocale(
+                USER_CREATE_PEM_ERROR,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, projectId)
+            )
+        )
         val repositoryId = createRepository(repository, projectId, userId)
         return HashUtil.encodeOtherLongId(repositoryId)
     }
@@ -485,10 +514,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.VIEW,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_VIEW_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryConfig.getRepositoryId())
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_VIEW_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryConfig.getRepositoryId()),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         return compose(repository)
     }
@@ -537,10 +567,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -550,19 +581,21 @@ class RepositoryService @Autowired constructor(
         if (!repository.isLegal()) {
             logger.warn("The repository($repository) is illegal")
             throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_PATH_WRONG_PARM,
-                    arrayOf(repository.getStartPrefix())
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_PATH_WRONG_PARM,
+                    params = arrayOf(repository.getStartPrefix()),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
 
         if (hasAliasName(projectId, repositoryHashId, repository.aliasName)) {
             throw OperationException(
-                MessageCodeUtil.generateResponseDataObject<String>(
+                MessageUtil.getMessageByLocale(
                     RepositoryMessageCode.REPO_NAME_EXIST,
+                    I18nUtil.getLanguage(userId),
                     arrayOf(repository.aliasName)
-                ).message!!
+                )
             )
         }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
@@ -804,10 +837,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.DELETE,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_DELETE_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_DELETE_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
 
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
@@ -848,10 +882,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -859,10 +894,11 @@ class RepositoryService @Autowired constructor(
         }
         if (record.type != ScmType.CODE_SVN.name) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
-                    arrayOf(repositoryHashId)
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
+                    params = arrayOf(repositoryHashId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
 
@@ -882,10 +918,11 @@ class RepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId,
             authPermission = AuthPermission.EDIT,
-            message = MessageCodeUtil.generateResponseDataObject<String>(
-                RepositoryMessageCode.USER_EDIT_PEM_ERROR,
-                arrayOf(userId, projectId, repositoryHashId)
-            ).message!!
+            message = MessageUtil.getMessageByLocale(
+                messageCode = RepositoryMessageCode.USER_EDIT_PEM_ERROR,
+                params = arrayOf(userId, projectId, repositoryHashId),
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val record = repositoryDao.get(dslContext, repositoryId, projectId)
         if (record.projectId != projectId) {
@@ -893,10 +930,11 @@ class RepositoryService @Autowired constructor(
         }
         if (record.type != ScmType.CODE_SVN.name) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.generateResponseDataObject<String>(
-                    RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
-                    arrayOf(repositoryHashId)
-                ).message!!
+                MessageUtil.getMessageByLocale(
+                    messageCode = RepositoryMessageCode.REPO_LOCK_UN_SUPPORT,
+                    params = arrayOf(repositoryHashId),
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         scmService.unlock(

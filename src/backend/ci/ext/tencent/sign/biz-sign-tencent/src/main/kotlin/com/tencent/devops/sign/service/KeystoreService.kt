@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.sign.SignMessageCode
+import com.tencent.devops.sign.api.constant.SignMessageCode.KEYSTORE_RESOURCE_NOT_EXISTS
 import com.tencent.devops.sign.pojo.IosProfile
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -65,7 +65,7 @@ class KeystoreService {
                 val message = responseData["msg"] as String
                 logger.warn("[${getHost()}|$appId]|getInHouseCertList|return error [${response.code}|$message|$responseContent]")
                 throw ErrorCodeException(
-                    errorCode = SignMessageCode.KEYSTORE_RESOURCE_NOT_EXISTS,
+                    errorCode = KEYSTORE_RESOURCE_NOT_EXISTS,
                     defaultMessage = message,
                     params = arrayOf(appId)
                 )

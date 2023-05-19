@@ -33,6 +33,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUICK_APPROVAL_MOA
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUICK_APPROVAL_PC
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -54,7 +57,13 @@ class TXPipelineMoaService @Autowired constructor(
     @Value("\${esb.appSecret}")
     private val appSecret = ""
 
-    private val ignoredMoaMessage = listOf("【通过MOA快速审批】", "【通过PC快速审批】")
+    private fun ignoredMoaMessage() = listOf(
+        I18nUtil.getCodeLanMessage(
+            messageCode = BK_QUICK_APPROVAL_MOA
+        ),
+        I18nUtil.getCodeLanMessage(
+            messageCode = BK_QUICK_APPROVAL_PC
+        ))
 
     /**
      * 保证回调一次之后就结单
@@ -170,7 +179,7 @@ class TXPipelineMoaService @Autowired constructor(
 
     private fun checkSuggest(suggest: String): String {
         var str = suggest
-        for (s in ignoredMoaMessage) {
+        for (s in ignoredMoaMessage()) {
             str = str.replace(s, "")
         }
         return str

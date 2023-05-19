@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.image
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
@@ -53,9 +53,10 @@ class ImageHandleBuildResultService @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val imageId = storeBuildResultRequest.storeId
         val imageRecord = imageDao.getImage(dslContext, imageId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(imageId)
+                params = arrayOf(imageId),
+                language = I18nUtil.getLanguage(storeBuildResultRequest.userId)
             )
         // 防止重复的mq消息造成的状态异常
         if (imageRecord.imageStatus != ImageStatusEnum.CHECKING.status.toByte()) {

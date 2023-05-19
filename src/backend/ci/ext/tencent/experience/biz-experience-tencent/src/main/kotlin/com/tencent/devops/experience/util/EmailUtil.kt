@@ -27,7 +27,17 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BELONG_TO_THE_PROJECT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_OPERATING
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TABLE_CONTENTS
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_INVITES_YOU_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_NAME
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -52,7 +62,10 @@ object EmailUtil {
     }
 
     private fun getShareEmailTitle(userId: String, name: String, version: String): String {
-        return "【蓝盾版本体验通知】${userId}邀您体验【$name-$version】"
+        return I18nUtil.getCodeLanMessage(
+            messageCode = BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION,
+            params = arrayOf(userId, name, version)
+        )
     }
 
     private fun getShareEmailBody(
@@ -62,7 +75,7 @@ object EmailUtil {
         rowList: List<Triple<String, String, String>>,
         title: String
     ): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy年MM月dd日")
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
         val date = simpleDateFormat.format(Date())
 
         val stringBuffer = StringBuilder()
@@ -72,10 +85,14 @@ object EmailUtil {
         }
         stringBuffer.append(SHARE_EMAIL_HTML_SUFFIX)
         val template = stringBuffer.toString()
-        return template.replace(BODY_TITLE_TEMPLATE, "${userId}邀您体验【$name-$version】")
-            .replace(TABLE_COLUMN1_TITLE, "名称")
-            .replace(TABLE_COLUMN2_TITLE, "所属项目")
-            .replace(TABLE_COLUMN3_TITLE, "操作")
+        return template.replace(BODY_TITLE_TEMPLATE,
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_INVITES_YOU_EXPERIENCE,
+                params = arrayOf(name, version)
+            ))
+            .replace(TABLE_COLUMN1_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_NAME))
+            .replace(TABLE_COLUMN2_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_BELONG_TO_THE_PROJECT))
+            .replace(TABLE_COLUMN3_TITLE, I18nUtil.getCodeLanMessage(messageCode = BK_OPERATING))
             .replace(HEADER_TITLE_TEMPLATE, title)
             .replace(BODY_DATE_TEMPLATE, date)
     }
@@ -84,7 +101,7 @@ object EmailUtil {
         return "                                                                            <tr>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$name</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">查看</a></td>\n" +
+            "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_VIEW) + "</a></td>\n" +
             "                                                                            </tr>\n"
     }
 
@@ -128,9 +145,12 @@ object EmailUtil {
             "                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "                                                <tr>\n" +
-            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td>\n" +
+            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+        ) + "</td>\n" +
             "                                                </tr>\n" +
-            "                                                <!-- 表格内容 -->\n" +
+            "                                                <!-- " + I18nUtil.getCodeLanMessage(messageCode = BK_TABLE_CONTENTS) +
+                " -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
             "                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
@@ -159,7 +179,9 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(
+            messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+        ) + "</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +
             "                                                    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +

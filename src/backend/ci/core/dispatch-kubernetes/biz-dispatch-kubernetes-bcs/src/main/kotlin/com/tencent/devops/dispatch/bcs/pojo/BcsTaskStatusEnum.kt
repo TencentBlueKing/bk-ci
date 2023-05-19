@@ -27,15 +27,21 @@
 
 package com.tencent.devops.dispatch.bcs.pojo
 
-enum class BcsTaskStatusEnum(val realName: String, val message: String) {
-    WAITING("waiting", "任务初始化"),
-    RUNNING("running", "任务正在执行"),
-    FAILED("failed", "任务执行失败"),
-    SUCCEEDED("succeeded", "任务执行成功"),
-    UNKNOWN("unknown", "未知状态"),
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
 
+enum class BcsTaskStatusEnum(
+    val realName: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsTaskStatus", reusePrefixFlag = false)
+    val message: String
+) {
+    WAITING("waiting", "waiting"), // 任务初始化
+    RUNNING("running", "running"), // 任务正在执行
+    FAILED("failed", "failed"), // 任务执行失败
+    SUCCEEDED("succeeded", "succeeded"), // 任务执行成功
+    UNKNOWN("unknown", "unknown"), // 未知状态
     // 下面的为自定义状态，非bcs返回
-    TIME_OUT("time_out", "超时");
+    TIME_OUT("time_out", "timeOut"); // 超时
 
     companion object {
         fun realNameOf(realName: String?): BcsTaskStatusEnum? {

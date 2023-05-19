@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.type
 
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.MessageUtil
 
 enum class BuildType(
     val value: String,
@@ -49,5 +50,12 @@ enum class BuildType(
     GIT_CI("工蜂CI", listOf(OS.LINUX), false, false, false),
     DOCKER("Docker公共构建机", listOf(OS.LINUX), true, true, true),
     STREAM("stream", listOf(OS.LINUX), false, false, false),
-    AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false)
+    AGENT_LESS("无编译环境", listOf(OS.LINUX), false, false, false);
+
+    fun getI18n(language: String): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = "buildType.${this.name}",
+            language = language
+        )
+    }
 }

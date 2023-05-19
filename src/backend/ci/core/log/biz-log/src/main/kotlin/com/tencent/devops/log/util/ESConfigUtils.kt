@@ -27,7 +27,14 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.common.log.constant.LogMessageCode.FILE_NOT_FOUND_CHECK_PATH
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
+import java.io.File
+import java.io.FileInputStream
+import java.security.KeyStore
+import java.security.SecureRandom
+import javax.net.ssl.SSLContext
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
@@ -39,11 +46,6 @@ import org.apache.http.ssl.SSLContexts
 import org.elasticsearch.client.RestClient
 import org.elasticsearch.client.RestClientBuilder
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.io.FileInputStream
-import java.security.KeyStore
-import java.security.SecureRandom
-import javax.net.ssl.SSLContext
 
 @Suppress("LongParameterList", "MagicNumber")
 object ESConfigUtils {
@@ -116,11 +118,19 @@ object ESConfigUtils {
     ): SSLContext {
         val keystoreFile = File(keystoreFilePath)
         if (!keystoreFile.exists()) {
-            throw IllegalArgumentException("未找到 keystore 文件，请检查路径是否正确: $keystoreFilePath")
+            throw IllegalArgumentException(
+                I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_FOUND_CHECK_PATH, params = arrayOf("keystore")) +
+                        keystoreFilePath
+            )
         }
         val truststoreFile = File(truststoreFilePath)
         if (!truststoreFile.exists()) {
-            throw IllegalArgumentException("未找到 truststore 文件，请检查路径是否正确: $truststoreFilePath")
+            throw IllegalArgumentException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = FILE_NOT_FOUND_CHECK_PATH,
+                    params = arrayOf("truststore")
+                ) + truststoreFilePath
+            )
         }
         val keyStore = KeyStore.getInstance(KeyStore.getDefaultType())
         val keystorePasswordCharArray = keystorePassword.toCharArray()

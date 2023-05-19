@@ -60,4 +60,16 @@ object PropertyUtil {
             )
         return propertyValue.toString()
     }
+
+    /**
+     * 基于资源文件内容获取配置项的值
+     * @param propertyKey 配置项KEY
+     * @param propertyFileContent 资源文件内容
+     * @return 配置项的值
+     */
+    fun getPropertyValueByContent(propertyKey: String, propertyFileContent: String): String? {
+        val properties = Properties()
+        properties.load(propertyFileContent.reader())
+        return properties[propertyKey]?.toString()
+    }
 }

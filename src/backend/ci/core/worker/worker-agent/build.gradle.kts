@@ -27,6 +27,7 @@
 
 plugins {
     `task-shadow-jar`
+    `task-i18n-load`
 }
 
 application.mainClassName = "com.tencent.devops.agent.ApplicationKt"

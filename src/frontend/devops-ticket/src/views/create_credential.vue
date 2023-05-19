@@ -92,9 +92,9 @@
                     <div v-for="(obj, key) in newModel" :key="key" :class="{ 'bk-form-item': true, 'is-required': obj.rules }">
                         <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
+                            <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'devops-icon icon-hide' : 'devops-icon icon-eye'"></i></a>
                             <component v-validate="($t(obj.label) === $t('ticket.credential.sshKey') && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
                             <component v-validate="obj.rule" v-if="obj.type === 'password' && showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" type="text" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
-                            <i v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" @click="toggleShowPwdCon(obj.modelName)" :class="showPwdCon[obj.modelName] ? 'devops-icon icon-hide' : 'devops-icon icon-eye'"></i>
                             <p class="error-tips"
                                 v-show="errors.has(key)">
                                 {{$t(obj.errorMsg)}}
@@ -214,9 +214,6 @@
             },
             ticketType () {
                 return this.getTicketType()
-            },
-            isExtendTx () {
-                return VERSION_TYPE === 'tencent'
             }
         },
         watch: {
@@ -256,11 +253,10 @@
             goToApplyPerm () {
                 // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
                 // window.open(url, '_blank')
-                // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
-                //     id: this.projectId,
-                //     type: this.$permissionResourceTypeMap.PROJECT
-                // }])
-                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`)
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             cancel () {
                 this.$router.push({
@@ -416,11 +412,6 @@
     .credential-setting {
         width: 100%;
         max-width: initial;
-        
-        .text-link {
-            color: $primaryColor;
-        }
-
         .bk-form-wrapper {
             max-width: 750px;
         }
@@ -454,15 +445,18 @@
             width: 550px;
         }
         .icon-hide,.icon-eye {
-            // right: 4%;
-            // position: absolute;
-            // padding: 10px;
+            right: 4%;
+            position: absolute;
+            padding: 10px;
             color: #808080;
         }
         .icon-info-circle {
             padding-left: 8px;
             color: #C3CDD7;
             font-size: 14px;
+        }
+        .link-tips {
+            margin-left: 28px;
         }
     }
 </style>

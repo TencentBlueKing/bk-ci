@@ -31,6 +31,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.CustomFileSearchCondition
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -39,6 +40,8 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
@@ -277,7 +280,9 @@ class ParamFacadeService @Autowired constructor(
             return copyFormProperty(subPipelineFormProperty, aliasName)
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to filter the properties of subpipelines", t)
-            throw OperationException("子流水线参数过滤失败")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED, I18nUtil.getLanguage(userId))
+            )
         }
     }
 

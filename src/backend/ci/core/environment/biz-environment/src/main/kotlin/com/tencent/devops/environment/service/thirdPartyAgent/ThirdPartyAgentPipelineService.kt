@@ -124,10 +124,7 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         val agentRecord = getAgentByNode(nodeId, projectId)
         val seqId = HashUtil.decodeIdToLong(seqIdStr)
         val pipelineRecord = thirdPartyAgentPipelineDao.getPipeline(dslContext, seqId, agentRecord.id)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                defaultMessage = "不存在该管道信息"
-            )
+            ?: throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_PIPE_NOT_FOUND)
         return PipelineResponse(
             seqIdStr,
             PipelineStatus.from(pipelineRecord.status),
@@ -140,10 +137,7 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         val record = thirdPartyAgentDao.getAgentByNodeId(dslContext, id, projectId)
         if (record == null) {
             logger.warn("The node $nodeId is not third party agent")
-            throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                defaultMessage = "这个节点不是第三方构建机"
-            )
+            throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_NOT_THIRD_PARTY_BUILD_MACHINE)
         }
         return record
     }

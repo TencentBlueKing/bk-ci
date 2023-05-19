@@ -61,7 +61,7 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
     override fun check(container: VMBuildContainer, appearedCnt: Int) {
         if (container.elements.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "Job需要至少有一个任务插件", errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_JOB_NEED_TASK
             )
         }
         val dispatchType = container.dispatchType
@@ -71,13 +71,11 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
                 // BKSTORE的镜像确保code与version不为空
                 if (dispatchType.imageCode.isNullOrBlank()) {
                     throw ErrorCodeException(
-                        defaultMessage = "从研发商店选择的镜像code不可为空",
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK
                     )
                 }
                 if (dispatchType.imageVersion.isNullOrBlank()) {
                     throw ErrorCodeException(
-                        defaultMessage = "从研发商店选择的镜像version不可为空",
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK
                     )
                 }
@@ -85,7 +83,6 @@ class DispatchTypeBizPlugin : ContainerBizPlugin<VMBuildContainer> {
                 // 其余类型的镜像确保value不为空
                 if (dispatchType.value.isBlank()) {
                     throw ErrorCodeException(
-                        defaultMessage = "非商店蓝盾源/第三方源的镜像value不可为空",
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_DISPATCH_VALUE_BLANK
                     )
                 }

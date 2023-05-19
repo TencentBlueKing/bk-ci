@@ -29,13 +29,23 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.store.constant.StoreMessageCode.BK_AFTER_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_AUTOMATICALLY_CONVERTED
+import com.tencent.devops.store.constant.StoreMessageCode.BK_COPY_FOR_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_OLD_VERSION_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreMessageCode.BK_OTHER
+import com.tencent.devops.store.constant.StoreMessageCode.BK_PIPELINED_JOB
+import com.tencent.devops.store.constant.StoreMessageCode.BK_PROJECT_MANAGER_CAN_OPERATION
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -52,13 +62,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.request.ImageCreateRequest
+import javax.annotation.PostConstruct
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 class OpImageDataTransferService @Autowired constructor(
@@ -130,7 +140,8 @@ class OpImageDataTransferService @Autowired constructor(
                     id = UUIDUtil.generate(),
                     categoryCode = categoryCode,
                     categoryName = categoryName,
-                    iconUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15649905585375037820270514184859.png?v=1564990558",
+                    iconUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/" +
+                            "random_15649905585375037820270514184859.png?v=1564990558",
                     type = StoreTypeEnum.IMAGE.type.toByte()
                 )
             } catch (e: DuplicateKeyException) {
@@ -153,10 +164,23 @@ class OpImageDataTransferService @Autowired constructor(
         categoryName: String?,
         interfaceName: String? = "Anon interface"
     ): Int {
-        logger.info("$interfaceName:initClassifyAndCategory:Input($classifyCode,$classifyName,$categoryCode,$categoryName)")
-        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName ?: "其它")
-        logger.info("$interfaceName:initClassifyAndCategory:Inner:createSystemInitClassify end,begin to createSystemInitCategory")
-        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName ?: "流水线Job")
+        logger.info(
+            "$interfaceName:initClassifyAndCategory:Input($classifyCode,$classifyName,$categoryCode,$categoryName)"
+        )
+        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName
+            ?: MessageUtil.getMessageByLocale(
+            messageCode = BK_OTHER,
+            language = I18nUtil.getLanguage(userId)
+        ))
+        logger.info(
+                "$interfaceName:initClassifyAndCategory:Inner:" +
+                "createSystemInitClassify end,begin to createSystemInitCategory"
+        )
+        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName
+            ?: MessageUtil.getMessageByLocale(
+            messageCode = BK_PIPELINED_JOB,
+            language = I18nUtil.getLanguage(userId)
+        ))
         logger.info("$interfaceName:initClassifyAndCategory:Output:createSystemInitCategory end")
         return 0
     }
@@ -182,7 +206,9 @@ class OpImageDataTransferService @Autowired constructor(
             val imageStatus = ((it.get(KEY_IMAGE_STATUS) as Byte?)?.toInt() ?: 0)
             logger.info("$interfaceName:batchRecheckByProject:$projectCode:($imageCode,$imageId,$imageStatus)")
             if (imageStatus == ImageStatusEnum.CHECK_FAIL.status) {
-                logger.info("$interfaceName:batchRecheckByProject:$projectCode:($imageCode,$imageId,$imageStatus)recheck")
+                logger.info(
+                    "$interfaceName:batchRecheckByProject:$projectCode:($imageCode,$imageId,$imageStatus)recheck"
+                )
                 imageReleaseService.recheckWithoutValidate(context = dslContext, userId = userId, imageId = imageId)
                 count++
             }
@@ -242,7 +268,9 @@ class OpImageDataTransferService @Autowired constructor(
             client.get(ServiceImageResource::class).listDockerBuildImages(userId, projectCode)
                 .data // linux环境第三方镜像
         logger.info("$interfaceName:transferImage:Inner(dockerBuildImageList?.size=${dockerBuildImageList?.size})")
-        logger.info("$interfaceName:transferImage:Inner(dockerBuildImageList=${dockerBuildImageList?.map { it.image }})")
+        logger.info(
+            "$interfaceName:transferImage:Inner(dockerBuildImageList=${dockerBuildImageList?.map { it.image }})"
+        )
         changedCount += transferImageList(
             projectCode = projectCode,
             realClassifyCode = realClassifyCode,
@@ -296,7 +324,9 @@ class OpImageDataTransferService @Autowired constructor(
             logger.warn("$interfaceName:transferImage:Inner:processing image:($imageRepoUrl,$imageRepoName,$imageTag)")
             if (opImageDao.countImageByRepoInfo(dslContext, imageRepoUrl, imageRepoName, imageTag) > 0) {
                 // 该条数据已迁移过，不再处理
-                logger.warn("$interfaceName:transferImage:Inner:already processed:$imageRepoUrl/$imageRepoName:$imageTag")
+                logger.warn(
+                    "$interfaceName:transferImage:Inner:already processed:$imageRepoUrl/$imageRepoName:$imageTag"
+                )
                 return@loop
             }
 
@@ -310,7 +340,10 @@ class OpImageDataTransferService @Autowired constructor(
                 imageCode = records!![0].imageCode
                 // 将已迁移完成的老版本镜像全部置为已发布
                 records.forEach { record ->
-                    logger.info("$interfaceName:transferImage:release existed image(${record.id},${record.imageCode},${record.version},${record.imageRepoUrl},${record.imageRepoName},${record.imageTag})")
+                    logger.info(
+                        "$interfaceName:transferImage:release existed image(${record.id},${record.imageCode}," +
+                                "${record.version},${record.imageRepoUrl},${record.imageRepoName},${record.imageTag})"
+                    )
                     if (record.imageStatus != ImageStatusEnum.RELEASED.status.toByte()) {
                         opImageService.releaseImageDirectly(
                             context = dslContext,
@@ -322,7 +355,10 @@ class OpImageDataTransferService @Autowired constructor(
                 }
             } else {
                 // 生成code
-                imageCode = it.repo!!.removePrefix("/").removeSuffix("/").replace("paas/bkdevops/", "").replace("/", "_")
+                imageCode = it.repo!!.removePrefix("/")
+                    .removeSuffix("/")
+                    .replace("paas/bkdevops/", "")
+                    .replace("/", "_")
                 // 超长处理
                 if (imageCode.length > 60) {
                     imageCode = imageCode.substring(imageCode.length - 60)
@@ -371,7 +407,10 @@ class OpImageDataTransferService @Autowired constructor(
             imageName = tempImageName
             // 6.调OP新增镜像接口
             // image字段是含repoUrl、repoName、tag的完整字段
-            logger.info("$interfaceName:transferImage:Inner:ImageCreateRequest($creator,$projectCode,$imageName,$imageCode,${it.image},${it.repo},$imageTag)")
+            logger.info(
+                "$interfaceName:transferImage:Inner:ImageCreateRequest($creator,$projectCode," +
+                        "$imageName,$imageCode,${it.image},${it.repo},$imageTag)"
+            )
             val imageId = opImageService.addImage(
                 accessToken = "",
                 userId = creator!!,
@@ -388,7 +427,10 @@ class OpImageDataTransferService @Autowired constructor(
                     } else {
                         ReleaseTypeEnum.COMPATIBILITY_FIX
                     },
-                    versionContent = "容器镜像商店上线，历史镜像数据自动生成",
+                    versionContent = MessageUtil.getMessageByLocale(
+                        messageCode = BK_IMAGE_STORE_ONLINE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     imageSourceType = ImageType.BKDEVOPS,
                     imageRepoUrl = imageRepoUrl,
                     imageRepoName = imageRepoName,
@@ -396,13 +438,27 @@ class OpImageDataTransferService @Autowired constructor(
                     imageTag = imageTag,
                     dockerFileType = null,
                     dockerFileContent = null,
-                    logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15755397330026456632033301754111.png?v=1575539733",
+                    logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/" +
+                            "random_15755397330026456632033301754111.png?v=1575539733",
                     iconData = null,
-                    summary = "旧版的构建镜像，通过拷贝为构建镜像入口生成。\n" +
-                        "已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。",
-                    description = "旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。\n" +
-                        "容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。\n" +
-                        "项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。",
+                    summary = MessageUtil.getMessageByLocale(
+                        messageCode = BK_OLD_VERSION_BUILD_IMAGE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "。\n" +
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_AUTOMATICALLY_CONVERTED,
+                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            ),
+                    description = MessageUtil.getMessageByLocale(
+                        messageCode = BK_COPY_FOR_BUILD_IMAGE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ) + "\n" + MessageUtil.getMessageByLocale(
+                                messageCode = BK_AFTER_IMAGE_STORE_ONLINE,
+                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                            ) + "\n" + MessageUtil.getMessageByLocale(
+                        messageCode = BK_PROJECT_MANAGER_CAN_OPERATION,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
                     publisher = creator,
                     labelIdList = null
                 ),

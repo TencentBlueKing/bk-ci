@@ -30,6 +30,7 @@ dependencies {
     api(project(":core:common:common-db-sharding"))
     api(project(":core:notify:api-notify"))
     api(project(":ext:tencent:statistics:api-statistics-tencent"))
+    api(project(":ext:tencent:openapi:api-openapi-tencent"))
     api(project(":ext:tencent:statistics:model-statistics-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
     api("org.springframework.boot:spring-boot-starter-jooq")

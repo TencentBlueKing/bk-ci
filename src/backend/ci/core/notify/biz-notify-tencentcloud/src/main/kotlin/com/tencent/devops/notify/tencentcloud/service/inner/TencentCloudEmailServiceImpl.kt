@@ -53,10 +53,10 @@ import com.tencent.devops.notify.tencentcloud.pojo.EmailResponse
 import com.tencent.devops.notify.tencentcloud.pojo.EmailSignatureConfig
 import com.tencent.devops.notify.tencentcloud.pojo.Template
 import com.tencent.devops.notify.tencentcloud.utils.TencentCloudSignatureUtil
+import java.util.stream.Collectors
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.stream.Collectors
 
 @Suppress("ALL")
 class TencentCloudEmailServiceImpl @Autowired constructor(
@@ -191,8 +191,6 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             if (it.response.error != null) {
                 throw ErrorCodeException(
                     errorCode = ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL,
-                    defaultMessage = "通知服务：腾讯云邮件通知发送失败,${it.response.error.message} " +
-                            "返回错误码 ${it.response.error.code}",
                     params = arrayOf(it.response.error.code)
                 )
             }

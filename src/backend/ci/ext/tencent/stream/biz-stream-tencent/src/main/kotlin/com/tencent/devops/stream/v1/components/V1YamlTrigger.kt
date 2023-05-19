@@ -33,8 +33,11 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.stream.constant.StreamMessageCode.GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamMessageCode.MIRROR_VERSION_NOT_AVAILABLE
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
@@ -45,13 +48,13 @@ import com.tencent.devops.stream.v1.pojo.V1StreamTriggerContext
 import com.tencent.devops.stream.v1.service.V1GitCIEventService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
 import com.tencent.devops.stream.v1.utils.V1GitCIWebHookMatcher
+import java.io.BufferedReader
+import java.io.StringReader
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.StringReader
-import javax.ws.rs.core.Response
 
 @Component
 class V1YamlTrigger @Autowired constructor(
@@ -220,10 +223,16 @@ class V1YamlTrigger @Autowired constructor(
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
-                        "Git CI没有此镜像版本记录. ${it.image}"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = GIT_CI_NO_RECOR
+                        ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
+                    throw CustomException(
+                        Response.Status.INTERNAL_SERVER_ERROR,
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = MIRROR_VERSION_NOT_AVAILABLE
+                        ) + ". ${it.image}")
                 }
             }
         }

@@ -171,6 +171,7 @@ async function execAsync (cmd) {
             }
         }, (err, res) => {
             if (err) {
+                console.error(err)
                 reject(err)
                 process.exit(1)
             }

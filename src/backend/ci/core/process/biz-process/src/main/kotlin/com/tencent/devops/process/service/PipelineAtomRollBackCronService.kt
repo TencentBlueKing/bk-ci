@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -42,6 +41,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.service.template.TemplateFacadeService
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -49,7 +49,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -231,11 +230,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = params,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
-                    )
+                    params = params
                 )
             }
             val sourceVersion = pipelineReplaceHistory.sourceVersion
@@ -249,11 +244,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                     errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = params,
-                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = params
-                    )
+                    params = params
                 )
             }
             sourceModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑

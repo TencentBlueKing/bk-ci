@@ -29,14 +29,17 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserStreamGitResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
+import com.tencent.devops.stream.constant.StreamMessageCode.BRANCH_INFO_ACCESS_DENIED
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -224,7 +227,9 @@ class UserStreamGitResourceImpl @Autowired constructor(
                     sort = sort,
                     search = search
                 )
-            }.fold({ it }, { throw PermissionForbiddenException("$userId 无权限获取分支信息") })
+            }.fold({ it }, { throw PermissionForbiddenException(
+                "$userId ${MessageUtil.getMessageByLocale(BRANCH_INFO_ACCESS_DENIED, I18nUtil.getLanguage(userId))}"
+            ) })
         )
     }
 

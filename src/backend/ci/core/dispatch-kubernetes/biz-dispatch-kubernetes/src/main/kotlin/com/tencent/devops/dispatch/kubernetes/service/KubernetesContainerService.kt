@@ -32,19 +32,25 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesBuilderClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesJobClient
 import com.tencent.devops.dispatch.kubernetes.client.KubernetesTaskClient
+import com.tencent.devops.dispatch.kubernetes.common.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_KUBERNETES_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImageInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.Builder
@@ -68,6 +74,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.canReStart
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.hasException
@@ -90,6 +97,7 @@ import java.util.stream.Collectors
 class KubernetesContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val dslContext: DSLContext,
+    private val commonConfig: CommonConfig,
     private val kubernetesTaskClient: KubernetesTaskClient,
     private val kubernetesBuilderClient: KubernetesBuilderClient,
     private val kubernetesJobClient: KubernetesJobClient,
@@ -107,10 +115,12 @@ class KubernetesContainerService @Autowired constructor(
 
     override val shutdownLockBaseKey = "dispatch_kubernetes_shutdown_lock_"
 
-    override val log = DispatchBuildLog(
-        readyStartLog = "准备创建kubernetes构建机...",
-        startContainerError = "启动kubernetes构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "Kubernetes构建异常，请联系蓝盾助手排查，异常信息 - "
+    override fun getLog() = DispatchBuildLog(
+        readyStartLog = I18nUtil.getCodeLanMessage(BK_READY_CREATE_KUBERNETES_BUILD_MACHINE),
+        startContainerError =
+        I18nUtil.getCodeLanMessage(messageCode = BK_START_BUILD_CONTAINER_FAIL, params = arrayOf("kubernetes")),
+        troubleShooting =
+        I18nUtil.getCodeLanMessage(messageCode = BK_CONTAINER_BUILD_ERROR, params = arrayOf("kubernetes"))
     )
 
     @Value("\${kubernetes.resources.builder.cpu}")
@@ -230,7 +240,8 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint),
                     nfs = null,
@@ -243,7 +254,12 @@ class KubernetesContainerService @Autowired constructor(
                     "taskId:($taskId)"
             )
             logsPrinter.printLogs(
-                this, "下发创建构建机请求成功，builderName: $builderName 等待机器创建..."
+                this,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_REQUEST_CREATE_BUILD_MACHINE_SUCCESSFUL,
+                    params = arrayOf(builderName),
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
             )
             return Pair(taskId, builderName)
         }
@@ -271,7 +287,8 @@ class KubernetesContainerService @Autowired constructor(
                         ENV_KEY_GATEWAY to gateway,
                         "TERM" to "xterm-256color",
                         SLAVE_ENVIRONMENT to "Kubernetes",
-                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name)
+                        ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.KUBERNETES.name),
+                        ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage
                     ),
                     command = listOf("/bin/sh", entrypoint)
                 )
@@ -345,9 +362,9 @@ class KubernetesContainerService @Autowired constructor(
     ): String {
         if (webConsoleProxy.isEmpty()) {
             throw BuildFailureException(
-                errorType = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorType,
-                errorCode = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
-                formatErrorMessage = ErrorCodeEnum.WEBSOCKET_NO_GATEWAY_PROXY.formatErrorMessage,
+                errorType = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorType,
+                errorCode = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.errorCode,
+                formatErrorMessage = ErrorCodeEnum.KUBERNETES_WEBSOCKET_NO_GATEWAY_PROXY.getErrorMessage(),
                 errorMessage = "webConsoleProxy is empty"
             )
         }

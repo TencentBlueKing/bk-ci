@@ -28,9 +28,11 @@
 package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
@@ -81,10 +83,10 @@ class RemoteDevService @Autowired constructor(
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "工作空间状态非RUNNING"
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                    I18nUtil.getCodeLanMessage(BK_WORKSPACE_STATE_NOT_RUNNING)
                 )
             }
 
@@ -130,10 +132,10 @@ class RemoteDevService @Autowired constructor(
             }
 
             throw BuildFailureException(
-                ErrorCodeEnum.CREATE_VM_ERROR.errorType,
-                ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
-                ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_CREATE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
@@ -150,9 +152,9 @@ class RemoteDevService @Autowired constructor(
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.START_VM_ERROR.errorType,
-                    ErrorCodeEnum.START_VM_ERROR.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
                     "工作空间状态非RUNNING"
                 )
             }
@@ -171,10 +173,10 @@ class RemoteDevService @Autowired constructor(
             )
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_START_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_START_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
@@ -196,10 +198,10 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.STOP_VM_ERROR.errorType,
-                ErrorCodeEnum.STOP_VM_ERROR.errorCode,
-                ErrorCodeEnum.STOP_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_STOP_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }
@@ -221,10 +223,10 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.DELETE_VM_ERROR.errorType,
-                ErrorCodeEnum.DELETE_VM_ERROR.errorCode,
-                ErrorCodeEnum.DELETE_VM_ERROR.formatErrorMessage,
-                "错误信息:$failedMsg"
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorType,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.errorCode,
+                ErrorCodeEnum.BASE_DELETE_VM_ERROR.getErrorMessage(),
+                "errorMessage:$failedMsg"
             )
         }
     }

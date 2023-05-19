@@ -30,7 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.utils
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
-import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import org.slf4j.LoggerFactory
 
 object CommonUtils {
@@ -108,7 +108,7 @@ object CommonUtils {
         return BuildFailureException(
             errorCodeEnum.errorType,
             errorCodeEnum.errorCode,
-            errorCodeEnum.formatErrorMessage,
+            errorCodeEnum.getErrorMessage(),
             message
         )
     }

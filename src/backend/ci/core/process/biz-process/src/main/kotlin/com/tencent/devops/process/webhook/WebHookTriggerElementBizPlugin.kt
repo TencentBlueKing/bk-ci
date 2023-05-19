@@ -134,7 +134,10 @@ class CodeGitGenericWebHookTriggerElementBizPlugin constructor(
                 credentialId.isNullOrBlank() &&
                 token.isNullOrBlank()
             ) {
-                throw ErrorCodeException(defaultMessage = "凭证不能为空", errorCode = CommonMessageCode.PARAMETER_IS_NULL)
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("credentialId")
+                )
             }
         }
     }

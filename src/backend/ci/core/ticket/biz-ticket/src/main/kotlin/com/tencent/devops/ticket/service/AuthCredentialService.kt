@@ -49,7 +49,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无凭证")
+            logger.info("$projectId no credential")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -68,7 +68,7 @@ class AuthCredentialService @Autowired constructor(
         val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
-            logger.info("$ids 无凭证")
+            logger.info("$ids no credential")
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -98,7 +98,7 @@ class AuthCredentialService @Autowired constructor(
             credentialId = keyword)
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无证书")
+            logger.info("$projectId no cert")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

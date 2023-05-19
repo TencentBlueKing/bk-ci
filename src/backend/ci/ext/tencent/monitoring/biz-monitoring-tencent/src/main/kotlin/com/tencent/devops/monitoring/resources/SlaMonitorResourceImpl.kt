@@ -29,7 +29,12 @@ package com.tencent.devops.monitoring.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.SlaMonitorResource
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_ILLEGAL_ENTERPRISE_GROUP_ID
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_ILLEGAL_TIMESTAMP_RANGE
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_INCORRECT_PASSWORD
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_SENT_SUCCESSFULLY
 import com.tencent.devops.monitoring.job.MonitorNotifyJob
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import com.tencent.devops.monitoring.services.SlaMonitorService
@@ -45,21 +50,38 @@ class SlaMonitorResourceImpl @Autowired constructor(
     override fun codeccQuery(bgId: String, startTime: Long, endTime: Long): Result<SlaCodeccResponseData> {
         if (startTime > System.currentTimeMillis() || startTime > endTime) {
             logger.error("wrong timestamp , startTime:$startTime , endTime:$endTime")
-            return Result(-1, "非法时间戳范围")
+            return Result(
+                -1,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ILLEGAL_TIMESTAMP_RANGE
+                )
+            )
         }
 
         if (!NumberUtils.isParsable(bgId)) {
             logger.error("wrong bgId , bgId:$bgId")
-            return Result(-2, "非法事业群ID")
+            return Result(-2,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ILLEGAL_ENTERPRISE_GROUP_ID
+                )
+            )
         }
 
         return Result(slaMonitorService.codeccQuery(bgId, startTime, endTime))
     }
 
     override fun emailTest(pwd: String): Result<String> {
-        if (pwd != "234lsd&QWfjno1!") return Result("密码错误")
+        if (pwd != "234lsd&QWfjno1!") return Result(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_INCORRECT_PASSWORD
+            )
+        )
         monitorNotifyJob.notifyDaily()
-        return Result("发送成功")
+        return Result(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_SENT_SUCCESSFULLY
+            )
+        )
     }
 
     companion object {

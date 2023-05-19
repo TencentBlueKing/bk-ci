@@ -37,8 +37,7 @@ class OuterLoginFilter @Autowired constructor(
                     logger.warn("it is black ip , ip:{}", realIp)
                     throw ErrorCodeException(
                         statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
-                        defaultMessage = "无法访问"
+                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED
                     )
                 }
                 // 路径过滤
@@ -51,8 +50,7 @@ class OuterLoginFilter @Autowired constructor(
                     )
                     throw ErrorCodeException(
                         statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
-                        defaultMessage = "无法访问"
+                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED
                     )
                 }
                 // 续期token

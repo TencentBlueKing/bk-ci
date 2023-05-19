@@ -55,7 +55,7 @@ class RepositoryAuthService @Autowired constructor(
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
         if (repositoryInfos?.records == null) {
-            logger.info("$projectId 项目下无代码库")
+            logger.info("project $projectId no code base")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -77,7 +77,7 @@ class RepositoryAuthService @Autowired constructor(
         if (repositoryInfos == null || repositoryInfos.isEmpty()) {
             repositoryInfos = repositoryService.getInfoByHashIds(ids as List<String>)
             if (repositoryInfos == null) {
-                logger.info("$ids 未匹配到代码库")
+                logger.info("$ids not matched to the codebase")
                 return result.buildFetchInstanceFailResult()
             }
         }

@@ -79,10 +79,10 @@ import com.tencent.devops.stream.trigger.actions.streamActions.data.StreamManual
 import com.tencent.devops.stream.trigger.service.StreamEventService
 import com.tencent.devops.stream.trigger.template.YamlTemplateService
 import com.tencent.devops.stream.util.GitCommonUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 @SuppressWarnings("LongParameterList", "ThrowsCount", "ComplexMethod")
@@ -185,7 +185,7 @@ class ManualTriggerService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
                     errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
-                    defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+                    defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.getErrorMessage()
                 )
             } else {
                 throw e
@@ -195,7 +195,7 @@ class ManualTriggerService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode,
                 errorCode = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.formatErrorMessage
+                defaultMessage = ErrorCodeEnum.MANUAL_TRIGGER_YAML_NULL.getErrorMessage()
             )
         }
 

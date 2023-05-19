@@ -28,6 +28,7 @@
 package com.tencent.devops.common.websocket.enum
 
 import com.fasterxml.jackson.annotation.JsonValue
+import com.tencent.devops.common.api.util.MessageUtil
 
 enum class NotityLevel(
     private val level: Int,
@@ -44,8 +45,10 @@ enum class NotityLevel(
         }
 
         @JsonValue
-        fun getMessage(): String
-        {
-                return leavelMessage
+        fun getMessage(language: String): String {
+                return MessageUtil.getMessageByLocale(
+                        messageCode = "NotityLevel." + this.name,
+                        language = language
+                )
         }
 }

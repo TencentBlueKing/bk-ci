@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -50,12 +50,14 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
+import com.tencent.devops.store.utils.StoreUtils
+import java.net.URLEncoder
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service
@@ -75,6 +77,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+    @Autowired
+    lateinit var storeI18nMessageService: StoreI18nMessageService
     @Autowired
     lateinit var client: Client
 
@@ -111,7 +115,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
         val atomCount = atomDao.countByCode(dslContext, atomCode)
         if (atomCount < 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         // 不是重新上传的包才需要校验版本号
@@ -138,7 +146,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         atomCode: String,
         version: String
     ): Result<GetAtomConfigResult?> {
-        val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
+        val taskJsonStr = storeI18nMessageService.parseJsonStrI18nInfo(
+            jsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME),
+            keyPrefix = StoreUtils.getStoreFieldKeyPrefix(StoreTypeEnum.ATOM, atomCode, version)
+        )
         val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
             taskJsonStr = taskJsonStr,
             projectCode = projectCode,
@@ -147,7 +158,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         return if (getAtomConfResult.errorCode != "0") {
-            MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
+            I18nUtil.generateResponseDataObject(
+                messageCode = getAtomConfResult.errorCode,
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
+            )
         } else {
             Result(getAtomConfResult)
         }
@@ -174,9 +189,10 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
             userId = userId
         )
         if (getAtomConfResult.errorCode != "0") {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = getAtomConfResult.errorCode,
-                params = getAtomConfResult.errorParams
+                params = getAtomConfResult.errorParams,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val taskDataMap = getAtomConfResult.taskDataMap

@@ -62,7 +62,7 @@ class StoreDeptServiceImpl @Autowired constructor(
     ) {
         if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
             val imageCode = (container.dispatchType as StoreDispatchType).imageCode
-            if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode!!)
+            if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode)
         }
     }
 

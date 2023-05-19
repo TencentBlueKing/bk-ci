@@ -102,10 +102,7 @@ open class DefaultModelCheckPlugin constructor(
         }
 
         val trigger = stages.getOrNull(0)
-            ?: throw ErrorCodeException(
-                defaultMessage = "流水线Stage为空",
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-            )
+            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
         // 检查触发容器
         val paramsMap = checkTriggerContainer(trigger)
         val contextMap = paramsMap.mapValues { it.value.defaultValue.toString() }
@@ -126,18 +123,12 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             if (containers.isEmpty()) {
-                throw ErrorCodeException(
-                    defaultMessage = "流水线Stage为空",
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
-                )
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB)
             }
 
             if (stage.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
-                    throw ErrorCodeException(
-                        defaultMessage = "流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置",
-                        errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE
-                    )
+                    throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE)
                 }
             }
 
@@ -176,14 +167,12 @@ open class DefaultModelCheckPlugin constructor(
         resetBuildOption()
         if (checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "Stage($name)准入配置不正确",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP,
                 params = arrayOf(name ?: id ?: "")
             )
         }
         checkIn?.reviewGroups?.forEach { group ->
             if (group.reviewers.isEmpty()) throw ErrorCodeException(
-                defaultMessage = "Stage($name)中审核组(${group.name})未配置审核人",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(name!!, group.name)
             )
@@ -225,7 +214,6 @@ open class DefaultModelCheckPlugin constructor(
             Preconditions.checkTrue(
                 condition = container.elements.isNotEmpty(),
                 exception = ErrorCodeException(
-                    defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(name!!, container.name)
                 )
             )
@@ -257,7 +245,6 @@ open class DefaultModelCheckPlugin constructor(
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_TASK_TIME_OUT_PARAM_VAR,
-                    defaultMessage = "流水线: Job[{0}]的插件[{1}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
                     params = arrayOf(
                         container.name, // Job名称
                         element.name, // 插件名称
@@ -332,12 +319,10 @@ open class DefaultModelCheckPlugin constructor(
         if (trigger.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${trigger.containers.size})")
             throw ErrorCodeException(
-                defaultMessage = "流水线只能有一个触发Stage",
                 errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
             )
         }
         val triggerContainer = (trigger.containers.getOrNull(0) ?: throw ErrorCodeException(
-            defaultMessage = "流水线Stage为空",
             errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
         )) as TriggerContainer
         return PipelineUtils.checkPipelineParams(triggerContainer.params)
@@ -416,7 +401,6 @@ open class DefaultModelCheckPlugin constructor(
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_JOB_MUTEX_TIME_OUT_PARAM_VAR,
-                    defaultMessage = "流水线: Job互斥组[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
                     params = arrayOf(
                         container.name, // job名称
                         mutexGroup.mutexGroupName!!, // 互斥组名称
@@ -466,7 +450,6 @@ open class DefaultModelCheckPlugin constructor(
             if (obj.change && obj.replaceByVar) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_JOB_TIME_OUT_PARAM_VAR,
-                    defaultMessage = "流水线: Job[{0}]的超时配置的流水线变量[{1}]值[{2}]超出合理范围[{3}](分钟)",
                     params = arrayOf(
                         container.name, // Job名称
                         jobControlOption.timeoutVar!!, // 超时配置项的变量字符串

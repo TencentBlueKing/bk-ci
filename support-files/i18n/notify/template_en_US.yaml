@@ -1,0 +1,607 @@
+- index: 0
+  id: "13ec2ac58aab4d9bb8a04bbf7a9242f6"
+  templateCode: "STORE_MEMBER_ADD_ATOM"
+  templateName: "Add templates for atom members of the  store"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "d4c60ef6f52c4afe8429a72c4b4ab425"
+    sender: "DevOps"
+    title: "Add notification to atom members of the  store"
+    body: "The administrator of the [${storeName}] atom of the  store [${storeAdmin}] has added you as a member of the atom"
+  creator: "system"
+  modifior: "system"
+- index: 1
+  id: "15a1e5f8642c4d7196270329531bf4cb"
+  templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
+  templateName: "Manual audit-send message when reject"
+  notifyTypeScope:
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "db7ae51ad64f48fa878d36308cdecb8a"
+    sender: "DevOps"
+    title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
+    body: "The build has been rejected by \"${rejectUserId}\" with a pipeline status of \"Stage successful\".\nReasons for rejection:\n${suggest}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+  weworkGroupTemplate:
+    id: "b236e73c17cb48bbbd7cc38ffbcae407"
+    title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
+    body: "The build has been rejected by \"${rejectUserId}\" with a pipeline status of \"Stage successful\".\nReasons for rejection:\n${suggest}\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 2
+  id: "168b9b44b7104647b2102355180a2837"
+  templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
+  templateName: "Use templates to batch update notification templates for pipelined"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "d6c50c2989944c9f8a16aa029ed816b0"
+    sender: "DevOps"
+    title: "[${projectName}] Project pipeline instance update"
+    body: "You have successfully updated ${successPipelineNum} instances under the [${projectName}] project:\n${successPipelineMsg}\nAmong them, ${failurePipelineNum} instances failed to update:\n${failurePipelineMsg}\n\nView details: ${instanceListUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 3
+  id: "1be5b658d4aa465a9f9a1d0af44c8384"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
+  templateName: "Quality red line audit message template V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "0696ed183dca43ceb0963c99710f1f25"
+    sender: "DevOps"
+    title: "[BK-CI quality Red Line] Intercept Notification-to be reviewed"
+    body: "${title}\nProject: ${projectName}\nTrigger: ${cc}\nIntercept time: ${time}\n${result}\nPipeline link: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 4
+  id: "1dd8f74e334e4c41a20f4187b4e0e992"
+  templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
+  templateName: "Extend the service publish success message notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "acd5c108730b41babcd57dbf31fda760"
+    sender: "DevOps"
+    title: "The  store extension [${name}] V$ {version} has been successfully released"
+    body: "\nThe  store extension [${name}] V$ {version} has been successfully released"
+  creator: "system"
+  modifior: "system"
+- index: 5
+  id: "20e4ac3f11ff4866b95a82b30b9032a1"
+  templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
+  templateName: "Store comment message Notification template"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "8599414eaeec4791a430594147ded587"
+    sender: "DevOps"
+    title: "[BK-CI  Store] comment notice"
+    body: "${userId} commented on ${storeName}\nRating: ${score}\nComment: ${commentContent}\n[reply | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 6
+  id: "2d8c427026b049dc98630507f5e3fa38"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "Successful execution of details notification template code"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "895ddf2c5ab949d889d988d818981239"
+    sender: "DevOps"
+    title: "BK-CI pipeline [${pipelineName}] # ${buildNum} built successfully"
+    body: "✔️ ${successContent}\nView details: ${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 7
+  id: "2e9227b122024a5a83c46a9f41b94aad"
+  templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
+  templateName: "Store comment reply message notification template"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "e91eeea3f97345e69a19fafec806e75a"
+    sender: "DevOps"
+    title: "[BK-CI  Store] comment notice"
+    body: "${userId} replied to ${replyToUser} on ${storeName}\n${replyContent} / / @ ${replyToUser}: ${replyComment}\n[reply | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 8
+  id: "30c94a920c79453da784124ab41fb068"
+  templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
+  templateName: "atom code scan qualified template"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 9
+  id: "37ef4157cc254021ac7278b70f211f5e"
+  templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
+  templateName: "Manual audit atom notification"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "930450b9edfe479e8c7504623261584d"
+    sender: "DevOps"
+    title: "${content}"
+    body: "Audit description: ${reviewDesc}\n\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+  weworkGroupTemplate:
+    id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
+    title: "${content}"
+    body: "Audit description:\n${reviewDesc}\nComputer side: [to audit] (${reviewUrl})\nMobile: [check] (${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 10
+  id: "3a39413a67bf404184dbd4e9309ebeb8"
+  templateCode: "QUALITY_NOTIFY_TEMPLATE"
+  templateName: "Quality red line message template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ac07cfe86b5040f7abb1280942e2c57c"
+    sender: "DevOps"
+    title: "[blue Shield quality Red Line] Audit notice"
+    body: "${pipelineName} (# ${buildNo}) is blocked and needs to be audited\nProject: ${projectName}\nIntercept time: ${time} ${result}\nAudit link: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 11
+  id: "3ea6c5e18d4b41a3890a150d1df16f4d"
+  templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
+  templateName: "Mirror execution cannot find mirror to notify administrator"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "97f1480ba61b4a83947924c6c9dad3e6"
+    sender: "DevOps"
+    title: "${imageCode} (${imageVersion}) Image execution exception"
+    body: "[view build link | ${url}] ${projectCode} under the ${projectCode} project of ${imageCode} (${imageVersion}) image execution exception, pipelineId:$ {pipelineId}, buildId:$ {buildId}"
+  creator: "system"
+  modifior: "system"
+- index: 12
+  id: "3fbf09f0511b424ab4480e18d6674349"
+  templateCode: "STREAM_V2_BUILD_TEMPLATE"
+  templateName: "Stream build end message template"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 13
+  id: "4589771c46b248079444a0e18e46a3fe"
+  templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "The  store image is released through audit."
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "b4d0f2eb62394a0d9df97b97858adf9f"
+    sender: "DevOps"
+    title: "The  store image [${name}] V$ {version} has been approved and released successfully"
+    body: "The  store image [${name}] V$ {version} has been approved and released successfully"
+  creator: "system"
+  modifior: "system"
+- index: 14
+  id: "502f34f94a0d4bc7abe7c55f4e93da46"
+  templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "Notification template code for failed registration of pipeline webhook"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "094a4cb13de54dc38e034002b01ffbeb"
+    sender: "DevOps"
+    title: "pipeline【${pipelineName}】Trigger callback registration failed"
+    body: "The pipeline you just saved【${pipelineName}】Trigger callback registration failed，Reason for failure: ${elementNames}See details: ${pipelineEditUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 15
+  id: "698634fd3bae40378eeb24c8d6a5c91c"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "Template release Audit rejected message Notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "756a60da56d345148567fb1465fbb6a7"
+    sender: "DevOps"
+    title: " store template [${name}] V$ {version} failed approval"
+    body: " store template [${name}] V$ {version} failed approval"
+  creator: "system"
+  modifior: "system"
+- index: 16
+  id: "6a3db6f561f44d4895518e881a3cb53b"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "Failed to execute notification template code"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "607d08cf17424ad483d9bbd57da898d1"
+    sender: "DevOps"
+    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
+    body: "❌${failContent}"
+  creator: "system"
+  modifior: "system"
+- index: 17
+  id: "6c00ffb0de6f485eb301940ca639d04d"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "Template release audit through message notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "9e982e6afc67440cab33604b7ad772b6"
+    sender: "DevOps"
+    title: "The  store template [${name}] has been approved and released successfully."
+    body: "The  store template [${name}] has been approved and released successfully."
+  creator: "system"
+  modifior: "system"
+- index: 18
+  id: "7a64b8cd997b49858964ac34079bf234"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
+  templateName: "Quality red line message template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "c7a45d36528a4af784f754017d7e37fe"
+    sender: "DevOps"
+    title: "[blue Shield quality Red Line] Audit notice"
+    body: "${pipelineName} (# ${buildNo}) is blocked and needs to be audited\nProject: ${projectName}\nIntercept time: ${time} ${result}\nAudit link: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 19
+  id: "7dee6377c27344818836ef1f035a14d1"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
+  templateName: "Stage manual audit is used to send triggers"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "9fb98246b0a2478384c21ba3fb617474"
+    sender: "DevOps"
+    title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
+    body: "The current build needs to be manually approved before the follow-up process is carried out. Please wait patiently for the audit, or contact the auditor ${reviewers} for processing.\n${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+  creator: "system"
+  modifior: "system"
+- index: 20
+  id: "91fb62ef51a24266ae0946112e094190"
+  templateCode: "GITCI_V2_BUILD_TEMPLATE"
+  templateName: "Worker bee CI-V2 builds end message template"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 21
+  id: "92055af946b64850a193e1090865642e"
+  templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
+  templateName: "The atom code scan does not pass the template"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 22
+  id: "92c4e65e4cd2432eb326789ce503d698"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "Failed execution of details notification template code"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "9f1c741fe5df486193971ef5a659f061"
+    sender: "DevOps"
+    title: "Failed to build Blue Shield pipeline [${pipelineName}] # ${buildNum}"
+    body: "❌ ${failContent}\n\nView details: ${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 23
+  id: "96c0a1adaca7428eb0b2d69820923d52"
+  templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: " store extended audit rejection message"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "f5861d3d23604c328aedd74afe73496c"
+    sender: "DevOps"
+    title: " store extension [${name}] V$ {version} failed audit"
+    body: " store extension [${name}] V$ {version} failed audit, rejected reason: ${serviceStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 24
+  id: "a9b46a21ed7949ddb946e5186b9102c1"
+  templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
+  templateName: "Extension Service publish failure message Notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ad06d0496fb74f3f8c526e5ffda12d00"
+    sender: "DevOps"
+    title: "Failed to release  store extension [${name}] V$ {version}"
+    body: "Failed to release  store extension [${name}] V$ {version}"
+  creator: "system"
+  modifior: "system"
+- index: 25
+  id: "bf0ca37469cf448a86875bb2f11517c5"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "Details notification template code for startup"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "6ea6e1ef451e44059e6d7545892d97f3"
+    sender: "DevOps"
+    title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} starts execution"
+    body: "[${projectName}]-[${pipelineName}] # ${buildNum} start to view details: ${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 26
+  id: "cbdd75de2c7f40a6a3bc1dfd909020a7"
+  templateCode: "STORE_MEMBER_DELETE_ATOM"
+  templateName: "Research and development store atom member remove template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "7b803d1073014351a8855bcc02629d90"
+    sender: "DevOps"
+    title: "Notification of removal of atom members in  store"
+    body: "The administrator of the  store's [${storeName}] atom [${storeAdmin}] has removed you from the list of members of the atom"
+  creator: "system"
+  modifior: "system"
+- index: 27
+  id: "cd7cecc126744f13a60d655d0af116af"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
+  templateName: "Started notification template code"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "252497da08fe4abdae8fa49e05ee8ea8"
+    sender: "DevOps"
+    title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} starts execution"
+    body: "[${projectName}]-[${pipelineName}] # ${buildNum} start execution"
+  creator: "system"
+  modifior: "system"
+- index: 28
+  id: "cff00f19e6884862b6f9afe0f608e91e"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
+  templateName: "Successful execution of notification template code"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "16b3188f363247ec81923fff2ee4cafd"
+    sender: "DevOps"
+    title: "Blue Shield pipeline [${pipelineName}] # ${buildNum} built successfully"
+    body: "✔️${successContent}"
+  creator: "system"
+  modifior: "system"
+- index: 29
+  id: "d58e5895dfab4136ac898d93e3bff3ac"
+  templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
+  templateName: "Build trigger audit notification"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "1424de9fcb6e4efe860e0b64bbf78002"
+    sender: "DevOps"
+    title: "Pipeline [${pipelineName}] # ${buildNum} build under project [${projectName}] triggers audit"
+    body: "Trigger: ${triggerUser}\n\nAuditor: ${reviewers}\n\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+  creator: "system"
+  modifior: "system"
+- index: 30
+  id: "d77a91dd09994c54b14f118956e0d6e9"
+  templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
+  templateName: "Pipeline TASK pause Notification"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "5182f93f61ee416c854b3e4d4e7b0859"
+    sender: "DevOps"
+    title: "Blue Shield pipeline [${BK_CI_PIPELINE_NAME}] # ${BK_CI_BUILD_NUM} construction paused"
+    body: "[${BK_CI_PROJECT_NAME_CN}]-[${BK_CI_PIPELINE_NAME}] # ${BK_CI_BUILD_NUM} paused before executing [${taskName}], triggered by: ${BK_CI_START_USER_ID} [to handle | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 31
+  id: "d7d9e1a773fe4a658f6c51b80da282ea"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
+  templateName: "Quality Red Line Intercept message template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "bd286b16e530440fb5691ab8dc625274"
+    sender: "DevOps"
+    title: "[blue Shield quality Red Line] Intercept Notification"
+    body: "${pipelineName} (# ${buildNo}) is blocked\nProject: ${projectName}\nIntercept time: ${time}\nIntercept indicator: ${thresholdListString}\nFor more information: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 32
+  id: "dff46cd92eab458b96b25be0d7a61054"
+  templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "The atom publishes an audit rejection message notification template"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "34a071f8d22f4edaba56624df3a0aae2"
+    sender: "DevOps"
+    title: "The  store atom [${name}] V$ {version} failed the audit"
+    body: "The  store atom [${name}] V$ {version} failed the audit"
+  creator: "system"
+  modifior: "system"
+- index: 33
+  id: "e961fd2ccc1c4f5d8eefaac9d51b5cb0"
+  templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "atom release audit through message notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "48ba65ca230c46f08c6e3ca2da753aee"
+    sender: "DevOps"
+    title: "The  store atom [${name}] V$ {version} has been approved and released successfully"
+    body: "The  store atom [${name}] V$ {version} has been approved and released successfully"
+  creator: "system"
+  modifior: "system"
+- index: 34
+  id: "ea98239a51a74f8db0a012a809bc1116"
+  templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "Image audit of  store rejected"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc4a01"
+    sender: "DevOps"
+    title: "The  store image [${name}] V$ {version} failed the audit."
+    body: " store image [${name}] V$ {version} failed review, rejected because of ${imageStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 35
+  id: "f0663e7ac2b74130ada0408bdce8cd20"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
+  templateName: "Quality Red Line Intercept message template V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "f19f696753f14007b3733e36dcf5d476"
+    sender: "DevOps"
+    title: "[blue Shield quality Red Line] Intercept Notification-terminated"
+    body: "${title}\nProject: ${projectName}\nTrigger: ${cc}\nIntercept time: ${time}\n${result}\nPipeline link: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 36
+  id: "f0949ab70cc04aa5b1bc787d5a47eba7"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
+  templateName: "Phase audit notification"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "aab3cc905f004b9392773d388d64daef"
+    sender: "DevOps"
+    title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
+    body: "The build status is stage sucess, and your audit is required to implement the follow-up process.\nAudit description: ${reviewDesc}\nClick ${reviewUrl} on the computer side\nClick ${reviewAppUrl} on the mobile phone"
+  weworkGroupTemplate:
+    id: "cead07553b364b5a9c3f0290e35c82da"
+    title: "The pipeline under the project [${projectName}] [${pipelineName}] # ${buildNum} builds Stage audit"
+    body: "The build status is stage sucess, and an audit of \"${reviewers}\" is required to execute the subsequent process.\n\nAudit description:\n${reviewDesc}\n\n[click on the computer side] (${reviewUrl})\n[click on mobile] (${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 37
+  id: "f5c17a3f5dcd4c9ea7cf7a16a16e7135"
+  templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
+  templateName: "atom collaborative development application rejected message notification template"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "8a943ecad5e7490bb04ef1bd7c176568"
+    sender: "DevOps"
+    title: "[blue Shield  Store] collaboration application was rejected"
+    body: "The administrator of the pipelined atom [${atomName}] [${atomAdmin}] rejected your collaboration application for the reason: ${approveMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 38
+  id: "1e7864726dd04311b21019bcceddfee8"
+  templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
+  templateName: "Pipeline callback disables the notification template code"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ca32a24efaf74062a0cd68a24f47e3b4"
+    sender: "DevOps"
+    title: "bk-ci pipeline callback interface is abnormal"
+    body: "project【${projectName}】Registered【${events}】Event callback interface【${callbackUrl}】It is now disabled due to multiple failed calls\pipeline url：${pipelineListUrl}"
+  creator: "system"
+  modifior: "system"

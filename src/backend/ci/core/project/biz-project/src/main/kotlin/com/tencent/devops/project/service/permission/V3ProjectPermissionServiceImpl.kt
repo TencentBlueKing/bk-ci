@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
@@ -77,7 +77,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
         if (!validateCreatePermission) {
             throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM)
+                I18nUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM)
             )
         }
         authResourceApi.createResource(

@@ -47,7 +47,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.model.process.tables.TTemplate
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.template.OptionalTemplate
 import com.tencent.devops.process.pojo.template.OptionalTemplateList
@@ -55,6 +54,7 @@ import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.statistics.constant.StatisticsMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.statistics.dao.process.PipelineSettingDao
 import com.tencent.devops.statistics.dao.process.template.TemplateDao
 import com.tencent.devops.statistics.dao.process.template.TemplatePipelineDao
@@ -230,10 +230,7 @@ class TemplateService @Autowired constructor(
             }
 
             if (templateRecord == null) {
-                throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "模板不存在"
-                )
+                throw ErrorCodeException(errorCode = ERROR_TEMPLATE_NOT_EXISTS)
             } else {
                 val modelStr = templateRecord[tTemplate.TEMPLATE] as String
                 val version = templateRecord[tTemplate.VERSION] as Long

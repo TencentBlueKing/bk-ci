@@ -45,7 +45,12 @@ internal class IamGroupUtilsTest {
         val projectName = "测试项目"
         val groupName = "管理员"
         val userId = "admin"
-        val group = IamGroupUtils.buildDefaultDescription(projectName, groupName, userId)
+        val group = IamGroupUtils.buildDefaultDescription(
+            projectName,
+            groupName,
+            userId,
+            "zh_CN"
+        )
         Assertions.assertNotEquals("测试项目 分级管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 
@@ -53,7 +58,7 @@ internal class IamGroupUtilsTest {
     fun buildManagerDescription() {
         val projectName = "测试项目"
         val userId = "admin"
-        val group = IamGroupUtils.buildManagerDescription(projectName, userId)
+        val group = IamGroupUtils.buildManagerDescription(projectName, userId, "zh_CN")
         Assertions.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 }

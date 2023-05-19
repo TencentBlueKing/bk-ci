@@ -61,12 +61,12 @@ import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.GitRequestEventForHandle
 import com.tencent.devops.stream.pojo.enums.GitCodeApiStatus
 import com.tencent.devops.stream.utils.RetryUtils
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Lazy
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class StreamScmService @Autowired constructor(
@@ -143,14 +143,16 @@ class StreamScmService @Autowired constructor(
                     error(
                         "getTokenForProject git error ${e.message}",
                         ErrorCodeEnum.GET_TOKEN_ERROR,
-                        ErrorCodeEnum.PROJECT_NOT_FOUND.formatErrorMessage.format(gitProjectId)
+                        ErrorCodeEnum.PROJECT_NOT_FOUND.getErrorMessage(arrayOf(gitProjectId))
                     )
                 }
                 else -> {
                     error(
                         "getTokenForProject error ${e.message}",
                         ErrorCodeEnum.GET_TOKEN_ERROR,
-                        ErrorCodeEnum.GET_TOKEN_ERROR.formatErrorMessage.format(e.message)
+                        ErrorCodeEnum.GET_TOKEN_ERROR.getErrorMessage(
+                            if (e.message.isNullOrBlank()) null else arrayOf(e.message!!)
+                        )
                     )
                 }
             }
@@ -242,7 +244,7 @@ class StreamScmService @Autowired constructor(
                     error(
                         "getProjectInfo error ${e.errorMessage}",
                         ErrorCodeEnum.PROJECT_NOT_FOUND,
-                        ErrorCodeEnum.PROJECT_NOT_FOUND.formatErrorMessage.format(gitProjectId)
+                        ErrorCodeEnum.PROJECT_NOT_FOUND.getErrorMessage(arrayOf(gitProjectId))
                     )
                 }
                 GitCodeApiStatus.FORBIDDEN.status -> {
@@ -255,7 +257,7 @@ class StreamScmService @Autowired constructor(
                     error(
                         logMessage = "getProjectInfo error ${e.errorMessage}",
                         errorCode = ErrorCodeEnum.GET_PROJECT_INFO_ERROR,
-                        exceptionMessage = ErrorCodeEnum.GET_PROJECT_INFO_ERROR.formatErrorMessage
+                        exceptionMessage = ErrorCodeEnum.GET_PROJECT_INFO_ERROR.getErrorMessage()
                             .format(gitProjectId, e.errorMessage)
                     )
                 }
@@ -335,14 +337,15 @@ class StreamScmService @Autowired constructor(
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR,
-                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR.formatErrorMessage
-                        .format(gitCICreateFile.filePath, gitCICreateFile.branch, e.httpStatus, e.errorMessage)
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_GIT_API_ERROR.getErrorMessage(
+                        arrayOf(gitCICreateFile.filePath, gitCICreateFile.branch, "${e.httpStatus}", e.errorMessage)
+                    )
                 )
             } else {
                 error(
                     logMessage = "createNewFile error ${e.errorMessage}",
                     errorCode = ErrorCodeEnum.CREATE_NEW_FILE_ERROR,
-                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.formatErrorMessage.format(e.errorMessage)
+                    exceptionMessage = ErrorCodeEnum.CREATE_NEW_FILE_ERROR.getErrorMessage(arrayOf(e.errorMessage))
                 )
             }
         } catch (e: CustomException) {
@@ -833,7 +836,7 @@ class StreamScmService @Autowired constructor(
             logger.warn("StreamScmService|retryFun|retry 5 times $log: ${e.message} ")
             throw ErrorCodeException(
                 errorCode = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.errorCode.toString(),
-                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.formatErrorMessage
+                defaultMessage = ErrorCodeEnum.DEVNET_TIMEOUT_ERROR.getErrorMessage()
             )
         } catch (e: RemoteServiceException) {
             logger.warn("StreamScmService|retryFun|GIT_API_ERROR $log: ${e.message} ")
@@ -854,7 +857,7 @@ class StreamScmService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = apiErrorCode.errorCode.toString(),
                 defaultMessage = if (e.message.isNullOrBlank()) {
-                    "$log: ${apiErrorCode.formatErrorMessage}"
+                    "$log: ${apiErrorCode.getErrorMessage()}"
                 } else {
                     "$log: ${e.message}"
                 }
@@ -868,7 +871,7 @@ class StreamScmService @Autowired constructor(
         throw ErrorCodeException(
             statusCode = 200,
             errorCode = errorCode.errorCode.toString(),
-            defaultMessage = exceptionMessage ?: errorCode.formatErrorMessage
+            defaultMessage = exceptionMessage ?: errorCode.getErrorMessage()
         )
     }
 }

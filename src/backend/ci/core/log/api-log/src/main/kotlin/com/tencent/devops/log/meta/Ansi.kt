@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.meta
 
-import java.util.ArrayList
 import java.util.concurrent.Callable
 
 open class Ansi(private var builder: StringBuilder) {

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.dao.ExtItemServiceDao
 import com.tencent.devops.store.dao.ExtServiceDao
@@ -50,14 +50,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
 import com.tencent.devops.store.service.common.StoreProjectService
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.springframework.stereotype.Service
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import org.springframework.util.StopWatch
-import java.lang.RuntimeException
-import java.time.LocalDateTime
 
 @Service
 class ExtServiceProjectService @Autowired constructor(
@@ -231,7 +230,11 @@ class ExtServiceProjectService @Autowired constructor(
         logger.info("uninstallService, isAdmin=$isAdmin")
 
         if (!(isAdmin || isInstaller)) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(serviceCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(serviceCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         dslContext.transaction { t ->

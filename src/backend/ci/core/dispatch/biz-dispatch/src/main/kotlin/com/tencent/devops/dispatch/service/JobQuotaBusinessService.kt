@@ -35,22 +35,24 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.dao.JobQuotaProjectRunTimeDao
 import com.tencent.devops.dispatch.dao.RunningJobsDao
+import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.JobQuotaHistory
 import com.tencent.devops.dispatch.pojo.JobQuotaStatus
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.utils.JobQuotaProjectLock
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @Service
 class JobQuotaBusinessService @Autowired constructor(
@@ -220,8 +222,10 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount >= jobQuota) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                            "正在执行JOB数量：$runningJobCount, 配额: $jobQuota",
+                    message = ErrorCodeEnum.JOB_NUM_REACHED_MAX_QUOTA.getErrorMessage(
+                        params = arrayOf(vmType.displayName, "$runningJobCount", "$jobQuota"),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -232,10 +236,16 @@ class JobQuotaBusinessService @Autowired constructor(
             if (runningJobCount * 100 / jobQuota >= jobThreshold) {
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经超过告警阈值，" +
-                            "正在执行JOB数量：$runningJobCount，配额：$jobQuota，" +
-                            "告警阈值：${normalizePercentage(jobThreshold.toDouble())}%，" +
-                            "当前已经使用：${normalizePercentage(runningJobCount * 100.0 / jobQuota)}%",
+                    message = ErrorCodeEnum.JOB_NUM_EXCEED_ALARM_THRESHOLD.getErrorMessage(
+                        params = arrayOf(
+                            vmType.displayName,
+                            "$runningJobCount",
+                            "$jobQuota",
+                            normalizePercentage(jobThreshold.toDouble()),
+                            normalizePercentage(runningJobCount * 100.0 / jobQuota)
+                        ),
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1

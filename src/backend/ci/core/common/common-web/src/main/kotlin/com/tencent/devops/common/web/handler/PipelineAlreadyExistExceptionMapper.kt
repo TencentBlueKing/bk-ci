@@ -27,9 +27,12 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.PIPELINE_NAME_OCCUPIED
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -44,7 +47,10 @@ class PipelineAlreadyExistExceptionMapper : ExceptionMapper<PipelineAlreadyExist
     override fun toResponse(exception: PipelineAlreadyExistException): Response {
         logger.warn("Failed with pipeline already exist exception: $exception")
         val status = Response.Status.CONFLICT
-        val message = "流水线名称已被他人使用"
+        val message = MessageUtil.getMessageByLocale(
+            PIPELINE_NAME_OCCUPIED,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
     }

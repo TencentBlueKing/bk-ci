@@ -30,10 +30,10 @@ package com.tencent.devops.project.resources
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
+import com.tencent.devops.project.constant.ProjectMessageCode.ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT
 import com.tencent.devops.project.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -58,7 +58,7 @@ class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
             }
             else ->
                 throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT,
+                    errorCode = ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT,
                     params = arrayOf(method.method),
                     defaultMessage = "iam callback method ${method.method} not support"
                 )

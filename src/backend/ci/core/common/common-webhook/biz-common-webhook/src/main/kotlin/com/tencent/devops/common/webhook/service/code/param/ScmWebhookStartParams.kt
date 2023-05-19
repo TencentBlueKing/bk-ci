@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.webhook.service.code.param
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_CODE_BASE_TRIGGERING
 import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_HASH_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_NAME
@@ -139,7 +141,8 @@ interface ScmWebhookStartParams<T : WebHookTriggerElement> {
         startParams[BK_REPO_WEBHOOK_REPO_NAME] = repo.projectName
         startParams[BK_REPO_WEBHOOK_REPO_ALIAS_NAME] = repo.aliasName
         startParams[BK_REPO_WEBHOOK_HASH_ID] = repo.repoHashId ?: ""
-        startParams[PIPELINE_BUILD_MSG] = startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String? ?: "代码库触发"
+        startParams[PIPELINE_BUILD_MSG] = startParams[PIPELINE_WEBHOOK_COMMIT_MESSAGE] as String?
+            ?: I18nUtil.getCodeLanMessage(BK_CODE_BASE_TRIGGERING)
         startParams[PIPELINE_WEBHOOK_QUEUE] = params.webhookQueue
 
         val gitProjectName = matcher.getRepoName()

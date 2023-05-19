@@ -463,8 +463,6 @@ class WorkspaceService @Autowired constructor(
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_ERROR_FIX.errorCode,
-                        defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR_FIX.formatErrorMessage
-                            .format(fix.name),
                         params = arrayOf(fix.name)
                     )
                 }

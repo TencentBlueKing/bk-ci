@@ -33,7 +33,7 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -52,7 +52,12 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
                 "User has no grade manager permission: userId = $userId " +
                     "| projectId = $projectId | managerProject = $managerProject"
             )
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    AuthMessageCode.GRADE_CHECK_FAIL,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 

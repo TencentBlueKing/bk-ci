@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.dispatch.sdk.listener
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -41,15 +42,16 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import java.util.regex.Pattern
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component@Suppress("ALL")
 interface BuildListener {
@@ -252,7 +254,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "启动构建机失败 - ${e.message}",
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")}- ${e.message}",
                 executeCount = event.executeCount)
 
             errorCode = e.errorCode
@@ -265,7 +267,7 @@ interface BuildListener {
             dispatchService.logRed(buildId = event.buildId,
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
-                message = "启动构建机失败 - ${t.message}",
+                message = "${I18nUtil.getCodeLanMessage("$BK_FAILED_START_BUILD_MACHINE")} - ${t.message}",
                 executeCount = event.executeCount)
 
             errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR

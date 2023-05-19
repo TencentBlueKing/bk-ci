@@ -42,7 +42,7 @@ const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_I
 const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
-const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
+const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"// 当前构建的唯一标示ID，从1开始自增
 const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.build.last.update"
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
 const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
@@ -82,7 +82,7 @@ const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
 const val PIPELINE_VIEW_MY_LIST_PIPELINES = "myListPipeline" // 兼容APP , 后面需要干掉
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
-const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"
+const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified" // 流水线视图未分组
 const val PIPELINE_VIEW_RECENT_USE = "recentUse"
 
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url

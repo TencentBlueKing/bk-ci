@@ -36,14 +36,14 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.utils.PIPELINE_VARIABLES_STRING_LENGTH_MAX
-import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
+import org.slf4j.LoggerFactory
 
 object PipelineUtils {
 
@@ -66,7 +66,9 @@ object PipelineUtils {
             if (!Pattern.matches(ENGLISH_NAME_PATTERN, param.id)) {
                 logger.warn("Pipeline's start params[${param.id}] is illegal")
                 throw OperationException(
-                    message = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR)
+                    message = I18nUtil.getCodeLanMessage(
+                        ProcessMessageCode.ERROR_PIPELINE_PARAMS_NAME_ERROR
+                    )
                 )
             }
             map[param.id] = param
@@ -109,7 +111,6 @@ object PipelineUtils {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH,
-                defaultMessage = "Stage审核参数 $key 超出4000长度限制",
                 params = arrayOf(key)
             )
         }

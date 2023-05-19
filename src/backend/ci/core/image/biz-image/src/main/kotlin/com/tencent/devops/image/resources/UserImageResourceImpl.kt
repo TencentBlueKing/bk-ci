@@ -30,8 +30,12 @@ package com.tencent.devops.image.resources
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.UserImageResource
+import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_FILE_VALID_IMAGE_COUNT_ZERO
+import com.tencent.devops.image.constants.ImageMessageCode.USER_NOT_UPLOAD_IMAGE_PERMISSION
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -65,7 +69,9 @@ class UserImageResourceImpl @Autowired constructor(
     ): Result<UploadImageTask> {
         checkUserAndProject(userId, projectId)
         if (!importImageService.checkDeployPermission(projectId, userId)) {
-            throw OperationException("用户($userId)没有上传镜像权限")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(USER_NOT_UPLOAD_IMAGE_PERMISSION, I18nUtil.getLanguage(userId))
+            )
         }
 
         var taskId: String
@@ -73,14 +79,16 @@ class UserImageResourceImpl @Autowired constructor(
             taskId = FileStoreUtils.storeFile(inputStream)
         } catch (e: Exception) {
             logger.error("save image file failed", e)
-            throw RuntimeException("文件保存失败：${e.message}")
+            throw RuntimeException("save image file failed：${e.message}")
         }
 
         try {
             val imageFilePath = FileStoreUtils.getFullFileName(taskId)
             val images = ImageFileUtils.parseImageMeta(imageFilePath)
             if (images.isEmpty()) {
-                throw OperationException("镜像文件有效镜像个数为零")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(IMAGE_FILE_VALID_IMAGE_COUNT_ZERO, I18nUtil.getLanguage(userId))
+                )
             }
 
             val task = importImageService.importImage(projectId, userId, taskId, isBuildImage == true)

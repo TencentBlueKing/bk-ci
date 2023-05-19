@@ -27,22 +27,41 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_DOWNLOAD
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BELONG_TO_THE_PROJECT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_FILE_NAME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_OPERATING
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_TABLE_CONTENTS
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.Date
 
 object EmailUtil {
     fun getShareEmailTitle(userId: String, fileName: String, size: Int): String {
-        return if (size == 1)
-            "【蓝盾版本仓库通知】${userId}与你共享${fileName}文件"
-        else
-            "【蓝盾版本仓库通知】${userId}与你共享${fileName}等${size}个文件"
+        return if (size == 1) {
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU,
+                params = arrayOf(userId, fileName)
+            )
+        } else {
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU,
+                params = arrayOf(userId, fileName, size.toString())
+            )
+        }
     }
 
     fun getShareEmailBody(projectName: String, title: String, userId: String, days: Int, FileShareInfoList: List<FileShareInfo>): String {
-        val simpleDateFormat = SimpleDateFormat("yyyy年MM月dd日")
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd")
         val date = simpleDateFormat.format(Date())
         val stringBuffer = StringBuilder()
         stringBuffer.append(SHARE_EMAIL_HTML_PREFIX)
@@ -53,12 +72,22 @@ object EmailUtil {
         val template = stringBuffer.toString()
         return template
                 .replace(HEADER_TITLE_TEMPLATE, title)
-                .replace(BODY_TITLE_TEMPLATE, "${userId}与你共享以下文件，请在有效期（${days}天）内及时下载：")
+                .replace(BODY_TITLE_TEMPLATE,
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME,
+                        params = arrayOf(userId, days.toString())
+                    ))
                 .replace(BODY_PROJECT_TEMPLATE, projectName)
                 .replace(BODY_DATE_TEMPLATE, date)
-                .replace(TABLE_COLUMN1_TITLE, "文件名")
-                .replace(TABLE_COLUMN2_TITLE, "所属项目")
-                .replace(TABLE_COLUMN3_TITLE, "操作")
+                .replace(TABLE_COLUMN1_TITLE, I18nUtil.getCodeLanMessage(
+                    messageCode = BK_FILE_NAME
+                ))
+                .replace(TABLE_COLUMN2_TITLE, I18nUtil.getCodeLanMessage(
+                    messageCode = BK_BELONG_TO_THE_PROJECT
+                ))
+                .replace(TABLE_COLUMN3_TITLE, I18nUtil.getCodeLanMessage(
+                    messageCode = BK_OPERATING
+                ))
     }
 
     fun makeEmailNotifyMessage(title: String, body: String, receivers: Set<String>): EmailNotifyMessage {
@@ -77,7 +106,7 @@ object EmailUtil {
                 "                                                                                   <p style=\"margin: 0px;color: #c7c7c7\">MD5：$md5</p>\n" +
                 "                                                                                </td>\n" +
                 "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
-                "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$downloadUrl\" style=\"color: #3c96ff\">下载</a></td>\n" +
+                "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$downloadUrl\" style=\"color: #3c96ff\">" + I18nUtil.getCodeLanMessage(messageCode = BK_DOWNLOAD) + "</a></td>\n" +
                 "                                                                            </tr>\n"
     }
 
@@ -121,9 +150,9 @@ object EmailUtil {
             "                                        <td class=\"email-content\" style=\"padding: 0 36px; background: #fff;\">\n" +
             "                                            <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
             "                                                <tr>\n" +
-            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">来自蓝盾DevOps平台的推送</td>\n" +
+            "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + I18nUtil.getCodeLanMessage(messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM) + "</td>\n" +
             "                                                </tr>\n" +
-            "                                                <!-- 表格内容 -->\n" +
+            "                                                <!-- " + I18nUtil.getCodeLanMessage(messageCode = BK_TABLE_CONTENTS) + " -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
             "                                                        <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\" style=\"font-size: 14px; mso-table-lspace: 0pt; mso-table-rspace: 0pt;\">\n" +
@@ -152,7 +181,7 @@ object EmailUtil {
             "                                                </tr>\n" +
             "\n" +
             "                                                <tr class=\"prompt-tips\">\n" +
-            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">如有任何问题，可随时联系蓝盾助手。</td>\n" +
+            "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + I18nUtil.getCodeLanMessage(messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT) + "</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +
             "                                                    <td style=\"padding: 20px 0; text-align: right; line-height: 24px; color: #707070;\">\n" +
@@ -163,7 +192,10 @@ object EmailUtil {
             "                                        </td>\n" +
             "                                    </tr>\n" +
             "                                    <tr class=\"email-footer\">\n" +
-            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">你收到此邮件，是因为你关注了 $BODY_PROJECT_TEMPLATE 项目，或其它人@了你</td>\n" +
+            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + I18nUtil.getCodeLanMessage(
+                    messageCode = BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT,
+                    params = arrayOf(BODY_PROJECT_TEMPLATE)
+            ) + "</td>\n" +
             "                                    </tr>\n" +
             "                                </table>\n" +
             "                            </td>\n" +

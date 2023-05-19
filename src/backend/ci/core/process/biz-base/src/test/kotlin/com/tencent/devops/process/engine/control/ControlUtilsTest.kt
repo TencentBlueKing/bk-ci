@@ -33,10 +33,17 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
+import io.mockk.every
+import io.mockk.mockk
+import io.mockk.mockkObject
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
@@ -45,6 +52,25 @@ import org.junit.jupiter.api.assertThrows
  */
 @Suppress("ALL")
 class ControlUtilsTest : TestBase() {
+
+    @BeforeEach
+    fun setup() {
+        val commonConfig: CommonConfig = mockk()
+        val redisOperation: RedisOperation = mockk()
+        every {
+            commonConfig.devopsDefaultLocaleLanguage
+        } returns "zh_CN"
+        every {
+            redisOperation.get(any())
+        } returns "zh_CN"
+        mockkObject(SpringContextUtil)
+        every {
+            SpringContextUtil.getBean(CommonConfig::class.java)
+        } returns commonConfig
+        every {
+            SpringContextUtil.getBean(RedisOperation::class.java)
+        } returns redisOperation
+    }
 
     @Test
     fun isEnable() {

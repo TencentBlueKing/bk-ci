@@ -38,7 +38,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -316,8 +316,8 @@ class ImageProjectService @Autowired constructor(
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String
         val classifyName = it["classifyName"] as String
-        val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+        val classifyLanName = I18nUtil.getCodeLanMessage(
+            messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
             defaultMessage = classifyName
         )
         val logoUrl = it["logoUrl"] as? String
@@ -954,8 +954,8 @@ class ImageProjectService @Autowired constructor(
         val labelList = imageLabelService.getLabelsByImageId(id).data
         val category = it.get(KEY_CATEGORY_CODE) as String?
         val categoryName = it.get(KEY_CATEGORY_NAME) as String?
-        val categoryLanName = MessageCodeUtil.getCodeLanMessage(
-            messageCode = "${StoreMessageCode.MSG_CODE_STORE_CATEGORY_PREFIX}$category",
+        val categoryLanName = I18nUtil.getCodeLanMessage(
+            messageCode = "${StoreTypeEnum.IMAGE.name}.category.$category",
             defaultMessage = categoryName
         )
         val publisher = it.get(KEY_PUBLISHER) as String

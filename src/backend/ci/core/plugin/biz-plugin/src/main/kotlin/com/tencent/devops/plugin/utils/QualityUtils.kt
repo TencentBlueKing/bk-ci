@@ -30,13 +30,15 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_CI_PIPELINE
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
@@ -56,10 +58,14 @@ object QualityUtils {
 
         val titleData = mutableListOf(event.status,
                 DateTimeUtil.formatMilliTime(System.currentTimeMillis() - event.startTime),
-                StartType.toReadableString(event.triggerType, null),
+                StartType.toReadableString(
+                    event.triggerType,
+                    null,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 pipelineName,
                 "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId",
-                "蓝盾流水线"
+                I18nUtil.getCodeLanMessage(BK_CI_PIPELINE)
         )
 
         val ruleName = mutableSetOf<String>()

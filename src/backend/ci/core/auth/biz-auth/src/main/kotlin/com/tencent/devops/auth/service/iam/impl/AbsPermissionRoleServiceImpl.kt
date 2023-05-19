@@ -1,13 +1,15 @@
 package com.tencent.devops.auth.service.iam.impl
 
 import com.tencent.bk.sdk.iam.exception.IamException
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType.Companion.getDisplayName
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -30,7 +32,7 @@ abstract class AbsPermissionRoleServiceImpl @Autowired constructor(
         } else {
             groupType = true
             groupName = groupInfo.name
-            displayName = DefaultGroupType.get(groupInfo.code).displayName
+            displayName = DefaultGroupType.get(groupInfo.code).getDisplayName(I18nUtil.getLanguage(userId))
         }
         val roleId = groupService.createGroup(
             userId = userId,

@@ -42,7 +42,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.repository.tables.TRepositoryGitToken
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.repository.constant.RepositoryMessageCode
 import com.tencent.devops.repository.dao.GitTokenDao
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -51,14 +51,14 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.pojo.Project
+import java.net.URLDecoder
+import java.net.URLEncoder
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.net.URLDecoder
-import java.net.URLEncoder
 
 @Service
 @Suppress("ALL")
@@ -225,7 +225,7 @@ class GitOauthService @Autowired constructor(
         )
         if (!projectUserCheck) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                errorCode = RepositoryMessageCode.USER_NEED_PROJECT_X_PERMISSION,
                 params = arrayOf(userId, buildBasicInfo.projectId)
             )
         }

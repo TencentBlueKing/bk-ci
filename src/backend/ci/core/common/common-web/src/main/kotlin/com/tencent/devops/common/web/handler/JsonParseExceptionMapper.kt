@@ -28,15 +28,17 @@
 package com.tencent.devops.common.web.handler
 
 import com.fasterxml.jackson.core.JsonParseException
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_JSON_BAD_PARAMETERS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.annotation.Priority
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 @Priority(1)
@@ -51,7 +53,7 @@ class JsonParseExceptionMapper : ExceptionMapper<JsonParseException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "JSON参数错误/Bad Parameters in json"
+            I18nUtil.getCodeLanMessage(BK_JSON_BAD_PARAMETERS)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

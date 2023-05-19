@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -41,5 +42,6 @@ data class AtomResp<out T>(
     @ApiModelProperty("总页数", required = true)
     val totalPages: Int,
     @ApiModelProperty("数据集合", required = false)
+    @BkFieldI18n
     val records: List<T>
 )

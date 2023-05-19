@@ -31,7 +31,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthGroupUserDao
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -52,13 +52,20 @@ class GroupUserService @Autowired constructor(
         )
         if (groupUserRecord != null) {
             logger.warn("addUser2Group user $userId already in this group $groupId")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_USER_ALREADY_EXIST))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    AuthMessageCode.GROUP_USER_ALREADY_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         val groupRecord = authGroupService.getGroupCode(groupId)
 
         if (groupRecord == null) {
             logger.warn("addUser2Group group $groupId is not exist")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(AuthMessageCode.GROUP_NOT_EXIST, language = I18nUtil.getLanguage(userId))
+            )
         }
         // 添加用户至用户组
         groupUserDao.create(
