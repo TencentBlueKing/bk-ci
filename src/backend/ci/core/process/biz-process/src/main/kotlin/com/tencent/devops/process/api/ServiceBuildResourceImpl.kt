@@ -194,20 +194,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask,
-                    isMobile = false,
-                    channelCode = channelCode,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    checkManualStartup = checkManualStartup ?: false
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask,
+                isMobile = false,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                checkManualStartup = checkManualStartup ?: false
             )
         )
     }
@@ -728,18 +726,16 @@ class ServiceBuildResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = startType,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
+            pipelineBuildFacadeService.buildManualStartup(
+                userId = userId,
+                startType = startType,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = values,
+                channelCode = channelCode,
+                buildNo = buildNo,
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                frequencyLimit = true
             )
         )
     }

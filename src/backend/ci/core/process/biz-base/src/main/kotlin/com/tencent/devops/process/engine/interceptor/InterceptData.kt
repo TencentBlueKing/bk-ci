@@ -30,7 +30,8 @@ package com.tencent.devops.process.engine.interceptor
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.PipelineRunLockType
+import io.swagger.annotations.ApiModelProperty
 
 /**
  *
@@ -41,6 +42,17 @@ data class InterceptData(
     val pipelineInfo: PipelineInfo,
     val model: Model?,
     val startType: StartType,
-    val setting: PipelineSetting?,
-    val buildId: String
+    val buildId: String,
+    @ApiModelProperty("Lock 类型", required = false)
+    val runLockType: PipelineRunLockType,
+    @ApiModelProperty("最大排队时长", required = false)
+    val waitQueueTimeMinute: Int,
+    @ApiModelProperty("最大排队数量", required = false)
+    val maxQueueSize: Int,
+    @ApiModelProperty("并发时,设定的group", required = false)
+    var concurrencyGroup: String?,
+    @ApiModelProperty("并发时,是否相同group取消正在执行的流水线", required = false)
+    val concurrencyCancelInProgress: Boolean = false,
+    @ApiModelProperty("并发构建数量限制", required = false)
+    val maxConRunningQueueSize: Int? // MULTIPLE类型时，并发构建数量限制
 )

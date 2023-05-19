@@ -171,11 +171,11 @@ interface CertService {
         limit: Int
     ): SQLPage<Cert>
 
-    fun getIos(projectId: String, certId: String): CertIOSInfo
+    fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo
 
     fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo
 
-    fun getAndroid(projectId: String, certId: String): CertAndroidInfo
+    fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo
 
     fun getTls(projectId: String, certId: String): CertTlsInfo
 

@@ -45,7 +45,7 @@ class DownloaderService {
     fun downloadWorker(eTag: String?): Response {
         logger.info("downloadWorker, eTag: $eTag")
         if (workerFile.isNullOrBlank()) {
-            throw RuntimeException("worker.jar文件路径没有配置")
+            throw RuntimeException("The worker.jar file path is not configured")
         }
         return download(workerFile!!, eTag)
     }
@@ -54,11 +54,11 @@ class DownloaderService {
         logger.info("download, file: $file, eTag: $eTag")
         val worker = File(file)
         if (!worker.exists()) {
-            throw NotFoundException("${worker.absolutePath} 不存在")
+            throw NotFoundException("${worker.absolutePath} not exist")
         }
 
         if (!worker.isFile) {
-            throw RuntimeException("${worker.absolutePath} 不是一个文件")
+            throw RuntimeException("${worker.absolutePath} not a file")
         }
 
         if (eTag != null && eTag.isNotBlank()) {

@@ -71,10 +71,10 @@ class InspectImageService @Autowired constructor(
                     registryUser = it.registryUser,
                     registryPwd = it.registryPwd
                 )
-                logger.info("开始拉取镜像，镜像名称：$imageName")
+                logger.info("Start pulling the image, image name：$imageName")
                 dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(userId)).awaitCompletion()
-                logger.info("拉取镜像成功，镜像名称：$imageName")
+                logger.info("The image was pulled successfully. Image name：$imageName")
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of userId $userId", t)
                 imageInspectList.add(
@@ -149,7 +149,7 @@ class InspectImageService @Autowired constructor(
                 }
 
                 if (currentProgress >= step[lays]?.plus(25) ?: 5) {
-                    logger.info("$userId 正在拉取镜像,第${lays}层，进度：$currentProgress%")
+                    logger.info("$userId pulling images, $lays layer, progress: $currentProgress%")
                     step[lays] = currentProgress
                 }
             }

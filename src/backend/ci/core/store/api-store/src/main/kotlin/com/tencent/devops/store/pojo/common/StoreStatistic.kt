@@ -45,6 +45,6 @@ data class StoreStatistic(
     @ApiModelProperty("成功率")
     val successRate: Double? = null,
     @ApiModelProperty("hotFlag")
-    val hotFlag: Boolean? = null
+    val hotFlag: Boolean? = false
 
 )

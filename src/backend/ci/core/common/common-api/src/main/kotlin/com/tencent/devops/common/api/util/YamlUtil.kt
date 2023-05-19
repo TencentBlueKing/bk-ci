@@ -52,9 +52,9 @@ object YamlUtil {
         return getObjectMapper().writeValueAsString(bean)!!
     }
 
-    fun <T> to(yamlStr: String): T {
+    fun <T> to(yamlStr: String, valueTypeRef: TypeReference<T>? = null): T {
         val yaml = Yaml()
         val obj = toYaml(yaml.load(yamlStr) as Any)
-        return getObjectMapper().readValue(obj, object : TypeReference<T>() {})
+        return getObjectMapper().readValue(obj, valueTypeRef ?: object : TypeReference<T>() {})
     }
 }

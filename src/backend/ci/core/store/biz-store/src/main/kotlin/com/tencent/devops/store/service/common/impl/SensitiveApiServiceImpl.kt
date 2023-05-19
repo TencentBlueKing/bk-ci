@@ -172,13 +172,11 @@ class SensitiveApiServiceImpl @Autowired constructor(
             id = id
         ) ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
-            params = arrayOf(id),
-            defaultMessage = "研发商店：敏感API[$id]不存在"
+            params = arrayOf(id)
         )
         if (record.apiStatus == ApiStatusEnum.PASS.name) {
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL,
-                defaultMessage = "研发商店：敏感API已经审批通过不能取消"
+                errorCode = StoreMessageCode.SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL
             )
         }
         val updateDTO = SensitiveApiUpdateDTO(
@@ -203,13 +201,11 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 id = id
             ) ?: throw ErrorCodeException(
                 errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
-                params = arrayOf(id),
-                defaultMessage = "研发商店：敏感API[$id]不存在"
+                params = arrayOf(id)
             )
             if (record.apiStatus == ApiStatusEnum.CANCEL.name) {
                 throw ErrorCodeException(
-                    errorCode = StoreMessageCode.SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS,
-                    defaultMessage = "研发商店：敏感API已经取消不能审批"
+                    errorCode = StoreMessageCode.SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS
                 )
             }
             val updateDTO = SensitiveApiUpdateDTO(
