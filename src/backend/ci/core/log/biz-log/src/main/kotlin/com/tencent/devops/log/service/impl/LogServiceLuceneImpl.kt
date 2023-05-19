@@ -640,7 +640,10 @@ class LogServiceLuceneImpl constructor(
             executeCount = executeCount
         )
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
-        return QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
+        val cleaned = indexService.getBuildIndexName(buildId) == null
+        return QueryLogs(
+            buildId = buildId, finished = logStatus, cleaned = cleaned, subTags = subTags
+        )
     }
 
     private fun doAddMultiLines(logMessages: List<LogMessageWithLineNo>, buildId: String): Int {
