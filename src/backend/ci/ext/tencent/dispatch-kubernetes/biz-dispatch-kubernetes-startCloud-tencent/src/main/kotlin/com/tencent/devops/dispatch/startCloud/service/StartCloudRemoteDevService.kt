@@ -60,7 +60,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
 
-        workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName))
+        kotlin.runCatching { workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName)) }.onFailure {
+            logger.warn("create user failed.|${it.message}")
+        }
 
         val ip = workspaceClient.createWorkspace(
             userId,
