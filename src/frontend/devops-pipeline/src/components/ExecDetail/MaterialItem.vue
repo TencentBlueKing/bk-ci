@@ -24,7 +24,7 @@
                 <span class="material-span" v-bk-tooltips="{ delay: [300, 0], content: formatField(field) }" v-else>{{ formatField(field) }}</span>
             </span>
         </div>
-        <span v-if="showMore" @click="emitMouseEnter" class="exec-more-material">
+        <span v-if="showMore" @mouseenter="emitMouseEnter" class="exec-more-material">
             <i class="devops-icon icon-ellipsis" />
         </span>
     </div>

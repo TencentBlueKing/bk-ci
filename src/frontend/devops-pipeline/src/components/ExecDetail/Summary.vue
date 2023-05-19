@@ -30,7 +30,7 @@
                     <ul
                         v-show="isShowMoreMaterial"
                         class="all-exec-material-list"
-                        @click="hideMoreMaterial"
+                        @mouseleave="hideMoreMaterial"
                     >
                         <li v-for="material in visibleMaterial" :key="material.newCommitId">
                             <material-item :material="material" />
