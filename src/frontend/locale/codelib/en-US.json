@@ -57,6 +57,7 @@
     "SVN": "SVN",
     "Github": "Github",
     "Gitlab": "Gitlab",
+    "Git": "Git",
     "TGit": "TGit",
     "P4": "P4",
     "authType": "Authorization method",
@@ -85,5 +86,14 @@
     "离开": "Leave",
     "copySuccess": "Copied",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "userName+password+Token": "Username password + personal token",
+    "refreshOAUTH": "Refresh authorization status",
+    "尚未授权，请先点击按钮授权。推荐使用公共账号授权。": "尚未授权，请先点击按钮授权。推荐使用公共账号授权。",
+    "此授权用于平台和代码库进行交互：": "此授权用于平台和代码库进行交互：",
+    "添加代码库触发器时往工蜂注册回调事件（需拥有代码库开发者及以上权限）": "添加代码库触发器时往工蜂注册回调事件（需拥有代码库开发者及以上权限）",
+    "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）": "代码库事件触发时，获取 YAML 配置文件（PAC 模式下）",
+    "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机": "拉代码插件不指定凭据时，默认使用此授权同步代码到构建机",
+    "流水线执行时，回写流水线执行状态到代码库": "流水线执行时，回写流水线执行状态到代码库",
+    "代码库别名不能重复。": "Codelib alias already exists."
 }

@@ -52,16 +52,40 @@
                 </layout>
             </div>
         </template>
-        <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
-            <bk-button v-for="typeLabel in codelibTypes" :key="typeLabel" @click="createCodelib(typeLabel)">
+        <empty-tips
+            v-else-if="codelibs && codelibs.hasCreatePermission"
+            :title="$t('codelib.codelib')"
+            :desc="$t('codelib.codelibDesc')"
+        >
+            <bk-button
+                v-for="typeLabel in codelibTypes"
+                :key="typeLabel"
+                @click="createCodelib(typeLabel)"
+            >
                 {{ $t('codelib.linkCodelibLabel', [typeLabel]) }}
             </bk-button>
         </empty-tips>
-        <empty-tips v-else :title="$t('codelib.noCodelibPermission')" :desc="$t('codelib.noPermissionDesc')">
-            <bk-button theme="primary" @click="switchProject">{{ $t('codelib.switchProject') }}</bk-button>
-            <bk-button theme="success" @click="toApplyPermission">{{ $t('codelib.applyPermission') }}</bk-button>
+        <empty-tips
+            v-else
+            :title="$t('codelib.noCodelibPermission')"
+            :desc="$t('codelib.noPermissionDesc')"
+        >
+            <bk-button
+                theme="primary"
+                @click="switchProject"
+            >
+                {{ $t('codelib.switchProject') }}
+            </bk-button>
+            <bk-button
+                theme="success"
+                @click="toApplyPermission"
+            >
+                {{ $t('codelib.applyPermission') }}
+            </bk-button>
         </empty-tips>
-        <code-lib-dialog :refresh-codelib-list="refreshCodelibList" @powersValidate="powerValidate"></code-lib-dialog>
+        <code-lib-dialog
+            :refresh-codelib-list="refreshCodelibList"
+        ></code-lib-dialog>
     </div>
 </template>
 
@@ -149,11 +173,11 @@
         },
 
         created () {
-            this.initCache()
+            // this.initCache()
         },
 
         async mounted () {
-            this.initPageSize()
+            this.init()
             this.projectList = this.$store.state.projectList
 
             this.refreshCodelibList()
@@ -180,7 +204,9 @@
                 'checkOAuth'
             ]),
 
-            initPageSize () {
+            init () {
+                const query = this.$route.query
+                const cachae = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
                 const { top } = getOffset(document.getElementById('codelib-list-content'))
                 const windowHeight = window.innerHeight
                 const tableHeadHeight = 42
@@ -188,18 +214,13 @@
                 const windownOffsetBottom = 20
                 const listTotalHeight = windowHeight - top - tableHeadHeight - paginationHeight - windownOffsetBottom - 52
                 const tableRowHeight = 42
-                const limit = Math.floor(listTotalHeight / tableRowHeight)
-                this.defaultPagesize = limit
-            },
 
-            /**
-             * 校验是否存在缓存仓库ID、page
-             */
-            initCache () {
-                const query = this.$route.query
-                const cachae = JSON.parse(localStorage.getItem(CODE_REPOSITORY_CACHE))
                 const id = (query && query.id) || (cachae && cachae.id) || ''
                 const page = (query && query.page) || (cachae && cachae.page) || 1
+                const limit = (query && query.limit) || (cachae && cachae.limit) || Math.floor(listTotalHeight / tableRowHeight)
+
+                this.defaultPagesize = limit
+
                 if (id) {
                     this.isListFlod = true
                     this.curRepoId = id
@@ -207,7 +228,8 @@
                     this.$router.push({
                         query: {
                             id,
-                            page
+                            page,
+                            limit
                         }
                     })
                 }
@@ -265,10 +287,6 @@
                     Object.assign(CodelibDialog, { authType: 'HTTP' })
                 }
                 this.toggleCodelibDialog(CodelibDialog)
-            },
-
-            powerValidate (url) {
-                window.open(url, '_self')
             },
 
             switchProject () {

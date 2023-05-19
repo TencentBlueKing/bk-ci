@@ -61,7 +61,7 @@
             <bk-table-column
                 v-if="!isListFlod"
                 :label="$t('codelib.operation')"
-                width="150"
+                width="100"
             >
                 <template slot-scope="props">
                     <bk-button
@@ -326,12 +326,14 @@
                     this.$router.push({
                         query: {
                             id: row.repositoryHashId,
-                            page: this.page
+                            page: this.page,
+                            limit: this.pagination.limit
                         }
                     })
                     localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
                         id: this.selectId,
-                        page: this.page
+                        page: this.page,
+                        limit: this.pagination.limit
                     }))
                     this.$emit('updataFlod', true)
                     this.$emit('update:curRepoId', row.repositoryHashId)
@@ -370,6 +372,12 @@
                 this.pagination.current = 1
                 this.pagination.limit = limit
                 this.switchPage(1, limit)
+
+                localStorage.setItem(CODE_REPOSITORY_CACHE, JSON.stringify({
+                    id: this.selectId,
+                    page: this.page,
+                    limit: this.pagination.limit
+                }))
             },
 
             // async editCodeLib (codelib) {

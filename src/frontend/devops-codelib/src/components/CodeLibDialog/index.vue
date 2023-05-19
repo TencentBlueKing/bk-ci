@@ -1,7 +1,17 @@
 <template>
-    <bk-dialog class="codelib-operate-dialog" v-model="isShow" :width="width" :padding="padding" :close-icon="false" :quick-close="false" :loading="loading" @confirm="submitCodelib" @cancel="handleCancel">
-        <h3 slot="header" class="bk-dialog-title">{{title}}</h3>
-        <form class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
+    <bk-dialog
+        class="codelib-operate-dialog"
+        v-model="isShow"
+        :width="width"
+        :padding="padding"
+        :quick-close="false"
+        :loading="loading"
+        @confirm="submitCodelib"
+        @cancel="handleCancel"
+    >
+        <h3 slot="header" class="bk-dialog-title">{{ title }}</h3>
+        <component ref="form" :is="comName"></component>
+        <form style="display: none" class="bk-form" v-bkloading="{ isLoading: saving || fetchingCodelibDetail }">
             <div class="bk-form-item is-required" v-if="isGit || isGitLab">
                 <label class="bk-label">{{ $t('codelib.codelibMode') }}:</label>
                 <bk-radio-group v-model="codelib.authType" @change="authTypeChange(codelib)" class="bk-form-content form-radio">
@@ -139,427 +149,49 @@
 </template>
 
 <script>
-    import { mapActions, mapState } from 'vuex'
-    import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import dialogMixin from './mixin.js'
+    import P4 from './P4'
+    import SVN from './SVN'
+    import Git from './Git'
+    import TGit from './TGit'
+    import Github from './Github'
+    import Gitlab from './Gitlab'
     export default {
         name: 'codelib-dialog',
-        props: {
-            padding: {
-                type: Number,
-                default: 20
-            },
-            width: {
-                type: Number,
-                default: 700
-            },
-            refreshCodelibList: {
-                type: Function,
-                required: true
-            }
+        components: {
+            Github,
+            Gitlab,
+            SVN,
+            TGit,
+            Git,
+            P4
         },
-        data () {
-            return {
-                isLoadingTickets: false,
-                loading: false,
-                saving: true,
-                urlErrMsg: '',
-                hasValidate: false,
-                placeholders: {
-                    url: {
-                        SVN: this.$t('codelib.svnUrlPlaceholder'),
-                        Git: this.$t('codelib.gitUrlPlaceholder'),
-                        TGit: this.$t('codelib.tgitUrlPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabUrlPlaceholder'),
-                        HTTP: this.$t('codelib.httpUrlPlaceholder'),
-                        HTTPS: this.$t('codelib.httpsUrlPlaceholder')
-                    },
-                    cred: {
-                        SVN: this.$t('codelib.svnCredPlaceholder'),
-                        Git: this.$t('codelib.gitCredPlaceholder'),
-                        Gitlab: this.$t('codelib.gitlabCredPlaceholder')
-                    },
-                    port: {
-                        P4: 'localhost:1666'
-                    }
-                }
-            }
-        },
+        mixins: [dialogMixin],
 
         computed: {
-            ...mapState({
-                user: 'user'
-            }),
-            ...mapState('codelib', [
-                'tickets',
-                'codelib',
-                'showCodelibDialog',
-                'fetchingCodelibDetail',
-                'gitOAuth',
-                'githubOAuth',
-                'tGitOAuth'
-            ]),
-            isShow: {
-                get () {
-                    return this.showCodelibDialog
-                },
-                set (showCodelibDialog) {
-                    this.toggleCodelibDialog({
-                        showCodelibDialog
-                    })
+            comName () {
+                const comMap = {
+                    Git: 'Git',
+                    TGit: 'TGit',
+                    Github: 'Github',
+                    SVN: 'SVN',
+                    P4: 'P4',
+                    Gitlab: 'Gitlab'
                 }
-            },
-            hasPower () {
-                return (
-                    (this.isTGit
-                        ? this.tGitOAuth.status
-                        : this.isGit
-                            ? this.gitOAuth.status
-                            : this.githubOAuth.status) !== 403
-                )
-            },
-            oAuth () {
-                return this.isTGit
-                    ? this.tGitOAuth
-                    : this.isGit
-                        ? this.gitOAuth
-                        : this.githubOAuth
-            },
-            codelibTypeName () {
-                return this.codelib && this.codelib['@type']
-                    ? this.codelib['@type']
-                    : ''
-            },
-            codelibTypeConstants () {
-                return this.codelibTypeName
-                    .toLowerCase()
-                    .replace(/^\S*?([github|git|tgit])/i, '$1')
-            },
-            codelibConfig () {
-                return (
-                    getCodelibConfig(
-                        this.codelibTypeName,
-                        this.codelib.svnType,
-                        this.codelib.authType
-                    ) || {}
-                )
-            },
-            title () {
-                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
-            },
-            isGit () {
-                return isGit(this.codelibTypeName)
-            },
-            isTGit () {
-                return isTGit(this.codelibTypeName)
-            },
-            isGitLab () {
-                return isGitLab(this.codelibTypeName)
-            },
-            isP4 () {
-                return isP4(this.codelibTypeName)
-            },
-            isGithub () {
-                return isGithub(this.codelibTypeName)
-            },
-            credentialList () {
-                return this.tickets || []
-            },
-            projectId () {
-                return this.$route.params.projectId
-            },
-            repositoryHashId () {
-                return this.codelib ? this.codelib.repositoryHashId : ''
-            },
-            credentialTypes () {
-                return this.codelibConfig.credentialTypes
-            },
-            credentialId: {
-                get () {
-                    return this.codelib.credentialId
-                },
 
-                set (credentialId) {
-                    this.updateCodelib({
-                        credentialId
-                    })
-                }
-            },
-            codelibUrl: {
-                get () {
-                    return this.codelib.url
-                },
-                set (url) {
-                    const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
-                    if (msg) {
-                        this.urlErrMsg = msg
-                    }
-                    const param = {
-                        projectName: alias,
-                        url
-                    }
-
-                    param.aliasName = this.codelib.aliasName || alias
-                    this.urlErrMsg = msg
-                    this.updateCodelib(param)
-                }
-            },
-            codelibAliasName: {
-                get () {
-                    return this.codelib.aliasName
-                },
-
-                set (aliasName) {
-                    this.updateCodelib({
-                        aliasName
-                    })
-                }
-            },
-            codelibPort: {
-                get () {
-                    return this.codelib.url
-                },
-                set (url) {
-                    const param = {
-                        projectName: url,
-                        url
-                    }
-                    this.updateCodelib(param)
-                }
-            },
-            urlPlaceholder () {
-                return (
-                    this.placeholders.url[this.codelibConfig.label]
-                    || this.placeholders.url[this.codelib.authType]
-                )
-            },
-            credentialPlaceholder () {
-                return this.placeholders.cred[this.codelibConfig.label]
-            },
-            portPlaceholder () {
-                return this.placeholders.port[this.codelibConfig.label]
-            },
-            selectComBindData () {
-                const bindData = {
-                    searchable: true,
-                    clearable: false,
-                    placeholder: this.$t('codelib.codelibUrlPlaceholder')
-                }
-                if (this.isGit) {
-                    bindData.remoteMethod = this.handleSearchCodeLib
-                }
-                return bindData
-            }
-        },
-
-        watch: {
-            tickets () {
-                this.isLoadingTickets = false
-            },
-            codelib: {
-                deep: true,
-                handler: async function (newVal, oldVal) {
-                    const { projectId, codelibTypeConstants } = this
-
-                    if (newVal.authType === 'OAUTH' && !this.hasValidate) {
-                        await this.checkOAuth({
-                            projectId,
-                            type: codelibTypeConstants
-                        })
-                    }
-                    if (newVal.authType === 'T_GIT_OAUTH' && !this.hasValidate) {
-                        await this.checkOAuth({
-                            projectId,
-                            type: codelibTypeConstants
-                        })
-                    }
-                    this.saving = false
-                }
-            },
-            'gitOAuth.status': function (newStatus) {
-                if (this.isGit) {
-                    this.hasValidate = true
-                    this.saving = false
-                }
-            },
-            'tGitOAuth.status': function (newStatus) {
-                if (this.isTGit) {
-                    this.hasValidate = true
-                    this.saving = false
-                }
-            },
-            'githubOAuth.status': function (newStatus) {
-                if (this.isGithub) {
-                    this.hasValidate = true
-                    this.saving = false
-                }
-            },
-            isShow (val) {
-                if (!val) {
-                    this.setTemplateCodelib()
-                }
-            }
-        },
-
-        methods: {
-            ...mapActions('codelib', [
-                'requestTickets',
-                'createOrEditRepo',
-                'toggleCodelibDialog',
-                'updateCodelib',
-                'gitOAuth',
-                'checkOAuth',
-                'checkTGitOAuth',
-                'setTemplateCodelib'
-            ]),
-            async submitCodelib () {
-                const {
-                    projectId,
-                    user: { username },
-                    codelib,
-                    codelibTypeName,
-                    createOrEditRepo,
-                    repositoryHashId
-                } = this
-                const params = Object.assign({}, codelib, { userName: username })
-                this.loading = true
-                try {
-                    const valid = await this.$validator.validate()
-
-                    if (valid && !this.urlErrMsg) {
-                        this.saving = true
-                        if (isSvn(codelibTypeName)) {
-                            params.region = parsePathRegion(codelib.url)
-                        }
-                        await createOrEditRepo({
-                            projectId,
-                            params,
-                            hashId: repositoryHashId
-                        })
-                        this.toggleCodelibDialog(false)
-                        this.hasValidate = false
-                        this.saving = true
-                        this.$bkMessage({
-                            message: repositoryHashId
-                                ? this.$t('codelib.successfullyEdited')
-                                : this.$t('codelib.successfullyAdded'),
-                            theme: 'success'
-                        })
-                        this.refreshCodelibList()
-                    }
-                } catch (e) {
-                    if (e.code === 403) {
-                        const actionId = this.$permissionActionMap[repositoryHashId ? 'edit' : 'create']
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                actionId,
-                                resourceId: this.$permissionResourceMap.code,
-                                instanceId: repositoryHashId
-                                    ? [{
-                                        id: repositoryHashId,
-                                        name: codelib.aliasName
-                                    }]
-                                    : null,
-                                projectId
-                            }]
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
-                    this.saving = false
-                } finally {
-                    this.$nextTick(() => (this.loading = false))
-                }
-            },
-
-            handleSearchCodeLib (search) {
-                const { projectId, codelibTypeConstants } = this
-                this.checkOAuth({
-                    projectId,
-                    type: codelibTypeConstants,
-                    search
-                })
-            },
-
-            async openValidate () {
-                this.$emit(
-                    'powersValidate',
-                    this[`${this.codelibTypeConstants}OAuth`].url
-                )
-            },
-            handleCancel () {
-                this.urlErrMsg = ''
-                this.hasValidate = false
-                this.saving = true
-                this.$validator.reset()
-                this.updateCodelib({
-                    url: '',
-                    aliasName: '',
-                    credentialId: '',
-                    projectName: '',
-                    authType: '',
-                    svnType: ''
-                })
-            },
-            authTypeChange (codelib) {
-                // 切换重置参数
-                Object.assign(codelib, {
-                    aliasName: '',
-                    credentialId: '',
-                    url: ''
-                })
-                this.$validator.reset()
-                this.urlErrMsg = ''
-            },
-            goToEditCre (index) {
-                const { projectId, credentialList } = this
-                const { credentialId } = credentialList[index]
-                window.open(
-                    `/console/ticket/${projectId}/editCredential/${credentialId}`,
-                    '_blank'
-                )
-            },
-            getTickets () {
-                const { projectId, credentialTypes } = this
-                this.isLoadingTickets = true
-                this.requestTickets({
-                    projectId,
-                    credentialTypes
-                })
-            },
-            refreshTicket (isShow) {
-                isShow && this.getTickets()
-            },
-            addCredential () {
-                const { projectId, codelibConfig } = this
-                window.open(
-                    `/console/ticket/${projectId}/createCredential/${codelibConfig.addType}/true`,
-                    '_blank'
-                )
-            },
-            svnTypeChange () {
-                this.updateCodelib({
-                    url: '',
-                    aliasName: '',
-                    credentialId: ''
-                })
-                this.$validator.reset()
-                this.urlErrMsg = ''
+                return comMap[this.codelibConfig.label]
             }
         }
     }
 </script>
 
 <style lang="scss">
+    .bk-dialog-title {
+        text-align: left;
+        font-size: 14px;
+        color: #313238;
+        font-weight: 400;
+    }
     .code-lib-credential {
         display: flex;
         align-items: center;
@@ -596,5 +228,11 @@
         .tip-icon {
             margin-left: 5px;
         }
+    }
+    .bk-form:nth-child(1) {
+        margin-top: -20px !important;
+    }
+    .bk-form-item {
+        margin-top: 20px !important;
     }
 </style>
