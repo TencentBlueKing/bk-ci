@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,12 +39,14 @@ data class AtomVersionListItem(
     @ApiModelProperty("插件标识")
     val atomCode: String,
     @ApiModelProperty("名称")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = false)
     val category: String?,
     @ApiModelProperty("版本号")
     val version: String,
     @ApiModelProperty("版本内容")
+    @BkFieldI18n(source = I18nSourceEnum.DB, keyPrefixName = "versionInfo")
     val versionContent: String?,
     @ApiModelProperty(
         "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +

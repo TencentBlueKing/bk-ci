@@ -29,14 +29,14 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import java.text.MessageFormat
 import javax.validation.ConstraintViolationException
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
@@ -52,7 +52,10 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
      */
     override fun toResponse(exception: ConstraintViolationException): Response {
         val constraintViolations = exception.constraintViolations
-        var errorResult: Result<Any> = MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        var errorResult: Result<Any> = I18nUtil.generateResponseDataObject(
+            CommonMessageCode.SYSTEM_ERROR,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         if (constraintViolations.isNotEmpty()) {
             constraintViolations.forEach { constraintViolation ->
                 val validateMessage = constraintViolation.messageTemplate // 获取接口参数校验的错误描述
@@ -67,13 +70,17 @@ class BkFieldExceptionMapper : ExceptionMapper<ConstraintViolationException> {
                     else -> propertyPath
                 }
                 // 获取path路径对应的描述信息，如果没有配置则给前端展示去掉方法名的path
-                val parameterName = MessageCodeUtil.getCodeLanMessage(propertyPath, propertyShowPath)
+                val parameterName = I18nUtil.getCodeLanMessage(
+                    messageCode = propertyPath,
+                    defaultMessage = propertyShowPath
+                )
                 // 生成错误提示信息
-                errorResult = MessageCodeUtil.generateResponseDataObject(
+                errorResult = I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_VALIDATE_ERROR,
                     params = arrayOf(parameterName, validateMessage),
                     data = null,
-                    defaultMessage = MessageFormat(validateMessage).format(arrayOf(parameterName))
+                    defaultMessage = MessageFormat(validateMessage).format(arrayOf(parameterName)),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 logger.info("field:$propertyPath errorResult is:$errorResult")
                 return Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
