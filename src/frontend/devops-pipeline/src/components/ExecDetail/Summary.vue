@@ -30,7 +30,7 @@
                     <ul
                         v-show="isShowMoreMaterial"
                         class="all-exec-material-list"
-                        @mouseleave="hideMoreMaterial"
+                        @click="hideMoreMaterial"
                     >
                         <li v-for="material in visibleMaterial" :key="material.newCommitId">
                             <material-item :material="material" />
@@ -241,23 +241,35 @@
             grid-gap: 20px;
             grid-auto-flow: column;
             height: 38px;
-            grid-auto-columns: minmax(120px, min-content);
+            grid-auto-columns: minmax(auto, max-content) 36px;
+            .material-row-info-spans {
+                display: grid;
+                grid-auto-flow: column;
+                grid-gap: 20px;
+                grid-auto-columns: minmax(auto, max-content);
+                > span {
+                    @include ellipsis();
+                    display: inline-flex;
+                    min-width: auto;
+                    align-items: center;
+                    > svg {
+                        flex-shrink: 0;
+                        margin-right: 6px;
+                    }
+                }
+            }
             &.visible-material-row {
               border: 1px solid transparent;
               padding-bottom: 0px;
               align-items: center;
 
             }
-            > span {
-              @include ellipsis();
-              display: inline-flex;
-              min-width: auto;
-              align-items: center;
-              > svg {
-                flex-shrink: 0;
-                margin-right: 6px;
-              }
+            .exec-more-material {
+                display: inline-flex;
+                align-items: center;
+
             }
+
             .mr-source-target {
                 display: grid;
                 align-items: center;
@@ -308,6 +320,7 @@
       align-self: stretch;
       display: flex;
       align-items: center;
+      line-height: 48px;
 
       .exec-remark {
         width: 100%;

@@ -253,6 +253,24 @@
             handleDeleteStage (stageId) {
                 this.pipeline.stages = this.pipeline.stages.filter(stage => stage.id !== stageId)
             },
+            expandPostAction (stageId, matrixId, containerId) {
+                return new Promise((resolve, reject) => {
+                    try {
+                        let jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[containerId]?.[0]?.$refs?.jobBox
+                        if (matrixId) {
+                            jobInstance = this.$refs?.[stageId]?.[0]?.$refs?.[matrixId]?.[0]?.$refs?.jobBox?.$refs[containerId]?.[0]
+                        }
+                        console.log(jobInstance, 'jobInstance')
+                        jobInstance?.$refs?.atomList?.expandPostAction?.()
+                        this.$nextTick(() => {
+                            resolve(true)
+                        })
+                    } catch (error) {
+                        console.error(error)
+                        resolve(false)
+                    }
+                })
+            },
             expandMatrix (stageId, matrixId, containerId) {
                 console.log('expandMatrix', stageId, matrixId, containerId)
                 return new Promise((resolve, reject) => {

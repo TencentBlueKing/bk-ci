@@ -33,7 +33,7 @@
   .pipeline-subpages-header {
     display: flex;
     align-items: center;
-    height: 60px;
+    height: 48px;
     background-color: white;
     width: 100%;
     box-shadow: 0 2px 5px 0 rgba(51, 60, 72, 0.03);

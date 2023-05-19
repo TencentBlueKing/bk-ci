@@ -1,6 +1,7 @@
 <template>
     <section
         class="pipeline-detail-wrapper"
+        @scroll="handlerScroll"
         v-bkloading="{ isLoading: isLoading || fetchingAtomList }"
     >
         <empty-tips
@@ -50,8 +51,7 @@
                     </span>
                 </aside>
             </div>
-            <p class="summary-header-shadow"></p>
-            <p class="summary-header-shadow-cover"></p>
+            <p class="summary-header-shadow" v-show="show"></p>
             <Summary
                 :show-info-row="showSummaryInfoRow"
                 ref="detailSummary"
@@ -173,6 +173,7 @@
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
                 showSummaryInfoRow: true,
+                show: false,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -395,6 +396,9 @@
                 'getAfterLog',
                 'pausePlugin'
             ]),
+            handlerScroll (e) {
+                this.show = e.target.scrollTop > 88
+            },
             ...mapActions('common', ['requestInterceptAtom']),
 
             hideSidePanel () {
@@ -467,7 +471,8 @@
   display: flex;
   flex-direction: column;
   border-top: 1px solid #dde4eb;
-  overflow: auto;
+  overflow-y: scroll;
+  overflow-y: overlay;
 
   .exec-detail-summary-header {
     padding: 8px 24px;
@@ -536,19 +541,11 @@
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   }
 
-  .summary-header-shadow-cover {
-    width: 100%;
-    min-height: 6px;
-    background: white;
-    position: absolute;
-    z-index: 9;
-    top: 40px;
-  }
-
   .exec-detail-main {
     margin: 16px 24px 0 24px;
     background: #f5f7fa;
     flex: 1;
+    box-shadow: 0 2px 2px 0 #00000026;
     &.is-outputs-panel {
         overflow: hidden;
         .pipeline-detail-tab-card {

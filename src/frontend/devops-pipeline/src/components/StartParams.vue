@@ -1,57 +1,59 @@
 <template>
-    <div class="startup-parameter-wrapper" v-bkloading="{ isLoading }">
-        <div class="build-param-row" v-for="(_chunk, index) in paramChunks" :key="index">
-            <div class="build-param-column" v-for="param in _chunk" :key="param.key">
-                <span class="build-param-span">
-                    <span class="build-param-key-span" :title="param.key">
-                        {{ param.key }}
-                    </span>
-                    <i
-                        v-if="param.desc"
-                        v-bk-tooltips="param.desc"
-                        class="devops-icon icon-question-circle"
-                    />
-                </span>
-                <span class="build-param-span">
-                    <template v-if="param.value">
-                        <span
-                            :class="{
-                                'build-param-value-span': true,
-                                'diff-param-value': param.isDiff
-                            }"
-                        >
-                            {{ param.value }}
+    <section class="startup-parameter-box" v-bkloading="{ isLoading }">
+        <div class="startup-parameter-wrapper">
+            <div class="build-param-row" v-for="(_chunk, index) in paramChunks" :key="index">
+                <div class="build-param-column" v-for="param in _chunk" :key="param.key">
+                    <span class="build-param-span">
+                        <span class="build-param-key-span" :title="param.key">
+                            {{ param.key }}
                         </span>
-                        <bk-button
-                            v-if="param.isOverflow"
-                            text
-                            class="view-param-value-detail"
-                            size="small"
-                            @click="showDetail(param)"
-                        >
-                            {{ $t("detail") }}
-                        </bk-button>
-                    </template>
-                    <span v-else>--</span>
-                </span>
+                        <i
+                            v-if="param.desc"
+                            v-bk-tooltips="param.desc"
+                            class="devops-icon icon-question-circle"
+                        />
+                    </span>
+                    <span class="build-param-span">
+                        <template v-if="param.value">
+                            <span
+                                :class="{
+                                    'build-param-value-span': true,
+                                    'diff-param-value': param.isDiff
+                                }"
+                            >
+                                {{ param.value }}
+                            </span>
+                            <bk-button
+                                v-if="param.isOverflow"
+                                text
+                                class="view-param-value-detail"
+                                size="small"
+                                @click="showDetail(param)"
+                            >
+                                {{ $t("detail") }}
+                            </bk-button>
+                        </template>
+                        <span v-else>--</span>
+                    </span>
+                </div>
             </div>
+            <bk-sideslider
+                quick-close
+                :width="640"
+                :title="$t('details.paramDetail')"
+                :is-show.sync="isDetailShow"
+                @hidden="hideDetail"
+            >
+                <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
+                    <p>{{ activeParam.key }}</p>
+                    <pre>
+                        {{ activeParam.value }}
+                    </pre
+                    >
+                </div>
+            </bk-sideslider>
         </div>
-        <bk-sideslider
-            quick-close
-            :width="640"
-            :title="$t('details.paramDetail')"
-            :is-show.sync="isDetailShow"
-            @hidden="hideDetail"
-        >
-            <div v-if="activeParam" slot="content" class="startup-param-detail-wrapper">
-                <p>{{ activeParam.key }}</p>
-                <pre>
-                    {{ activeParam.value }}
-                </pre
-                >
-            </div>
-        </bk-sideslider>
-    </div>
+    </section>
 </template>
 
 <script>
@@ -149,8 +151,12 @@
 
 <style lang="scss">
 @import "@/scss/mixins/ellipsis";
+.startup-parameter-box {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+}
 .startup-parameter-wrapper {
-  margin: 24px;
   border: 1px solid #dcdee5;
   border-radius: 2px;
   width: fit-content;

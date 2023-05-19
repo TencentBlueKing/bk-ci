@@ -84,7 +84,11 @@
                     <bk-table v-if="block.key === 'meta'" :data="block.value">
                         <bk-table-column :label="$t('view.key')" prop="key"></bk-table-column>
                         <bk-table-column :label="$t('view.value')" prop="value"></bk-table-column>
-                        <bk-table-column :label="$t('desc')" prop="desc"></bk-table-column>
+                        <bk-table-column :label="$t('desc')" prop="description">
+                            <template slot-scope="scope">
+                                <span>{{ scope.row.description || '--' }}</span>
+                            </template>
+                        </bk-table-column>
                     </bk-table>
                     <ul v-else slot="content" class="pipeline-exec-output-block-content">
                         <li v-for="row in block.block" :key="row.key">
@@ -253,11 +257,7 @@
                     {
                         key: 'meta',
                         title: this.$t('metaData'),
-                        value: Object.keys(this.activeOutputDetail.meta).map((key) => ({
-                            key,
-                            value: this.activeOutputDetail.meta[key],
-                            desc: 'desc'
-                        }))
+                        value: this.activeOutputDetail.nodeMetadata
                     }
                 ]
             },

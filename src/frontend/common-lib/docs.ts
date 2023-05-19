@@ -14,5 +14,6 @@ export const BkciDocs = {
     TURBO_GUIDE_DOC: `${turboPrefix}/Quickstart/linux_c_cpp.md` // turbo指引文档
 }
 export const pipelineDocs = {
-    ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md` // 构建号别名文档
+    ALIAS_BUILD_NO_DOC: `${commonPrefix}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`, // 构建号别名文档
+    PIPELINE_ERROR_GUIDE_DOC: `${commonPrefix}/FAQS/FAQ.md` // 流水线编辑指引文档
 }

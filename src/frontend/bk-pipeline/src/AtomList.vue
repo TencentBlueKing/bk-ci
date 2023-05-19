@@ -251,6 +251,9 @@
             },
             togglePostAction () {
                 this.showPostAction = !this.showPostAction
+            },
+            expandPostAction () {
+                this.showPostAction = true
             }
         }
     }

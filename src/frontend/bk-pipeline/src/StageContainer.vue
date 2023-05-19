@@ -102,18 +102,15 @@
                 }
             }
         },
-        watch: {
-            'container.elements.length': function (newVal, oldVal) {
-                if (newVal !== oldVal) {
-                    this.updateCruveConnectHeight()
-                }
-            }
-        },
         mounted () {
-            this.updateCruveConnectHeight()
+            this.resizeObserver = new ResizeObserver((entries) => {
+                this.updateCruveConnectHeight()
+            })
+            this.resizeObserver.observe(this.$el)
         },
-        updated () {
-            this.updateCruveConnectHeight()
+
+        beforeDestroy () {
+            this.resizeObserver?.unobserve?.(this.$el)
         },
         methods: {
             updateCruveConnectHeight () {

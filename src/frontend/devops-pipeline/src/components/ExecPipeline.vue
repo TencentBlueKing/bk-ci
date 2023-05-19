@@ -64,7 +64,7 @@
                 >
                     {{ $t("details.hideSkipStep") }}
                 </bk-checkbox>
-                <bk-button text theme="primary" @click="toggleCompleteLog">
+                <bk-button text theme="primary" @click="showCompleteLog">
                     <i class="devops-icon icon-txt"></i>
                     {{ $t("history.viewLog") }}
                 </bk-button>
@@ -121,11 +121,7 @@
                             />
                         </bk-button>
                     </template>
-                    <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
-                        <template slot="label">
-                            <span @click="setShowErrorPopup" class="panel-name pointer">{{panel.label}}</span>
-                            <bk-tag theme="info" radius="4px" v-if="errorList.length">{{errorList.length}}</bk-tag>
-                        </template>
+                    <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
                         <bk-table
                             :data="errorList"
                             :border="false"
@@ -165,6 +161,7 @@
                                             {{ props.row.errorMsg }}
                                         </span>
                                         <bk-button
+                                            v-if="!props.row.cleaned"
                                             class="build-error-see-more"
                                             theme="primary"
                                             @click.stop="setAtomLocate(props.row, true)"
@@ -219,7 +216,7 @@
         </div>
         <template v-if="execDetail && showLog">
             <complete-log
-                @close="toggleCompleteLog"
+                @close="hideCompleteLog"
                 :execute-count="executeCount"
             ></complete-log>
         </template>
@@ -261,8 +258,7 @@
                 errorRow: null,
                 isErrorOverflow: [],
                 curPipeline: this.execDetail?.model,
-                pipelineErrorGuideLink:
-                    '//bk.tencent.com/docs/markdown/持续集成平台/产品白皮书/FAQS/FAQ.md'
+                pipelineErrorGuideLink: this.$pipelineDocs.PIPELINE_ERROR_GUIDE_DOC
             }
         },
         computed: {
@@ -428,17 +424,30 @@
             },
             'execDetail.model': function (val) {
                 if (val) {
+                    console.log('cha ge, modle')
                     this.curPipeline = val
                 }
+            },
+            executeCount () {
+                if (this.activeErrorAtom) {
+                    this.locateError(this.activeErrorAtom, false)
+                    this.activeErrorAtom = null
+                }
+                this.$nextTick(() => {
+                    if (this.errorList?.length > 0) {
+                        this.setAtomLocate(this.errorList[0])
+                        this.setShowErrorPopup()
+                    }
+                })
             }
+
         },
         mounted () {
             this.requestInterceptAtom(this.routerParams)
             if (this.errorList?.length > 0) {
                 setTimeout(() => {
-                    console.log(this.errorList[0])
                     this.setAtomLocate(this.errorList[0])
-                    this.toggleErrorPopup()
+                    this.setShowErrorPopup()
                 }, 600)
             }
         },
@@ -461,14 +470,55 @@
             ]),
             ...mapActions('common', ['requestInterceptAtom']),
             ...mapActions('pipelines', ['requestRetryPipeline']),
+            renderLabel (h, name) {
+                return h(
+                    'p',
+                    {},
+                    [
+                        h(
+                            'span',
+                            {
+                                class: 'panel-name pointer',
+                                on: {
+                                    click: this.setShowErrorPopup
+                                }
+                            },
+                            name
+                        ),
+                        h(
+                            'bk-tag',
+                            {
+                                props: {
+                                    theme: 'info',
+                                    radius: '4px'
+                                }
+                            },
+                            this.errorList.length
+                        )
+                    ]
+
+                )
+            },
             isSkip (status) {
                 return ['SKIP'].includes(status)
             },
             showErrorMsgDetail (row) {
                 this.errorRow = row
             },
-            toggleCompleteLog () {
-                this.showLog = !this.showLog
+            toggleAsidePropertyPanel (...args) {
+                this.hideCompleteLog()
+                this.togglePropertyPanel(...args)
+            },
+            hideCompleteLog () {
+                this.showLog = false
+            },
+            showCompleteLog () {
+                if (this.isPropertyPanelVisible) {
+                    this.togglePropertyPanel({
+                        isShow: false
+                    })
+                }
+                this.showLog = true
             },
             toggleErrorPopup () {
                 this.showErrors = !this.showErrors
@@ -478,7 +528,7 @@
             },
 
             handlePiplineClick (args) {
-                this.togglePropertyPanel({
+                this.toggleAsidePropertyPanel({
                     isShow: true,
                     editingElementPos: args
                 })
@@ -577,7 +627,7 @@
                         done()
                     }
                 } else {
-                    this.togglePropertyPanel({
+                    this.toggleAsidePropertyPanel({
                         isShow: true,
                         showPanelType,
                         editingElementPos: {
@@ -690,13 +740,16 @@
                     }
                     const element = container.elements[elementIndex]
                     if (element) {
+                        if (element.additionalOptions?.elementPostInfo) { // isPostActionAtom
+                            await this.$refs.bkPipeline.expandPostAction(stageId, matrixId, containerId)
+                        }
                         this.$set(element, 'locateActive', isLocate)
                     } else {
                         this.$set(container, 'locateActive', isLocate)
                     }
                     console.log(element, elementIndex, container)
                     if (this.isPropertyPanelVisible || (showLog && isLocate)) {
-                        this.togglePropertyPanel({
+                        this.toggleAsidePropertyPanel({
                             isShow: true,
                             editingElementPos: {
                                 stageIndex,
@@ -716,6 +769,7 @@
                 if (this.activeErrorAtom?.taskId) {
                     this.locateError(this.activeErrorAtom, false, showLog)
                 }
+
                 this.locateError(row, true, showLog)
                 this.activeErrorAtom = row
             },
@@ -861,10 +915,10 @@
     padding: 0 24px 42px 24px;
   }
   .exec-errors-popup {
-    width: 100%;
     position: fixed;
     bottom: 0;
-    left: 0;
+    left: 24px;
+    right: 24px;
     overflow: hidden;
     will-change: auto;
     transition: all 0.5s ease;

@@ -75,6 +75,7 @@
         </h3>
         <atom-list
             v-if="showAtomList || !showMatrixFold"
+            ref="atomList"
             :stage="stage"
             :container="container"
             :stage-index="stageIndex"

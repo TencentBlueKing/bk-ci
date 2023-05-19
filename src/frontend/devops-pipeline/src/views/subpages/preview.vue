@@ -107,12 +107,14 @@
             pipeline: {
                 immediate: true,
                 handler (newVal, oldVal) {
+                    console.log(oldVal, newVal, 123)
                     if (oldVal === null && newVal) {
                         this.setPipelineSkipProp(newVal.stages, this.checkTotal)
                         this.previewPipeline = {
                             ...newVal,
                             stages: newVal.stages.slice(1)
                         }
+                        console.log(this.previewPipeline, 123)
                     }
                 }
             },

@@ -25,7 +25,6 @@
     import { BUILD_HISTORY_TABLE_DEFAULT_COLUMNS } from '@/utils/pipelineConst'
     import { mapGetters, mapActions, mapState } from 'vuex'
     import { coverStrTimer } from '@/utils/util'
-    import { bus } from '@/utils/bus'
     import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '@/store/constants'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import InfiniteScroll from '@/components/InfiniteScroll'
@@ -139,7 +138,10 @@
                         disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
-                            !this.executeStatus && bus.$emit('trigger-excute')
+                            !this.executeStatus && this.$router.push({
+                                name: 'pipelinesPreview',
+                                ...this.$route.params
+                            })
                         },
                         text: this.$t('history.startBuildTips')
                     }]

@@ -1,28 +1,30 @@
 <template>
     <div class="exec-material-row">
-        <span v-for="(field) in materialInfos" :key="field">
-            <logo :name="iconArray[field] || 'commit'" size="14" />
-            <!-- <bk-link
-                v-if="includeLink(field)"
-                class="material-span"
-                theme="primary"
-                target="_blank"
-                :href="getLink(field)"
-            >
-                {{ formatField(field) }}
-            </bk-link> -->
-            <span
-                v-if="isMR && field === 'webhookSourceTarget'"
-                class="mr-source-target"
-            >
-                <span>{{ material.webhookSourceBranch }}</span>
-                <i class="devops-icon icon-arrows-right"></i>
+        <div class="material-row-info-spans">
+            <span v-for="(field) in materialInfos" :key="field">
                 <logo :name="iconArray[field] || 'commit'" size="14" />
-                <span>{{ material.webhookBranch }}</span>
+                <!-- <bk-link
+                    v-if="includeLink(field)"
+                    class="material-span"
+                    theme="primary"
+                    target="_blank"
+                    :href="getLink(field)"
+                >
+                    {{ formatField(field) }}
+                </bk-link> -->
+                <span
+                    v-if="isMR && field === 'webhookSourceTarget'"
+                    class="mr-source-target"
+                >
+                    <span :title="material.webhookSourceBranch">{{ material.webhookSourceBranch }}</span>
+                    <i class="devops-icon icon-arrows-right"></i>
+                    <logo :name="iconArray[field] || 'commit'" size="14" />
+                    <span :title="material.webhookBranch">{{ material.webhookBranch }}</span>
+                </span>
+                <span class="material-span" :title="formatField(field)" v-else>{{ formatField(field) }}</span>
             </span>
-            <span class="material-span" v-else>{{ formatField(field) || '--' }}</span>
-        </span>
-        <span v-if="showMore" @mouseenter="emitMouseEnter" class="exec-more-material">
+        </div>
+        <span v-if="showMore" @click="emitMouseEnter" class="exec-more-material">
             <i class="devops-icon icon-ellipsis" />
         </span>
     </div>
