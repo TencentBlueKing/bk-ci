@@ -18,7 +18,8 @@ import (
 	"github.com/ci-plugins/crypto-go/ssh"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 )
 
 type RouteHandlerConfig struct {
@@ -228,10 +229,10 @@ func logHandler(h http.Handler) http.Handler {
 			wsID = vars[workspaceIDIdentifier]
 			port = vars[workspacePortIdentifier]
 		)
-		entry := logrus.Fields{
-			"workspaceId": wsID,
-			"portID":      port,
-			"url":         req.URL.String(),
+		entry := []zapcore.Field{
+			logs.String("workspaceId", wsID),
+			logs.String("portID", port),
+			logs.String("url", req.URL.String()),
 		}
 		ctx := context.WithValue(req.Context(), logContextValueKey, entry)
 		req = req.WithContext(ctx)
@@ -244,20 +245,20 @@ func logHandler(h http.Handler) http.Handler {
 func logRouteHandlerHandler(routeHandlerName string) mux.MiddlewareFunc {
 	return func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
-			getLog(req.Context()).WithField("routeHandler", routeHandlerName).Debug("hit route handler")
+			getLog(req.Context()).Debug("hit route handler", logs.String("routeHandler", routeHandlerName))
 			h.ServeHTTP(resp, req)
 		})
 	}
 }
 
-func getLog(ctx context.Context) *logrus.Entry {
+func getLog(ctx context.Context) *zap.Logger {
 	r := ctx.Value(logContextValueKey)
-	rl, ok := r.(logrus.Fields)
-	if rl == nil || !ok {
+	rl, ok := r.([]zapcore.Field)
+	if !ok {
 		return logs.Logs
 	}
 
-	return logs.WithFields(rl)
+	return logs.With(rl...)
 }
 
 func sensitiveCookieHandler(domain string) func(h http.Handler) http.Handler {
@@ -324,7 +325,7 @@ func removeSensitiveCookies(cookies []*http.Cookie, domain string) []*http.Cooki
 			// skip owner token
 			continue
 		}
-		logs.WithField("hostnamePrefix", hostnamePrefix).WithField("name", c.Name).Debug("keeping cookie")
+		logs.Debug("keeping cookie", logs.String("hostnamePrefix", hostnamePrefix), logs.String("name", c.Name))
 		cookies[n] = c
 		n++
 	}

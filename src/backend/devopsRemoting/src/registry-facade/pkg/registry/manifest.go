@@ -23,7 +23,7 @@ import (
 	"github.com/opencontainers/go-digest"
 	ociv1 "github.com/opencontainers/image-spec/specs-go/v1"
 	"github.com/pkg/errors"
-	log "github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"golang.org/x/xerrors"
 )
 
@@ -33,14 +33,14 @@ func (reg *Registry) handleManifest(ctx context.Context, r *http.Request) http.H
 	spname, name := getSpecProviderName(ctx)
 	sp, ok := reg.SpecProvider[spname]
 	if !ok {
-		logs.WithField("specProvName", spname).Error("unknown spec provider")
+		logs.Error("unknown spec provider", logs.String("specProvName", spname))
 		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
 	}
 	spec, err := sp.GetSpec(ctx, name)
 	if err != nil {
-		logs.WithError(err).WithField("specProvName", spname).WithField("name", name).Error("cannot get spec")
+		logs.Error("cannot get spec", logs.String("specProvName", spname), logs.Err(err), logs.String("name", name))
 		return http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 			respondWithError(w, distv2.ErrorCodeManifestUnknown)
 		})
@@ -95,11 +95,14 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 	//nolint:staticcheck,ineffassign
 	// span, ctx := opentracing.StartSpanFromContext(r.Context(), "getManifest")
 	ctx := r.Context()
-	logFields := log.Fields{"workspaceId": mh.Name}
-	logFields["tag"] = mh.Tag
-	logFields["spec"] = mh.Spec
+	logFields := []zap.Field{
+		logs.String("workspaceId", mh.Name),
+		logs.String("tag", mh.Tag),
+		logs.Any("spec", mh.Spec),
+	}
 	err := func() error {
-		logs.WithFields(logFields).Debug("get manifest")
+		logger := logs.With(logFields...)
+		logger.Debug("get manifest")
 		// tracing.LogMessageSafe(span, "spec", mh.Spec)
 
 		var (
@@ -133,7 +136,7 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 
 		_, desc, err := mh.Resolver.Resolve(ctx, ref)
 		if err != nil {
-			logs.WithError(err).WithField("ref", ref).WithFields(logFields).Error("cannot resolve")
+			logger.Error("cannot resolve", logs.Err(err), logs.String("ref", ref))
 			// ErrInvalidAuthorization
 			return err
 		}
@@ -154,7 +157,7 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 
 		manifest, ndesc, err := DownloadManifest(ctx, fetch, desc, WithStore(mh.Store))
 		if err != nil {
-			logs.WithError(err).WithField("desc", desc).WithFields(logFields).WithField("ref", ref).Error("cannot download manifest")
+			logger.Error("cannot download manifest", logs.Err(err), logs.Any("desc", desc), logs.String("ref", ref))
 			return distv2.ErrorCodeManifestUnknown.WithDetail(err)
 		}
 		desc = *ndesc
@@ -165,14 +168,14 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 			// download config
 			cfg, err := DownloadConfig(ctx, fetch, ref, manifest.Config, WithStore(mh.Store))
 			if err != nil {
-				logs.WithError(err).WithFields(logFields).Error("cannot download config")
+				logger.Error("cannot download config", logs.Err(err))
 				return err
 			}
 
 			// modify config
 			addonLayer, err := mh.ConfigModifier(ctx, mh.Spec, cfg)
 			if err != nil {
-				logs.WithError(err).WithFields(logFields).Error("cannot modify config")
+				logger.Error("cannot modify config", logs.Err(err))
 				return err
 			}
 			manifest.Layers = append(manifest.Layers, addonLayer...)
@@ -180,7 +183,7 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 			// place config in store
 			rawCfg, err := json.Marshal(cfg)
 			if err != nil {
-				logs.WithError(err).WithFields(logFields).Error("cannot marshal config")
+				logger.Error("cannot marshal config", logs.Err(err))
 				return err
 			}
 			cfgDgst := digest.FromBytes(rawCfg)
@@ -198,11 +201,11 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 
 				_, err = w.Write(rawCfg)
 				if err != nil {
-					logs.WithError(err).WithFields(logFields).Warn("cannot write config to store - we'll regenerate it on demand")
+					logger.Warn("cannot write config to store - we'll regenerate it on demand", logs.Err(err))
 				}
 				err = w.Commit(ctx, 0, cfgDgst, content.WithLabels(contentTypeLabel(manifest.Config.MediaType)))
 				if err != nil {
-					logs.WithError(err).WithFields(logFields).Warn("cannot commit config to store - we'll regenerate it on demand")
+					logger.Warn("cannot commit config to store - we'll regenerate it on demand", logs.Err(err))
 				}
 			}
 
@@ -233,12 +236,12 @@ func (mh *manifestHandler) getManifest(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Docker-Content-Digest", dgst)
 		_, _ = w.Write(p)
 
-		logs.WithFields(logFields).Debug("get manifest (end)")
+		logger.Debug("get manifest (end)")
 		return nil
 	}()
 
 	if err != nil {
-		logs.WithError(err).WithField("spec", mh.Spec).Error("cannot get manifest")
+		logs.Error("cannot get manifest", logs.Err(err), logs.Any("spec", mh.Spec))
 		respondWithError(w, err)
 	}
 	// tracing.FinishSpan(span, &err)
@@ -263,7 +266,7 @@ func DownloadConfig(ctx context.Context, fetch FetcherFunc, ref string, desc oci
 		if errors.Is(err, errdefs.ErrNotFound) {
 			// not cached yet
 		} else if err != nil {
-			logs.WithError(err).WithField("desc", desc).Warn("cannot read config from store - fetching again")
+			logs.Warn("cannot read config from store - fetching again", logs.Err(err), logs.Any("desc", desc))
 		} else {
 			defer r.Close()
 			rc = io.NopCloser(content.NewReader(r))
@@ -314,7 +317,7 @@ func DownloadConfig(ctx context.Context, fetch FetcherFunc, ref string, desc oci
 			return w.Commit(ctx, int64(len(buf)), digest.FromBytes(buf), content.WithLabels(contentTypeLabel(desc.MediaType)))
 		}()
 		if err != nil && !strings.Contains(err.Error(), "already exists") {
-			logs.WithError(err).WithField("ref", ref).WithField("desc", desc).Warn("cannot cache config")
+			logs.Warn("cannot cache config", logs.Err(err), logs.String("ref", ref), logs.Any("desc", desc))
 		}
 	}
 
@@ -347,7 +350,7 @@ func DownloadManifest(ctx context.Context, fetch FetcherFunc, desc ociv1.Descrip
 				return
 			}
 			if err != nil {
-				logs.WithError(err).WithField("desc", desc).Warn("cannot get manifest from store")
+				logs.Warn("cannot get manifest from store", logs.Err(err), logs.Any("desc", desc))
 				return
 			}
 			if nfo.Labels["Content-Type"] == "" {
@@ -361,7 +364,7 @@ func DownloadManifest(ctx context.Context, fetch FetcherFunc, desc ociv1.Descrip
 				return
 			}
 			if err != nil {
-				logs.WithError(err).WithField("desc", desc).Warn("cannot get manifest from store")
+				logs.Warn("cannot get manifest from store", logs.Err(err), logs.Any("desc", desc))
 				return
 			}
 
@@ -398,7 +401,7 @@ func DownloadManifest(ctx context.Context, fetch FetcherFunc, desc ociv1.Descrip
 
 	switch rdesc.MediaType {
 	case images.MediaTypeDockerSchema2ManifestList, ociv1.MediaTypeImageIndex:
-		logs.WithField("desc", rdesc).Debug("resolving image index")
+		logs.Debug("resolving image index", logs.Any("desc", rdesc))
 
 		var list ociv1.Index
 		err = json.Unmarshal(inpt, &list)
@@ -452,17 +455,17 @@ func DownloadManifest(ctx context.Context, fetch FetcherFunc, desc ociv1.Descrip
 		w, err := opts.Store.Writer(ctx, content.WithDescriptor(desc), content.WithRef(desc.Digest.String()))
 		if err != nil {
 			if err != nil && !strings.Contains(err.Error(), "already exists") {
-				logs.WithError(err).WithField("desc", *rdesc).Warn("cannot create store writer")
+				logs.Warn("cannot create store writer", logs.Err(err), logs.Any("desc", *rdesc))
 			}
 		} else {
 			_, err = io.Copy(w, bytes.NewReader(inpt))
 			if err != nil {
-				logs.WithError(err).WithField("desc", *rdesc).Warn("cannot copy manifest")
+				logs.Warn("cannot copy manifest", logs.Err(err), logs.Any("desc", *rdesc))
 			}
 
 			err = w.Commit(ctx, 0, digest.FromBytes(inpt), content.WithLabels(map[string]string{"Content-Type": rdesc.MediaType}))
 			if err != nil {
-				logs.WithError(err).WithField("desc", *rdesc).Warn("cannot store manifest")
+				logs.Warn("cannot store manifest", logs.Err(err), logs.Any("desc", *rdesc))
 			}
 			w.Close()
 		}

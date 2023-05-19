@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.enums.AuthSystemType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
@@ -73,7 +74,7 @@ class RbacPermissionMigrateService constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionMigrateService::class.java)
         private const val ALL_MEMBERS = "*"
-        private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val ALL_MEMBERS_NAME = "allMembersName"
         private const val MAX_RETRY_TIMES = 3
         private const val IAM_NAME_CONFLICT_ERROR = 1902409L
         private val executorService = Executors.newFixedThreadPool(2)
@@ -254,7 +255,7 @@ class RbacPermissionMigrateService constructor(
                         SubjectScopeInfo(
                             id = ALL_MEMBERS,
                             type = ALL_MEMBERS,
-                            name = ALL_MEMBERS_NAME
+                            name = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)
                         )
                     )
                 )

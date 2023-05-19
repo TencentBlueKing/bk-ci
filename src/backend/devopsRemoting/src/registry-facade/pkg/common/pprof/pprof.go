@@ -24,10 +24,10 @@ const Path = "/debug/pprof/"
 func Serve(addr string) {
 	mux := Handler()
 
-	logs.WithField("addr", addr).Info("serving pprof service")
+	logs.Info("serving pprof service", logs.String("addr", addr))
 	err := http.ListenAndServe(addr, mux)
 	if err != nil {
-		logs.WithField("addr", addr).WithError(err).Warn("cannot serve pprof service")
+		logs.Warn("cannot serve pprof service", logs.String("addr", addr), logs.Err(err))
 	}
 }
 
@@ -39,8 +39,6 @@ func Handler() *http.ServeMux {
 	mux.HandleFunc(Path+"profile", pprof.Profile)
 	mux.HandleFunc(Path+"symbol", pprof.Symbol)
 	mux.HandleFunc(Path+"trace", pprof.Trace)
-
-	mux.HandleFunc("/debug/logging", logs.LevelHandler)
 
 	return mux
 }
@@ -63,12 +61,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 			if serr == nil && ferr == nil && seconds > 0 && frac > 0 {
 				//nolint:gosec
 				id := rand.Uint32()
-				logs.WithField("id", id).WithField("frac", frac).WithField("seconds", seconds).Debug("enabled mutex profiling")
+				logs.Debug("enabled mutex profiling", logs.Uint32("id", id), logs.Int64("frac", frac), logs.Int64("seconds", seconds))
 
 				runtime.SetMutexProfileFraction(int(frac))
 				defer func() {
 					runtime.SetMutexProfileFraction(0)
-					logs.WithField("id", id).WithField("frac", frac).WithField("seconds", seconds).Debug("disabled mutex profiling")
+					logs.Debug("disabled mutex profiling", logs.Uint32("id", id), logs.Int64("frac", frac), logs.Int64("seconds", seconds))
 				}()
 			}
 		} else if name == "block" {
@@ -76,12 +74,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 			if rerr == nil && rate > 0 && serr == nil && seconds > 0 {
 				//nolint:gosec
 				id := rand.Uint32()
-				logs.WithField("id", id).WithField("rate", rate).WithField("seconds", seconds).Debug("enabled mutex block sampling")
+				logs.Debug("enabled mutex block sampling", logs.Uint32("id", id), logs.Int64("rate", rate), logs.Int64("seconds", seconds))
 				runtime.SetBlockProfileRate(int(rate))
 
 				defer func() {
 					runtime.SetBlockProfileRate(0)
-					logs.WithField("id", id).WithField("rate", rate).WithField("seconds", seconds).Debug("disabled mutex block sampling")
+					logs.Debug("disabled mutex block sampling", logs.Uint32("id", id), logs.Int64("rate", rate), logs.Int64("seconds", seconds))
 				}()
 			}
 		}

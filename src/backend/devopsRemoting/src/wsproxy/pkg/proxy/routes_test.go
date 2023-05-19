@@ -14,7 +14,6 @@ import (
 	"wsproxy/pkg/config"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -260,8 +259,7 @@ func TestRoutes(t *testing.T) {
 		},
 	}
 
-	logs.Init("ws-proxy-test", "", false, true)
-	logs.Logs.Logger.SetLevel(logrus.ErrorLevel)
+	logs.DeafultInitStd("ws-proxy-test", "test", false)
 
 	defaultTargets := &Targets{
 		IDE:       &Target{Status: http.StatusOK},

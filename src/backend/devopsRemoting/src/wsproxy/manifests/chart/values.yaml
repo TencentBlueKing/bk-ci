@@ -23,6 +23,26 @@ wsproxy:
     workspaceHostSuffix: ""
     sha1key: ""
     oauthRedirectUrl: ""
+  # 关于日志的配置  
+  logConfig:  
+    # 日志是否落盘
+    enablePathLog: true
+    serviceLogPath: "/data/workspace/wsproxy/logs/service.log"
+    errorLogPath: "/data/workspace/wsproxy/logs/error.log"
+    # 使用sidecar模式采集日志
+    sidecar:
+      enable: true
+      image: ""
+      env: 
+      - name: xxx
+      resources:
+        requests:
+          cpu: 500m
+          memory: 256Mi
+        limits:
+          cpu: 750m
+          memory: 512Mi
+      workingDir: ""
 
 # 镜像配置
 backendImage:

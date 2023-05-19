@@ -177,25 +177,25 @@ func (pm *PortsManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 				logs.Error("exposed ports observer stopped")
 				return
 			}
-			logs.WithError(err).Warn("error while observing exposed ports")
+			logs.Error("error while observing exposed ports", logs.Err(err))
 		case err := <-servedErrors:
 			if err == nil {
 				logs.Error("served ports observer stopped")
 				return
 			}
-			logs.WithError(err).Warn("error while observing served ports")
+			logs.Error("error while observing served ports", logs.Err(err))
 		case err := <-configErrors:
 			if err == nil {
 				logs.Error("port configs observer stopped")
 				return
 			}
-			logs.WithError(err).Warn("error while observing served port configs")
+			logs.Error("error while observing served port configs", logs.Err(err))
 		case err := <-tunneledErrors:
 			if err == nil {
 				logs.Error("tunneled ports observer stopped")
 				return
 			}
-			logs.WithError(err).Warn("error while observing tunneled ports")
+			logs.Error("error while observing tunneled ports", logs.Err(err))
 		}
 
 		if exposed == nil && served == nil && configured == nil && tunneled == nil && !forceUpdate {
@@ -304,7 +304,7 @@ func (pm *PortsManager) updateState(ctx context.Context, exposed []ExposedPort, 
 		}
 
 		if !reflect.DeepEqual(pm.served, newServed) {
-			logs.WithField("served", newServed).Debug("updating served ports")
+			logs.Debug("updating served ports", logs.Any("served", newServed))
 			pm.served = newServed
 			pm.updateProxies()
 			pm.autoTunnel(ctx)
@@ -324,7 +324,7 @@ func (pm *PortsManager) updateState(ctx context.Context, exposed []ExposedPort, 
 	}
 
 	status := pm.getStatus()
-	logs.WithField("ports", fmt.Sprintf("%+v", status)).Debug("ports changed")
+	logs.Debugf("ports %+v changed", status)
 	for sub := range pm.subscriptions {
 		select {
 		case sub.updates <- status:
@@ -347,9 +347,9 @@ func (pm *PortsManager) updateProxies() {
 			delete(pm.proxies, port)
 			err := proxy.Close()
 			if err != nil {
-				logs.WithError(err).WithField("localPort", port).Warn("cannot stop localhost proxy")
+				logs.Error("cannot stop localhost proxy", logs.Err(err), logs.Uint32("localPort", port))
 			} else {
-				logs.WithField("localPort", port).Info("localhost proxy has been stopped")
+				logs.Info("localhost proxy has been stopped", logs.Uint32("localPort", port))
 			}
 		}
 	}
@@ -363,10 +363,10 @@ func (pm *PortsManager) updateProxies() {
 
 		proxy, err := pm.proxyStarter(localPort)
 		if err != nil {
-			logs.WithError(err).WithField("localPort", localPort).Warn("cannot start localhost proxy")
+			logs.Error("cannot start localhost proxy", logs.Err(err), logs.Uint32("localPort", localPort))
 			continue
 		}
-		logs.WithField("localPort", localPort).Info("localhost proxy has been started")
+		logs.Info("localhost proxy has been started", logs.Uint32("localPort", localPort))
 
 		pm.proxies[localPort] = &localhostProxy{
 			Closer:    proxy,
@@ -413,7 +413,7 @@ func startLocalhostProxy(port uint32) (io.Closer, error) {
 			}
 		}
 
-		logs.WithError(err).WithField("local-port", port).WithField("url", req.URL.String()).Warn("localhost proxy request failed")
+		logs.Error("localhost proxy request failed", logs.Err(err), logs.Uint32("localPort", port), logs.String("url", req.URL.String()))
 	}
 
 	proxyAddr := fmt.Sprintf("%v:%d", workspaceIPAdress, port)
@@ -431,7 +431,7 @@ func startLocalhostProxy(port uint32) (io.Closer, error) {
 		if err == http.ErrServerClosed {
 			return
 		}
-		logs.WithError(err).WithField("local-port", port).Error("localhost proxy failed")
+		logs.Error("localhost proxy failed", logs.Err(err), logs.Uint32("localPort", port))
 	}()
 
 	return srv, nil
@@ -447,7 +447,7 @@ func (pm *PortsManager) autoTunnel(ctx context.Context) {
 		pm.autoTunneled = make(map[uint32]struct{})
 		_, err := pm.TunnelService.CloseTunnel(ctx, localPorts...)
 		if err != nil {
-			logs.WithError(err).Error("cannot close auto tunneled ports")
+			logs.Error("cannot close auto tunneled ports", logs.Err(err))
 		}
 		return
 	}
@@ -470,7 +470,7 @@ func (pm *PortsManager) autoTunnel(ctx context.Context) {
 		SkipIfExists: true,
 	}, descs...)
 	if err != nil {
-		logs.WithError(err).Error("cannot auto tunnel ports")
+		logs.Error("cannot auto tunnel ports", logs.Err(err))
 	}
 	for _, localPort := range autoTunneled {
 		pm.autoTunneled[localPort] = struct{}{}
@@ -643,15 +643,15 @@ func (pm *PortsManager) autoExpose(ctx context.Context, localPort uint32, public
 		if err != nil {
 			if err != context.Canceled {
 				autoExpose.state = types.PortAutoExposureFailed
-				logs.WithError(err).WithField("localPort", localPort).Warn("cannot auto-expose port")
+				logs.Warn("cannot auto-expose port", logs.Err(err), logs.Uint32("localPort", localPort))
 			}
 			return
 		}
 		autoExpose.state = types.PortAutoExposureSucceeded
-		logs.WithField("localPort", localPort).Info("auto-exposed port")
+		logs.Info("auto-exposed port", logs.Uint32("localPort", localPort))
 	}()
 	pm.autoExposed[localPort] = autoExpose
-	logs.WithField("localPort", localPort).Info("auto-exposing port")
+	logs.Info("auto-exposing port", logs.Uint32("localPort", localPort))
 	return autoExpose
 }
 

@@ -12,6 +12,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.pcg.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 import okhttp3.FormBody
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -23,8 +25,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
 
 /**
  * deng
@@ -90,7 +90,7 @@ class PCGBuildListener @Autowired constructor(
             onFailure(
                 ErrorType.USER,
                 ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.errorCode,
-                ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.formatErrorMessage,
+                ErrorCodeEnum.IMAGE_ILLEGAL_ERROR.getErrorMessage(),
                 "The pcg dispatch image is illegal - (${dispatchMessage.dispatchMessage})"
             )
         }
@@ -183,7 +183,7 @@ class PCGBuildListener @Autowired constructor(
             onFailure(
                 ErrorType.THIRD_PARTY,
                 ErrorCodeEnum.START_UP_ERROR.errorCode,
-                ErrorCodeEnum.START_UP_ERROR.formatErrorMessage,
+                ErrorCodeEnum.START_UP_ERROR.getErrorMessage(),
                 "Fail to start up pcg docker, response is null"
             )
         }
@@ -196,7 +196,7 @@ class PCGBuildListener @Autowired constructor(
             onFailure(
                 ErrorType.THIRD_PARTY,
                 ErrorCodeEnum.START_UP_RESPONSE_JSON_ERROR.errorCode,
-                ErrorCodeEnum.START_UP_RESPONSE_JSON_ERROR.formatErrorMessage,
+                ErrorCodeEnum.START_UP_RESPONSE_JSON_ERROR.getErrorMessage(),
                 "Fail to start up pcg docker, parse responseJson error"
             )
         } as JSONObject
@@ -207,7 +207,7 @@ class PCGBuildListener @Autowired constructor(
             onFailure(
                 ErrorType.THIRD_PARTY,
                 ErrorCodeEnum.START_UP_FAIL.errorCode,
-                ErrorCodeEnum.START_UP_FAIL.formatErrorMessage,
+                ErrorCodeEnum.START_UP_FAIL.getErrorMessage(),
                 "Fail to start up pcg docker - (${jsonResponse.optString("errMsg")})"
             )
         }

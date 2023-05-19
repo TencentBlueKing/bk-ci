@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.TpaLock
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
@@ -50,12 +50,12 @@ import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("LongParameterList", "ThrowsCount")
@@ -95,7 +95,10 @@ class ImportService @Autowired constructor(
 
             if (!environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)) {
                 throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+                    message = I18nUtil.getCodeLanMessage(
+                        EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                        language = I18nUtil.getLanguage(userId)
+                    )
                 )
             }
 
@@ -152,7 +155,10 @@ class ImportService @Autowired constructor(
         Preconditions.checkTrue(
             condition = environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE),
             exception = PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(
+                    EnvironmentMessageCode.ERROR_NODE_NO_CREATE_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         )
 

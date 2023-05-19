@@ -27,6 +27,10 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_COPY_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.DESTINATION_PATH_SHOULD_BE_FOLDER
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -35,13 +39,15 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.BuildCustomDirService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.web.utils.I18nUtil
+import javax.ws.rs.BadRequestException
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.BadRequestException
-import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoBuildCustomDirService @Autowired constructor(
@@ -65,7 +71,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
-            ?: throw NotFoundException("文件不存在")
+            ?: throw NotFoundException(I18nUtil.getCodeLanMessage(messageCode = FILE_NOT_EXIST))
         return RepoUtils.toFileDetail(fileDetail)
     }
 
@@ -88,14 +94,18 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         if (combinationPath.srcPaths.size > 1) {
             val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
-                throw OperationException("目标路径应为文件夹")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER)
+                )
             }
         }
 
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = PathUtils.normalize(srcPath)
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                throw BadRequestException("不能在拷贝到当前目录")
+                throw BadRequestException(
+                    I18nUtil.getCodeLanMessage(messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY)
+                )
             }
 
             bkRepoClient.copy(
@@ -119,11 +129,14 @@ class BkRepoBuildCustomDirService @Autowired constructor(
 
             if (normalizedSrcPath == normalizedDestPath ||
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                throw BadRequestException("不能移动到当前目录")
+                throw BadRequestException(
+                    I18nUtil.getCodeLanMessage(messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY)
+                )
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
-                throw BadRequestException("不能将父目录移动到子目录")
+                throw BadRequestException(
+                    I18nUtil.getCodeLanMessage(messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY))
             }
 
             bkRepoClient.move(

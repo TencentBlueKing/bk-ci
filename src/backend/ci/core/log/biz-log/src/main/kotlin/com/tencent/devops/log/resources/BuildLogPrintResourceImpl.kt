@@ -136,9 +136,9 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
-                tag = tag ?: "",
+                tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode)
             )
@@ -163,9 +163,9 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             LogStatusEvent(
                 buildId = buildId,
                 finished = finished,
-                tag = tag ?: "",
+                tag = tag,
                 subTag = subTag,
-                jobId = jobId ?: "",
+                jobId = jobId,
                 executeCount = executeCount,
                 logStorageMode = LogStorageMode.parse(logMode)
             )

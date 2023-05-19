@@ -29,8 +29,7 @@ class RbacLogPermissionService @Autowired constructor(
                 pipelineId = pipelineId,
                 channelCode = null
             ).data ?: throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
         // 兼容CodeCC场景，CodeCC创建的流水线未向权限中心注册，调鉴权接口会报错。
         return pipelineInfo.channelCode != ChannelCode.BS ||

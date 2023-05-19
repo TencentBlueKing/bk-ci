@@ -33,10 +33,10 @@ import com.tencent.devops.store.service.atom.AtomBusHandleService
 class JavaAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
     override fun handleOsName(osName: String): String {
-        return if (osName.toUpperCase() == OSType.MAC_OS.name) {
+        return if (osName.uppercase() == OSType.MAC_OS.name) {
             "darwin"
         } else {
-            osName.toLowerCase()
+            osName.lowercase()
         }
     }
 

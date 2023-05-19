@@ -63,8 +63,8 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
@@ -458,7 +458,11 @@ class PipelineRuntimeService @Autowired constructor(
             BuildHistory(
                 id = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, channelCode),
+                trigger = StartType.toReadableString(
+                    trigger,
+                    channelCode,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 buildNum = buildNum,
                 pipelineVersion = version,
                 startTime = startTime?.timestampmilli() ?: 0L,
@@ -1785,7 +1789,7 @@ class PipelineRuntimeService @Autowired constructor(
                 BuildStageStatus(
                     stageId = TRIGGER_STAGE,
                     name = TRIGGER_STAGE,
-                    status = MessageCodeUtil.getCodeLanMessage(BUILD_QUEUE),
+                    status = I18nUtil.getCodeLanMessage(BUILD_QUEUE),
                     showMsg = showMsg
                 )
             ),

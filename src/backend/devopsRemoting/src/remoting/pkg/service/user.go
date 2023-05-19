@@ -33,7 +33,7 @@ func AddDevopsRemotingUserIfNotExists() error {
 		}
 	}
 	if err := addSudoer(devopsRemotingGroupName); err != nil {
-		logs.WithError(err).Error("add devopsRemoting sudoers")
+		logs.Error("add devopsRemoting sudoers", logs.Err(err))
 	}
 
 	targetUser := &user.User{
@@ -137,7 +137,7 @@ func addGroup(name string, gid int) error {
 	if err != nil {
 		return errors.Errorf("%s: %s", err.Error(), string(out))
 	}
-	logs.WithField("args", args).Debug("addgroup")
+	logs.Debug("addgroup", logs.Strings("args", args))
 
 	return nil
 }
@@ -153,7 +153,7 @@ func addUser(opts *user.User) error {
 	if err != nil {
 		return errors.Errorf("%v: %s: %s", args, err.Error(), string(out))
 	}
-	logs.WithField("args", args).Debug("adduser")
+	logs.Debug("adduser", logs.Strings("args", args))
 
 	return nil
 }

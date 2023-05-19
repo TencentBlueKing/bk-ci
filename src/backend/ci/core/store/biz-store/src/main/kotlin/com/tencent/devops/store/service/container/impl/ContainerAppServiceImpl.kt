@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.container.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TAppsRecord
 import com.tencent.devops.store.dao.container.ContainerAppsDao
 import com.tencent.devops.store.dao.container.ContainerAppsEnvDao
@@ -45,13 +45,13 @@ import com.tencent.devops.store.pojo.app.ContainerAppVersion
 import com.tencent.devops.store.pojo.app.ContainerAppVersionCreate
 import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.service.container.ContainerAppService
+import java.util.Collections
+import javax.ws.rs.NotFoundException
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.Collections
-import javax.ws.rs.NotFoundException
 
 /**
  * 编译环境业务逻辑类
@@ -172,10 +172,11 @@ class ContainerAppServiceImpl @Autowired constructor(
         // 判断编译环境名称和操作系统组合是否存在系统
         val count = containerAppsDao.countByNameAndOs(dslContext, containerApp.name, containerApp.os)
         if (count > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(containerApp.name + "+" + containerApp.os),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(containerApp.name + "+" + containerApp.os),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         dslContext.transaction { t ->
@@ -213,10 +214,10 @@ class ContainerAppServiceImpl @Autowired constructor(
             if (null != containerAppInfoRecord &&
                 name != containerAppInfoRecord.name &&
                 os != containerAppInfoRecord.os) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf("$name+$os"),
-                    false
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf("$name+$os"),
+                    data = false
                 )
             }
         }

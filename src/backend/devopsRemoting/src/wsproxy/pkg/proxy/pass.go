@@ -12,7 +12,6 @@ import (
 	"wsproxy/pkg/config"
 
 	"github.com/pkg/errors"
-	"github.com/sirupsen/logrus"
 )
 
 type proxyPassConfig struct {
@@ -62,7 +61,7 @@ func proxyPass(config *RouteHandlerConfig, infoProvider WorkspaceInfoProvider, r
 			if h.ErrorHandler != nil {
 				h.ErrorHandler(w, req, err)
 			} else {
-				logs.WithError(err).Errorf("Unable to resolve targetURL: %s", req.URL.String())
+				logs.Errorfw("Unable to resolve targetURL: %s", []any{req.URL.String()}, logs.Err(err))
 			}
 			return
 		}
@@ -77,9 +76,9 @@ func proxyPass(config *RouteHandlerConfig, infoProvider WorkspaceInfoProvider, r
 				return errors.Errorf("response's request without URL")
 			}
 
-			if logs.Logs.Level <= logrus.DebugLevel && resp.StatusCode >= http.StatusBadRequest {
+			if logs.Logs.Level() <= logs.DebugLevel && resp.StatusCode >= http.StatusBadRequest {
 				dmp, _ := httputil.DumpRequest(resp.Request, false)
-				logs.WithField("url", url.String()).WithField("req", dmp).WithField("status", resp.Status).Debug("proxied request failed")
+				logs.Debug("proxied request failed", logs.String("url", url.String()), logs.Bytes("req", dmp), logs.String("status", resp.Status))
 			}
 
 			// execute response handlers in order of registration
@@ -103,7 +102,7 @@ func proxyPass(config *RouteHandlerConfig, infoProvider WorkspaceInfoProvider, r
 			rw.WriteHeader(http.StatusBadGateway)
 		}
 
-		getLog(req.Context()).WithField("targetURL", targetURL.String()).Debug("proxy-passing request")
+		getLog(req.Context()).Debug("proxy-passing request", logs.String("targetURL", targetURL.String()))
 		proxy.ServeHTTP(w, req)
 	}
 }

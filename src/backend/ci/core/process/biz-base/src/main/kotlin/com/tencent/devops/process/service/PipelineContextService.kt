@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.pojo.enums.GatewayType
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
@@ -68,14 +69,15 @@ class PipelineContextService @Autowired constructor(
         stageId: String?,
         containerId: String?,
         taskId: String?,
-        variables: Map<String, String>
-    ): Map<String, String> {
-        val modelDetail = pipelineBuildDetailService.get(projectId, buildId) ?: return emptyMap()
+        variables: Map<String, String>,
+        model: Model? = null
+    ): MutableMap<String, String> {
+        val modelDetail = model ?: pipelineBuildDetailService.get(projectId, buildId)?.model ?: return mutableMapOf()
         val contextMap = mutableMapOf<String, String>()
         var previousStageStatus = BuildStatus.RUNNING
         val failTaskNameList = mutableListOf<String>()
         try {
-            modelDetail.model.stages.forEach { stage ->
+            modelDetail.stages.forEach { stage ->
                 if (stage.checkIn?.status == BuildStatus.REVIEW_ABORT.name) {
                     previousStageStatus = BuildStatus.FAILED
                 }

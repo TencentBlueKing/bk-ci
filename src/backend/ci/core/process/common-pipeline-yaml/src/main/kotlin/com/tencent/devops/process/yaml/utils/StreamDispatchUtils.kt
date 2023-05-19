@@ -40,6 +40,8 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_RESOURCE_NOT_EXIST
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.pojo.ThirdPartyContainerInfo
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -144,7 +146,10 @@ object StreamDispatchUtils {
         // macos构建机
         if (poolName.startsWith("macos")) {
             // 外部版暂时不支持macos构建机，遇到直接报错
-            throw CustomException(Response.Status.BAD_REQUEST, "MACOS构建资源暂不支持，请检查yml配置.")
+            throw CustomException(
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(messageCode = BUILD_RESOURCE_NOT_EXIST, params = arrayOf("macos"))
+            )
         }
 
         // 公共docker构建机
@@ -184,7 +189,12 @@ object StreamDispatchUtils {
         if (containsMatrix == true) {
             return DockerDispatchType(defaultImage)
         } else {
-            throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
+            throw CustomException(
+                Response.Status.NOT_FOUND, I18nUtil.getCodeLanMessage(
+                    messageCode = BUILD_RESOURCE_NOT_EXIST,
+                    params = arrayOf("public")
+                )
+            )
         }
     }
 

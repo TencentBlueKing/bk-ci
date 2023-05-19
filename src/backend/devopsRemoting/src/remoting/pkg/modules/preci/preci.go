@@ -37,7 +37,7 @@ func StartPreci(
 
 	// 更新preci到最新版本
 	if err := updatePreci(ctx, workDir, cfg.WorkSpace.PreCIDownUrl); err != nil {
-		logs.WithError(err).Error("updatePreci error")
+		logs.Error("updatePreci error", logs.Err(err))
 		return
 	}
 
@@ -47,14 +47,14 @@ func StartPreci(
 		ticket := <-tokenUpdate
 
 		if err := updateSession(workDir, ticket, cfg.WorkSpace.PreciGateWayUrl); err != nil {
-			logs.WithError(err).Error("updateSession error")
+			logs.Error("updateSession error", logs.Err(err))
 			continue
 		}
 
 		// 都完成了之后启动preci
 		// TODO: 根据问题，看未来要不要加上重试机制
 		if err := preciStart(workDir, childProcessEnv); err != nil {
-			logs.WithError(err).Error("preciStart error")
+			logs.Error("preciStart error", logs.Err(err))
 			continue
 		}
 
@@ -64,7 +64,7 @@ func StartPreci(
 
 		// preci初始化用户项目，初始化失败可能是别的原因，暂时不因为初始化失败干掉整个preci
 		if err := preciInit(workDir, cfg.WorkSpace.GitRepoRootPath, childProcessEnv); err != nil {
-			logs.WithError(err).Error("preciInit error")
+			logs.Error("preciInit error", logs.Err(err))
 			continue
 		}
 

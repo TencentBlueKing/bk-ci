@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.common.StoreApproveDao
@@ -86,7 +86,10 @@ abstract class AtomCooperationServiceImpl @Autowired constructor() : AtomCoopera
             approveType = ApproveTypeEnum.ATOM_COLLABORATOR_APPLY
         )
         if (storeMemberFlag || !flag) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_APPROVAL_IS_NOT_ALLOW_REPEAT_APPLY,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         val approveId = UUIDUtil.generate()
         val token = UUIDUtil.generate()

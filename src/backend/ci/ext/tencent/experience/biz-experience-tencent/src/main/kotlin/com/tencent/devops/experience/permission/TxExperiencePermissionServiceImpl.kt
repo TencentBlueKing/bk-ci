@@ -8,7 +8,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.service.ExperiencePermissionService
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
@@ -42,8 +42,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                 defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
@@ -142,9 +142,10 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
+                defaultMessage = authPermission.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,

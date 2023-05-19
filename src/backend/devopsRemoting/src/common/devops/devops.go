@@ -19,7 +19,7 @@ type DevopsHttpResult struct {
 func ParseWsId2UserProjectId(workspaceId string) string {
 	workspaceSub := strings.Split(workspaceId, "-")
 	if len(workspaceSub) < 2 || len(workspaceSub) > 3 {
-		logs.Errorf("worksapceid %s format error", workspaceId)
+		logs.Errorf("ParseWsId2UserProjectId worksapceid %s format error", workspaceId)
 		return ""
 	}
 	userId := "_" + workspaceSub[0]
