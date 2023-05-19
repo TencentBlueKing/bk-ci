@@ -99,14 +99,14 @@ func (srv *MuxTerminalService) get(alias string) (*types.Terminal, bool) {
 		pid = int64(proc.Pid)
 		cwd, err = filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/cwd", pid))
 		if err != nil {
-			logs.WithField("pid", pid).WithError(err).Warn("unable to resolve terminal's current working dir")
+			logs.Error("unable to resolve terminal's current working dir", logs.Int64("pid", pid), logs.Err(err))
 			cwd = term.Command.Dir
 		}
 	}
 
 	title, err := term.GetTitle()
 	if err != nil {
-		logs.WithField("pid", pid).WithError(err).Warn("unable to resolve terminal's title")
+		logs.Error("unable to resolve terminal's title", logs.Int64("pid", pid), logs.Err(err))
 	}
 
 	return &types.Terminal{
@@ -147,8 +147,8 @@ func (srv *MuxTerminalService) Listen(c *gin.Context, alias string) error {
 
 	defer stdout.Close()
 
-	logs.WithField("alias", alias).Infof("new terminal client")
-	defer logs.WithField("alias", alias).Infof("terminal client left")
+	logs.Infof("new terminal client", logs.String("alias", alias))
+	defer logs.Infof("terminal client left", logs.String("alias", alias))
 
 	errchan := make(chan error, 1)
 	messages := make(chan *types.ListenTerminalResponse, 1)

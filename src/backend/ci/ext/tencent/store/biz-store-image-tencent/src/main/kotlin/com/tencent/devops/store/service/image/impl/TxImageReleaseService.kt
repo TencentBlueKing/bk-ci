@@ -43,7 +43,7 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.image.ImageReleaseService
@@ -96,15 +96,18 @@ class TxImageReleaseService @Autowired constructor() : ImageReleaseService() {
      */
     private fun initProcessInfo(isNormalUpgrade: Boolean): List<ReleaseProcessItem> {
         val processInfo = mutableListOf<ReleaseProcessItem>()
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(BEGIN), BEGIN, NUM_ONE, SUCCESS))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(COMMIT), COMMIT, NUM_TWO, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(CHECK), CHECK, NUM_THREE, UNDO))
-        processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(TEST), TEST, NUM_FOUR, UNDO))
+        processInfo.add(ReleaseProcessItem(
+            I18nUtil.getCodeLanMessage(messageCode = BEGIN), BEGIN, NUM_ONE, SUCCESS))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = COMMIT), COMMIT, NUM_TWO, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = CHECK), CHECK, NUM_THREE, UNDO))
+        processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = TEST), TEST, NUM_FOUR, UNDO))
         if (isNormalUpgrade) {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_FIVE, UNDO))
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_FIVE, UNDO))
         } else {
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(APPROVE), APPROVE, NUM_FIVE, UNDO))
-            processInfo.add(ReleaseProcessItem(MessageCodeUtil.getCodeLanMessage(END), END, NUM_SIX, UNDO))
+            processInfo.add(
+                ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = APPROVE), APPROVE, NUM_FIVE, UNDO)
+            )
+            processInfo.add(ReleaseProcessItem(I18nUtil.getCodeLanMessage(messageCode = END), END, NUM_SIX, UNDO))
         }
         return processInfo
     }

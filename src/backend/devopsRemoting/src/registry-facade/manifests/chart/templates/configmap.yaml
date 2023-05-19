@@ -15,6 +15,12 @@ data:
       {{- if .Values.registry.readinessProbeAddr }}
       "readinessProbeAddr": "{{.Values.registry.readinessProbeAddr }}",
       {{- end }}
+      {{- if .Values.registry.logConfig.enablePathLog }}
+      "logConfig": {
+        "serviceLogPath": "{{ .Values.registry.logConfig.serviceLogPath }}",
+        "errorLogPath": "{{ .Values.registry.logConfig.errorLogPath }}"
+      },
+      {{- end }}
       "registry": {
         "port": 9000,
         {{- if .Values.registry.fixedSpec }}

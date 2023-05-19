@@ -71,7 +71,7 @@ func StartAndWatchIDE(
 	devfileSrv *config.DevfileConfigService,
 ) {
 	defer wg.Done()
-	defer logs.WithField("ide", ide.String()).Debug("startAndWatchIDE shutdown")
+	defer logs.Debug("startAndWatchIDE shutdown", logs.String("ide", ide.String()))
 
 	// 等到工作空间准备好
 	<-cstate.ContentReady()
@@ -85,7 +85,7 @@ func StartAndWatchIDE(
 	}
 	if devfile == nil && ide == WebIDE {
 		// devfile 不存在目前不能影响ide正常打开
-		logs.Warn("webide devfile is null")
+		logs.Warn("webIde devfile is null")
 	}
 
 	// 对于ssh插件因为工作空间可能清空的问题，需要主动copy下插件
@@ -99,7 +99,7 @@ func StartAndWatchIDE(
 			filepath.Join(cfg.WorkSpace.WorkspaceRootPath, ".vscode-server", "extensions"),
 			[]string{},
 		); err != nil {
-			logs.WithError(err).Error("copy vscode ssh extensions fail")
+			logs.Error("copy vscode ssh extensions fail", logs.Err(err))
 		}
 	}
 
@@ -132,7 +132,7 @@ loop:
 			// 被要求停止
 			ideStatus = statusShouldShutdown
 			if cmd == nil || cmd.Process == nil {
-				logs.WithField("ide", ide.String()).Error("cmd or cmd.Process is nil, cannot send SIGTERM signal ")
+				logs.Error("cmd or cmd.Process is nil, cannot send SIGTERM signal ", logs.String("ide", ide.String()))
 			} else {
 				_ = cmd.Process.Signal(syscall.SIGTERM)
 			}
@@ -140,15 +140,15 @@ loop:
 		}
 	}
 
-	logs.WithField("ide", ide.String()).Info("IDE DevopsRemoting loop ended - waiting for IDE to come down")
+	logs.Info("IDE DevopsRemoting loop ended - waiting for IDE to come down", logs.String("ide", ide.String()))
 	select {
 	case <-ideStopped:
-		logs.WithField("ide", ide.String()).Info("IDE has been stopped in time")
+		logs.Info("IDE has been stopped in time", logs.String("ide", ide.String()))
 		return
 	case <-time.After(timeBudgetIDEShutdown):
-		logs.WithField("ide", ide.String()).Error("IDE did not stop in time - sending SIGKILL")
+		logs.Error("IDE did not stop in time - sending SIGKILL", logs.String("ide", ide.String()))
 		if cmd == nil || cmd.Process == nil {
-			logs.WithField("ide", ide.String()).Error("cmd or cmd.Process is nil, cannot send SIGKILL")
+			logs.Error("cmd or cmd.Process is nil, cannot send SIGKILL", logs.String("ide", ide.String()))
 		} else {
 			_ = cmd.Process.Signal(syscall.SIGKILL)
 		}
@@ -169,7 +169,7 @@ func prepareIDELaunch(cfg *config.Config, ideConfig *config.IDEConfig, childProc
 		args[i] = strings.ReplaceAll(args[i], "{IDEPORT}", strconv.Itoa(cfg.WorkSpace.IDEPort))
 		args[i] = strings.ReplaceAll(args[i], "{DESKTOPIDEPORT}", strconv.Itoa(DesktopIDEPort))
 	}
-	logs.WithField("args", args).WithField("entrypoint", ideConfig.Entrypoint).Info("preparing IDE launch")
+	logs.Info("preparing IDE launch", logs.Strings("args", args), logs.String("entrypoint", ideConfig.Entrypoint))
 
 	cmd := exec.Command(ideConfig.Entrypoint, args...)
 	cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -193,7 +193,7 @@ func prepareIDELaunch(cfg *config.Config, ideConfig *config.IDEConfig, childProc
 		limit := int64(lrr)
 		cmd.Stdout = dropwriter.Writer(cmd.Stdout, dropwriter.NewBucket(limit*1024*3, limit*1024))
 		cmd.Stderr = dropwriter.Writer(cmd.Stderr, dropwriter.NewBucket(limit*1024*3, limit*1024))
-		logs.WithField("limit_kb_per_sec", limit).Info("rate limiting IDE log output")
+		logs.Info("rate limiting IDE log output", logs.Int64("limit_kb_per_sec", limit))
 	}
 
 	return cmd
@@ -216,7 +216,7 @@ func launchIDE(cfg *config.Config, ideConfig *config.IDEConfig, cmd *exec.Cmd, i
 		logs.Info("start launchIDE")
 		err := cmd.Start()
 		if err != nil {
-			logs.WithField("ide", ide.String()).WithError(err).Error("IDE failed to start")
+			logs.Error("IDE failed to start", logs.String("ide", ide.String()), logs.Err(err))
 
 			return
 		}
@@ -230,12 +230,12 @@ func launchIDE(cfg *config.Config, ideConfig *config.IDEConfig, cmd *exec.Cmd, i
 		err = cmd.Wait()
 		if err != nil {
 			if errSignalTerminated.Error() != err.Error() {
-				logs.WithField("ide", ide.String()).WithError(err).Warn("IDE was stopped")
+				logs.Warn("IDE was stopped", logs.String("ide", ide.String()), logs.Err(err))
 			}
 
 			ideWasReady, _ := ideReady.Get()
 			if !ideWasReady {
-				logs.WithField("ide", ide.String()).WithError(err).Error("IDE failed to start")
+				logs.Error("IDE failed to start", logs.String("ide", ide.String()), logs.Err(err))
 				return
 			}
 		}
@@ -246,7 +246,7 @@ func launchIDE(cfg *config.Config, ideConfig *config.IDEConfig, cmd *exec.Cmd, i
 }
 
 func runIDEReadinessProbe(cfg *config.Config, ideConfig *config.IDEConfig, ide IDEKind) (desktopIDEStatus *service.DesktopIDEStatus) {
-	defer logs.WithField("ide", ide.String()).Info("IDE is ready")
+	defer logs.Info("IDE is ready", logs.String("ide", ide.String()))
 
 	defaultIfEmpty := func(value, defaultValue string) string {
 		if len(value) == 0 {
@@ -286,14 +286,14 @@ func runIDEReadinessProbe(cfg *config.Config, ideConfig *config.IDEConfig, ide I
 			var err error
 			body, err = ideStatusRequest(url)
 			if err != nil {
-				logs.WithError(err).Debug("Error running IDE readiness probe")
+				logs.Debug("Error running IDE readiness probe", logs.Err(err))
 				continue
 			}
 
 			break
 		}
 
-		logs.WithField("ide", ide.String()).Infof("IDE readiness took %.3f seconds", time.Since(t0).Seconds())
+		logs.Infof("IDE readiness took %.3f seconds", time.Since(t0).Seconds(), logs.String("ide", ide.String()))
 
 		if ide != DesktopIDE {
 			return
@@ -301,11 +301,11 @@ func runIDEReadinessProbe(cfg *config.Config, ideConfig *config.IDEConfig, ide I
 
 		err := json.Unmarshal(body, &desktopIDEStatus)
 		if err != nil {
-			logs.WithField("ide", ide.String()).WithField("body", body).WithError(err).Debug("Error parsing JSON body from IDE status probe.")
+			logs.Debug("Error parsing JSON body from IDE status probe.", logs.String("ide", ide.String()), logs.String("body", string(body)), logs.Err(err))
 			return
 		}
 
-		logs.WithField("ide", ide.String()).Infof("Desktop IDE status: %s", desktopIDEStatus)
+		logs.Infof("Desktop IDE status: %s", desktopIDEStatus, logs.String("ide", ide.String()))
 		return
 	}
 
@@ -334,7 +334,7 @@ func ideStatusRequest(url string) ([]byte, error) {
 }
 
 func exit(exitCode int) {
-	logs.WithField("exitCode", exitCode).Debugf("devopsRemoting exit")
+	logs.Debugf("devopsRemoting exit", logs.Int("exitCode", exitCode))
 	os.Exit(exitCode)
 }
 

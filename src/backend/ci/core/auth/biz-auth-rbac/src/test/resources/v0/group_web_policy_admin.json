@@ -1,0 +1,314 @@
+{
+  "type": "group_web_policy",
+  "project_id": "mht",
+  "subject": {
+    "type": "group",
+    "id": 2,
+    "name": "管理员"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "pipeline_delete"
+        },
+        {
+          "id": "pipeline_view"
+        },
+        {
+          "id": "pipeline_execute"
+        },
+        {
+          "id": "pipeline_download"
+        },
+        {
+          "id": "pipeline_share"
+        },
+        {
+          "id": "pipeline_create"
+        },
+        {
+          "id": "pipeline_list"
+        },
+        {
+          "id": "pipeline_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "codecc_task_report_view"
+        },
+        {
+          "id": "codecc_task_analyze"
+        },
+        {
+          "id": "codecc_task_task_manage"
+        },
+        {
+          "id": "codecc_task_defect_view"
+        },
+        {
+          "id": "codecc_task_defect_manage"
+        }
+      ],
+      "resources": [
+        {
+          "type": "codecc_task",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "credential_delete"
+        },
+        {
+          "id": "credential_view"
+        },
+        {
+          "id": "credential_use"
+        },
+        {
+          "id": "credential_create"
+        },
+        {
+          "id": "credential_list"
+        },
+        {
+          "id": "credential_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "credential",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cert_delete"
+        },
+        {
+          "id": "cert_view"
+        },
+        {
+          "id": "cert_use"
+        },
+        {
+          "id": "cert_create"
+        },
+        {
+          "id": "cert_list"
+        },
+        {
+          "id": "cert_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cert",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "repertory_delete"
+        },
+        {
+          "id": "repertory_view"
+        },
+        {
+          "id": "repertory_use"
+        },
+        {
+          "id": "repertory_create"
+        },
+        {
+          "id": "repertory_list"
+        },
+        {
+          "id": "repertory_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "repertory",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "environment_delete"
+        },
+        {
+          "id": "environment_view"
+        },
+        {
+          "id": "environment_use"
+        },
+        {
+          "id": "environment_create"
+        },
+        {
+          "id": "environment_list"
+        },
+        {
+          "id": "environment_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "environment",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "env_node_delete"
+        },
+        {
+          "id": "env_node_view"
+        },
+        {
+          "id": "env_node_use"
+        },
+        {
+          "id": "env_node_create"
+        },
+        {
+          "id": "env_node_list"
+        },
+        {
+          "id": "env_node_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "env_node",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "experience_group_delete"
+        },
+        {
+          "id": "experience_group_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "experience_group",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "experience_task_delete"
+        },
+        {
+          "id": "experience_task_edit"
+        }
+      ],
+      "resources": [
+        {
+          "type": "experience_task",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "rule_delete"
+        },
+        {
+          "id": "rule_enable"
+        },
+        {
+          "id": "rule_edit"
+        },
+        {
+          "id": "rule_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "rule",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "quality_gate_group_delete"
+        },
+        {
+          "id": "quality_gate_group_enable"
+        },
+        {
+          "id": "quality_gate_group_edit"
+        },
+        {
+          "id": "quality_gate_group_create"
+        }
+      ],
+      "resources": [
+        {
+          "type": "quality_gate_group",
+          "paths": [
+
+          ]
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "type": "user",
+      "id": "124"
+    }
+  ]
+}

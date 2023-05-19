@@ -36,7 +36,7 @@ func Run() {
 
 	remotingConfig, err := config.GetConfig()
 	if err != nil {
-		logs.WithError(err).Error("run command load config error")
+		logs.Error("run command load config error", logs.Err(err))
 		exit(1)
 		return
 	}
@@ -73,7 +73,7 @@ func Run() {
 		},
 	)
 	if err != nil {
-		logs.WithError(err).Warn("cannot tunnel internal ports")
+		logs.Error("cannot tunnel internal ports", logs.Err(err))
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -194,7 +194,7 @@ func buildChildProcEnv(_ *config.Config) []string {
 	for _, e := range envvars {
 		segs := strings.SplitN(e, "=", 2)
 		if len(segs) < 2 {
-			logs.Printf("\"%s\" has invalid format, not including in IDE environment", e)
+			logs.Infof("\"%s\" has invalid format, not including in IDE environment", e)
 			continue
 		}
 		name, value := segs[0], segs[1]
@@ -217,12 +217,12 @@ func buildChildProcEnv(_ *config.Config) []string {
 
 	var env, envn []string
 	for name, value := range envs {
-		logs.WithField("envvar", name).Debugf("passing environment variable to IDE")
+		logs.Debug("passing environment variable to IDE", logs.String("envvar", name))
 		env = append(env, fmt.Sprintf("%s=%s", name, value))
 		envn = append(envn, name)
 	}
 
-	logs.WithField("envvar", envn).Debugf("passing environment variables to IDE")
+	logs.Debug("passing environment variables to IDE", logs.Strings("envvar", envn))
 
 	return env
 }
@@ -245,6 +245,6 @@ func isBlacklistedEnvvar(name string) bool {
 }
 
 func exit(exitCode int) {
-	logs.WithField("exitCode", exitCode).Debugf("devopsRemoting exit")
+	logs.Debug("devopsRemoting exit", logs.Int("exitCode", exitCode))
 	os.Exit(exitCode)
 }

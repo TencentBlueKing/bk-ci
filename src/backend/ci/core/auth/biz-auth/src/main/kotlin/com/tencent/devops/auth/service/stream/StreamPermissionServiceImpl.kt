@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service.stream
 
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
 import org.slf4j.LoggerFactory
 
@@ -83,6 +84,59 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         )
     }
 
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resource.resourceCode,
+                resourceType = resource.resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceType = resource.resourceType,
+            resourceCode = resource.resourceCode,
+            relationResourceType = null
+        )
+    }
+
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -113,6 +167,28 @@ abstract class StreamPermissionServiceImpl : PermissionService {
             instanceMap[AuthPermission.get(it)] = actionList
         }
         return instanceMap
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate { action ->
+            val authPermission = action.substringAfterLast("_")
+            AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+        }
+    }
+
+    override fun getUserResourceAndParentByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     /**

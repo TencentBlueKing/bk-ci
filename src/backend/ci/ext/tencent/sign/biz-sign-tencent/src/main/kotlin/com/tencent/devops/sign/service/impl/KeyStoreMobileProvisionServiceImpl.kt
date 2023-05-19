@@ -46,15 +46,15 @@ import com.tencent.devops.sign.utils.EncryptUtil
 import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import io.jsonwebtoken.security.Keys
+import java.io.File
+import java.net.InetAddress
+import java.nio.charset.StandardCharsets
+import java.time.Instant
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
-import java.io.File
-import java.net.InetAddress
-import java.nio.charset.StandardCharsets
-import java.time.Instant
 
 @Suppress("NestedBlockDepth")
 @Service

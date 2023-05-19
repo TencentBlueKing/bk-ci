@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -47,12 +47,12 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.TxStoreCodeccCommonService
 import com.tencent.devops.store.service.common.TxStoreCodeccService
 import com.tencent.devops.store.service.common.TxStoreRepoService
+import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
 
 @Service
 class TxStoreCodeccServiceImpl @Autowired constructor(
@@ -84,7 +84,7 @@ class TxStoreCodeccServiceImpl @Autowired constructor(
                 return Result(
                     CodeccMeasureInfo(
                         status = 1,
-                        message = MessageCodeUtil.getCodeLanMessage(StoreMessageCode.USER_START_CODECC_TASK_FAIL)
+                        message = I18nUtil.getCodeLanMessage(messageCode = StoreMessageCode.USER_START_CODECC_TASK_FAIL)
                     )
                 )
             }

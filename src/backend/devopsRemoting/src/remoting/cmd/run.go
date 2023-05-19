@@ -21,7 +21,7 @@ func newCommandRun() *cobra.Command {
 		Short: "启动 DevopsRemoting",
 		Long:  runDesc,
 		Run: func(_ *cobra.Command, _ []string) {
-			logs.Init(Service, Version, true, os.Getenv(constant.DebugModEnvName) == "true")
+			logs.DeafultInitStd(Service, Version, os.Getenv(constant.DebugModEnvName) == "true")
 			remoting.Run()
 		},
 	}

@@ -117,7 +117,7 @@ class PushImageService @Autowired constructor(
         val fromImage =
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/" +
                 "${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
-        logger.info("源镜像：$fromImage")
+        logger.info("Source image：$fromImage")
         val toImageRepo = "${pushImageParam.repoAddress}/${pushImageParam.namespace}/${pushImageParam.targetImageName}"
         try {
             pullImage(fromImage)
@@ -127,7 +127,7 @@ class PushImageService @Autowired constructor(
                 "$toImageRepo:${pushImageParam.targetImageTag}")
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
-                message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
+                message = "Target image：$toImageRepo:${pushImageParam.targetImageTag}",
                 tag = pushImageParam.buildId,
                 executeCount = pushImageParam.executeCount ?: 1
             )

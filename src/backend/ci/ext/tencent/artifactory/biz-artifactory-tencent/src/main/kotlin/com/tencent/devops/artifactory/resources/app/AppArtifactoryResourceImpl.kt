@@ -28,6 +28,8 @@
 package com.tencent.devops.artifactory.resources.app
 
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -42,7 +44,6 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -58,11 +59,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import javax.ws.rs.BadRequestException
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.BadRequestException
 
 @RestResource
 @SuppressWarnings("MagicNumber", "TooManyFunctions", "ThrowsCount")
@@ -205,11 +206,11 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                errorCode = GRANT_DOWNLOAD_PERMISSION,
                 defaultMessage = "请联系流水线负责人授予下载构件权限。"
             )
         }
-        val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+        val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
@@ -221,7 +222,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                errorCode = GRANT_PIPELINE_PERMISSION,
+                params = arrayOf(pipelineInfo?.creator ?: ""),
                 defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
             )
         }
@@ -236,16 +238,19 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 createdTime = fileDetail.createdTime,
                 projectName = projectName,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
-                creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
-                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
-                logoUrl = UrlUtil.toOuterPhotoAddr(fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value),
+                creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID]?.toString() ?: StringUtils.EMPTY,
+                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString()
+                    ?: StringUtils.EMPTY,
+                logoUrl = UrlUtil.toOuterPhotoAddr(
+                    fileDetail.meta[ARCHIVE_PROPS_APP_ICON]?.toString() ?: backUpIcon.value
+                ),
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
                 md5 = fileDetail.checksums.md5,
-                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0),
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO]?.toString(), 0),
                 nodeMetadata = fileDetail.nodeMetadata
             )
         )

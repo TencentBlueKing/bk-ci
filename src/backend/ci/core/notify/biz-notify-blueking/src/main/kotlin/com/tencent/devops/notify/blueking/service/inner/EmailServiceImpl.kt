@@ -35,8 +35,8 @@ import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
-import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.Configuration
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_EMAIL

@@ -27,6 +27,8 @@
 
 package com.tencent.devops.artifactory.service
 
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.Property
@@ -74,7 +76,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, BkRepoUtils.REPO_NAME_CUSTOM),
+            repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
             fileNames = listOf(),
             metadata = mapOf("pipelineId" to pipelineId, "buildId" to buildId),
             page = 1,
@@ -87,7 +89,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             fullPath = it.fullPath,
             size = it.size,
             folder = it.folder,
-            properties = it.metadata?.map { m -> Property(m.key, m.value) },
+            properties = it.metadata?.map { m -> Property(m.key, m.value.toString()) },
             modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
             artifactoryType = BkRepoUtils.parseArtifactoryType(it.repoName)
         ) }

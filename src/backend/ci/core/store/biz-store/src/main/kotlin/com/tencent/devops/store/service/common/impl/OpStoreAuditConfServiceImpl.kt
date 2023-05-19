@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreAuditConfDao
@@ -136,10 +136,11 @@ class OpStoreAuditConfServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val isExists = storeAuditConfDao.countDeptRel(dslContext, id)
         if (isExists == 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(id),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         storeAuditConfDao.approveVisibleDept(dslContext, userId, id, storeApproveRequest)

@@ -13,7 +13,7 @@ import (
 func (s *Server) ChannelForward(ctx context.Context, session *Session, targetConn ssh.Conn, originChannel ssh.NewChannel) {
 	targetChan, targetReqs, err := targetConn.OpenChannel(originChannel.ChannelType(), originChannel.ExtraData())
 	if err != nil {
-		logs.WithField("workspaceId", session.WorkspaceID).Error("open target channel error")
+		logs.Error("open target channel error", logs.String("workspaceId", session.WorkspaceID))
 		originChannel.Reject(ssh.ConnectionFailed, "open target channel error")
 		return
 	}
@@ -21,7 +21,7 @@ func (s *Server) ChannelForward(ctx context.Context, session *Session, targetCon
 
 	originChan, originReqs, err := originChannel.Accept()
 	if err != nil {
-		logs.WithField("workspaceId", session.WorkspaceID).Error("accept origin channel failed")
+		logs.Error("accept origin channel failed", logs.String("workspaceId", session.WorkspaceID))
 		return
 	}
 	if originChannel.ChannelType() == "session" {
@@ -35,7 +35,7 @@ func (s *Server) ChannelForward(ctx context.Context, session *Session, targetCon
 		for req := range originReqs {
 			switch req.Type {
 			case "pty-req", "shell":
-				logs.WithField("workspaceId", session.WorkspaceID).Debugf("forwarding %s request", req.Type)
+				logs.Debugfw("forwarding %s request", []any{req.Type}, logs.String("workspaceId", session.WorkspaceID))
 				if channel, ok := originChan.(*heartbeatingChannel); ok && req.Type == "pty-req" {
 					channel.mux.Lock()
 					channel.requestedPty = true
@@ -83,7 +83,7 @@ func (s *Server) ChannelForward(ctx context.Context, session *Session, targetCon
 	go forward(targetReqs, originChan)
 
 	wg.Wait()
-	logs.WithField("workspaceId", session.WorkspaceID).Debug("session forward stop")
+	logs.Debug("session forward stop", logs.String("workspaceId", session.WorkspaceID))
 }
 
 type heartbeatingChannel struct {
@@ -120,7 +120,7 @@ func startHeartbeatingChannel(c ssh.Channel, heartbeat Heartbeat, session *Sessi
 			case <-ctx.Done():
 				if res.requestedPty {
 					heartbeat.SendHeartbeat(session.WorkspaceID, true, false)
-					logs.WithField("instanceId", session.WorkspaceID).Info("send closed heartbeat")
+					logs.Info("send closed heartbeat", logs.String("workspaceId", session.WorkspaceID))
 				}
 				return
 			}

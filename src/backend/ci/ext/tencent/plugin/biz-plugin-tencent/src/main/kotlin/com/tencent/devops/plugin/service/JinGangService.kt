@@ -32,25 +32,30 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_APP_SCAN_COMPLETED
+import com.tencent.devops.plugin.constant.PluginMessageCode.BK_PROJECT_MANAGER
 import com.tencent.devops.plugin.dao.JinGangAppDao
 import com.tencent.devops.plugin.dao.JinGangAppMetaDao
 import com.tencent.devops.plugin.pojo.JinGangApp
@@ -81,7 +86,7 @@ class JinGangService @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val jinGangAppDao: JinGangAppDao,
     private val jinGangAppMetaDao: JinGangAppMetaDao,
-    private val authPermissionApi: BSAuthPermissionApi,
+    private val authPermissionApi: AuthPermissionApi,
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
@@ -120,7 +125,13 @@ class JinGangService @Autowired constructor(
 
             buildLogPrinter.addLine(
                 buildId = data.buildId,
-                message = "金刚app扫描完成【<a target='_blank' href='${data.scanUrl}'>查看详情</a>】",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_APP_SCAN_COMPLETED,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "【<a target='_blank' href='${data.scanUrl}'>" + MessageUtil.getMessageByLocale(
+                    messageCode = BK_VIEW_DETAILS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "</a>】",
                 tag = data.elementId,
                 jobId = "",
                 executeCount = 1
@@ -201,8 +212,9 @@ class JinGangService @Autowired constructor(
             else -> throw IllegalArgumentException("$fileName is not a app")
         }
 
-        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw IllegalArgumentException("no appVersion found")
-        val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]
+        val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION]?.toString()
+            ?: throw IllegalArgumentException("no appVersion found")
+        val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString()
             ?: throw IllegalArgumentException("no bundleIdentifier found")
         val pipelineName = client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId))
             .data?.get(pipelineId) ?: throw IllegalArgumentException("no pipeline name found for $pipelineId")
@@ -349,7 +361,9 @@ class JinGangService @Autowired constructor(
 
     private fun getProjectManager(projectId: String): List<StarUser> {
         val manager = authProjectApi.getProjectUsers(pipelineServiceCode, projectId, BkAuthGroup.MANAGER)
-        return listOf(StarUser(roleName = "项目管理员", roleId = "37", user = manager.joinToString(";")))
+        return listOf(StarUser(roleName = I18nUtil.getCodeLanMessage(
+            messageCode = BK_PROJECT_MANAGER
+        ), roleId = "37", user = manager.joinToString(";")))
     }
 
     data class StarResponse(

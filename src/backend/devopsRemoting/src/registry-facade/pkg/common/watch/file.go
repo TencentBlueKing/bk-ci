@@ -57,11 +57,11 @@ func File(ctx context.Context, path string, onChange func()) error {
 
 	go func() {
 		defer func() {
-			logs.WithError(err).Error("Stopping file watch")
+			logs.Error("Stopping file watch", logs.Err(err))
 
 			err = watcher.Close()
 			if err != nil {
-				logs.WithError(err).Error("Unexpected error closing file watcher")
+				logs.Error("Unexpected error closing file watcher", logs.Err(err))
 			}
 		}()
 
@@ -78,7 +78,7 @@ func File(ctx context.Context, path string, onChange func()) error {
 
 				currentHash, err := hashConfig(path)
 				if err != nil {
-					logs.WithError(err).Warn("Cannot check if config has changed")
+					logs.Warn("Cannot check if config has changed", logs.Err(err))
 					return
 				}
 
@@ -87,12 +87,12 @@ func File(ctx context.Context, path string, onChange func()) error {
 					continue
 				}
 
-				logs.WithField("path", path).Info("reloading file after change")
+				logs.Info("reloading file after change", logs.String("path", path))
 
 				fw.hash = currentHash
 				fw.onChange()
 			case err := <-watcher.Errors:
-				logs.WithError(err).Error("Unexpected error watching event")
+				logs.Error("Unexpected error watching event", logs.Err(err))
 			case <-ctx.Done():
 				return
 			}

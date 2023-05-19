@@ -27,6 +27,13 @@
 
 package com.tencent.devops.scm.utils
 
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_EXPECT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_QUALITY_RED_LINE
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_QUALITY_RED_LINE_OUTPUT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_RESULT
+import com.tencent.devops.scm.constant.ScmMessageCode.BK_TRIGGER_METHOD
+
 @Suppress("MaxLineLength")
 object QualityUtils {
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
@@ -38,18 +45,24 @@ object QualityUtils {
         val title = "<table><tr>" +
                 "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
                 "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
-                "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
+                "<td style=\"border:none;padding-right: 0\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_TRIGGER_METHOD) + "：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
-                "<td style=\"border:none;padding-right: 0\">质量红线：</td>" +
+                "<td style=\"border:none;padding-right: 0\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_QUALITY_RED_LINE) + "：</td>" +
                 "<td style=\"border:none;padding-left:0;\">$ruleName</td>" +
                 "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")
         body.append("<tr>")
-        body.append("<th style=\"text-align:left;\">质量红线产出插件</th>")
-        body.append("<th style=\"text-align:left;\">指标</th>")
-        body.append("<th style=\"text-align:left;\">结果</th>")
-        body.append("<th style=\"text-align:left;\">预期</th>")
+        body.append("<th style=\"text-align:left;\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_QUALITY_RED_LINE_OUTPUT) + "</th>")
+        body.append("<th style=\"text-align:left;\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_QUALITY_RED_LINE_OUTPUT) + "</th>")
+        body.append("<th style=\"text-align:left;\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_RESULT) + "</th>")
+        body.append("<th style=\"text-align:left;\">" +
+                I18nUtil.getCodeLanMessage(messageCode = BK_EXPECT) + "</th>")
         body.append("<th style=\"text-align:left;\"></th>")
         body.append("</tr>")
         resultData.forEach { (elementName, result) ->

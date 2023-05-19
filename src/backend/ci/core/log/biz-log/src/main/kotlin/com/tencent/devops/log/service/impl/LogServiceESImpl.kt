@@ -584,13 +584,7 @@ class LogServiceESImpl constructor(
         size: Int
     ): QueryLogs {
         logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount] doGetEndLogs")
-        val logStatus = if (tag == null && jobId != null) getLogStatus(
-            buildId = buildId,
-            tag = jobId,
-            subTag = null,
-            jobId = null,
-            executeCount = executeCount
-        ) else getLogStatus(
+        val logStatus = getLogStatus(
             buildId = buildId,
             tag = tag,
             subTag = subTag,
@@ -931,23 +925,13 @@ class LogServiceESImpl constructor(
         subTag: String?,
         executeCount: Int?
     ): QueryLogs {
-        val logStatus = if (tag == null && jobId != null) {
-            getLogStatus(
-                buildId = buildId,
-                tag = jobId,
-                subTag = null,
-                jobId = null,
-                executeCount = executeCount
-            )
-        } else {
-            getLogStatus(
-                buildId = buildId,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        }
+        val logStatus = getLogStatus(
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
         val subTags = tag?.let { logTagService.getSubTags(buildId, it) }
         return QueryLogs(buildId = buildId, finished = logStatus, subTags = subTags)
     }

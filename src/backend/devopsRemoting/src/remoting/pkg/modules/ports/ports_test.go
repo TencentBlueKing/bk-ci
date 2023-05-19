@@ -13,7 +13,6 @@ import (
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/sync/errgroup"
 )
 
@@ -610,7 +609,7 @@ func TestPortsUpdateState(t *testing.T) {
 		},
 	}
 
-	logs.Logs.Logger.SetLevel(logrus.FatalLevel)
+	logs.DeafultInitStd("remoting", "test", false)
 
 	for _, test := range tests {
 		t.Run(test.Desc, func(t *testing.T) {

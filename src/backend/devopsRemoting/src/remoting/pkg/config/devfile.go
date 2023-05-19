@@ -11,7 +11,7 @@ import (
 	"time"
 
 	"github.com/fsnotify/fsnotify"
-	"github.com/sirupsen/logrus"
+	"go.uber.org/zap"
 	"gopkg.in/yaml.v3"
 )
 
@@ -29,7 +29,7 @@ type DevfileConfigService struct {
 
 	pollTimer *time.Timer
 
-	logs *logrus.Entry
+	logger *zap.Logger
 
 	ready     chan struct{}
 	readyOnce sync.Once
@@ -37,12 +37,12 @@ type DevfileConfigService struct {
 	debounceDuration time.Duration
 }
 
-func NewDevfileConfigService(path string, pathReady <-chan struct{}, logs *logrus.Entry) *DevfileConfigService {
+func NewDevfileConfigService(path string, pathReady <-chan struct{}, logger *zap.Logger) *DevfileConfigService {
 	return &DevfileConfigService{
 		path:             path,
 		pathReady:        pathReady,
 		cond:             sync.NewCond(&sync.Mutex{}),
-		logs:             logs.WithField("path", path),
+		logger:           logger.With(logs.String("path", path)),
 		ready:            make(chan struct{}),
 		debounceDuration: 100 * time.Millisecond,
 	}
@@ -74,15 +74,15 @@ const WathchEmpty = "watchEmpty"
 
 // Watch 持续的监控devfile
 func (service *DevfileConfigService) Watch(ctx context.Context) {
-	service.logs.Info("devops remoting config watcher: starting...")
+	service.logger.Info("devops remoting config watcher: starting...")
 
 	select {
 	case <-service.pathReady:
 		// 兼容拉代码后使用默认devfile的情况,contentready后重新赋值一次
 		if filepath.Base(service.path) == WathchEmpty {
 			service.path = filepath.Join(filepath.Dir(service.path), constant.DefaultDevFileName)
-			service.logs = logs.WithField("path", service.path)
-			service.logs.Debug("devops remoting config watcher: change devfile to default")
+			service.logger = logs.With(logs.String("path", service.path))
+			service.logger.Debug("devops remoting config watcher: change devfile to default")
 		}
 	case <-ctx.Done():
 		return
@@ -125,11 +125,11 @@ func (service *DevfileConfigService) watch(ctx context.Context) {
 	watcher, err := fsnotify.NewWatcher()
 	defer func() {
 		if err != nil {
-			service.logs.WithError(err).Error("devops remoting config watcher: failed to start")
+			service.logger.Error("devops remoting config watcher: failed to start", logs.Err(err))
 			return
 		}
 
-		service.logs.Info("devops remoting config watcher: started")
+		service.logger.Info("devops remoting config watcher: started")
 	}()
 	if err != nil {
 		return
@@ -142,7 +142,7 @@ func (service *DevfileConfigService) watch(ctx context.Context) {
 	}
 
 	go func() {
-		defer service.logs.Info("devops remoting config watcher: stopped")
+		defer service.logger.Info("devops remoting config watcher: stopped")
 		defer watcher.Close()
 
 		polling := make(chan struct{}, 1)
@@ -154,7 +154,7 @@ func (service *DevfileConfigService) watch(ctx context.Context) {
 			case <-ctx.Done():
 				return
 			case err := <-watcher.Errors:
-				service.logs.WithError(err).Error("devops remoting config watcher: failed to watch")
+				service.logger.Error("devops remoting config watcher: failed to watch", logs.Err(err))
 			case <-watcher.Events:
 				service.scheduleUpdateConfig(ctx, polling)
 			}
@@ -174,7 +174,7 @@ func (service *DevfileConfigService) scheduleUpdateConfig(ctx context.Context, p
 			polling <- struct{}{}
 			go service.poll(ctx)
 		} else if err != nil {
-			service.logs.WithError(err).Error("devops remoting config watcher: failed to parse")
+			service.logger.Error("devops remoting config watcher: failed to parse", logs.Err(err))
 		}
 	})
 }
@@ -189,7 +189,7 @@ func (service *DevfileConfigService) updateDevfile() error {
 		service.markReady()
 		service.cond.Broadcast()
 
-		service.logs.WithField("devfile", service.devfile).Debug("devops remoting devfile watcher: updated")
+		service.logger.Debug("devops remoting devfile watcher: updated", logs.Any("devfile", service.devfile))
 	}
 
 	return err

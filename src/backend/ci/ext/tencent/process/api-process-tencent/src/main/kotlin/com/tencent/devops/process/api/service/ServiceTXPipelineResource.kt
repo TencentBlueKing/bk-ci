@@ -73,7 +73,7 @@ interface ServiceTXPipelineResource {
     fun getPipelineInfobyId(
         @PathParam("id")
         @ApiParam(value = "流水线自增id", required = true)
-        id: Int
+        id: Long
     ): Result<SimplePipeline>
 
     @ApiOperation("用模板实例化一条AM流水线并且触发运行")
