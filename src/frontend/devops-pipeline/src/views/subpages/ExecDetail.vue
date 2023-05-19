@@ -536,7 +536,7 @@
     width: 100%;
     min-height: 2px;
     position: sticky;
-    top: 40px;
+    top: 38px;
     z-index: 8;
     box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
   }
