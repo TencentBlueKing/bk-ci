@@ -23,6 +23,9 @@ import com.tencent.devops.dispatch.devcloud.pojo.ContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.ContainerType
 import com.tencent.devops.dispatch.devcloud.pojo.Credential
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainer
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_CPU
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_DISK
+import com.tencent.devops.dispatch.devcloud.pojo.ENV_DEVCLOUD_MEM
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_ID
 import com.tencent.devops.dispatch.devcloud.pojo.ENV_KEY_AGENT_SECRET_KEY
@@ -508,7 +511,10 @@ class DevCloudBuildListener @Autowired constructor(
                 ENV_KEY_GATEWAY to gateway,
                 "TERM" to "xterm-256color",
                 SLAVE_ENVIRONMENT to "DevCloud",
-                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name)
+                ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
+                ENV_DEVCLOUD_CPU to threadLocalCpu.get(),
+                ENV_DEVCLOUD_MEM to threadLocalMemory.get(),
+                ENV_DEVCLOUD_DISK to threadLocalDisk.get()
             ))
 
             return envs

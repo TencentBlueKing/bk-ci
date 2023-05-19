@@ -30,3 +30,6 @@ const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
 const val ENTRY_POINT_CMD = "/data/init.sh"
 
 const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+const val ENV_DEVCLOUD_CPU = "DEVCLOUD_CPU"
+const val ENV_DEVCLOUD_MEM = "DEVCLOUD_MEM"
+const val ENV_DEVCLOUD_DISK = "DEVCLOUD_DISK"
