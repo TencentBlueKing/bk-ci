@@ -13,7 +13,8 @@ import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreateRsp
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
-import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDeleteRsp
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDefaltRsp
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -95,6 +96,56 @@ class WorkspaceStartCloudClient @Autowired constructor(
         }
     }
 
+    fun createUser(userId: String, environment: EnvironmentUserCreate): Boolean {
+        val url = "$apiUrl/openapi/user/create"
+        val body = JsonUtil.toJson(environment, false)
+        logger.info("User $userId request url: $url, body: $body")
+        val request = Request.Builder()
+            .url(url)
+            .headers(
+                makeHeaders(
+                    body
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
+            .build()
+
+        try {
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body!!.string()
+                logger.info("User $userId create environment response: ${response.code} || $responseContent")
+                if (!response.isSuccessful) {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口异常: ${response.code}"
+                    )
+                }
+
+                val environmentRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
+                if (OK == environmentRsp.code) {
+                    return true
+                } else {
+                    throw BuildFailureException(
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回失败: ${environmentRsp.message}"
+                    )
+                }
+            }
+        } catch (e: SocketTimeoutException) {
+            logger.error("User $userId create environment get SocketTimeoutException", e)
+            throw BuildFailureException(
+                errorType = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
+                errorCode = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
+                formatErrorMessage = ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
+                errorMessage = "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口超时, url: $url"
+            )
+        }
+    }
+
     fun deleteWorkspace(
         userId: String,
         workspaceName: String,
@@ -128,7 +179,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                     )
                 }
                 logger.info("User $userId  environment response: $responseContent")
-                val environmentOpRsp: EnvironmentDeleteRsp = jacksonObjectMapper().readValue(responseContent)
+                val environmentOpRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
                 if (HttpStatus.OK.value == environmentOpRsp.code) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(

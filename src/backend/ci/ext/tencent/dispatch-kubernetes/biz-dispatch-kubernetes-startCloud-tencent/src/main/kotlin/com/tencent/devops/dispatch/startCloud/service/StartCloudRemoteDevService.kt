@@ -40,6 +40,7 @@ import com.tencent.devops.dispatch.startCloud.client.WorkspaceStartCloudClient
 import com.tencent.devops.dispatch.startCloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentCreate
 import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentDelete
+import com.tencent.devops.dispatch.startCloud.pojo.EnvironmentUserCreate
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -58,6 +59,8 @@ class StartCloudRemoteDevService @Autowired constructor(
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
+
+        workspaceClient.createUser(userId, EnvironmentUserCreate(userId, appName))
 
         val ip = workspaceClient.createWorkspace(
             userId,
