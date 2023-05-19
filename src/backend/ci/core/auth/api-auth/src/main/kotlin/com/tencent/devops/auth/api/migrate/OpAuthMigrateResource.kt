@@ -62,7 +62,7 @@ interface OpAuthMigrateResource {
     ): Result<Boolean>
 
     @POST
-    @Path("/allToRbacAuth")
+    @Path("/allToRbac")
     @ApiOperation("权限全部升级到rbac权限")
     fun allToRbacAuth(): Result<Boolean>
 }

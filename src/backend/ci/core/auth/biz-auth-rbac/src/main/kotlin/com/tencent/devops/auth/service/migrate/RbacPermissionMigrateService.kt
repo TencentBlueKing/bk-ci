@@ -140,14 +140,15 @@ class RbacPermissionMigrateService constructor(
                     offset = offset
                 ).data ?: break
                 val v3MigrateProjects =
-                    migrateProjects.filter { it.routerTag == null ||
-                        it.routerTag == AuthSystemType.V3_AUTH_TYPE.value }
-                        .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
-
+                    migrateProjects.filter {
+                        it.routerTag == null ||
+                            it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
+                    }.map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
+                logger.info("migrate all project to rbac|v3MigrateProjects:$v3MigrateProjects")
                 val v0MigrateProjects =
                     migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
                         .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
-
+                logger.info("migrate all project to rbac|v0MigrateProjects:$v0MigrateProjects")
                 if (v3MigrateProjects.isNotEmpty()) {
                     v3ToRbacAuth(migrateProjects = v3MigrateProjects)
                 }
