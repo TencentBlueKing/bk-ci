@@ -135,6 +135,7 @@
                                     action: pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
                                 }
                             }"
+                            key="comfirmBtn"
                             theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
