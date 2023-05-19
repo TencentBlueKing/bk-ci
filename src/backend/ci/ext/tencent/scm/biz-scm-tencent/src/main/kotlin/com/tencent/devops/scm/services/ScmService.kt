@@ -42,6 +42,7 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitCommitReviewInfo
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -526,6 +527,26 @@ class ScmService @Autowired constructor(
             region = null,
             userName = null
         ).getProjectInfo(projectName = projectName)
+    }
+
+    fun getCrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        crId: Long
+    ): GitCommitReviewInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        ).getCommitReviewInfo(crId = crId)
     }
 
     companion object {
