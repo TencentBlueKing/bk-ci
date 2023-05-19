@@ -178,11 +178,11 @@ class CodeccToolDownloaderService {
     private fun download(file: String, eTag: String): Response {
         val target = File(codeccPath, file)
         if (!target.exists()) {
-            throw FileNotFoundException("${target.absolutePath} 不存在")
+            throw FileNotFoundException("${target.absolutePath} not exist")
         }
 
         if (!target.isFile) {
-            throw FileNotFoundException("${target.absolutePath} 不是一个文件")
+            throw FileNotFoundException("${target.absolutePath} not file")
         }
 
         if (eTag.isNotBlank()) {

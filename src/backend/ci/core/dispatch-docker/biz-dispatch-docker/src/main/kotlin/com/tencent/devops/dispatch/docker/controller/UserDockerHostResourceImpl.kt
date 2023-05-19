@@ -28,17 +28,20 @@
 package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
+import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
@@ -49,11 +52,10 @@ import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.debug.impl.DockerHostDebugServiceImpl
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.process.constant.ProcessMessageCode
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 @Suppress("ALL")
@@ -148,7 +150,7 @@ class UserDockerHostResourceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(debugStartParam.pipelineId)
             )
@@ -220,13 +222,24 @@ class UserDockerHostResourceImpl @Autowired constructor(
         val consulTag = bkTag.getLocalTag()
 
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EDIT
             validPipelinePermission(
                 userId = userId,
                 authResourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EDIT,
-                message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(language),
+                        pipelineId
+                    )
+                )
             )
         }
     }
@@ -248,15 +261,11 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${permission.value}",
-                defaultMessage = permission.alias
-            )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                errorCode = CommonMessageCode.USER_NO_PIPELINE_PERMISSION,
                 defaultMessage = message,
-                params = arrayOf(permissionMsg)
+                params = arrayOf(permission.getI18n(I18nUtil.getLanguage(userId)))
             )
         }
     }

@@ -30,12 +30,15 @@ package com.tencent.devops.sign.resources
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.sign.api.constant.SignMessageCode.IOS_ENTERPRISE_RESIGNATURE
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.api.user.UserIpaResource
@@ -43,9 +46,9 @@ import com.tencent.devops.sign.service.AsyncSignService
 import com.tencent.devops.sign.service.DownloadService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
+import java.io.InputStream
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 @Suppress("LongParameterList")
@@ -67,9 +70,14 @@ class UserIpaResourceImpl @Autowired constructor(
         val resignId = "s-${UUIDUtil.generate()}"
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         if (!checkParams(ipaSignInfo, userId)) {
-            logger.warn("用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
+            logger.warn("User ($userId) does not have permission to initiate iOS enterprise resignature in " +
+                    "pipeline (${ipaSignInfo.pipelineId}) of project (${ipaSignInfo.projectId}).")
             throw PermissionForbiddenException(
-                message = "用户($userId)无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名。")
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = IOS_ENTERPRISE_RESIGNATURE,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId, ipaSignInfo.projectId, ipaSignInfo.pipelineId.toString())
+                ))
         }
         var taskExecuteCount = 1
         try {

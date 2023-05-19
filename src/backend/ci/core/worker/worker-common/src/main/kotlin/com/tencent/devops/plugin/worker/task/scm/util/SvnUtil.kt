@@ -29,11 +29,14 @@ package com.tencent.devops.plugin.worker.task.scm.util
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ScmException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import com.tencent.devops.worker.common.CommonEnv
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_SVN_DIRECTORY_ERROR
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import org.tmatesoft.svn.core.SVNDepth
@@ -96,7 +99,13 @@ object SvnUtil {
             return directories
         } catch (t: Throwable) {
             logger.error("SvnUtil get directories error.", t)
-            throw ScmException("获取Svn目录错误", ScmType.CODE_SVN.name)
+            throw ScmException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = GET_SVN_DIRECTORY_ERROR,
+                    language = AgentEnv.getLocaleLanguage()
+                ),
+                ScmType.CODE_SVN.name
+            )
         } finally {
             rootDir.deleteRecursively()
         }

@@ -27,8 +27,12 @@
 
 package com.tencent.devops.store.pojo.container
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 data class ContainerBuildType(
     val type: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "buildType", reusePrefixFlag = false)
     val name: String,
     val enableApp: Boolean /*是否支持选择对应的构建依赖*/,
     val disabled: Boolean /*是否可点击*/,

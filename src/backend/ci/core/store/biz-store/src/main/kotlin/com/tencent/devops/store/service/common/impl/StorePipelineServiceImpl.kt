@@ -39,8 +39,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.process.api.service.ServicePipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
@@ -61,12 +61,12 @@ import com.tencent.devops.store.pojo.common.enums.ScopeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StorePipelineService
+import java.util.concurrent.Executors
 import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Suppress("ALL")
 @Service
@@ -117,10 +117,16 @@ class StorePipelineServiceImpl : StorePipelineService {
         if (updatePipelineModel.isNullOrBlank()) {
             val pipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "PIPELINE_MODEL")
-                    ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                    ?: return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.SYSTEM_ERROR,
+                        language = I18nUtil.getLanguage(userId)
+                    )
             val grayPipelineModelConfig =
                 businessConfigDao.get(dslContext, storeType, featureName, "GRAY_PIPELINE_MODEL")
-                    ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                    ?: return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.SYSTEM_ERROR,
+                        language = I18nUtil.getLanguage(userId)
+                    )
             pipelineModel = pipelineModelConfig.configValue
             grayPipelineModel = grayPipelineModelConfig.configValue
         } else {
@@ -164,9 +170,10 @@ class StorePipelineServiceImpl : StorePipelineService {
             }
             ScopeTypeEnum.SPEC.name -> {
                 if (storeCodeList == null) {
-                    return MessageCodeUtil.generateResponseDataObject(
-                        CommonMessageCode.PARAMETER_IS_NULL,
-                        arrayOf("storeCodeList")
+                    return I18nUtil.generateResponseDataObject(
+                        messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                        params = arrayOf("storeCodeList"),
+                        language = I18nUtil.getLanguage(userId)
                     )
                 }
                 updatePipelineModel(

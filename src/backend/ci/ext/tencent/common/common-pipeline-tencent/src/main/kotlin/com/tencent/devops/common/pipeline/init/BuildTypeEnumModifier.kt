@@ -27,63 +27,86 @@
 
 package com.tencent.devops.common.pipeline.init
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 
 class BuildTypeEnumModifier : EnumModifier {
 
     override fun modified() {
+        var language = System.getProperty(LOCALE_LANGUAGE) ?: System.getenv(LOCALE_LANGUAGE)
+        if (language.isNullOrBlank()) {
+            language = try {
+                SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage
+            } catch (ignored: Throwable) {
+                // 不是spring管理的工程则用工程代码中定义的默认语言
+                DEFAULT_LOCALE_LANGUAGE
+            }
+        }
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
-            additionalValues = arrayOf("蓝盾公共构建资源", listOf(OS.MACOS), false, true, false)
+            additionalValues = arrayOf(BuildType.ESXi.getI18n(language), listOf(OS.MACOS), false, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.MACOS.name,
-            additionalValues = arrayOf("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, true, true)
+            additionalValues = arrayOf(BuildType.MACOS.getI18n(language), listOf(OS.MACOS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.DOCKER.name,
-            additionalValues = arrayOf("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(BuildType.DOCKER.getI18n(language), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_DEVCLOUD.name,
-            additionalValues = arrayOf("公共：Docker on DevCloud", listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(BuildType.PUBLIC_DEVCLOUD.getI18n(language), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_BCS.name,
-            additionalValues = arrayOf("公共：Docker on Bcs", listOf(OS.LINUX), true, true, false)
+            additionalValues = arrayOf(BuildType.PUBLIC_BCS.getI18n(language), listOf(OS.LINUX), true, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ID.name,
-            additionalValues = arrayOf("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues =
+            arrayOf(
+                BuildType.THIRD_PARTY_AGENT_ID.getI18n(language), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true,
+                true
+            )
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ENV.name,
-            additionalValues = arrayOf("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues =
+            arrayOf(
+                BuildType.THIRD_PARTY_AGENT_ENV.getI18n(language), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true,
+                true
+            )
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_PCG.name,
-            additionalValues = arrayOf("PCG公共构建资源", listOf(OS.LINUX), false, true, true)
+            additionalValues =
+            arrayOf(BuildType.THIRD_PARTY_PCG.getI18n(language), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
-            additionalValues = arrayOf("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true)
+            additionalValues =
+            arrayOf(BuildType.THIRD_PARTY_DEVCLOUD.getI18n(language), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.WINDOWS.name,
-            additionalValues = arrayOf("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf(BuildType.WINDOWS.getI18n(language), listOf(OS.WINDOWS), false, true, true)
         )
     }
 }

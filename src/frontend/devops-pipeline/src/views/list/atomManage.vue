@@ -78,7 +78,7 @@
                 </hgroup>
 
                 <h5 class="related-pipeline">{{ $t('atomManage.relatedPipeline') }}（{{detailObj.list && detailObj.list.length}}）</h5>
-                <bk-table :data="detailObj.list" empty-text="暂无关联流水线">
+                <bk-table :data="detailObj.list" :empty-text="$t('noReleatedPipeline')">
                     <bk-table-column :label="$t('pipelineName')" prop="pipelineName" width="235">
                         <template slot-scope="props">
                             <h3 class="slide-link">
@@ -103,8 +103,8 @@
 </template>
 
 <script>
-    import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import { mapActions } from 'vuex'
 
     export default {
         components: {

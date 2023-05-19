@@ -36,6 +36,7 @@ import com.tencent.devops.dockerhost.services.generator.annotation.EnvGenerator
 import com.tencent.devops.dockerhost.pojo.Env
 import com.tencent.devops.dockerhost.services.container.ContainerHandlerContext
 import com.tencent.devops.dockerhost.utils.COMMON_DOCKER_SIGN
+import com.tencent.devops.dockerhost.utils.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.dockerhost.utils.ENV_JOB_BUILD_TYPE
@@ -68,7 +69,8 @@ class SystemDockerEnvGenerator @Autowired constructor(
             Env(key = ENV_DOCKER_HOST_IP, value = hostIp),
             Env(key = ENV_DOCKER_HOST_PORT, value = commonConfig.serverPort.toString()),
             Env(key = COMMON_DOCKER_SIGN, value = "docker"),
-            Env(key = ENV_JOB_BUILD_TYPE, value = handlerContext.buildType.name))
+            Env(key = ENV_JOB_BUILD_TYPE, value = handlerContext.buildType.name),
+            Env(key = ENV_DEFAULT_LOCALE_LANGUAGE, value = commonConfig.devopsDefaultLocaleLanguage))
 
         handlerContext.customBuildEnv?.forEach { k, v ->
             envList.add(Env(key = k, value = v))

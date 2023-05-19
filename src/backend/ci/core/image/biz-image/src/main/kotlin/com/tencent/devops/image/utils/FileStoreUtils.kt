@@ -28,8 +28,9 @@
 package com.tencent.devops.image.utils
 
 import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.image.constants.ImageMessageCode.MIRROR_FILE_SAVE_FAILED
 import org.slf4j.LoggerFactory
 import java.io.BufferedInputStream
 import java.io.BufferedOutputStream
@@ -77,9 +78,9 @@ object FileStoreUtils {
         } catch (ex: Exception) {
             logger.error("store file failed", ex)
             throw TaskExecuteException(
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorCode = MIRROR_FILE_SAVE_FAILED.toInt(),
                 errorType = ErrorType.USER,
-                errorMsg = "镜像文件保存失败"
+                errorMsg = I18nUtil.getCodeLanMessage(MIRROR_FILE_SAVE_FAILED)
             )
         } finally {
             closeQuietily(ips)

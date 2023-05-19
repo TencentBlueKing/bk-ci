@@ -58,6 +58,9 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -65,9 +68,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.LocalTime
 
 @Suppress("ALL")
 @Service
@@ -135,7 +135,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                 successEvents.add(it.name)
             } catch (e: Throwable) {
                 logger.error("Fail to create callback|$projectId|${it.name}|$callBackUrl", e)
-                failureEvents[it.name] = e.message ?: "创建callback失败"
+                failureEvents[it.name] = e.message ?: "Fail to create callback"
             }
         }
         return CreateCallBackResult(
@@ -201,7 +201,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
             id = id
         ) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_NOT_FOUND,
-            defaultMessage = "回调记录($id)不存在",
             params = arrayOf(id.toString())
         )
         projectPipelineCallbackDao.deleteById(
@@ -407,7 +406,6 @@ class ProjectPipelineCallBackService @Autowired constructor(
         validProjectManager(userId, projectId)
         val record = getHistory(userId, projectId, id) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_CALLBACK_HISTORY_NOT_FOUND,
-            defaultMessage = "重试的回调历史记录($id)不存在",
             params = arrayOf(id.toString())
         )
 
@@ -432,8 +430,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code}")
                     throw ErrorCodeException(
                         statusCode = response.code,
-                        errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
-                        defaultMessage = "回调重试失败"
+                        errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL
                     )
                 } else {
                     logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code}")

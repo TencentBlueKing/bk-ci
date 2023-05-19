@@ -6,11 +6,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceGroupResource
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.pojo.GroupCreate
 import com.tencent.devops.experience.pojo.GroupUpdate
 import com.tencent.devops.experience.pojo.GroupUsers
 import com.tencent.devops.experience.service.GroupService
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,8 +53,7 @@ class ServiceExperienceGroupResourceImpl @Autowired constructor(
                 .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
         ) {
             throw ErrorCodeException(
-                defaultMessage = "用户没有权限",
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION
+                errorCode = USER_NOT_PERMISSION
             )
         }
     }

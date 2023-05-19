@@ -42,11 +42,10 @@ import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 
 class TxPermissionProjectServiceImpl @Autowired constructor(
     override val permissionRoleService: PermissionRoleService,
@@ -106,8 +105,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         if (iamProjectId.isNullOrEmpty()) {
             logger.warn("[IAM] $projectCode iamProject is empty")
             throw ErrorCodeException(
-                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.RELATED_RESOURCE_EMPTY)
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY
             )
         }
         return iamProjectId.toInt()

@@ -7,6 +7,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.dispatch.windows.constant.ErrorCodeEnum
 import com.tencent.devops.dispatch.windows.enums.WindowsJobStatus
@@ -19,11 +20,11 @@ import com.tencent.devops.dispatch.windows.service.DevCloudWindowsService
 import com.tencent.devops.dispatch.windows.service.WindowsBuildHistoryService
 import com.tencent.devops.model.dispatch.windows.tables.records.TBuildHistoryRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import java.net.SocketTimeoutException
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.net.SocketTimeoutException
 
 @Component
 class WindowsBuildListener @Autowired constructor(
@@ -36,6 +37,10 @@ class WindowsBuildListener @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WindowsBuildListener::class.java)
         private const val LOCK_SHUTDOWN = "dispatcher:locker:windows:shutdown"
+        // 未找到空闲的windows构建资源，等待20秒后重试。
+        const val BK_NO_FREE_WINDOWS_BUILD_RESOURCE = "bkNoFreeWindowsBuildResource"
+        // Windows资源紧缺，等待1分钟分配不到资源
+        const val BK_WINDOWS_RESOURCE_SCARCITY = "bkWindowsResourceScarcity"
     }
 
     override fun getShutdownQueue(): String {
@@ -91,7 +96,7 @@ class WindowsBuildListener @Autowired constructor(
                     dispatchMessage.buildId,
                     dispatchMessage.containerHashId,
                     dispatchMessage.vmSeqId,
-                    "未找到空闲的windows构建资源，等待20秒后重试。",
+                    I18nUtil.getCodeLanMessage(BK_NO_FREE_WINDOWS_BUILD_RESOURCE),
                     dispatchMessage.executeCount
                 )
                 retry(sleepTimeInMS = 20000, retryTimes = 3)
@@ -99,14 +104,14 @@ class WindowsBuildListener @Autowired constructor(
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.formatErrorMessage,
-                    errorMessage = "Windows资源紧缺，等待1分钟分配不到资源"
+                    formatErrorMessage = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.getErrorMessage(),
+                    errorMessage = I18nUtil.getCodeLanMessage(BK_WINDOWS_RESOURCE_SCARCITY)
                 )
             } catch (e: Throwable) {
                 throw BuildFailureException(
                     errorType = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.errorCode,
-                    formatErrorMessage = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.formatErrorMessage,
+                    formatErrorMessage = ErrorCodeEnum.NO_IDLE_WINDOWS_ERROR.getErrorMessage(),
                     errorMessage = "Windows启动失败"
                 )
             }

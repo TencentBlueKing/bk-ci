@@ -46,9 +46,9 @@ import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
+import java.io.File
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import java.io.File
 
 abstract class AbstractDockerHostBuildService constructor(
     private val dockerHostConfig: DockerHostConfig,

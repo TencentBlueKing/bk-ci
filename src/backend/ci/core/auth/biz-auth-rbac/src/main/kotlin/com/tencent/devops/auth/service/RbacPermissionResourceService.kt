@@ -45,7 +45,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -248,7 +248,7 @@ class RbacPermissionResourceService(
         // TODO 流水线组一期先不上,流水线组权限由项目控制
         if (resourceType == AuthResourceType.PROJECT.value || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         } else {
             val checkResourceManage = permissionService.validateUserResourcePermissionByRelation(
@@ -264,7 +264,7 @@ class RbacPermissionResourceService(
             )
             if (!checkResourceManage) {
                 throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+                    message = I18nUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
                 )
             }
         }

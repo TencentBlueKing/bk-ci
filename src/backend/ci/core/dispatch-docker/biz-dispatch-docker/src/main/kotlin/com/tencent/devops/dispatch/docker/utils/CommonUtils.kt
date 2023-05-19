@@ -33,13 +33,13 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.slf4j.LoggerFactory
 import java.util.Base64
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 object CommonUtils {
@@ -105,9 +105,11 @@ object CommonUtils {
 
             return ticketMap
         } catch (e: Exception) {
-            throw DockerServiceException(errorType = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorType,
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorType,
                 errorCode = ErrorCodeEnum.GET_CREDENTIAL_FAIL.errorCode,
-                errorMsg = ErrorCodeEnum.GET_CREDENTIAL_FAIL.formatErrorMessage)
+                errorMsg = ErrorCodeEnum.GET_CREDENTIAL_FAIL.getErrorMessage()
+            )
         }
     }
 

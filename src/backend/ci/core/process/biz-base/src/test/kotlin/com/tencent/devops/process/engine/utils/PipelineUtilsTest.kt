@@ -31,9 +31,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.context.SpringBootTest
 
+@SpringBootTest(classes = [SpringContextUtil::class, CommonConfig::class])
 class PipelineUtilsTest {
 
     @Test

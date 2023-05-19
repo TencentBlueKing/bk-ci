@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
@@ -254,8 +255,10 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
-                message = "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) {
-                    "错误信息: $msg"
+                message = I18nUtil.getCodeLanMessage(
+                    "${ErrorCodeEnum.IMAGE_CHECK_LEGITIMATE_OR_RETRY.errorCode}"
+                ) + if (!msg.isNullOrBlank()) {
+                    "errormessage: $msg"
                 } else {
                     ""
                 }
@@ -275,7 +278,9 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message = "登录调试失败，调试容器异常关闭，请重试。"
+                    message = I18nUtil.getCodeLanMessage(
+                        "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}"
+                    )
                 )
             }
         } catch (e: Exception) {
@@ -409,7 +414,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             )
         } else {
             throw ErrorCodeException(
-                errorCode = "2103503",
+                errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                 defaultMessage = "Can not found debug container.",
                 params = arrayOf(pipelineId)
             )
@@ -474,7 +479,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     // 母机负载过高
                     LOG.error("[$projectId|$pipelineId] Debug docker VM overload, please wait a moment and try again.")
                     throw ErrorCodeException(
-                        errorCode = "2103505",
+                        errorCode = "${ErrorCodeEnum.LOAD_TOO_HIGH.errorCode}",
                         defaultMessage = "Debug docker VM overload, please wait a moment and try again.",
                         params = arrayOf(pipelineId)
                     )
@@ -483,7 +488,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                     val msg = response["message"]
                     LOG.error("[$projectId|$pipelineId] Start debug Docker VM failed. $msg")
                     throw ErrorCodeException(
-                        errorCode = "2103503",
+                        errorCode = "${ErrorCodeEnum.NO_CONTAINER_IS_READY_DEBUG.errorCode}",
                         defaultMessage = "Start debug Docker VM failed.",
                         params = arrayOf(pipelineId)
                     )

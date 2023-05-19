@@ -34,8 +34,8 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_WORKER_DEAD_ERROR
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_TIP_MESSAGE
 import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
@@ -43,10 +43,10 @@ import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartB
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class HeartbeatControl @Autowired constructor(
@@ -117,12 +117,10 @@ class HeartbeatControl @Autowired constructor(
         var found = false
 
         // # 5806 完善构建进程超时提示信息
-        val tipMessage = "构建进程心跳超时/builder's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)" +
-            "\n 可能原因(Maybe):" +
-            "\n 1. 构建机网络不通，检查构建机网络代理、或所在企业安全鉴权会话是否过期。(Network or proxy not working properly.)" +
-            "\n 2. 业务构建进程进程被操作系统或其他程序杀掉，需自查并降低负载后重试。(Builder process was killed.)" +
-            "\n 3. 其他参考链接[Link] ${MessageCodeUtil.getCodeLanMessage(BUILD_WORKER_DEAD_ERROR)}" +
-            "\n 4. 平台级故障导致大面积超时。(System error, please wait)"
+        val tipMessage = I18nUtil.getCodeLanMessage(
+            messageCode = BK_TIP_MESSAGE,
+            params = arrayOf("${TimeUnit.MILLISECONDS.toSeconds(elapse)}")
+        )
 
         // #2365 在运行中的插件中记录心跳超时信息
         val runningTask = pipelineTaskService.getRunningTask(container.projectId, container.buildId)

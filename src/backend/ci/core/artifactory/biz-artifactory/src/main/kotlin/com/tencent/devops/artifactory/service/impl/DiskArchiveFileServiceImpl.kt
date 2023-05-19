@@ -27,6 +27,8 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -49,6 +51,15 @@ import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import java.io.File
+import java.io.FileInputStream
+import java.io.InputStream
+import java.io.OutputStream
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.time.LocalDateTime
+import javax.servlet.http.HttpServletResponse
+import javax.ws.rs.NotFoundException
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -59,15 +70,6 @@ import org.springframework.util.FileCopyUtils
 import org.springframework.util.FileSystemUtils
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.io.File
-import java.io.FileInputStream
-import java.io.InputStream
-import java.io.OutputStream
-import java.net.URLDecoder
-import java.net.URLEncoder
-import java.time.LocalDateTime
-import javax.servlet.http.HttpServletResponse
-import javax.ws.rs.NotFoundException
 
 @Service
 @Suppress("UNUSED", "TooManyFunctions", "UnusedPrivateMember", "NestedBlockDepth", "MagicNumber")
@@ -630,6 +632,39 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         dstFullPath: String
     ) {
         TODO("Not yet implemented")
+    }
+
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): String {
+        if (filePath.contains("../")) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
+        }
+        val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
+        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        return if (file.exists()) file.readText((Charsets.UTF_8)) else ""
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): List<String> {
+        val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
+        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        val fileNames = mutableListOf<String>()
+        file.listFiles()?.forEach { tmpFile ->
+            if (tmpFile.isFile) {
+                fileNames.add(file.name)
+            }
+        }
+        return fileNames
     }
 
     companion object {

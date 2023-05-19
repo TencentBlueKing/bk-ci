@@ -28,9 +28,13 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NAME_EXIST
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -70,7 +74,9 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         val dbProjectRecord = projectDao.get(dslContext, projectId)
         if (dbProjectRecord == null) {
             logger.warn("The project $projectId is not exist")
-            throw OperationException("项目不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+            )
         }
         // 判断项目是不是审核的情况
         var flag = false
@@ -92,7 +98,9 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectFromOp(transactionContext, projectInfoRequest)
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectInfoRequest", e)
-                throw OperationException("项目名或英文名重复")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(PROJECT_NAME_EXIST, I18nUtil.getLanguage(userId))
+                )
             }
             // 先解除项目与标签的关联关系，然后再从新建立二者之间的关系
             projectLabelRelDao.deleteByProjectId(transactionContext, projectId)

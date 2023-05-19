@@ -27,13 +27,15 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.INCORRECT_EXCEL_FORMAT
+import java.io.FileInputStream
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Workbook
 import org.apache.poi.util.IOUtils
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.LoggerFactory
-import java.io.FileInputStream
 
 object ExcelUtils {
 
@@ -71,7 +73,11 @@ object ExcelUtils {
             return result
         } catch (e: Exception) {
             logger.error("Excel format error!", e)
-            throw RuntimeException("Excel格式错误，或文件不存在")
+            throw RuntimeException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = INCORRECT_EXCEL_FORMAT
+                )
+            )
         } finally {
             if (null != workBook) {
                 IOUtils.closeQuietly(workBook)

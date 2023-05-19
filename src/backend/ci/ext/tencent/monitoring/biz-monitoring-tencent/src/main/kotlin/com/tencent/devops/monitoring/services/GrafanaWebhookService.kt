@@ -29,17 +29,21 @@ package com.tencent.devops.monitoring.services
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_MONITORING_OBJECT
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_SEND_MONITORING_MESSAGES
+import com.tencent.devops.monitoring.constant.MonitoringMessageCode.BK_WARNING_MESSAGE_FROM_GRAFANA
 import com.tencent.devops.monitoring.pojo.GrafanaMessage
 import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import javax.annotation.PostConstruct
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import javax.annotation.PostConstruct
 
 @Service
 @RefreshScope
@@ -82,7 +86,10 @@ class GrafanaWebhookService @Autowired constructor(
                         receivers = grafanaMessage.notifyReceivers ?: mutableSetOf(),
                         notifyType = mutableSetOf(grafanaMessage.notifyType?.name ?: "RTX"),
                         titleParams = mapOf(),
-                        bodyParams = mapOf("data" to grafanaMessage.notifyMessage, "url" to "来自Grafana的预警信息")
+                        bodyParams = mapOf("data" to grafanaMessage.notifyMessage, "url" to
+                                I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_WARNING_MESSAGE_FROM_GRAFANA
+                                ))
                     )
                 }
                 else -> return Result(data = false)
@@ -95,7 +102,10 @@ class GrafanaWebhookService @Autowired constructor(
                 evalMatches.forEach {
                     val metricName = it.metric
                     val metricValue = it.value
-                    notifyMessage["data"] += " 监控对象：$metricName，当前值为：$metricValue；"
+                    notifyMessage["data"] += I18nUtil.getCodeLanMessage(
+                        messageCode = BK_MONITORING_OBJECT,
+                        params = arrayOf(metricName, metricValue)
+                    )
                     busiDataList.add(NocNoticeBusData(metricName, metricValue))
                 }
                 notifyMessage["data"] += "）"
@@ -103,6 +113,11 @@ class GrafanaWebhookService @Autowired constructor(
             return client.get(ServiceNotifyMessageTemplateResource::class)
                 .sendNotifyMessageByTemplate(sendMessage.copy(bodyParams = notifyMessage))
         }
-        return Result(data = false, message = "只有处于alerting告警状态的信息才发送监控消息")
+        return Result(
+            data = false,
+            message = I18nUtil.getCodeLanMessage(
+            messageCode = BK_SEND_MONITORING_MESSAGES
+            )
+        )
     }
 }

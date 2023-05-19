@@ -1,18 +1,18 @@
 package com.tencent.devops.remotedev.filter.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import com.tencent.devops.remotedev.service.redis.RedisCacheService
 import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_IP_LIST_KEY
-import org.slf4j.LoggerFactory
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
+import org.slf4j.LoggerFactory
 
 @Provider
 @PreMatching
@@ -63,7 +63,7 @@ class IpFilter constructor(
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
                     .entity(
-                        MessageCodeUtil.generateResponseDataObject(
+                        I18nUtil.generateResponseDataObject(
                             messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
                             params = null,
                             data = null,

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -41,6 +42,7 @@ data class Page<out T>(
     @ApiModelProperty("总共多少页", required = true)
     val totalPages: Int,
     @ApiModelProperty("数据", required = true)
+    @BkFieldI18n
     val records: List<T>
 ) {
     constructor(page: Int, pageSize: Int, count: Long, records: List<T>) : this(

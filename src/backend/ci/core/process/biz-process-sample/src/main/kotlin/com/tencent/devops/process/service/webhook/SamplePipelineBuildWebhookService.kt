@@ -29,7 +29,9 @@ package com.tencent.devops.process.service.webhook
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.permission.PipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -46,7 +48,10 @@ class SamplePipelineBuildWebhookService : PipelineBuildWebhookService() {
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EXECUTE,
-            message = "用户（$userId) 无权限启动流水线($pipelineId)" // 只是默认消息，有国际化i18n会取代该mesg
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = ProcessMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                params = arrayOf(userId, projectId, AuthPermission.EXECUTE.getI18n(I18nUtil.getLanguage(userId)))
+            )
         )
     }
 

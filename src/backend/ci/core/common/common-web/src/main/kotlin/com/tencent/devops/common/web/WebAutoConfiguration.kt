@@ -28,6 +28,7 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.web.interceptor.BkWriterInterceptor
 import com.tencent.devops.common.web.jasypt.DefaultEncryptor
 import io.undertow.UndertowOptions
 import org.slf4j.LoggerFactory
@@ -85,6 +86,9 @@ class WebAutoConfiguration {
 
     @Bean
     fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
+
+    @Bean
+    fun bkWriterInterceptor() = BkWriterInterceptor()
 
     @Bean
     @ConditionalOnProperty(

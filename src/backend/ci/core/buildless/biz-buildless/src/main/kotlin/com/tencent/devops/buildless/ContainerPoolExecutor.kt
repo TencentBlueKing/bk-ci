@@ -119,7 +119,7 @@ class ContainerPoolExecutor @Autowired constructor(
                 throw BuildLessException(
                     errorType = ErrorCodeEnum.GET_LOCK_FAILED.errorType,
                     errorCode = ErrorCodeEnum.GET_LOCK_FAILED.errorCode,
-                    errorMsg = ErrorCodeEnum.GET_LOCK_FAILED.formatErrorMessage
+                    errorMsg = ErrorCodeEnum.GET_LOCK_FAILED.getFormatErrorMessage()
                 )
             }
 

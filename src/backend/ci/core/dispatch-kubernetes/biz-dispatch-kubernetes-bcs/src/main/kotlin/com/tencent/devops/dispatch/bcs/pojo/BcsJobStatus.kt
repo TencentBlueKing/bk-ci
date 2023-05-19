@@ -27,6 +27,9 @@
 
 package com.tencent.devops.dispatch.bcs.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 /**
  * Bcs job 状态信息
  * @param status job 状态
@@ -37,11 +40,15 @@ data class BcsJobStatus(
     val deleted: Boolean
 )
 
-enum class BcsJobStatusEnum(val realName: String, val message: String) {
-    PENDING("pending", "job正在创建"),
-    RUNNING("running", "job正在运行"),
-    FAILED("failed", "job失败"),
-    SUCCEEDED("succeeded", "job成功");
+enum class BcsJobStatusEnum(
+    val realName: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "bcsJobStatus", reusePrefixFlag = false)
+    val message: String
+) {
+    PENDING("pending", "pending"), // job正在创建
+    RUNNING("running", "running"), // job正在运行
+    FAILED("failed", "failed"), // job失败
+    SUCCEEDED("succeeded", "succeeded"); // job成功
 
     companion object {
         fun realNameOf(realName: String?): BcsTaskStatusEnum? {

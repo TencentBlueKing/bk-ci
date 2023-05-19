@@ -47,9 +47,6 @@ interface ContainerService {
     // 停止构建锁
     val shutdownLockBaseKey: String
 
-    // 启动构建时打印的相关日志
-    val log: DispatchBuildLog
-
     // 平台不同的配置信息
     var cpu: Double
     var memory: String
@@ -59,6 +56,11 @@ interface ContainerService {
 
     // 平台错误帮助链接
     val helpUrl: String?
+
+    /**
+     * 启动构建时打印的相关日志
+     */
+    fun getLog(): DispatchBuildLog
 
     /**
      * 获取构建机状态

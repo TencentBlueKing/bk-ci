@@ -44,7 +44,7 @@ class DockerDownloaderService {
 
     fun downloadDocker(eTag: String?): Response {
         if (dockerFile.isNullOrBlank()) {
-            throw BadRequestException("docker.jar文件路径没有配置")
+            throw BadRequestException("docker.jar file Path no config")
         }
         return download(dockerFile, eTag)
     }
@@ -52,11 +52,11 @@ class DockerDownloaderService {
     private fun download(file: String, eTag: String?): Response {
         val worker = File(file)
         if (!worker.exists()) {
-            throw NotFoundException("${worker.absolutePath} 不存在")
+            throw NotFoundException("${worker.absolutePath} Does not exist")
         }
 
         if (!worker.isFile) {
-            throw BadRequestException("${worker.absolutePath} 不是一个文件")
+            throw BadRequestException("${worker.absolutePath} Not a file")
         }
 
         if (eTag != null && eTag.isNotBlank()) {

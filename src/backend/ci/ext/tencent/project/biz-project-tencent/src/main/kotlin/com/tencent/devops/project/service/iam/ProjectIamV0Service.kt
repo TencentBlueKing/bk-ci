@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.service.tof.TOFService
@@ -91,7 +91,12 @@ class ProjectIamV0Service @Autowired constructor(
         resourceTypeCode: String
     ): Boolean {
         projectDao.getByEnglishName(dslContext, projectId)
-            ?: throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+            ?: throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
 
         val authPermission = AuthPermission.get(permission)
         val authResourceType = AuthResourceType.get(resourceType)
@@ -116,8 +121,7 @@ class ProjectIamV0Service @Autowired constructor(
     ): Boolean {
         logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw ErrorCodeException(
-            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-            defaultMessage = MessageCodeUtil.getCodeMessage(ProjectMessageCode.PROJECT_NOT_EXIST, null)
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST
         )
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value
@@ -153,7 +157,7 @@ class ProjectIamV0Service @Autowired constructor(
             } catch (ignore: OperationException) {
                 logger.warn("OperationException $it $projectId ${ignore.message}")
                 throw OperationException(
-                    MessageCodeUtil.getCodeLanMessage(
+                    I18nUtil.getCodeLanMessage(
                         messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
                         defaultMessage = ignore.message,
                         params = arrayOf(it)

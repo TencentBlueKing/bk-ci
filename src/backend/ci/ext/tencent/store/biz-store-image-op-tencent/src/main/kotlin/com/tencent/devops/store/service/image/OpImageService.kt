@@ -28,9 +28,12 @@
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreMessageCode.BK_HISTORY_DATA_MIGRATE_PASS
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -79,12 +82,12 @@ import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
 import com.tencent.devops.store.pojo.image.request.OpImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.response.OpImageItem
 import com.tencent.devops.store.pojo.image.response.OpImageResp
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class OpImageService @Autowired constructor(
@@ -418,7 +421,11 @@ class OpImageService @Autowired constructor(
                 rdType = ImageRDTypeEnum.THIRD_PARTY,
                 weight = 1,
                 result = PASS,
-                message = "historyData数据迁移自动通过"
+                message =
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_HISTORY_DATA_MIGRATE_PASS,
+                    language = I18nUtil.getLanguage(userId)
+                )
             ),
             checkCurrentStatus = false
         )

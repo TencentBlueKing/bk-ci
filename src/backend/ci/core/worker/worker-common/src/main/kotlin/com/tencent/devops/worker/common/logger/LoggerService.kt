@@ -282,7 +282,7 @@ object LoggerService {
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (ignored: InterruptedException) {
-            logger.error("写入 $logType 日志行失败：", ignored)
+            logger.error("Writing to a $logType log line failed：", ignored)
         }
     }
 

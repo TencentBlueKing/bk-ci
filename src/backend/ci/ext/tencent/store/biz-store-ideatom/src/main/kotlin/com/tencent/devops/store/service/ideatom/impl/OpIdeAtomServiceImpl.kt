@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -50,8 +50,8 @@ import com.tencent.devops.store.dao.ideatom.IdeAtomEnvInfoDao
 import com.tencent.devops.store.dao.ideatom.IdeAtomLabelRelDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomFeatureDao
 import com.tencent.devops.store.dao.ideatom.MarketIdeAtomVersionLogDao
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.StoreReleaseCreateRequest
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreMemberTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.ideatom.IdeAtomBaseInfoUpdateRequest
@@ -67,13 +67,13 @@ import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.ideatom.IdeAtomCategoryService
 import com.tencent.devops.store.service.ideatom.OpIdeAtomService
 import com.tencent.devops.store.utils.VersionUtils
+import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class OpIdeAtomServiceImpl @Autowired constructor(
@@ -122,18 +122,20 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("updateIdeAtom userId is :$userId , ideAtomUpdateRequest is :$ideAtomUpdateRequest")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId)
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
             )
         val atomCode = atomRecord.atomCode
         val atomName = ideAtomUpdateRequest.atomName
         if (null != atomName) {
             // 判断更新的名称是否已存在
-            if (validateNameIsExist(atomCode, atomName)) return MessageCodeUtil.generateResponseDataObject(
+            if (validateNameIsExist(atomCode, atomName)) return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 更新git代码库信息
@@ -190,17 +192,19 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     override fun deleteIdeAtomById(atomId: String): Result<Boolean> {
         logger.info("deleteIdeAtomById atomId is :$atomId")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId)
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         val atomCode = atomRecord.atomCode
         val releasedCount = ideAtomDao.countReleaseAtomById(dslContext, atomId)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
-                params = arrayOf(atomCode)
+                params = arrayOf(atomCode),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         dslContext.transaction { t ->
@@ -226,8 +230,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val classifyRecord = classifyDao.getClassify(dslContext, it.classifyId)
             val classifyCode = classifyRecord?.classifyCode
             val classifyName = classifyRecord?.classifyName
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            val classifyLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, it.id)
@@ -301,8 +305,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomEnvInfoRecord = ideAtomEnvInfoDao.getIdeAtomEnvInfo(dslContext, atomId)
             val atomClassifyCode = it["classifyCode"] as? String
             val classifyName = it["classifyName"] as? String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$atomClassifyCode",
+            val classifyLanName = I18nUtil.getCodeLanMessage(
+                messageCode = "${StoreTypeEnum.IDE_ATOM.name}.classify.$classifyCode",
                 defaultMessage = classifyName
             )
             val opIdeAtomItem = OpIdeAtomItem(
@@ -370,9 +374,10 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("releaseIdeAtom userId:$userId,atomId:$atomId,ideAtomReleaseRequest:$ideAtomReleaseRequest")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId)
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(userId)
             )
         // 判断插件是否可以发布
         val atomFinalStatusList = listOf(
@@ -380,7 +385,9 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             IdeAtomStatusEnum.AUDITING.status.toByte()
         )
         if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_RELEASE_STEPS_ERROR,
+                language = I18nUtil.getLanguage(userId))
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -444,13 +451,16 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         logger.info("offlineIdeAtom userId is :$userId,atomCode is :$atomCode,version is :$version,reason is :$reason")
         if (!version.isNullOrEmpty()) {
             val atomRecord = ideAtomDao.getIdeAtom(dslContext, atomCode, version.trim())
-                ?: return MessageCodeUtil.generateResponseDataObject(
+                ?: return I18nUtil.generateResponseDataObject(
                     messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                     params = arrayOf("$atomCode:$version"),
-                    data = false
+                    data = false,
+                    language = I18nUtil.getLanguage(userId)
                 )
             if (IdeAtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PERMISSION_DENIED,
+                    language = I18nUtil.getLanguage(userId))
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -530,15 +540,17 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         val atomName = ideAtomCreateRequest.atomName
         // 判断更新的名称是否已存在
-        if (validateNameIsExist(atomCode, atomName)) return MessageCodeUtil.generateResponseDataObject(
-            CommonMessageCode.PARAMETER_IS_EXIST,
-            arrayOf(atomName)
+        if (validateNameIsExist(atomCode, atomName)) return I18nUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+            params = arrayOf(atomName),
+            language = I18nUtil.getLanguage(userId)
         )
         val atomRecord = ideAtomDao.getNewestAtomByCode(dslContext, atomCode)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(atomCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         // 校验前端传的版本号是否正确
         val releaseType = ideAtomCreateRequest.releaseType
@@ -567,9 +579,10 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 )
             }
         if (!requireVersionList.contains(version)) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
-                params = arrayOf(version, requireVersionList.toString())
+                params = arrayOf(version, requireVersionList.toString()),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 判断最近一个IDE插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
@@ -580,9 +593,10 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
         if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                params = arrayOf(atomRecord.atomName, atomRecord.version)
+                params = arrayOf(atomRecord.atomName, atomRecord.version),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 更新git代码库信息
@@ -627,7 +641,9 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                 )
         } catch (ignored: Throwable) {
             logger.warn("atom[$atomCode] updateGitCodeRepository fail", ignored)
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.SYSTEM_ERROR,
+                language = I18nUtil.getLanguage(userId))
         }
         logger.info("atom[$atomCode] updateGitRepositoryResult is :$updateGitRepositoryResult")
         if (updateGitRepositoryResult.isNotOk()) {
@@ -647,10 +663,11 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val codeCount = ideAtomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomCode),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val atomName = ideAtomCreateRequest.atomName
@@ -658,10 +675,11 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val nameCount = ideAtomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
+            return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf(atomName),
-                data = false
+                data = false,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         // 远程调工蜂接口创建代码库
@@ -685,11 +703,17 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("atom[$atomCode] createGitCodeRepository fail", ignored)
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
+                data = false,
+                language = I18nUtil.getLanguage(userId))
         }
         if (null == repositoryInfo) {
             // 创建代码库失败抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CREATE_REPOSITORY_FAIL, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_CREATE_REPOSITORY_FAIL,
+                data = false,
+                language = I18nUtil.getLanguage(userId))
         }
         saveIdeAtom(userId, ideAtomCreateRequest, atomCode, repositoryInfo)
         return Result(true)

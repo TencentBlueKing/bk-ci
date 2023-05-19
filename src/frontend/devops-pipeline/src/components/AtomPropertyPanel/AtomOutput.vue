@@ -42,9 +42,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'atom-output',
         components: {

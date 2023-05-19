@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
@@ -61,9 +61,10 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         logger.info("handleStoreBuildResult storeBuildResultRequest is:$storeBuildResultRequest")
         val atomId = storeBuildResultRequest.storeId
         val atomRecord = marketAtomDao.getAtomRecordById(dslContext, atomId)
-            ?: return MessageCodeUtil.generateResponseDataObject(
+            ?: return I18nUtil.generateResponseDataObject(
                 messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomId)
+                params = arrayOf(atomId),
+                language = I18nUtil.getLanguage(storeBuildResultRequest.userId)
             )
         // 防止重复的mq消息造成的状态异常
         if (atomRecord.atomStatus != AtomStatusEnum.BUILDING.status.toByte()) {
@@ -83,7 +84,7 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
             msg = null
         )
         if (atomStatus == AtomStatusEnum.TESTING) {
-            // 插件error.json文件数据入库
+            // 插件errorCodes.json文件数据入库
             atomReleaseService.syncAtomErrorCodeConfig(
                 atomCode = atomCode,
                 atomVersion = version,

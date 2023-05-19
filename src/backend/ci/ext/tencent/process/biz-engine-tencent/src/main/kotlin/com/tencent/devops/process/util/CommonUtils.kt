@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.util
 
-import org.apache.commons.lang3.StringUtils
-import org.slf4j.LoggerFactory
 import java.net.Inet4Address
 import java.net.InetAddress
 import java.net.NetworkInterface
+import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 
 @Suppress("LongMethod", "NestedBlockDepth")
 object CommonUtils {
@@ -42,7 +42,7 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.info("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.info("eth1 NIC IP is empty, therefore, get eth0's NIC IP")
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -72,7 +72,7 @@ object CommonUtils {
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) {
                         // 过滤掉127.0.0.1的IP
-                        logger.info("loopback地址或网卡名称为空")
+                        logger.info("The loopback address or NIC name is empty")
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -89,7 +89,7 @@ object CommonUtils {
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn("获取网卡失败", ignore)
+            logger.warn("Failed to obtain NIC", ignore)
         }
 
         return allIp

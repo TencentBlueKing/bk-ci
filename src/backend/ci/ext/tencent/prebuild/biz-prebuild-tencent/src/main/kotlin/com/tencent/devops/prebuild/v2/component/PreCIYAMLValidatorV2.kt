@@ -6,16 +6,19 @@ import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.prebuild.PreBuildMessageCode.ALPHABET_NUMBER_UNDERSCORE
+import com.tencent.devops.prebuild.PreBuildMessageCode.STAGES_JOBS_STEPS
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
-import org.slf4j.LoggerFactory
-import org.springframework.core.io.ClassPathResource
-import org.springframework.stereotype.Component
-import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.concurrent.ConcurrentHashMap
+import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
+import org.springframework.stereotype.Component
+import org.yaml.snakeyaml.Yaml
 
 @Component
 class PreCIYAMLValidatorV2 {
@@ -130,7 +133,11 @@ private fun JsonNode.checkVariablesFormat() {
     val keyRegex = Regex("^[0-9a-zA-Z_]+$")
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
-            throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
+            throw YamlFormatException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = ALPHABET_NUMBER_UNDERSCORE
+                )
+            )
         }
     }
 }
@@ -142,11 +149,18 @@ private fun JsonNode.checkCiRequired() {
             return
         }
     }
-    throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
+    throw YamlFormatException(
+        I18nUtil.getCodeLanMessage(
+        messageCode = STAGES_JOBS_STEPS
+    ))
 }
 
 private fun JsonNode.checkExtendsRequired() {
     if (get("stages") == null && get("jobs") == null && get("steps") == null) {
-        throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
+        throw YamlFormatException(
+            I18nUtil.getCodeLanMessage(
+                messageCode = STAGES_JOBS_STEPS
+            )
+        )
     }
 }

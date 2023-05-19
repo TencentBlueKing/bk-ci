@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.api.container
 
+import com.tencent.devops.common.api.annotation.BkInterfaceI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
@@ -95,6 +96,7 @@ interface UserContainerResource {
     @ApiOperation("获取所有的流水线构建容器信息")
     @GET
     @Path("/{projectCode}")
+    @BkInterfaceI18n
     fun getAllContainerInfos(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)

@@ -36,8 +36,8 @@ import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.AtomRespItem
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.service.atom.AtomService
 import org.springframework.beans.factory.annotation.Autowired
 

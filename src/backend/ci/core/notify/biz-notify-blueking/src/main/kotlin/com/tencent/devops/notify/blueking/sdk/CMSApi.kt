@@ -30,6 +30,7 @@ import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import com.tencent.devops.common.notify.pojo.RtxNotifyPost
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.pojo.WechatNotifyPost
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiResp
 import com.tencent.devops.notify.blueking.sdk.pojo.NocNoticeReq
 import com.tencent.devops.notify.blueking.sdk.pojo.SendMailReq
@@ -42,6 +43,7 @@ import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.NOC_NOTI
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.RTX_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.SMS_URL
 import com.tencent.devops.notify.blueking.utils.NotifyService.Companion.WECHAT_URL
+import com.tencent.devops.notify.constant.NotifyMessageCode.BK_NOTIFY_MESSAGES
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -105,7 +107,13 @@ class CMSApi @Autowired constructor(
         val wechatReq = with(wechatNotifyPost) {
             SendWxReq(
                     null, receiver,
-                    SendWxReq.Data(heading = "蓝鲸通知消息", message = msgInfo),
+                    SendWxReq.Data(
+                        heading = I18nUtil.getCodeLanMessage(
+                            messageCode = BK_NOTIFY_MESSAGES,
+                            language = I18nUtil.getLanguage(wechatNotifyPost.receiver)
+                        ),
+                        message = msgInfo
+                    ),
                     bk_username = sender
             )
         }

@@ -34,11 +34,11 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
 import com.tencent.devops.common.pipeline.event.PipelineCallbackEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_CALLBACK_SAVE_FAIL
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
 import com.tencent.devops.process.pojo.CreateCallBackResult
-import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -67,7 +67,6 @@ class ServiceCallBackResourceImpl @Autowired constructor(
         return if (result.failureEvents.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_CALLBACK_SAVE_FAIL,
-                defaultMessage = "创建callback失败",
                 params = arrayOf(result.failureEvents[event.name] ?: "")
             )
         } else {

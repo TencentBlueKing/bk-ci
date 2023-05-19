@@ -27,15 +27,17 @@
 
 package com.tencent.devops.common.web.handler
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
+import org.slf4j.LoggerFactory
 
 @BkExceptionMapper
 class PermissionForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenException> {
@@ -49,7 +51,7 @@ class PermissionForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenEx
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.defaultMessage
         } else {
-            "你没有权限进行该操作"
+            I18nUtil.getCodeLanMessage(BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

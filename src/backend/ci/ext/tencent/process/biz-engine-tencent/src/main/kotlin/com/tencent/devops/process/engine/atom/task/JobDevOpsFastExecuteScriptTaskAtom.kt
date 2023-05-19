@@ -32,15 +32,18 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.environment.api.ServiceEnvironmentResource
-import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobDevOpsFastExecuteScriptElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.api.ServiceEnvironmentResource
+import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_VIEW_RESULT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS
@@ -306,7 +309,10 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
             if (isParamSensitive) 1 else 0, type, envSet, account
         )
         val taskInstanceId = jobClient.fastExecuteScriptDevops(fastExecuteScriptReq, projectId)
-        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
+            messageCode = BK_VIEW_RESULT,
+            language = I18nUtil.getDefaultLocaleLanguage()
+        ) + jobClient.getDetailUrl(projectId, taskInstanceId), task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -394,11 +400,17 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            buildLogPrinter.addRedLine(buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
+                messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + "$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
-                errorMsg = "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$noExistsEnvNames"
             )
         }
 
@@ -412,11 +424,17 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val noAuthEnvIds = envIdList.subtract(userEnvIdList)
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
-            buildLogPrinter.addRedLine(buildId, "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
+                messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ) + "$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
-                errorMsg = "用户没有操作这些环境的权限！环境ID：$noAuthEnvIds"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + "$noAuthEnvIds"
             )
         }
         return envIdList
@@ -444,7 +462,10 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 logger.warn("The envIds not exists, id:$noExistsEnvIds")
                 buildLogPrinter.addRedLine(
                     buildId,
-                    "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds",
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "$noExistsEnvIds",
                     taskId,
                     containerId,
                     executeCount
@@ -452,7 +473,10 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
-                    errorMsg = "以下这些环境id不存在,请重新修改流水线！id：$noExistsEnvIds"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "$noExistsEnvIds"
                 )
             }
         }
@@ -468,7 +492,10 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 logger.warn("The nodeIds not exists, id:$noExistsNodeIds")
                 buildLogPrinter.addRedLine(
                     buildId,
-                    "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds",
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "$noExistsNodeIds",
                     taskId,
                     containerId,
                     executeCount
@@ -476,7 +503,10 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
-                    errorMsg = "以下这些节点id不存在,请重新修改流水线！id：$noExistsNodeIds"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ) + "$noExistsNodeIds"
                 )
             }
         }

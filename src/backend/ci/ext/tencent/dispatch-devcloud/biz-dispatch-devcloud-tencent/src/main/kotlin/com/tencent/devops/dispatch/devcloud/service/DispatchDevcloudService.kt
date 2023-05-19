@@ -1,12 +1,18 @@
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_BUILD_MACHINE_FAILS_START
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_CONTAINER_STATUS_EXCEPTION
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_GET_WEBSOCKET_URL_FAIL
+import com.tencent.devops.dispatch.devcloud.constant.DispatchDevcloudMessageCode.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
@@ -84,7 +90,7 @@ class DispatchDevcloudService @Autowired constructor(
             containerName = buildHistory.containerName
         } else {
             throw ErrorCodeException(
-                errorCode = "2103501",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "no container is ready to debug",
                 params = arrayOf(pipelineId)
             )
@@ -124,7 +130,7 @@ class DispatchDevcloudService @Autowired constructor(
                     if (status != DevCloudContainerStatus.RUNNING) {
                         logger.error("Status exception, containerName: $containerName, status: $status")
                         throw ErrorCodeException(
-                            errorCode = "2103502",
+                            errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                             defaultMessage = "Status exception, please try rebuild the pipeline",
                             params = arrayOf(pipelineId)
                         )
@@ -134,7 +140,7 @@ class DispatchDevcloudService @Autowired constructor(
                     // 异常状态
                     logger.error("Status exception, containerName: $containerName, status: $status")
                     throw ErrorCodeException(
-                        errorCode = "2103502",
+                        errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                         defaultMessage = "Status exception, please try rebuild the pipeline",
                         params = arrayOf(pipelineId)
                     )
@@ -219,11 +225,11 @@ class DispatchDevcloudService @Autowired constructor(
                     }
                 } else {
                     logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                                    "containerName:$debugContainerName 容器没有处于debug或正在占用中")
+                                    "containerName:$debugContainerName container is not in debug or in use")
                 }
             } else {
                 logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                                "containerName:$debugContainerName 容器已不存在")
+                                "containerName:$debugContainerName container no longer exists")
             }
         }
 
@@ -360,8 +366,19 @@ class DispatchDevcloudService @Autowired constructor(
                 projectId, pipelineId, AuthPermission.EDIT
             )
         ) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+            logger.info("user($userId)You do not have permission to edit " +
+                    "pipelines($pipelineId) under the project($projectId)")
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    params = arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
         }
     }
 
@@ -416,8 +433,8 @@ class DispatchDevcloudService @Autowired constructor(
                 val actionMessage = containerInstanceInfo.optString("actionMessage")
                 logger.error("Get container instance failed, msg: $actionMessage")
                 throw ErrorCodeException(
-                    errorCode = "2103503",
-                    defaultMessage = "构建机启动失败，错误信息:$actionMessage"
+                    errorCode = BK_BUILD_MACHINE_FAILS_START,
+                    params = arrayOf(actionMessage)
                 )
             }
             // 启动成功
@@ -425,8 +442,8 @@ class DispatchDevcloudService @Autowired constructor(
         } else {
             logger.error("create dev cloud vm failed, msg: ${startResult.second}")
             throw ErrorCodeException(
-                errorCode = "2103503",
-                defaultMessage = "构建机启动失败，错误信息:$startResult.second"
+                errorCode = BK_BUILD_MACHINE_FAILS_START,
+                params = arrayOf(startResult.second)
             )
         }
     }
@@ -443,8 +460,8 @@ class DispatchDevcloudService @Autowired constructor(
             val actionMessage = result.optString("actionMessage")
             logger.error("Get websocket url failed, msg: $actionMessage")
             throw ErrorCodeException(
-                errorCode = "2103504",
-                defaultMessage = "获取websocket url失败，错误信息:$actionMessage"
+                errorCode = BK_GET_WEBSOCKET_URL_FAIL,
+                params = arrayOf(actionMessage)
             )
         }
 

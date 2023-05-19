@@ -29,9 +29,12 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PIPELINE_NAME
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_PROJECT_ID
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -76,8 +79,32 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_BEE_CI_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_INTEGRITY_YAML
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_OPERATING_SYSTEM_CORRECT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CHECK_POOL_FIELD
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_CONTACT_PLUG_DEVELOPER
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EXPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EXPORT_SYSTEM_CREDENTIALS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_EXPORT_TIME
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_MODIFICATION_GUIDELINES
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NOT_CONFIRMED_CAN_EXECUTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NOT_EXIST_UNDER_NEW_BUSINESS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_NO_RIGHT_EXPORT_PIPELINE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ONLY_VISIBLE_PCG_BUSINESS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PIPELINED_ID
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLEASE_MANUALLY_MODIFY
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PLUG_NOT_SUPPORTED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SEARCH_STORE
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_WORKER_BEE_CI_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -98,10 +125,6 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.io.BufferedReader
 import java.io.StringReader
 import java.net.URLEncoder
@@ -109,6 +132,10 @@ import java.time.LocalDateTime
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import org.springframework.util.StopWatch
 
 /**
  *
@@ -437,8 +464,12 @@ class TXPipelineService @Autowired constructor(
         val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
             val gitCINotSupportTip =
-                "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行" +
-                    "，请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
+                "# ======== " + I18nUtil.getCodeLanMessage(
+                    messageCode = BK_NOT_CONFIRMED_CAN_EXECUTED,
+                    params = arrayOf(it.name)
+                ) + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CONTACT_PLUG_DEVELOPER
+                        ) + "（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
                     val element = it as LinuxScriptElement
@@ -570,8 +601,12 @@ class TXPipelineService @Autowired constructor(
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append(
-                        "# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！" +
-                                "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                        I18nUtil.getCodeLanMessage(
+                            messageCode = BK_PLUG_NOT_SUPPORTED,
+                            params = arrayOf(it.name, it.getClassType())
+                        ) + "！" + I18nUtil.getCodeLanMessage(
+                            messageCode = BK_CHECK_INTEGRITY_YAML
+                        ) + "。\n"
                     )
                     if (isGitCI) {
                         val task = OldVersionTask(
@@ -582,8 +617,12 @@ class TXPipelineService @Autowired constructor(
                         taskList.add(
                             TaskData(
                                 task,
-                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，" +
-                                        "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
+                                "# ======== " + I18nUtil.getCodeLanMessage(
+                                    messageCode = BK_BEE_CI_NOT_SUPPORT
+                                ) + " ${it.name} ，" +
+                                        I18nUtil.getCodeLanMessage(
+                                            messageCode = BK_SEARCH_STORE
+                                        ) + " ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
                         )
@@ -607,9 +646,20 @@ class TXPipelineService @Autowired constructor(
                 val dispatchType = modelContainer.dispatchType ?: return PoolData(null, null, null)
                 // 工蜂CI仅支持docker，devCloud，macos
                 val tip =
-                    "# 注意：工蜂CI暂不支持当前类型的构建机" +
-                            "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                            "需检查JOB(${modelContainer.name})的Pool字段 "
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE,
+                        language = I18nUtil.getLanguage(userId)
+                    ) +
+                            "【${dispatchType.buildType().getI18n(I18nUtil.getLanguage(userId))}" +
+                            "(${dispatchType.buildType().name})】 " +
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_EXPORT,
+                                language = I18nUtil.getLanguage(userId)
+                    ) + MessageUtil.getMessageByLocale(
+                                messageCode = BK_CHECK_POOL_FIELD,
+                                language = I18nUtil.getLanguage(userId),
+                                params = arrayOf(modelContainer.name)
+                            )
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
                         return PoolData(
@@ -664,9 +714,20 @@ class TXPipelineService @Autowired constructor(
                     }
                     else -> {
                         comment.append(
-                            "# 注意：暂不支持当前类型的构建机" +
-                                    "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                                    "需检查JOB(${modelContainer.name})的Pool字段 \n"
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED,
+                                language = I18nUtil.getLanguage(userId)
+                            ) +
+                                    "【${dispatchType.buildType().getI18n(userId)}(${dispatchType.buildType().name})】" +
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_EXPORT,
+                                        language = I18nUtil.getLanguage(userId)
+                                    ) +
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_CHECK_POOL_FIELD,
+                                        language = I18nUtil.getLanguage(userId),
+                                        params = arrayOf(modelContainer.name)
+                                    ) + " \n"
                         )
                         return PoolData(null, null, null)
                     }
@@ -680,8 +741,17 @@ class TXPipelineService @Autowired constructor(
 
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
-            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，" +
-                    "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_NOT_EXIST_UNDER_NEW_BUSINESS,
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_AGENT_ENV.getI18n(
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
+                    dispatchType.value
+                )
+            ) + I18nUtil.getCodeLanMessage(
+                        messageCode = BK_CHECK_OPERATING_SYSTEM_CORRECT
+                    ) + "! \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
@@ -739,8 +809,17 @@ class TXPipelineService @Autowired constructor(
 
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
-            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，" +
-                    "请手动修改成存在的节点！ \n"
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS,
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_AGENT_ID.getI18n(
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    ),
+                    dispatchType.value
+                )
+            ) + I18nUtil.getCodeLanMessage(
+                messageCode = BK_PLEASE_MANUALLY_MODIFY
+            ) + "！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
@@ -794,7 +873,15 @@ class TXPipelineService @Autowired constructor(
     }
 
     private fun getPcgPool(dispatchType: DispatchType, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_PCG.value}】仅对PCG业务可见，请检查当前业务是否属于PCG！ \n")
+        comment.append(
+            I18nUtil.getCodeLanMessage(
+                messageCode = BK_ONLY_VISIBLE_PCG_BUSINESS,
+                params = arrayOf(
+                    BuildType.THIRD_PARTY_PCG.getI18n(
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
+                )
+            ))
         return if (dispatchType is PCGDispatchType) {
             Pool(
                 container = dispatchType.value,
@@ -1085,26 +1172,72 @@ class TXPipelineService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下导出流水线"
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectId)
+            )
         )
         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
             Response.Status.BAD_REQUEST,
-            "流水线已不存在！"
+            MessageUtil.getMessageByLocale(
+                messageCode = ERROR_PIPELINE_NOT_EXISTS,
+                language = I18nUtil.getLanguage(userId)
+            ) + "！"
         )
         val yamlSb = StringBuilder()
         yamlSb.append("############################################################################" +
             "#########################################\n")
-        yamlSb.append("# 项目ID: $projectId \n")
-        yamlSb.append("# 流水线ID: $pipelineId \n")
-        yamlSb.append("# 流水线名称: ${model.name} \n")
-        yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PROJECT_ID,
+                language = I18nUtil.getLanguage(userId)
+            ) + " $projectId \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PIPELINED_ID,
+                language = I18nUtil.getLanguage(userId)
+            ) + " $pipelineId \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PIPELINE_NAME,
+                language = I18nUtil.getLanguage(userId)
+            ) + " ${model.name} \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_EXPORT_TIME,
+                language = I18nUtil.getLanguage(userId)
+            ) + " ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：https://iwiki.woa.com/p/800638064 ！  \n")
-        yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_EXPORT_SYSTEM_CREDENTIALS,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
         if (isGitCI) {
-            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），" +
-                "请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
-            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+            yamlSb.append(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_WORKER_BEE_CI_NOT_SUPPORT,
+                    language = I18nUtil.getLanguage(userId)
+                ) + MessageUtil.getMessageByLocale(
+                            messageCode = BK_MODIFICATION_GUIDELINES,
+                            language = I18nUtil.getLanguage(userId)
+                        ))
+            yamlSb.append(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_BEE_CI_NOT_SUPPORT,
+                    language = I18nUtil.getLanguage(userId)
+                ) + "," + MessageUtil.getMessageByLocale(
+                    messageCode = BK_SEARCH_STORE,
+                    language = I18nUtil.getLanguage(userId)
+                ) + " \n")
         }
         return Pair(model, yamlSb)
     }

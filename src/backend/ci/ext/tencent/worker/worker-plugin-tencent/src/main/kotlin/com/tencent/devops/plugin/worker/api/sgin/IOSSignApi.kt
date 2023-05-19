@@ -28,13 +28,15 @@
 package com.tencent.devops.plugin.worker.api.sgin
 
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_ENTERPRISE_SIGNATURE_FAILED
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
-import java.io.File
 
 /**
  * deng
@@ -54,7 +56,12 @@ class IOSSignApi : AbstractBuildResourceApi() {
             .build()
         val request = buildPost(path, requestBody)
         val timeout = (1 + file.length() / 1024 / 1024 / 1024) * 14 // 每G给14分钟，再增加14分钟做签名。
-        val response = request(request, "企业签名失败", 100, timeout * 60, timeout * 60)
+        val response = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_ENTERPRISE_SIGNATURE_FAILED,
+                language = AgentEnv.getLocaleLanguage()
+            ), 100, timeout * 60, timeout * 60)
         LoggerService.addErrorLine("response:$response")
         if (response.trim() != "success") {
             LoggerService.addErrorLine("Enterprise sign ($file) fail in domain:$gatewayDomain")

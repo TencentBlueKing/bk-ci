@@ -31,7 +31,8 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
@@ -41,6 +42,7 @@ import com.tencent.devops.process.pojo.template.TemplateId
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
@@ -138,12 +140,14 @@ class UserPTemplateResourceImpl @Autowired constructor(private val templateFacad
             if (setting.waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 setting.waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
             ) {
-                throw InvalidParamException("最大排队时长非法")
+                throw InvalidParamException(I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_QUEUE_LENGTH_ILLEGAL))
             }
             if (setting.maxQueueSize < PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN ||
                 setting.maxQueueSize > PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
             ) {
-                throw InvalidParamException("最大排队数量非法")
+                throw InvalidParamException(
+                    I18nUtil.getCodeLanMessage(ProcessMessageCode.MAXIMUM_NUMBER_QUEUES_ILLEGAL)
+                )
             }
         }
         return Result(templateFacadeService.updateTemplateSetting(projectId, userId, templateId, setting))

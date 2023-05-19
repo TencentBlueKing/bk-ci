@@ -1,0 +1,607 @@
+- index: 0
+  id: "13ec2ac58aab4d9bb8a04bbf7a9242f6"
+  templateCode: "STORE_MEMBER_ADD_ATOM"
+  templateName: "研发商店插件成员添加模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "d4c60ef6f52c4afe8429a72c4b4ab425"
+    sender: "DevOps"
+    title: "研发商店插件成员添加通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您添加为该插件的成员"
+  creator: "system"
+  modifior: "system"
+- index: 1
+  id: "15a1e5f8642c4d7196270329531bf4cb"
+  templateCode: "MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"
+  templateName: "人工审核-reject时发送消息"
+  notifyTypeScope:
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "db7ae51ad64f48fa878d36308cdecb8a"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由: \n${suggest}\n电脑端点击 ${reviewUrl} \n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "b236e73c17cb48bbbd7cc38ffbcae407"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建已被「${rejectUserId}」驳回，流水线状态为「 Stage成功」。\n驳回理由:  \n${suggest} \n[电脑端点击](${reviewUrl}) \n[手机端点击](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 2
+  id: "168b9b44b7104647b2102355180a2837"
+  templateCode: "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
+  templateName: "使用模板批量更新流水线的通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "d6c50c2989944c9f8a16aa029ed816b0"
+    sender: "DevOps"
+    title: "【${projectName}】项目流水线实例更新"
+    body: "您在【${projectName}】项目下已成功更新${successPipelineNum}条实例: \n${successPipelineMsg}\n其中${failurePipelineNum}条实例更新失败: \n${failurePipelineMsg}\n\n查看详情: ${instanceListUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 3
+  id: "1be5b658d4aa465a9f9a1d0af44c8384"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
+  templateName: "质量红线审核消息模板V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "0696ed183dca43ceb0963c99710f1f25"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知-待审核"
+    body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 4
+  id: "1dd8f74e334e4c41a20f4187b4e0e992"
+  templateCode: "EXTENSION_RELEASE_SUCCESS_TEMPLATE"
+  templateName: "扩展服务发布成功消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "acd5c108730b41babcd57dbf31fda760"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 成功发布"
+    body: "\n研发商店扩展【${name}】V${version} 成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 5
+  id: "20e4ac3f11ff4866b95a82b30b9032a1"
+  templateCode: "STORE_COMMENT_NOTIFY_TEMPLATE"
+  templateName: "store评论消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "8599414eaeec4791a430594147ded587"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 评论了 ${storeName}\n评分: ${score}\n评论: ${commentContent}\n[去回复 | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 6
+  id: "2d8c427026b049dc98630507f5e3fa38"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "执行成功的详情通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "895ddf2c5ab949d889d988d818981239"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}\n查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 7
+  id: "2e9227b122024a5a83c46a9f41b94aad"
+  templateCode: "STORE_COMMENT_REPLY_NOTIFY_TEMPLATE"
+  templateName: "store评论回复消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "e91eeea3f97345e69a19fafec806e75a"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】评论通知"
+    body: "${userId} 在 ${storeName} 回复了 ${replyToUser}\n${replyContent}//@${replyToUser}: ${replyComment}\n[去回复 | ${url}]"
+  creator: "system"
+  modifior: "system"
+- index: 8
+  id: "30c94a920c79453da784124ab41fb068"
+  templateCode: "ATOM_CODECC_QUALIFIED_TEMPLATE"
+  templateName: "插件代码扫描合格模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 9
+  id: "37ef4157cc254021ac7278b70f211f5e"
+  templateCode: "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
+  templateName: "人工审核插件通知"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  - "WEWORK_GROUP"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "930450b9edfe479e8c7504623261584d"
+    sender: "DevOps"
+    title: "${content}"
+    body: "审核说明: ${reviewDesc}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "0ca84f7d0dcf4453b30b3e465f1c4caf"
+    title: "${content}"
+    body: "审核说明: \n${reviewDesc} \n电脑端: [去审核](${reviewUrl}) \n手机端: [去审核](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 10
+  id: "3a39413a67bf404184dbd4e9309ebeb8"
+  templateCode: "QUALITY_NOTIFY_TEMPLATE"
+  templateName: "质量红线消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ac07cfe86b5040f7abb1280942e2c57c"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】审核通知"
+    body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 11
+  id: "3ea6c5e18d4b41a3890a150d1df16f4d"
+  templateCode: "IMAGE_EXECUTE_NULL_NOTIFY_TPL"
+  templateName: "镜像执行找不到镜像通知管理员"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "97f1480ba61b4a83947924c6c9dad3e6"
+    sender: "DevOps"
+    title: "${imageCode}(${imageVersion}) 镜像执行异常"
+    body: "[查看构建链接|${url}] ${userId} 的 ${projectCode} 项目下的 ${imageCode}(${imageVersion}) 镜像执行异常，pipelineId:${pipelineId},buildId:${buildId}"
+  creator: "system"
+  modifior: "system"
+- index: 12
+  id: "3fbf09f0511b424ab4480e18d6674349"
+  templateCode: "STREAM_V2_BUILD_TEMPLATE"
+  templateName: "Stream构建结束消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 13
+  id: "4589771c46b248079444a0e18e46a3fe"
+  templateCode: "IMAGE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "研发商店镜像通过审核发布"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "b4d0f2eb62394a0d9df97b97858adf9f"
+    sender: "DevOps"
+    title: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店镜像【${name}】V${version} 审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 14
+  id: "502f34f94a0d4bc7abe7c55f4e93da46"
+  templateCode: "PIPELINE_WEBHOOK_REGISTER_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "流水线webhook注册失败的通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "094a4cb13de54dc38e034002b01ffbeb"
+    sender: "DevOps"
+    title: "流水线【${pipelineName}】触发器回调注册失败"
+    body: "你刚刚保存的流水线【${pipelineName}】触发器回调注册失败，失败原因: ${elementNames}查看详情: ${pipelineEditUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 15
+  id: "698634fd3bae40378eeb24c8d6a5c91c"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "模板发布审核被拒消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "756a60da56d345148567fb1465fbb6a7"
+    sender: "DevOps"
+    title: "研发商店模板【${name}】V${version} 审核不通过"
+    body: "研发商店模板【${name}】V${version} 审核不通过"
+  creator: "system"
+  modifior: "system"
+- index: 16
+  id: "6a3db6f561f44d4895518e881a3cb53b"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
+  templateName: "执行失败的通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "607d08cf17424ad483d9bbd57da898d1"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}"
+  creator: "system"
+  modifior: "system"
+- index: 17
+  id: "6c00ffb0de6f485eb301940ca639d04d"
+  templateCode: "TEMPLATE_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "模板发布审核通过消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "9e982e6afc67440cab33604b7ad772b6"
+    sender: "DevOps"
+    title: "研发商店模板【${name}】审核通过，成功发布"
+    body: "研发商店模板【${name}】审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 18
+  id: "7a64b8cd997b49858964ac34079bf234"
+  templateCode: "QUALITY_AUDIT_NOTIFY_TEMPLATE"
+  templateName: "质量红线消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "c7a45d36528a4af784f754017d7e37fe"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】审核通知"
+    body: "${pipelineName}(#${buildNo})被拦截，需要审核\n所属项目: ${projectName}\n拦截时间: ${time} ${result}\n审核链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 19
+  id: "7dee6377c27344818836ef1f035a14d1"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"
+  templateName: "stage人工审核用于发给触发者"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "9fb98246b0a2478384c21ba3fb617474"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "当前构建需人工审核通过后才执行后续流程，请耐心等待审核，或联系审核人${reviewers}处理。\n${reviewDesc} \n电脑端点击 ${reviewUrl} \n手机端点击 ${reviewAppUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 20
+  id: "91fb62ef51a24266ae0946112e094190"
+  templateCode: "GITCI_V2_BUILD_TEMPLATE"
+  templateName: "工蜂CI-V2构建结束消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 21
+  id: "92055af946b64850a193e1090865642e"
+  templateCode: "ATOM_CODECC_FAILED_TEMPLATE"
+  templateName: "插件代码扫描不通过模板"
+  notifyTypeScope:
+  - "EMAIL"
+  priority: 0
+  source: 0
+  creator: "system"
+  modifior: "system"
+- index: 22
+  id: "92c4e65e4cd2432eb326789ce503d698"
+  templateCode: "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "执行失败的详情通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "9f1c741fe5df486193971ef5a659f061"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建失败"
+    body: "❌${failContent}\n\n查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 23
+  id: "96c0a1adaca7428eb0b2d69820923d52"
+  templateCode: "EXTENSION_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "研发商店扩展审核拒绝消息"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "f5861d3d23604c328aedd74afe73496c"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 审核不通过"
+    body: "研发商店扩展【${name}】V${version} 审核不通过，驳回原因: ${serviceStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 24
+  id: "a9b46a21ed7949ddb946e5186b9102c1"
+  templateCode: "EXTENSION_RELEASE_FAIL_TEMPLATE"
+  templateName: "扩展服务发布失败消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ad06d0496fb74f3f8c526e5ffda12d00"
+    sender: "DevOps"
+    title: "研发商店扩展【${name}】V${version} 发布失败"
+    body: "研发商店扩展【${name}】V${version} 发布失败"
+  creator: "system"
+  modifior: "system"
+- index: 25
+  id: "bf0ca37469cf448a86875bb2f11517c5"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
+  templateName: "启动的详情通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "6ea6e1ef451e44059e6d7545892d97f3"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
+    body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行查看详情:${detailUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 26
+  id: "cbdd75de2c7f40a6a3bc1dfd909020a7"
+  templateCode: "STORE_MEMBER_DELETE_ATOM"
+  templateName: "研发商店插件成员移除模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "7b803d1073014351a8855bcc02629d90"
+    sender: "DevOps"
+    title: "研发商店插件成员移除通知"
+    body: "研发商店的【${storeName}】插件的管理员【${storeAdmin}】已将您从该插件的成员列表中移除"
+  creator: "system"
+  modifior: "system"
+- index: 27
+  id: "cd7cecc126744f13a60d655d0af116af"
+  templateCode: "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
+  templateName: "启动的通知模板代码"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "252497da08fe4abdae8fa49e05ee8ea8"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 开始执行"
+    body: "【${projectName}】-【${pipelineName}】#${buildNum} 开始执行"
+  creator: "system"
+  modifior: "system"
+- index: 28
+  id: "cff00f19e6884862b6f9afe0f608e91e"
+  templateCode: "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
+  templateName: "执行成功的通知模板代码"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "16b3188f363247ec81923fff2ee4cafd"
+    sender: "DevOps"
+    title: "蓝盾流水线【${pipelineName}】#${buildNum} 构建成功"
+    body: "✔️${successContent}"
+  creator: "system"
+  modifior: "system"
+- index: 29
+  id: "d58e5895dfab4136ac898d93e3bff3ac"
+  templateCode: "PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"
+  templateName: "构建触发审核通知"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "1424de9fcb6e4efe860e0b64bbf78002"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建触发审核"
+    body: "触发人: ${triggerUser}\n\n审核人: ${reviewers}\n\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  creator: "system"
+  modifior: "system"
+- index: 30
+  id: "d77a91dd09994c54b14f118956e0d6e9"
+  templateCode: "PIPELINE_TASK_PAUSE_NOTIFY"
+  templateName: "流水线TASK暂停通知"
+  notifyTypeScope:
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "5182f93f61ee416c854b3e4d4e7b0859"
+    sender: "DevOps"
+    title: "蓝盾流水线【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 构建暂停"
+    body: "【${BK_CI_PROJECT_NAME_CN}】-【${BK_CI_PIPELINE_NAME}】#${BK_CI_BUILD_NUM} 在执行【${taskName}】前暂停，触发人: ${BK_CI_START_USER_ID}[去处理 | ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 31
+  id: "d7d9e1a773fe4a658f6c51b80da282ea"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE"
+  templateName: "质量红线拦截消息模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "bd286b16e530440fb5691ab8dc625274"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知"
+    body: "${pipelineName}(#${buildNo})被拦截\n所属项目: ${projectName}\n拦截时间: ${time}\n拦截指标: ${thresholdListString}\n详情链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 32
+  id: "dff46cd92eab458b96b25be0d7a61054"
+  templateCode: "ATOM_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "插件发布审核被拒消息通知模板"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "34a071f8d22f4edaba56624df3a0aae2"
+    sender: "DevOps"
+    title: "研发商店插件【${name}】V${version} 审核不通过"
+    body: "研发商店插件【${name}】V${version} 审核不通过"
+  creator: "system"
+  modifior: "system"
+- index: 33
+  id: "e961fd2ccc1c4f5d8eefaac9d51b5cb0"
+  templateCode: "ATOM_RELEASE_AUDIT_PASS_TEMPLATE"
+  templateName: "插件发布审核通过消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "48ba65ca230c46f08c6e3ca2da753aee"
+    sender: "DevOps"
+    title: "研发商店插件【${name}】V${version} 审核通过，成功发布"
+    body: "研发商店插件【${name}】V${version} 审核通过，成功发布"
+  creator: "system"
+  modifior: "system"
+- index: 34
+  id: "ea98239a51a74f8db0a012a809bc1116"
+  templateCode: "IMAGE_RELEASE_AUDIT_REFUSE_TEMPLATE"
+  templateName: "研发商店镜像审核驳回"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "390987c50179422388dd742924fc4a01"
+    sender: "DevOps"
+    title: "研发商店镜像【${name}】V${version} 审核不通过"
+    body: "研发商店镜像【${name}】V${version} 审核不通过，驳回原因: ${imageStatusMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 35
+  id: "f0663e7ac2b74130ada0408bdce8cd20"
+  templateCode: "QUALITY_END_NOTIFY_TEMPLATE_V2"
+  templateName: "质量红线拦截消息模板V2"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "f19f696753f14007b3733e36dcf5d476"
+    sender: "DevOps"
+    title: "【蓝盾质量红线】拦截通知-已终止"
+    body: "${title}\n所属项目: ${projectName}\n触发人: ${cc}\n拦截时间: ${time}\n${result}\n流水线链接: ${url}"
+  creator: "system"
+  modifior: "system"
+- index: 36
+  id: "f0949ab70cc04aa5b1bc787d5a47eba7"
+  templateCode: "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
+  templateName: "阶段审核通知"
+  notifyTypeScope:
+  - "WEWORK"
+  - "EMAIL"
+  - "WEWORK_GROUP"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "aab3cc905f004b9392773d388d64daef"
+    sender: "DevOps"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建状态为stage sucess，需要您的审核才执行后续流程\n审核说明: ${reviewDesc}\n电脑端点击 ${reviewUrl}\n手机端点击 ${reviewAppUrl}"
+  weworkGroupTemplate:
+    id: "cead07553b364b5a9c3f0290e35c82da"
+    title: "项目【${projectName}】下的流水线【${pipelineName}】#${buildNum} 构建Stage审核"
+    body: "构建状态为stage sucess，需要「${reviewers}」的审核才执行后续流程\n\n审核说明: \n${reviewDesc}\n\n[电脑端点击](${reviewUrl})\n[手机端点击](${reviewAppUrl})"
+  creator: "system"
+  modifior: "system"
+- index: 37
+  id: "f5c17a3f5dcd4c9ea7cf7a16a16e7135"
+  templateCode: "ATOM_COLLABORATOR_APPLY_REFUSE"
+  templateName: "插件协作开发申请被拒的消息通知模板"
+  notifyTypeScope:
+  - "EMAIL"
+  - "WEWORK"
+  priority: 1
+  source: 0
+  weworkTemplate:
+    id: "8a943ecad5e7490bb04ef1bd7c176568"
+    sender: "DevOps"
+    title: "【蓝盾研发商店】协作申请被驳回"
+    body: "流水线插件【${atomName}】的管理员【${atomAdmin}】驳回了你的协作申请,驳回原因: ${approveMsg}"
+  creator: "system"
+  modifior: "system"
+- index: 38
+  id: "1e7864726dd04311b21019bcceddfee8"
+  templateCode: "PIPELINE_CALLBACK_DISABLE_NOTIFY_TEMPLATE"
+  templateName: "流水线callback禁用通知模板代码"
+  notifyTypeScope:
+    - "WEWORK"
+  priority: 0
+  source: 0
+  weworkTemplate:
+    id: "ca32a24efaf74062a0cd68a24f47e3b4"
+    sender: "DevOps"
+    title: "蓝盾流水线回调接口异常"
+    body: "项目【${projectName}】所注册的【${events}】事件回调接口【${callbackUrl}】因多次调用失败，现已被禁用\n流水线链接：${pipelineListUrl}"
+  creator: "system"
+  modifior: "system"

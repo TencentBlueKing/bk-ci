@@ -39,7 +39,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -77,7 +77,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
-                MessageCodeUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )
@@ -131,7 +131,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val englishName = callBackInfo.englishName
         val projectInfo =
             client.get(ServiceProjectResource::class).get(englishName = englishName).data ?: throw OperationException(
-                MessageCodeUtil.getCodeLanMessage(
+                I18nUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.PROJECT_NOT_EXIST,
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )

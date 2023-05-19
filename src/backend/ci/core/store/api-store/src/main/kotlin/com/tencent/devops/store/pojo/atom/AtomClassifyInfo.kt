@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -34,7 +36,10 @@ import io.swagger.annotations.ApiModelProperty
 data class AtomClassifyInfo(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
+    @ApiModelProperty("版本号", required = true)
+    val version: String,
     @ApiModelProperty("插件名称", required = true)
+    @BkFieldI18n(source = I18nSourceEnum.DB, convertName = "name")
     val atomName: String,
     @ApiModelProperty("插件分类编码", required = true)
     val classifyCode: String,

@@ -156,7 +156,7 @@ class UserStreamDetailResourceImpl @Autowired constructor(
                 permission = AuthPermission.VIEW
             )
         } catch (error: CustomException) {
-            return Result(ErrorCodeEnum.NO_REPORT_AUTH.errorCode, ErrorCodeEnum.NO_REPORT_AUTH.formatErrorMessage)
+            return Result(ErrorCodeEnum.NO_REPORT_AUTH.errorCode, ErrorCodeEnum.NO_REPORT_AUTH.getErrorMessage())
         }
         return Result(streamDetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }

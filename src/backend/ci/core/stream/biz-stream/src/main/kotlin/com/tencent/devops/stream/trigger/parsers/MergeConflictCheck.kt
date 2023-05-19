@@ -157,7 +157,7 @@ class MergeConflictCheck @Autowired constructor(
                 recordId = notBuildRecordId,
                 reason = ErrorCodeEnum.GET_GIT_MERGE_INFO.name,
                 reasonDetail = if (e.defaultMessage.isNullOrBlank()) {
-                    ErrorCodeEnum.GET_GIT_MERGE_INFO.formatErrorMessage
+                    ErrorCodeEnum.GET_GIT_MERGE_INFO.getErrorMessage()
                 } else {
                     e.defaultMessage!!
                 }

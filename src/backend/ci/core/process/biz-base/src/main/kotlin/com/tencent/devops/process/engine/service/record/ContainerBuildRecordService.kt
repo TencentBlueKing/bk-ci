@@ -417,6 +417,13 @@ class ContainerBuildRecordService(
                 )
                 return@transaction
             }
+            val containerStatus = recordContainer.status
+            if (buildStatus == BuildStatus.PREPARE_ENV && containerStatus != null &&
+                BuildStatus.valueOf(containerStatus).isFinish()
+            ) {
+                logger.warn("ENGINE|$buildId|updateContainerRecord|container($containerId) is finish.")
+                return@transaction
+            }
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
             val now = LocalDateTime.now()

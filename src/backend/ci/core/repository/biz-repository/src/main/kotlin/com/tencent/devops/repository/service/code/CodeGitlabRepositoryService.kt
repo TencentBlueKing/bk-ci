@@ -26,12 +26,14 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.GITLAB_INVALID
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.USER_SECRET_EMPTY
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -100,7 +102,12 @@ class CodeGitlabRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_GITLAB.name) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = GITLAB_INVALID,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
@@ -159,12 +166,12 @@ class CodeGitlabRepositoryService @Autowired constructor(
             RepoAuthType.SSH -> {
                 if (repoCredentialInfo.token.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.GIT_TOKEN_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.privateKey.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(USER_SECRET_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(

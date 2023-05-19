@@ -73,7 +73,7 @@
         },
         methods: {
             startDebug () {
-                const vmSeqId = this.job.containerId || this.getRealSeqId()
+                const vmSeqId = this.job.id || this.getRealSeqId()
                 let url = ''
                 const tab = window.open('about:blank')
                 const dispatchType = this.job.dispatchType.buildType || 'GIT_CI'

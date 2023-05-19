@@ -30,8 +30,8 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.pojo.common.Classify
@@ -91,10 +91,11 @@ class ClassifyServiceImpl @Autowired constructor(
         val codeCount = classifyDao.countByCode(dslContext, classifyCode, type)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(classifyCode),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(classifyCode),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val classifyName = classifyRequest.classifyName
@@ -102,10 +103,11 @@ class ClassifyServiceImpl @Autowired constructor(
         val nameCount = classifyDao.countByName(dslContext, classifyName, type)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(classifyName),
-                false
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(classifyName),
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         val id = UUIDUtil.generate()
@@ -126,10 +128,10 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyCode != classify.classifyCode) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(classifyCode),
-                    false
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(classifyCode),
+                    data = false
                 )
             }
         }
@@ -141,10 +143,10 @@ class ClassifyServiceImpl @Autowired constructor(
             val classify = classifyDao.getClassify(dslContext, id)
             if (null != classify && classifyName != classify.classifyName) {
                 // 抛出错误提示
-                return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_EXIST,
-                    arrayOf(classifyName),
-                    false
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                    params = arrayOf(classifyName),
+                    data = false
                 )
             }
         }
@@ -166,7 +168,11 @@ class ClassifyServiceImpl @Autowired constructor(
         if (flag) {
             classifyDao.delete(dslContext, id)
         } else {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_CLASSIFY_IS_NOT_ALLOW_DELETE, false)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_CLASSIFY_IS_NOT_ALLOW_DELETE,
+                data = false,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         }
         return Result(true)
     }

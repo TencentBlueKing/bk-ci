@@ -36,9 +36,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.constant.StoreMessageCode
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
@@ -46,6 +45,7 @@ import java.io.InputStream
 import java.net.URL
 import java.util.regex.Matcher
 import java.util.regex.Pattern
+import org.slf4j.LoggerFactory
 
 object AtomReleaseTxtAnalysisUtil {
 
@@ -164,7 +164,8 @@ object AtomReleaseTxtAnalysisUtil {
                     serviceUrlPrefix = serviceUrlPrefix,
                     file = file,
                     fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-                    logo = true
+                    logo = true,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ).data
                 fileUrl?.let { result[path] = StoreUtils.removeUrlHost(fileUrl) }
             } else {
@@ -183,9 +184,10 @@ object AtomReleaseTxtAnalysisUtil {
             matcher.group(2).replace("\"", "")
         } else null
         return if (relativePath.isNullOrBlank()) {
-            MessageCodeUtil.generateResponseDataObject(
+            I18nUtil.generateResponseDataObject(
                 StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
-                arrayOf("releaseInfo.logoUrl")
+                arrayOf("releaseInfo.logoUrl"),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         } else {
             Result(relativePath)
@@ -209,7 +211,10 @@ object AtomReleaseTxtAnalysisUtil {
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
             response.body!!.string()
             if (!response.isSuccessful) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+                return I18nUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.SYSTEM_ERROR,
+                    language = I18nUtil.getLanguage(userId)
+                )
             }
             return Result(true)
         }

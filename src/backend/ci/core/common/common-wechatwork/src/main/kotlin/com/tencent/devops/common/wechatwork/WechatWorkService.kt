@@ -29,9 +29,11 @@ package com.tencent.devops.common.wechatwork
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.BK_HUMAN_SERVICE
 import com.tencent.devops.common.api.util.JacksonUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
 import com.tencent.devops.common.wechatwork.model.CallbackElement
 import com.tencent.devops.common.wechatwork.model.CreateChatItem
@@ -346,7 +348,7 @@ class WechatWorkService @Autowired constructor(
                     type = "link",
                     link = LinkItem(
                         type = "click",
-                        text = "人工服务",
+                        text = I18nUtil.getCodeLanMessage(BK_HUMAN_SERVICE),
                         key = "humanService"
                     ),
                     text = null

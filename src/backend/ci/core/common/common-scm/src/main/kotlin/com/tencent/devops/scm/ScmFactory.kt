@@ -27,12 +27,13 @@
 
 package com.tencent.devops.scm
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.scm.code.CodeGitScmImpl
 import com.tencent.devops.scm.code.CodeGitlabScmImpl
@@ -166,13 +167,19 @@ object ScmFactory {
             ScmType.CODE_P4 -> {
                 if (passPhrase == null) {
                     throw ScmException(
-                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY),
+                        MessageUtil.getMessageByLocale(
+                            messageCode = CommonMessageCode.PWD_EMPTY,
+                            language = DEFAULT_LOCALE_LANGUAGE
+                        ),
                         ScmType.CODE_P4.name
                     )
                 }
                 if (userName == null) {
                     throw ScmException(
-                        MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY),
+                        MessageUtil.getMessageByLocale(
+                            messageCode = CommonMessageCode.USER_NAME_EMPTY,
+                            language = DEFAULT_LOCALE_LANGUAGE
+                        ),
                         ScmType.CODE_P4.name
                     )
                 }

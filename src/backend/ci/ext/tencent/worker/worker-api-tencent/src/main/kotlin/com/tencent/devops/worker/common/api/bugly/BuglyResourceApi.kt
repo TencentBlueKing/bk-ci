@@ -29,13 +29,16 @@ package com.tencent.devops.worker.common.api.bugly
 
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_FAILED_UPLOAD_BUGLY_FILE
+import com.tencent.devops.worker.common.env.AgentEnv
+import java.io.File
+import java.net.URLEncoder
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
-import java.io.File
-import java.net.URLEncoder
 
 class BuglyResourceApi : AbstractBuildResourceApi() {
     private val logger = LoggerFactory.getLogger(BuglyResourceApi::class.java)
@@ -65,7 +68,13 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
             .addFormDataPart("file", file.name, file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
             .build()
         val request = buildPost(path, body)
-        val responseContent = request(request, "上传bugly文件失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_UPLOAD_BUGLY_FILE,
+                language = AgentEnv.getLocaleLanguage()
+            )
+        )
 
         val obj = parser.parse(responseContent).asJsonObject
         return if (obj["rtcode"].asString != "0") {

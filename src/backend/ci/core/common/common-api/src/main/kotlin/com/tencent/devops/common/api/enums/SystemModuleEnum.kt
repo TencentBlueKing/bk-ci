@@ -50,8 +50,18 @@ enum class SystemModuleEnum(val code: String) {
     TICKET("18"), // 证书凭据
     PROJECT("19"), // 项目管理
     STORE("20"), // 商店
-    LAMBDA("21"), // lambda
-    METRICS("23"); // 度量服务
+    AUTH("21"), // 权限
+    SIGN("22"), // 签名服务
+    METRICS("23"), // 度量服务
+    EXTERNAL("24"), // 外部扩展
+    PREBUILD("25"), // 预构建
+    // DISPATCH-KUBERNETES("26"), // k8s分发服务
+    BUILDLESS("27"), // buildless服务
+    LAMBDA("28"), // lambda服务
+    STREAM("29"), // stream服务
+    WORKER("30"), // 度量服务
+    // DISPATCH-DOCKER("31"), // docker分发服务
+    REMOTEDEV("32"); // 远程开发服务
 
     companion object {
         fun getSystemModule(code: String): String {

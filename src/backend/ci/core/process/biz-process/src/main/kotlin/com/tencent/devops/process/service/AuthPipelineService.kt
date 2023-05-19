@@ -102,7 +102,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId 项目下无流水线")
+            logger.info("project $projectId no pipeline")
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -136,7 +136,7 @@ class AuthPipelineService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (pipelineInfos.records.isEmpty()) {
-            logger.info("$projectId 项目下无流水线")
+            logger.info("$projectId There is no assembly line under the project")
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -175,7 +175,7 @@ class AuthPipelineService @Autowired constructor(
         val result = FetchInstanceInfo()
 
         if (pipelineInfos.isEmpty()) {
-            logger.info("$ids 未匹配到启用流水线")
+            logger.info("$ids does not match to the enable pipeline")
             return result.buildFetchInstanceFailResult()
         }
 

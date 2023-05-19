@@ -27,8 +27,18 @@
 
 package com.tencent.devops.stream.util
 
+import com.tencent.devops.common.web.utils.I18nUtil
+
 @Suppress("MaxLineLength")
 object QualityUtils {
+
+    private const val BK_TRIGGER_METHOD = "bkTriggerMethod" // 触发方式
+    private const val BK_QUALITY = "bkQuality" // 质量红线
+    private const val BK_QUALITY_OUTPUT_ATOM = "bkQualityOutputAtom" // 质量红线产出插件
+    private const val BK_INDEX = "bkIndex" // 指标
+    private const val BK_RESULT = "bkResult" // 结果
+    private const val BK_ANTICIPATE = "bkAnticipate" // 预期
+
     fun getQualityReport(titleData: List<String>, resultData: MutableMap<String, MutableList<List<String>>>): String {
         val (status, timeCost, triggerType, pipelineName, url) = titleData
         val pipelineNameTitle = titleData[5]
@@ -38,18 +48,18 @@ object QualityUtils {
         val title = "<table><tr>" +
             "<td style=\"border:none;padding-right: 0;\">$pipelineNameTitle：</td>" +
             "<td style=\"border:none;padding-left:0;\"><a href='$url' style=\"color: #03A9F4\">$pipelineName</a></td>" +
-            "<td style=\"border:none;padding-right: 0\">触发方式：</td>" +
+            "<td style=\"border:none;padding-right: 0\">${I18nUtil.getCodeLanMessage(BK_TRIGGER_METHOD)}：</td>" +
             "<td style=\"border:none;padding-left:0;\">$triggerType</td>" +
-            "<td style=\"border:none;padding-right: 0\">质量红线：</td>" +
+            "<td style=\"border:none;padding-right: 0\">${I18nUtil.getCodeLanMessage(BK_QUALITY)}：</td>" +
             "<td style=\"border:none;padding-left:0;\">$ruleName</td>" +
             "</tr></table>"
         val body = StringBuilder("")
         body.append("<table border=\"1\" cellspacing=\"0\" width=\"450\">")
         body.append("<tr>")
-        body.append("<th style=\"text-align:left;\">质量红线产出插件</th>")
-        body.append("<th style=\"text-align:left;\">指标</th>")
-        body.append("<th style=\"text-align:left;\">结果</th>")
-        body.append("<th style=\"text-align:left;\">预期</th>")
+        body.append("<th style=\"text-align:left;\">${I18nUtil.getCodeLanMessage(BK_QUALITY_OUTPUT_ATOM)}</th>")
+        body.append("<th style=\"text-align:left;\">${I18nUtil.getCodeLanMessage(BK_INDEX)}</th>")
+        body.append("<th style=\"text-align:left;\">${I18nUtil.getCodeLanMessage(BK_RESULT)}</th>")
+        body.append("<th style=\"text-align:left;\">${I18nUtil.getCodeLanMessage(BK_ANTICIPATE)}</th>")
         body.append("<th style=\"text-align:left;\"></th>")
         body.append("</tr>")
         resultData.forEach { (elementName, result) ->

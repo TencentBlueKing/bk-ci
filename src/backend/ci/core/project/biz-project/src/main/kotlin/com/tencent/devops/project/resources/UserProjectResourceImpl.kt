@@ -31,7 +31,9 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
@@ -106,7 +108,7 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun diff(userId: String, projectId: String, accessToken: String?): Result<ProjectDiffVO> {
         return Result(
             projectService.diff(userId, projectId, accessToken)
-                ?: throw OperationException("项目不存在")
+                ?: throw OperationException(I18nUtil.getCodeLanMessage(PROJECT_NOT_EXIST))
         )
     }
 

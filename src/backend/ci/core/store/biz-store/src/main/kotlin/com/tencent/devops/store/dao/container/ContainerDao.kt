@@ -34,7 +34,6 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 @Repository
@@ -101,8 +100,8 @@ class ContainerDao {
 
     private fun queryContainerCondition(a: TContainer, type: String?, os: String?): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        if (!StringUtils.isEmpty(type)) conditions.add(a.TYPE.eq(type))
-        if (!StringUtils.isEmpty(os)) conditions.add(a.OS.eq(os))
+        if (!type.isNullOrBlank()) conditions.add(a.TYPE.eq(type))
+        if (!os.isNullOrBlank()) conditions.add(a.OS.eq(os))
         return conditions
     }
 
