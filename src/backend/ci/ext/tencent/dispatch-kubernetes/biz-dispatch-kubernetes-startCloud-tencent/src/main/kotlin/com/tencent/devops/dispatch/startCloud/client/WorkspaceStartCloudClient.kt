@@ -29,7 +29,6 @@ import java.net.SocketTimeoutException
 @Component
 class WorkspaceStartCloudClient @Autowired constructor(
     private val dslContext: DSLContext,
-    private val commonService: CommonService,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
     companion object {
@@ -51,7 +50,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val body = JsonUtil.toJson(environment, false)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     body
@@ -106,7 +105,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         val body = JsonUtil.toJson(environment, false)
         logger.info("deleteWorkspace User $userId request url: $url, body: $body")
         val request = Request.Builder()
-            .url(commonService.getProxyUrl(url))
+            .url(url)
             .headers(
                 makeHeaders(
                     body
