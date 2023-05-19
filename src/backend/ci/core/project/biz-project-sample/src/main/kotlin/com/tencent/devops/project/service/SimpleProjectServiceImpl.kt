@@ -194,21 +194,6 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun updateProjectRouterTag(englishName: String) = Unit
 
-    override fun getV0orV3Projects(
-        authType: AuthSystemType,
-        limit: Int,
-        offset: Int
-    ): List<ProjectVO> {
-        return projectDao.list(
-            dslContext = dslContext,
-            limit = limit,
-            offset = offset,
-            channelCode = ProjectChannelCode.BS
-        ).map {
-            ProjectUtils.packagingBean(it)
-        }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)
     }

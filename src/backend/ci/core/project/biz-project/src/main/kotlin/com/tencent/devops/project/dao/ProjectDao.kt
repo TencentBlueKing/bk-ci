@@ -28,6 +28,7 @@
 package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.db.utils.JooqUtils
 import com.tencent.devops.model.project.tables.TProject
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -110,22 +111,28 @@ class ProjectDao {
         }
     }
 
-    fun list(
+    fun list(dslContext: DSLContext, limit: Int, offset: Int): Result<TProjectRecord> {
+        return with(TProject.T_PROJECT) {
+            dslContext.selectFrom(this)
+                .where(ENABLED.eq(true))
+                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+                .limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun listMigrateProjects(
         dslContext: DSLContext,
         limit: Int,
-        offset: Int,
-        enabled: Boolean? = null,
-        channelCode: ProjectChannelCode? = null
+        offset: Int
     ): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .let {
-                    if (enabled != null) it.and(ENABLED.eq(enabled)) else it
-                }
-                .let {
-                    if (channelCode != null) it.and(CHANNEL.eq(channelCode.name)) else it
-                }
+                .and(CHANNEL.eq(ProjectChannelCode.BS.name))
+                .and(
+                    ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value)
+                        .or(ROUTER_TAG.isNull)
+                )
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
