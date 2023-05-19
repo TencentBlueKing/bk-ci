@@ -48,10 +48,10 @@ class ExtProjectDao {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(CHANNEL.eq(ProjectChannelCode.BS.name))
+                .and(ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value))
                 .and(
                     if (authType == AuthSystemType.V0_AUTH_TYPE) {
                         ROUTER_TAG.notContains(AuthSystemType.V3_AUTH_TYPE.value)
-                            .and(ROUTER_TAG.notContains(AuthSystemType.RBAC_AUTH_TYPE.value))
                             .or(ROUTER_TAG.isNull)
                     } else {
                         ROUTER_TAG.contains(AuthSystemType.V3_AUTH_TYPE.value)
