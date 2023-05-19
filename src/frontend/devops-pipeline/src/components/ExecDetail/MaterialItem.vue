@@ -16,12 +16,12 @@
                     v-if="isMR && field === 'webhookSourceTarget'"
                     class="mr-source-target"
                 >
-                    <span :title="material.webhookSourceBranch">{{ material.webhookSourceBranch }}</span>
+                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookSourceBranch }">{{ material.webhookSourceBranch }}</span>
                     <i class="devops-icon icon-arrows-right"></i>
                     <logo :name="iconArray[field] || 'commit'" size="14" />
-                    <span :title="material.webhookBranch">{{ material.webhookBranch }}</span>
+                    <span v-bk-tooltips="{ delay: [300, 0], content: material.webhookBranch }">{{ material.webhookBranch }}</span>
                 </span>
-                <span class="material-span" :title="formatField(field)" v-else>{{ formatField(field) }}</span>
+                <span class="material-span" v-bk-tooltips="{ delay: [300, 0], content: formatField(field) }" v-else>{{ formatField(field) }}</span>
             </span>
         </div>
         <span v-if="showMore" @click="emitMouseEnter" class="exec-more-material">
