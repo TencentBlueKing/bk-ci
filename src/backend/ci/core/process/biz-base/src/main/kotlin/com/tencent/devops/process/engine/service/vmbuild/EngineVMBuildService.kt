@@ -357,13 +357,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         if (startUpVMTask == null) {
             return false
         }
+        val finalBuildStatus = getFinalBuildStatus(buildStatus, buildId, vmSeqId, startUpVMTask)
 
         // 如果是完成状态，则更新构建机启动插件的状态
-        if (buildStatus.isFinish()) {
+        if (finalBuildStatus.isFinish()) {
             pipelineTaskService.updateTaskStatus(
                 task = startUpVMTask,
                 userId = startUpVMTask.starter,
-                buildStatus = buildStatus,
+                buildStatus = finalBuildStatus,
                 errorType = errorType,
                 errorCode = errorCode,
                 errorMsg = errorMsg
@@ -386,7 +387,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     buildId = buildId,
                     containerId = vmSeqId,
                     executeCount = startUpVMTask.executeCount ?: 1,
-                    containerBuildStatus = buildStatus
+                    containerBuildStatus = finalBuildStatus
                 )
             }
         }
@@ -394,12 +395,16 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         // 失败的话就发终止事件
         var message: String?
         val actionType = when {
-            buildStatus.isTimeout() -> {
+            finalBuildStatus.isTimeout() -> {
                 message = "Job Timeout"
                 ActionType.TERMINATE
             }
-            buildStatus.isFailure() -> {
+            finalBuildStatus.isFailure() -> {
                 message = "Agent failed to start!"
+                ActionType.TERMINATE
+            }
+            finalBuildStatus.isCancel() -> {
+                message = "Job Cancel"
                 ActionType.TERMINATE
             }
             else -> {
@@ -416,7 +421,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
-                source = "container_startup_$buildStatus",
+                source = "container_startup_$finalBuildStatus",
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -430,6 +435,29 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             )
         )
         return true
+    }
+
+    private fun getFinalBuildStatus(
+        buildStatus: BuildStatus,
+        buildId: String,
+        vmSeqId: String,
+        startUpVMTask: PipelineBuildTask
+    ): BuildStatus {
+        val finalBuildStatus = if (buildStatus.isFinish()) {
+            buildStatus
+        } else {
+            val cancelTaskSetKey = TaskUtils.getCancelTaskIdRedisKey(buildId, vmSeqId, false)
+            val cancelFlag = redisOperation.isMember(cancelTaskSetKey, startUpVMTask.taskId)
+            val runCondition = startUpVMTask.additionalOptions?.runCondition
+            val failedEvenCancelFlag = runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL
+            // 判断开机插件是否被取消
+            if (!failedEvenCancelFlag && cancelFlag) {
+                BuildStatus.CANCELED
+            } else {
+                buildStatus
+            }
+        }
+        return finalBuildStatus
     }
 
     /**
