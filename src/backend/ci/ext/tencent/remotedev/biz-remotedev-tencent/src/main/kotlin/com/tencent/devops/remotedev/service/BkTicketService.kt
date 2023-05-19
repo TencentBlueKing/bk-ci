@@ -30,11 +30,17 @@ package com.tencent.devops.remotedev.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.WorkspaceDao
+import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -44,7 +50,9 @@ import javax.ws.rs.core.Response
 @Service
 @Suppress("LongMethod")
 class BkTicketService @Autowired constructor(
-    private val commonService: CommonService
+    private val commonService: CommonService,
+    private val workspaceDao: WorkspaceDao,
+    private val dslContext: DSLContext
 ) {
     @Value("\${remoteDev.bkTicketCheckUrl:}")
     private val bkTicketCheckUrl: String = ""
@@ -56,7 +64,23 @@ class BkTicketService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(BkTicketService::class.java)
     }
 
-    // 更新容器内的bkticket
+    // 更新指定用户的所有运行中的容器的bkticket
+    fun updateAllBkTicket(userId: String, bkTicket: String):Boolean {
+        logger.info("updateAllBkTicket|userId|$userId|bkTicket|$bkTicket")
+        if (bkTicket.isBlank()) return false
+        // 获取user的所有运行中的容器
+        workspaceDao.fetchWorkspace(
+            dslContext, status = WorkspaceStatus.RUNNING
+        )?.parallelStream()?.forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            logger.info(
+                "workspace ${it.name} is EXCEPTION, try to fix."
+            )
+            updateBkTicket(userId, bkTicket, it.name)
+        }
+        return true
+    }
+    // 更新指定容器内的bkticket
     fun updateBkTicket(userId: String, bkTicket: String?, hostName: String?, retryTime: Int = 3): Boolean {
         logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
         if (bkTicket.isNullOrBlank() || hostName.isNullOrBlank()) {

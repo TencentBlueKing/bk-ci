@@ -202,4 +202,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
         return Result(true)
     }
+    override fun updateAllBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
+        bkTicketService.updateAllBkTicket(userId, bkTicketInfo.bkTicket)
+        return Result(true)
+    }
 }

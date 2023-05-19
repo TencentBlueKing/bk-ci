@@ -322,4 +322,14 @@ interface UserWorkspaceResource {
         @ApiParam("bkTicket信息", required = true)
         bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
+    @ApiOperation("更新容器的BKticket")
+    @POST
+    @Path("/updateAllBkTicket")
+    fun updateAllBkTicket(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("bkTicket信息", required = true)
+        bkTicketInfo: BkTicketInfo
+    ): Result<Boolean>
 }
