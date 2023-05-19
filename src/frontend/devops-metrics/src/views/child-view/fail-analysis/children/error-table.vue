@@ -95,8 +95,7 @@ const columns = [
       return h(
         'span',
         [
-          cell,
-          row.errorMsg
+          cell
         ]
       );
     },
