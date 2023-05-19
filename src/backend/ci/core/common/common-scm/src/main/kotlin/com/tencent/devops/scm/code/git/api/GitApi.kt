@@ -652,6 +652,11 @@ open class GitApi {
 
     fun getCommitReviewInfo(host: String, token: String, url: String): GitCommitReviewInfo {
         val request = get(host, token, url, StringUtils.EMPTY)
-        return JsonUtil.getObjectMapper().readValue(getBody(GET_COMMIT_REVIEW_INFO, request))
+        return JsonUtil.getObjectMapper().readValue(
+            getBody(
+                getMessageByLocale(CommonMessageCode.GET_COMMIT_REVIEW_INFO),
+                request
+            )
+        )
     }
 }
