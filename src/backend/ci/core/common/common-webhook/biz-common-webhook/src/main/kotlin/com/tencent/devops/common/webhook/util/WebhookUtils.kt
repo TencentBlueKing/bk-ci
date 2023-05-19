@@ -334,7 +334,7 @@ object WebhookUtils {
     fun crStartParam(
         gitCommitReviewInfo: GitCommitReviewInfo?,
         gitMrInfo: GitMrInfo?
-    ): Map<String, Any>{
+    ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[PIPELINE_BUILD_MSG] = gitCommitReviewInfo?.title ?: (gitMrInfo?.title ?: "代码库触发")
         return startParams

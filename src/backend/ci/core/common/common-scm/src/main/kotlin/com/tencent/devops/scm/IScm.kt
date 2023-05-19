@@ -36,7 +36,6 @@ import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 
-
 @Suppress("ALL")
 interface IScm {
     val projectName: String
