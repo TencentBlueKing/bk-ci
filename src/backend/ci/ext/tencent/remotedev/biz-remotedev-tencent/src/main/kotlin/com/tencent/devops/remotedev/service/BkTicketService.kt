@@ -72,10 +72,7 @@ class BkTicketService @Autowired constructor(
             dslContext, status = WorkspaceStatus.RUNNING
         )?.parallelStream()?.forEach {
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-            logger.info(
-                "workspace ${it.name} is EXCEPTION, try to fix."
-            )
-            updateBkTicket(userId, bkTicket, it.name)
+            updateBkTicket(userId, bkTicket, it.hostName)
         }
         return true
     }
