@@ -29,12 +29,12 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_WORKSPACE_STATE_NOT_RUNNING
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
@@ -42,6 +42,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import com.tencent.devops.remotedev.pojo.WorkspaceMountType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -209,9 +210,9 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun deleteWorkspace(event: WorkspaceOperateEvent): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .deleteWorkspace(event.userId, event)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -233,15 +234,26 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
-        return remoteDevServiceFactory.loadRemoteDevService(userId).getWorkspaceUrl(userId, workspaceName)
+    fun getWorkspaceUrl(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): String? {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceUrl(userId, workspaceName)
     }
 
-    fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        return remoteDevServiceFactory.loadRemoteDevService(userId).getWorkspaceInfo(userId, workspaceName)
+    fun getWorkspaceInfo(
+        userId: String,
+        workspaceName: String,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): WorkspaceInfo {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).getWorkspaceInfo(userId, workspaceName)
     }
 
-    fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        return remoteDevServiceFactory.loadRemoteDevService("").workspaceTaskCallback(taskStatus)
+    fun workspaceTaskCallback(
+        taskStatus: TaskStatus,
+        mountType: WorkspaceMountType = WorkspaceMountType.DEVCLOUD
+    ): Boolean {
+        return remoteDevServiceFactory.loadRemoteDevService(mountType).workspaceTaskCallback(taskStatus)
     }
 }

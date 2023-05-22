@@ -52,6 +52,7 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
+            mountType = event.devFile.checkWorkspaceMountType(),
             type = UpdateEventType.CREATE,
             bkTicket = event.bkTicket,
             status = false
@@ -87,6 +88,7 @@ class WorkspaceListener @Autowired constructor(
             traceId = event.traceId,
             userId = event.userId,
             workspaceName = event.workspaceName,
+            mountType = event.mountType,
             type = event.type,
             bkTicket = event.bkTicket,
             status = false,

@@ -61,6 +61,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevGitType
+import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.pojo.WorkSpaceCacheInfo
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -88,7 +89,6 @@ import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
-import com.tencent.devops.remotedev.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -319,7 +319,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            getOrSaveWorkspaceDetail(event.workspaceName)
+            getOrSaveWorkspaceDetail(event.workspaceName, event.mountType)
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
 
             kotlin.runCatching { bkTicketServie.updateBkTicket(event.userId, event.bkTicket, event.environmentHost) }
@@ -363,7 +363,7 @@ class WorkspaceService @Autowired constructor(
                 logger.info("${workspace.name} is running.")
                 remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                    .getWorkspaceInfo(userId, workspaceName)
+                    .getWorkspaceInfo(userId, workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
                 bkTicketServie.updateBkTicket(userId, bkTicket, workspaceInfo.data?.environmentHost)
 
                 return WorkspaceResponse(
@@ -384,7 +384,12 @@ class WorkspaceService @Autowired constructor(
             }
             checkUserCreate(userId, true)
             /*处理异常的情况*/
-            checkAndFixExceptionWS(status, userId, workspaceName)
+            checkAndFixExceptionWS(
+                status,
+                userId,
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -452,10 +457,11 @@ class WorkspaceService @Autowired constructor(
     private fun checkAndFixExceptionWS(
         status: WorkspaceStatus,
         userId: String,
-        workspaceName: String
+        workspaceName: String,
+        mountType: WorkspaceMountType
     ) {
         if (status.checkException()) {
-            when (val fix = fixUnexpectedStatus(userId, workspaceName, status)) {
+            when (val fix = fixUnexpectedStatus(userId, workspaceName, status, mountType)) {
                 WorkspaceStatus.EXCEPTION -> {
                     logger.info("$workspaceName is EXCEPTION and not repaired, return error.")
                     throw ErrorCodeException(
@@ -479,7 +485,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when {
                 workspaceInfo.status == EnvStatusEnum.running && workspaceInfo.started != false -> event.status = true
                 else -> logger.warn(
@@ -553,7 +559,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }
 
-            getOrSaveWorkspaceDetail(workspaceName)
+            getOrSaveWorkspaceDetail(workspaceName, WorkspaceMountType.valueOf(workspace.workspaceMountType))
             redisHeartBeat.refreshHeartbeat(workspaceName)
         } else {
             // 启动失败,记录为EXCEPTION
@@ -627,7 +633,12 @@ class WorkspaceService @Autowired constructor(
             }
 
             /*处理异常的情况*/
-            checkAndFixExceptionWS(status, userId, workspaceName)
+            checkAndFixExceptionWS(
+                status,
+                userId,
+                workspaceName,
+                WorkspaceMountType.valueOf(workspace.workspaceMountType)
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -684,7 +695,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.stopped -> event.status = true
                 else -> logger.warn(
@@ -733,7 +744,14 @@ class WorkspaceService @Autowired constructor(
             }
             /*处理异常的情况，如果还异常，直接强制删除*/
             var deleteImmediately = false
-            kotlin.runCatching { checkAndFixExceptionWS(status, userId, workspaceName) }.onFailure {
+            kotlin.runCatching {
+                checkAndFixExceptionWS(
+                    status = status,
+                    userId = userId,
+                    workspaceName = workspaceName,
+                    mountType = WorkspaceMountType.valueOf(workspace.workspaceMountType)
+                )
+            }.onFailure {
                 if (it is ErrorCodeException && it.errorCode == ErrorCodeEnum.WORKSPACE_ERROR.errorCode) {
                     deleteImmediately = true
                 } else throw it
@@ -838,7 +856,7 @@ class WorkspaceService @Autowired constructor(
         if (!event.status) {
             // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
             val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+                .getWorkspaceInfo(event.userId, event.workspaceName, event.mountType).data!!
             when (workspaceInfo.status) {
                 EnvStatusEnum.deleted -> event.status = true
                 else -> logger.warn(
@@ -922,7 +940,12 @@ class WorkspaceService @Autowired constructor(
                             LocalDateTime.now()
                         ).seconds > DEFAULT_WAIT_TIME
                     ) {
-                        status = fixUnexpectedStatus(userId, it.name, status)
+                        status = fixUnexpectedStatus(
+                            userId = userId,
+                            workspaceName = it.name,
+                            status = status,
+                            mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
+                        )
                     }
                 }
                 Workspace(
@@ -950,11 +973,12 @@ class WorkspaceService @Autowired constructor(
     private fun fixUnexpectedStatus(
         userId: String,
         workspaceName: String,
-        status: WorkspaceStatus
+        status: WorkspaceStatus,
+        mountType: WorkspaceMountType
     ): WorkspaceStatus {
         val workspaceInfo = kotlin.runCatching {
             client.get(ServiceRemoteDevResource::class)
-                .getWorkspaceInfo(userId, workspaceName).data!!
+                .getWorkspaceInfo(userId, workspaceName, mountType).data!!
         }.getOrElse { ignore ->
             logger.warn(
                 "get workspace info error $workspaceName|${ignore.message}"
@@ -1150,7 +1174,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun getOrSaveWorkspaceDetail(workspaceName: String): WorkSpaceCacheInfo {
+    private fun getOrSaveWorkspaceDetail(workspaceName: String, mountType: WorkspaceMountType): WorkSpaceCacheInfo {
         return redisCache.getWorkspaceDetail(workspaceName) ?: run {
             val userSet = workspaceDao.fetchWorkspaceUser(
                 dslContext,
@@ -1158,7 +1182,8 @@ class WorkspaceService @Autowired constructor(
             ).toSet()
             val sshKey = sshService.getSshPublicKeys4Ws(userSet)
             val workspaceInfo =
-                client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName).data!!
+                client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo(userSet.first(), workspaceName, mountType).data!!
             val cache = WorkSpaceCacheInfo(
                 sshKey,
                 workspaceInfo.environmentHost,
@@ -1289,7 +1314,12 @@ class WorkspaceService @Autowired constructor(
             logger.info(
                 "workspace ${it.name} is EXCEPTION, try to fix."
             )
-            fixUnexpectedStatus(ADMIN_NAME, it.name, WorkspaceStatus.values()[it.status])
+            fixUnexpectedStatus(
+                userId = ADMIN_NAME,
+                workspaceName = it.name,
+                status = WorkspaceStatus.values()[it.status],
+                mountType = WorkspaceMountType.valueOf(it.workspaceMountType)
+            )
         }
     }
 
