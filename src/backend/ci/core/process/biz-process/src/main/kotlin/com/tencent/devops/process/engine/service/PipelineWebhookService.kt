@@ -366,7 +366,6 @@ class PipelineWebhookService @Autowired constructor(
                 } else {
                     // 两者不能同时为空
                     throw ErrorCodeException(
-                        defaultMessage = "Webhook 的ID和名称同时为空",
                         errorCode = ProcessMessageCode.ERROR_PARAM_WEBHOOK_ID_NAME_ALL_NULL
                     )
                 }

@@ -28,11 +28,13 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_NOT_OAUTH_CERTIFICATION
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -50,7 +52,7 @@ class OauthForbiddenExceptionMapper : ExceptionMapper<OauthForbiddenException> {
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.defaultMessage
         } else {
-            "你没有Oauth认证"
+            I18nUtil.getCodeLanMessage(BK_NOT_OAUTH_CERTIFICATION)
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(
