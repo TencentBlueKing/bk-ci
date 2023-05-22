@@ -232,7 +232,7 @@ interface ApigwRepositoryResourceV4 {
 
     @ApiOperation("代码库详情", tags = ["v4_user_repository_get", "v4_app_repository_get"])
     @GET
-    @Path("/repository")
+    @Path("/repository/{repositoryId}")
     fun get(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
