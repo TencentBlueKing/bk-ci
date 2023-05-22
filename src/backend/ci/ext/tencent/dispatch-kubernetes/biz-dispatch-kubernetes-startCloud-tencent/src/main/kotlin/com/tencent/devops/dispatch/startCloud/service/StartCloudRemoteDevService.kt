@@ -101,6 +101,7 @@ class StartCloudRemoteDevService @Autowired constructor(
             workspaceName = event.workspaceName,
             EnvironmentDelete(
                 userId = event.userId,
+                appName = appName,
                 ticket = event.bkTicket,
                 pipeLineId = null
             )
