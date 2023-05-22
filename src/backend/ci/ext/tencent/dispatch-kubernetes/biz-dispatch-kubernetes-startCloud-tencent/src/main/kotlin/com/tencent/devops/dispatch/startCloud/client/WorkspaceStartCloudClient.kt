@@ -74,14 +74,16 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
 
                 val environmentRsp: EnvironmentCreateRsp = jacksonObjectMapper().readValue(responseContent)
-                if (OK == environmentRsp.code) {
+                logger.info("createWorkspace rsp: $environmentRsp")
+                if (OK == environmentRsp.code && environmentRsp.data != null) {
                     return environmentRsp.data.cgsIp
                 } else {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口返回失败: ${environmentRsp.message}"
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口返回失败" +
+                            ": ${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -131,7 +133,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回失败: ${environmentRsp.message}"
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 创建user接口返回失败:" +
+                            "${environmentRsp.code}-${environmentRsp.message}"
                     )
                 }
             }
@@ -194,7 +197,8 @@ class WorkspaceStartCloudClient @Autowired constructor(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_FAIL.formatErrorMessage,
-                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：${environmentOpRsp.message}"
+                        "第三方服务-START-CLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口返回失败：" +
+                            "${environmentOpRsp.code}-${environmentOpRsp.message}"
                     )
                 }
             }
