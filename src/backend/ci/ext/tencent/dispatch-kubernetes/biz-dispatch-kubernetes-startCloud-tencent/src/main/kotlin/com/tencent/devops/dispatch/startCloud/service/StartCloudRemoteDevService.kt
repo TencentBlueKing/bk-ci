@@ -57,6 +57,9 @@ class StartCloudRemoteDevService @Autowired constructor(
     @Value("\${startCloud.appName:IEG_BKCI}")
     val appName: String = "IEG_BKCI"
 
+    @Value("\${startCloud.curLaunchId:980005}")
+    val curLaunchId: Int = 980005
+
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
 
@@ -68,7 +71,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             userId,
             EnvironmentCreate(
                 userId = userId,
-                ticket = event.bkTicket,
                 appName = appName,
                 pipeLineId = null
             )
@@ -102,7 +104,6 @@ class StartCloudRemoteDevService @Autowired constructor(
             EnvironmentDelete(
                 userId = event.userId,
                 appName = appName,
-                ticket = event.bkTicket,
                 pipeLineId = null
             )
         )
@@ -141,7 +142,8 @@ class StartCloudRemoteDevService @Autowired constructor(
             namespace = "",
             environmentHost = "",
             ready = true,
-            started = true
+            started = true,
+            curLaunchId = curLaunchId
         )
     }
 

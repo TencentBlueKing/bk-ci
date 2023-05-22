@@ -7,8 +7,6 @@ data class EnvironmentDelete(
     val userId: String,
     @JsonProperty("AppName")
     val appName: String,
-    @JsonProperty("Ticket")
-    val ticket: String?,
     @JsonProperty("PipeLineID")
     val pipeLineId: String?
 )

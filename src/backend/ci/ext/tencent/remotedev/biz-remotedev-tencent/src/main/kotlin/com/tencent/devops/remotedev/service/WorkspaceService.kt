@@ -72,6 +72,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
+import com.tencent.devops.remotedev.pojo.WorkspaceStartCloudDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceSystemType
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
@@ -1130,6 +1131,27 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
+    fun startCloudWorkspaceDetail(userId: String, workspaceName: String): WorkspaceStartCloudDetail {
+        logger.info("$userId get startCloud workspace from workspaceName $workspaceName")
+        permissionService.checkPermission(userId, workspaceName)
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
+        val detail = redisCache.getWorkspaceDetail(workspaceName)
+        if (detail == null || !WorkspaceStatus.values()[workspace.status].checkRunning()) {
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_RUNNING.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
+        }
+        return WorkspaceStartCloudDetail(detail.environmentIP, detail.curLaunchId!!)
+    }
+
     fun getWorkspaceTimeline(
         userId: String,
         workspaceName: String,
@@ -1190,7 +1212,8 @@ class WorkspaceService @Autowired constructor(
                 workspaceInfo.hostIP,
                 workspaceInfo.environmentIP,
                 workspaceInfo.environmentIP,
-                workspaceInfo.namespace
+                workspaceInfo.namespace,
+                workspaceInfo.curLaunchId
             )
             redisCache.saveWorkspaceDetail(
                 workspaceName,

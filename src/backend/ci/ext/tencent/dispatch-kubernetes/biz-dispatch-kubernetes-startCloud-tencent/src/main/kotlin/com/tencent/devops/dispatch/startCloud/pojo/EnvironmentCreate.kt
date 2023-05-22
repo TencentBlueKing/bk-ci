@@ -7,8 +7,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class EnvironmentCreate(
     @JsonProperty("UserID")
     val userId: String,
-    @JsonProperty("Ticket")
-    val ticket: String?,
     @JsonProperty("AppName")
     val appName: String,
     @JsonProperty("PipeLineID")
