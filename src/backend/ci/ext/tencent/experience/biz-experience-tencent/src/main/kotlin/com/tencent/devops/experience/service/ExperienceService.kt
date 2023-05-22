@@ -66,6 +66,8 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCT
 import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_PROJECT_TAKEDOWN_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NEED_VIEW_EXP_PERMISSION
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -223,7 +225,7 @@ class ExperienceService @Autowired constructor(
             projectId = experienceRecord.projectId,
             experienceId = experienceId,
             authPermission = AuthPermission.VIEW,
-            message = "用户没有查看版本体验的权限！"
+            message = I18nUtil.getCodeLanMessage(USER_NEED_VIEW_EXP_PERMISSION)
         )
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
@@ -644,7 +646,10 @@ class ExperienceService @Autowired constructor(
             experienceId = experienceId,
             userId = userId,
             projectId = projectId,
-            message = "用户在项目($projectId)下没有下架体验($experienceHashId)的权限"
+            message = I18nUtil.getCodeLanMessage(
+                messageCode = USER_NEED_PROJECT_TAKEDOWN_PERMISSION,
+                params = arrayOf(projectId, experienceHashId)
+            )
         )
         experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
