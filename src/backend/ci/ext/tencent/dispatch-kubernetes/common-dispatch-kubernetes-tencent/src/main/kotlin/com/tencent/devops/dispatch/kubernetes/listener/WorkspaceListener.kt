@@ -96,7 +96,9 @@ class WorkspaceListener @Autowired constructor(
         )
         try {
             logger.info("Start to handle workspace operate ($event)")
-            backEvent.environmentIp = remoteDevService.getWorkspaceInfo(event.userId, event.workspaceName).environmentIP
+            backEvent.environmentIp = remoteDevService.getWorkspaceInfo(
+                event.userId, event.workspaceName, event.mountType
+            ).environmentIP
             when (event.type) {
                 UpdateEventType.START -> {
                     val workspaceResponse = remoteDevService.startWorkspace(event)
