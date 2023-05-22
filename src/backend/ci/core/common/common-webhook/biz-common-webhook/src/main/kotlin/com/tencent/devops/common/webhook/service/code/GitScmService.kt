@@ -404,7 +404,7 @@ class GitScmService @Autowired constructor(
                 ).data
             }
         } catch (e: Exception) {
-            logger.warn("fail to get mr info", e)
+            logger.warn("fail to get cr info", e)
             null
         }
     }
