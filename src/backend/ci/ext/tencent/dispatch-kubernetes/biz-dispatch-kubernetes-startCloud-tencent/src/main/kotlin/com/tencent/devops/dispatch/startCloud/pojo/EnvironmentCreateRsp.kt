@@ -8,6 +8,7 @@ data class EnvironmentCreateRsp(
     val data: EnvironmentCreateRspData?,
     val message: String
 ) {
+    @JsonIgnoreProperties(ignoreUnknown = true)
     data class EnvironmentCreateRspData(
         val cgsIp: String
     )
