@@ -168,6 +168,9 @@ object CommonMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2100117" // STREAM Service镜像格式非法
     const val ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS = "2100118" // 请确保step.id唯一性!({0})
     const val BUILD_RESOURCE_NOT_EXIST = "2100119" // {0}构建资源不存在，请检查yml配置.
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2100120" // {0}配置Env数量超过100限制!
+    // {0}Env单变量{1}长度超过{2}字符!({3})
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2100121"
 
     const val BK_CONTAINER_TIMED_OUT = "bkContainerTimedOut" // 创建容器超时
     const val BK_CREATION_FAILED_EXCEPTION_INFORMATION = "bkCreationFailedExceptionInformation" // 创建失败，异常信息
@@ -238,4 +241,7 @@ object CommonMessageCode {
     const val BK_SECOND_LEVEL_ADMIN_REVISE = "bkSecondLevelAdminRevise" // {0} 二级管理员, 由{1} 修改于
     // 用户 {0} 申请{1}蓝盾项目 {2} ,请审批！
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
+    const val BK_BUILD_MSG_MANUAL = "bkBuildMsgManual" // 手动触发
+    const val BK_BUILD_MSG_TRIGGERS = "bkBuildMsgTriggers" // 构建触发
+    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
 }
