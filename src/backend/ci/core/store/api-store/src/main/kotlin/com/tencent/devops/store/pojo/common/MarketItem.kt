@@ -27,6 +27,9 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nSourceEnum
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -35,9 +38,12 @@ data class MarketItem(
     @ApiModelProperty("ID")
     val id: String,
     @ApiModelProperty("名称")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val name: String,
     @ApiModelProperty("标识")
     val code: String,
+    @ApiModelProperty("版本号")
+    val version: String,
     @ApiModelProperty("类型")
     val type: String,
     @ApiModelProperty("研发来源")
@@ -57,6 +63,7 @@ data class MarketItem(
     @ApiModelProperty("评分")
     val score: Double?,
     @ApiModelProperty("简介")
+    @BkFieldI18n(source = I18nSourceEnum.DB)
     val summary: String?,
     @ApiModelProperty("是否有权限安装标识")
     val flag: Boolean,
@@ -78,6 +85,12 @@ data class MarketItem(
     val installed: Boolean? = null,
     @ApiModelProperty("每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
+    @ApiModelProperty("荣誉信息列表")
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null,
     @ApiModelProperty("最近执行次数")
-    val recentExecuteNum: Int? = null
+    val recentExecuteNum: Int? = null,
+    @ApiModelProperty("是否为受欢迎组件")
+    val hotFlag: Boolean? = null
 )

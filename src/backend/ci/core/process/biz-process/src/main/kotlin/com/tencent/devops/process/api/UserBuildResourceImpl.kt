@@ -48,6 +48,7 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,6 +57,7 @@ import javax.ws.rs.core.Response
 @RestResource
 @Suppress("ALL")
 class UserBuildResourceImpl @Autowired constructor(
+    private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
     private val pipelineRecentUseService: PipelineRecentUseService
@@ -103,7 +105,7 @@ class UserBuildResourceImpl @Autowired constructor(
             triggerReviewers = triggerReviewers
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
-        return Result(BuildId(manualStartup))
+        return Result(manualStartup)
     }
 
     override fun retry(
@@ -120,16 +122,14 @@ class UserBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask
             )
         )
     }
@@ -483,6 +483,22 @@ class UserBuildResourceImpl @Autowired constructor(
                 element = element,
                 stageId = stageId,
                 containerId = containerId
+            )
+        )
+    }
+
+    override fun tryFinishStuckBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Boolean> {
+        return Result(
+            data = pipelineBuildMaintainFacadeService.tryFinishStuckBuilds(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildIds = buildIds
             )
         )
     }

@@ -61,7 +61,7 @@ export const rankOptions = {
     }
 }
 
-export const trendOptions = {
+export const trendOptions = (i18n) => ({
     tooltip: {
         trigger: 'axis',
         axisPointer: {
@@ -70,7 +70,10 @@ export const trendOptions = {
     },
     legend: {
         padding: [10, 0, 0, 0],
-        data: ['生效流水线执行数', '拦截数']
+        data: ['effectPipelineExecCount', 'intercepts'],
+        formatter: (name) => {
+            return i18n('quality.' + name)
+        }
     },
     grid: {
         top: '12%',
@@ -112,7 +115,7 @@ export const trendOptions = {
     },
     series: [
         {
-            name: '生效流水线执行数',
+            name: 'effectPipelineExecCount',
             data: [],
             type: 'line',
             itemStyle: {
@@ -122,10 +125,11 @@ export const trendOptions = {
                         color: '#3c96ff'
                     }
                 }
-            }
+            },
+            label: 'aaaa'
         },
         {
-            name: '拦截数',
+            name: 'Intercepts',
             data: [],
             type: 'line',
             itemStyle: {
@@ -138,4 +142,4 @@ export const trendOptions = {
             }
         }
     ]
-}
+})

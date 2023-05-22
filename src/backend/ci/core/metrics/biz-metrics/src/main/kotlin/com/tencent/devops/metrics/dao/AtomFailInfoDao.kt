@@ -28,7 +28,7 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.count
+import com.tencent.devops.common.db.utils.JooqUtils.count
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_POSITION
@@ -46,11 +46,12 @@ import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_PROJECT_ID
 import com.tencent.devops.metrics.constant.Constants.BK_START_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_START_USER
-import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
-import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
+import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -214,6 +215,30 @@ class AtomFailInfoDao {
                 .where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .execute().toLong()
+        }
+    }
+
+    fun limitAtomCodes(dslContext: DSLContext, projectIds: List<String>): List<String> {
+        with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
+            return dslContext.select(ATOM_CODE)
+                .from(this)
+                .where(PROJECT_ID.`in`(projectIds))
+                .fetchInto(String::class.java).distinct()
+        }
+    }
+
+    fun getAtomErrorInfos(dslContext: DSLContext, projectId: String): Result<Record4<String, Int, Int, String>> {
+        with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
+            return dslContext.select(
+                ATOM_CODE.`as`(BK_ATOM_CODE),
+                ERROR_CODE.`as`(BK_ERROR_CODE),
+                ERROR_TYPE.`as`(BK_ERROR_TYPE),
+                ERROR_MSG.`as`(BK_ERROR_MSG)
+            )
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .groupBy(ATOM_CODE, ERROR_CODE, ERROR_TYPE)
+                .fetch()
         }
     }
 }

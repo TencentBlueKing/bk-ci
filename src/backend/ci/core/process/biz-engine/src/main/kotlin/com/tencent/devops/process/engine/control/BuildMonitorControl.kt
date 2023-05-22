@@ -37,8 +37,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_JOB_QUEUE_TIMEOUT
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_QUEUE_TIMEOUT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
@@ -46,24 +48,24 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
+import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineContainerService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 import kotlin.math.min
 
 /**
@@ -85,6 +87,8 @@ class BuildMonitorControl @Autowired constructor(
 ) {
 
     companion object {
+        private const val TAG = "startVM-0"
+        private const val JOB_ID = "0"
         private val LOG = LoggerFactory.getLogger(BuildMonitorControl::class.java)
         private val TEN_MIN_MILLS = TimeUnit.MINUTES.toMillis(10)
         private fun coerceAtMost10Min(interval: Long) = interval.coerceAtMost(TEN_MIN_MILLS)
@@ -130,12 +134,31 @@ class BuildMonitorControl @Autowired constructor(
     }
 
     private fun monitorContainer(event: PipelineBuildMonitorEvent): Long {
-        // #5090 ==0 是为了兼容旧的监控事件
-        val containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
-            .filter { !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0) }
 
         var minInterval = Timeout.CONTAINER_MAX_MILLS
-
+        // #5090 ==0 是为了兼容旧的监控事件
+        var containers = pipelineContainerService.listContainers(event.projectId, event.buildId)
+        if (containers.isEmpty()) { // 因数据被过期清理，必须超时失败
+            buildLogPrinter.addRedLine(event.buildId, "empty_container!", TAG, JOB_ID, event.executeCount)
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildFinishEvent(
+                    source = "empty_container",
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    userId = event.userId,
+                    buildId = event.buildId,
+                    status = BuildStatus.TERMINATE,
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_OUTTIME_ERROR,
+                    errorMsg = "empty_container"
+                )
+            )
+            return minInterval
+        }
+        // #5090 ==0 是为了兼容旧的监控事件
+        containers = containers.filter {
+            !it.status.isFinish() && (it.executeCount == event.executeCount || event.executeCount == 0)
+        }
         if (containers.isEmpty()) {
             LOG.info("ENGINE|${event.buildId}|BUILD_CONTAINER_MONITOR|no match")
             return minInterval
@@ -153,16 +176,33 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun monitorStage(event: PipelineBuildMonitorEvent, buildInfo: BuildInfo): Long {
 
-        val stages = pipelineStageService.listStages(event.projectId, event.buildId)
-            .filter {
-                // #5873 即使stage已完成，如果有准出卡审核也需要做超时监控
-                (!it.status.isFinish() || it.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) &&
-                    it.status != BuildStatus.STAGE_SUCCESS &&
-                    (it.executeCount == event.executeCount || event.executeCount == 0) // #5090 ==0 是为了兼容旧的监控事件
-            }
-
         var minInterval = Timeout.STAGE_MAX_MILLS
 
+        var stages = pipelineStageService.listStages(event.projectId, event.buildId)
+        if (stages.isEmpty()) { // 因数据被过期清理，必须超时失败
+            buildLogPrinter.addRedLine(event.buildId, "empty_stage!", TAG, JOB_ID, event.executeCount)
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildFinishEvent(
+                    source = "empty_stage",
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    userId = event.userId,
+                    buildId = event.buildId,
+                    status = BuildStatus.TERMINATE,
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_OUTTIME_ERROR,
+                    errorMsg = "empty_stage"
+                )
+            )
+            return minInterval
+        }
+
+        stages = stages.filter {
+            // #5873 即使stage已完成，如果有准出卡审核也需要做超时监控
+            (!it.status.isFinish() || it.checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name) &&
+                it.status != BuildStatus.STAGE_SUCCESS &&
+                (it.executeCount == event.executeCount || event.executeCount == 0) // #5090 ==0 是为了兼容旧的监控事件
+        }
         if (stages.isEmpty()) {
             LOG.info("ENGINE|${event.buildId}|BUILD_STAGE_MONITOR|no match")
             return minInterval
@@ -186,24 +226,34 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Long {
 
-        val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
-            timeoutMinutes = controlOption?.jobControlOption?.timeout
-        )
         val usedTimeMills: Long = if (status.isRunning() && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
         }
 
+        val minute = controlOption.jobControlOption.timeout
+        val timeoutMills = Timeout.transMinuteTimeoutToMills(minute)
+
+        buildLogPrinter.addDebugLine(
+            buildId = buildId,
+            message = "[SystemLog]Check job timeout($minute minutes), " +
+                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)} minutes!",
+            tag = VMUtils.genStartVMTaskId(containerId),
+            jobId = containerHashId,
+            executeCount = executeCount
+        )
+
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_RUNNING,
-                params = arrayOf("Job", "$minute")
+                params = arrayOf("Job", "$minute"),
+                language = I18nUtil.getLanguage(userId)
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
-                message = errorInfo.message ?: "Job timeout($minute) min",
+                message = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                 tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerHashId,
                 executeCount = executeCount
@@ -221,7 +271,7 @@ class BuildMonitorControl @Autowired constructor(
                     containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
-                    reason = errorInfo.message ?: "Job timeout($minute) min!",
+                    reason = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
                     errorTypeName = ErrorType.USER.name
                 )
@@ -275,6 +325,15 @@ class BuildMonitorControl @Autowired constructor(
         } else {
             0
         }
+
+        buildLogPrinter.addDebugLine(
+            buildId = buildId,
+            message = "Monitor| check stage review($inOrOut) timeout($hours hours), " +
+                "running: ${TimeUnit.MILLISECONDS.toMinutes(usedTimeMills)}) minutes!",
+            tag = stageId,
+            jobId = "",
+            executeCount = executeCount
+        )
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
@@ -335,14 +394,18 @@ class BuildMonitorControl @Autowired constructor(
                 buildStatus = buildInfo.status
             )
             LOG.info("ENGINE|${event.buildId}|BUILD_QUEUE_MONITOR_TIMEOUT|queue timeout|exitQueue=$exitQueue")
-            val errorInfo = MessageCodeUtil.generateResponseDataObject<String>(
+            val errorInfo = I18nUtil.generateResponseDataObject<String>(
                 messageCode = ERROR_TIMEOUT_IN_BUILD_QUEUE,
-                params = arrayOf(event.buildId)
+                params = arrayOf(event.buildId),
+                language = I18nUtil.getLanguage()
             )
             val jobId = "0"
             buildLogPrinter.addRedLine(
                 buildId = event.buildId,
-                message = errorInfo.message ?: "排队超时(Queue timeout). Cancel build!",
+                message = errorInfo.message ?: I18nUtil.getCodeLanMessage(
+                    messageCode = BK_QUEUE_TIMEOUT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ) + ". Cancel build!",
                 tag = VMUtils.genStartVMTaskId(jobId),
                 jobId = jobId,
                 executeCount = 1
@@ -357,7 +420,10 @@ class BuildMonitorControl @Autowired constructor(
                     status = BuildStatus.QUEUE_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
-                    errorMsg = "Job排队超时，请检查并发配置/Queue timeout"
+                    errorMsg = I18nUtil.getCodeLanMessage(
+                        messageCode = BK_JOB_QUEUE_TIMEOUT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             )
         } else {

@@ -40,7 +40,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.util.PinyinUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
@@ -61,14 +61,15 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
+import java.text.Collator
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -494,7 +495,7 @@ class PipelineViewGroupService @Autowired constructor(
         projectViewList.add(
             PipelineViewDict.ViewInfo(
                 viewId = PIPELINE_VIEW_UNCLASSIFIED,
-                viewName = "未分组",
+                viewName = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
                 pipelineList = pipelineInfoMap.values
                     .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
                     .map {
@@ -658,7 +659,7 @@ class PipelineViewGroupService @Autowired constructor(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
                     projectId = projectId,
-                    name = "未分组",
+                    name = I18nUtil.getCodeLanMessage(PIPELINE_VIEW_UNCLASSIFIED),
                     projected = true,
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),
@@ -699,7 +700,9 @@ class PipelineViewGroupService @Autowired constructor(
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
-        return views.sortedBy { PinyinUtil.toPinyin(it.name).toUpperCase() }.sortedBy {
+        return views.sortedWith(Comparator { a, b ->
+            Collator.getInstance().compare(a.name, b.name)
+        }).sortedBy {
             viewScoreMap[it.id] ?: Int.MAX_VALUE
         }.map {
             PipelineNewViewSummary(
@@ -754,6 +757,17 @@ class PipelineViewGroupService @Autowired constructor(
                 logger.info("init finish , ${view.projectId} , ${view.id}")
             }
         }
+    }
+
+    fun listViewIdsByPipelineId(projectId: String, pipelineId: String): Set<Long> {
+        return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
+    }
+
+    fun listViewIdsByProjectId(projectId: String): Set<Long> {
+        return pipelineViewGroupDao.listByProjectId(
+            dslContext = dslContext,
+            projectId = projectId
+        ).map { it.viewId }.toSet()
     }
 
     companion object {

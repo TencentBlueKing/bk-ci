@@ -28,7 +28,9 @@
 package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.service.utils.JooqUtils.productSum
+import com.tencent.devops.common.db.utils.JooqUtils.productSum
+import com.tencent.devops.common.db.utils.JooqUtils.sum
+import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
@@ -36,21 +38,22 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TAtomIndexStatisticsDaily
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
-import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
-import com.tencent.devops.common.service.utils.JooqUtils.sum
-import org.jooq.Record3
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -210,6 +213,23 @@ class AtomStatisticsDao {
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions).groupBy(ATOM_CODE).execute().toLong()
+        }
+    }
+
+    fun queryAtomComplianceInfo(
+        dslContext: DSLContext,
+        atomCode: String,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
+    ): Record2<BigDecimal, BigDecimal>? {
+        with(TAtomIndexStatisticsDaily.T_ATOM_INDEX_STATISTICS_DAILY) {
+            return dslContext.select(
+                sum(FAIL_EXECUTE_COUNT).`as`(Constants.BK_FAIL_EXECUTE_COUNT),
+                sum(FAIL_COMPLIANCE_COUNT).`as`(Constants.BK_FAIL_COMPLIANCE_COUNT)
+            ).from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .fetchOne()
         }
     }
 }

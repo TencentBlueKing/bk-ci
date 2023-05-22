@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -59,12 +60,13 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TTemplate
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -121,6 +123,10 @@ import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import java.text.MessageFormat
+import java.time.LocalDateTime
+import javax.ws.rs.NotFoundException
+import javax.ws.rs.core.Response
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -131,10 +137,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
-import java.time.LocalDateTime
-import javax.ws.rs.NotFoundException
-import javax.ws.rs.core.Response
 import kotlin.reflect.full.declaredMemberProperties
 import kotlin.reflect.jvm.isAccessible
 
@@ -293,8 +295,7 @@ class TemplateFacadeService @Autowired constructor(
         val template = pipelineResDao.getLatestVersionModelString(dslContext, projectId, saveAsTemplateReq.pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
             )
 
         val templateId = UUIDUtil.generate()
@@ -354,22 +355,19 @@ class TemplateFacadeService @Autowired constructor(
             )
             if (instanceSize > 0) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE
                 )
             }
             if (template.type == TemplateType.CUSTOMIZE.name && template.storeFlag == true) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH,
-                    defaultMessage = "已关联到研发商店，请先下架再删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_PUBLISH
                 )
             }
             if (template.type == TemplateType.CUSTOMIZE.name &&
                 templateDao.isExistInstalledTemplate(context, templateId)
             ) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL,
-                    defaultMessage = "已安装到其他项目下使用，不能删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_INSTALL
                 )
             }
             templatePipelineDao.deleteByTemplateId(context, projectId, templateId)
@@ -402,8 +400,7 @@ class TemplateFacadeService @Autowired constructor(
             if (instanceSize > 0) {
                 logger.warn("There are $instanceSize pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
-                    defaultMessage = "模板还存在实例，不允许删除"
+                    errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE
                 )
             }
             templatePipelineDao.deleteByVersion(
@@ -462,8 +459,7 @@ class TemplateFacadeService @Autowired constructor(
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         if (latestTemplate.type == TemplateType.CONSTRAINT.name && latestTemplate.storeFlag == true) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE,
-                defaultMessage = "来自研发商店的模板无法进行更新"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_UPDATE
             )
         }
         var version: Long = 0
@@ -544,8 +540,7 @@ class TemplateFacadeService @Autowired constructor(
         if (setting == null) {
             logger.warn("Fail to get the template setting - [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
-                defaultMessage = "流水线模板设置不存在"
+                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
         val hasPermission = hasManagerPermission(projectId, userId)
@@ -654,8 +649,7 @@ class TemplateFacadeService @Autowired constructor(
 
             if (templateRecord == null) {
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "模板不存在"
+                    errorCode = ERROR_TEMPLATE_NOT_EXISTS
                 )
             } else {
                 val modelStr = templateRecord[tTemplate.TEMPLATE] as String
@@ -934,8 +928,7 @@ class TemplateFacadeService @Autowired constructor(
             } catch (ignored: NotFoundException) {
                 logger.warn("The src template ${latestTemplate.srcTemplateId} is not exist")
                 throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS,
-                    defaultMessage = "源模板不存在"
+                    errorCode = ProcessMessageCode.ERROR_SOURCE_TEMPLATE_NOT_EXISTS
                 )
             }
         }
@@ -944,8 +937,7 @@ class TemplateFacadeService @Autowired constructor(
         if (setting == null) {
             logger.warn("The template setting is not exist [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
-                defaultMessage = "模板设置不存在"
+                errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
             )
         }
         val template = if (version == null && versionName.isNullOrBlank()) {
@@ -982,8 +974,12 @@ class TemplateFacadeService @Autowired constructor(
                 checkTemplate(templateResult, projectId)
             } catch (ignored: ErrorCodeException) {
                 // 兼容历史数据，模板内容有问题给出错误提示
-                val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
-                templateResult.tips = message ?: ignored.defaultMessage
+                val message = MessageUtil.getMessageByLocale(
+                    messageCode = ignored.errorCode,
+                    params = ignored.params,
+                    language = I18nUtil.getLanguage(userId)
+                )
+                templateResult.tips = message
             }
         }
         val latestVersion = TemplateVersion(
@@ -1064,7 +1060,11 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateCompareModelResult {
         logger.info("Compare the template instances - [$projectId|$userId|$templateId|$pipelineId|$version]")
         val templatePipelineRecord = templatePipelineDao.get(dslContext, projectId, pipelineId)
-            ?: throw NotFoundException("流水线模板不存在")
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = ERROR_TEMPLATE_NOT_EXISTS,
+                language = userId
+            ))
         val template: Model = objectMapper.readValue(
             templateDao.getTemplate(dslContext = dslContext, version = templatePipelineRecord.version).template
         )
@@ -1073,8 +1073,7 @@ class TemplateFacadeService @Autowired constructor(
                 content = pipelineResDao.getVersionModelString(dslContext, projectId, pipelineId, null)
                     ?: throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                        defaultMessage = "流水线编排不存在"
+                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS
                     )
             ),
             template
@@ -1242,8 +1241,7 @@ class TemplateFacadeService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list pipeline params - [$projectId|$userId|$templateId|$version]", ignored)
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS,
-                defaultMessage = "列举流水线参数失败"
+                errorCode = ProcessMessageCode.FAIL_TO_LIST_TEMPLATE_PARAMS
             )
         }
     }
@@ -1318,13 +1316,22 @@ class TemplateFacadeService @Autowired constructor(
                     successPipelinesId.add(pipelineId)
                 }
             } catch (ignored: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
+                logger.warn("TemplateCreateInstanceDuplicate|$projectId|$instance|$userId|${ignored.message}")
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = "流水线已经存在"
+                messages[instance.pipelineName] = "duplicate!"
+            } catch (exception: ErrorCodeException) {
+                logger.warn("TemplateCreateInstanceErrorCode|$projectId|$instance|$userId|${exception.message}")
+                messages[instance.pipelineName] = I18nUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
+                failurePipelines.add(instance.pipelineName)
             } catch (ignored: Throwable) {
-                logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
+                logger.warn("TemplateCreateInstanceThrowable|$projectId|$instance|$userId|${ignored.message}")
                 failurePipelines.add(instance.pipelineName)
-                messages[instance.pipelineName] = ignored.message ?: "创建流水线失败"
+                messages[instance.pipelineName] = ignored.message ?: "create instance fail"
             }
         }
 
@@ -1388,13 +1395,22 @@ class TemplateFacadeService @Autowired constructor(
                 )
                 successPipelines.add(it.pipelineName)
             } catch (ignored: DuplicateKeyException) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
+                logger.warn("updateTemplateInstancesDuplicate|$projectId|$it|$userId|${ignored.message}")
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = "流水线已经存在"
+                messages[it.pipelineName] = " exist!"
+            } catch (exception: ErrorCodeException) {
+                logger.warn("updateTemplateInstancesErrorCode|$projectId|$it|$userId|${exception.message}")
+                messages[it.pipelineName] = I18nUtil.generateResponseDataObject(
+                    messageCode = exception.errorCode,
+                    params = exception.params,
+                    data = null,
+                    defaultMessage = exception.defaultMessage
+                ).message ?: exception.defaultMessage ?: "unknown!"
+                failurePipelines.add(it.pipelineName)
             } catch (ignored: Throwable) {
-                logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
+                logger.warn("updateTemplateInstancesThrowable|$projectId|$it|$userId|${ignored.message}")
                 failurePipelines.add(it.pipelineName)
-                messages[it.pipelineName] = ignored.message ?: "更新流水线失败"
+                messages[it.pipelineName] = ignored.message ?: "update instance fail"
             }
         }
         return TemplateOperationRet(0, TemplateOperationMessage(successPipelines, failurePipelines, messages), "")
@@ -1521,12 +1537,21 @@ class TemplateFacadeService @Autowired constructor(
                         templateInstanceUpdate = templateInstanceUpdate
                     )
                     successPipelines.add(templateInstanceUpdate.pipelineName)
+                } catch (exception: ErrorCodeException) {
+                    logger.info("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|${exception.message}")
+                    val message = I18nUtil.generateResponseDataObject(
+                        messageCode = exception.errorCode,
+                        params = exception.params,
+                        data = null,
+                        defaultMessage = exception.defaultMessage
+                    ).message ?: exception.defaultMessage ?: "unknown!"
+                    failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                 } catch (t: Throwable) {
-                    logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
                     val message =
                         if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
                             t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
+                    logger.warn("asyncUpdateTemplate|$projectId|$templateInstanceUpdate|$userId|$message")
                 }
             }
             // 发送执行任务结果通知
@@ -1590,6 +1615,7 @@ class TemplateFacadeService @Autowired constructor(
                 labels = labels,
                 waitQueueTimeMinute = waitQueueTimeMinute,
                 maxQueueSize = maxQueueSize,
+                concurrencyGroup = concurrencyGroup,
                 hasPermission = hasPermission,
                 maxPipelineResNum = maxPipelineResNum,
                 maxConRunningQueueSize = maxConRunningQueueSize,
@@ -1606,7 +1632,7 @@ class TemplateFacadeService @Autowired constructor(
         template: Model
     ): Model {
         val templateParams = (template.stages[0].containers[0] as TriggerContainer).templateParams
-        if (templateParams == null || templateParams.isEmpty()) {
+        if (templateParams.isNullOrEmpty()) {
             return instance
         }
         val triggerContainer = instance.stages[0].containers[0] as TriggerContainer
@@ -1633,14 +1659,9 @@ class TemplateFacadeService @Autowired constructor(
                 id = id,
                 name = name,
                 elements = elements,
-                status = status,
-                startEpoch = startEpoch,
-                systemElapsed = systemElapsed,
-                elementElapsed = elementElapsed,
                 params = finalParams,
                 templateParams = templateParams,
                 buildNo = buildNo,
-                canRetry = canRetry,
                 containerId = containerId,
                 containerHashId = containerHashId
             )
@@ -1648,7 +1669,7 @@ class TemplateFacadeService @Autowired constructor(
 
         return Model(
             name = instance.name,
-            desc = "",
+            desc = instance.desc,
             stages = PipelineUtils.getFixedStages(instance, finalTriggerContainer, defaultStageTagId = null),
             labels = instance.labels,
             instanceFromTemplate = true
@@ -1693,7 +1714,6 @@ class TemplateFacadeService @Autowired constructor(
             elements = triggerContainer.elements,
             params = params, templateParams = templateParams,
             buildNo = triggerContainer.buildNo,
-            canRetry = triggerContainer.canRetry,
             containerId = triggerContainer.containerId,
             containerHashId = triggerContainer.containerHashId
         )
@@ -1712,11 +1732,9 @@ class TemplateFacadeService @Autowired constructor(
      */
     private fun checkPermission(projectId: String, userId: String) {
         val isProjectUser = hasManagerPermission(projectId = projectId, userId = userId)
-        val errMsg = "用户${userId}没有模板操作权限"
         if (!isProjectUser) {
             logger.warn("The manager users is empty of project $projectId")
             throw ErrorCodeException(
-                defaultMessage = errMsg,
                 errorCode = ProcessMessageCode.ONLY_MANAGE_CAN_OPERATE_TEMPLATE
             )
         }
@@ -1811,9 +1829,8 @@ class TemplateFacadeService @Autowired constructor(
         val templatePipelines = associatePipelines.map {
             val pipelineId = it[KEY_PIPELINE_ID] as String
             val pipelineSetting = pipelineSettings[pipelineId]
-            if (pipelineSetting == null || pipelineSetting.isEmpty()) {
+            if (pipelineSetting.isNullOrEmpty()) {
                 throw ErrorCodeException(
-                    defaultMessage = "流水线设置配置不存在",
                     errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
                 )
             }
@@ -1835,19 +1852,19 @@ class TemplateFacadeService @Autowired constructor(
                 status = templatePipelineStatus
             )
         }
-        val sortTemplatePipelines = templatePipelines.sortedWith(
-            Comparator { a, b ->
-                when (sortType) {
-                    TemplateSortTypeEnum.PIPELINE_NAME -> {
-                        a.pipelineName.toLowerCase().compareTo(b.pipelineName.toLowerCase())
-                    }
-                    TemplateSortTypeEnum.STATUS -> {
-                        b.status.name.compareTo(a.status.name)
-                    }
-                    else -> 0
+        val sortTemplatePipelines = templatePipelines.sortedWith { a, b ->
+            when (sortType) {
+                TemplateSortTypeEnum.PIPELINE_NAME -> {
+                    a.pipelineName.lowercase().compareTo(b.pipelineName.lowercase())
                 }
+
+                TemplateSortTypeEnum.STATUS -> {
+                    b.status.name.compareTo(a.status.name)
+                }
+
+                else -> 0
             }
-        )
+        }
         return TemplateInstancePage(
             projectId = projectId,
             templateId = templateId,
@@ -1916,7 +1933,6 @@ class TemplateFacadeService @Autowired constructor(
     private fun checkTemplate(template: Model, projectId: String? = null) {
         if (template.name.isBlank()) {
             throw ErrorCodeException(
-                defaultMessage = "模板名不能为空字符串",
                 errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
             )
         }
@@ -1956,8 +1972,7 @@ class TemplateFacadeService @Autowired constructor(
             triggerContainer.templateParams!!.forEach { template ->
                 if (param.id == template.id) {
                     throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.PIPELINE_PARAM_CONSTANTS_DUPLICATE,
-                        defaultMessage = "流水线变量参数和常量重名"
+                        errorCode = ProcessMessageCode.PIPELINE_PARAM_CONSTANTS_DUPLICATE
                     )
                 }
             }
@@ -2011,8 +2026,7 @@ class TemplateFacadeService @Autowired constructor(
         )?.value1() ?: 0
         if (count > 0) {
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS,
-                defaultMessage = "模板名已经存在"
+                errorCode = ProcessMessageCode.ERROR_TEMPLATE_NAME_IS_EXISTS
             )
         }
         // 判断提交的模板数量是否超过系统规定的阈值

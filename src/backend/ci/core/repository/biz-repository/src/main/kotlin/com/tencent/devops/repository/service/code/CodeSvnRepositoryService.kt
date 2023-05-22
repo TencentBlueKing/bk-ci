@@ -26,13 +26,15 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION
+import com.tencent.devops.repository.constant.RepositoryMessageCode.SVN_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeSvnRepository
@@ -103,7 +105,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_SVN.name)) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_INVALID))
+            throw OperationException(I18nUtil.getCodeLanMessage(SVN_INVALID))
         }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         checkCredentialInfo(projectId = projectId, repository = repository)
@@ -160,12 +162,12 @@ class CodeSvnRepositoryService @Autowired constructor(
                 }
                 if (username.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
                     )
                 }
                 if (repoCredentialInfo.password.isEmpty()) {
                     throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                        message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
                     )
                 }
                 scmService.checkPrivateKeyAndToken(
@@ -193,7 +195,7 @@ class CodeSvnRepositoryService @Autowired constructor(
             }
             else -> {
                 throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
+                    errorCode = REPO_TYPE_NO_NEED_CERTIFICATION,
                     params = arrayOf(repository.svnType ?: "")
                 )
             }

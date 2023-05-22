@@ -26,12 +26,13 @@
  */
 package com.tencent.devops.repository.service.code
 
-import com.tencent.devops.common.api.constant.RepositoryMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.constant.RepositoryMessageCode.P4_INVALID
 import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeP4Repository
@@ -61,7 +62,8 @@ class CodeP4RepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeP4Repository): Long {
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        // 触发器可以由用户自己配置,可能存在ci不能访问p4服务器,但是需要p4服务器能访问ci,也能支持事件触发,所以p4不再校验用户名密码
+        // checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -93,9 +95,9 @@ class CodeP4RepositoryService @Autowired constructor(
     ) {
         // 提交的参数与数据库中类型不匹配
         if (record.type != ScmType.CODE_P4.name) {
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
+            throw OperationException(I18nUtil.getCodeLanMessage(P4_INVALID))
         }
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        // checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -153,12 +155,12 @@ class CodeP4RepositoryService @Autowired constructor(
     ): TokenCheckResult {
         if (repoCredentialInfo.username.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.USER_NAME_EMPTY)
             )
         }
         if (repoCredentialInfo.password.isEmpty()) {
             throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                message = I18nUtil.getCodeLanMessage(CommonMessageCode.PWD_EMPTY)
             )
         }
         return scmService.checkUsernameAndPassword(

@@ -146,7 +146,7 @@ class GithubTagPushActionGit(
         val isMatch = TriggerMatcher.isTagPushMatch(
             triggerOn = triggerOn,
             eventTag = GitActionCommon.getTriggerBranch(event.ref),
-            userId = data.getUserId(),
+            userId = data.eventCommon.userId,
             fromBranch = event.baseRef?.let { GitActionCommon.getTriggerBranch(it) }
         )
         return TriggerResult(

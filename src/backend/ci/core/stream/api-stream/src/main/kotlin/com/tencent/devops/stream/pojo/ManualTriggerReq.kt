@@ -43,5 +43,7 @@ data class ManualTriggerReq(
     @ApiModelProperty("yaml")
     val yaml: String,
     @ApiModelProperty("输入参数(json对象)")
-    val inputs: Map<String, Any?>?
+    val inputs: Map<String, Any?>?,
+    @ApiModelProperty("是否使用commitId进行手动触发")
+    val useCommitId: Boolean
 )

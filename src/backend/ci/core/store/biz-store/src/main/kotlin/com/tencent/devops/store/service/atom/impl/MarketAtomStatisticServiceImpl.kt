@@ -196,6 +196,7 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
             )
             storeStatistics?.forEach { storeStatistic ->
                 val storeCode = storeStatistic.value1()
+                logger.info("batchUpdateAtomDailyStatisticInfo storeCode:$storeCode")
                 val atomMonitorStatisticData =
                     client.get(ServiceAtomMonitorResource::class).queryAtomMonitorStatisticData(
                         atomCode = storeCode,

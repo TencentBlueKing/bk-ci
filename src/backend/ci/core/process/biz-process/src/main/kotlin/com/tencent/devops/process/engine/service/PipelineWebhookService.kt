@@ -54,6 +54,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -124,7 +125,8 @@ class PipelineWebhookService @Autowired constructor(
                         ),
                         codeEventType = eventType,
                         repositoryConfig = repositoryConfig,
-                        createPipelineFlag = true
+                        createPipelineFlag = true,
+                        version = element.version
                     )
                 } catch (ignore: Exception) {
                     failedElementNames.add("- ${element.name}: ${ignore.message}")
@@ -156,7 +158,8 @@ class PipelineWebhookService @Autowired constructor(
         pipelineWebhook: PipelineWebhook,
         codeEventType: CodeEventType? = null,
         repositoryConfig: RepositoryConfig,
-        createPipelineFlag: Boolean? = false
+        createPipelineFlag: Boolean? = false,
+        version: String
     ) {
         logger.info("save Webhook[$pipelineWebhook]")
         var continueFlag = true
@@ -174,7 +177,8 @@ class PipelineWebhookService @Autowired constructor(
             val projectName = registerWebhook(
                 pipelineWebhook = pipelineWebhook,
                 repositoryConfig = repositoryConfig,
-                codeEventType = codeEventType
+                codeEventType = codeEventType,
+                version = version
             )
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
@@ -190,7 +194,8 @@ class PipelineWebhookService @Autowired constructor(
     private fun registerWebhook(
         pipelineWebhook: PipelineWebhook,
         repositoryConfig: RepositoryConfig,
-        codeEventType: CodeEventType?
+        codeEventType: CodeEventType?,
+        version: String
     ): String? {
         // 防止同一个仓库注册多个相同事件的webhook
         val redisLock = RedisLock(
@@ -219,11 +224,20 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
                 ScmType.CODE_P4 ->
-                    scmProxyService.addP4Webhook(
-                        projectId = pipelineWebhook.projectId,
-                        repositoryConfig = repositoryConfig,
-                        codeEventType = codeEventType
-                    )
+                    if (WebhookUtils.isCustomP4TriggerVersion(version)) {
+                        val repo = client.get(ServiceRepositoryResource::class).get(
+                            pipelineWebhook.projectId,
+                            repositoryConfig.getURLEncodeRepositoryId(),
+                            repositoryConfig.repositoryType
+                        ).data!!
+                        repo.projectName
+                    } else {
+                        scmProxyService.addP4Webhook(
+                            projectId = pipelineWebhook.projectId,
+                            repositoryConfig = repositoryConfig,
+                            codeEventType = codeEventType
+                        )
+                    }
                 else -> {
                     null
                 }
@@ -352,7 +366,6 @@ class PipelineWebhookService @Autowired constructor(
                 } else {
                     // 两者不能同时为空
                     throw ErrorCodeException(
-                        defaultMessage = "Webhook 的ID和名称同时为空",
                         errorCode = ProcessMessageCode.ERROR_PARAM_WEBHOOK_ID_NAME_ALL_NULL
                     )
                 }

@@ -32,11 +32,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
+import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.openapi.api.apigw.v4.environment.ApigwEnvironmentAgentResourceV4
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -74,8 +76,31 @@ class ApigwEnvironmentAgentResourceV4Impl @Autowired constructor(
             return Result(nodeList[0])
         }
         throw ErrorCodeException(
-            errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+            errorCode = OpenAPIMessageCode.ERROR_NODE_NOT_EXISTS,
             params = arrayOf(nodeHashId)
+        )
+    }
+
+    override fun getNodeDetail(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String?,
+        nodeName: String?,
+        agentHashId: String?
+    ): Result<ThirdPartyAgentDetail?> {
+        logger.info("OPENAPI_ENVIRONMENT_AGENT_V4|$userId|get node detail|$projectId|$nodeHashId|$agentHashId")
+        if (!agentHashId.isNullOrBlank()) {
+            return client.get(ServiceThirdPartyAgentResource::class).getAgentDetail(
+                userId = userId, projectId = projectId, agentHashId = agentHashId
+            )
+        }
+        return client.get(ServiceThirdPartyAgentResource::class).getNodeDetail(
+            userId = userId,
+            projectId = projectId,
+            nodeHashId = nodeHashId,
+            nodeName = nodeName
         )
     }
 

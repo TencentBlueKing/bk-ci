@@ -91,5 +91,6 @@
     "构建完成": "success",
     "构建失败": "failure",
     "查看编译过程数据": "View compilation process data",
-    "welcome": "Turbo is based on distributed compilation, caching, and container technologies, and aims to provide users with efficient, stable and convenient acceleration services and improve R&D efficiency. It has supported the acceleration of C/C++ background service compilation under Linux and UE4 code compilation under Windows."
+    "welcome": "Turbo is based on distributed compilation, caching, and container technologies, and aims to provide users with efficient, stable and convenient acceleration services and improve R&D efficiency. It has supported the acceleration of C/C++ background service compilation under Linux and UE4 code compilation under Windows.",
+    "节省率(%)" : "Saving rate(%)"
 }

@@ -56,11 +56,23 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId        string      `json:"agentId"`
-	SecretKey      string      `json:"secretKey"`
-	Image          string      `json:"image"`
-	Credential     *Credential `json:"credential"`
-	DockerResource *DockerResourceOptions
+	AgentId         string         `json:"agentId"`
+	SecretKey       string         `json:"secretKey"`
+	Image           string         `json:"image"`
+	Credential      *Credential    `json:"credential"`
+	Options         *DockerOptions `json:"options"`
+	ImagePullPolicy string         `json:"imagePullPolicy"`
+}
+
+type ImagePullPolicyEnum string
+
+const (
+	ImagePullPolicyAlways       ImagePullPolicyEnum = "always"
+	ImagePullPolicyIfNotPresent ImagePullPolicyEnum = "if-not-present"
+)
+
+func (i ImagePullPolicyEnum) String() string {
+	return string(i)
 }
 
 type Credential struct {
@@ -69,14 +81,10 @@ type Credential struct {
 	ErrMsg   string `json:"errMsg"`
 }
 
-type DockerResourceOptions struct {
-	MemoryLimitBytes    int64
-	CpuPeriod           int64
-	CpuQuota            int64
-	BlkioDeviceWriteBps int64
-	BlkioDeviceReadBps  int64
-	Disk                int
-	Description         string
+type DockerOptions struct {
+	Volumes []string `json:"volumes"`
+	Gpus    string   `json:"gpus"`
+	Mounts  []string `json:"mounts"`
 }
 
 type ThirdPartyBuildWithStatus struct {

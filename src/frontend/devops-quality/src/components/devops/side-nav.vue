@@ -14,13 +14,13 @@
         <div class="side-menu-nav clearfix"
             v-else>
             <logo :name="nav.icon" size="32" class="nav-icon" />
-            <span class="side-menu-title">{{ nav.title }}</span>
+            <span class="side-menu-title">{{nav.title}}</span>
             <i v-if="nav.url" class="devops-icon icon-question-circle" @click="goToDoc(nav.url)"></i>
         </div>
         <section class="side-menu-list">
             <div class="side-menu-item"
                 v-for="(menu, index) of sideMenuList" :key="index">
-                <p class="title" v-if="menu.title">{{ menu.title }}</p>
+                <p class="title" v-if="menu.title">{{menu.title}}</p>
                 <bk-menu
                     v-if="sideMenuList.length"
                     :key="`devopsSideMenu${index}`"
@@ -29,7 +29,7 @@
                 </bk-menu>
             </div>
         </section>
-        <p class="biz-copyright">Copyright © 2012-<span>{{ currentYear }}</span> Tencent BlueKing. All Rights Reserved</p>
+        <p class="biz-copyright">Copyright © 2012-<span>{{currentYear}}</span> Tencent BlueKing. All Rights Reserved</p>
     </div>
 </template>
 <script>

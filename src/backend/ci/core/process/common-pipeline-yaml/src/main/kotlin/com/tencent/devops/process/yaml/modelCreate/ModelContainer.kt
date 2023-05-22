@@ -44,6 +44,8 @@ import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_C
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.MatrixControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_ENV_NOT_YET_SUPPORTED
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.inner.InnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
@@ -54,9 +56,9 @@ import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import javax.ws.rs.core.Response
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired(required = false) constructor(
@@ -125,18 +127,20 @@ class ModelContainer @Autowired(required = false) constructor(
             client.get(ServiceContainerAppResource::class).getBuildEnv(
                 name = env.key,
                 version = env.value,
-                os = os.name.toLowerCase()
+                os = os.name.lowercase()
             ).data ?: throw CustomException(
                 // 说明用户填写的name或version不对，直接抛错
-                Response.Status.BAD_REQUEST, "尚未支持 ${env.key} ${env.value}，请联系 DevOps-helper 添加对应版本"
+                Response.Status.BAD_REQUEST,
+                I18nUtil.getCodeLanMessage(
+                    messageCode = BK_ENV_NOT_YET_SUPPORTED,
+                    params = arrayOf(env.key, env.value)
+                )
             )
         }
     }
 
-    protected fun getMatrixControlOption(
-        job: Job,
-        dispatchInfo: DispatchInfo?
-    ): MatrixControlOption? {
+    @Suppress("UNCHECKED_CAST")
+    fun getMatrixControlOption(job: Job, dispatchInfo: DispatchInfo?): MatrixControlOption? {
 
         val strategy = job.strategy ?: return null
 
@@ -209,15 +213,17 @@ class ModelContainer @Autowired(required = false) constructor(
         )
     }
 
-    protected fun getJobControlOption(
+    fun getJobControlOption(
         job: Job,
         jobEnable: Boolean = true,
         finalStage: Boolean = false
     ): JobControlOption {
+        val timeout = setUpTimeout(job)
         return if (!job.ifField.isNullOrBlank()) {
             if (finalStage) {
                 JobControlOption(
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = when (job.ifField) {
                         IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
                         IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
@@ -232,7 +238,8 @@ class ModelContainer @Autowired(required = false) constructor(
             } else {
                 JobControlOption(
                     enable = jobEnable,
-                    timeout = job.timeoutMinutes ?: 480,
+                    timeout = timeout,
+                    timeoutVar = timeout.toString(),
                     runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                     customCondition = ModelCreateUtil.removeIfBrackets(job.ifField),
                     dependOnType = DependOnType.ID,
@@ -244,7 +251,8 @@ class ModelContainer @Autowired(required = false) constructor(
         } else {
             JobControlOption(
                 enable = jobEnable,
-                timeout = job.timeoutMinutes ?: 480,
+                timeout = timeout,
+                timeoutVar = timeout.toString(),
                 dependOnType = DependOnType.ID,
                 dependOnId = job.dependOn,
                 prepareTimeout = job.runsOn.queueTimeoutMinutes,
@@ -253,7 +261,9 @@ class ModelContainer @Autowired(required = false) constructor(
         }
     }
 
-    protected fun getMutexGroup(resource: Mutex?): MutexGroup? {
+    private fun setUpTimeout(job: Job) = (job.timeoutMinutes ?: 480)
+
+    fun getMutexGroup(resource: Mutex?): MutexGroup? {
         if (resource == null) {
             return null
         }
