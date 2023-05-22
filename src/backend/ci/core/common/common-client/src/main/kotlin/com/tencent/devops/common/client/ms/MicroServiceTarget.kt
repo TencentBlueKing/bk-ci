@@ -79,7 +79,7 @@ class MicroServiceTarget<T> constructor(
     private fun choose(serviceName: String): ServiceInstance {
         val discoveryTag = bkTag.getFinalTag()
 
-        val instances = if (KubernetesUtils.inContainer()) {
+        val instances = if (KubernetesUtils.inContainer() || bkTag.inContainer(discoveryTag)) {
             val namespace = discoveryTag.replace("kubernetes-", "")
             msCache.get(KubernetesUtils.getSvrName(serviceName, namespace))
         } else {
