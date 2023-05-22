@@ -220,7 +220,7 @@ class TGitReviewTriggerHandler(
         }
     }
 
-    companion object{
+    companion object {
         private val logger = LoggerFactory.getLogger(TGitReviewTriggerHandler::class.java)
     }
 }
