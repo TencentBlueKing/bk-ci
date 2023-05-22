@@ -195,7 +195,8 @@ class RbacPermissionMigrateService constructor(
             authMigrationDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                status = AuthMigrateStatus.PENDING.value
+                status = AuthMigrateStatus.PENDING.value,
+                routerTag = authType.value
             )
             // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
             val iamApprover = buildResourceCreator(
