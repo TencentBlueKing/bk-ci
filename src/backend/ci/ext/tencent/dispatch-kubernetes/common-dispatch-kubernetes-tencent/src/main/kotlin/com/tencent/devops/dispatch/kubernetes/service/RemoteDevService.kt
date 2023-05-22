@@ -144,13 +144,13 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun startWorkspace(event: WorkspaceOperateEvent): WorkspaceResponse {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .startWorkspace(event.userId, event.workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+            val workspaceInfo = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
                 .getWorkspaceInfo(event.userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
@@ -185,9 +185,9 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun stopWorkspace(event: WorkspaceOperateEvent): Boolean {
-        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.userId)
+        val taskId = remoteDevServiceFactory.loadRemoteDevService(event.mountType)
             .stopWorkspace(event.userId, event.workspaceName)
-        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.userId)
+        val (taskStatus, failedMsg) = remoteDevServiceFactory.loadContainerService(event.mountType)
             .waitTaskFinish(event.userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
