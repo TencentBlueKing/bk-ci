@@ -36,6 +36,7 @@ package com.tencent.devops.remotedev.pojo
  * @param contentLayer 工作空间内容部分相关层
  */
 data class ImageSpec(
+    val id: Int,
     val baseRef: String,
     val ideRef: String,
     val remotingRef: String,
