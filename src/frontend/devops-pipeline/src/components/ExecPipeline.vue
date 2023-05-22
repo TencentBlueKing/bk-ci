@@ -117,9 +117,6 @@
                                 {{ $t("details.pipelineErrorGuide") }}
                             </span>
                         </bk-link>
-                        <bk-button theme="normal" text @click="toggleErrorPopup">
-                            <i class="bk-icon icon-angle-up toggle-error-popup-icon hide-error-popup-icon" />
-                        </bk-button>
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
                         <bk-table
@@ -944,12 +941,6 @@
         height: 30px;
     }
 
-    .hide-error-popup-icon {
-      font-size: 20px;
-      width: 20px;
-      height: 20px;
-      margin-right: 24px;
-    }
     &.visible {
       transform: translateY(0);
       .toggle-error-popup-icon {
