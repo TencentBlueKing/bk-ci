@@ -4,8 +4,7 @@ import com.tencent.devops.common.service.utils.KubernetesUtils
 import org.slf4j.LoggerFactory
 
 class BkTag constructor(
-    private val consulTag: String,
-    private val kubernetesTags: String?
+    private val consulTag: String
 ) {
     private val gatewayTag = ThreadLocal<String>()
 
@@ -34,11 +33,6 @@ class BkTag constructor(
             tag?.let { removeGatewayTag() }
         }
     }
-
-    /**
-     * 判断tag是否已全部容器化部署
-     */
-    fun inContainer(tag: String) = kubernetesTags?.split(",")?.contains(tag) ?: false
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkTag::class.java)

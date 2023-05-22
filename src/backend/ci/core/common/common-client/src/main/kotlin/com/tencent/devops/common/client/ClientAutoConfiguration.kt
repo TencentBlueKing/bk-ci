@@ -58,10 +58,6 @@ class ClientAutoConfiguration {
     @Value("\${spring.cloud.consul.discovery.tags:prod}")
     private val consulTag: String = "prod"
 
-    // 已全部使用容器化部署的tag列表
-    @Value("\${spring.cloud.consul.kubernetes.tags:#{null}}")
-    private val kubernetesTags: String? = null
-
     @Bean
     @ConditionalOnMissingBean(CommonConfig::class)
     fun commonConfig() = CommonConfig()
@@ -69,7 +65,7 @@ class ClientAutoConfiguration {
     @Bean
     fun bkTag(): BkTag {
         val finalConsulTag = consulTag.split(',')[0].trim()
-        return BkTag(consulTag = finalConsulTag, kubernetesTags = kubernetesTags)
+        return BkTag(finalConsulTag)
     }
 
     @Bean
