@@ -78,13 +78,13 @@ import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.support.api.service.ServiceFileResource
+import java.io.File
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Suppress("ALL")
 @Service
@@ -259,7 +259,7 @@ class TxProjectServiceImpl @Autowired constructor(
             return emptyList()
         }
         return bkTag.invokeByTag(rbacTag) {
-            client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+            client.get(ServiceProjectAuthResource::class).getUserProjectsByPermission(
                 userId = userId,
                 token = tokenService.getSystemToken(null)!!,
                 action = permission.value
@@ -453,7 +453,7 @@ class TxProjectServiceImpl @Autowired constructor(
     ): List<String> {
         if (!tag.isBlank()) {
             val iamProjectList = bkTag.invokeByTag(tag) {
-                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
+                client.get(ServiceProjectAuthResource::class).getUserProjects(
                     userId = userId,
                     token = tokenService.getSystemToken(null)!!
                 ).data
