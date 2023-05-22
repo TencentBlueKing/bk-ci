@@ -33,8 +33,10 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreBuildService
+import com.tencent.devops.store.service.common.StoreErrorCodeService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
@@ -44,7 +46,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storeBuildService: StoreBuildService
+    private val storeBuildService: StoreBuildService,
+    private val storeErrorCodeService: StoreErrorCodeService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -67,8 +70,24 @@ class ServiceStoreResourceImpl @Autowired constructor(
         return Result(
             SpringContextUtil.getBean(
                 clazz = StoreMemberService::class.java,
-                beanName = "${storeType.name.toLowerCase()}MemberService"
+                beanName = "${storeType.name.lowercase()}MemberService"
             ).isStoreMember(userId, storeCode, storeType.type.toByte())
+        )
+    }
+
+    override fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int,
+        errorCodeType: ErrorCodeTypeEnum
+    ): Result<Boolean> {
+        return Result(
+            storeErrorCodeService.isComplianceErrorCode(
+                storeCode = storeCode,
+                storeType = storeType,
+                errorCode = errorCode,
+                errorCodeType = errorCodeType
+            )
         )
     }
 }

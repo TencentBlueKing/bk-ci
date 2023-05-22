@@ -27,18 +27,24 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
@@ -70,6 +76,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val stageCommonSettingConfig: StageCommonSettingConfig,
     private val jobCommonSettingConfig: JobCommonSettingConfig,
     private val taskCommonSettingConfig: TaskCommonSettingConfig,
+    private val auditService: AuditService,
     private val client: Client,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
@@ -84,27 +91,52 @@ class PipelineSettingFacadeService @Autowired constructor(
         updateLabels: Boolean = true
     ): String {
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EDIT
             checkEditPermission(
                 userId = userId,
                 projectId = setting.projectId,
                 pipelineId = setting.pipelineId,
-                message = "用户($userId)无权限在工程(${setting.projectId})下编辑流水线(${setting.pipelineId})"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        setting.projectId,
+                        permission.getI18n(language),
+                        setting.pipelineId
+                    )
+                )
             )
         }
 
-        pipelineRepositoryService.saveSetting(
+        val pipelineName = pipelineRepositoryService.saveSetting(
             userId = userId,
             setting = setting,
             version = version,
             updateLastModifyUser = updateLastModifyUser
         )
 
-        if (checkPermission) {
-            pipelinePermissionService.modifyResource(
-                projectId = setting.projectId,
-                pipelineId = setting.pipelineId,
-                pipelineName = setting.pipelineName
+        if (pipelineName.name != pipelineName.oldName) {
+            auditService.createAudit(
+                Audit(
+                    resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                    resourceId = setting.pipelineId,
+                    resourceName = pipelineName.name,
+                    userId = userId,
+                    action = "edit",
+                    actionContent = "Rename (${pipelineName.oldName})",
+                    projectId = setting.projectId
+                )
             )
+
+            if (checkPermission) {
+                pipelinePermissionService.modifyResource(
+                    projectId = setting.projectId,
+                    pipelineId = setting.pipelineId,
+                    pipelineName = setting.pipelineName
+                )
+            }
         }
 
         if (updateLabels) {
@@ -143,12 +175,23 @@ class PipelineSettingFacadeService @Autowired constructor(
     ): PipelineSetting {
 
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        permission.getI18n(language),
+                        pipelineId
+                    )
+                )
             )
         }
 

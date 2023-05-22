@@ -27,6 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.pojo
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
+import com.tencent.devops.common.api.enums.I18nTranslateTypeEnum
+
 /**
  * job 状态信息
  */
@@ -36,12 +39,16 @@ data class JobStatus(
     val podIp: String
 )
 
-enum class JobStatusEnum(val realName: String, val message: String) {
-    PENDING("pending", "job正在创建"),
-    RUNNING("running", "job正在运行"),
-    FAILED("failed", "job失败"),
-    SUCCEEDED("succeeded", "job成功"),
-    UNKNOWN("unknown", "状态位置");
+enum class JobStatusEnum(
+    val realName: String,
+    @BkFieldI18n(translateType = I18nTranslateTypeEnum.VALUE, keyPrefixName = "jobStatus", reusePrefixFlag = false)
+    val message: String
+) {
+    PENDING("pending", "pending"), // job正在创建
+    RUNNING("running", "running"), // job正在运行
+    FAILED("failed", "failed"), // job失败
+    SUCCEEDED("succeeded", "succeeded"), // job成功
+    UNKNOWN("unknown", "unknown"); // 状态位置
 
     companion object {
         fun realNameOf(realName: String?): JobStatusEnum? {

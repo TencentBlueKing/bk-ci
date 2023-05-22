@@ -31,12 +31,12 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("组件所属错误码信息")
+@ApiModel("研发商店错误码信息")
 data class StoreErrorCodeInfo(
-    @ApiModelProperty("store组件代码")
-    val storeCode: String,
+    @ApiModelProperty("store代码")
+    val storeCode: String?,
     @ApiModelProperty("store组件类型")
-    val storeType: StoreTypeEnum,
-    @ApiModelProperty("错误码信息")
-    val errorCodeInfos: List<ErrorCodeInfo>
+    val storeType: StoreTypeEnum?,
+    @ApiModelProperty("错误码集合")
+    val errorCodes: Set<Int>
 )

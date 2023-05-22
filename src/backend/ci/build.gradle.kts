@@ -14,9 +14,12 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
-    // Docker镜像构建
-    if (name.startsWith("boot-") && System.getProperty("devops.assemblyMode") == "KUBERNETES") {
-        pluginManager.apply("task-docker-build")
+    // 加载boot的插件
+    if (name.startsWith("boot-")) {
+        pluginManager.apply("task-i18n-load") // i18n插件
+        if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+            pluginManager.apply("task-docker-build") // Docker镜像构建
+        }
     }
 
     // 版本管理
@@ -98,9 +101,6 @@ allprojects {
                 entry("poi")
                 entry("poi-ooxml")
             }
-            dependencySet("com.github.taptap:${Versions.PinyinPlus}") {
-                entry("pinyin-plus")
-            }
             dependency("com.perforce:p4java:${Versions.p4}")
             dependency("io.mockk:mockk:${Versions.mockk}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
@@ -122,6 +122,7 @@ allprojects {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")
             }
+            dependency("com.tencent.bk.sdk:iam-java-sdk:${Versions.iam}")
         }
     }
 

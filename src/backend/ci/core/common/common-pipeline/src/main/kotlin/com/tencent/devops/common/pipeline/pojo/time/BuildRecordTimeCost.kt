@@ -30,15 +30,15 @@ package com.tencent.devops.common.pipeline.pojo.time
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("各项执行耗时")
+@ApiModel("各项执行耗时（单位毫秒）")
 data class BuildRecordTimeCost(
     @ApiModelProperty("系统耗时（由总耗时减去其他得出）", required = true)
     var systemCost: Long = 0,
     @ApiModelProperty("执行耗时", required = true)
     var executeCost: Long = 0,
-    @ApiModelProperty("等待耗时", required = true)
+    @ApiModelProperty("等待耗时（包括了排队和等待人工审核操作时间）", required = true)
     var waitCost: Long = 0,
-    @ApiModelProperty("排队耗时（流水线并发、Stage下Job并发和Job互斥）", required = true)
+    @ApiModelProperty("只处于排队的耗时（流水线并发、Stage下Job并发和Job互斥）", required = true)
     var queueCost: Long = 0,
     @ApiModelProperty("总耗时（结束时间-开始时间）", required = true)
     var totalCost: Long = 0

@@ -27,18 +27,23 @@
 
 package com.tencent.devops.worker.common.task.script
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_SCRIPT_TASK_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.BK_NO_FILES_TO_ARCHIVE
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.SCRIPT_EXECUTION_FAIL
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
@@ -47,9 +52,9 @@ import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.CredentialUtils.parseCredentialValue
 import com.tencent.devops.worker.common.utils.TaskUtil
-import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLDecoder
+import org.slf4j.LoggerFactory
 
 /**
  * 构建脚本任务
@@ -119,7 +124,13 @@ open class ScriptTask : ITask() {
         } catch (ignore: Throwable) {
             logger.warn("Fail to run the script task", ignore)
             if (!archiveFileIfExecFail.isNullOrBlank()) {
-                LoggerService.addErrorLine("脚本执行失败， 归档${archiveFileIfExecFail}文件")
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(
+                        SCRIPT_EXECUTION_FAIL,
+                        AgentEnv.getLocaleLanguage(),
+                        arrayOf(archiveFileIfExecFail)
+                    )
+                )
                 val token = RepoServiceFactory.getInstance().getRepoToken(
                     userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
                     projectId = buildVariables.projectId,
@@ -135,12 +146,17 @@ open class ScriptTask : ITask() {
                     token = token
                 )
                 if (count == 0) {
-                    LoggerService.addErrorLine("脚本执行失败之后没有匹配到任何待归档文件")
+                    LoggerService.addErrorLine(
+                        MessageUtil.getMessageByLocale(BK_NO_FILES_TO_ARCHIVE, AgentEnv.getLocaleLanguage())
+                    )
                 }
             }
-            val errorMsg = if (ignore is TaskExecuteException) {
+            val errorMsg = (if (ignore is TaskExecuteException) {
                 ignore.errorMsg
-            } else ""
+            } else "") + I18nUtil.getCodeLanMessage(
+                messageCode = "$USER_SCRIPT_TASK_FAIL",
+                language = I18nUtil.getDefaultLocaleLanguage()
+            )
 
             throw TaskExecuteException(
                 errorMsg = errorMsg,

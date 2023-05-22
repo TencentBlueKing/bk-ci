@@ -39,13 +39,14 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
+import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants
@@ -104,10 +105,14 @@ import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.ImageUtil
+import java.time.LocalDateTime
+import java.util.Date
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -117,8 +122,6 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.Date
 import kotlin.math.ceil
 
 @Suppress("ALL")
@@ -149,6 +152,12 @@ abstract class ImageService @Autowired constructor() {
     lateinit var marketImageFeatureDao: MarketImageFeatureDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var storeHonorDao: StoreHonorDao
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
@@ -303,7 +312,8 @@ abstract class ImageService @Autowired constructor() {
             storeType = storeType.type.toByte(),
             storeCodeList = imageCodeList
         )
-
+        val imageHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, imageCodeList)
+        val imageIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, imageCodeList)
         // 获取用户
         val memberData = storeMemberService.batchListMember(imageCodeList, storeType).data
 
@@ -318,6 +328,8 @@ abstract class ImageService @Autowired constructor() {
             val imageCode = it[KEY_IMAGE_CODE] as String
             val visibleList = imageVisibleData?.get(imageCode)
             val statistic = imageStatisticData[imageCode]
+            val honorInfos = imageHonorInfoMap[imageCode]
+            val indexInfos = imageIndexInfosMap[imageCode]
             val members = memberData?.get(imageCode)
 
             val installFlag = storeCommonService.generateInstallFlag(
@@ -353,7 +365,10 @@ abstract class ImageService @Autowired constructor() {
                     modifier = it[KEY_MODIFIER] as String,
                     createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                     updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
-                    installedFlag = null
+                    installedFlag = null,
+                    honorInfos = honorInfos,
+                    indexInfos = indexInfos,
+                    hotFlag = statistic?.hotFlag
                 )
             )
         }
@@ -429,6 +444,7 @@ abstract class ImageService @Autowired constructor() {
                     id = it.id,
                     name = it.name,
                     code = it.code,
+                    version = it.version,
                     // 仅用于插件区分Agent/AgentLess
                     type = "",
                     rdType = it.rdType,
@@ -446,7 +462,8 @@ abstract class ImageService @Autowired constructor() {
                     docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
                     updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
-                    recommendFlag = it.recommendFlag
+                    recommendFlag = it.recommendFlag,
+                    hotFlag = it.hotFlag
                 )
             }
         )
@@ -470,7 +487,7 @@ abstract class ImageService @Autowired constructor() {
         result.add(
             MarketImageMain(
                 key = LATEST,
-                label = MessageCodeUtil.getCodeLanMessage(LATEST),
+                label = I18nUtil.getCodeLanMessage(messageCode = LATEST, language = I18nUtil.getLanguage(userId)),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -492,7 +509,7 @@ abstract class ImageService @Autowired constructor() {
         result.add(
             MarketImageMain(
                 key = HOTTEST,
-                label = MessageCodeUtil.getCodeLanMessage(HOTTEST),
+                label = I18nUtil.getCodeLanMessage(messageCode = HOTTEST, language = I18nUtil.getLanguage(userId)),
                 records = doList(
                     userId = userId,
                     userDeptList = userDeptList,
@@ -515,9 +532,10 @@ abstract class ImageService @Autowired constructor() {
         classifyList.forEach {
             val classifyCode = it.classifyCode
             if (classifyCode != "trigger") {
-                val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
-                    defaultMessage = it.classifyName
+                val classifyLanName = I18nUtil.getCodeLanMessage(
+                    messageCode = "${StoreTypeEnum.IMAGE.name}.classify.$classifyCode",
+                    defaultMessage = it.classifyName,
+                    language = I18nUtil.getLanguage(userId)
                 )
                 result.add(
                     MarketImageMain(
@@ -802,6 +820,20 @@ abstract class ImageService @Autowired constructor() {
         }
     }
 
+    fun getImageStatusByCodeAndVersion(
+        imageCode: String,
+        imageVersion: String
+    ): String {
+        logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
+        val imageRecord =
+            imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+                params = arrayOf(imageCode, imageVersion)
+            )
+        return ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
+    }
+
     fun getLatestImageDetailByCode(
         userId: String,
         imageCode: String,
@@ -846,6 +878,8 @@ abstract class ImageService @Autowired constructor() {
             storeCode = imageCode,
             storeType = StoreTypeEnum.IMAGE.type.toByte()
         )
+        val storeHonorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.IMAGE, imageCode)
+        val storeIndexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.IMAGE, imageCode)
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
@@ -948,7 +982,9 @@ abstract class ImageService @Autowired constructor() {
             creator = imageVersionLog?.creator,
             modifier = imageVersionLog?.modifier,
             createTime = (imageVersionLog?.createTime ?: imageRecord.createTime).timestampmilli(),
-            updateTime = (imageVersionLog?.updateTime ?: imageRecord.updateTime).timestampmilli()
+            updateTime = (imageVersionLog?.updateTime ?: imageRecord.updateTime).timestampmilli(),
+            honorInfos = storeHonorInfos,
+            indexInfos = storeIndexInfos
         )
     }
 
@@ -970,12 +1006,20 @@ abstract class ImageService @Autowired constructor() {
         val type = StoreTypeEnum.IMAGE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, imageCode, type)
         if (!isOwner) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(imageCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(imageCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
 
         val releasedCnt = marketImageDao.countReleaseImageByCode(dslContext, imageCode)
         if (releasedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_RELEASED, arrayOf(imageCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_IMAGE_RELEASED,
+                params = arrayOf(imageCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         logger.info("$interfaceName:delete:Inner:releasedCnt=$releasedCnt")
 
@@ -983,7 +1027,11 @@ abstract class ImageService @Autowired constructor() {
         val installedCnt = storeProjectRelDao.countInstalledProject(dslContext, imageCode, type)
         logger.info("$interfaceName:delete:Inner:installedCnt=$installedCnt")
         if (installedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_USED, arrayOf(imageCode))
+            return I18nUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_IMAGE_USED,
+                params = arrayOf(imageCode),
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         deleteImage(userId, imageCode)
         return Result(true)
@@ -1085,7 +1133,9 @@ abstract class ImageService @Autowired constructor() {
                 // 处于测试中、下架中、已下架的插件版本的版本名称加下说明
                 val imageStatusName = ImageStatusEnum.getImageStatus(imageStatus.toInt())
                 val storeImageStatusPrefix = STORE_IMAGE_STATUS + "_"
-                val imageStatusMsg = MessageCodeUtil.getCodeLanMessage("$storeImageStatusPrefix$imageStatusName")
+                val imageStatusMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "$storeImageStatusPrefix$imageStatusName"
+                )
                 versionName = "$versionName / $imageStatusMsg"
                 latestVersionName = "$latestVersionName / $imageStatusMsg"
             }
@@ -1107,7 +1157,10 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:updateImageBaseInfo:Input($userId,$imageCode,$imageBaseInfoUpdateRequest")
         // 判断当前用户是否是该镜像的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, imageCode, StoreTypeEnum.IMAGE.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            return I18nUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         }
         // 查询镜像的最新记录
         val newestImageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)

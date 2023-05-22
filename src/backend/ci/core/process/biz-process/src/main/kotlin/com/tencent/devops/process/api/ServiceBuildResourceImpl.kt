@@ -58,12 +58,14 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(
+    private val pipelineBuildMaintainFacadeService: PipelineBuildMaintainFacadeService,
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
@@ -72,11 +74,11 @@ class ServiceBuildResourceImpl @Autowired constructor(
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
+            throw ParamBlankException("Invalid buildId, it must not empty.")
         }
         return Result(
             pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
-                ?: throw ParamBlankException("Invalid buildId")
+                ?: throw ParamBlankException("Invalid buildId, please check if projectId & buildId are related")
         )
     }
 
@@ -192,20 +194,18 @@ class ServiceBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.retry(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    failedContainer = failedContainer,
-                    skipFailedTask = skipFailedTask,
-                    isMobile = false,
-                    channelCode = channelCode,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    checkManualStartup = checkManualStartup ?: false
-                )
+            pipelineBuildFacadeService.retry(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId,
+                failedContainer = failedContainer,
+                skipFailedTask = skipFailedTask,
+                isMobile = false,
+                channelCode = channelCode,
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                checkManualStartup = checkManualStartup ?: false
             )
         )
     }
@@ -726,18 +726,16 @@ class ServiceBuildResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkParam(projectId, pipelineId)
         return Result(
-            BuildId(
-                pipelineBuildFacadeService.buildManualStartup(
-                    userId = userId,
-                    startType = startType,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    values = values,
-                    channelCode = channelCode,
-                    buildNo = buildNo,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode),
-                    frequencyLimit = true
-                )
+            pipelineBuildFacadeService.buildManualStartup(
+                userId = userId,
+                startType = startType,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                values = values,
+                channelCode = channelCode,
+                buildNo = buildNo,
+                checkPermission = ChannelCode.isNeedAuth(channelCode),
+                frequencyLimit = true
             )
         )
     }
@@ -769,6 +767,22 @@ class ServiceBuildResourceImpl @Autowired constructor(
             remark = remark?.remark
         )
         return Result(true)
+    }
+
+    override fun tryFinishStuckBuilds(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildIds: Set<String>
+    ): Result<Boolean> {
+        return Result(
+            data = pipelineBuildMaintainFacadeService.tryFinishStuckBuilds(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildIds = buildIds
+            )
+        )
     }
 
     private fun checkParam(projectId: String, pipelineId: String) {

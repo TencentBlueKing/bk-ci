@@ -50,6 +50,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Repository
 
@@ -200,7 +201,7 @@ class StoreEnvVarDao {
         varName: String
     ): Int? {
         with(TStoreEnvVar.T_STORE_ENV_VAR) {
-            return dslContext.select(VERSION.max()).from(this)
+            return dslContext.select(DSL.max(VERSION)).from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)).and(VAR_NAME.eq(varName)))
                 .fetchOne(0, Int::class.java)
         }
@@ -269,7 +270,7 @@ class StoreEnvVarDao {
                 STORE_CODE.`as`(KEY_STORE_CODE),
                 STORE_TYPE.`as`(KEY_STORE_TYPE),
                 VAR_NAME.`as`(KEY_VAR_NAME),
-                VERSION.max().`as`(KEY_VERSION)
+                DSL.max(VERSION).`as`(KEY_VERSION)
             ).from(this).groupBy(STORE_CODE, STORE_TYPE, SCOPE, VAR_NAME)
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_CODE.eq(storeCode))

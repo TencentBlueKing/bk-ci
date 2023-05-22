@@ -62,8 +62,10 @@
                 // catch
             }
             // @ts-ignore
-            this.$setLocale(locale)
-            location.reload()
+            this.$setLocale(locale).then(() => {
+                location.reload()
+            })
+            
             // this.$nextTick(this.hideList)
         }
 

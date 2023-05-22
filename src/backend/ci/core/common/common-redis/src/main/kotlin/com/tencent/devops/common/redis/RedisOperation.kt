@@ -141,9 +141,12 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         redisTemplate.opsForHash<String, String>().put(getFinalKey(key, isDistinguishCluster), hashKey, values)
     }
 
-    fun hIncrBy(key: String, hashKey: String, delta: Long, isDistinguishCluster: Boolean? = false) {
-        redisTemplate.opsForHash<String, String>().increment(getFinalKey(key, isDistinguishCluster), hashKey, delta)
+    fun hmset(key: String, map: Map<String, String>, isDistinguishCluster: Boolean? = false) {
+        redisTemplate.opsForHash<String, String>().putAll(getFinalKey(key, isDistinguishCluster), map)
     }
+
+    fun hIncrBy(key: String, hashKey: String, delta: Long, isDistinguishCluster: Boolean? = false): Long =
+        redisTemplate.opsForHash<String, String>().increment(getFinalKey(key, isDistinguishCluster), hashKey, delta)
 
     fun hget(key: String, hashKey: String, isDistinguishCluster: Boolean? = false): String? {
         return redisTemplate.opsForHash<String, String>().get(getFinalKey(key, isDistinguishCluster), hashKey)

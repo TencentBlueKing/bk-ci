@@ -62,6 +62,7 @@ const disableDate = (time) => time && time.getTime() > Date.now()
       class="mr8 w240"
       id-key="errorCode"
       name-key="errorCode"
+      :atom-code="atomCode"
       :placeholder="t('Error code')"
       :multiple="true"
       :api-method="http.getErrorCodeList"

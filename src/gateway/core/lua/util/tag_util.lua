@@ -84,6 +84,23 @@ function _M:get_tag(ns_config)
         if tag == nil then
             tag = default_tag
         end
+        -- 是否使用kubernetes
+        if not string.find(tag, '^kubernetes-') then
+            if config.kubernetes.switchAll == true or self:switch_kubernetes(tag) then
+                tag = "kubernetes-" .. tag
+            else
+                local k8s_redis_key = nil
+                if devops_project == 'codecc' then
+                    k8s_redis_key = 'project:setting:k8s:codecc'
+                else
+                    k8s_redis_key = "project:setting:k8s"
+                end
+                local k8s_redRes = red:sismember(k8s_redis_key, devops_project_id)
+                if k8s_redRes == 1 then
+                    tag = "kubernetes-" .. tag
+                end
+            end
+        end
         --- 将redis连接放回pool中
         red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
 
@@ -95,6 +112,17 @@ function _M:get_tag(ns_config)
     self:set_header(tag)
 
     return tag
+end
+
+function _M:switch_kubernetes(tag)
+    local isInList = false
+    for _, v in ipairs(config.kubernetes.tags) do
+        if v == tag then
+            isInList = true
+            break
+        end
+    end
+    return isInList
 end
 
 -- 设置tag到http请求头

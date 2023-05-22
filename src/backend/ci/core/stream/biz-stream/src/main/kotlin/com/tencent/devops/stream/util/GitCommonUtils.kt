@@ -29,6 +29,8 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.stream.constant.StreamMessageCode.PARAM_INCORRECT
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork
 import org.slf4j.LoggerFactory
@@ -48,7 +50,7 @@ object GitCommonUtils {
 
     private const val httpsPrefix = "https://"
 
-    private const val gitEnd = ".git"
+    const val gitEnd = ".git"
 
     fun getPathWithNameSpace(url: String?): String? {
         if (url.isNullOrBlank()) {
@@ -160,9 +162,13 @@ object GitCommonUtils {
                 return projectId.removePrefix(githubProjectPrefix).toLong()
             }
         } catch (e: Exception) {
-            throw OperationException("蓝盾项目ID $projectId 不正确")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(messageCode = PARAM_INCORRECT, params = arrayOf(projectId))
+            )
         }
-        throw OperationException("蓝盾项目ID $projectId 不正确")
+        throw OperationException(
+            I18nUtil.getCodeLanMessage(messageCode = PARAM_INCORRECT, params = arrayOf(projectId))
+        )
     }
 
     // 获取蓝盾项目名称

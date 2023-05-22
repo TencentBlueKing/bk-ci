@@ -44,5 +44,7 @@ data class StreamGitProjectCache(
     override val description: String?,
     override val avatarUrl: String?,
     override val pathWithNamespace: String?,
-    override val nameWithNamespace: String
+    override val nameWithNamespace: String,
+    override val repoCreatedTime: String,
+    override val repoCreatorId: String
 ) : StreamGitProjectInfo
