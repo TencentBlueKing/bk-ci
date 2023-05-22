@@ -86,6 +86,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
+    override fun editWorkspace(userId: String, workspaceName: String, displayName: String): Result<Boolean> {
+        return Result(workspaceService.editWorkspace(userId, workspaceName, displayName))
+    }
+
     override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
         return Result(workspaceService.deleteWorkspace(userId, workspaceName))
     }
@@ -197,6 +201,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
         bkTicketService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
+        return Result(true)
+    }
+    override fun updateAllBkTicket(userId: String, bkTicket: String): Result<Boolean> {
+        bkTicketService.updateAllBkTicket(userId, bkTicket)
         return Result(true)
     }
 

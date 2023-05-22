@@ -49,7 +49,8 @@ class QualityUrlUtils {
         pipelineId: String,
         buildId: String,
         detail: String?,
-        client: Client
+        client: Client,
+        logPrompt: String?
     ): String {
         val variable = client.get(ServiceVarResource::class).getBuildVar(
             projectId = projectId,
@@ -62,7 +63,10 @@ class QualityUrlUtils {
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
             "http://$codeccHost/codecc/$projectId/task/$taskId/detail?buildId=$buildId"
         } else {
-            val detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            var detailValue = logPrompt
+            if (detailValue.isNullOrBlank()) {
+                detailValue = codeccToolUrlPathMap[detail] ?: DEFAULT_CODECC_URL
+            }
             val fillDetailUrl = detailValue.replace("##projectId##", projectId)
                 .replace("##taskId##", taskId.toString())
                 .replace("##buildId##", buildId)

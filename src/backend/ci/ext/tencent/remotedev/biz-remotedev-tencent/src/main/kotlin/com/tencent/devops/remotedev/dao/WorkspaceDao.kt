@@ -309,6 +309,20 @@ class WorkspaceDao {
             }
         }
     }
+    fun updateWorkspaceDisplayName(
+        dslContext: DSLContext,
+        workspaceName: String,
+        displayName: String? = ""
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+                dslContext.update(this)
+                    .set(DISPLAY_NAME, displayName)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                    .where(NAME.eq(workspaceName))
+                    .execute()
+        }
+    }
 
     fun updateWorkspaceCreatorInfo(
         dslContext: DSLContext,
