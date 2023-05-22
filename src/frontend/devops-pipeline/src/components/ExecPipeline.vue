@@ -95,8 +95,14 @@
                     visible: showErrors
                 }"
             >
-                <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
-                >.....</bk-button
+                <bk-button
+                    text
+                    class="drag-dot"
+                    theme="normal"
+                    @click="toggleErrorPopup"
+                >
+                    <i class="bk-icon icon-angle-up toggle-error-popup-icon" />
+                </bk-button
                 >
                 <bk-tab
                     class="pipeline-exec-error-tab"
@@ -112,13 +118,7 @@
                             </span>
                         </bk-link>
                         <bk-button theme="normal" text @click="toggleErrorPopup">
-                            <i
-                                class="bk-icon hide-error-popup-icon"
-                                :class="{
-                                    'icon-angle-down': showErrors,
-                                    'icon-angle-up': !showErrors
-                                }"
-                            />
+                            <i class="bk-icon icon-angle-up toggle-error-popup-icon hide-error-popup-icon" />
                         </bk-button>
                     </template>
                     <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index" :render-label="renderLabel">
@@ -935,8 +935,27 @@
         position: static;
       }
     }
+    .toggle-error-popup-icon {
+        display: flex;
+        align-items: center;
+        transform-origin: center;
+        font-size: 30px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .hide-error-popup-icon {
+      font-size: 20px;
+      width: 20px;
+      height: 20px;
+      margin-right: 24px;
+    }
     &.visible {
       transform: translateY(0);
+      .toggle-error-popup-icon {
+        transition: transform 0.6s ease;
+        transform: rotate(180deg);
+    }
     }
     .drag-dot {
       position: absolute;
@@ -953,11 +972,7 @@
         padding: 0 4px;
       }
     }
-    .hide-error-popup-icon {
-      display: inline-block;
-      font-size: 20px;
-      margin-right: 24px;
-    }
+
     .exec-error-type-cell {
       color: $primaryColor;
       display: grid;
