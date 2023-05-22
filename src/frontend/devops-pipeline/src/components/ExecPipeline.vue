@@ -111,7 +111,12 @@
                     type="unborder-card"
                 >
                     <template slot="setting">
-                        <bk-link theme="primary" :href="pipelineErrorGuideLink" target="_blank">
+                        <bk-link
+                            class="pipeline-error-guide-link"
+                            theme="primary"
+                            target="_blank"
+                            :href="pipelineErrorGuideLink"
+                        >
                             <span class="fix-error-jump">
                                 <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
                                 {{ $t("details.pipelineErrorGuide") }}
@@ -938,7 +943,6 @@
         transform-origin: center;
         font-size: 30px;
         width: 30px;
-        height: 30px;
     }
 
     &.visible {
@@ -954,14 +958,18 @@
       top: 0;
       z-index: 2;
     }
-    .fix-error-jump {
-      display: flex;
-      align-items: center;
-      color: $primaryColor;
-      font-size: 12px;
-      .fix-error-jump-icon {
-        padding: 0 4px;
-      }
+    .pipeline-error-guide-link {
+        margin-right: 24px;
+        .fix-error-jump {
+        display: flex;
+        align-items: center;
+        color: $primaryColor;
+        font-size: 12px;
+
+        .fix-error-jump-icon {
+            padding: 0 4px;
+        }
+        }
     }
 
     .exec-error-type-cell {
