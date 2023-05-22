@@ -766,7 +766,7 @@
             setAtomLocate (row, showLog = false) {
                 console.log(this.isPropertyPanelVisible, 'isPropertyPanelVisible', this.activeErrorAtom)
                 if (this.activeErrorAtom?.taskId === row.taskId && !showLog) return
-                if (this.activeErrorAtom?.taskId) {
+                if (this.activeErrorAtom) {
                     this.locateError(this.activeErrorAtom, false, showLog)
                 }
 
