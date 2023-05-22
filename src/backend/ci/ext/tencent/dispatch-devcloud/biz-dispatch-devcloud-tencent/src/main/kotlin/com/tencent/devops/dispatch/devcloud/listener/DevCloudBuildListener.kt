@@ -583,7 +583,7 @@ class DevCloudBuildListener @Autowired constructor(
                 ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
                 ENV_DEFAULT_LOCALE_LANGUAGE to commonConfig.devopsDefaultLocaleLanguage,
                 ENV_JOB_BUILD_TYPE to (dispatchType?.buildType()?.name ?: BuildType.PUBLIC_DEVCLOUD.name),
-                ENV_DEVCLOUD_CPU to threadLocalCpu.get(),
+                ENV_DEVCLOUD_CPU to Integer.valueOf(threadLocalCpu.get()),
                 ENV_DEVCLOUD_MEM to threadLocalMemory.get(),
                 ENV_DEVCLOUD_DISK to threadLocalDisk.get()
             ))
