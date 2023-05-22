@@ -183,7 +183,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
                 logger.info("User $userId  environment response: $responseContent")
                 val environmentOpRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
-                if (HttpStatus.OK.value == environmentOpRsp.code) {
+                if (OK == environmentOpRsp.code) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
