@@ -58,6 +58,7 @@ import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTrigger
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
@@ -119,6 +120,7 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
+        logger.info("git commit view trigger projectId=$projectId,repository=$repository")
         if (projectId != null && repository != null) {
             when (event.reviewableType) {
                 // MR Review
@@ -216,5 +218,9 @@ class TGitReviewTriggerHandler(
             )
             return listOf(urlFilter, eventTypeFilter, crStateFilter, crTypeFilter)
         }
+    }
+
+    companion object{
+        private val logger = LoggerFactory.getLogger(TGitReviewTriggerHandler::class.java)
     }
 }
