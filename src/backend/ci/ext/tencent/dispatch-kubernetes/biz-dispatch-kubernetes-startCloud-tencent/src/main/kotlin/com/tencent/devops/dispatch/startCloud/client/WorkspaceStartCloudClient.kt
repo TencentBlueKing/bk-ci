@@ -216,7 +216,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
         headerBuilder["x-start-appid"] = appId
         val timestampMillis = System.currentTimeMillis().toString().take(10)
         headerBuilder["x-start-timestamp"] = timestampMillis
-        headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body")
+        headerBuilder["x-start-signature"] = ShaUtils.sha256("$appId$appKey$timestampMillis$body").uppercase()
 
         return headerBuilder
     }
