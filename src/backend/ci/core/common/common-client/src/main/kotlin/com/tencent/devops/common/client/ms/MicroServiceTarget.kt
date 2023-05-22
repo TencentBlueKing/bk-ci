@@ -66,7 +66,7 @@ class MicroServiceTarget<T> constructor(
                 }
             })
 
-    private val errorInfo = Result(
+    private fun getErrorInfo() = Result(
         ERROR_SERVICE_NO_FOUND.toInt(),
         MessageUtil.getMessageByLocale(
             messageCode = ERROR_SERVICE_NO_FOUND,
@@ -88,7 +88,7 @@ class MicroServiceTarget<T> constructor(
 
         if (instances.isEmpty()) {
             throw ClientException(
-                errorInfo.message ?: MessageUtil.getMessageByLocale(
+                getErrorInfo().message ?: MessageUtil.getMessageByLocale(
                     messageCode = SERVICE_PROVIDER_NOT_FOUND,
                     language = SpringContextUtil.getBean(CommonConfig::class.java).devopsDefaultLocaleLanguage,
                     params = arrayOf(serviceName, discoveryTag)
