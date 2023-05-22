@@ -144,6 +144,7 @@
     import HonerImg from '../../honer-img.vue'
     import HonerTag from '../../honer-tag.vue'
     import api from '@/api'
+    import { DEFAULT_LOGO_URL } from '@/utils'
 
     export default {
         components: {
@@ -172,6 +173,7 @@
 
         data () {
             return {
+                defaultUrl: DEFAULT_LOGO_URL,
                 showCooperDialog: false,
                 user: window.userInfo.username,
                 cooperData: {
@@ -199,6 +201,15 @@
                 }
             },
 
+            isPublic () {
+                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
+            },
+
+            isPublicTitle () {
+                if (this.isPublic) return this.$t('store.点击查看源码')
+                else return this.$t('store.未开源')
+            },
+
             approveMsg () {
                 const key = `${typeof this.userInfo.type}-${this.detail.approveStatus}`
                 const mapStatus = {
@@ -223,6 +234,10 @@
                 if (this.detail.defaultFlag) info.des = `${this.$t('store.通用流水线插件，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('store.你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 
@@ -304,6 +319,10 @@
                     }
                 })
                 return jobList
+            },
+
+            goToCode () {
+                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {
