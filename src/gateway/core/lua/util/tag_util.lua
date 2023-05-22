@@ -86,7 +86,7 @@ function _M:get_tag(ns_config)
         end
         -- 是否使用kubernetes
         if not string.find(tag, '^kubernetes-') then
-            if config.kubernetes.switchAll == true or self:switch_kubernetes(tag) then
+            if config.kubernetes.switchAll == true or self:switch_kubernetes(devops_project, tag) then
                 tag = "kubernetes-" .. tag
             else
                 local k8s_redis_key = nil
@@ -114,9 +114,15 @@ function _M:get_tag(ns_config)
     return tag
 end
 
-function _M:switch_kubernetes(tag)
+function _M:switch_kubernetes(devops_project, tag)
     local isInList = false
-    for _, v in ipairs(config.kubernetes.tags) do
+    local tags = nil
+    if devops_project == 'codecc' then
+        tags = config.kubernetes.codeccTags
+    else
+        tags = config.kubernetes.tags
+    end
+    for _, v in ipairs(tags) do
         if v == tag then
             isInList = true
             break
