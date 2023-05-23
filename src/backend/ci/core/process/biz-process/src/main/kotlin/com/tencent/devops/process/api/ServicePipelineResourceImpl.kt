@@ -27,18 +27,20 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -327,7 +329,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         setting.checkParam()
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
-            setting = setting,
+            setting = setting.copy(projectId, pipelineId),
             checkPermission = ChannelCode.isNeedAuth(channelCode ?: ChannelCode.BS),
             updateLastModifyUser = updateLastModifyUser
         )
@@ -508,7 +510,12 @@ class ServicePipelineResourceImpl @Autowired constructor(
                 permission = AuthPermission.VIEW
             )
         ) {
-            throw PermissionForbiddenException("$userId 无项目$projectId 查看权限")
+            throw PermissionForbiddenException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    params = arrayOf(userId, projectId)
+                )
+            )
         }
         val pipelineInfos = pipelineListFacadeService.searchIdAndName(
             projectId = projectId,
@@ -521,6 +528,10 @@ class ServicePipelineResourceImpl @Autowired constructor(
 
     override fun batchUpdateModelName(modelUpdateList: List<ModelUpdate>): Result<List<ModelUpdate>> {
         return Result(pipelineInfoFacadeService.batchUpdateModelName(modelUpdateList))
+    }
+
+    override fun getPipelineInfobyAutoId(id: Long): Result<SimplePipeline> {
+        return Result(pipelineListFacadeService.getByAutoIds(listOf(id))[0])
     }
 
     private fun checkParams(userId: String, projectId: String) {

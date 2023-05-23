@@ -46,8 +46,8 @@ config = {
         pass = "__REDIS_PASS__", -- redis 密码，没有密码的话，把这行注释掉
         database = __REDIS_DB__, -- 默认选择db0
         max_idle_time = 600000, -- 保留在连接池的时间
-        pool_size = 40, -- 连接池的大小
-        backlog = 10, -- 池外连接最大值
+        pool_size = 5, -- 连接池的大小
+        backlog = 100, -- 连接等待队列
         ssl = false
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
@@ -105,6 +105,7 @@ config = {
     kubernetes = {
         domain = "__BK_CI_KUBERNETES_DOMAIN__",
         switchAll = __BK_CI_KUBERNETES_SWITCH_ALL__,
+        tags = {"rbac"},
         codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"},
         api = {
             host = "__BK_CI_KUBERNETES_API_HOST__",

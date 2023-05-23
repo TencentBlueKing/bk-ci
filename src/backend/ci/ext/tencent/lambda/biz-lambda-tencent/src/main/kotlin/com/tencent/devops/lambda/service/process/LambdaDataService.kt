@@ -52,7 +52,9 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
+import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.process.LambdaBuildCommitDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
@@ -73,6 +75,7 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecor
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
 import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -644,7 +647,10 @@ class LambdaDataService @Autowired constructor(
                 executeTime = t.executeTime ?: 0,
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
-                }
+                },
+                stageStatus = kotlin.runCatching {
+                    JsonUtil.getObjectMapper().readValue(t.stageStatus) as List<BuildStageStatus>
+                }.getOrNull()
             )
         }
     }
@@ -680,7 +686,11 @@ class LambdaDataService @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 userId = triggerUser ?: startUser,
-                trigger = StartType.toReadableString(trigger, ChannelCode.valueOf(channel)),
+                trigger = StartType.toReadableString(
+                    type = trigger,
+                    channelCode = ChannelCode.valueOf(channel),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 buildNum = buildNum,
                 pipelineVersion = version,
                 startTime = startTime?.format(dateTimeFormatter) ?: "",
@@ -724,7 +734,12 @@ class LambdaDataService @Autowired constructor(
 
     private fun checkParamBlank(param: String?, message: String): String {
         if (param.isNullOrBlank()) {
-            throw ParamBlankException("启动配置缺少 $message")
+            throw ParamBlankException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = STARTUP_CONFIGURATION_MISSING,
+                    params = arrayOf(message)
+                )
+            )
         }
         return param
     }

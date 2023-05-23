@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_ENV_NO_DEL_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_CHANGE_USER_NOT_SUPPORT
@@ -53,16 +53,16 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import org.jooq.DSLContext
-import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 @Suppress("ALL")
@@ -84,8 +84,7 @@ class NodeService @Autowired constructor(
     }
 
     val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
-    fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
-        val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
+    fun deleteNodes(userId: String, projectId: String, nodeLongIds: List<Long>) {
         val canDeleteNodeIds =
             environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.DELETE)
         val existNodeList = nodeDao.listByIds(dslContext, projectId, nodeLongIds)
@@ -117,6 +116,11 @@ class NodeService @Autowired constructor(
         }
     }
 
+    fun deleteNodeByAgentId(userId: String, projectId: String, agentId: String) {
+        val node = thirdPartyAgentDao.getAgent(dslContext, HashUtil.decodeIdToLong(agentId))?.nodeId ?: return
+        deleteNodes(userId, projectId, listOf(node))
+    }
+
     fun hasCreatePermission(userId: String, projectId: String): Boolean {
         return environmentPermissionService.checkNodePermission(userId, projectId, AuthPermission.CREATE)
     }
@@ -131,6 +135,13 @@ class NodeService @Autowired constructor(
             userId = userId, projectId = projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
 
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
@@ -148,11 +159,19 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeRecordList.map {
+
+        return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -190,6 +209,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = canEditNodeIds.contains(it.nodeId),
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
@@ -217,8 +237,15 @@ class NodeService @Autowired constructor(
 
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId, projectId,
-            setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
 
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
@@ -235,12 +262,18 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeRecordList.map {
+        return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -263,6 +296,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = canEditNodeIds.contains(it.nodeId),
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
@@ -290,6 +324,14 @@ class NodeService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
+
         return validRecordList.map {
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
@@ -307,6 +349,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = null,
                 canDelete = null,
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
@@ -385,7 +428,10 @@ class NodeService @Autowired constructor(
         )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+                message = I18nUtil.getCodeLanMessage(
+                    ERROR_NODE_NO_EDIT_PERMISSSION,
+                    language = I18nUtil.getLanguage(userId)
+                )
             )
         }
         checkDisplayName(projectId, nodeId, displayName)
@@ -472,6 +518,7 @@ class NodeService @Autowired constructor(
                 canUse = false,
                 canEdit = false,
                 canDelete = false,
+                canView = false,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {

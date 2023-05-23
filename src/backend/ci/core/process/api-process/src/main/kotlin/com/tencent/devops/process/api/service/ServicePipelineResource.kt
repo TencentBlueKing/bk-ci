@@ -30,8 +30,8 @@ package com.tencent.devops.process.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.pojo.measure.PipelineLabelRelateInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.ModelUpdate
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -545,4 +545,13 @@ interface ServicePipelineResource {
     fun batchUpdateModelName(
         modelUpdateList: List<ModelUpdate>
     ): Result<List<ModelUpdate>>
+
+    @ApiOperation("根据自增id获取流水线信息")
+    @GET
+    @Path("/{id}/info")
+    fun getPipelineInfobyAutoId(
+        @PathParam("id")
+        @ApiParam(value = "流水线自增id", required = true)
+        id: Long
+    ): Result<SimplePipeline>
 }

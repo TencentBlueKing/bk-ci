@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.api.user
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
@@ -68,6 +69,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "bkTicket", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
+        bkTicket: String,
         @ApiParam("工作空间描述", required = true)
         workspace: WorkspaceCreate
     ): Result<WorkspaceResponse>
@@ -106,6 +110,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "bkTicket", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
+        bkTicket: String,
         @ApiParam("工作空间名称", required = true)
         @QueryParam("workspaceName")
         workspaceName: String
@@ -136,6 +143,21 @@ interface UserWorkspaceResource {
         @ApiParam("分享用户", required = true)
         @QueryParam("sharedUser")
         sharedUser: String
+    ): Result<Boolean>
+
+    @ApiOperation("修改工作空间")
+    @POST
+    @Path("/edit")
+    fun editWorkspace(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam("备注名称", required = true)
+        @QueryParam("displayName")
+        displayName: String
     ): Result<Boolean>
     // todo 获取运行日志的接口
 
@@ -300,13 +322,15 @@ interface UserWorkspaceResource {
         @ApiParam("bkTicket信息", required = true)
         bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
-
-    @ApiOperation("校验是否有最新稳定版本,返回当前环境的最新稳定版")
+    @ApiOperation("更新容器的BKticket")
     @POST
-    @Path("/checkUpdate")
-    fun checkUpdate(
-        @ApiParam("userId", required = true)
+    @Path("/updateAllBkTicket")
+    fun updateAllBkTicket(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
-    ): Result<String>
+        userId: String,
+        @ApiParam(value = "bkTicket", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TICKET)
+        bkTicket: String
+    ): Result<Boolean>
 }

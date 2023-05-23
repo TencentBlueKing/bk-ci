@@ -32,6 +32,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 object StoreUtils {
 
@@ -106,5 +107,26 @@ object StoreUtils {
             return true
         }
         return false
+    }
+
+    /**
+     * 获取字段Key前缀
+     * @param storeType 组件类型
+     * @param storeCode 组件代码
+     * @param version 组件版本
+     * @param fixPrefixName 固定前缀名称
+     */
+    fun getStoreFieldKeyPrefix(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        version: String,
+        fixPrefixName: String? = null
+    ): String {
+        val dataKey = "${storeType.name}.$storeCode.$version"
+        return if (!fixPrefixName.isNullOrBlank()) {
+            "$dataKey.$fixPrefixName"
+        } else {
+            dataKey
+        }
     }
 }

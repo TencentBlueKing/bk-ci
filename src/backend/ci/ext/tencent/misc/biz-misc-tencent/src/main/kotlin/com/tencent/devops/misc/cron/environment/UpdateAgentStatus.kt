@@ -30,7 +30,7 @@ package com.tencent.devops.misc.cron.environment
 import com.tencent.devops.common.environment.agent.client.EsbAgentClient
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.environment.DEFAULT_SYTEM_USER
+import com.tencent.devops.environment.constant.DEFAULT_SYTEM_USER
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

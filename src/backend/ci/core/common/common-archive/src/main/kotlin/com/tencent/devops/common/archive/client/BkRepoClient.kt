@@ -34,6 +34,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -927,7 +928,9 @@ class BkRepoClient constructor(
         pathNamePairs: List<Pair<String, String>>, // (path eq and name match) or
         metadata: Map<String, String>, // eq and
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
     ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
@@ -956,7 +959,7 @@ class BkRepoClient constructor(
         }
         val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
 
-        return query(userId, projectId, rule, page, pageSize)
+        return query(userId, projectId, rule, page, pageSize, sortBy, direction)
     }
 
     fun queryByPattern(
@@ -1059,11 +1062,49 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
+    fun listDir(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String?,
+        name: String?,
+        page: Int,
+        pageSize: Int
+    ): QueryData {
+        if (path.isNullOrBlank() && name.isNullOrBlank()) {
+            throw IllegalArgumentException()
+        }
+        val projectRule = Rule.QueryRule("projectId", projectId)
+        val repoRule = Rule.QueryRule("repoName", repoName)
+        val folderRule = Rule.QueryRule("folder", true)
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, folderRule)
+        if (!path.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("path", PathUtils.normalizePath(path)))
+        }
+        if (!name.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("name", name, OperationType.MATCH))
+        }
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        return query(userId, projectId, rule, page, pageSize)
+    }
+
+    private fun query(
+        userId: String,
+        projectId: String,
+        rule: Rule,
+        page: Int,
+        pageSize: Int,
+        sortBy: String? = null,
+        direction: Sort.Direction? = null
+    ): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
-            sort = Sort(listOf("fullPath"), Sort.Direction.ASC),
+            sort = if (!sortBy.isNullOrBlank() && direction != null) {
+                Sort(listOf(sortBy), direction)
+            } else {
+                Sort(listOf("fullPath"), Sort.Direction.ASC)
+            },
             select = mutableListOf(),
             rule = rule
         )

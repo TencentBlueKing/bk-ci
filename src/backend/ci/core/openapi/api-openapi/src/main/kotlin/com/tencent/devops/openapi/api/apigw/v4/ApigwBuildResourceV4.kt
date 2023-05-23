@@ -387,7 +387,19 @@ interface ApigwBuildResourceV4 {
         @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("变量名列表", required = true)
+        @ApiParam(
+            "变量名列表", required = true,
+            examples = Example(
+                value = [
+                    ExampleProperty(
+                        mediaType = "以数组形式把需要获取的变量key传进来，比如获取variable1变量",
+                        value = """
+                            ["variable1"]
+                                """
+                    )
+                ]
+            )
+        )
         variableNames: List<String>
     ): Result<Map<String, String>>
 
@@ -466,13 +478,13 @@ interface ApigwBuildResourceV4 {
         @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = false)
+        @ApiParam("流水线ID（p-开头）", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("构建ID（b-开头）", required = true)
         @QueryParam("buildId")
         buildId: String,
-        @ApiParam("步骤Id", required = true)
+        @ApiParam("步骤Id（e-开头）", required = true)
         @QueryParam("elementId")
         elementId: String,
         @ApiParam("审核信息", required = true)

@@ -30,6 +30,7 @@ package com.tencent.devops.repository.api
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.code.p4.api.P4FileSpec
+import com.tencent.devops.scm.code.p4.api.P4ServerInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -104,4 +105,19 @@ interface ServiceP4Resource {
         @HeaderParam("password")
         password: String
     ): Result<String>
+
+    @ApiOperation("获取p4服务端信息")
+    @GET
+    @Path("/{projectId}/{repositoryId}/serverInfo")
+    fun getServerInfo(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("代码库哈希ID或代代码库名称", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = true)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?
+    ): Result<P4ServerInfo>
 }

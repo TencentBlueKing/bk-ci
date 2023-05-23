@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_INV
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.dao.ProjectFreshDao
 import com.tencent.devops.project.dao.ProjectUserDao
 import com.tencent.devops.project.dao.UserDao
@@ -42,11 +41,11 @@ import com.tencent.devops.project.pojo.UserInfo
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.tof.TOFService
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.Executors
 
 @Service
 @Suppress("ALL")
@@ -179,7 +178,7 @@ class ProjectUserRefreshService @Autowired constructor(
                 userId = userId,
                 bkTicket = "",
                 userCache = false
-            ) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage("user $userId level office"))
+            ) ?: throw OperationException("user $userId level office")
             if (isUserInfoChange(
                     tofDeptInfo = deptInfo,
                     dbUserRecord = userInfo

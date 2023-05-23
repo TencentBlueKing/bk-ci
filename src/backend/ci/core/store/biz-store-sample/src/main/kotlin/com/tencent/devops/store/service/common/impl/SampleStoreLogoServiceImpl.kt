@@ -31,9 +31,10 @@ import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.utils.StoreUtils
-import org.springframework.stereotype.Service
 import java.io.File
+import org.springframework.stereotype.Service
 
 @Service
 class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
@@ -45,7 +46,8 @@ class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
             serviceUrlPrefix = serviceUrlPrefix,
             file = file,
             fileChannelType = FileChannelTypeEnum.WEB_SHOW.name,
-            logo = true
+            logo = true,
+            language = I18nUtil.getLanguage(userId)
         ).data
         // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
         return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)

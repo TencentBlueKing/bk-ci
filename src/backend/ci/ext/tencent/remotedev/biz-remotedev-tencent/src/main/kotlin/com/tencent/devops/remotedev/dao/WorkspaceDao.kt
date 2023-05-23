@@ -93,7 +93,7 @@ class WorkspaceDao {
                     /* value9 = */ workspace.workspaceFolder,
                     /* value10 = */ workspace.hostName,
                     /* value11 = */ 8,
-                    /* value12 = */ 16,
+                    /* value12 = */ 32,
                     /* value13 = */ 100,
                     /* value14 = */ workspaceStatus.ordinal,
                     /* value15 = */ LocalDateTime.now(),
@@ -294,6 +294,20 @@ class WorkspaceDao {
             }
         }
     }
+    fun updateWorkspaceDisplayName(
+        dslContext: DSLContext,
+        workspaceName: String,
+        displayName: String? = ""
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+                dslContext.update(this)
+                    .set(DISPLAY_NAME, displayName)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                    .where(NAME.eq(workspaceName))
+                    .execute()
+        }
+    }
     fun updateWorkspaceCreatorInfo(
         dslContext: DSLContext,
         workspaceName: String,
@@ -366,6 +380,19 @@ class WorkspaceDao {
                 .and(STATUS.eq(3))
                 .limit(1000)
                 .fetch()
+        }
+    }
+
+    fun updatePreCiAgentId(
+        dslContext: DSLContext,
+        agentId: String,
+        workspaceName: String
+    ): Boolean {
+        with(TWorkspace.T_WORKSPACE) {
+            return dslContext.update(this)
+                .set(PRECI_AGENT_ID, agentId)
+                .where(NAME.eq(workspaceName))
+                .execute() == 1
         }
     }
 

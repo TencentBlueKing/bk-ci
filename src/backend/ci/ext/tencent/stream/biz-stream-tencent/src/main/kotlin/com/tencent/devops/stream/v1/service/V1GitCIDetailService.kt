@@ -35,9 +35,11 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -45,6 +47,8 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.stream.common.CommonVariables
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_CANNOT_QUERIED
+import com.tencent.devops.stream.constant.StreamMessageCode.USER_NOT_PERMISSION_FOR_WORKER_BEE
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -86,7 +90,10 @@ class V1GitCIDetailService @Autowired constructor(
     fun getProjectLatestBuildDetail(userId: String, gitProjectId: Long, pipelineId: String?): V1GitCIModelDetail? {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(
             dslContext = dslContext,
@@ -119,7 +126,10 @@ class V1GitCIDetailService @Autowired constructor(
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): V1GitCIModelDetail? {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
@@ -167,7 +177,10 @@ class V1GitCIDetailService @Autowired constructor(
     ): Map<String, V1GitCIBuildHistory> {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val history = client.get(ServiceBuildResource::class).getBatchBuildStatus(
             projectId = conf.projectCode!!,
@@ -214,7 +227,10 @@ class V1GitCIDetailService @Autowired constructor(
     ): FileInfoPage<FileInfo> {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
 
         val propMap = HashMap<String, String>()
@@ -242,7 +258,10 @@ class V1GitCIDetailService @Autowired constructor(
     ): Url {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
 
         // 校验工蜂项目权限
@@ -252,7 +271,11 @@ class V1GitCIDetailService @Autowired constructor(
             accessLevel = 30
         )
         if (!checkAuth.data!!) {
-            throw CustomException(Response.Status.FORBIDDEN, "用户没有工蜂项目权限，无法获取下载链接")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = USER_NOT_PERMISSION_FOR_WORKER_BEE,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         }
 
         try {
@@ -286,7 +309,10 @@ class V1GitCIDetailService @Autowired constructor(
     fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): List<Report> {
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val reportList = client.get(TXUserReportResource::class)
             .getGitCI(userId, conf.projectCode!!, pipelineId, buildId)

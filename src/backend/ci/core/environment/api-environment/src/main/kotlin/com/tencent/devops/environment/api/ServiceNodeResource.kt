@@ -37,12 +37,14 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_NODE"], description = "服务-节点")
@@ -155,5 +157,20 @@ interface ServiceNodeResource {
         projectId: String,
         @ApiParam(value = "节点列表", required = true)
         nodeHashIds: List<String>
+    ): Result<Boolean>
+
+    @ApiOperation("删除节点")
+    @DELETE
+    @Path("/projects/{projectId}/delete_third_party_node")
+    fun deleteThirdPartyNode(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "agent id", required = true)
+        @QueryParam("agentId")
+        agentId: String
     ): Result<Boolean>
 }

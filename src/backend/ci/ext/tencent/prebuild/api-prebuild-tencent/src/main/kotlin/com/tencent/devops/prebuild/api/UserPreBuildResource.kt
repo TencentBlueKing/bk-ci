@@ -33,30 +33,30 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
+import com.tencent.devops.prebuild.pojo.GitYamlString
 import com.tencent.devops.prebuild.pojo.HistoryResponse
-import com.tencent.devops.prebuild.pojo.UserProject
-import com.tencent.devops.process.pojo.BuildId
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
-import com.tencent.devops.prebuild.pojo.PrePluginVersion
+import com.tencent.devops.prebuild.pojo.UserProject
 import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
+import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
-import javax.ws.rs.DELETE
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PREBUILD"], description = "用户-PREBUILD资源")
@@ -91,7 +91,10 @@ interface UserPreBuildResource {
         ip: String,
         @ApiParam("hostName", required = true)
         @PathParam("hostName")
-        hostName: String
+        hostName: String,
+        @ApiParam("指定生成node的别名", required = false)
+        @QueryParam("nodeStingId")
+        nodeStingId: String?
     ): Result<ThirdPartyAgentStaticInfo>
 
     @ApiOperation("获取agent状态")

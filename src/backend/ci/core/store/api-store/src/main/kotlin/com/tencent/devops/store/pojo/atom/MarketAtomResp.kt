@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.common.api.annotation.BkFieldI18n
 import com.tencent.devops.store.pojo.common.MarketItem
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -40,5 +41,6 @@ data class MarketAtomResp(
     @ApiModelProperty("每页记录大小")
     val pageSize: Int?,
     @ApiModelProperty("数据集合")
+    @BkFieldI18n
     val records: List<MarketItem?>
 )

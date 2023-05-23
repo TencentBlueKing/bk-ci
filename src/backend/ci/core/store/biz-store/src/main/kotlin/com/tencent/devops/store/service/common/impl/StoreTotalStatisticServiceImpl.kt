@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -48,10 +48,6 @@ import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
-import java.math.BigDecimal
-import java.time.LocalDateTime
-import java.util.Calendar
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record7
@@ -62,6 +58,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.math.BigDecimal
+import java.time.LocalDateTime
+import java.util.Calendar
+import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
 @Suppress("ALL")
@@ -322,11 +322,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         return StoreErrorCodeInfo(
             storeCode = storeCode,
             storeType = storeType,
-            errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-                dslContext = dslContext,
-                storeCode = storeCode,
-                storeType = storeType
-            )
+            errorCodes = storeErrorCodeInfoDao.getStoreErrorCodes(dslContext, storeCode, storeType)
         )
     }
 
@@ -335,7 +331,10 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         key: String,
         failNum: Int
     ) {
-        totalFailDetail[key] = mapOf(NAME to MessageCodeUtil.getCodeLanMessage(key, key), FAIL_NUM to failNum)
+        totalFailDetail[key] = mapOf(
+            NAME to I18nUtil.getCodeLanMessage(messageCode = key, defaultMessage = key),
+            FAIL_NUM to failNum
+        )
     }
 
     private fun generateStoreStatistic(
@@ -349,7 +348,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
             successRate = successRate,
-            hotFlag = record?.get(KEY_HOT_FLAG) as Boolean
+            hotFlag = record?.get(KEY_HOT_FLAG) as? Boolean ?: false
         )
     }
 

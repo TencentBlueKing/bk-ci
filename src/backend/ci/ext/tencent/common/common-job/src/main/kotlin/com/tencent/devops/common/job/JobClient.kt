@@ -30,6 +30,7 @@ package com.tencent.devops.common.job
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -38,6 +39,7 @@ import com.tencent.devops.common.job.api.pojo.BkJobProperties
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -200,7 +202,7 @@ class JobClient @Autowired constructor(
 
     fun getDetailUrl(projectId: String, taskInstanceId: Long): String {
         return "<a target='_blank' href='${jobProperties.linkUrl}/$projectId/?taskInstanceList" +
-            "&projectId=$projectId#taskInstanceId=$taskInstanceId'>查看详情</a>"
+            "&projectId=$projectId#taskInstanceId=$taskInstanceId'>${I18nUtil.getCodeLanMessage(BK_VIEW_DETAILS)}</a>"
     }
 
     companion object {

@@ -45,7 +45,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
-import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.GRANT_EXPERIENCE_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -65,6 +66,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL.timestamp
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
@@ -139,8 +141,8 @@ class ExperienceAppService(
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "请联系产品负责人：\n${experience.creator} 授予体验权限。",
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+                errorCode = GRANT_EXPERIENCE_PERMISSION,
+                params = arrayOf(experience.creator)
             )
         }
         val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
@@ -449,8 +451,7 @@ class ExperienceAppService(
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有查询该体验的权限。",
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+                errorCode = NO_PERMISSION_QUERY_EXPERIENCE
             )
         }
         val experience = experienceDao.get(dslContext, experienceId)

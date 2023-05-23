@@ -8,9 +8,10 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.service.ExperiencePermissionService
+import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -30,6 +31,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         if (!bsAuthPermissionApi.validateUserResourcePermission(
                 user = user,
                 serviceCode = experienceServiceCode,
@@ -39,8 +42,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                 defaultMessage = authPermission.alias
             )
             throw ErrorCodeException(
@@ -50,6 +53,26 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 params = arrayOf(permissionMsg)
             )
         }
+    }
+
+    override fun validateCreateTaskPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
+
+    override fun validateDeleteExperience(
+        experienceId: Long,
+        userId: String,
+        projectId: String,
+        message: String
+    ) {
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = message
+        )
     }
 
     override fun createTaskResource(
@@ -88,6 +111,19 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         return map
     }
 
+    override fun filterCanListExperience(
+        user: String,
+        projectId: String,
+        experienceRecordList: List<TExperienceRecord>
+    ): List<TExperienceRecord> {
+        return experienceRecordList
+    }
+
+    override fun validateCreateGroupPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
+
     override fun validateGroupPermission(
         userId: String,
         projectId: String,
@@ -95,6 +131,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         if (!bsAuthPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = experienceServiceCode,
@@ -104,9 +142,10 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 permission = authPermission
             )
         ) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
-                defaultMessage = authPermission.alias
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
+                defaultMessage = authPermission.alias,
+                language = I18nUtil.getLanguage(userId)
             )
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
@@ -166,4 +205,10 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         }
         return map
     }
+
+    override fun filterCanListGroup(
+        user: String,
+        projectId: String,
+        groupRecordIds: List<Long>
+    ): List<Long> = groupRecordIds
 }

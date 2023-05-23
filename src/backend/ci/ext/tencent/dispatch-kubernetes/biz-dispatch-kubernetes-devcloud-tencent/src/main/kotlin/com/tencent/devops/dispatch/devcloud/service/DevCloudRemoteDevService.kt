@@ -28,14 +28,17 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.pojo.Container
 import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
 import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
+import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpPatch
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.devcloud.pojo.PatchOp
 import com.tencent.devops.dispatch.devcloud.pojo.Probe
 import com.tencent.devops.dispatch.devcloud.pojo.ProbeHandler
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
@@ -56,13 +59,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import org.springframework.util.Base64Utils
 
 @Service("devcloudRemoteDevService")
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceDevCloudClient: WorkspaceDevCloudClient
+    private val workspaceDevCloudClient: WorkspaceDevCloudClient,
+    private val profile: Profile
 ) : RemoteDevInterface {
 
     @Value("\${devCloud.workspace.environment.cpu:8000}")
@@ -83,8 +88,14 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.workspace.backendHost:}")
     val backendHost: String = ""
 
+    @Value("\${devCloud.workspace.turboInstallUrl:}")
+    val turboInstallUrl: String = ""
+
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
+
+    @Value("\${remotedev.idePort}")
+    val idePort: String = ""
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -142,7 +153,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                             name = VOLUME_MOUNT_NAME,
                             volumeSource = VolumeSource(
                                 dataDisk = DataDiskSource(
-                                    type = "pvc",
+                                    type = "local",
                                     sizeLimit = workspaceDisk
                                 )
                             )
@@ -157,14 +168,38 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
+        val environment = workspaceDevCloudClient.getWorkspaceDetail(userId, environmentUid)
+        val envPatchStr = getWorkspaceEnvPatchStr(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "false", environment)
         val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
-            environmentAction = EnvironmentAction.START
+            environmentAction = EnvironmentAction.START,
+            envPatchStr = envPatchStr
         )
 
         return resp.taskUid
+    }
+
+    private fun getWorkspaceEnvPatchStr(
+        envName: String,
+        patchValue: String,
+        environment: Environment
+    ): String {
+        val envList = environment.spec.containers[0].env
+        if (envList.isEmpty()) return ""
+
+        val envNameIndex = envList.indexOfFirst { it.name == envName }
+        if (envNameIndex < 0) return ""
+
+        val environmentPatch = EnvironmentOpPatch(
+            op = PatchOp.ADD.value,
+            path = "/spec/containers/0/env/$envNameIndex/value",
+            value = patchValue
+        )
+
+        val patchJson = JsonUtil.toJson(listOf(environmentPatch)).toByteArray()
+        return Base64Utils.encodeToString(patchJson)
     }
 
     override fun stopWorkspace(userId: String, workspaceName: String): String {
@@ -217,13 +252,16 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName)
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            ready = podInfo?.ready,
+            started = podInfo?.started
         )
     }
 
@@ -242,24 +280,21 @@ class DevCloudRemoteDevService @Autowired constructor(
         event: WorkspaceCreateEvent
     ): List<EnvVar> {
         val envVarList = mutableListOf<EnvVar>()
-        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
-        allCustomizedEnvs.forEach { (t, u) ->
-            envVarList.add(EnvVar(t, u))
-        }
-
         envVarList.addAll(
             listOf(
-                EnvVar(DEVOPS_REMOTING_IDE_PORT, "23000"),
+                // 此env环境变量顺序不能变更，需保持在第一位，pod patch根据env index更新
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
                 EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
                 EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
                 EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
-                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
-                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
+                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
+                EnvVar(DEVOPS_REMOTING_TURBO_DOWN_URL, turboInstallUrl),
                 EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
                 EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
                 EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
@@ -268,6 +303,11 @@ class DevCloudRemoteDevService @Autowired constructor(
 
             )
         )
+
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
+        }
 
         return envVarList
     }
@@ -288,6 +328,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
         private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
         private const val DEVOPS_REMOTING_PRECI_DOWN_URL = "DEVOPS_REMOTING_PRECI_DOWN_URL"
+        private const val DEVOPS_REMOTING_TURBO_DOWN_URL = "DEVOPS_REMOTING_TURBO_DOWN_URL"
         private const val DEVOPS_REMOTING_PRECI_GATEWAY_URL = "DEVOPS_REMOTING_PRECI_GATEWAY_URL"
         private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
         private const val BK_PRE_BUILD_GATEWAY = "BK_PRE_BUILD_GATEWAY"

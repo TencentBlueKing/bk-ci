@@ -56,7 +56,7 @@ data class RunsOn(
 )
 
 data class Container(
-    val image: String,
+    var image: String,
     val host: String? = null,
     val credentials: Credentials? = null
 )
@@ -74,7 +74,9 @@ data class ImagePullCertificate(
 
 data class DevfileCommands(
     @ApiModelProperty("当工作空间首次创建时需要执行的命令")
-    val postCreateCommand: String?
+    val postCreateCommand: String?,
+    @ApiModelProperty("当工作空间启动时需要执行的命令")
+    val postStartCommand: String?
 )
 
 data class DevfileVscode(

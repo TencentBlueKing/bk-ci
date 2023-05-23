@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
-import com.tencent.devops.quality.constant.MQ as QualityMQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
@@ -49,6 +48,7 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import com.tencent.devops.quality.constant.MQ as QualityMQ
 
 @Service
 @Suppress("NestedBlockDepth")

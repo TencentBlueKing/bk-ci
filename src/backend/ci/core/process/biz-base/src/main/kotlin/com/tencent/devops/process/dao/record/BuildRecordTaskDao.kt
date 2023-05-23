@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.Record17
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
+import org.jooq.util.mysql.MySQLDSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -51,31 +52,51 @@ class BuildRecordTaskDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordTask>) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            records.forEach { record ->
-                dslContext.insertInto(this)
-                    .set(BUILD_ID, record.buildId)
-                    .set(PROJECT_ID, record.projectId)
-                    .set(PIPELINE_ID, record.pipelineId)
-                    .set(RESOURCE_VERSION, record.resourceVersion)
-                    .set(STAGE_ID, record.stageId)
-                    .set(CONTAINER_ID, record.containerId)
-                    .set(TASK_ID, record.taskId)
-                    .set(EXECUTE_COUNT, record.executeCount)
-                    .set(CLASS_TYPE, record.classType)
-                    .set(ORIGIN_CLASS_TYPE, record.originClassType)
-                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
-                    .set(STATUS, record.status)
-                    .set(TASK_SEQ, record.taskSeq)
-                    .set(ATOM_CODE, record.atomCode)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .onDuplicateKeyUpdate()
-                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
-                    .set(STATUS, record.status)
-                    .set(START_TIME, record.startTime)
-                    .set(END_TIME, record.endTime)
-                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
-                    .execute()
-            }
+
+            dslContext.insertInto(
+                this,
+                BUILD_ID,
+                PROJECT_ID,
+                PIPELINE_ID,
+                RESOURCE_VERSION,
+                STAGE_ID,
+                CONTAINER_ID,
+                TASK_ID,
+                EXECUTE_COUNT,
+                CLASS_TYPE,
+                ORIGIN_CLASS_TYPE,
+                TASK_VAR,
+                STATUS,
+                TASK_SEQ,
+                ATOM_CODE,
+                TIMESTAMPS
+            ).also { insert ->
+                records.forEach { record ->
+                    insert.values(
+                        record.buildId,
+                        record.projectId,
+                        record.pipelineId,
+                        record.resourceVersion,
+                        record.stageId,
+                        record.containerId,
+                        record.taskId,
+                        record.executeCount,
+                        record.classType,
+                        record.originClassType,
+                        JsonUtil.toJson(record.taskVar, false),
+                        record.status,
+                        record.taskSeq,
+                        record.atomCode,
+                        JsonUtil.toJson(record.timestamps, false)
+                    )
+                }
+            }.onDuplicateKeyUpdate()
+                .set(STATUS, MySQLDSL.values(STATUS))
+                .set(START_TIME, MySQLDSL.values(START_TIME))
+                .set(END_TIME, MySQLDSL.values(END_TIME))
+                .set(TIMESTAMPS, MySQLDSL.values(TIMESTAMPS))
+                .set(TASK_VAR, MySQLDSL.values(TASK_VAR))
+                .execute()
         }
     }
 
@@ -122,14 +143,14 @@ class BuildRecordTaskDao {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val update = dslContext.update(this)
                 .set(STATUS, buildStatus.name)
-            update.where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(executeCount))
-            )
-            stageId?.let { update.set(STAGE_ID, stageId) }
-            containerId?.let { update.set(CONTAINER_ID, containerId) }
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                )
+            stageId?.let { update.and(STAGE_ID.eq(stageId)) }
+            containerId?.let { update.and(CONTAINER_ID.eq(containerId)) }
             update.execute()
         }
     }
@@ -141,7 +162,7 @@ class BuildRecordTaskDao {
         buildId: String,
         executeCount: Int,
         containerId: String? = null,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -150,6 +171,7 @@ class BuildRecordTaskDao {
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
+            buildStatusSet?.let { conditions.add(STATUS.`in`(it.map { status -> status.name })) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
         }

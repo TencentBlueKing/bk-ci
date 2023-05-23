@@ -28,6 +28,8 @@
 package com.tencent.devops.stream.v1.utils
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.stream.constant.StreamMessageCode.INCORRECT_ID_BLUE_SHIELD_PROJECT
 import com.tencent.devops.stream.v1.pojo.V1GitProjectCache
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEvent
 import com.tencent.devops.stream.v1.pojo.isFork
@@ -168,10 +170,18 @@ object V1GitCommonUtils {
             try {
                 return projectId.removePrefix(projectPrefix).toLong()
             } catch (e: Exception) {
-                throw OperationException("蓝盾项目ID不正确")
+                throw OperationException(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = INCORRECT_ID_BLUE_SHIELD_PROJECT
+                    )
+                )
             }
         } else {
-            throw OperationException("蓝盾项目ID不正确")
+            throw OperationException(
+                I18nUtil.getCodeLanMessage(
+                    messageCode = INCORRECT_ID_BLUE_SHIELD_PROJECT
+                )
+            )
         }
     }
 

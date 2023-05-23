@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.event.CallBackEvent
 import com.tencent.devops.common.pipeline.event.CallBackNetWorkRegionType
-import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
+import com.tencent.devops.process.pojo.CreateCallBackResult
 import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -58,7 +58,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwCallBackResourceV3 {
 
-    @ApiOperation("创建callback回调 #4319 支持Stage事件", tags = ["v3_app_callback_create", "v3_user_callback_create"])
+    @ApiOperation("创建callback回调，调用需要项目管理员身份", tags = ["v3_app_callback_create", "v3_user_callback_create"])
     @POST
     @Path("/")
     fun create(
@@ -83,7 +83,7 @@ interface ApigwCallBackResourceV3 {
         @ApiParam("event", required = true)
         @QueryParam("event")
         event: CallBackEvent,
-        @ApiParam("secretToken", required = false)
+        @ApiParam("该参数将会在回调中X-DEVOPS-WEBHOOK-TOKEN返回", required = false)
         @QueryParam("secretToken")
         secretToken: String?
     ): Result<Boolean>

@@ -32,4 +32,5 @@ dependencies {
     api(project(":ext:tencent:dispatch-devcloud:biz-dispatch-pcg-tencent"))
     api(project(":ext:tencent:common:common-digest-tencent"))
     api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
 }
