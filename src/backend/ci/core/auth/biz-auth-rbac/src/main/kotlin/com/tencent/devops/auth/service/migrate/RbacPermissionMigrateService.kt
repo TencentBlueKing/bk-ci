@@ -116,29 +116,6 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    override fun allV3ToRbacAuth(): Boolean {
-        executorService.submit {
-            var offset = 0
-            val limit = 100
-            do {
-                val dbV3Projects = client.get(ServiceProjectResource::class).getV0orV3Projects(
-                    authType = AuthSystemType.V3_AUTH_TYPE,
-                    limit = limit,
-                    offset = offset
-                ).data ?: break
-                val migrateProjects = dbV3Projects.map {
-                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
-                }
-                v3ToRbacAuth(
-                    migrateProjects = migrateProjects,
-                    dbProjectVos = dbV3Projects
-                )
-                offset += limit
-            } while (dbV3Projects.size == limit)
-        }
-        return true
-    }
-
     override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
         logger.info("migrate $migrateProjects auth from v0 to rbac")
         // 1. 启动迁移任务
@@ -154,20 +131,31 @@ class RbacPermissionMigrateService constructor(
         }.all { it }
     }
 
-    override fun allV0ToRbacAuth(): Boolean {
+    override fun allToRbacAuth(): Boolean {
         executorService.submit {
             var offset = 0
-            val limit = 100
+            val limit = 50
             do {
-                val v0MigrateProjects = client.get(ServiceProjectResource::class).getV0orV3Projects(
-                    authType = AuthSystemType.V0_AUTH_TYPE,
+                val migrateProjects = client.get(ServiceProjectResource::class).listMigrateProjects(
                     limit = limit,
                     offset = offset
                 ).data ?: break
-                val migrateProjects = v0MigrateProjects.map {
-                    MigrateProjectDTO(approver = null, projectCode = it.englishName)
+                val v3MigrateProjects =
+                    migrateProjects.filter {
+                        it.routerTag == null ||
+                            it.routerTag == AuthSystemType.V3_AUTH_TYPE.value
+                    }.map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
+                logger.info("migrate all project to rbac|v3MigrateProjects:$v3MigrateProjects")
+                val v0MigrateProjects =
+                    migrateProjects.filter { it.routerTag == AuthSystemType.V0_AUTH_TYPE.value }
+                        .map { MigrateProjectDTO(approver = null, projectCode = it.englishName) }
+                logger.info("migrate all project to rbac|v0MigrateProjects:$v0MigrateProjects")
+                if (v3MigrateProjects.isNotEmpty()) {
+                    v3ToRbacAuth(migrateProjects = v3MigrateProjects)
                 }
-                v0ToRbacAuth(migrateProjects = migrateProjects)
+                if (v0MigrateProjects.isNotEmpty()) {
+                    v0ToRbacAuth(migrateProjects = v0MigrateProjects)
+                }
                 offset += limit
             } while (migrateProjects.size == limit)
         }
@@ -207,7 +195,8 @@ class RbacPermissionMigrateService constructor(
             authMigrationDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                status = AuthMigrateStatus.PENDING.value
+                status = AuthMigrateStatus.PENDING.value,
+                routerTag = authType.value
             )
             // 判断项目的创建人是否离职，若离职并且未指定新创建人，则直接结束。
             val iamApprover = buildResourceCreator(
@@ -364,7 +353,8 @@ class RbacPermissionMigrateService constructor(
                     projectCode = projectCode,
                     resourceType = AuthResourceType.PROJECT.value,
                     resourceCode = projectCode,
-                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                    resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
+                    async = false
                 )
                 break
             } catch (iamException: IamException) {

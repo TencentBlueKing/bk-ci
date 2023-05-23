@@ -40,7 +40,8 @@ class AuthMigrationDao {
     fun create(
         dslContext: DSLContext,
         projectCode: String,
-        status: Int
+        status: Int,
+        routerTag: String
     ) {
         val now = LocalDateTime.now()
         with(TAuthMigration.T_AUTH_MIGRATION) {
@@ -48,12 +49,14 @@ class AuthMigrationDao {
                 this,
                 PROJECT_CODE,
                 STATUS,
+                ROUTER_TAG,
                 START_TIME,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
                 projectCode,
                 status,
+                routerTag,
                 now,
                 now,
                 now

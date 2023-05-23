@@ -39,25 +39,26 @@ import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.bk.sdk.iam.exception.IamException
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
-import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.ResourceMigrationCountDTO
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.RbacCacheService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.trace.TraceTag
+import java.time.LocalDateTime
+import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executors
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.CompletableFuture
-import java.util.concurrent.Executors
 
 /**
  * 将资源迁移到权限中心
@@ -72,7 +73,6 @@ class MigrateResourceService @Autowired constructor(
     private val tokenApi: AuthTokenApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val dslContext: DSLContext,
-    private val authResourceGroupDao: AuthResourceGroupDao,
     private val authMigrationDao: AuthMigrationDao,
     private val deptService: DeptService,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
@@ -135,6 +135,9 @@ class MigrateResourceService @Autowired constructor(
                 projectCode = projectCode,
                 iamApprover = iamApprover
             )
+        } catch (ignore: Exception) {
+            logger.error("Failed to migrate resource|$projectCode|$resourceType", ignore)
+            throw ignore
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to migrate resource|$projectCode|$resourceType"
@@ -181,18 +184,24 @@ class MigrateResourceService @Autowired constructor(
                     resourceType = resourceType,
                     resourceCode = resourceCode
                 ) ?: run {
-                    val resourceName = it.displayName
+                    // 版本体验名称会重复,需添加上时间戳
+                    val resourceName = if (resourceType == AuthResourceType.EXPERIENCE_TASK_NEW.value) {
+                        "${it.displayName}-${DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyyMMddHHmmss")}"
+                    } else {
+                        it.displayName
+                    }
                     for (suffix in 0..MAX_RETRY_TIMES) {
                         try {
                             rbacPermissionResourceService.resourceCreateRelation(
                                 userId = buildIamApprover(
-                                    resourceCreator = it.iamApprover[0],
+                                    resourceCreator = it.iamApprover.firstOrNull(),
                                     iamApprover = iamApprover
                                 ),
                                 projectCode = projectCode,
                                 resourceType = resourceType,
                                 resourceCode = resourceCode,
-                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix)
+                                resourceName = RbacAuthUtils.addSuffixIfNeed(resourceName, suffix),
+                                async = false
                             )
                             break
                         } catch (iamException: IamException) {
@@ -203,7 +212,7 @@ class MigrateResourceService @Autowired constructor(
                 }
             }
             offset += limit
-        } while (resourceData!!.data.count == limit)
+        } while (resourceData!!.data.result.size.toLong() == limit)
     }
 
     private fun listInstance(
@@ -233,7 +242,7 @@ class MigrateResourceService @Autowired constructor(
         ) as ListInstanceResponseDTO?
     }
 
-    private fun fetchInstanceInfo(
+    fun fetchInstanceInfo(
         resourceType: String,
         projectCode: String,
         ids: List<String>
@@ -273,27 +282,15 @@ class MigrateResourceService @Autowired constructor(
     }
 
     private fun buildIamApprover(
-        resourceCreator: String,
+        resourceCreator: String?,
         iamApprover: String
-    ): String {
-        val isResourceCreatorNotExist = deptService.getUserInfo(
-            userId = "admin",
-            name = resourceCreator
-        ) == null
-        return if (isResourceCreatorNotExist) iamApprover else resourceCreator
-    }
+    ): String = if (resourceCreator != null && deptService.getUserInfo("admin", resourceCreator) != null)
+        resourceCreator else iamApprover
 
     companion object {
         private val logger = LoggerFactory.getLogger(MigrateResourceService::class.java)
         private val noNeedToMigrateResourceType = listOf(
-            AuthResourceType.CODECC_TASK.value,
-            AuthResourceType.CODECC_IGNORE_TYPE.value,
-            AuthResourceType.CODECC_RULE_SET.value,
-            AuthResourceType.PIPELINE_GROUP.value,
-            AuthResourceType.TURBO.value,
-            AuthResourceType.PROJECT.value,
-            AuthResourceType.EXPERIENCE_TASK_NEW.value,
-            AuthResourceType.EXPERIENCE_GROUP_NEW.value
+            AuthResourceType.PROJECT.value
         )
         private val executorService = Executors.newFixedThreadPool(10)
         private const val IAM_RESOURCE_NAME_CONFLICT_ERROR = 1902409L
