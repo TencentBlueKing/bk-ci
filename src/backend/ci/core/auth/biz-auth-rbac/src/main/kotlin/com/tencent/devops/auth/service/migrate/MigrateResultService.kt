@@ -44,6 +44,7 @@ class MigrateResultService constructor(
     private val permissionService: PermissionService,
     private val migrateResourceCodeConverter: MigrateResourceCodeConverter,
     private val authVerifyRecordService: AuthVerifyRecordService,
+    private val migrateResourceService: MigrateResourceService,
     private val client: Client
 ) {
 
@@ -81,28 +82,14 @@ class MigrateResultService constructor(
                             )
                         } ?: false
                         if (verifyResult != rbacVerifyResult) {
-                            // 只对渠道为BS的流水线进行策略对比，因为只有该渠道注册的流水线，才有往权限中心注册
-                            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-                                val pipelineInfo = client.get(ServicePipelineResource::class)
-                                    .getPipelineInfo(
-                                        projectId = projectCode,
-                                        pipelineId = it.resourceCode,
-                                        channelCode = ChannelCode.BS
-                                    ).data ?: throw ErrorCodeException(
-                                    errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-                                    params = arrayOf(projectCode),
-                                    defaultMessage = "pipeline not found:|$resourceCode"
-                                )
-                                if (pipelineInfo.channelCode != ChannelCode.BS)
-                                    return@forEach
-                            }
-                            logger.warn("compare policy failed:$userId|$action|$projectId|$resourceType|$resourceCode")
-                            throw ErrorCodeException(
-                                errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
-                                params = arrayOf(projectCode),
-                                defaultMessage = "compare policy failed:" +
-                                    "$userId|$action|$projectId|$resourceType|$resourceCode"
+                            val isSkip = handleVerifyResult(
+                                userId = userId,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                projectCode = projectCode,
+                                action = action
                             )
+                            if (isSkip) return@forEach
                         }
                     }
                 }
@@ -114,5 +101,42 @@ class MigrateResultService constructor(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to compare policy|$projectCode"
             )
         }
+    }
+
+    private fun handleVerifyResult(
+        userId: String,
+        resourceType: String,
+        resourceCode: String,
+        projectCode: String,
+        action: String
+    ): Boolean {
+        // 有可能鉴权表存在数据，但实际资源被删除的情况。所以得先查询资源是否存在，不存在则直接跳过
+        migrateResourceService.fetchInstanceInfo(
+            resourceType = resourceType,
+            projectCode = projectCode,
+            ids = listOf(resourceCode)
+        ) ?: return true
+        // 只对渠道为BS的流水线进行策略对比，因为只有该渠道注册的流水线，才有往权限中心注册
+        if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+            val pipelineInfo = client.get(ServicePipelineResource::class)
+                .getPipelineInfo(
+                    projectId = projectCode,
+                    pipelineId = resourceCode,
+                    channelCode = ChannelCode.BS
+                ).data ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                params = arrayOf(projectCode),
+                defaultMessage = "pipeline not found:$resourceCode"
+            )
+            if (pipelineInfo.channelCode != ChannelCode.BS)
+                return true
+        }
+        logger.warn("compare policy failed:$userId|$action|$projectCode|$resourceType|$resourceCode")
+        throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_MIGRATE_AUTH_COMPARE_FAIL,
+            params = arrayOf(projectCode),
+            defaultMessage = "compare policy failed:" +
+                "$userId|$action|$projectCode|$resourceType|$resourceCode"
+        )
     }
 }

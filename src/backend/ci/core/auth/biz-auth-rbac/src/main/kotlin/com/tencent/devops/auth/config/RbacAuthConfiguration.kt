@@ -313,11 +313,13 @@ class RbacAuthConfiguration {
         permissionService: PermissionService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
         authVerifyRecordService: AuthVerifyRecordService,
+        migrateResourceService: MigrateResourceService,
         client: Client
     ) = MigrateResultService(
         permissionService = permissionService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
         authVerifyRecordService = authVerifyRecordService,
+        migrateResourceService = migrateResourceService,
         client = client
     )
 
