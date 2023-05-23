@@ -129,9 +129,9 @@ class AuthHttpClientService @Autowired constructor(
         val tag = bkTag.getFinalTag()
         logger.info("iam callback url: $url,tag:$tag")
         return Request.Builder().url(url).post(requestBody)
+            .headers(buildJwtAndToken(token).toHeaders())
             // 指定回调集群
             .header(AUTH_HEADER_GATEWAY_TAG, tag)
-            .headers(buildJwtAndToken(token).toHeaders())
             .build()
     }
 
