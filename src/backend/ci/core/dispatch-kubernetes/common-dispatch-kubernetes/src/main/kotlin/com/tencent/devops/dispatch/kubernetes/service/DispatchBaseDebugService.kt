@@ -27,18 +27,24 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_STARTUP_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_STATUS_EXCEPTION
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_NO_CONTAINER_IS_READY_DEBUG
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
@@ -97,7 +103,7 @@ class DispatchBaseDebugService @Autowired constructor(
             buildHistory.containerName
         } else {
             throw ErrorCodeException(
-                errorCode = "2103501",
+                errorCode = BK_NO_CONTAINER_IS_READY_DEBUG,
                 defaultMessage = "no container is ready to debug",
                 params = arrayOf(pipelineId)
             )
@@ -161,7 +167,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     if (buildStatus != DispatchBuilderDebugStatus.RUNNING) {
                         logger.error("Status exception, builderName: $builderName, status: $buildStatus")
                         throw ErrorCodeException(
-                            errorCode = "2103502",
+                            errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                             defaultMessage = "Status exception, please try rebuild the pipeline",
                             params = arrayOf(pipelineId)
                         )
@@ -171,7 +177,7 @@ class DispatchBaseDebugService @Autowired constructor(
                     // 异常状态
                     logger.error("Status exception, builderName: $builderName, status: $status")
                     throw ErrorCodeException(
-                        errorCode = "2103502",
+                        errorCode = BK_CONTAINER_STATUS_EXCEPTION,
                         defaultMessage = "Status exception, please try rebuild the pipeline",
                         params = arrayOf(pipelineId)
                     )
@@ -268,13 +274,13 @@ class DispatchBaseDebugService @Autowired constructor(
                 } else {
                     logger.info(
                         "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                            "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中"
+                                "debugBuilderName:$debugBuilderName container is not in debug or in use"
                     )
                 }
             } else {
                 logger.info(
                     "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                        "debugBuilderName:$debugBuilderName 容器已不存在"
+                        "debugBuilderName:$debugBuilderName container no exists"
                 )
             }
         }
@@ -314,8 +320,8 @@ class DispatchBaseDebugService @Autowired constructor(
         } else {
             logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
-                errorCode = "2103503",
-                defaultMessage = "构建机启动失败，错误信息:${startResult.errMsg}"
+                errorCode = BK_BUILD_MACHINE_STARTUP_FAILED,
+                params = arrayOf(startResult.errMsg ?: "")
             )
         }
     }
@@ -331,8 +337,20 @@ class DispatchBaseDebugService @Autowired constructor(
                 projectId, pipelineId, AuthPermission.EDIT
             )
         ) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+            val language = I18nUtil.getLanguage(userId)
+            logger.info("user($userId)No permissions in project($projectId) edit pipeline($pipelineId)")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        AuthPermission.EDIT.getI18n(I18nUtil.getLanguage(userId)),
+                        pipelineId
+                    )
+                )
+            )
         }
     }
 }

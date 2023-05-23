@@ -36,14 +36,20 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_CREDENTIAL_INFO_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_CUSTOM_FILE_FAILED
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_PIPELINE_FILE_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
+import com.tencent.devops.worker.common.utils.TaskUtil
+import java.io.File
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
-import java.io.File
 
 @ApiPriority(priority = 9)
 class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
@@ -104,10 +110,14 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
-        val response = request(request, "上传自定义文件失败")
+        val message = MessageUtil.getMessageByLocale(
+            UPLOAD_CUSTOM_FILE_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
             throw TaskExecuteException(
@@ -163,10 +173,14 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
-        val response = request(request, "上传流水线文件失败")
+        val message = MessageUtil.getMessageByLocale(
+            UPLOAD_PIPELINE_FILE_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传流水线文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -266,7 +280,10 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     override fun dockerBuildCredential(projectId: String): Map<String, String> {
         val path = "/dockerbuild/credential"
         val request = buildGet(path)
-        val responseContent = request(request, "获取凭证信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, AgentEnv.getLocaleLanguage())
+        )
         return jacksonObjectMapper().readValue(responseContent)
     }
 

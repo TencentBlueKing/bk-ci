@@ -548,7 +548,7 @@
       "queueTime": "排队于",
       "startTime": "开始于",
       "endTime": "完成于",
-      "totalTime": "耗时",
+      "totalTime": "耗时{0}",
       "appVersions": "APP版本",
       "recommendVersion": "推荐版本号",
       "pipelineVersion": "编排版本号",
@@ -588,7 +588,7 @@
     "executor": "执行人",
     "trigger": "触发人",
     "executionTime": "执行耗时",
-    "noCodeRecords": "暂时没有代码变更记录",
+    "noCodeRecords": "暂无代码变更记录",
     "commitIdsRange": "提示：本次流水线的版本号变化范围：",
     "committer": "提交人",
     "commitTime": "提交时间",
@@ -1152,4 +1152,7 @@
   "关闭流水线权限管理，将执行如下操作：": "关闭{0}权限管理，将执行如下操作：",
   "确认关闭【】的权限管理？": "确认关闭【{0}】的权限管理？",
   "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限": "尚未开启流水线组权限管理。开启后，可以给组内流水线批量添加编辑者、执行者或查看者权限"
+  "duration": "耗时",
+  "outputNameSpaceDescTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
+  "noReleatedPipeline": "暂无关联流水线"
 }

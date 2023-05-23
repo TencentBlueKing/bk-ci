@@ -67,6 +67,7 @@ const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
 
 const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
 const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
+const val ENV_DEFAULT_LOCALE_LANGUAGE = "BK_CI_LOCALE_LANGUAGE"
 
 const val ENTRY_POINT_CMD = "/data/init.sh"
 

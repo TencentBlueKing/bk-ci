@@ -47,6 +47,7 @@ import com.tencent.devops.buildless.utils.ENTRY_POINT_CMD
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_BK_CI_DOCKER_HOST_WORKSPACE
 import com.tencent.devops.buildless.utils.ENV_CONTAINER_NAME
+import com.tencent.devops.buildless.utils.ENV_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.buildless.utils.ENV_DEVOPS_FILE_GATEWAY
 import com.tencent.devops.buildless.utils.ENV_DEVOPS_GATEWAY
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
@@ -252,7 +253,8 @@ class BuildLessContainerService(
             "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
             "$ENV_JOB_BUILD_TYPE=BUILD_LESS",
             "$ENV_CONTAINER_NAME=$containerName",
-            "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
+            "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
+            "$ENV_DEFAULT_LOCALE_LANGUAGE=${commonConfig.devopsDefaultLocaleLanguage}"
         ))
 
         buildLessConfig.idcGateway?.let {

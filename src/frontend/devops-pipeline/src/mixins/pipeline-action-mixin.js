@@ -17,10 +17,11 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapMutations, mapGetters } from 'vuex'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
-import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
+import { convertMStoStringByRule, convertTime, navConfirm } from '@/utils/util'
+import { mapActions, mapGetters, mapMutations } from 'vuex'
+
 import {
     RESOURCE_ACTION,
     PROJECT_RESOURCE_ACTION
@@ -28,10 +29,10 @@ import {
 import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
-    MY_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID,
-    RECENT_USED_VIEW_ID
+    MY_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID,
+    UNCLASSIFIED_PIPELINE_VIEW_ID
 } from '@/store/constants'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -155,7 +156,7 @@ export default {
         calcDuration ({ latestBuildEndTime, latestBuildStartTime, latestBuildNum }) {
             if (latestBuildNum) {
                 const duration = convertMStoStringByRule(latestBuildEndTime - latestBuildStartTime)
-                return `${this.$t('history.tableMap.totalTime')}${duration}`
+                return this.$t('history.tableMap.totalTime', [duration])
             }
             return '--'
         },
@@ -259,7 +260,7 @@ export default {
                     ...pipeline,
                     isCollect
                 })
-                
+
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 

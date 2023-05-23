@@ -32,7 +32,7 @@ import com.tencent.devops.store.service.atom.AtomBusHandleService
 class CommonAtomBusHandleHandleServiceImpl : AtomBusHandleService {
 
     override fun handleOsName(osName: String): String {
-        return osName.toLowerCase()
+        return osName.lowercase()
     }
 
     override fun handleOsArch(osName: String, osArch: String): String {

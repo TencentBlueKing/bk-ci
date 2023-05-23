@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -51,13 +52,13 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
+import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
@@ -162,7 +163,11 @@ class PipelineBuildDetailService @Autowired constructor(
             pipelineName = model.name,
             userId = record.startUser ?: "",
             triggerUser = buildInfo.triggerUser,
-            trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
+            trigger = StartType.toReadableString(
+                buildInfo.trigger,
+                buildInfo.channelCode,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            ),
             startTime = record.startTime?.timestampmilli() ?: LocalDateTime.now().timestampmilli(),
             endTime = record.endTime?.timestampmilli(),
             status = record.status ?: "",

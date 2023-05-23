@@ -32,7 +32,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -124,10 +123,7 @@ class PipelineRetryFacadeService @Autowired constructor(
     ) {
         if (!containerInfo.status.isFinish()) {
             logger.warn("retry runningJob: $projectId|$buildId｜${containerInfo.containerId} is running")
-            throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ERROR_JOB_RUNNING,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ERROR_JOB_RUNNING)
-            )
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_JOB_RUNNING)
         }
     }
 
