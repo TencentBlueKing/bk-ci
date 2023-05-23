@@ -206,7 +206,7 @@ object CommonMessageCode {
     const val BK_QUERY_PARAM_REQUEST_EMPTY = "bkQueryParamRequestEmpty" // 请求的参数内容为空
     const val BK_QUERY_PARAM_TYPE_ERROR = "bkQueryParamTypeError" // 查询参数类型错误
     // 你没有权限进行该操作
-    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION"
+    const val BK_NOT_HAVE_PERMISSION_PERFORM_THIS_OPERATION = "bkNotHavePermissionPerformThisOperation"
     // 访问后台数据失败，已通知产品、开发，请稍后重试
     const val BK_FAILED_ACCESS_BACKGROUND_DATA = "bkFailedAccessBackgroundData"
     // 未授权访问的资源
