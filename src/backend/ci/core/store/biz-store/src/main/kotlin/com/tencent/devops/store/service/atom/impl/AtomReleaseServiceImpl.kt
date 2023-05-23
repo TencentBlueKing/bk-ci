@@ -335,12 +335,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 getAtomConfResult.errorParams
             )
         }
-        val atomLanguage = getAtomConfResult.taskDataMap[KEY_LANGUAGE].toString()
+        val taskJsonMap = getAtomConfResult.taskDataMap
+        val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
         // 把传入的请求报文参数做国际化
         val jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest)
         val versionContentFieldName = MarketAtomUpdateRequest::versionContent.name
         jsonMap["$KEY_VERSION_INFO.$versionContentFieldName"] = marketAtomUpdateRequest.versionContent
-        val defaultLocaleLanguage = getAtomConfResult.taskDataMap[KEY_DEFAULT_LOCALE_LANGUAGE].toString()
+        val defaultLocaleLanguage = taskJsonMap[KEY_DEFAULT_LOCALE_LANGUAGE].toString()
         jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] = defaultLocaleLanguage
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, atomPackageSourceType)
         val updateRequestDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
