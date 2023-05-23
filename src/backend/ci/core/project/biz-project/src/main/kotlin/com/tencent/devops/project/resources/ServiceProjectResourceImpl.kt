@@ -29,7 +29,6 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
@@ -39,10 +38,11 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
@@ -80,10 +80,12 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.getAllProject())
     }
 
-    override fun getV0orV3Projects(authType: AuthSystemType, limit: Int, offset: Int): Result<List<ProjectVO>> {
+    override fun listMigrateProjects(
+        limit: Int,
+        offset: Int
+    ): Result<List<ProjectWithPermission>> {
         return Result(
-            projectService.getV0orV3Projects(
-                authType = authType,
+            projectService.listMigrateProjects(
                 limit = limit,
                 offset = offset
             )

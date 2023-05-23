@@ -36,15 +36,11 @@ class SamplePermissionMigrateService : PermissionMigrateService {
         return true
     }
 
-    override fun allV3ToRbacAuth(): Boolean {
-        return true
-    }
-
     override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
         return true
     }
 
-    override fun allV0ToRbacAuth(): Boolean {
+    override fun allToRbacAuth(): Boolean {
         return true
     }
 }
