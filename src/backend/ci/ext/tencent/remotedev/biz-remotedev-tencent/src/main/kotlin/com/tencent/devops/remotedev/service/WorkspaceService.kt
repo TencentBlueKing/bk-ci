@@ -236,7 +236,8 @@ class WorkspaceService @Autowired constructor(
         )
 
         // 替换部分devfile内容，兼容使用老remoting的情况
-        if (!isImageInDefaultList(devfile.runsOn?.container?.image, redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet())) {
+        if (!isImageInDefaultList(devfile.runsOn?.container?.image,
+                redisCache.getSetMembers(RedisKeys.REDIS_DEFAULT_IMAGES_KEY) ?: emptySet())) {
             devfile.runsOn?.container?.image =
                 "${commonConfig.workspaceImageRegistryHost}/remote/${workspace.workspaceName}"
         }
