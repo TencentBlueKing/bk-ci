@@ -19,4 +19,5 @@ object RedisKeys {
     const val REDIS_CHECKOUT_TEMPLATE_ID = "remotedev:checkoutTID" // 拉代码流水线模板id
     const val REDIS_WHITE_LIST_KEY = "remotedev:whiteList"
     const val REDIS_IP_LIST_KEY = "remotedev:ipSubnets"
+    const val REDIS_DEFAULT_IMAGES_KEY = "remotedev:defaultImages"
 }
