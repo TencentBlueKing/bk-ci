@@ -61,6 +61,15 @@ interface ServiceOauthResource {
         userId: String
     ): Result<GitToken?>
 
+    @ApiOperation("获取tgit代码库accessToken信息")
+    @GET
+    @Path("/tgit/{userId}")
+    fun tGitGet(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<GitToken?>
+
     @ApiOperation("工蜂回调请求")
     @GET
     @Path("/git/callback")

@@ -47,6 +47,10 @@ class ServiceOauthResourceImpl @Autowired constructor(
         return Result(gitOauthService.getAccessToken(userId))
     }
 
+    override fun tGitGet(userId: String): Result<GitToken?> {
+        return Result(tGitOAuthService.getAccessToken(userId))
+    }
+
     override fun gitCallback(code: String, state: String): Result<GitOauthCallback> {
         return Result(gitOauthService.gitCallback(code = code, state = state))
     }

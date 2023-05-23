@@ -27,19 +27,37 @@
 
 package com.tencent.devops.repository.service.tgit
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonParser
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
+import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.GitFileInfo
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
+import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
@@ -116,6 +134,211 @@ class TGitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "拉分支"], value = "bk_tgit_api_time")
+    override fun getBranch(
+        accessToken: String,
+        userId: String,
+        repository: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?
+    ): List<GitBranch> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        logger.info("start to get the $userId's $repository branch by accessToken")
+        val repoId = URLEncoder.encode(repository, "utf-8")
+        val url = "${gitConfig.tGitApiUrl}/projects/$repoId/repository/branches" +
+            "?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull" +
+            if (search != null) {
+                "&search=$search"
+            } else {
+                ""
+            }
+        val res = mutableListOf<GitBranch>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            val data = response.body?.string() ?: return@use
+            val branList = JsonParser().parse(data).asJsonArray
+            if (!branList.isJsonNull) {
+                branList.forEach {
+                    val branch = it.asJsonObject
+                    val commit = branch["commit"].asJsonObject
+                    if (!branch.isJsonNull && !commit.isJsonNull) {
+                        res.add(
+                            GitBranch(
+                                name = if (branch["name"].isJsonNull) "" else branch["name"].asString,
+                                commit = GitBranchCommit(
+                                    id = if (commit["id"].isJsonNull) "" else commit["id"].asString,
+                                    message = if (commit["message"].isJsonNull) "" else commit["message"].asString,
+                                    authoredDate =
+                                    if (commit["authored_date"].isJsonNull) "" else commit["authored_date"].asString,
+                                    authorEmail =
+                                    if (commit["author_email"].isJsonNull) "" else commit["author_email"].asString,
+                                    authorName =
+                                    if (commit["author_name"].isJsonNull) "" else commit["author_name"].asString,
+                                    title =
+                                    if (commit["title"].isJsonNull) "" else commit["title"].asString
+                                )
+                            )
+                        )
+                    }
+                }
+            }
+        }
+        return res
+    }
+
+    @BkTimed(extraTags = ["operation", "GIT_FILE_CONTENT"], value = "bk_tgit_api_time")
+    override fun getGitFileContent(
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): String {
+        val startEpoch = System.currentTimeMillis()
+        try {
+            var url = "${gitConfig.tGitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
+                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
+
+            logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $url")
+            val request = if (authType == RepoAuthType.OAUTH) {
+                url += "&access_token=$token"
+                Request.Builder()
+                    .url(url)
+                    .get()
+                    .build()
+            } else {
+                Request.Builder()
+                    .url(url)
+                    .get()
+                    .header("PRIVATE-TOKEN", token)
+                    .build()
+            }
+            OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "fail to get git file content with: ${it.code}): ${it.message}"
+                    )
+                }
+                return it.stringLimit(
+                    readLimit = MAX_FILE_SIZE
+                )
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "get_file_tree"], value = "bk_tgit_api_time")
+    override fun getFileTree(
+        gitProjectId: String,
+        path: String,
+        token: String,
+        ref: String?,
+        recursive: Boolean?,
+        tokenType: TokenTypeEnum
+    ): List<GitFileInfo> {
+        logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = StringBuilder(
+                "${gitConfig.tGitApiUrl}/projects/" +
+                    "${URLEncoder.encode(gitProjectId, "UTF-8")}/repository/tree"
+            )
+            setToken(tokenType, url, token)
+            with(url) {
+                append(
+                    "&path=${URLEncoder.encode(path, "UTF-8")}"
+                )
+                append(
+                    if (!ref.isNullOrBlank()) {
+                        "&ref_name=${URLEncoder.encode(ref, "UTF-8")}"
+                    } else {
+                        ""
+                    }
+                )
+                append("&recursive=$recursive&access_token=$token")
+            }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+            return OkhttpUtils.doHttp(request).use {
+                if (!it.isSuccessful) {
+                    throw CustomException(
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code})${it.message}"
+                    )
+                }
+                val data = it.body!!.string()
+                JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file tree")
+        }
+    }
+
+    @BkTimed(extraTags = ["operation", "git_project_list"], value = "bk_tgit_api_time")
+    override fun getGitCodeProjectList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>> {
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        val url = ("${gitConfig.tGitApiUrl}/api/v3/projects?access_token=$accessToken" +
+            "&page=$pageNotNull&per_page=$pageSizeNotNull")
+            .addParams(
+                mapOf(
+                    "search" to search,
+                    "order_by" to orderBy?.value,
+                    "sort" to sort?.value,
+                    "owned" to owned,
+                    "min_access_level" to minAccessLevel?.level
+                )
+            )
+        val res = mutableListOf<GitCodeProjectInfo>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        var result = Result(res.toList())
+        logger.info("getProjectList: $url")
+        OkhttpUtils.doHttp(request).use { response ->
+            if (!response.isSuccessful) {
+                throw RemoteServiceException(
+                    httpStatus = response.code,
+                    errorMessage = "(${response.code})${response.message}"
+                )
+            }
+            val data = response.body?.string() ?: return@use
+            val repoList = JsonParser().parse(data).asJsonArray
+            if (!repoList.isJsonNull) {
+                result = Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))
+            }
+        }
+
+        return result
+    }
+
     private fun setToken(tokenType: TokenTypeEnum, url: StringBuilder, token: String) {
         if (TokenTypeEnum.OAUTH == tokenType) {
             url.append("?access_token=$token")
@@ -124,9 +347,20 @@ class TGitService @Autowired constructor(
         }
     }
 
+    private fun String.addParams(args: Map<String, Any?>): String {
+        val sb = StringBuilder(this)
+        args.forEach { (name, value) ->
+            if (value != null) {
+                sb.append("&$name=$value")
+            }
+        }
+        return sb.toString()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TGitService::class.java)
         private const val PAGE_SIZE = 100
         private const val SLEEP_MILLS_FOR_RETRY_500: Long = 500
+        private const val MAX_FILE_SIZE = 1 * 1024 * 1024
     }
 }

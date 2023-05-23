@@ -38,6 +38,7 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.OauthParams
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.oauth.GitOauthCallback
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.config.GitConfig
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -115,6 +116,10 @@ class TGitOAuthService @Autowired constructor(
             oauthUserId = oauthUserId,
             redirectUrl = redirectUrl
         )
+    }
+
+    fun getAccessToken(userId: String): GitToken? {
+        return tGitTokenService.getAccessToken(userId)
     }
 
     private fun getRedirectUrl(authParam: OauthParams): String {

@@ -25,55 +25,99 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service.tgit
+package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.api.scm.ServiceTGitResource
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.repository.service.tgit.ITGitService
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitFileInfo
+import org.springframework.beans.factory.annotation.Autowired
 
-interface ITGitService {
-
-    fun getToken(userId: String, code: String): GitToken
-
-    fun getUserInfoByToken(token: String, tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH): GitUserInfo
-
-    fun refreshToken(userId: String, accessToken: GitToken): GitToken
-
-    fun getBranch(
+@RestResource
+@Suppress("ALL")
+class ServiceTGitResourceImpl @Autowired constructor(
+    private val gitService: ITGitService
+) : ServiceTGitResource {
+    override fun getBranch(
         accessToken: String,
         userId: String,
         repository: String,
         page: Int?,
         pageSize: Int?,
         search: String?
-    ): List<GitBranch>
+    ): Result<List<GitBranch>> {
+        return Result(
+            gitService.getBranch(
+                userId = userId,
+                accessToken = accessToken,
+                repository = repository,
+                page = page,
+                pageSize = pageSize,
+                search = search
+            )
+        )
+    }
 
-    fun getGitFileContent(
+    override fun getGitFileContent(
         repoName: String,
         filePath: String,
         authType: RepoAuthType?,
         token: String,
         ref: String
-    ): String
+    ): Result<String> {
+        return Result(
+            gitService.getGitFileContent(
+                repoName = repoName,
+                filePath = filePath,
+                authType = authType,
+                token = token,
+                ref = ref
+            )
+        )
+    }
 
-    fun getFileTree(
+    override fun getGitFileTree(
         gitProjectId: String,
         path: String,
         token: String,
         ref: String?,
-        recursive: Boolean? = false,
+        recursive: Boolean?,
         tokenType: TokenTypeEnum
-    ): List<GitFileInfo>
+    ): Result<List<GitFileInfo>> {
+        return Result(
+            gitService.getFileTree(
+                gitProjectId = gitProjectId,
+                path = path,
+                token = token,
+                ref = ref,
+                recursive = recursive,
+                tokenType = tokenType
+            )
+        )
+    }
 
-    fun getGitCodeProjectList(
+    override fun getUserInfoByToken(
+        token: String,
+        tokenType: TokenTypeEnum
+    ): Result<GitUserInfo> {
+        return Result(
+            gitService.getUserInfoByToken(
+                token,
+                tokenType
+            )
+        )
+    }
+
+    override fun getGitCodeProjectList(
         accessToken: String,
         page: Int?,
         pageSize: Int?,
@@ -82,5 +126,16 @@ interface ITGitService {
         sort: GitCodeBranchesSort?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
-    ): Result<List<GitCodeProjectInfo>>
+    ): Result<List<GitCodeProjectInfo>> {
+        return gitService.getGitCodeProjectList(
+            accessToken = accessToken,
+            page = page,
+            pageSize = pageSize,
+            search = search,
+            orderBy = orderBy,
+            sort = sort,
+            owned = owned,
+            minAccessLevel = minAccessLevel
+        )
+    }
 }
