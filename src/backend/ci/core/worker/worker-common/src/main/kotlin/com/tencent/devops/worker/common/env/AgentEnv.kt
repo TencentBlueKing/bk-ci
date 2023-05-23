@@ -45,17 +45,17 @@ object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
 
-    private const val PROJECT_ID = "devops.project.id"
-    private const val DOCKER_PROJECT_ID = "devops_project_id"
-    private const val AGENT_ID = "devops.agent.id"
-    private const val DOCKER_AGENT_ID = "devops_agent_id"
-    private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
-    private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
-    private const val AGENT_GATEWAY = "landun.gateway"
-    private const val DOCKER_GATEWAY = "devops_gateway"
-    private const val AGENT_ENV = "landun.env"
-    private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
-    private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    const val PROJECT_ID = "devops.project.id"
+    const val DOCKER_PROJECT_ID = "devops_project_id"
+    const val AGENT_ID = "devops.agent.id"
+    const val DOCKER_AGENT_ID = "devops_agent_id"
+    const val AGENT_SECRET_KEY = "devops.agent.secret.key"
+    const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
+    const val AGENT_GATEWAY = "landun.gateway"
+    const val DOCKER_GATEWAY = "devops_gateway"
+    const val AGENT_ENV = "landun.env"
+    const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
+    const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -74,9 +74,12 @@ object AgentEnv {
         if (projectId.isNullOrBlank()) {
             synchronized(this) {
                 if (projectId.isNullOrBlank()) {
-                    projectId = getProperty(if (isDockerEnv()) DOCKER_PROJECT_ID else PROJECT_ID)
+                    projectId = getProperty(DOCKER_PROJECT_ID)
                     if (projectId.isNullOrBlank()) {
-                        throw PropertyNotExistException(PROJECT_ID, "Empty project Id")
+                        projectId = getProperty(PROJECT_ID)
+                    }
+                    if (projectId.isNullOrBlank()) {
+                        throw PropertyNotExistException("$PROJECT_ID|$DOCKER_PROJECT_ID", "Empty project Id")
                     }
                     logger.info("Get the project ID($projectId)")
                 }
@@ -89,9 +92,12 @@ object AgentEnv {
         if (agentId.isNullOrBlank()) {
             synchronized(this) {
                 if (agentId.isNullOrBlank()) {
-                    agentId = getProperty(if (isDockerEnv()) DOCKER_AGENT_ID else AGENT_ID)
+                    agentId = getProperty(DOCKER_AGENT_ID)
                     if (agentId.isNullOrBlank()) {
-                        throw PropertyNotExistException(AGENT_ID, "Empty agent Id")
+                        agentId = getProperty(AGENT_ID)
+                    }
+                    if (agentId.isNullOrBlank()) {
+                        throw PropertyNotExistException("$AGENT_ID|$DOCKER_AGENT_ID", "Empty agent Id")
                     }
                     logger.info("Get the agent id($agentId)")
                 }
@@ -135,9 +141,12 @@ object AgentEnv {
         if (secretKey.isNullOrBlank()) {
             synchronized(this) {
                 if (secretKey.isNullOrBlank()) {
-                    secretKey = getProperty(if (isDockerEnv()) DOCKER_AGENT_SECRET_KEY else AGENT_SECRET_KEY)
+                    secretKey = getProperty(DOCKER_AGENT_SECRET_KEY)
                     if (secretKey.isNullOrBlank()) {
-                        throw PropertyNotExistException(AGENT_SECRET_KEY, "Empty agent secret key")
+                        secretKey = getProperty(AGENT_SECRET_KEY)
+                    }
+                    if (secretKey.isNullOrBlank()) {
+                        throw PropertyNotExistException("$AGENT_SECRET_KEY|$DOCKER_AGENT_SECRET_KEY", "Empty agent secret key")
                     }
                     logger.info("Get the agent secret key($secretKey)")
                 }
@@ -151,7 +160,10 @@ object AgentEnv {
             synchronized(this) {
                 if (gateway.isNullOrBlank()) {
                     try {
-                        gateway = getProperty(if (isDockerEnv()) DOCKER_GATEWAY else AGENT_GATEWAY)
+                        gateway = getProperty(DOCKER_GATEWAY)
+                        if (gateway.isNullOrBlank()) {
+                            gateway = getProperty(AGENT_GATEWAY)
+                        }
                         if (gateway.isNullOrBlank()) {
                             throw PropertyNotExistException(AGENT_GATEWAY, "Empty agent gateway")
                         }
