@@ -4,6 +4,7 @@ import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateR
 
 import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
+import request from '../utils/request'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')

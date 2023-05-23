@@ -1,5 +1,5 @@
+import { lang, locale } from '@tencent/bk-magic-vue'
 import axios from 'axios'
-import { lang, locale } from 'bk-magic-vue'
 import cookies from 'js-cookie'
 import Vue from 'vue'
 import VueI18n from 'vue-i18n'

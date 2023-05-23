@@ -11,7 +11,7 @@
                     <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
-            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH' || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
+            <div class="bk-form-item" v-if="((isGit || isGithub) && codelib.authType === 'OAUTH') || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
@@ -124,7 +124,7 @@
                             @toggle="refreshTicket"
                         >
                             <bk-option v-for="(option, index) in credentialList"
-                                :key="index"
+                                :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                                 <span>{{option.credentialId}}</span>
@@ -132,8 +132,8 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                        <div class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</div>
                     </div>
-                    <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -144,7 +144,7 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isGit, isGitLab, isGithub, isP4, isSvn, isTGit } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { extendParsePathAlias, parsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
         props: {
@@ -282,6 +282,9 @@
             credentialTypes () {
                 return this.codelibConfig.credentialTypes
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             credentialId: {
                 get () {
                     return this.codelib.credentialId
@@ -299,12 +302,9 @@
                 },
                 set (url) {
                     const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
+                    const { alias, msg } = this.isExtendTx
+                        ? extendParsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
+                        : parsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
                     if (msg) {
                         this.urlErrMsg = msg
                     }
@@ -474,7 +474,14 @@
                                     }]
                                     : null,
                                 projectId
-                            }]
+                            }],
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                                projectId
+                            }&service_code=code&${
+                                repositoryHashId
+                                    ? 'role_manager=repertory'
+                                    : 'role_creator=repertory'
+                            }`
                         })
                     } else {
                         this.$bkMessage({
@@ -566,10 +573,8 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .code-lib-credential {
-        display: flex;
-        align-items: center;
         > .codelib-credential-selector {
             width: 300px;
             display: inline-block;
@@ -579,6 +584,8 @@
             display: block;
         }
         .text-link {
+            position: relative;
+            top: -10px;
             cursor: pointer;
             color: #3c96ff;
             line-height: 1.5;

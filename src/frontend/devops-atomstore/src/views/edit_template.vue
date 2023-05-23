@@ -532,7 +532,7 @@
                 .bk-tooltip {
                     margin-top: 10px;
                     margin-left: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     p {
                         max-width: 400px;
                         text-align: left;
