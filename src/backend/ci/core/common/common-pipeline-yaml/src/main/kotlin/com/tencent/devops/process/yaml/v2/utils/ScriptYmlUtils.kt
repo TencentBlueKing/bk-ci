@@ -90,7 +90,7 @@ import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
 import java.io.BufferedReader
 import java.io.StringReader
-import java.util.*
+import java.util.Random
 import java.util.regex.Pattern
 import org.apache.commons.text.StringEscapeUtils
 import org.slf4j.LoggerFactory
