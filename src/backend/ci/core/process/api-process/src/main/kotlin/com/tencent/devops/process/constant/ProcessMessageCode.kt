@@ -249,7 +249,7 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101153" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101154" // 流水线触发
     const val BUILD_MSG_DESC = "2101155" // 构建信息描述
-    const val BUILD_WORKER_DEAD_ERROR = "2101156" // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
+    const val BUILD_WORKER_DEAD_ERROR = "2101156" // 其他构建进程挂掉的参考信息，自由添加方便打印到日志里
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101157" // 构建机Agent详情链接
     const val BUILD_MSG_TRIGGERS = "2101158" // 构建触发
 

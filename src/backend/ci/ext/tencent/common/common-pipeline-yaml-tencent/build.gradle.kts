@@ -26,7 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:process:common-pipeline-yaml"))
+    api(project(":core:common:common-pipeline-yaml"))
     api(project(":core:common:common-webhook:biz-common-webhook"))
     api(project(":core:store:api-store"))
     api(project(":core:quality:api-quality"))
