@@ -49,7 +49,7 @@ class TGitTokenDao {
             return dslContext.insertInto(
                 this,
                 USER_ID,
-                OAUTHUSERID,
+                OAUTH_USER_ID,
                 ACCESS_TOKEN,
                 REFRESH_TOKEN,
                 TOKEN_TYPE,
@@ -68,7 +68,7 @@ class TGitTokenDao {
                 .onDuplicateKeyUpdate()
                 .set(ACCESS_TOKEN, token.accessToken)
                 .set(REFRESH_TOKEN, token.refreshToken)
-                .set(OAUTHUSERID, oauthUserId)
+                .set(OAUTH_USER_ID, oauthUserId)
                 .set(TOKEN_TYPE, token.tokenType)
                 .set(EXPIRES_IN, token.expiresIn)
                 .set(CREATE_TIME, LocalDateTime.now())
