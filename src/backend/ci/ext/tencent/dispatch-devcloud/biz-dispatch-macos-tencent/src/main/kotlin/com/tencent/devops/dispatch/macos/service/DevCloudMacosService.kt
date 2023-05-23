@@ -74,9 +74,9 @@ class DevCloudMacosService @Autowired constructor(
                     systemVersion,
                 xcode = xcodeVersion,
                 env = mapOf(
-                    "devops.project.id" to projectId,
-                    "devops.agent.id" to dispatchMessage.id,
-                    "devops.agent.secret.key" to dispatchMessage.secretKey,
+                    "devops_project_id" to projectId,
+                    "devops_agent_id" to dispatchMessage.id,
+                    "devops_agent_secret_key" to dispatchMessage.secretKey,
                     "xcodeVersion" to (xcodeVersion ?: "")
                 )
             )
