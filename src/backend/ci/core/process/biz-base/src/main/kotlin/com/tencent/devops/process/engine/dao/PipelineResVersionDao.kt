@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.dao
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE_VERSION
 import com.tencent.devops.process.pojo.setting.PipelineVersionSimple
 import org.jooq.DSLContext
@@ -47,10 +48,13 @@ class PipelineResVersionDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        versionName: String = "init",
-        model: Model
+        versionName: String,
+        model: Model,
+        trigger: TriggerContainer,
+        modelVersion: Int,
+        triggerVersion: Int,
+        settingVersion: Int
     ) {
-        val modelString = JsonUtil.toJson(model, formatted = false)
         create(
             dslContext = dslContext,
             projectId = projectId,
@@ -58,7 +62,11 @@ class PipelineResVersionDao {
             creator = creator,
             version = version,
             versionName = versionName,
-            modelString = modelString
+            modelString = JsonUtil.toJson(model, formatted = false),
+            triggerString = JsonUtil.toJson(trigger, formatted = false),
+            modelVersion = modelVersion,
+            triggerVersion = triggerVersion,
+            settingVersion = settingVersion
         )
     }
 
@@ -69,24 +77,33 @@ class PipelineResVersionDao {
         creator: String,
         version: Int,
         versionName: String = "init",
-        modelString: String
+        modelString: String,
+        triggerString: String,
+        modelVersion: Int,
+        triggerVersion: Int,
+        settingVersion: Int
     ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                VERSION,
-                VERSION_NAME,
-                MODEL,
-                CREATOR,
-                CREATE_TIME
-            ).values(projectId, pipelineId, version, versionName, modelString, creator, LocalDateTime.now())
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(VERSION, version)
+                .set(VERSION_NAME, versionName)
+                .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
+                .set(CREATOR, creator)
+                .set(CREATE_TIME, LocalDateTime.now())
+                .set(MODEL_VERSION, modelVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
                 .onDuplicateKeyUpdate()
                 .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(VERSION_NAME, versionName)
-                .set(CREATE_TIME, LocalDateTime.now())
+                .set(MODEL_VERSION, modelVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
                 .execute()
         }
     }

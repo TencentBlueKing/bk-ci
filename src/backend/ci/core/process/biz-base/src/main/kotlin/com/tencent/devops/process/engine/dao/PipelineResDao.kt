@@ -29,7 +29,9 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
+import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -50,26 +52,46 @@ class PipelineResDao {
         pipelineId: String,
         creator: String,
         version: Int,
-        model: Model
+        versionName: String = "init",
+        model: Model,
+        trigger: TriggerContainer,
+        modelVersion: Int,
+        triggerVersion: Int,
+        settingVersion: Int
     ) {
         logger.info("Create the pipeline model pipelineId=$pipelineId, version=$version")
         with(T_PIPELINE_RESOURCE) {
             val modelString = JsonUtil.toJson(model, formatted = false)
-            dslContext.insertInto(
-                this,
-                PROJECT_ID,
-                PIPELINE_ID,
-                VERSION,
-                MODEL,
-                CREATOR,
-                CREATE_TIME
-            )
-                .values(projectId, pipelineId, version, modelString, creator, LocalDateTime.now())
-                .onDuplicateKeyUpdate()
+            val triggerString = JsonUtil.toJson(trigger, formatted = false)
+            dslContext.insertInto(this)
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
+                .set(VERSION, version)
+                .set(VERSION_NAME, versionName)
                 .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
                 .set(CREATOR, creator)
                 .set(CREATE_TIME, LocalDateTime.now())
+                .set(MODEL_VERSION, modelVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
+                .onDuplicateKeyUpdate()
+                .set(MODEL, modelString)
+                .set(TRIGGER, triggerString)
+                .set(CREATOR, creator)
+                .set(VERSION_NAME, versionName)
+                .set(MODEL_VERSION, modelVersion)
+                .set(TRIGGER_VERSION, triggerVersion)
+                .set(SETTING_VERSION, settingVersion)
                 .execute()
+        }
+    }
+
+    fun getLatestVersionRecord(dslContext: DSLContext, projectId: String, pipelineId: String): TPipelineResourceRecord? {
+        return with(T_PIPELINE_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId).and(PROJECT_ID.eq(projectId)))
+                .fetchAny()
         }
     }
 

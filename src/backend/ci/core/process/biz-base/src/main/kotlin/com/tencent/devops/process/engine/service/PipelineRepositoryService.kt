@@ -127,6 +127,14 @@ class PipelineRepositoryService constructor(
     private val redisOperation: RedisOperation
 ) {
 
+    companion object {
+        private const val MAX_LEN_FOR_NAME = 255
+        private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
+        private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
+        private fun getVersionName(modelVersion: Int, triggerVersion: Int, settingVersion: Int) =
+            "P$modelVersion.T$triggerVersion.$settingVersion"
+    }
+
     fun deployPipeline(
         model: Model,
         projectId: String,
@@ -192,7 +200,8 @@ class PipelineRepositoryService constructor(
                 buildNo = buildNo,
                 modelTasks = modelTasks,
                 useTemplateSettings = useTemplateSettings,
-                templateId = templateId
+                templateId = templateId,
+                trigger = triggerContainer
             )
         }
     }
@@ -466,6 +475,7 @@ class PipelineRepositoryService constructor(
         projectId: String,
         pipelineId: String,
         model: Model,
+        trigger: TriggerContainer,
         userId: String,
         channelCode: ChannelCode,
         canManualStartup: Boolean,
@@ -498,21 +508,33 @@ class PipelineRepositoryService constructor(
                     id = id
                 )
                 model.latestVersion = 1
+                // 最新版本永远是新增逻辑
                 pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     creator = userId,
                     version = 1,
-                    model = model
+                    model = model,
+                    trigger = trigger,
+                    versionName = getVersionName(1, 1, 1),
+                    modelVersion = 1,
+                    triggerVersion = 1,
+                    settingVersion = 1
                 )
+                // 同步记录到历史版本表
                 pipelineResVersionDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     creator = userId,
                     version = 1,
-                    model = model
+                    model = model,
+                    trigger = trigger,
+                    versionName = getVersionName(1, 1, 1),
+                    modelVersion = 1,
+                    triggerVersion = 1,
+                    settingVersion = 1
                 )
                 if (model.instanceFromTemplate != true) {
                     if (null == pipelineSettingDao.getSetting(transactionContext, projectId, pipelineId)) {
@@ -616,6 +638,7 @@ class PipelineRepositoryService constructor(
         updateLastModifyUser: Boolean? = true
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         var version = 0
         val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
@@ -656,13 +679,17 @@ class PipelineRepositoryService constructor(
                     throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
                 }
                 model.latestVersion = version
+                val latestResRecord = pipelineResDao.getLatestVersionRecord(
+                    transactionContext, projectId, pipelineId
+                )
                 pipelineResDao.create(
                     dslContext = transactionContext,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     creator = userId,
                     version = version,
-                    model = model
+                    model = model,
+                    trigger = latestResRecord?.
                 )
                 pipelineResVersionDao.create(
                     dslContext = transactionContext,
@@ -670,7 +697,8 @@ class PipelineRepositoryService constructor(
                     pipelineId = pipelineId,
                     creator = userId,
                     version = version,
-                    model = model
+                    model = model,
+                    trigger = triggerContainer
                 )
                 if (version > 1 && pipelineResVersionDao.getVersionModelString(
                         dslContext = transactionContext,
@@ -1287,11 +1315,5 @@ class PipelineRepositoryService constructor(
             pipelineIdList = listOf(pipelineId),
             maxConRunningQueueSize = maxConRunningQueueSize
         )
-    }
-
-    companion object {
-        private const val MAX_LEN_FOR_NAME = 255
-        private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
-        private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
     }
 }
