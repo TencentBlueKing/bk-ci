@@ -8,11 +8,7 @@ export const resourceMap = {
     envNode: 'ENVIRONMENT_ENV_NODE',
     project: 'PROJECT',
     rule: 'QUALITY_RULE',
-    ruleGroup: 'QUALITY_GROUP',
-    experience: 'EXPERIENCE',
-    experienceGroup: 'EXPERIENCE_GROUP',
-    notifyGroup: 'NOTIFY_GROUP',
-    artifactory: 'ARTIFACTORY'
+    ruleGroup: 'QUALITY_GROUP'
 }
 
 export const resourceTypeMap = {
@@ -24,27 +20,19 @@ export const resourceTypeMap = {
     ENVIRONMENT_ENV_NODE: 'env_node',
     PROJECT: 'project',
     QUALITY_RULE: 'rule',
-    QUALITY_GROUP: 'group',
-    EXPERIENCE: 'experience',
-    EXPERIENCE_GROUP: 'experienceGroup',
-    NOTIFY_GROUP: 'notifyGroup',
-    ARTIFACTORY: 'artifactory'
+    QUALITY_GROUP: 'group'
 }
 
 export const resourceAliasMap = {
-    CODE_REPERTORY: '代码库',
-    PIPELINE_DEFAULT: '流水线',
-    TICKET_CREDENTIAL: '凭据',
-    TICKET_CERT: '证书',
-    ENVIRONMENT_ENVIRONMENT: '环境',
-    ENVIRONMENT_ENV_NODE: '节点',
-    PROJECT: '项目',
-    QUALITY_RULE: '质量规则',
-    QUALITY_GROUP: '规则集',
-    EXPERIENCE: '版本体验',
-    EXPERIENCE_GROUP: '体验组',
-    NOTIFY_GROUP: '通知组',
-    ARTIFACTORY: '版本仓库'
+    CODE_REPERTORY: 'codelib',
+    PIPELINE_DEFAULT: 'pipeline',
+    TICKET_CREDENTIAL: 'ticket',
+    TICKET_CERT: 'cert',
+    ENVIRONMENT_ENVIRONMENT: 'env',
+    ENVIRONMENT_ENV_NODE: 'node',
+    PROJECT: 'project',
+    QUALITY_RULE: 'quality',
+    QUALITY_GROUP: 'rules'
 }
 
 export function isProjectResource (resourceId) {
@@ -70,54 +58,54 @@ export const actionMap = {
 export const actionAliasMap = {
     CREATE: {
         value: 'create',
-        alias: '创建'
+        i18nAlias: 'actions.create'
     },
     DEPLOY: {
         value: 'deploy',
-        alias: '部署'
+        i18nAlias: 'actions.deploy'
     },
     DOWNLOAD: {
         value: 'download',
-        alias: '下载'
+        i18nAlias: 'actions.download'
     },
     EDIT: {
         value: 'edit',
-        alias: '编辑'
+        i18nAlias: 'actions.edit'
     },
     DELETE: {
         value: 'delete',
-        alias: '删除'
+        i18nAlias: 'actions.delete'
     },
     VIEW: {
         value: 'view',
-        alias: '查看'
+        i18nAlias: 'actions.view'
     },
     MOVE: {
         value: 'move',
-        alias: '移动'
+        i18nAlias: 'actions.move'
     },
     USE: {
         value: 'use',
-        alias: '使用'
+        i18nAlias: 'actions.use'
     },
     SHARE: {
         value: 'share',
-        alias: '分享'
+        i18nAlias: 'actions.share'
     },
     LIST: {
         value: 'list',
-        alias: '列表'
+        i18nAlias: 'actions.list'
     },
     EXECUTE: {
         value: 'execute',
-        alias: '执行'
+        i18nAlias: 'actions.execute'
     },
     ENABLE: {
         value: 'enable',
-        alias: '停用/启用'
+        i18nAlias: 'actions.enable/启用'
     },
     MANAGE: {
         value: 'manage',
-        alias: '管理'
+        i18nAlias: 'actions.manage'
     }
 }

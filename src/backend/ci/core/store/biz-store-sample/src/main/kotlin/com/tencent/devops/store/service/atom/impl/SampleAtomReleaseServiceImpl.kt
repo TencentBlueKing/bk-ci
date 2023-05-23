@@ -46,7 +46,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
-import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
+import com.tencent.devops.store.pojo.common.enums.PackageSourceTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -68,8 +68,8 @@ class SampleAtomReleaseServiceImpl : SampleAtomReleaseService, AtomReleaseServic
         return Result(data = null)
     }
 
-    override fun getAtomPackageSourceType(): AtomPackageSourceTypeEnum {
-        return AtomPackageSourceTypeEnum.UPLOAD
+    override fun getAtomPackageSourceType(): PackageSourceTypeEnum {
+        return PackageSourceTypeEnum.UPLOAD
     }
 
     override fun getFileStr(
