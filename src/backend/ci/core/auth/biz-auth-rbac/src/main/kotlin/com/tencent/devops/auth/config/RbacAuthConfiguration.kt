@@ -288,7 +288,6 @@ class RbacAuthConfiguration {
         tokenApi: AuthTokenApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
-        authResourceGroupDao: AuthResourceGroupDao,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao
@@ -301,7 +300,6 @@ class RbacAuthConfiguration {
         tokenApi = tokenApi,
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
-        authResourceGroupDao = authResourceGroupDao,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
         authResourceGroupConfigDao = authResourceGroupConfigDao
