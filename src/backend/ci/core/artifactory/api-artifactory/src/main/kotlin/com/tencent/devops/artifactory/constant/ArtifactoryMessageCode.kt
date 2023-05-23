@@ -95,7 +95,7 @@ object ArtifactoryMessageCode {
     const val BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME = "bkShareFilesPleaseDownloadFilesInTime"
     // {0}与你共享以下文件，请在有效期（{1}}天）内及时下载：
     const val BK_DOWNLOAD = "bkDownload" // 下载
-    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkbkReceivedThisEmailBecauseYouFollowedProject"
+    const val BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT = "bkReceivedThisEmailBecauseYouFollowedProject"
     // 你收到此邮件，是因为你关注了 {0} 项目，或其它人@了你
     const val BK_ILLEGAL_PATH = "bkIllegalPath" // 非法路径
 }
