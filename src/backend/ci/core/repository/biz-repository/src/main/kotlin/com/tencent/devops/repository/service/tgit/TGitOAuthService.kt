@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.service.tgit
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -144,10 +145,10 @@ class TGitOAuthService @Autowired constructor(
     private fun checkAndGetRedisUser(key: String): OauthParams {
         val value = redisOperation.get(REDIS_KEY + key)
         if (value.isNullOrBlank()) {
-            throw OperationException("session is already registered or has expired.")
+            throw OperationException("Session is already registered or has expired.Please reapply for authorization.")
         }
         redisOperation.delete(REDIS_KEY + key)
-        return JsonUtil.to(value)
+        return JsonUtil.to(value, object : TypeReference<OauthParams>() {})
     }
 
     companion object {
