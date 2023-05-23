@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
@@ -25,6 +26,7 @@ import java.net.URLEncoder
 @Service
 class DevCloudMacosService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val macVmTypeService: MacVmTypeService,
     private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao
 ) {
 
@@ -45,32 +47,50 @@ class DevCloudMacosService @Autowired constructor(
     private lateinit var devopsIdcProxyGateway: String
 
     fun creatVM(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: String,
-        creator: String,
-        macosVersion: String?,
-        xcodeVersion: String?,
-        source: String = ""
+        dispatchMessage: DispatchMessage
     ): DevCloudMacosVmCreateInfo? {
+        val buildId = dispatchMessage.buildId
+        val macOSEvn = dispatchMessage.dispatchMessage.split(":")
+        val (systemVersion, xcodeVersion) = when (macOSEvn.size) {
+            0 -> Pair(null, null)
+            1 -> Pair(macOSEvn[0], null)
+            else -> Pair(macOSEvn[0], macOSEvn[1])
+        }
+
+        val projectId = dispatchMessage.projectId
+        val isGitProject = projectId.startsWith("git_")
 
         val url = "$devCloudUrl/api/mac/vm/create"
-        val macosVmCreate = DevCloudMacosVmCreate(
-            project = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            source = source,
-            os = macosVersion,
-            xcode = xcodeVersion
-        )
+        val macosVmCreate = with(dispatchMessage) {
+            DevCloudMacosVmCreate(
+                project = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                vmSeqId = vmSeqId,
+                source = if (isGitProject) "gongfeng" else "landun",
+                os = if (isGitProject)
+                    macVmTypeService.getSystemVersionByVersion(systemVersion)
+                else
+                    systemVersion,
+                xcode = xcodeVersion,
+                env = mapOf(
+                    "devops.project.id" to projectId,
+                    "devops.agent.id" to dispatchMessage.id,
+                    "devops.agent.secret.key" to dispatchMessage.secretKey,
+                    "xcodeVersion" to (xcodeVersion ?: "")
+                )
+            )
+        }
+
         var taskId = ""
         val body = ObjectMapper().writeValueAsString(macosVmCreate)
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
+            .headers(
+                SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId)
+                    .toHeaders()
+            )
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -123,7 +143,7 @@ class DevCloudMacosService @Autowired constructor(
         var times = 0
         logger.info("start query")
         while (times < 200) {
-            var temp = queryTaskStatus(taskId = taskId, creator = creator)
+            var temp = queryTaskStatus(taskId = taskId, creator = dispatchMessage.userId)
 
             var staus = temp.first
             if (staus == DevCloudCreateMacVMStatus.failed.title) {

@@ -1,17 +1,14 @@
 package com.tencent.devops.dispatch.macos.listener
 
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.dispatch.macos.constant.ErrorCodeEnum
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
 import com.tencent.devops.dispatch.macos.service.BuildHistoryService
 import com.tencent.devops.dispatch.macos.service.BuildTaskService
 import com.tencent.devops.dispatch.macos.service.DevCloudMacosService
-import com.tencent.devops.dispatch.macos.service.MacVmTypeService
 import com.tencent.devops.dispatch.macos.service.MacosVMRedisService
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.model.dispatch.macos.tables.records.TBuildTaskRecord
@@ -25,7 +22,6 @@ import java.net.SocketTimeoutException
 @Component
 class MacBuildListener @Autowired constructor(
     private val buildHistoryService: BuildHistoryService,
-    private val macVmTypeService: MacVmTypeService,
     private val buildTaskService: BuildTaskService,
     private val redisOperation: RedisOperation,
     private val devCloudMacosService: DevCloudMacosService,
@@ -51,29 +47,7 @@ class MacBuildListener @Autowired constructor(
 
     override fun onStartup(dispatchMessage: DispatchMessage) {
         logger.info("MacOS Dispatch on start up - ($dispatchMessage)")
-        val macOSEvn = dispatchMessage.dispatchMessage.split(":")
-        val (systemVersion, xcodeVersion) = when (macOSEvn.size) {
-            0 -> Pair(null, null)
-            1 -> Pair(macOSEvn[0], null)
-            else -> Pair(macOSEvn[0], macOSEvn[1])
-        }
-
-        val projectId = dispatchMessage.projectId
-        val isGitProject = projectId.startsWith("git_")
-
-        val devCloudMacosVmInfo = devCloudMacosService.creatVM(
-            projectId = projectId,
-            pipelineId = dispatchMessage.pipelineId,
-            buildId = dispatchMessage.buildId,
-            vmSeqId = dispatchMessage.vmSeqId,
-            creator = dispatchMessage.userId,
-            source = if (isGitProject) "gongfeng" else "landun",
-            macosVersion = if (isGitProject)
-                macVmTypeService.getSystemVersionByVersion(systemVersion)
-            else
-                systemVersion,
-            xcodeVersion = xcodeVersion
-        )
+        val devCloudMacosVmInfo = devCloudMacosService.creatVM(dispatchMessage)
 
         devCloudMacosVmInfo?.let {
             devCloudMacosService.saveVM(it)
