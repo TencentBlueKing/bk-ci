@@ -73,7 +73,8 @@ class TGitService @Autowired constructor(
             val tokenUrl =
                 "${gitConfig.tGitUrl}/oauth/token?client_id=${gitConfig.tGitClientId}" +
                     "&client_secret=${gitConfig.tGitClientSecret}&code=$code" +
-                    "&grant_type=authorization_code&redirect_uri=${gitConfig.tGitWebhookUrl}"
+                    "&grant_type=authorization_code&" +
+                    "redirect_uri=${URLEncoder.encode(gitConfig.tGitWebhookUrl, "utf-8")}"
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
