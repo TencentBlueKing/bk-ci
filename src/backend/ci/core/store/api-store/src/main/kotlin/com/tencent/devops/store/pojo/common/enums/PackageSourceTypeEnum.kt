@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom.enums
+package com.tencent.devops.store.pojo.common.enums
 
-enum class AtomPackageSourceTypeEnum {
+enum class PackageSourceTypeEnum {
     REPO, // 代码库打包
     UPLOAD; // 上传包
 }
