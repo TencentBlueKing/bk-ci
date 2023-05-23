@@ -104,31 +104,7 @@ fun main(args: Array<String>) {
 
         BuildType.MACOS.name -> {
             MacAgentEnv.initEnv()
-
-            println("Start to select xcode.")
-            // 选择XCODE版本
-            val xcodeVersion = System.getProperty("xcodeVersion")
-            val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
-            val xcodeFile = File(xcodePath)
-            // 当指定XCode版本存在的时候，切换xcode
-            if (xcodeFile.exists() && xcodeFile.isDirectory) {
-                try {
-                    // 删除软链
-                    val rmCommand = "sudo rm -rf /Applications/Xcode.app"
-                    runCommand(rmCommand, rmCommand)
-                    // 新建软链
-                    val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  /Applications/Xcode.app"
-                    runCommand(lnCommand, lnCommand)
-                    // 选择xcode
-                    val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
-                    runCommand(selectCommand, selectCommand)
-                    println("End to select xcode:select Xcode_$xcodeVersion.app.")
-                } catch (e: Exception) {
-                    println("End to select xcode with error: $e")
-                }
-            } else {
-                println("End to select xcode:nothing to do.")
-            }
+            MacAgentEnv.selectXcode()
 
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspaceAndLogDir(

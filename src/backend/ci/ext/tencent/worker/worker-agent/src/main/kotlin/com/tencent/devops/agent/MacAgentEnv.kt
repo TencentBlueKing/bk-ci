@@ -4,13 +4,16 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.utils.ExecutorUtil
 import okhttp3.Request
 import org.slf4j.LoggerFactory
+import java.io.File
 
 object MacAgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
     private const val MACOS_WORKSPACE = "DEVOPS_MACOS_DIR"
+    private const val XCODE_VERSION = "devops_xcodeVersion"
     private var macOSWorkspace: String? = null
 
     fun getMacOSWorkspace(): String {
@@ -32,7 +35,7 @@ object MacAgentEnv {
 
     fun initEnv() {
         // 如果agentId环境变量存在，表示变量已注入，不用调用接口获取
-        if (System.getProperty("devops.agent.id") != null) {
+        if (AgentEnv.getAgentId().isNotBlank()) {
             return
         }
 
@@ -60,10 +63,10 @@ object MacAgentEnv {
                         // 将变量写入到property当中
                         response.forEach { (key, value) ->
                             when (key) {
-                                "agentId" -> System.setProperty("devops.agent.id", value)
-                                "secretKey" -> System.setProperty("devops.agent.secret.key", value)
-                                "projectId" -> System.setProperty("devops.project.id", value)
-                                "xcodeVersion" -> System.setProperty("xcodeVersion", value)
+                                "agentId" -> System.setProperty(AgentEnv.AGENT_ID, value)
+                                "secretKey" -> System.setProperty(AgentEnv.AGENT_SECRET_KEY, value)
+                                "projectId" -> System.setProperty(AgentEnv.PROJECT_ID, value)
+                                "xcodeVersion" -> System.setProperty(XCODE_VERSION, value)
                             }
                         }
                         startBuild = true
@@ -79,5 +82,32 @@ object MacAgentEnv {
             }
         } while (!startBuild)
         println("Start to run.")
+    }
+
+    fun selectXcode() {
+        println("Start to select xcode.")
+        // 选择XCODE版本
+        val xcodeVersion = AgentEnv.getEnvProp(XCODE_VERSION) ?: throw RuntimeException("Not found xcodeVersion")
+        val xcodePath = "/Applications/Xcode_$xcodeVersion.app"
+        val xcodeFile = File(xcodePath)
+        // 当指定XCode版本存在的时候，切换xcode
+        if (xcodeFile.exists() && xcodeFile.isDirectory) {
+            try {
+                // 删除软链
+                val rmCommand = "sudo rm -rf /Applications/Xcode.app"
+                ExecutorUtil.runCommand(rmCommand, rmCommand)
+                // 新建软链
+                val lnCommand = "sudo ln -s /Applications/Xcode_$xcodeVersion.app  /Applications/Xcode.app"
+                ExecutorUtil.runCommand(lnCommand, lnCommand)
+                // 选择xcode
+                val selectCommand = "sudo xcode-select -s /Applications/Xcode.app/Contents/Developer/"
+                ExecutorUtil.runCommand(selectCommand, selectCommand)
+                println("End to select xcode:select Xcode_$xcodeVersion.app.")
+            } catch (e: Exception) {
+                println("End to select xcode with error: $e")
+            }
+        } else {
+            println("End to select xcode:nothing to do.")
+        }
     }
 }

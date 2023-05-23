@@ -5,6 +5,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
@@ -32,6 +33,7 @@ class DevCloudMacosService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudMacosService::class.java)
+        private const val XCODE_VERSION = "devops_xcodeVersion"
     }
 
     @Value("\${macos.devCloud.appId:}")
@@ -74,10 +76,11 @@ class DevCloudMacosService @Autowired constructor(
                     systemVersion,
                 xcode = xcodeVersion,
                 env = mapOf(
-                    "devops_project_id" to projectId,
-                    "devops_agent_id" to dispatchMessage.id,
-                    "devops_agent_secret_key" to dispatchMessage.secretKey,
-                    "xcodeVersion" to (xcodeVersion ?: "")
+                    DockerConstants.ENV_KEY_PROJECT_ID to projectId,
+                    DockerConstants.ENV_KEY_AGENT_ID to dispatchMessage.id,
+                    DockerConstants.ENV_KEY_AGENT_SECRET_KEY to dispatchMessage.secretKey,
+                    DockerConstants.ENV_KEY_GATEWAY to dispatchMessage.gateway,
+                    XCODE_VERSION to (xcodeVersion ?: "")
                 )
             )
         }
