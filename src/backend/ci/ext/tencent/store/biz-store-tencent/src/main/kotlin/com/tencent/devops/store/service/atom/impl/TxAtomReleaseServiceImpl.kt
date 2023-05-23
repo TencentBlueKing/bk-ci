@@ -492,8 +492,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
                 language = I18nUtil.getLanguage(userId)
             )
         }
-        val taskJsonMap =  getAtomConfResult.taskDataMap
-        val atomLanguage = taskJsonMap[KEY_LANGUAGE].toString()
+        val taskJsonMap = getAtomConfResult.taskDataMap
+        val executionInfoMap = taskJsonMap[KEY_EXECUTION] as Map<String, Any>
+        val atomLanguage = executionInfoMap[KEY_LANGUAGE].toString()
         val i18nDir = StoreUtils.getStoreI18nDir(atomLanguage, getAtomPackageSourceType())
         val taskDataMap = storeI18nMessageService.parseJsonMapI18nInfo(
             userId = userId,
