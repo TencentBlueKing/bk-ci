@@ -5,7 +5,7 @@
         :current-tab="currentTab"
     >
         <span class="head-tab" slot="tab">
-            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span>
+            <!-- <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span> -->
             <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
         <template v-slot:content>
@@ -49,7 +49,7 @@
         },
         data () {
             return {
-                currentTab: 'log'
+                currentTab: 'setting'
             }
         },
 
