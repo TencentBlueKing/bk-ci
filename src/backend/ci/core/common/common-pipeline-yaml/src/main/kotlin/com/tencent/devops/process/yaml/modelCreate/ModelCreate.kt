@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_MSG_MANUAL
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_BUILD_MSG_TRIGGERS
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -37,8 +39,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
-import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TRIGGERS
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
@@ -80,14 +80,14 @@ class ModelCreate @Autowired constructor(
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement(
-            I18nUtil.getCodeLanMessage(BUILD_MSG_MANUAL),
+            I18nUtil.getCodeLanMessage(BK_BUILD_MSG_MANUAL),
             "T-1-1-1"
         )
         triggerElementList.add(manualTriggerElement)
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = I18nUtil.getCodeLanMessage(BUILD_MSG_TRIGGERS),
+            name = I18nUtil.getCodeLanMessage(BK_BUILD_MSG_TRIGGERS),
             elements = triggerElementList,
             status = null,
             startEpoch = null,
