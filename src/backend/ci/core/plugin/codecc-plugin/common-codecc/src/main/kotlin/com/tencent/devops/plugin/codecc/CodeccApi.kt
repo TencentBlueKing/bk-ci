@@ -199,9 +199,9 @@ open class CodeccApi constructor(
             val body = response.body!!.string()
             logger.info("codecc opensource measurement response: $body")
             if (!response.isSuccessful) {
-                throw ErrorCodeException(
-                    errorCode = response.code.toString(),
-                    defaultMessage = "get codecc opensource measurement response fail.$body"
+                throw RemoteServiceException(
+                    errorCode = response.code,
+                    errorMessage = "get codecc opensource measurement response fail.$body"
                 )
             }
             return objectMapper.readValue(body)
