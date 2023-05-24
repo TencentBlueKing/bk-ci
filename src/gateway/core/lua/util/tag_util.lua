@@ -122,7 +122,7 @@ function _M:switch_kubernetes(devops_project, tag)
     if config.kubernetes.switchAll == true then
         return true
     end
-    if ngx.var.http_x_gateway_force_k8s == 'true' then
+    if config.kubernetes.useForceHeader and ngx.var.http_x_gateway_force_k8s == 'true' then
         return true
     end
     local isInList = false
