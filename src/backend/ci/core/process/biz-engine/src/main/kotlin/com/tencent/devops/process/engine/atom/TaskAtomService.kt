@@ -63,7 +63,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
-import java.time.ZoneOffset
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
