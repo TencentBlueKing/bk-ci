@@ -150,8 +150,5 @@ class StartCloudRemoteDevService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(StartCloudRemoteDevService::class.java)
         private const val EMPTY = ""
-
-        private const val WORKSPACE_PATH = "/data/landun/workspace"
-        private const val VOLUME_MOUNT_NAME = "workspace"
     }
 }

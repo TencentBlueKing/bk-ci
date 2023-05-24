@@ -33,6 +33,7 @@ class WorkspaceStartCloudClient @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceStartCloudClient::class.java)
         const val OK = 0
+        const val HAS_BEEN_DELETED = 32006
     }
 
     @Value("\${startCloud.appId}")
@@ -182,13 +183,13 @@ class WorkspaceStartCloudClient @Autowired constructor(
                 }
                 logger.info("User $userId  environment response: $responseContent")
                 val environmentOpRsp: EnvironmentDefaltRsp = jacksonObjectMapper().readValue(responseContent)
-                if (OK == environmentOpRsp.code) {
+                if (OK == environmentOpRsp.code || environmentOpRsp.code == HAS_BEEN_DELETED) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
                         workspaceName = workspaceName,
                         environmentUid = "",
-                        operator = "admin",
+                        operator = userId,
                         action = EnvironmentAction.DELETE
                     )
                 } else {
