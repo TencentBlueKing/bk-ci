@@ -88,7 +88,8 @@ import kotlin.math.ceil
     "TooManyFunctions",
     "NestedBlockDepth",
     "LongMethod",
-    "ReturnCount"
+    "ReturnCount",
+    "ComplexMethod"
 )
 class LogServiceESImpl constructor(
     private val logClient: LogClient,
