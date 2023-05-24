@@ -1150,8 +1150,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCode: String
     )
 
-    abstract fun buildRouterTag(routerTag: String?): String?
-
     abstract fun updateProjectRouterTag(englishName: String)
 
     private fun getAllMembersName() = I18nUtil.getCodeLanMessage(ALL_MEMBERS_NAME)

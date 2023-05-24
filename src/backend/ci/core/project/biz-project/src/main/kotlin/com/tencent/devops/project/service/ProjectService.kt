@@ -231,4 +231,6 @@ interface ProjectService {
         projectId: String,
         subjectScopes: List<SubjectScopeInfo>
     ): Boolean
+
+    fun buildRouterTag(routerTag: String?): String?
 }
