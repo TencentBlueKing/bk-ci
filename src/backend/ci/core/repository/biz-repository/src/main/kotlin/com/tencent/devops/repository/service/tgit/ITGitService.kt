@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.service.tgit
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -73,7 +72,7 @@ interface ITGitService {
         tokenType: TokenTypeEnum
     ): List<GitFileInfo>
 
-    fun getGitCodeProjectList(
+    fun getProjectList(
         accessToken: String,
         page: Int?,
         pageSize: Int?,
@@ -82,5 +81,5 @@ interface ITGitService {
         sort: GitCodeBranchesSort?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
-    ): Result<List<GitCodeProjectInfo>>
+    ): List<GitCodeProjectInfo>
 }

@@ -293,7 +293,7 @@ class TGitService @Autowired constructor(
     }
 
     @BkTimed(extraTags = ["operation", "git_project_list"], value = "bk_tgit_api_time")
-    override fun getGitCodeProjectList(
+    override fun getProjectList(
         accessToken: String,
         page: Int?,
         pageSize: Int?,

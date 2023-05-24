@@ -127,15 +127,17 @@ class ServiceTGitResourceImpl @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): Result<List<GitCodeProjectInfo>> {
-        return gitService.getGitCodeProjectList(
-            accessToken = accessToken,
-            page = page,
-            pageSize = pageSize,
-            search = search,
-            orderBy = orderBy,
-            sort = sort,
-            owned = owned,
-            minAccessLevel = minAccessLevel
+        return Result(
+            gitService.getProjectList(
+                accessToken = accessToken,
+                page = page,
+                pageSize = pageSize,
+                search = search,
+                orderBy = orderBy,
+                sort = sort,
+                owned = owned,
+                minAccessLevel = minAccessLevel
+            )
         )
     }
 }
