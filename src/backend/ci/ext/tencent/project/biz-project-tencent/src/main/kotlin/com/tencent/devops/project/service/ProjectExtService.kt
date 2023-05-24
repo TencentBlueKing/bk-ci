@@ -18,29 +18,30 @@ class ProjectExtService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
     fun getMigrateProjectInfo(): List<MigrateProjectInfo> {
-        var offset = 0
         val limit = 100
         val migrateProjectInfoList = mutableListOf<MigrateProjectInfo>()
-        do {
+        var hasMore = true
+        var offset = 0
+        while (hasMore) {
             val migrateProjects = projectDao.listMigrateProjects(
                 dslContext = dslContext,
                 limit = limit,
                 offset = offset
             )
-            migrateProjects.forEach {
-                migrateProjectInfoList.add(
-                    MigrateProjectInfo(
-                        englishName = it.englishName,
-                        projectName = it.projectName,
-                        authSystemType = projectService.buildRouterTag(it.routerTag),
-                        creator = it.creator,
-                        creatorNotExist = client.get(ServiceDeptResource::class)
-                            .getUserInfo("admin", it.creator).data == null
-                    )
+            migrateProjectInfoList.addAll(migrateProjects.map {
+                val isCreatorNotExist = client.get(ServiceDeptResource::class)
+                    .getUserInfo("admin", it.creator).data == null
+                MigrateProjectInfo(
+                    englishName = it.englishName,
+                    projectName = it.projectName,
+                    authSystemType = projectService.buildRouterTag(it.routerTag),
+                    creator = it.creator,
+                    creatorNotExist = isCreatorNotExist
                 )
-            }
+            })
+            hasMore = migrateProjects.size == limit
             offset += limit
-        } while (migrateProjects.size == limit)
+        }
         return migrateProjectInfoList
     }
 
