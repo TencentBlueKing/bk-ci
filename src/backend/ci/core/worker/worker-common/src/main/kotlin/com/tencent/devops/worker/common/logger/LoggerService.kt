@@ -272,7 +272,6 @@ object LoggerService {
                     this.uploadQueue.put(logMessage.copy(message = chunk))
                     offset += LOG_MESSAGE_LENGTH_LIMIT
                 }
-
             } else if (elementId2LogProperty[elementId]?.logStorageMode != LogStorageMode.LOCAL) {
                 logger.warn(
                     "The number of Task[$elementId] log lines exceeds the limit, " +
