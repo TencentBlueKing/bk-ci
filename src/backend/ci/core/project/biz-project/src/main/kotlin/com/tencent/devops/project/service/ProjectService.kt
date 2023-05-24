@@ -56,7 +56,7 @@ interface ProjectService {
     fun validate(validateType: ProjectValidateType, name: String, projectId: String? = null)
 
     /**
-     * 创建 项目信息
+     * 创建项目信息
      */
     fun create(
         userId: String,
@@ -231,4 +231,6 @@ interface ProjectService {
         projectId: String,
         subjectScopes: List<SubjectScopeInfo>
     ): Boolean
+
+    fun buildRouterTag(routerTag: String?): String?
 }
