@@ -29,18 +29,20 @@ package com.tencent.devops.lambda.service.project
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.project.LambdaProjectDao
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.ForkJoinPool
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.ForkJoinPool
 
 @Service
 class LambdaProjectService @Autowired constructor(
@@ -145,7 +147,11 @@ class LambdaProjectService @Autowired constructor(
 
     private fun checkParamBlank(param: String?, message: String): String {
         if (param.isNullOrBlank()) {
-            throw ParamBlankException("启动配置缺少 $message")
+            throw ParamBlankException(
+                I18nUtil.getCodeLanMessage(
+                messageCode = STARTUP_CONFIGURATION_MISSING,
+                params = arrayOf(message)
+            ))
         }
         return param
     }

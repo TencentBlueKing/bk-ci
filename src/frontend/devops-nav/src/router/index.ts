@@ -1,10 +1,10 @@
 import Vue from 'vue'
-import Router, { RouteMeta } from 'vue-router'
-import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle, ifShowNotice } from '../utils/util'
+import Router from 'vue-router'
+import { getServiceAliasByPath, ifShowNotice, importScript, importStyle, updateRecentVisitServiceList, urlJoin } from '../utils/util'
 
+import cookie from 'js-cookie'
 import compilePath from '../utils/pathExp'
 import request from '../utils/request'
-import cookie from 'js-cookie'
 
 // 首页 - index
 const Index = () => import('../views/Index.vue')
@@ -158,7 +158,7 @@ const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
     return router
 }
 
-function updateHeaderConfig (routeMeta: RouteMeta) {
+function updateHeaderConfig (routeMeta: any) {
     return {
         showProjectList: routeMeta.showProjectList || (window.currentPage && window.currentPage.show_project_list && typeof routeMeta.showProjectList === 'undefined'),
         showNav: routeMeta.showNav || (window.currentPage && window.currentPage.show_nav && typeof routeMeta.showNav === 'undefined')

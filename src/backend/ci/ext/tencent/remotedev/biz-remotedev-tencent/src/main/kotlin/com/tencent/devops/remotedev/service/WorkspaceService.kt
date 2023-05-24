@@ -205,6 +205,7 @@ class WorkspaceService @Autowired constructor(
             Workspace(
                 workspaceId = null,
                 workspaceName = workspaceName,
+                displayName = null,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -463,8 +464,6 @@ class WorkspaceService @Autowired constructor(
                     logger.info("$workspaceName is $status to $fix , return info.")
                     throw ErrorCodeException(
                         errorCode = ErrorCodeEnum.WORKSPACE_ERROR_FIX.errorCode,
-                        defaultMessage = ErrorCodeEnum.WORKSPACE_ERROR_FIX.formatErrorMessage
-                            .format(fix.name),
                         params = arrayOf(fix.name)
                     )
                 }
@@ -845,6 +844,33 @@ class WorkspaceService @Autowired constructor(
         doDeleteWS(event.status, event.userId, event.workspaceName, event.environmentIp, event.errorMsg)
     }
 
+    // 修改workspace备注名称
+    fun editWorkspace(userId: String, workspaceName: String, displayName: String): Boolean {
+        logger.info("$userId edit workspace $workspaceName|$displayName")
+        permissionService.checkPermission(userId, workspaceName)
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:editWorkspace:$workspaceName",
+            expiredTimeInSeconds
+        ).lock().use {
+            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
+        }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.updateWorkspaceDisplayName(
+                dslContext = transactionContext,
+                workspaceName = workspaceName,
+                displayName = displayName
+            )
+        }
+        return true
+    }
+
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
         logger.info("$userId share workspace $workspaceName|$sharedUser")
         permissionService.checkPermission(userId, workspaceName)
@@ -923,6 +949,7 @@ class WorkspaceService @Autowired constructor(
                 Workspace(
                     workspaceId = it.id,
                     workspaceName = it.name,
+                    displayName = it.displayName,
                     repositoryUrl = it.url,
                     branch = it.branch,
                     devFilePath = it.yamlPath,
@@ -1085,6 +1112,7 @@ class WorkspaceService @Autowired constructor(
             WorkspaceDetail(
                 workspaceId = id,
                 workspaceName = name,
+                displayName = displayName,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = endBilling.second +

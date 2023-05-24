@@ -56,12 +56,12 @@ class ApiAspect(
     @Before("within(com.tencent.devops.statistics.openapi.resources.apigw..*)")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
-            logger.info("Openapi非apigw接口，不需要鉴权。")
+            logger.info("Openapi is not an apigw interface and does not require authentication.")
             return
         }
 
         val methodName: String = jp.signature.name
-        logger.info("【前置增强】the method 【$methodName】")
+        logger.info("[Pre-enhanced] the method 【$methodName】")
         // 参数value
         val parameterValue = jp.args
         // 参数key
@@ -70,11 +70,11 @@ class ApiAspect(
         var appCode: String? = null
         var apigwType: String? = null
         parameterNames.forEach {
-            logger.info("参数名[$it]")
+            logger.info("parameter name[$it]")
         }
 
         parameterValue.forEach {
-            logger.info("参数值[$it]")
+            logger.info("parameter value[$it]")
         }
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
@@ -93,13 +93,22 @@ class ApiAspect(
                 else -> null
             }
         }
-        logger.info("请求类型apigwType[$apigwType],appCode[$appCode],项目[$projectId]")
+        logger.info("request class apigwType[$apigwType],appCode[$appCode],project[$projectId]")
         if (projectId != null && appCode != null && (apigwType == "apigw-app")) {
-            logger.info("判断！！！！请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限.")
+            logger.info(
+                "judge！！！！request class apigwType[$apigwType]," +
+                        "appCode[$appCode],Is there a project[$projectId]permission."
+            )
             if (appCodeService.validAppCode(appCode, projectId)) {
-                logger.info("请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证通过】")
+                logger.info(
+                    "request class apigwType[$apigwType],appCode[$appCode]," +
+                            "Is there a project[$projectId]Permissions [Verification Passed]"
+                )
             } else {
-                val message = "请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证失败】"
+                val message = "" +
+                        "request class apigwType[$apigwType],appCode[$appCode]," +
+                        "Is there a project[$projectId]Permissions【verification failed】" +
+                        ""
                 throw PermissionForbiddenException(
                     message = message
                 )

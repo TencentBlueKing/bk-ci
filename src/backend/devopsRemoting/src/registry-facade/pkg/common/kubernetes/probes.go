@@ -35,7 +35,7 @@ func NetworkIsReachableProbe(url string) func() error {
 		resp.Body.Close()
 
 		if resp.StatusCode > 499 {
-			logs.WithField("url", url).WithField("statusCode", resp.StatusCode).WithError(err).Error("NetworkIsReachableProbe: unexpected status code checking URL")
+			logs.Error("NetworkIsReachableProbe: unexpected status code checking URL", logs.String("url", url), logs.Int("statusCode", resp.StatusCode), logs.Err(err))
 			return fmt.Errorf("returned status %d", resp.StatusCode)
 		}
 
@@ -56,7 +56,7 @@ func DNSCanResolveProbe(host string, timeout time.Duration) func() error {
 
 		addrs, err := resolver.LookupHost(ctx, host)
 		if err != nil {
-			logs.WithField("host", host).WithError(err).Error("NetworkIsReachableProbe: unexpected error resolving host")
+			logs.Error("NetworkIsReachableProbe: unexpected error resolving host", logs.String("host", host), logs.Err(err))
 			return err
 		}
 

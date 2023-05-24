@@ -56,7 +56,7 @@ func (m *Mux) Start(cmd *exec.Cmd, options TermOptions) (alias string, err error
 	m.aliases = append(m.aliases, alias)
 	m.terms[alias] = term
 
-	logs.WithField("alias", alias).WithField("cmd", cmd.Path).Info("started new terminal")
+	logs.Info("started new terminal", logs.String("alias", alias), logs.String("cmd", cmd.Path))
 
 	go func() {
 		term.waitErr = cmd.Wait()
@@ -79,7 +79,7 @@ func (m *Mux) Close(ctx context.Context) error {
 		g.Go(func() error {
 			cerr := m.doClose(ctx, k)
 			if cerr != nil {
-				logs.WithError(cerr).WithField("alias", k).Warn("cannot properly close terminal")
+				logs.Error("cannot properly close terminal", logs.String("alias", k), logs.Err(cerr))
 				return cerr
 			}
 			return nil
@@ -167,21 +167,21 @@ func (m *Mux) doClose(ctx context.Context, alias string) error {
 		return ErrNotFound
 	}
 
-	logs.WithField("alias", alias).Info("closing terminal")
+	logs.Info("closing terminal", logs.String("alias", alias))
 	if term.Command.Process != nil {
 		err := process.Terminate(ctx, term.Command.Process.Pid)
 		if err != nil {
-			logs.WithError(err).Errorf("cannot terminate process %s.", fmt.Sprint(term.Command.Args))
+			logs.Errorfw("cannot terminate process %s.", []any{fmt.Sprint(term.Command.Args)}, logs.Err(err))
 		}
 	}
 
 	err := term.Stdout.Close()
 	if err != nil {
-		logs.WithError(err).Warn("cannot close connection to terminal clients")
+		logs.Error("cannot close connection to terminal clients", logs.Err(err))
 	}
 	err = term.PTY.Close()
 	if err != nil {
-		logs.WithError(err).Warn("cannot close pseudo-terminal")
+		logs.Error("cannot close pseudo-terminal", logs.Err(err))
 	}
 	i := 0
 	for i < len(m.aliases) && m.aliases[i] != alias {
@@ -293,7 +293,7 @@ func (mw *multiWriter) Write(p []byte) (n int, err error) {
 
 	mw.recorder.Write(p)
 	if mw.logStdout {
-		logs.WithField("terminalOutput", true).WithField("label", mw.logLabel).Info(string(p))
+		logs.Info(string(p), logs.Bool("terminalOutput", true), logs.String("label", mw.logLabel))
 	}
 
 	for lstr := range mw.listener {
@@ -398,7 +398,7 @@ func (mw *multiWriter) ListenWithOptions(options TermListenOptions) io.ReadClose
 		// listener cleanup on close
 		<-closeChan
 		if res.closeErr != nil {
-			logs.WithError(res.closeErr).Error("terminal listener droped out")
+			logs.Error("terminal listener droped out", logs.Err(res.closeErr))
 			w.CloseWithError(res.closeErr)
 		} else {
 			w.Close()

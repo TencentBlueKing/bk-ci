@@ -109,17 +109,17 @@ func (g *RemotingExposedPorts) getPortUrl(port uint32) string {
 	} else {
 		detail, err := g.thirdApi.Server.GetWorkspaceDetail(context.Background(), g.WorkspaceId)
 		if err != nil {
-			logs.WithError(err).Errorf("port %d request workspace detail error", port)
+			logs.Errorfw("port %d request workspace detail error", []any{port}, logs.Err(err))
 			return ""
 		} else if detail.EnvironmentHost == "" {
-			logs.Warnf("port %d request workspace detail host null", port)
+			logs.Errorf("port %d request workspace detail host null", port)
 			return ""
 		}
 		wurl := fmt.Sprintf("%s%s", constant.WorkspaceSchema, detail.EnvironmentHost)
 		g.WorkspaceUrl = wurl
 		u, err = url.Parse(g.WorkspaceUrl)
 		if err != nil {
-			logs.WithError(err).Errorf("parse workspace url %s error", g.WorkspaceUrl)
+			logs.Errorfw("parse workspace url %s error", []any{g.WorkspaceUrl}, logs.Err(err))
 			return ""
 		}
 	}
@@ -166,7 +166,7 @@ func (g *RemotingExposedPorts) Run(ctx context.Context) {
 			return
 		case req := <-g.requests:
 			// TODO: 暂时先不实现，看后续开发进度
-			logs.WithField("req", req).Warn("recived public ports expose request")
+			logs.Warn("recived public ports expose request", logs.Any("req", req))
 		}
 	}
 }

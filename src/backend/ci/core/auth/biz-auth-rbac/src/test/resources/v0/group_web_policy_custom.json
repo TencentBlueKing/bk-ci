@@ -1,0 +1,98 @@
+{
+  "type": "group_web_policy",
+  "project_id": "mht",
+  "subject": {
+    "type": "group",
+    "id": 219,
+    "name": "用户组迁移"
+  },
+  "permissions": [
+    {
+      "actions": [
+        {
+          "id": "pipeline_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "pipeline",
+          "paths": [
+            [
+              {
+                "id": "p-665e332fa3bf4df29037de2de0a29f81",
+                "name": "mingshew_event_mr_dev",
+                "system_id": "bk_ci",
+                "type": "pipeline"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "credential_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "credential",
+          "paths": [
+            [
+              {
+                "id": "code_git_token",
+                "name": "code_git_token",
+                "system_id": "bk_ci",
+                "type": "credential"
+              }
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "cert_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "cert",
+          "paths": [
+
+          ]
+        }
+      ]
+    },
+    {
+      "actions": [
+        {
+          "id": "repertory_view"
+        }
+      ],
+      "resources": [
+        {
+          "type": "repertory",
+          "paths": [
+            [
+              {
+                "id": "2984",
+                "name": "mingshewhe/webhook_test",
+                "system_id": "bk_ci",
+                "type": "repertory"
+              }
+            ]
+          ]
+        }
+      ]
+    }
+  ],
+  "members": [
+    {
+      "type": "user",
+      "id": "345"
+    }
+  ]
+}

@@ -1,0 +1,284 @@
+{
+  "system_id": "bk_ci_rbac",
+  "operations": [
+    {
+      "operation": "upsert_system",
+      "data": {
+        "id": "bk_ci_rbac",
+        "name": "蓝盾",
+        "name_en": "bk-ci",
+        "clients": "bkci,bk_ci",
+        "provider_config": {
+          "host": "http://ci-auth.service.consul:21936",
+          "auth": "basic",
+          "healthz": "/api/v1/healthz"
+        }
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "project",
+        "name": "项目",
+        "name_en": "Project",
+        "parents": [],
+        "provider_config": {
+          "path": "/api/open/auth/resource/projects?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "pipeline_group",
+        "name": "流水线组",
+        "name_en": "Pipeline Group",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "pipeline",
+        "name": "流水线",
+        "name_en": "Pipeline",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "repertory",
+        "name": "代码库",
+        "name_en": "Repository",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "credential",
+        "name": "凭据",
+        "name_en": "Credential",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "cert",
+        "name": "证书",
+        "name_en": "Cert",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "environment",
+        "name": "环境",
+        "name_en": "Environment",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "env_node",
+        "name": "节点",
+        "name_en": "Node",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "experience_task",
+        "name": "版本体验任务",
+        "name_en": "Experience Task",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "experience_group",
+        "name": "版本体验用户组",
+        "name_en": "Experience Group",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "rule",
+        "name": "质量红线规则",
+        "name_en": "Andon Rule",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "quality_group",
+        "name": "质量红线通知组",
+        "name_en": "Andon Notice Group",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "codecc_task",
+        "name": "CodeCC任务",
+        "name_en": "Codecc Task",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "codecc_rule_set",
+        "name": "CodeCC规则集",
+        "name_en": "Codecc Rule Set",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_resource_type",
+      "data": {
+        "id": "codecc_ignore_type",
+        "name": "CodeCC忽略类型",
+        "name_en": "Codecc Ignore Type",
+        "parents": [
+          {
+            "system_id": "bk_ci_rbac",
+            "id": "project"
+          }
+        ],
+        "provider_config": {
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
+        },
+        "version": 1
+      }
+    }
+  ]
+}

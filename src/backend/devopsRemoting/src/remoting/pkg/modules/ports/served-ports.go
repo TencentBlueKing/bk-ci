@@ -127,7 +127,7 @@ func readNetTCPFile(fc io.Reader, listeningOnly bool) (ports []ServedPort, err e
 
 		port, err := strconv.ParseUint(portHex, 16, 32)
 		if err != nil {
-			logs.WithError(err).WithField("port", portHex).Warn("cannot parse port entry from /proc/net/tcp* file")
+			logs.Error("cannot parse port entry from /proc/net/tcp* file", logs.Err(err), logs.String("port", portHex))
 			continue
 		}
 		ipAddress := hexDecodeIP([]byte(addrHex))

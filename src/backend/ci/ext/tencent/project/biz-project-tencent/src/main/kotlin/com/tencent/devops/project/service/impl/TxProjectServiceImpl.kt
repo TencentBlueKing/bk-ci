@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
@@ -45,28 +46,31 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
@@ -86,12 +90,12 @@ import java.io.File
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
-    private val bsAuthProjectApi: AuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
@@ -105,7 +109,10 @@ class TxProjectServiceImpl @Autowired constructor(
     private val bsAuthTokenApi: BSAuthTokenApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -116,7 +123,10 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher = projectDispatcher,
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
-    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService
+    shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
+    objectMapper = objectMapper,
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -124,6 +134,9 @@ class TxProjectServiceImpl @Autowired constructor(
 
     @Value("\${tag.v3:#{null}}")
     private var v3Tag: String = ""
+
+    @Value("\${tag.rbac:#{null}}")
+    private var rbacTag: String = ""
 
     @Value("\${tag.auto:#{null}}")
     private val autoTag: String? = null
@@ -134,8 +147,12 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
-    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
-        val projectVO = getInfoByEnglishName(englishName)
+    override fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?
+    ): ProjectVO? {
+        val projectVO = getInfoByEnglishName(userId = userId, englishName = englishName)
         if (projectVO == null) {
             logger.warn("The projectCode $englishName is not exist")
             return null
@@ -152,7 +169,12 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("getByEnglishName $userId is $englishName manager")
             return projectVO
         }
-
+        // 若该项目是该用户创建，并且还未创建成功，并不需要鉴权，直接返回项目详情
+        val isNotCreateSuccess = projectVO.creator == userId &&
+            (projectVO.approvalStatus == ProjectApproveStatus.CREATE_PENDING.status ||
+                projectVO.approvalStatus == ProjectApproveStatus.CREATE_REJECT.status)
+        if (isNotCreateSuccess)
+            return projectVO
         val englishNames = getProjectFromAuth(userId, accessToken)
         if (englishNames.isEmpty()) {
             return null
@@ -162,24 +184,6 @@ class TxProjectServiceImpl @Autowired constructor(
             return null
         }
         return projectVO
-    }
-
-    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
-        val startEpoch = System.currentTimeMillis()
-        try {
-
-            val englishNames = getProjectFromAuth(userId, accessToken).toSet()
-            if (englishNames.isEmpty()) {
-                return emptyList()
-            }
-            val list = ArrayList<ProjectVO>(englishNames.size)
-            projectDao.listByCodes(dslContext, englishNames, enabled = enabled).map {
-                list.add(ProjectUtils.packagingBean(it))
-            }
-            return list
-        } finally {
-            logger.info("$userId|It took ${System.currentTimeMillis() - startEpoch}ms to list projects")
-        }
     }
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -199,40 +203,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 groupName = ""
             )
         }
-    }
-
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        // 添加repo项目
-        val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-        logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-
-        if (createExtInfo.needAuth!!) {
-            val newAccessToken = if (accessToken.isNullOrBlank()) {
-                bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-            } else accessToken
-            // 添加paas项目
-            projectPaasCCService.createPaasCCProject(
-                userId = userId,
-                projectId = projectId,
-                accessToken = newAccessToken,
-                projectCreateInfo = projectCreateInfo
-            )
-        }
-
-        // 工蜂CI项目不会添加paas项目，但也需要广播
-        projectDispatcher.dispatch(
-            ProjectCreateBroadCastEvent(
-                userId = userId,
-                projectId = projectId,
-                projectInfo = projectCreateInfo
-            )
-        )
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
@@ -259,40 +229,46 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun deleteAuth(projectId: String, accessToken: String?) {
-//        logger.warn("Deleting the project $projectId from auth")
-//        try {
-//            val url = "$authUrl/$projectId?access_token=$accessToken"
-//            val request = Request.Builder().url(url).delete().build()
-//            val responseContent = request(request, "Fail to delete the project $projectId")
-//            logger.info("Get the delete project $projectId response $responseContent")
-//            val response: Response<Any?> = objectMapper.readValue(responseContent)
-//            if (response.code.toInt() != 0) {
-//                logger.warn("Fail to delete the project $projectId with response $responseContent")
-//            }
-//            logger.info("Finish deleting the project $projectId from auth")
-//        } catch (t: Throwable) {
-//            logger.warn("Fail to delete the project $projectId from auth", t)
-//        }
         projectPermissionService.deleteResource(projectId)
     }
 
-    // 此处为兼容V0,V3并存的情况, 拉群用户有权限的项目列表需取V0+V3的并集, 无论啥集群, 都需取两个iam环境下的数据, 完全迁移完后可直接指向V3
-    override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
-        // 全部迁移完后,直接用此实现
-//        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
+    override fun getProjectFromAuth(
+        userId: String?,
+        accessToken: String?
+    ): List<String> {
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
-
-        // 请求V3的项目,流量必须指向到v3,需指定项目头
-        val iamV3List = getV3UserProject(userId!!)
-        logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
-        if (!iamV3List.isNullOrEmpty()) {
-            projectList.addAll(iamV3List)
+        // 请求v3以及rbac的项目
+        val iamList = getIamUserProject(userId!!)
+        logger.info("$userId iam project: $iamList")
+
+        if (iamList.isNotEmpty()) {
+            projectList.addAll(iamList)
         }
         return projectList.toList()
     }
+
+    override fun getProjectFromAuth(
+        userId: String,
+        accessToken: String?,
+        permission: AuthPermission
+    ): List<String>? {
+        if (rbacTag.isBlank()) {
+            return emptyList()
+        }
+        return bkTag.invokeByTag(rbacTag) {
+            client.getGateway(ServiceProjectAuthResource::class).getUserProjectsByPermission(
+                userId = userId,
+                token = tokenService.getSystemToken(null)!!,
+                action = permission.value
+            ).data
+        }
+    }
+
+    override fun isShowUserManageIcon(routerTag: String?): Boolean =
+        routerTag?.contains(rbacTag) ?: false
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
         return
@@ -304,7 +280,7 @@ class TxProjectServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code}, " +
-                            "message ${response.message} and response $responseContent"
+                        "message ${response.message} and response $responseContent"
                 )
                 throw OperationException(errorMessage)
             }
@@ -313,18 +289,31 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        return if (permission == AuthPermission.MANAGE) {
-            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
-        } else {
-            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
-        }
+        return authProjectApi.validateUserProjectPermission(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            permission = permission,
+            projectCode = projectCode
+        )
     }
 
-    override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
-        return
+    override fun modifyProjectAuthResource(
+        resourceUpdateInfo: ResourceUpdateInfo
+    ) {
+        projectPermissionService.modifyResource(
+            resourceUpdateInfo = resourceUpdateInfo
+        )
     }
 
-    fun getInfoByEnglishName(englishName: String): ProjectVO? {
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(userId = userId, projectCode = projectCode)
+    }
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
+    }
+
+    fun getInfoByEnglishName(userId: String, englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return ProjectUtils.packagingBean(record)
     }
@@ -380,20 +369,26 @@ class TxProjectServiceImpl @Autowired constructor(
         val deptName = projectCreateInfo.deptName.ifEmpty { userDeptDetail.deptName }
         val centerName = projectCreateInfo.centerName.ifEmpty { userDeptDetail.centerName }
 
-        return ProjectCreateInfo(
-            projectName = projectCreateInfo.projectName,
-            projectType = projectCreateInfo.projectType,
-            secrecy = projectCreateInfo.secrecy,
-            description = projectCreateInfo.description,
-            kind = projectCreateInfo.kind,
+        return projectCreateInfo.copy(
             bgId = bgId,
             bgName = bgName,
             centerId = centerId,
             centerName = centerName,
             deptId = deptId,
-            deptName = deptName,
-            englishName = projectCreateInfo.englishName
+            deptName = deptName
         )
+    }
+
+    override fun buildRouterTag(routerTag: String?): String {
+        return if (routerTag == null) {
+            AuthSystemType.V0_AUTH_TYPE.value
+        } else if (routerTag.contains(AuthSystemType.V3_AUTH_TYPE.value)) {
+            AuthSystemType.V3_AUTH_TYPE.value
+        } else if (routerTag.contains(AuthSystemType.RBAC_AUTH_TYPE.value)) {
+            AuthSystemType.RBAC_AUTH_TYPE.value
+        } else {
+            AuthSystemType.V0_AUTH_TYPE.value
+        }
     }
 
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
@@ -405,11 +400,15 @@ class TxProjectServiceImpl @Autowired constructor(
         val url = "$v0IamUrl/projects?access_token=$token&user_id=$userId"
         logger.info("Start to get auth projects - ($url)")
         val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+        val responseContent = request(request, I18nUtil.getCodeLanMessage(
+            messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+            language = I18nUtil.getLanguage(userId)))
         val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+            throw OperationException(I18nUtil.getCodeLanMessage(
+                messageCode = ProjectMessageCode.PEM_QUERY_ERROR,
+                language = I18nUtil.getLanguage(userId)))
         }
         if (result.data == null) {
             return emptyList()
@@ -420,29 +419,50 @@ class TxProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getV3UserProject(userId: String): List<String>? {
-        if (v3Tag.isBlank()) {
+    private fun getIamUserProject(userId: String): List<String> {
+        if (v3Tag.isBlank() && rbacTag.isBlank()) {
             return emptyList()
         }
-        logger.info("getV3userProject tag: $v3Tag")
+        logger.info("getUserProject tag: v3Tag=$v3Tag|rbacTag=$rbacTag")
+        val projectList = mutableListOf<String>()
         try {
-            return bkTag.invokeByTag(v3Tag) {
-                try {
-                    // 请求V3的项目,流量必须指向到v3,需指定项目头
-                    client.get(ServiceProjectAuthResource::class).getUserProjects(
-                        userId = userId,
-                        token = tokenService.getSystemToken(null)!!
-                    ).data
-                } catch (e: Exception) {
-                    logger.warn("ServiceGitForAppResource is error", e)
-                    return@invokeByTag null
-                }
-            }
+            getIamProjectList(
+                tag = v3Tag,
+                projectList = projectList,
+                userId = userId
+            )
+            logger.info("get v3 Project $projectList")
+            getIamProjectList(
+                tag = rbacTag,
+                projectList = projectList,
+                userId = userId
+            )
+            logger.info("get rbac+v3 Project $projectList")
         } catch (e: Exception) {
             // 为防止V0,V3发布存在时间差,导致项目列表拉取异常
-            logger.warn("getV3Project fail $userId $e")
+            logger.warn("get iam Project fail $userId $e")
             return emptyList()
         }
+        return projectList
+    }
+
+    private fun getIamProjectList(
+        tag: String,
+        projectList: MutableList<String>,
+        userId: String
+    ): List<String> {
+        if (!tag.isBlank()) {
+            val iamProjectList = bkTag.invokeByTag(tag) {
+                client.getGateway(ServiceProjectAuthResource::class).getUserProjects(
+                    userId = userId,
+                    token = tokenService.getSystemToken(null)!!
+                ).data
+            }
+            if (iamProjectList != null) {
+                projectList.addAll(iamProjectList)
+            }
+        }
+        return projectList
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
@@ -455,6 +475,26 @@ class TxProjectServiceImpl @Autowired constructor(
             checkManager = true
         )
         return true
+    }
+
+    override fun isRbacPermission(projectId: String): Boolean {
+        val projectInfo = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = projectId
+        ) ?: return false
+        return projectInfo.routerTag?.contains(rbacTag) ?: false
+    }
+
+    override fun updateProjectRouterTag(englishName: String) {
+        try {
+            val tag = bkTag.getLocalTag()
+            // rbac环境创建的项目,需要指定到rbac集群
+            if (tag.contains(rbacTag)) {
+                projectTagService.updateTagByProject(projectCode = englishName, tag = rbacTag)
+            }
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update project router tag", ignore)
+        }
     }
 
     companion object {

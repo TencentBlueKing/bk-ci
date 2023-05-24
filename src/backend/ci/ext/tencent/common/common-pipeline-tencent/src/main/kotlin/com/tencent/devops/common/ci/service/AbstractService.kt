@@ -29,9 +29,11 @@ package com.tencent.devops.common.ci.service
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.common.api.constant.CommonMessageCode.ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.SERVICE_TYPE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
+import com.tencent.devops.common.web.utils.I18nUtil
 import javax.ws.rs.core.Response
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = SERVICE_TYPE)
@@ -49,12 +51,20 @@ abstract class AbstractService(
 
     abstract fun getServiceParamNameSpace(): String
 
-    abstract fun getServiceInput(repoUrl: String, repoUsername: String, repoPwd: String, env: String): ServiceJobDevCloudInput
+    abstract fun getServiceInput(
+        repoUrl: String,
+        repoUsername: String,
+        repoPwd: String,
+        env: String
+    ): ServiceJobDevCloudInput
 
     fun parseImage(): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+            throw CustomException(
+                status = Response.Status.INTERNAL_SERVER_ERROR,
+                message = I18nUtil.getCodeLanMessage(ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT)
+                )
         }
         return Pair(list[0], list[1])
     }

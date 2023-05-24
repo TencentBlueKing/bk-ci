@@ -35,7 +35,10 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TRIGGERS
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
@@ -46,10 +49,10 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.pojo.QualityElementInfo
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.TimeUnit
 import com.tencent.devops.process.yaml.v2.models.stage.Stage as StreamV2Stage
 
 @Component
@@ -76,12 +79,15 @@ class ModelCreate @Autowired constructor(
 
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            I18nUtil.getCodeLanMessage(BUILD_MSG_MANUAL),
+            "T-1-1-1"
+        )
         triggerElementList.add(manualTriggerElement)
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = "构建触发",
+            name = I18nUtil.getCodeLanMessage(BUILD_MSG_TRIGGERS),
             elements = triggerElementList,
             status = null,
             startEpoch = null,

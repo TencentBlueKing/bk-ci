@@ -30,16 +30,18 @@ package com.tencent.devops.artifactory.service.bkrepo
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
+import com.tencent.devops.common.api.constant.CommonMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import java.net.URLEncoder
+import javax.ws.rs.NotFoundException
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import java.net.URLEncoder
-import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoReportService @Autowired constructor(
@@ -59,7 +61,12 @@ class BkRepoReportService @Autowired constructor(
         val normalizedPath = PathUtils.normalize(path)
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
         bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, realPath)
-            ?: throw NotFoundException("文件($path)不存在")
+            ?: throw NotFoundException(
+                I18nUtil.getCodeLanMessage(
+                        messageCode = FILE_NOT_EXIST,
+                        params = arrayOf(path)
+                )
+            )
 
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val redirectUrlBuilder = StringBuilder()

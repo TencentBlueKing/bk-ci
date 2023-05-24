@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,13 +75,58 @@ class TxQualityPermissionService @Autowired constructor(
                 resourceCode = HashUtil.encodeLongId(groupId),
                 permission = authPermission
             )) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                 defaultMessage = authPermission.alias
             )
             throw PermissionForbiddenException(
                 message = message,
-                params = arrayOf(permissionMsg))
+                params = arrayOf(permissionMsg)
+            )
+        }
+    }
+
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
+        val iamPermission = bkAuthPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.QUALITY_GROUP,
+            projectCode = projectId,
+            permission = authPermission
+        )
+        return if (iamPermission) {
+            return true
+        } else {
+            managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = AuthResourceType.QUALITY_GROUP
+            )
+        }
+    }
+
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            val permissionMsg = I18nUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
+                defaultMessage = authPermission.alias
+            )
+            throw PermissionForbiddenException(
+                message = message,
+                params = arrayOf(permissionMsg)
+            )
         }
     }
 
@@ -169,12 +214,19 @@ class TxQualityPermissionService @Autowired constructor(
         return map
     }
 
+    override fun filterListPermissionGroups(
+        userId: String,
+        projectId: String,
+        allGroupIds: List<Long>
+    ): List<Long> = allGroupIds
+
     override fun validateRulePermission(
         userId: String,
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-
+        if (authPermission == AuthPermission.LIST)
+            return true
         val iamPermission = bkAuthPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = serviceCode,
@@ -214,8 +266,8 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                val permissionMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                     defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
@@ -247,8 +299,8 @@ class TxQualityPermissionService @Autowired constructor(
                     authPermission = authPermission,
                     resourceType = AuthResourceType.QUALITY_RULE
                 )) {
-                val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                val permissionMsg = I18nUtil.getCodeLanMessage(
+                    messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.name}",
                     defaultMessage = authPermission.alias
                 )
                 throw PermissionForbiddenException(
@@ -341,4 +393,10 @@ class TxQualityPermissionService @Autowired constructor(
         }
         return permissionRuleMap
     }
+
+    override fun filterListPermissionRules(
+        userId: String,
+        projectId: String,
+        allRulesIds: List<Long>
+    ): List<Long> = allRulesIds
 }

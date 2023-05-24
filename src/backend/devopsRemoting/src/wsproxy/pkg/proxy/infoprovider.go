@@ -107,7 +107,7 @@ func (r *RemoteWorkspaceInfoProvider) Reconcile(ctx context.Context, req ctrl.Re
 	if kerrors.IsNotFound(err) {
 		// pod is gone - that's ok
 		r.store.Delete(req.Name)
-		logs.WithField("workspace", req.Name).Debug("removing workspace from store")
+		logs.Debug("removing workspace from store", logs.String("workspace", req.Name))
 
 		return reconcile.Result{}, nil
 	}
@@ -115,7 +115,7 @@ func (r *RemoteWorkspaceInfoProvider) Reconcile(ctx context.Context, req ctrl.Re
 	// extract workspace details from pod and store
 	workspaceInfo := mapPodToWorkspaceInfo(&pod)
 	r.store.Update(req.Name, workspaceInfo)
-	logs.WithField("workspace", req.Name).WithField("details", workspaceInfo).Debug("adding/updating workspace details")
+	logs.Debug("adding/updating workspace details", logs.String("workspace", req.Name), logs.Any("details", workspaceInfo))
 
 	return ctrl.Result{}, nil
 }
@@ -195,13 +195,13 @@ func (b *BackendWorkspaceInfoProvider) WorkspaceInfo(workspaceId string) *Worksp
 
 	info, err := b.client.GetWorkspaceDetail(context.Background(), workspaceId)
 	if err != nil {
-		logs.WithField("workspaceId", workspaceId).WithError(err).Error("get backend workspace info error")
+		logs.Error("get backend workspace info error", logs.String("workspaceId", workspaceId), logs.Err(err))
 		return nil
 	}
-	logs.WithField("workspaceId", workspaceId).WithField("details", info).Debug("get backend workspace details")
+	logs.Debug("get backend workspace details", logs.String("workspaceId", workspaceId), logs.Any("details", info))
 
 	if info.PodIp == "" {
-		logs.WithField("workspaceId", workspaceId).Error("wsinfo podIp is null")
+		logs.Error("wsinfo podIp is null", logs.String("workspaceId", workspaceId))
 	}
 
 	wsInfo := &WorkspaceInfo{

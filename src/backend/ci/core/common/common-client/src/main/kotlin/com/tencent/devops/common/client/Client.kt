@@ -31,7 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.api.constant.CommonMessageCode.SERVICE_COULD_NOT_BE_ANALYZED
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.ms.MicroServiceTarget
 import com.tencent.devops.common.client.pojo.enums.GatewayType
@@ -51,13 +52,6 @@ import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
 import feign.spring.SpringContract
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
-import org.springframework.context.annotation.DependsOn
-import org.springframework.core.annotation.AnnotationUtils
-import org.springframework.stereotype.Component
 import java.lang.reflect.Method
 import java.security.cert.CertificateException
 import java.util.concurrent.ConcurrentHashMap
@@ -66,6 +60,13 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
+import org.springframework.context.annotation.DependsOn
+import org.springframework.core.annotation.AnnotationUtils
+import org.springframework.stereotype.Component
 import kotlin.reflect.KClass
 
 /**
@@ -301,7 +302,10 @@ class Client @Autowired constructor(
                 val packageName = clz.qualifiedName.toString()
                 val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
                 val matches = regex.find(packageName)
-                    ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
+                    ?: throw ErrorCodeException(
+                        errorCode = SERVICE_COULD_NOT_BE_ANALYZED,
+                        params = arrayOf(packageName)
+                    )
                 matches.groupValues[1]
             }
         }
