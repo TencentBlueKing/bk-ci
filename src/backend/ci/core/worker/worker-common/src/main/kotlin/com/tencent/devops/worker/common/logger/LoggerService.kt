@@ -65,7 +65,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod")
+@Suppress("MagicNumber", "TooManyFunctions", "ComplexMethod", "LongMethod")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -181,8 +181,8 @@ object LoggerService {
             Runtime.getRuntime().addShutdownHook(object : Thread() {
                 override fun run() = loggerService.stop()
             })
-        } catch (t: Throwable) {
-            logger.warn("Fail to add shutdown hook", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to add shutdown hook", ignore)
         }
     }
 
