@@ -491,9 +491,10 @@ class PipelineBuildRecordService @Autowired constructor(
         buildStatus: BuildStatus,
         errorInfoList: List<ErrorInfo>?,
         errorMsg: String?
-    ): Pair<Model, List<BuildStageStatus>> {
+    ): Triple<Model, List<BuildStageStatus>, BuildRecordTimeCost?> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
 //        var allStageStatus: List<BuildStageStatus> = emptyList()
+        var timeCost: BuildRecordTimeCost? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val recordModel = recordModelDao.getRecord(
@@ -546,20 +547,21 @@ class PipelineBuildRecordService @Autowired constructor(
 //            )
 
             val modelVar = mutableMapOf<String, Any>()
-            modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
+            timeCost = recordModel.generateBuildTimeCost(recordStages)
+            timeCost?.let { modelVar[Model::timeCost.name] = it }
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
                 errorInfoList, null, null
             )
         }
-
-        return pipelineBuildDetailService.buildEnd(
+        val detail = pipelineBuildDetailService.buildEnd(
             projectId = projectId,
             buildId = buildId,
             buildStatus = buildStatus,
             errorMsg = errorMsg
         )
+        return Triple(detail.first, detail.second, timeCost)
     }
 
     fun updateBuildCancelUser(
