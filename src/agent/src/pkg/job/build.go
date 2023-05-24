@@ -276,7 +276,8 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		"PROJECT_ID":            buildInfo.ProjectId,           //deprecated
 		"BUILD_ID":              buildInfo.BuildId,             //deprecated
 		"VM_SEQ_ID":             buildInfo.VmSeqId,             //deprecated
-
+		"DEVOPS_FILE_GATEWAY":   config.GAgentConfig.FileGateway,
+		"DEVOPS_GATEWAY":        config.GetGateWay(),
 	}
 	if config.GEnvVars != nil {
 		for k, v := range config.GEnvVars {
