@@ -154,6 +154,6 @@ class TGitOAuthService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TGitOAuthService::class.java)
         private const val REDIS_KEY = "repository_oauth_set:tgit:"
-        private const val EXPIRED_SECOND = 60L
+        private const val EXPIRED_SECOND = 300L
     }
 }
