@@ -224,7 +224,7 @@ class PipelineWebhookService @Autowired constructor(
                     scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 }
                 ScmType.CODE_P4 ->
-                    if (WebhookUtils.getMajorVersion(version) >= WebhookUtils.P4_CUSTOM_TRIGGER_VERSION) {
+                    if (WebhookUtils.isCustomP4TriggerVersion(version)) {
                         val repo = client.get(ServiceRepositoryResource::class).get(
                             pipelineWebhook.projectId,
                             repositoryConfig.getURLEncodeRepositoryId(),
@@ -366,7 +366,6 @@ class PipelineWebhookService @Autowired constructor(
                 } else {
                     // 两者不能同时为空
                     throw ErrorCodeException(
-                        defaultMessage = "Webhook 的ID和名称同时为空",
                         errorCode = ProcessMessageCode.ERROR_PARAM_WEBHOOK_ID_NAME_ALL_NULL
                     )
                 }

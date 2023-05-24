@@ -283,7 +283,7 @@ class CallBackControl @Autowired constructor(
                     "Removing callbacks because of 100% failure rate|" +
                         "[${callBack.projectId}]|CALL_BACK|url=${callBack.callBackUrl}|${callBack.events}"
                 )
-                projectPipelineCallBackService.disable(callBack.projectId, callBack.id!!)
+                projectPipelineCallBackService.disable(callBack)
             }
             errorMsg = e.message
             status = ProjectPipelineCallbackStatus.FAILED

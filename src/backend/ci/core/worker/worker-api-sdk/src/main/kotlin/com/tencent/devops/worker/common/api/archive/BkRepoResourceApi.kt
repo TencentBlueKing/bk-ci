@@ -42,6 +42,7 @@ import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -59,6 +60,9 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.GET_BUILD_BASE_INFO_FAIL
+import com.tencent.devops.worker.common.constants.WorkerMessageCode.UPLOAD_FILE_FAILED
+import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -78,7 +82,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         return try {
             val path = "/artifactory/api/build/fileGateway/get"
             val request = buildGet(path)
-            val response = request(request, "获取构建机基本信息失败")
+            val response = request(
+                request,
+                MessageUtil.getMessageByLocale(GET_BUILD_BASE_INFO_FAIL, AgentEnv.getLocaleLanguage())
+            )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
         } catch (e: Exception) {
@@ -88,6 +95,9 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     }
 
     fun tokenAccess(): Boolean {
+        if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+            return true
+        }
         var fileDevnetGateway = CommonEnv.fileDevnetGateway
         var fileIdcGateway = CommonEnv.fileIdcGateway
         if (fileDevnetGateway == null || fileIdcGateway == null) {
@@ -155,10 +165,14 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             getUploadHeader(file, buildVariables, parseAppMetadata, parsePipelineMetadata),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传文件失败")
+        val message = MessageUtil.getMessageByLocale(
+            UPLOAD_FILE_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -190,7 +204,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(fullPath)}"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = user
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header)
         download(request, destPath)
     }
 
@@ -260,13 +274,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPut(
             path = url,
             requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
-            headers = getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileDevnetGateway = true
+            headers = getUploadHeader(file, buildVariables, parseAppMetadata)
         )
-        val response = request(request, "上传文件失败")
+        val message = MessageUtil.getMessageByLocale(
+            UPLOAD_FILE_FAILED,
+            AgentEnv.getLocaleLanguage()
+        )
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }

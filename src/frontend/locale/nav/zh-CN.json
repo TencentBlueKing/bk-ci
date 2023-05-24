@@ -173,5 +173,29 @@
     "documentTitleMetrics": "持续集成平台-蓝盾 | 腾讯蓝鲸智云 | Metrics",
     "technicalSupport": "技术支持",
     "communityForum": "社区论坛",
-    "ProductOfficialWebsite": "产品官网"
+    "ProductOfficialWebsite": "产品官网",
+    "codelib": "代码库",
+    "pipeline": "流水线",
+    "ticket": "凭据",
+    "cert": "证书",
+    "env": "环境",
+    "node": "节点",
+    "project": "项目",
+    "quality": "质量规则",
+    "rules": "规则集",
+    "actions": {
+        "create": "创建",
+        "deploy": "部署",
+        "download": "下载",
+        "edit": "编辑",
+        "delete": "删除",
+        "view": "查看",
+        "move": "移动",
+        "use": "使用",
+        "share": "分享",
+        "list": "列表",
+        "execute": "执行",
+        "enable/disable": "停用/启用",
+        "manage": "管理"
+    }
 }

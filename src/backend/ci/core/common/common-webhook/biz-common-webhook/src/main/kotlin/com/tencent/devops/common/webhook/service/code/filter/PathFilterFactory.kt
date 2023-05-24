@@ -40,7 +40,8 @@ object PathFilterFactory {
                         pipelineId = pipelineId,
                         triggerOnPath = triggerOnPath,
                         includedPaths = includedPaths,
-                        excludedPaths = excludedPaths
+                        excludedPaths = excludedPaths,
+                        caseSensitive = caseSensitive
                     )
                 else ->
                     PathPrefixFilter(

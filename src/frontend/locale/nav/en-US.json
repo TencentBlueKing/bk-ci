@@ -173,5 +173,29 @@
     "documentTitleMetrics": "BK_CI | Tencent BlueKing | Metrics",
     "technicalSupport": "Support",
     "communityForum": "Forum",
-    "ProductOfficialWebsite": "Official "
+    "ProductOfficialWebsite": "Official ",
+    "codelib": "Repo",
+    "pipeline": "Pipeline",
+    "ticket": "Ticket",
+    "cert": "Cert",
+    "env": "Env",
+    "node": "Node",
+    "project": "Project",
+    "quality": "Gate",
+    "rules": "Rules",
+    "actions": {
+        "create": "Create",
+        "deploy": "Deploy",
+        "download": "Download",
+        "edit": "Edit",
+        "delete": "Delete",
+        "view": "View",
+        "move": "Move",
+        "use": "Use",
+        "share": "Share",
+        "list": "List",
+        "execute": "Execute",
+        "enable/disable": "Enable/Disable",
+        "manage": "Manage"
+    }
 }

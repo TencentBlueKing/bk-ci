@@ -32,6 +32,10 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_CANCEL
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.BK_PREVIOUS_STAGE_SUCCESS
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -154,17 +158,32 @@ class CheckConditionalSkipContainerCmd constructor(
         // #6366 增加日志明确展示跳过的原因
         val skip = when (jobControlOption.runCondition) {
             JobRunCondition.PREVIOUS_STAGE_CANCEL -> {
-                message.append("[上游 Stage 取消时](Previous Stage Cancel): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_CANCEL,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isCancel() // null will pass
             }
 
             JobRunCondition.PREVIOUS_STAGE_FAILED -> {
-                message.append("[上游 Stage 失败时](Previous Stage Failed): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_FAILED,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isFailure() // null will pass
             }
 
             JobRunCondition.PREVIOUS_STAGE_SUCCESS -> { // null will pass
-                message.append("[上游 Stage 成功时](Previous Stage Success): ")
+                message.append(
+                    I18nUtil.getCodeLanMessage(
+                        messageCode = BK_PREVIOUS_STAGE_SUCCESS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    )
+                )
                 previousStatus != null && !previousStatus.isSuccess() && previousStatus != BuildStatus.STAGE_SUCCESS
             }
 

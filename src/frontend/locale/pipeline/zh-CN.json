@@ -545,7 +545,7 @@
       "queueTime": "排队于",
       "startTime": "开始于",
       "endTime": "完成于",
-      "totalTime": "耗时",
+      "totalTime": "耗时{0}",
       "appVersions": "APP版本",
       "recommendVersion": "推荐版本号",
       "pipelineVersion": "编排版本号",
@@ -587,7 +587,7 @@
     "executor": "执行人",
     "trigger": "触发人",
     "executionTime": "执行耗时",
-    "noCodeRecords": "暂时没有代码变更记录",
+    "noCodeRecords": "暂无代码变更记录",
     "commitIdsRange": "提示：本次流水线的版本号变化范围：",
     "committer": "提交人",
     "commitTime": "提交时间",
@@ -1159,5 +1159,9 @@
   "groupNameTooLong": "流水线组名称长度不能超过16个字符",
   "groupNameNotAllowEmpty": "流水线组名称不能为空",
   "pipelineLockTips": "流水线已禁用执行；可前往基础设置中恢复",
-  "pipelineManualDisable": "该流水线未配置手动触发"
+  "pipelineManualDisable": "该流水线未配置手动触发",
+  "duration": "耗时",
+  "namespaceTips": "即将下线，请使用Step ID来设置插件字段的命名空间，通过上下文方式访问",
+  "outputNameSpaceDescTips": "用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改",
+  "noReleatedPipeline": "暂无关联流水线"
 }

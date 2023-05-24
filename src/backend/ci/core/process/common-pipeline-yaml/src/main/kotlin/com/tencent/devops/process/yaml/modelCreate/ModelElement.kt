@@ -99,7 +99,7 @@ class ModelElement @Autowired(required = false) constructor(
             )
 
             additionalOptions.enable = jobEnable && PathMatchUtils.isIncludePathMatch(
-                step.ifModify, changeSet, event.checkIfModify
+                step.ifModify, changeSet, event.checkIfModify, event
             )
             // bash
             val element: Element? = when {
@@ -122,7 +122,12 @@ class ModelElement @Autowired(required = false) constructor(
                 elementList.add(element)
 
                 if (element is MarketBuildAtomElement) {
-                    ModelCommon.installMarketAtom(client, event.projectCode, event.userId, element.getAtomCode())
+                    ModelCommon.installMarketAtom(
+                        client = client,
+                        projectCode = event.projectCode,
+                        userId = event.elementInstallUserId,
+                        atomCode = element.getAtomCode()
+                    )
                 }
             }
         }

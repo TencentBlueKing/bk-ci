@@ -35,5 +35,7 @@ data class CertPermissions(
     @ApiModelProperty("删除权限", required = true)
     val delete: Boolean,
     @ApiModelProperty("编辑权限", required = true)
-    val edit: Boolean
+    val edit: Boolean,
+    @ApiModelProperty("使用权限", required = true)
+    val use: Boolean
 )

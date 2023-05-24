@@ -114,13 +114,13 @@
 </template>
 
 <script>
-    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import emptyTips from '@/components/devops/emptyTips'
 
+    import nodeSelect from '@/components/devops/environment/node-select-dialog'
     export default {
         components: {
-            'empty-tips': emptyTips,
-            nodeSelect
+            nodeSelect,
+            'empty-tips': emptyTips
         },
         data () {
             return {

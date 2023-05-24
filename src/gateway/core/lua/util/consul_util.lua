@@ -31,7 +31,8 @@ function _M:getAllWhitelistIp()
     end
 
     -- consul 白名单
-    if #ip_whitelist > 1 then
+    local in_container = ngx.var.namespace ~= '' and ngx.var.namespace ~= nil
+    if not in_container and #ip_whitelist > 1 then
         -- 获取灰度设置
         local ns_config = nil
         if ngx.var.devops_region ~= "DEVNET" then

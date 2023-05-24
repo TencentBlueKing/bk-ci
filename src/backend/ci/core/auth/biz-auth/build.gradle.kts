@@ -38,5 +38,6 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:stream:api-stream"))
     api(project(":core:repository:api-repository"))
+    api(project(":core:process:api-process"))
     api("com.github.ben-manes.caffeine:caffeine")
 }

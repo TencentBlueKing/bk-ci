@@ -70,7 +70,7 @@ class ServiceStoreResourceImpl @Autowired constructor(
         return Result(
             SpringContextUtil.getBean(
                 clazz = StoreMemberService::class.java,
-                beanName = "${storeType.name.toLowerCase()}MemberService"
+                beanName = "${storeType.name.lowercase()}MemberService"
             ).isStoreMember(userId, storeCode, storeType.type.toByte())
         )
     }

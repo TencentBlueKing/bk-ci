@@ -42,9 +42,9 @@
 </template>
 
 <script>
-    import atomMixin from './atomMixin'
-    import validMixins from '../validMixins'
     import copyIcon from '@/components/copyIcon'
+    import validMixins from '../validMixins'
+    import atomMixin from './atomMixin'
     export default {
         name: 'atom-output',
         components: {
@@ -54,8 +54,8 @@
         data () {
             return {
                 showEditNamespace: false,
-                namespaceTips: '即将下线，请使用Step ID来设置插件字段的命名空间，通过上下文方式访问',
-                outputNamespaceDesc: '用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改'
+                namespaceTips: this.$t('namespaceTips'),
+                outputNamespaceDesc: this.$t('outputNameSpaceDescTips')
             }
         },
         computed: {

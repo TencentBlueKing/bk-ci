@@ -30,15 +30,19 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.builds.BuildSubPipelineResource
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_CORRESPONDING_SUB_PIPELINE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -73,7 +77,10 @@ class SubPipelineCallAtom constructor(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorMsg = "找不到对应子流水线"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_NO_CORRESPONDING_SUB_PIPELINE,
+                    I18nUtil.getDefaultLocaleLanguage()
+                )
             )
         } else {
             val subBuildId = task.subBuildId!!
@@ -88,7 +95,10 @@ class SubPipelineCallAtom constructor(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                    errorMsg = "找不到对应子流水线的构建记录"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE,
+                        I18nUtil.getDefaultLocaleLanguage()
+                    )
                 )
             } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
                 // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
@@ -112,6 +122,7 @@ class SubPipelineCallAtom constructor(
                         pipelineId = subBuildInfo.pipelineId,
                         buildId = subBuildId,
                         userId = subBuildInfo.startUser,
+                        executeCount = subBuildInfo.executeCount ?: 1,
                         buildStatus = BuildStatus.CANCELED
                     )
                     status = BuildStatus.CANCELED
@@ -148,7 +159,10 @@ class SubPipelineCallAtom constructor(
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
-                errorMsg = "子流水线ID参数为空，请检查流水线重新保存后并重新执行",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_BUILD_TASK_SUBPIPELINEID_NULL,
+                    I18nUtil.getDefaultLocaleLanguage()
+                ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
         }
@@ -157,7 +171,10 @@ class SubPipelineCallAtom constructor(
             ?: throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
-                errorMsg = "子流水线[$subPipelineId]不存在,请检查流水线是否还存在",
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS,
+                    I18nUtil.getDefaultLocaleLanguage()
+                ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
 

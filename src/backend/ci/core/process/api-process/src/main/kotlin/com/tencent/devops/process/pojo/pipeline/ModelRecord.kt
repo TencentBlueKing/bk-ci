@@ -29,6 +29,7 @@ package com.tencent.devops.process.pojo.pipeline
 
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
@@ -52,6 +53,8 @@ data class ModelRecord(
     val queueTime: Long,
     @ApiModelProperty("执行开始时间", required = true)
     val startTime: Long?,
+    @ApiModelProperty("排队耗时（进队列到开始执行）", required = true)
+    val queueTimeCost: Long?,
     @ApiModelProperty("执行结束时间", required = false)
     val endTime: Long?,
     @ApiModelProperty("Build status", required = true)
@@ -72,10 +75,13 @@ data class ModelRecord(
     val latestBuildNum: Int,
     @ApiModelProperty("最近修改人", required = false)
     val lastModifyUser: String?,
+    @Deprecated("保留是为了兼容detail，后续耗时不再以executeTime为准")
     @ApiModelProperty("执行耗时（排除系统耗时）流水线执行结束时才赋值", required = true)
     val executeTime: Long = 0,
     @ApiModelProperty("流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
+    @ApiModelProperty("已执行stage的状态", required = false)
+    var stageStatus: List<BuildStageStatus>?,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
     @ApiModelProperty("当前查询的执行次数", required = false)
