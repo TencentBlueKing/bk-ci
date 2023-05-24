@@ -33,7 +33,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
@@ -302,7 +301,7 @@ class TGitService @Autowired constructor(
         sort: GitCodeBranchesSort?,
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
-    ): Result<List<GitCodeProjectInfo>> {
+    ): List<GitCodeProjectInfo> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = ("${gitConfig.tGitApiUrl}/api/v3/projects?access_token=$accessToken" +
@@ -321,7 +320,7 @@ class TGitService @Autowired constructor(
             .url(url)
             .get()
             .build()
-        var result = Result(res.toList())
+        var result = res.toList()
         logger.info("getProjectList: $url")
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
@@ -333,7 +332,7 @@ class TGitService @Autowired constructor(
             val data = response.body?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
             if (!repoList.isJsonNull) {
-                result = Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))
+                result = JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {})
             }
         }
 
