@@ -11,7 +11,7 @@ import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
 @Service
-class ProjectExtService @Autowired constructor(
+class ProjectMigrateService @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectService: ProjectService,
     private val client: Client,

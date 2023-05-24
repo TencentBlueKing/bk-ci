@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Path("/op/ext/projects")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpExtProjectResource {
+interface OpMigrateProjectResource {
     @GET
     @Path("/getMigrateProjectInfo")
     @ApiOperation("获取迁移项目信息")
