@@ -1894,7 +1894,7 @@ class PipelineBuildFacadeService(
         )
         val result = mutableListOf<IdValue>()
         BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
-            result.add(IdValue(it.name, I18nUtil.getCodeLanMessage(it.statusName)))
+            result.add(IdValue(it.name, it.getI18n(I18nUtil.getLanguage(I18nUtil.getRequestUserId()))))
         }
         return result
     }
