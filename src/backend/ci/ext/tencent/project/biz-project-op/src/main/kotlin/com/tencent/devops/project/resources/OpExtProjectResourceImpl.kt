@@ -18,12 +18,10 @@ class OpExtProjectResourceImpl @Autowired constructor(
 
     override fun updateProjectCreator(
         projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>
-    ):
-        Result<Boolean> {
+    ): Result<Boolean> {
         return Result(
             projectExtService.updateProjectCreator(
-                projectUpdateCreatorDtoList
-                = projectUpdateCreatorDtoList
+                projectUpdateCreatorDtoList = projectUpdateCreatorDtoList
             )
         )
     }
