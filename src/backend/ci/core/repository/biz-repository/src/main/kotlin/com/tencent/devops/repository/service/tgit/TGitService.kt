@@ -94,7 +94,7 @@ class TGitService @Autowired constructor(
         logger.info("Start to get the user info by token[$token]")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = StringBuilder("${gitConfig.tGitUrl}/user")
+            val url = StringBuilder("${gitConfig.tGitApiUrl}/user")
             setToken(tokenType, url, token)
             logger.info("getToken url>> $url")
             val request = Request.Builder()
