@@ -242,7 +242,7 @@ class MigrateResourceService @Autowired constructor(
         ) as ListInstanceResponseDTO?
     }
 
-    private fun fetchInstanceInfo(
+    fun fetchInstanceInfo(
         resourceType: String,
         projectCode: String,
         ids: List<String>
