@@ -38,6 +38,7 @@ import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
+import com.tencent.devops.project.pojo.ProjectUpdateCreatorDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ProjectWithPermission
@@ -232,5 +233,5 @@ interface ProjectService {
         subjectScopes: List<SubjectScopeInfo>
     ): Boolean
 
-    fun buildRouterTag(routerTag: String?): String?
+    fun updateProjectCreator(projectUpdateCreatorDtoList: List<ProjectUpdateCreatorDTO>): Boolean
 }

@@ -28,7 +28,9 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_RESOURCE_CREATE_FAIL
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
@@ -61,6 +63,7 @@ class RbacPermissionResourceService(
     private val permissionService: PermissionService,
     private val permissionProjectService: PermissionProjectService,
     private val traceEventDispatcher: TraceEventDispatcher,
+    private val iamV2ManagerService: V2ManagerService,
     private val client: Client
 ) : PermissionResourceService {
 
@@ -111,8 +114,43 @@ class RbacPermissionResourceService(
                 iamResourceCode = iamResourceCode
             )
         }
-        // 项目创建需要审批时,不需要保存资源信息
-        if (managerId != 0) {
+        // 项目创建需要审批时,不需要保存资源信息,审批通过回调后，再进行创建。
+        val isCreateResourceAndGroup = managerId != 0
+        if (isCreateResourceAndGroup) {
+            createResource(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                resourceCode = resourceCode,
+                iamResourceCode = iamResourceCode,
+                managerId = managerId
+            )
+            createResourceDefaultGroup(
+                userId = userId,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = resourceType,
+                resourceName = resourceName,
+                resourceCode = resourceCode,
+                iamResourceCode = iamResourceCode,
+                async = async,
+                managerId = managerId
+            )
+        }
+        return true
+    }
+
+    private fun createResource(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceName: String,
+        resourceCode: String,
+        iamResourceCode: String,
+        managerId: Int
+    ) {
+        try {
             authResourceService.create(
                 userId = userId,
                 projectCode = projectCode,
@@ -124,44 +162,67 @@ class RbacPermissionResourceService(
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
-            if (async) {
-                traceEventDispatcher.dispatch(
-                    AuthResourceGroupCreateEvent(
-                        managerId = managerId,
-                        userId = userId,
-                        projectCode = projectCode,
-                        projectName = projectName,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = resourceName,
-                        iamResourceCode = iamResourceCode
-                    )
+        } catch (exception: Exception) {
+            if (resourceType == AuthResourceType.PROJECT.value) {
+                iamV2ManagerService.deleteManagerV2(managerId.toString())
+            } else {
+                iamV2ManagerService.deleteSubsetManager(managerId.toString())
+            }
+            logger.warn("create resource failed|$userId|$projectCode|$resourceType|$resourceName",exception)
+            throw ErrorCodeException(
+                errorCode = ERROR_RESOURCE_CREATE_FAIL,
+                defaultMessage = "create resource failed|$userId|$projectCode|$resourceType|$resourceName"
+            )
+        }
+    }
+
+    private fun createResourceDefaultGroup(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceName: String,
+        resourceCode: String,
+        iamResourceCode: String,
+        async: Boolean,
+        managerId: Int
+    ) {
+        if (async) {
+            traceEventDispatcher.dispatch(
+                AuthResourceGroupCreateEvent(
+                    managerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode
+                )
+            )
+        } else {
+            // 同步创建组，主要用于迁移数据；正常创建资源，走异步
+            if (resourceType == AuthResourceType.PROJECT.value) {
+                permissionGradeManagerService.createGradeDefaultGroup(
+                    gradeManagerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName
                 )
             } else {
-                // 同步创建组，主要用于迁移数据；正常创建资源，走异步
-                if (resourceType == AuthResourceType.PROJECT.value) {
-                    permissionGradeManagerService.createGradeDefaultGroup(
-                        gradeManagerId = managerId,
-                        userId = userId,
-                        projectCode = projectCode,
-                        projectName = projectName
-                    )
-                } else {
-                    permissionSubsetManagerService.createSubsetManagerDefaultGroup(
-                        subsetManagerId = managerId,
-                        userId = userId,
-                        projectCode = projectCode,
-                        projectName = projectName,
-                        resourceType = resourceType,
-                        resourceCode = resourceCode,
-                        resourceName = resourceName,
-                        iamResourceCode = iamResourceCode,
-                        createMode = AuthGroupCreateMode.CREATE
-                    )
-                }
+                permissionSubsetManagerService.createSubsetManagerDefaultGroup(
+                    subsetManagerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode,
+                    createMode = AuthGroupCreateMode.CREATE
+                )
             }
         }
-        return true
     }
 
     override fun resourceModifyRelation(
