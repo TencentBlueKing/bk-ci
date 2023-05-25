@@ -122,6 +122,18 @@ class CommonConfig {
     val shardingRoutingCacheSize: Long = 50000
 
     /**
+     * bkrepo DevNet区域网关配置
+     */
+    @Value("\${devopsGateway.fileDevnetGateway:#{null}}")
+    val fileDevnetGateway: String? = null
+
+    /**
+     * bkrepo Idc区域网关配置
+     */
+    @Value("\${devopsGateway.fileIdcGateway:#{null}}")
+    val fileIdcGateway: String? = null
+
+    /**
      * 蓝盾默认语言
      */
     @Value("\${bkci.defaultLocale:$DEFAULT_LOCALE_LANGUAGE}")

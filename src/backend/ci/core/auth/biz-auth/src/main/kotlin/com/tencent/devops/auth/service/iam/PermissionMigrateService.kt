@@ -41,17 +41,12 @@ interface PermissionMigrateService {
     fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
 
     /**
-     * v3全部迁移到rbac
-     */
-    fun allV3ToRbacAuth(): Boolean
-
-    /**
      * v0批量迁移到rbac
      */
     fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean
 
     /**
-     * v0全部迁移到rbac
+     * 全部迁移到rbac
      */
-    fun allV0ToRbacAuth(): Boolean
+    fun allToRbacAuth(): Boolean
 }

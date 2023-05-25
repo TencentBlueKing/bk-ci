@@ -288,7 +288,6 @@ class RbacAuthConfiguration {
         tokenApi: AuthTokenApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
         dslContext: DSLContext,
-        authResourceGroupDao: AuthResourceGroupDao,
         authMigrationDao: AuthMigrationDao,
         deptService: DeptService,
         authResourceGroupConfigDao: AuthResourceGroupConfigDao
@@ -301,7 +300,6 @@ class RbacAuthConfiguration {
         tokenApi = tokenApi,
         projectAuthServiceCode = projectAuthServiceCode,
         dslContext = dslContext,
-        authResourceGroupDao = authResourceGroupDao,
         authMigrationDao = authMigrationDao,
         deptService = deptService,
         authResourceGroupConfigDao = authResourceGroupConfigDao
@@ -314,13 +312,11 @@ class RbacAuthConfiguration {
     fun migrateResultService(
         permissionService: PermissionService,
         migrateResourceCodeConverter: MigrateResourceCodeConverter,
-        authVerifyRecordService: AuthVerifyRecordService,
-        client: Client
+        authVerifyRecordService: AuthVerifyRecordService
     ) = MigrateResultService(
         permissionService = permissionService,
         migrateResourceCodeConverter = migrateResourceCodeConverter,
-        authVerifyRecordService = authVerifyRecordService,
-        client = client
+        authVerifyRecordService = authVerifyRecordService
     )
 
     @Bean
