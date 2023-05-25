@@ -37,13 +37,13 @@ import org.springframework.stereotype.Service
 class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
 
     companion object {
-        private const val DEFAULT_I18N_DIR = "src/main/resources/i18n"
         private val logger = LoggerFactory.getLogger(TxStoreI18nMessageServiceImpl::class.java)
     }
 
     override fun getPropertiesFileStr(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
@@ -51,7 +51,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         return try {
             client.get(ServiceGitRepositoryResource::class).getFileContent(
                 repoId = repositoryHashId!!,
-                filePath = "$DEFAULT_I18N_DIR/$fileName",
+                filePath = "$i18nDir/$fileName",
                 reversion = null,
                 branch = branch,
                 repositoryType = null
@@ -65,6 +65,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     override fun getPropertiesFileNames(
         projectCode: String,
         fileDir: String,
+        i18nDir: String,
         repositoryHashId: String?,
         branch: String?
     ): List<String>? {
@@ -72,7 +73,7 @@ class TxStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
             userId = AUTH_HEADER_USER_ID_DEFAULT_VALUE,
             repoId = repositoryHashId!!,
             refName = branch,
-            path = DEFAULT_I18N_DIR,
+            path = i18nDir,
             tokenType = TokenTypeEnum.PRIVATE_KEY
         ).data
         return gitRepositoryDirItems?.filter { it.type != "tree" }?.map { it.name }
