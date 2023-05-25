@@ -73,7 +73,7 @@ spec:
             {{- end}}
             {{- if .Values.kubernetesManager.debug }}
             - name: KUBERNETES_MANAGER_DEBUG_ENABLE
-              value: true
+              value: "true"
             {{- end}}
           workingDir: /data/workspace/kubernetes-manager
           livenessProbe:
