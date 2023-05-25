@@ -346,7 +346,7 @@ object MessageUtil {
      * @param prefixName 前缀名称
      * @return 动态参数
      */
-    fun getPrefixNameVar(prefixName: String) : String? {
+    fun getPrefixNameVar(prefixName: String): String? {
         val regex = Regex("\\{(.*)}")
         val matchResult = regex.find(prefixName)
         return matchResult?.groupValues?.get(1)
