@@ -54,11 +54,11 @@ class StartCloudRemoteDevService @Autowired constructor(
     private val workspaceClient: WorkspaceStartCloudClient
 ) : RemoteDevInterface {
 
-    @Value("\${startCloud.appName:IEG_BKCI}")
+    @Value("\${startCloud.appName}")
     val appName: String = "IEG_BKCI"
 
-    @Value("\${startCloud.curLaunchId:980005}")
-    val curLaunchId: Int = 980005
+    @Value("\${startCloud.curLaunchId}")
+    val curLaunchId: Int = 980007
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
