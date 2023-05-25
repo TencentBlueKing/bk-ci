@@ -42,7 +42,7 @@ class TxMigrateCreatorFixServiceImpl @Autowired constructor(
                         group = BkAuthGroup.MANAGER
                     ).data
                 }
-                logger.info("get project managers $managers")
+                logger.info("get project($projectCode) managers $managers")
                 managers?.find { isUserExist(it) }
             }
         }
