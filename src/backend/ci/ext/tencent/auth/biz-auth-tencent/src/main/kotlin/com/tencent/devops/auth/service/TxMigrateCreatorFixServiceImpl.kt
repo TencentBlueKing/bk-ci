@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.service.TokenService
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -13,7 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
-import kotlin.math.log
 
 @Service
 @Primary
