@@ -292,12 +292,11 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
             map[AUTH_HEADER_DEVOPS_BUILD_TYPE] = buildType.name
             when (buildType) {
-                BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS -> {
+                BuildType.DOCKER, BuildType.AGENT, BuildType.MACOS, BuildType.MACOS_NEW -> {
                     map[AUTH_HEADER_DEVOPS_PROJECT_ID] = AgentEnv.getProjectId()
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
-
                 else -> Unit
             }
             logger.info("Get the request header - $map")

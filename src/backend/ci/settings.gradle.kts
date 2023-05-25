@@ -80,6 +80,7 @@ include(":core:common:common-auth:common-auth-blueking")
 include(":core:common:common-auth:common-auth-v3")
 include(":core:common:common-wechatwork")
 include(":core:common:common-auth:common-auth-rbac")
+include(":core:common:common-pipeline-yaml")
 
 include(":core:common:common-notify")
 include(":core:common:common-websocket")
