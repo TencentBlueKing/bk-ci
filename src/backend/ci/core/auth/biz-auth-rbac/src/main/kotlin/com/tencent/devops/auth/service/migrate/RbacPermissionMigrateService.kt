@@ -33,6 +33,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthMigrationDao
 import com.tencent.devops.auth.pojo.enum.AuthMigrateStatus
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.iam.MigrateCreatorFixService
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -63,6 +64,7 @@ class RbacPermissionMigrateService constructor(
     private val migrateResultService: MigrateResultService,
     private val permissionResourceService: PermissionResourceService,
     private val authResourceService: AuthResourceService,
+    private val migrateCreatorFixService: MigrateCreatorFixService,
     private val dslContext: DSLContext,
     private val authMigrationDao: AuthMigrationDao
 ) : PermissionMigrateService {
@@ -197,7 +199,18 @@ class RbacPermissionMigrateService constructor(
                 status = AuthMigrateStatus.PENDING.value,
                 routerTag = authType.value
             )
-            // todo 获取项目创建人
+            val projectCreator = migrateCreatorFixService.getProjectCreator(
+                projectCode = projectCode,
+                authSystemType = authType,
+                projectCreator = projectInfo.creator!!,
+                projectUpdator = projectInfo.updator
+            ) ?: run {
+                logger.warn("project($projectCode) creator(${projectInfo.creator}) not exist")
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_CREATOR_NOT_EXIST,
+                    defaultMessage = "project($projectCode) creator(${projectInfo.creator}) not exist"
+                )
+            }
             // 创建分级管理员
             watcher.start("createGradeManager")
             val gradeManagerId = authResourceService.getOrNull(
@@ -208,7 +221,7 @@ class RbacPermissionMigrateService constructor(
                 createGradeManager(
                     projectCode = projectCode,
                     projectInfo = projectInfo,
-                    iamApprover = projectInfo.creator!!
+                    projectCreator = projectCreator
                 )
             } ?: run {
                 logger.warn("project $projectCode gradle manager not found")
@@ -219,10 +232,9 @@ class RbacPermissionMigrateService constructor(
             }
             // 迁移资源
             watcher.start("migrateResource")
-            // todo 传递项目创建人
             migrateResourceService.migrateResource(
                 projectCode = projectCode,
-                iamApprover = projectInfo.creator!!
+                projectCreator = projectCreator
             )
 
             when (authType) {
@@ -338,11 +350,11 @@ class RbacPermissionMigrateService constructor(
     private fun createGradeManager(
         projectCode: String,
         projectInfo: ProjectVO,
-        iamApprover: String
+        projectCreator: String
     ): Int? {
         client.get(ServiceProjectApprovalResource::class).createMigration(projectId = projectCode)
         permissionResourceService.resourceCreateRelation(
-            userId = iamApprover,
+            userId = projectCreator,
             projectCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
