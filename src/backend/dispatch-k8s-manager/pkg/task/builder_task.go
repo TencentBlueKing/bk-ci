@@ -9,17 +9,18 @@ import (
 	"disaptch-k8s-manager/pkg/prometheus"
 	"disaptch-k8s-manager/pkg/types"
 	"fmt"
+	"time"
+
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/watch"
-	"time"
 )
 
 func DoCreateBuilder(taskId string, dep *kubeclient.Deployment) {
 	_, err := kubeclient.CreateDockerRegistry(dep.Pod.PullImageSecret)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "create builder pull image secret error").Error())
+		FailTask(taskId, errors.Wrap(err, "create builder pull image secret error").Error())
 		return
 	}
 
@@ -29,14 +30,14 @@ func DoCreateBuilder(taskId string, dep *kubeclient.Deployment) {
 	}
 
 	// 创建失败后的操作
-	failTask(taskId, errors.Wrap(err, "create builder error").Error())
+	FailTask(taskId, errors.Wrap(err, "create builder error").Error())
 	deleteBuilderLinkRes(dep.Name)
 }
 
 func DoStartBuilder(taskId string, builderName string, data []byte) {
 	err := kubeclient.PatchDeployment(builderName, data)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "start builder error").Error())
+		FailTask(taskId, errors.Wrap(err, "start builder error").Error())
 		return
 	}
 }
@@ -55,7 +56,7 @@ func DoStopBuilder(taskId string, builderName string, data []byte) {
 
 	err = kubeclient.PatchDeployment(builderName, data)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "stop builder error").Error())
+		FailTask(taskId, errors.Wrap(err, "stop builder error").Error())
 		return
 	}
 
@@ -123,14 +124,14 @@ func saveRealResourceUsage(builderName string, pods []*corev1.Pod) error {
 func DoDeleteBuilder(taskId string, builderName string) {
 	err := kubeclient.DeleteDeployment(builderName)
 	if err != nil {
-		failTask(taskId, errors.Wrap(err, "delete builder error").Error())
+		FailTask(taskId, errors.Wrap(err, "delete builder error").Error())
 		return
 	}
 
 	deleteBuilderLinkRes(builderName)
 	deleteBuilderLinkDbData(builderName)
 
-	okTask(taskId)
+	OkTask(taskId)
 }
 
 // deleteBuilderLinkRes 删除构建机相关联的kubernetes资源
@@ -177,7 +178,7 @@ func watchBuilderTaskPodCreateOrStart(event watch.Event, pod *corev1.Pod, taskId
 		{
 			switch podStatus.Phase {
 			case corev1.PodPending:
-				updateTask(taskId, types.TaskRunning)
+				UpdateTask(taskId, types.TaskRunning)
 			// 对于task的start/create来说，启动了就算成功，而不关心启动成功还是失败了
 			case corev1.PodRunning, corev1.PodSucceeded, corev1.PodFailed:
 				{
@@ -206,7 +207,7 @@ func watchBuilderTaskPodCreateOrStart(event watch.Event, pod *corev1.Pod, taskId
 					}
 					defer redis.UnLock(key)
 
-					okTask(taskId)
+					OkTask(taskId)
 
 					// mysql中保存分配至节点成功的构建机最近三次节点信息，用来做下一次调度的依据
 					if builderName == "" {
@@ -222,13 +223,13 @@ func watchBuilderTaskPodCreateOrStart(event watch.Event, pod *corev1.Pod, taskId
 					return
 				}
 			case corev1.PodUnknown:
-				updateTask(taskId, types.TaskUnknown)
+				UpdateTask(taskId, types.TaskUnknown)
 			}
 		}
 	case watch.Error:
 		{
 			logs.Error("add job error. ", pod)
-			failTask(taskId, podStatus.Message+"|"+podStatus.Reason)
+			FailTask(taskId, podStatus.Message+"|"+podStatus.Reason)
 		}
 	}
 }
@@ -265,14 +266,14 @@ func watchBuilderTaskDeploymentStop(event watch.Event, dep *appsv1.Deployment, t
 		switch event.Type {
 		case watch.Modified:
 			if dep.Spec.Replicas != nil && *dep.Spec.Replicas == 0 {
-				okTask(taskId)
+				OkTask(taskId)
 			}
 		case watch.Error:
 			logs.Error("stop builder error. ", dep)
 			if len(dep.Status.Conditions) > 0 {
-				failTask(taskId, dep.Status.Conditions[0].String())
+				FailTask(taskId, dep.Status.Conditions[0].String())
 			} else {
-				failTask(taskId, "stop builder error")
+				FailTask(taskId, "stop builder error")
 			}
 		}
 	}

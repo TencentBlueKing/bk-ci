@@ -9,6 +9,7 @@ type ConfigYaml struct {
 	Dispatch          Dispatch          `json:"dispatch"`
 	BuildAndPushImage BuildAndPushImage `json:"buildAndPushImage"`
 	ApiServer         ApiServer         `json:"apiServer"`
+	Docker            Docker            `json:"docker"`
 }
 
 type Server struct {
@@ -134,4 +135,8 @@ type Auth struct {
 type ApiToken struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
+}
+
+type Docker struct {
+	Enable bool `json:"enable"`
 }

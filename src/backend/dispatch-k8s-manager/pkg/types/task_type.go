@@ -23,6 +23,11 @@ const (
 	TaskActionDelete TaskAction = "delete"
 )
 
+// docker 交互操作
+const (
+	TaskDockerActionInspect TaskAction = "inspect"
+)
+
 type TaskLabelType string
 
 const (
@@ -36,6 +41,7 @@ type TaskBelong string
 const (
 	TaskBelongBuilder = "builder"
 	TaskBelongJob     = "job"
+	TaskBelongDocker  = "docker"
 )
 
 type Task struct {

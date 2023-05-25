@@ -6,17 +6,20 @@ definitions:
         description: Job存活时间
         type: integer
       info:
-        $ref: '#/definitions/service.buildImageInfo'
+        allOf:
+        - $ref: '#/definitions/service.buildImageInfo'
         description: 构建并推送镜像的具体信息
       name:
         description: 唯一名称
         maxLength: 32
         type: string
       podNameSelector:
-        $ref: '#/definitions/service.PodNameSelector'
+        allOf:
+        - $ref: '#/definitions/service.PodNameSelector'
         description: Pod名称调度
       resource:
-        $ref: '#/definitions/service.CommonWorkLoadResource'
+        allOf:
+        - $ref: '#/definitions/service.CommonWorkLoadResource'
         description: 工作负载资源
     required:
     - info
@@ -49,16 +52,20 @@ definitions:
           $ref: '#/definitions/types.NFS'
         type: array
       privateBuilder:
-        $ref: '#/definitions/service.DedicatedBuilder'
+        allOf:
+        - $ref: '#/definitions/service.DedicatedBuilder'
         description: 私有构建机配置
       registry:
-        $ref: '#/definitions/types.Registry'
+        allOf:
+        - $ref: '#/definitions/types.Registry'
         description: 镜像凭证
       resource:
-        $ref: '#/definitions/service.CommonWorkLoadResource'
+        allOf:
+        - $ref: '#/definitions/service.CommonWorkLoadResource'
         description: 工作负载资源
       specialBuilder:
-        $ref: '#/definitions/service.DedicatedBuilder'
+        allOf:
+        - $ref: '#/definitions/service.DedicatedBuilder'
         description: 特殊构建机配置
     required:
     - image
@@ -76,12 +83,30 @@ definitions:
           type: string
         type: object
     type: object
+  service.BuilderState:
+    enum:
+    - readyToRun
+    - notExist
+    - pending
+    - running
+    - succeeded
+    - failed
+    - unknown
+    type: string
+    x-enum-varnames:
+    - BuilderReadyToRun
+    - BuilderNotExist
+    - BuilderPending
+    - BuilderRunning
+    - BuilderSucceeded
+    - BuilderFailed
+    - BuilderUnknown
   service.BuilderStatus:
     properties:
       message:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/service.BuilderState'
     type: object
   service.CommonWorkLoadResource:
     properties:
@@ -119,10 +144,33 @@ definitions:
     - requestDiskIO
     - requestMem
     type: object
+  service.Credential:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
   service.DedicatedBuilder:
     properties:
       name:
         type: string
+    type: object
+  service.DockerInspectInfo:
+    properties:
+      cred:
+        allOf:
+        - $ref: '#/definitions/service.Credential'
+        description: 拉取镜像凭据
+      name:
+        description: 任务名称，唯一
+        type: string
+      ref:
+        description: docker镜像信息 如：docker:latest
+        type: string
+    required:
+    - name
+    - ref
     type: object
   service.Job:
     properties:
@@ -152,19 +200,36 @@ definitions:
           $ref: '#/definitions/types.NFS'
         type: array
       podNameSelector:
-        $ref: '#/definitions/service.PodNameSelector'
+        allOf:
+        - $ref: '#/definitions/service.PodNameSelector'
         description: Pod名称调度选项
       registry:
-        $ref: '#/definitions/types.Registry'
+        allOf:
+        - $ref: '#/definitions/types.Registry'
         description: 镜像凭证
       resource:
-        $ref: '#/definitions/service.CommonWorkLoadResource'
+        allOf:
+        - $ref: '#/definitions/service.CommonWorkLoadResource'
         description: 工作负载资源
     required:
     - image
     - name
     - resource
     type: object
+  service.JobState:
+    enum:
+    - pending
+    - running
+    - succeeded
+    - failed
+    - unknown
+    type: string
+    x-enum-varnames:
+    - JobPending
+    - JobRunning
+    - JobSucceeded
+    - JobFailed
+    - JobUnknown
   service.JobStatus:
     properties:
       message:
@@ -172,7 +237,7 @@ definitions:
       podIp:
         type: string
       state:
-        type: string
+        $ref: '#/definitions/service.JobState'
     type: object
   service.PodNameSelector:
     properties:
@@ -195,7 +260,7 @@ definitions:
       detail:
         type: string
       status:
-        type: string
+        $ref: '#/definitions/types.TaskState'
     type: object
   service.buildImageInfo:
     properties:
@@ -252,6 +317,20 @@ definitions:
       status:
         type: integer
     type: object
+  types.TaskState:
+    enum:
+    - waiting
+    - running
+    - succeeded
+    - failed
+    - unknown
+    type: string
+    x-enum-varnames:
+    - TaskWaiting
+    - TaskRunning
+    - TaskSucceeded
+    - TaskFailed
+    - TaskUnknown
 info:
   contact: {}
   title: kubernetes-manager api文档
@@ -432,6 +511,35 @@ paths:
       summary: 获取远程登录链接
       tags:
       - builder
+  /docker/inspect:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 凭证信息
+        in: header
+        name: Devops-Token
+        required: true
+        type: string
+      - description: 构建机信息
+        in: body
+        name: info
+        required: true
+        schema:
+          $ref: '#/definitions/service.DockerInspectInfo'
+      responses:
+        "200":
+          description: 任务ID
+          schema:
+            allOf:
+            - $ref: '#/definitions/types.Result'
+            - properties:
+                data:
+                  $ref: '#/definitions/service.TaskId'
+              type: object
+      summary: docker inspect命令(同时会pull)
+      tags:
+      - docker
   /jobs:
     post:
       consumes:

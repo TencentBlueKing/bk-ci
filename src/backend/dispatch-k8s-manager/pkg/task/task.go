@@ -4,7 +4,6 @@ import (
 	"disaptch-k8s-manager/pkg/db/mysql"
 	"disaptch-k8s-manager/pkg/logs"
 	"disaptch-k8s-manager/pkg/types"
-	"github.com/pkg/errors"
 )
 
 func InitTask() {
@@ -12,23 +11,30 @@ func InitTask() {
 	go WatchTaskDeployment()
 }
 
-func okTask(taskId string) {
+func OkTask(taskId string) {
 	err := mysql.UpdateTask(taskId, types.TaskSucceeded, "")
 	if err != nil {
-		logs.Error(errors.Wrapf(err, "save okTask %s %s error. ", taskId, ""))
+		logs.Errorf("save OkTask %s error %s", taskId, err.Error())
 	}
 }
 
-func updateTask(taskId string, state types.TaskState) {
+func OkTaskWithMessage(taskId string, message string) {
+	err := mysql.UpdateTask(taskId, types.TaskSucceeded, message)
+	if err != nil {
+		logs.Errorf("save OkTaskWithMessage %s %s error %s", taskId, message, err.Error())
+	}
+}
+
+func UpdateTask(taskId string, state types.TaskState) {
 	err := mysql.UpdateTask(taskId, state, "")
 	if err != nil {
-		logs.Error(errors.Wrapf(err, "update okTask %s %s error. ", taskId, ""))
+		logs.Errorf("save UpdateTask %s %s error %s", taskId, state, err.Error())
 	}
 }
 
-func failTask(taskId string, message string) {
+func FailTask(taskId string, message string) {
 	err := mysql.UpdateTask(taskId, types.TaskFailed, message)
 	if err != nil {
-		logs.Error(errors.Wrapf(err, "save failTask %s %s error. ", taskId, message))
+		logs.Errorf("save FailTask %s %s error %s", taskId, message, err.Error())
 	}
 }
