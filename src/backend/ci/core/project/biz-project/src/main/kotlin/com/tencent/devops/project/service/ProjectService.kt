@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.auth.enums.AuthSystemType
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
@@ -181,11 +180,10 @@ interface ProjectService {
 
     fun getAllProject(): List<ProjectVO>
 
-    fun getV0orV3Projects(
-        authType: AuthSystemType,
+    fun listMigrateProjects(
         limit: Int,
         offset: Int
-    ): List<ProjectVO>
+    ): List<ProjectWithPermission>
 
     /**
      * 获取用户已的可访问项目列表=
