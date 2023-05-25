@@ -243,5 +243,5 @@ object CommonMessageCode {
     const val BK_USER_REQUESTS_THE_PROJECT = "bkUserRequestsTheProject"
     const val BK_BUILD_MSG_MANUAL = "bkBuildMsgManual" // 手动触发
     const val BK_BUILD_MSG_TRIGGERS = "bkBuildMsgTriggers" // 构建触发
-    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 DevOps-helper 添加对应版本
+    const val BK_ENV_NOT_YET_SUPPORTED = "bkEnvNotYetSupported" // 尚未支持 {0} {1}，请联系 管理员 添加对应版本
 }
