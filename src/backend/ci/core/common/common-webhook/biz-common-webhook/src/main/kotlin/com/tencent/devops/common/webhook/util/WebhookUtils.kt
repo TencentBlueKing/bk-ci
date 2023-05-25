@@ -338,7 +338,6 @@ object WebhookUtils {
         gitMrInfo: GitMrInfo?
     ): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
-        logger.info("gitCommitReviewInfo=$gitCommitReviewInfo,gitMrInfo=$gitMrInfo")
         startParams[PIPELINE_BUILD_MSG] = gitCommitReviewInfo?.title ?: (gitMrInfo?.title ?: I18nUtil.getCodeLanMessage(
             CommonMessageCode.BK_CODE_BASE_TRIGGERING
         ))
