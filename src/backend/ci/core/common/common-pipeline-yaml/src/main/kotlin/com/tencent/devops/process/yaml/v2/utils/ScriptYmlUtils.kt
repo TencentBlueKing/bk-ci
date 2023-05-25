@@ -88,6 +88,8 @@ import com.tencent.devops.process.yaml.v2.stageCheck.Flow
 import com.tencent.devops.process.yaml.v2.stageCheck.PreStageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageCheck
 import com.tencent.devops.process.yaml.v2.stageCheck.StageReviews
+import org.apache.commons.text.StringEscapeUtils
+import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
@@ -119,18 +121,16 @@ object ScriptYmlUtils {
         // replace custom tag
         val yamlNormal = formatYamlCustom(yamlStr)
         // replace anchor tag
-        val yaml = Yaml()
-        val obj = yaml.load(yamlNormal) as Any
-        return YamlUtil.toYaml(obj)
+        return YamlUtil.loadYamlRetryOnAccident(yamlNormal)
     }
+
     fun parseVersion(yamlStr: String?): YmlVersion? {
         if (yamlStr == null) {
             return null
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         } catch (e: Exception) {
             null
@@ -143,8 +143,7 @@ object ScriptYmlUtils {
         }
 
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             YamlUtil.getObjectMapper().readValue(obj, YmlName::class.java)
         } catch (e: Exception) {
             null
@@ -156,8 +155,7 @@ object ScriptYmlUtils {
             return false
         }
         return try {
-            val yaml = Yaml()
-            val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+            val obj = YamlUtil.loadYamlRetryOnAccident(yamlStr)
             val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
             version != null && version.version == "v2.0"
         } catch (e: Exception) {
