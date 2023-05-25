@@ -141,7 +141,7 @@
                     <div class="remark-cell">
                         <span
                             :class="{ 'remark-span': true, active: props.row.active }"
-                            v-bk-tooltips="{ content: props.row.remark, disabled: !props.row.remark, delay: [300, 0] }"
+                            v-bk-tooltips="{ content: props.row.remark, maxWidth: 500, disabled: !props.row.remark, delay: [300, 0] }"
                         >
                             {{ props.row.remark || "--" }}
                         </span>
