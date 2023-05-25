@@ -340,4 +340,15 @@ object MessageUtil {
             bkI18nFieldMap.putAll(getBkI18nFieldMap(entity = itemEntity, fieldPath = newFieldPath))
         }
     }
+
+    /**
+     * 获取前缀名称中的动态参数
+     * @param prefixName 前缀名称
+     * @return 动态参数
+     */
+    fun getPrefixNameVar(prefixName: String) : String? {
+        val regex = Regex("\\{(.*)}")
+        val matchResult = regex.find(prefixName)
+        return matchResult?.groupValues?.get(1)
+    }
 }
