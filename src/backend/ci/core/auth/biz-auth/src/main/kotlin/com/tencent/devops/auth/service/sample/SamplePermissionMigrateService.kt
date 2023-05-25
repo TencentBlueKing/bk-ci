@@ -28,15 +28,14 @@
 
 package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.auth.pojo.dto.MigrateProjectDTO
 import com.tencent.devops.auth.service.iam.PermissionMigrateService
 
 class SamplePermissionMigrateService : PermissionMigrateService {
-    override fun v3ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+    override fun v3ToRbacAuth(migrateProjects: List<String>): Boolean {
         return true
     }
 
-    override fun v0ToRbacAuth(migrateProjects: List<MigrateProjectDTO>): Boolean {
+    override fun v0ToRbacAuth(migrateProjects: List<String>): Boolean {
         return true
     }
 
